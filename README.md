@@ -1,6 +1,6 @@
 [![Rhizomatics Open Source](https://avatars.githubusercontent.com/u/162821163?s=96&v=4)](https://github.com/rhizomatics)
 
-# SuperNotifier
+# Supernotify
 
 Easy multi-channel rich notifications.
 
@@ -36,7 +36,7 @@ for sending only to people in or out of the property
 
 * Add git repo to HACS as custom repo
 * Select *SuperNotify* in the list of available integrations in HACS and install
-* Add a `notify` config for the `supernotifier` integration, see `examples` folder
+* Add a `notify` config for the `supernotify` integration, see `examples` folder
 * In order to use email attachments, e.g. from camera snapshot or a `snapshot_url`,
 you must set the `allowlist_external_dirs` in main HomeAssistant config to the same as
 `media_path` in the supernotify configuration
@@ -102,7 +102,7 @@ translate general priority to Apple specific push priority.
 
 Some functionality may also work with Android push, though has not been tested.
 
-Although SuperNotifier will automatically set most useful mobile push options,
+Although Supernotify will automatically set most useful mobile push options,
 its also possible to directly set them, as in this example:
 
 ```yaml
@@ -415,7 +415,7 @@ Priority order of application
 3. Scenario delivery override
 4. Delivery definition
 5. Method defaults
-6. Target notification action defaults, e.g. mail recipients ( this isn't applied inside supernotifier )
+6. Target notification action defaults, e.g. mail recipients ( this isn't applied inside Supernotify )
 
 ## Setup
 
@@ -559,7 +559,7 @@ A blank `message_template` or `title_template` can also be used to selectively s
 ### Additional variables for conditions
 
 Scenario and DeliveryMethod conditions have access to everything that any other Home Assistant conditions can
-access, such as entities, templating etc. In addition, supernotifier makes additional variables
+access, such as entities, templating etc. In addition, Supernotify makes additional variables
 automatically available:
 
 |Template Variable              |Description                                                       |

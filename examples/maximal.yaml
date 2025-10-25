@@ -102,8 +102,8 @@ notify:
     recipients:
       - person: person.new_home_owner
         alias: sysadmin
-        email: jrb@jeymail.net
-        phone_number: "+447989408889"
+        email: jalaboli@myhome.net
+        phone_number: "+430504103451"
         delivery:
           mobile_push:
             target:
@@ -116,7 +116,7 @@ notify:
             target:
               - media_player.echo_study
       - person: person.bidey_in
-        phone_number: "+4489393013834"
+        phone_number: "+4287600013834"
         target:
           - switch.garden_shed_chime
         mobile_discovery: false
@@ -133,7 +133,7 @@ notify:
         default:
           action: notify.smtp
           data:
-            footer: Delivered by SuperNotify (MsgId:{e.notification_id})
+            footer: Delivered by Supernotify (MsgId:{e.notification_id})
           options:
             jpeg_opts:
               progressive: true

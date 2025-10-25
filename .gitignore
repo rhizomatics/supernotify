@@ -8,7 +8,7 @@ tests/__pycache__
 *$py.class
 tests/supernotify/__pycache__/
 cov.xml
-examples/barrsofcloak.yaml
+examples/mine.yaml
 node_modules/
 package-lock.json
 supernotify/media

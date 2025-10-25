@@ -6,7 +6,7 @@ from homeassistant.helpers import config_validation as cv
 
 from custom_components.supernotify import PRIORITY_CRITICAL, PRIORITY_LOW, PRIORITY_MEDIUM, ConditionVariables
 
-""" test bed for checking conditions rather than supernotifier functionality """
+""" test bed for checking conditions rather than supernotify functionality """
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:

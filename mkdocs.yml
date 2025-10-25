@@ -1,9 +1,9 @@
-site_name: Home Assistant Supernotifier
-site_url: https://jeyrb.github.io/hass_supernotify/
+site_name: Home Assistant Supernotify
+site_url: https://rhizomatics.github.io/supernotify/
 site_description: Advanced, concise, flexible notification upgrade for Home Assistant
 
-repo_name: jeyrb/hass_supernotify
-repo_url: https://github.com/jeyrb/hass_supernotify
+repo_name: rhizomatics/supernotify
+repo_url: https://github.com/rhizomatics/supernotify
 
 theme:
   name: material

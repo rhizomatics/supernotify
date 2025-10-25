@@ -279,7 +279,7 @@ class Notification(ArchivableObject):
                     template = Template(template_format, self.context.hass)
                     rendered = template.async_render(variables=context_vars)
             except TemplateError as e:
-                _LOGGER.warning("SUPERNOTIFIER Rendering template %s for %s failed: %s", template_field, delivery_name, e)
+                _LOGGER.warning("SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, delivery_name, e)
         return rendered
 
     def message(self, delivery_name: str) -> str | None:

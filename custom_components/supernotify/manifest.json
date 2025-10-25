@@ -1,7 +1,7 @@
 {
     "domain":"supernotify",
-    "name":"SuperNotifier",
-    "version":"0.7.0",
+    "name":"Supernotify",
+    "version":"1.0.0",
     "after_dependencies":["mobile_app"],
     "dependencies":["person"],
     "requirements":["Pillow","bs4","aiofiles","cachetools","httpx"
@@ -9,8 +9,8 @@
     "iot_class":"local_push",
     "integration_type": "service",
     "config_flow": false,
-    "documentation": "https://jeyrb.github.io/hass_supernotify/",
-    "issue_tracker": "https://github.com/jeyrb/hass_supernotify/issues",
+    "documentation": "https://rhizomatics.github.io/supernotify/",
+    "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",
     "codeowners":["@jey"]
 
     }

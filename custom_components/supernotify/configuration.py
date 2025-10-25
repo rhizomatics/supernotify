@@ -203,7 +203,7 @@ class Context:
         issue_key: str,
         issue_map: dict[str, str],
         severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
-        learn_more_url: str = "https://jeyrb.github.io/hass_supernotify",
+        learn_more_url: str = "https://rhizomatics.github.io/supernotify",
     ) -> None:
         if not self.hass:
             return

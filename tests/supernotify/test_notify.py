@@ -55,7 +55,7 @@ RECIPIENTS: list[dict] = [
     {
         "person": "person.new_home_owner",
         "email": "me@tester.net",
-        CONF_PHONE_NUMBER: "+447989408889",
+        CONF_PHONE_NUMBER: "+2301015050503",
         "mobile_devices": [{"notify_action": "mobile_app_new_iphone"}],
         CONF_DELIVERY: {"dummy": {CONF_DATA: {"emoji_id": 912393}, CONF_TARGET: ["xyz123"]}},
     },
