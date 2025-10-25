@@ -24,9 +24,18 @@ TOP_LEVEL_SCHEMAS = {
 
 # some hacks to stop voluptuous_openapi generating broken schemas
 
+
 def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) -> None:
+    def defuncify(v: typing.Any) -> typing.Any:
+        if isinstance(v, FunctionType):
+            if v.__name__ in ("url", "string"):
+                return str
+            if v.__name__ == "boolean":
+                return bool
+        return v
     if isinstance(node, dict):
         for key in node:
+            node[key] = defuncify(node[key])
             if isinstance(node[key], FunctionType):
                 if node[key].__name__ in ("url", "string"):
                     node[key] = str
@@ -35,7 +44,7 @@ def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) ->
                     node[key] = bool
 
                 if isinstance(node[key], Any):
-                    node[key].validators = [v if v not in (cv.url, cv.string) else str for v in node[key].validators]
+                    node[key].validators = [defuncify(v) for v in node[key].validators]
 
 
 def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -> None:
