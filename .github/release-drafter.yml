@@ -27,7 +27,7 @@ template: |
   ## Check list (to be removed before releasing)
 
   [ ] Check stable version reference in documentation is updated
-  [ ] Split all changes between the two categories (`Changes` vs `Chages to the Cookiecutter`)
+  [ ] Check docs updated with functional changes
 
   ## Overview of changes
 
@@ -36,9 +36,5 @@ template: |
   ## Changes
 
 
-
-  ## Changes to the Cookiecutter
-
-  This section lists changes to the Cookiecutter that don't affect generated projects.
 
   $CHANGES
