@@ -2,6 +2,13 @@
 
 # Supernotify
 
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/rhizomatics/supernotify/main/assets/badge/v2.json)](https://github.com/rhizomatics/supernotify)
+[![pre-commit](https://results.pre-commit.ci/badge/github/rhizomatics/supernotify/main.svg)](https://results.pre-commit.ci/latest/github/rhizomatics/supernotify/main)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/:user/:repo/:workflow)
+[![CodeQL](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql)
+[![Dependabot Updates](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates)
+
+
 Easy multi-channel rich notifications.
 
 An extension of HomeAssistant's built in `notify.notify` that can greatly simplify multiple notification channels and
@@ -584,9 +591,3 @@ a much more detailed body only for email.
 
 Use `data_template` to build the `data` dictionary with Jinja2 logic from automations or scripts.
 
-## Development
-
-[![pre-commit](https://results.pre-commit.ci/badge/github/rhizomatics/supernotify/main.svg)](https://results.pre-commit.ci/latest/github/rhizomatics/supernotify/main)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/:user/:repo/:workflow)
-[![CodeQL](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/github-code-scanning/codeql)
-[![Dependabot Updates](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates)
