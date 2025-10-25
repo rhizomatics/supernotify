@@ -24,7 +24,6 @@ TOP_LEVEL_SCHEMAS = {
 
 # some hacks to stop voluptuous_openapi generating broken schemas
 
-
 def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) -> None:
     if isinstance(node, dict):
         for key in node:

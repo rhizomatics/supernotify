@@ -47,3 +47,11 @@ jobs:
         path: junit/test-results-${{ matrix.python-version }}.xml
         # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
+    - name: Deploy docs
+      # run in the build workflow since schemagen has homeassistant dependency
+      run: |
+        if [ -f requirements_docs.txt ]; then pip install -r requirements_docs.txt; fi
+        mkdocs gh-deploy --force --config-file mkdocs.yml
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REQUIREMENTS: requirements_docs.txt
