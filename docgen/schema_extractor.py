@@ -6,8 +6,8 @@ sys.path.append(str((Path(__file__).parent / "..").resolve()))
 import json
 import logging
 import typing
+from types import FunctionType
 
-import homeassistant.helpers.config_validation as cv
 import mkdocs_gen_files
 from json_schema_for_humans.generate import generate_from_schema
 from json_schema_for_humans.generation_configuration import GenerationConfiguration
@@ -28,14 +28,15 @@ TOP_LEVEL_SCHEMAS = {
 def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) -> None:
     if isinstance(node, dict):
         for key in node:
-            if node[key] in (cv.url, cv.string):
-                node[key] = str
-                logging.info(f"Converted {key} to Required(str)")
-            elif node[key] == cv.boolean:
-                node[key] = bool
+            if isinstance(node[key], FunctionType):
+                if node[key].__name__ in ("url", "string"):
+                    node[key] = str
+                    logging.info(f"Converted {key} to Required(str)")
+                elif node[key].__name__ == "boolean":
+                    node[key] = bool
 
-            if isinstance(node[key], Any):
-                node[key].validators = [v if v not in (cv.url, cv.string) else str for v in node[key].validators]
+                if isinstance(node[key], Any):
+                    node[key].validators = [v if v not in (cv.url, cv.string) else str for v in node[key].validators]
 
 
 def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -> None:

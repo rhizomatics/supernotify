@@ -98,7 +98,7 @@ fine tuning delivery configurations, or using existing notification blueprints, 
             priority: {% if {{ state_attr('sensor.tank', 'depth') }}<10 }critical{% else %}medium {% endif %}
 ```
 
- See the [Recipes](recipes/) for more ideas.
+ See the [Recipes](recipes/index.md) for more ideas.
 
 ## Delivery Methods
 
