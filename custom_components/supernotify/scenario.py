@@ -72,7 +72,7 @@ class Scenario:
                     translation_key="scenario_condition",
                     translation_placeholders={"scenario": self.name, "error": error},
                     severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://rhizomatics.github.io/supernotify/#scenarios",
+                    learn_more_url="https://supernotify.rhizomatics.github.io/#scenarios",
                 )
                 return False
 
@@ -90,7 +90,7 @@ class Scenario:
                         translation_key="scenario_delivery",
                         translation_placeholders={"scenario": self.name, "delivery": delivery_name},
                         severity=ir.IssueSeverity.WARNING,
-                        learn_more_url="https://rhizomatics.github.io/supernotify/#scenarios",
+                        learn_more_url="https:/supernotify.rhizomatics.github.io/#scenarios",
                     )
             for delivery_name in invalid_deliveries:
                 del self.delivery[delivery_name]
@@ -109,7 +109,7 @@ class Scenario:
                         translation_key="scenario_delivery",
                         translation_placeholders={"scenario": self.name, "action_group": action_group_name},
                         severity=ir.IssueSeverity.WARNING,
-                        learn_more_url="https://rhizomatics.github.io/supernotify/#scenarios",
+                        learn_more_url="https://supernotify.rhizomatics.github.io/#scenarios",
                     )
             for action_group_name in invalid_action_groups:
                 self.action_groups.remove(action_group_name)
