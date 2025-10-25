@@ -1,0 +1,6 @@
+homeassistant==2025.10.3
+pillow
+cachetools
+bs4
+aiofiles
+httpx

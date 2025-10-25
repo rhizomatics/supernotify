@@ -1,0 +1,190 @@
+[project]
+name = "supernotify"
+description = "Home Assistant custom component for advanced notifications"
+readme = "README.md"
+dynamic = ["version"]
+requires-python = ">=3.13.2"
+dependencies = ["homeassistant>=2025.10.0"]
+
+[tool.poetry]
+package-mode = false
+version = "0.7.0"
+packages = [{ include = "custom_components.supernotify" }]
+
+[tool.setuptools.packages.find]
+where = [
+    "custom_components",
+] # list of folders that contain the packages (["."] by default)
+include = [
+    "supernotify*",
+] # package names should match these glob patterns (["*"] by default)
+exclude = [
+    "supernotify.tests*",
+] # exclude packages matching these glob patterns (empty by default)
+namespaces = true # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.poetry.group.dev.dependencies]
+homeassistant-stubs = "2025.10.0"
+
+[tool.ruff]
+line-length = 128
+indent-width = 4
+target-version = "py311"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".devcontainer",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "htmlcov",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".github",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+[tool.ruff.lint]
+preview = false
+select = [
+    "E",
+    "C",
+    "R",
+    "F",
+    "B",
+    "W",
+    "I",
+    "C90",
+    "N",
+    "D",
+    "UP",
+    "YTT",
+    "RUF",
+    "PGH",
+    "PT",
+    "T20",
+    "DTZ",
+    "TD",
+    "PTH",
+    "ARG",
+    "INT",
+    "TCH",
+    "TID",
+    "SIM",
+    "PERF",
+    "ASYNC",
+    "ANN",
+    "S",
+    "A",
+    "COM",
+    "C4",
+]
+ignore = [
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "COM812",
+    "COM819",
+    "ISC001",
+    "ISC002",  # std formatter conflicts
+    "D203",
+    "D213",    # other formatter clashes
+    "TD002",
+    "TD003",
+    "TD005",
+    "SIM102",
+    "SIM117",
+    "ANN002",
+    "ANN003",
+    "SIM108",
+    "D103",
+    "D100",
+    "D101",
+    "D102",
+    "D104",
+    "D107",
+    "D415",
+    "D400",
+    "D415",
+    "ANN401",
+    "S101",
+    "C901",
+    "FURB113",
+    "PGH003",
+    "ANN101",
+    "S602",
+    "S607",
+] # subprocess usage
+unfixable = ["B"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = []
+"**/{tests,docs}/*" = [
+    "ANN201",
+    "ANN204",
+    "ANN001",
+    "ARG002",
+    "ARG001",
+    "ANN202",
+    "PT004",
+    "ARG001",
+    "SIM115",
+]
+"conftest.py" = [
+    "ANN201",
+    "ANN204",
+    "ANN001",
+    "ARG002",
+    "ARG001",
+    "ANN202",
+    "PT004",
+    "ARG001",
+    "SIM115",
+]
+
+
+[tool.ruff.format]
+preview = true
+
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+log_cli = 1
+testpaths = ["tests"]
+norecursedirs = [".git", "templates"]
+
+addopts = [
+    "-n 4",
+    "--timeout=30",
+    "--cov-report=xml:cov.xml",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov=custom_components.supernotify",
+    "--cov-fail-under=80",
+    "--allow-hosts=127.0.0.1,127.0.1.1,localhost",
+]

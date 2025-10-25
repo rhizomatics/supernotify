@@ -1,0 +1,57 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: SuperNotifier
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements_test.txt ]; then pip install -r requirements_test.txt; fi
+    - name: Ruff
+      run: |
+        ruff check --output-format=github .
+    - name: Test with pytest
+      run: |
+        pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.supernotify --cov-report=xml --cov-report=html
+    - name: HACS Action
+      uses: "hacs/action@main"
+      with:
+        category: "integration"
+        ignore: brands
+    - name: Deploy docs
+      #uses: mhausenblas/mkdocs-deploy-gh-pages@master
+      run: |
+        if [ -f requirements_docs.txt ]; then pip install -r requirements_docs.txt; fi
+        mkdocs gh-deploy --force --config-file mkdocs.yml
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REQUIREMENTS: requirements_docs.txt
+    - name: Upload pytest test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: pytest-results-${{ matrix.python-version }}
+        path: junit/test-results-${{ matrix.python-version }}.xml
+        # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}

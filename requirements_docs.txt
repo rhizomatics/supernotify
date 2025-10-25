@@ -1,0 +1,12 @@
+mkdocstrings
+mkdocstrings-python>=1.10.5
+mkdocs-minify-plugin
+pymdown-extensions
+mkdocs-material
+mkdocs-autorefs
+mkdocs-coverage
+mkdocs-pagetree-plugin
+mkdocs
+json-schema-for-humans
+mkdocs-gen-files
+voluptuous-openapi>=0.2.0

@@ -1,0 +1,56 @@
+{
+    "name": "jeyrb/dev-supernotify",
+    "image": "mcr.microsoft.com/devcontainers/python:3.13",
+    "postCreateCommand": "python3 -m venv .devcontainer/.venv;./refresh-deps.sh",
+    "appPort": [
+      "9123:8123"
+    ],
+    "portsAttributes": {
+      "8123": {
+        "label": "Home Assistant internal",
+        "onAutoForward": "notify"
+      },
+      "9123": {
+        "label": "Home Assistant remote",
+        "onAutoForward": "notify"
+      }
+    },
+    "customizations": {
+      "vscode": {
+        "extensions": [
+            "ms-python.python",
+            "ryanluker.vscode-coverage-gutters",
+            "ms-python.vscode-pylance",
+            "ms-python.pylint",
+            "charliermarsh.ruff",
+            "keesschollaart.vscode-home-assistant",
+            "donjayamanne.python-environment-manager"
+        ],
+        "settings": {
+          "files.eol": "\n",
+          "editor.tabSize": 4,
+          "python.terminal.activateEnvInCurrentTerminal": true,
+          "python.defaultInterpreterPath": ".devcontainer/.venv/bin/python",
+          "python.analysis.autoSearchPaths": false,
+          "[python]": {
+            "editor.defaultFormatter": "charliermarsh.ruff",
+            "editor.formatOnSave": true
+          },
+          "editor.formatOnPaste": false,
+          "editor.formatOnSave": true,
+          "editor.formatOnType": true,
+          "python.testing.pytestEnabled": true,
+          "python.testing.pytestArgs": [],
+          "python.testing.cwd": "${workspaceFolder}",
+          "files.trimTrailingWhitespace": true,
+          "[markdown]": {
+            "files.trimTrailingWhitespace": false
+          }
+        }
+      }
+    },
+    "remoteUser": "vscode",
+    "features": {
+      "ghcr.io/devcontainers/features/git:1":{}
+    }
+  }

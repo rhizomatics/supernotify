@@ -1,0 +1,7 @@
+ notify:
+  - name: minimal
+    platform: supernotify
+    delivery:
+      email:
+        method: email
+        action: notify.smtp

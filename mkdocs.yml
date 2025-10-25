@@ -1,0 +1,56 @@
+site_name: Home Assistant Supernotifier
+site_url: https://jeyrb.github.io/hass_supernotify/
+site_description: Advanced, concise, flexible notification upgrade for Home Assistant
+
+repo_name: jeyrb/hass_supernotify
+repo_url: https://github.com/jeyrb/hass_supernotify
+
+theme:
+  name: material
+  highlightjs: true
+  language: en
+  features:
+    - content.code.copy
+    - content.code.select
+    - content.code.annotate
+plugins:
+  - search
+  - autorefs
+  - pagetree
+  - minify:
+      minify_html: true
+  - coverage:
+      page_path: developer/coverage
+      html_report_dir: htmlcov
+  - mkdocstrings:
+      handlers:
+        # See: https://mkdocstrings.github.io/python/usage/
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            summary: true
+            docstring_section_style: spacy
+  - gen-files:
+      scripts:
+      - docgen/schema_extractor.py
+
+watch:
+  - custom_components/supernotify
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - smarty
+  - toc:
+      permalink: true
+  - sane_lists
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
