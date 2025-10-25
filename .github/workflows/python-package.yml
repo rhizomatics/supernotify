@@ -40,14 +40,6 @@ jobs:
       with:
         category: "integration"
         ignore: brands
-    - name: Deploy docs
-      #uses: mhausenblas/mkdocs-deploy-gh-pages@master
-      run: |
-        if [ -f requirements_docs.txt ]; then pip install -r requirements_docs.txt; fi
-        mkdocs gh-deploy --force --config-file mkdocs.yml
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        REQUIREMENTS: requirements_docs.txt
     - name: Upload pytest test results
       uses: actions/upload-artifact@v5
       with:

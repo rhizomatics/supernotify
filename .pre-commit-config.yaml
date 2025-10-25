@@ -1,6 +1,6 @@
 default_language_version:
   python: python3.13
-exclude: 'custom_components/supernotify/integrations/frigate.py'
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
