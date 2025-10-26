@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      content: read
+      contents: read
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2.3.4
