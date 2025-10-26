@@ -33,12 +33,6 @@ repos:
         args:
           - --quiet
         files: ^(custom_components)/.+\.py$
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 'v6.0.0'
-    hooks:
-      - id: check-executables-have-shebangs
-        stages: [manual]
-      - id: check-json
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v1.18.2'
     hooks:
@@ -63,3 +57,16 @@ repos:
           - pytest_unordered
           - pytest_mock
           - pytest_httpserver
+
+ci:
+    autofix_commit_msg: |
+        [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+        for more information, see https://pre-commit.ci
+    autofix_prs: true
+    autoupdate_branch: ''
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: weekly
+    skip:
+      - bandit
+    submodules: false

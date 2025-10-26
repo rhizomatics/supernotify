@@ -33,6 +33,7 @@ def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) ->
             if v.__name__ == "boolean":
                 return bool
         return v
+
     if isinstance(node, dict):
         for key in node:
             node[key] = defuncify(node[key])
