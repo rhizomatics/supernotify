@@ -16,14 +16,14 @@ from custom_components.supernotify.configuration import Context
 from custom_components.supernotify.snoozer import Snooze, Snoozer
 
 
-async def test_do_nothing_filter_recipients():
+def test_do_nothing_filter_recipients() -> None:
     uut = Snoozer()
     assert uut.filter_recipients([{CONF_PERSON: "test_1"}], PRIORITY_MEDIUM, "email", {}, ["email"], {}) == [
         {CONF_PERSON: "test_1"}
     ]
 
 
-async def test_filter_mobile_device_action(mock_context: Context):
+def test_filter_mobile_device_action(mock_context: Context) -> None:
     uut: Snoozer = Snoozer()
     uut.register_snooze(
         CommandType.SNOOZE,
@@ -46,7 +46,7 @@ async def test_filter_mobile_device_action(mock_context: Context):
     }
 
 
-async def test_check_notification_for_snooze_global():
+def test_check_notification_for_snooze_global() -> None:
     uut: Snoozer = Snoozer()
     assert uut.current_snoozes() == []
     assert not uut.is_global_snooze()
@@ -62,7 +62,7 @@ async def test_check_notification_for_snooze_global():
     assert uut.current_snoozes() == [Snooze(GlobalTargetType.EVERYTHING, RecipientType.EVERYONE)]
 
 
-async def test_check_notification_for_snooze_qualified(mock_context: Context):
+def test_check_notification_for_snooze_qualified(mock_context: Context) -> None:
     uut: Snoozer = Snoozer()
     uut.handle_command_event(
         Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_DELIVERY_chime"}), mock_context.people
