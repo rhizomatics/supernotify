@@ -355,6 +355,7 @@ async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
 
 
 async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
+    hass.states.async_set("sensor.issues", "23")
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
@@ -366,7 +367,7 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
                     {
                         "condition": "not",
                         "conditions": [
-                            {"condition": "state", "entity_id": "sensor.home_assistant_website", "state": "2023.5.1"}
+                            {"condition": "state", "entity_id": "sensor.issues", "state": "24"}
                         ],
                     },
                 ],
@@ -376,6 +377,8 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
     )
     assert await uut.validate()
     assert await uut.evaluate(ConditionVariables())
+    hass.states.async_set("sensor.issues", "24")
+    assert not await uut.evaluate(ConditionVariables())
 
 
 async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
