@@ -384,7 +384,7 @@ class SuperNotificationAction(BaseNotificationService):
 
         except Exception as err:
             # fault barrier of last resort, integration failures should be caught within envelope delivery
-            _LOGGER.error("SUPERNOTIFY Failed to send message %s: %s", message, err, exc_info=True)
+            _LOGGER.exception("SUPERNOTIFY Failed to send message %s", message)
             self.failures += 1
             if notification is not None:
                 notification.delivery_error = format_exception(err)

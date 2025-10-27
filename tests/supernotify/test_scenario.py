@@ -6,13 +6,16 @@ from homeassistant.helpers import issue_registry as ir
 from pytest_unordered import unordered
 
 from custom_components.supernotify import (
+    ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     CONF_METHOD,
+    CONF_SELECTION,
     DOMAIN,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
     SCENARIO_SCHEMA,
+    SELECTION_BY_SCENARIO,
     ConditionVariables,
 )
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
@@ -226,6 +229,57 @@ async def test_scenario_constraint(mock_context: Context) -> None:
     )
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+
+
+async def test_scenario_suppress(mock_context: Context) -> None:
+    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Mostly": ["siren"], "Alarm": ["chime"], "DevNull": []}
+    mock_context.deliveries = {
+        "plain_email": {CONF_SELECTION: SELECTION_BY_SCENARIO},
+        "mobile": {CONF_SELECTION: SELECTION_BY_SCENARIO},
+        "chime": {CONF_SELECTION: SELECTION_BY_SCENARIO},
+        "siren": {CONF_SELECTION: SELECTION_BY_SCENARIO},
+    }
+    mock_context.scenarios = {
+        "Alarm": Scenario("Alarm", {}, mock_context.hass),  # type: ignore
+        "DevNull": Scenario("DevNull", {}, mock_context.hass),  # type: ignore
+        "Mostly": Scenario(
+            "Mostly",
+            SCENARIO_SCHEMA({
+                CONF_ALIAS: "test001",
+                CONF_CONDITION: {
+                    "condition": "and",
+                    "conditions": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{notification_priority not in ['critical']}}",
+                        },
+                    ],
+                },
+            }),
+            mock_context.hass,  # type: ignore
+        ),
+    }
+    # Only deliveries for enabled scenarios
+    uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
+    await uut.initialize()
+    assert uut.applied_scenario_names == ["Alarm"]
+    assert uut.selected_scenario_names == ["Mostly"]
+    assert uut.selected_delivery_names == unordered("chime", "siren")
+
+    # No selected scenarios
+    uut = Notification(mock_context, "testing 123", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL})
+    await uut.initialize()
+    assert uut.applied_scenario_names == []
+    assert uut.selected_scenario_names == []
+    assert uut.selected_delivery_names == []
+
+    # Single scenario with no deliveries
+    uut = Notification(mock_context, "testing 123", action_data={
+    ATTR_SCENARIOS_APPLY: ["DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]})
+    await uut.initialize()
+    assert uut.applied_scenario_names == ["DevNull"]
+    assert list(uut.enabled_scenarios.keys()) == ["DevNull"]
+    assert uut.selected_delivery_names == []
 
 
 async def test_attributes(hass: HomeAssistant) -> None:

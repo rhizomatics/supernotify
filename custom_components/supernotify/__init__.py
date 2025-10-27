@@ -284,7 +284,10 @@ SCENARIO_SCHEMA = vol.Schema({
     vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
     vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
     vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DELIVERY_SELECTION): vol.In(DELIVERY_SELECTION_VALUES),
+    vol.Optional(CONF_DELIVERY_SELECTION, default=DELIVERY_SELECTION_IMPLICIT): vol.In([
+        DELIVERY_SELECTION_IMPLICIT,
+        DELIVERY_SELECTION_EXPLICIT,
+    ]),
     vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
 })
 ACTION_CALL_SCHEMA = vol.Schema(

@@ -25,6 +25,7 @@ from custom_components.supernotify import (
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
+from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.configuration import Context
 from custom_components.supernotify.snoozer import Snoozer
 
@@ -74,6 +75,7 @@ def mock_context(mock_hass: HomeAssistant) -> Context:
     context.cameras = {}
     context.snoozer = Snoozer()
     context.delivery_by_scenario = {}
+    context.fallback_by_default = []
     context.mobile_actions = {}
     context.content_scenario_templates = {}
     context.hass_internal_url = "http://hass-dev"
@@ -104,6 +106,15 @@ def mock_notify(hass: HomeAssistant) -> MockAction:
     mock_action: MockAction = MockAction()
     hass.services.async_register(DOMAIN, "mock", mock_action, supports_response=SupportsResponse.NONE)  # type: ignore
     return mock_action
+
+
+@pytest.fixture
+def mock_method() -> AsyncMock:
+    m = AsyncMock(spec=DeliveryMethod)
+    m.name = 'unit_test'
+    m.delivery_config = Mock(return_value={})
+    m.deliver=AsyncMock(return_value=True)
+    return m
 
 
 @pytest.fixture

@@ -76,7 +76,7 @@ class DeliveryMethod:
     async def initialize(self) -> None:
         """Async post-construction initialization"""
         if self.method is None:
-            raise OSError("No delivery method configured")
+            raise ValueError("No delivery method configured")
         self.valid_deliveries = await self.validate_deliveries()
         if self.device_discovery:
             self.default.setdefault(CONF_TARGET, [])

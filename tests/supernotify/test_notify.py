@@ -1,4 +1,4 @@
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_CONDITION, CONF_CONDITIONS, CONF_ENTITY_ID, CONF_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -23,12 +23,13 @@ from custom_components.supernotify import (
     METHOD_CHIME,
     METHOD_EMAIL,
     METHOD_GENERIC,
-    METHOD_MOBILE_PUSH,
     METHOD_PERSISTENT,
     METHOD_SMS,
+    PRIORITY_CRITICAL,
     SCENARIO_DEFAULT,
     SELECTION_BY_SCENARIO,
     SELECTION_FALLBACK,
+    SELECTION_FALLBACK_ON_ERROR,
 )
 from custom_components.supernotify.configuration import Context
 from custom_components.supernotify.envelope import Envelope
@@ -150,17 +151,40 @@ async def test_null_delivery(mock_hass: HomeAssistant) -> None:
     mock_hass.services.async_call.assert_not_called()  # type: ignore
 
 
-async def test_fallback_delivery(mock_hass: HomeAssistant) -> None:
+async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
+    uut = SuperNotificationAction(
+        mock_hass,
+        deliveries={
+            "generic": {CONF_METHOD: METHOD_GENERIC, CONF_SELECTION: SELECTION_FALLBACK_ON_ERROR, CONF_ACTION: "notify.dummy"},
+            "failing": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.make_fail"},
+        },
+        method_configs=METHOD_DEFAULTS,
+    )
+
+    def call_service(domain, service, service_data=None):
+        if service == "make_fail":
+            raise ValueError("just because")
+
+    mock_hass.services.async_call = AsyncMock(side_effect=call_service)
+    await uut.initialize()
+    await uut.async_send_message("just a test", data={"priority": "low", "delivery": "failing"})
+    mock_hass.services.async_call.assert_called_with(  # type: ignore
+        "notify", "dummy", service_data={"message": "just a test", "data": {}}
+    )
+
+
+async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
     uut = SuperNotificationAction(
         mock_hass,
         deliveries={
             "generic": {CONF_METHOD: METHOD_GENERIC, CONF_SELECTION: SELECTION_FALLBACK, CONF_ACTION: "notify.dummy"},
-            "push": {CONF_METHOD: METHOD_MOBILE_PUSH, CONF_ACTION: "notify.push", CONF_PRIORITY: "critical"},
+            "failing": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.make_fail", CONF_PRIORITY: PRIORITY_CRITICAL},
         },
         method_configs=METHOD_DEFAULTS,
     )
+
     await uut.initialize()
-    await uut.async_send_message("just a test", data={"priority": "low"})
+    await uut.async_send_message("just a test", data={"priority": "low", "delivery": "failing"})
     mock_hass.services.async_call.assert_called_once_with(  # type: ignore
         "notify", "dummy", service_data={"message": "just a test", "data": {}}
     )

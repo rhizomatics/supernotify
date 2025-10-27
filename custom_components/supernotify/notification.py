@@ -394,7 +394,7 @@ class Notification(ArchivableObject):
                     self.undelivered_envelopes.append(envelope)
 
         except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY Failed to notify using %s: %s", delivery, e)
+            _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery)
             _LOGGER.debug("SUPERNOTIFY %s delivery failure", delivery, exc_info=True)
             self.delivery_errors[delivery] = format_exception(e)
 

@@ -480,8 +480,7 @@ could be selected or deliveries switched off.
 
 Scenarios can override specific delivery configurations, general media configuration (such as setting a camera, or specifying which alert sound to use for a mobile push ). A scenario have a
 default `delivery_selection` basis of `implicit`, where the scenario inherits all the default
-deliveries, or have this switched off by overriding `delivery_selection` to `explicit` or `fixed` (both do the same thing) in which case only the deliveries mentioned in the scenario
-are included.
+deliveries, or have this switched off by overriding `delivery_selection` to `explicit` in which case only the deliveries mentioned in the scenario are included.
 
 For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of
 notification by the standard Home Assistant module.
