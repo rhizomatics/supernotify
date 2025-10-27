@@ -22,8 +22,3 @@ red_alert:
 
 ```
 
-## Variations
-
-The applied scenario could be one explicitly referenced in the notify action `data` section
-or it could be one that is automatically enabled, for example based on date/time, occupancy,
-alarm state or similar.

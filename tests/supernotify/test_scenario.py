@@ -232,7 +232,12 @@ async def test_scenario_constraint(mock_context: Context) -> None:
 
 
 async def test_scenario_suppress(mock_context: Context) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Mostly": ["siren"], "Alarm": ["chime"], "DevNull": []}
+    mock_context.delivery_by_scenario = {
+        "DEFAULT": ["plain_email", "mobile"],
+        "Mostly": ["siren"],
+        "Alarm": ["chime"],
+        "DevNull": [],
+    }
     mock_context.deliveries = {
         "plain_email": {CONF_SELECTION: SELECTION_BY_SCENARIO},
         "mobile": {CONF_SELECTION: SELECTION_BY_SCENARIO},
@@ -274,8 +279,9 @@ async def test_scenario_suppress(mock_context: Context) -> None:
     assert uut.selected_delivery_names == []
 
     # Single scenario with no deliveries
-    uut = Notification(mock_context, "testing 123", action_data={
-    ATTR_SCENARIOS_APPLY: ["DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]})
+    uut = Notification(
+        mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]}
+    )
     await uut.initialize()
     assert uut.applied_scenario_names == ["DevNull"]
     assert list(uut.enabled_scenarios.keys()) == ["DevNull"]
@@ -295,7 +301,12 @@ async def test_attributes(hass: HomeAssistant) -> None:
                     {
                         "condition": "not",
                         "conditions": [
-                            {"condition": "state", "entity_id": "alarm_control_panel.home_alarm_control", "state": "disarmed"}
+                            {
+                                "condition": "state",
+                                "enabled": True,
+                                "entity_id": "alarm_control_panel.home_alarm_control",
+                                "state": "disarmed",
+                            }
                         ],
                     },
                     {"condition": "time", "after": "21:30:00", "before": "06:30:00"},
@@ -304,6 +315,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
         }),
         hass,
     )
+    hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
     assert await uut.validate()
     attrs = uut.attributes()
     assert attrs["delivery_selection"] == "implicit"
@@ -326,6 +338,57 @@ async def test_secondary_scenario(hass: HomeAssistant) -> None:
     assert not await uut.evaluate(cvars)
     cvars.applied_scenarios.append("scenario-possible-danger")
     assert await uut.evaluate(cvars)
+
+
+async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
+    uut = Scenario(
+        "testing",
+        SCENARIO_SCHEMA({
+            CONF_CONDITION: {
+                "condition": "template",
+                "value_template": '{{weather == "sunny" and "danger" in applied_scenarios}}',
+            }
+        }),
+        hass,
+    )
+    assert not await uut.validate()
+
+
+async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
+    uut = Scenario(
+        "testing",
+        SCENARIO_SCHEMA({
+            CONF_CONDITION: {
+                "condition": "or",
+                "alias": "test complicated logic",
+                "conditions": [
+                    {"condition": "sun", "after": "sunset", "before": "sunrise"},
+                    {
+                        "condition": "not",
+                        "conditions": [
+                            {"condition": "state", "entity_id": "sensor.home_assistant_website", "state": "2023.5.1"}
+                        ],
+                    },
+                ],
+            }
+        }),
+        hass,
+    )
+    assert await uut.validate()
+    assert await uut.evaluate(ConditionVariables())
+
+
+async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
+    uut = Scenario(
+        "testing",
+        SCENARIO_SCHEMA({CONF_CONDITION: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
+        hass,
+    )
+    hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 12})
+    assert await uut.validate()
+    assert not await uut.evaluate(ConditionVariables())
+    hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 60})
+    assert await uut.evaluate(ConditionVariables())
 
 
 async def test_trace(hass: HomeAssistant) -> None:

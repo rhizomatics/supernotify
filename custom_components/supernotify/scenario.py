@@ -51,10 +51,12 @@ class Scenario:
         if self.condition:
             error: str | None = None
             try:
+                # note: basic template syntax within conditions already validated by voluptuous checks
                 cond: ConfigType = await condition.async_validate_condition_config(self.hass, self.condition)
-                if await condition.async_from_config(self.hass, cond) is None:
-                    _LOGGER.warning("SUPERNOTIFY Disabling scenario %s with failed condition %s", self.name, self.condition)
-                    error = "Unable to build condition from definition"
+                self.force_strict_template_mode(cond, undo=False)
+                test: condition.ConditionCheckerType = await condition.async_from_config(self.hass, cond)
+                test(self.hass, asdict(ConditionVariables()))
+                self.force_strict_template_mode(cond, undo=True)
             except vol.Invalid as vi:
                 _LOGGER.error(
                     f"SUPERNOTIFY Condition definition for scenario {self.name} fails Home Assistant schema check {vi}"
@@ -114,6 +116,34 @@ class Scenario:
             for action_group_name in invalid_action_groups:
                 self.action_groups.remove(action_group_name)
         return True
+
+    def force_strict_template_mode(self, condition: ConfigType, undo: bool = False) -> None:
+        from functools import partial
+
+        from homeassistant.helpers.template import Template
+
+        class TemplateWrapper:
+            def __init__(self, obj: Template) -> None:
+                self._obj = obj
+
+            def __getattr__(self, name: str) -> Any:
+                if name == 'async_render_to_info':
+                    return partial(self._obj.async_render_to_info, strict=True)
+                return getattr(self._obj, name)
+
+            def __setattr__(self, name: str, value: Any) -> None:
+                super().__setattr__(name, value)
+
+        def wrap_template(cond: ConfigType, undo: bool) -> None:
+            for key, val in cond.items():
+                if not undo and isinstance(val, Template) and hasattr(val, '_env'):
+                    cond[key] = TemplateWrapper(val)
+                elif undo and isinstance(val, TemplateWrapper):
+                    cond[key] = val._obj
+                elif isinstance(val, dict):
+                    wrap_template(val, undo)
+        if condition is not None:
+            wrap_template(condition, undo)
 
     def attributes(self, include_condition: bool = True, include_trace: bool = False) -> dict[str, Any]:
         """Return scenario attributes"""
