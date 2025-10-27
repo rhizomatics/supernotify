@@ -59,7 +59,7 @@
         "method_invalid_delivery_condition":{
             "title":"Method Default Has Invalid Delivery Condition",
             "description":"The {method} method has a delivery {delivery} with an invalid condition {condition}"
- 
+
         }
 
     }

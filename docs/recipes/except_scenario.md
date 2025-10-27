@@ -21,4 +21,3 @@ red_alert:
           - "{{'unknown_vehicle' not in applied_scenarios}}"
 
 ```
-

@@ -203,49 +203,31 @@ async def test_message_usage(mock_context: Context, mock_method: DeliveryMethod)
     mock_context.delivery_by_scenario = {"DEFAULT": ["push"]}
     mock_context.delivery_method.return_value = mock_method  # type: ignore[attr-defined]
 
-    uut = Notification(
-        mock_context,
-        "testing 123",
-        title="the big title"
-    )
+    uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") == "the big title"
 
     mock_method.option_str.return_value = MessageOnlyPolicy.USE_TITLE  # type: ignore
-    uut = Notification(
-        mock_context,
-        "testing 123",
-        title="the big title"
-    )
+    uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "the big title"
     assert uut.title("push") is None
 
     mock_method.option_str.return_value = MessageOnlyPolicy.USE_TITLE  # type: ignore
-    uut = Notification(
-        mock_context,
-        "testing 123"
-    )
+    uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") is None
 
     mock_method.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE  # type: ignore
-    uut = Notification(
-        mock_context,
-        "testing 123",
-        title="the big title"
-    )
+    uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "the big title testing 123"
     assert uut.title("push") is None
 
     mock_method.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE  # type: ignore
-    uut = Notification(
-        mock_context,
-        "testing 123"
-    )
+    uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") is None

@@ -107,23 +107,29 @@ class DeliveryMethod:
             # don't care about ENABLED here since disabled deliveries can be overridden
             if d in RESERVED_DELIVERY_NAMES:
                 _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", d)
-                self.context.raise_issue(f"method_{self.method}_reserved_delivery_name",
-                        issue_key="method_reserved_delivery_name",
-                        issue_map={"method": self.method, "delivery": d})
+                self.context.raise_issue(
+                    f"method_{self.method}_reserved_delivery_name",
+                    issue_key="method_reserved_delivery_name",
+                    issue_map={"method": self.method, "delivery": d},
+                )
                 continue
             if not self.validate_action(dc.get(CONF_ACTION)):
                 _LOGGER.warning("SUPERNOTIFY Invalid action definition for delivery %s (%s)", d, dc.get(CONF_ACTION))
-                self.context.raise_issue(f"method_{self.method}_invalid_delivery_action",
-                        issue_key="method_invalid_delivery_action",
-                        issue_map={"method": self.method, "delivery": d, "action": str(dc.get(CONF_ACTION))})
+                self.context.raise_issue(
+                    f"method_{self.method}_invalid_delivery_action",
+                    issue_key="method_invalid_delivery_action",
+                    issue_map={"method": self.method, "delivery": d, "action": str(dc.get(CONF_ACTION))},
+                )
                 continue
             delivery_condition = dc.get(CONF_CONDITION)
             if delivery_condition:
                 if not await condition.async_validate_condition_config(self.hass, delivery_condition):
                     _LOGGER.warning("SUPERNOTIFY Invalid delivery condition for %s: %s", d, delivery_condition)
-                    self.context.raise_issue(f"method_{self.method}_invalid_delivery_condition",
+                    self.context.raise_issue(
+                        f"method_{self.method}_invalid_delivery_condition",
                         issue_key="method_invalid_delivery_condition",
-                        issue_map={"method": self.method, "delivery": d, "condition": delivery_condition})
+                        issue_map={"method": self.method, "delivery": d, "condition": delivery_condition},
+                    )
                     continue
 
             valid_deliveries[d] = dc

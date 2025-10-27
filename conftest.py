@@ -25,8 +25,8 @@ from custom_components.supernotify import (
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
-from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.snoozer import Snoozer
 
 
@@ -111,9 +111,9 @@ def mock_notify(hass: HomeAssistant) -> MockAction:
 @pytest.fixture
 def mock_method() -> AsyncMock:
     m = AsyncMock(spec=DeliveryMethod)
-    m.name = 'unit_test'
+    m.name = "unit_test"
     m.delivery_config = Mock(return_value={})
-    m.deliver=AsyncMock(return_value=True)
+    m.deliver = AsyncMock(return_value=True)
     return m
 
 

@@ -127,7 +127,7 @@ class Scenario:
                 self._obj = obj
 
             def __getattr__(self, name: str) -> Any:
-                if name == 'async_render_to_info':
+                if name == "async_render_to_info":
                     return partial(self._obj.async_render_to_info, strict=True)
                 return getattr(self._obj, name)
 
@@ -136,12 +136,13 @@ class Scenario:
 
         def wrap_template(cond: ConfigType, undo: bool) -> None:
             for key, val in cond.items():
-                if not undo and isinstance(val, Template) and hasattr(val, '_env'):
+                if not undo and isinstance(val, Template) and hasattr(val, "_env"):
                     cond[key] = TemplateWrapper(val)
                 elif undo and isinstance(val, TemplateWrapper):
                     cond[key] = val._obj
                 elif isinstance(val, dict):
                     wrap_template(val, undo)
+
         if condition is not None:
             wrap_template(condition, undo)
 
