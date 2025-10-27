@@ -4,7 +4,7 @@ description = "Home Assistant custom component for advanced notifications"
 readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
-dependencies = ["homeassistant>=2025.10.0"]
+dependencies = ["homeassistant>=2025.10.4"]
 
 [tool.poetry]
 package-mode = false
@@ -24,7 +24,7 @@ exclude = [
 namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 
 [tool.poetry.group.dev.dependencies]
-homeassistant-stubs = "2025.10.2"
+homeassistant-stubs = "2025.10.4"
 
 [tool.ruff]
 line-length = 128
