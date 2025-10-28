@@ -3,6 +3,7 @@
 ## 1.0.3
 
 - Improve mqtt notification archiving by generating unique qualified topic per item
+- Simplify archive config to be clear what applies to file and what to mqtt
 
 ## 1.0.2
 

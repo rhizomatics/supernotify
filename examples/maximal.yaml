@@ -5,8 +5,11 @@ notify:
     media_path: config/media/supernotify
     archive:
       enabled: true
-      archive_days: 4
-      archive_path: config/archive/supernotify
+      file_retention_days: 4
+      file_path: config/archive/supernotify
+      mqtt_topic: notifications/supernotify
+      mqtt_qos: 1
+      mqtt_retain: False
     delivery:
       html_email:
         method: email

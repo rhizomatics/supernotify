@@ -36,7 +36,7 @@ for sending only to people in or out of the property
 * Well-behaved `notify` extension, so can use data templating, `notify.group` and other notify features.
 * Refactor out repetitive configuration for ease of maintenance
 * Debugging support,
-  * Optional archival of message structures
+  * Optional archival of message structures to file system and/or MQTT topic
   * Additional actions ( previously known as services ) to pull back live configuration or last known notification details.
 
 ## Installation
