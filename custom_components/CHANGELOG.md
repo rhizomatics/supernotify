@@ -1,0 +1,18 @@
+# Public releases
+
+## 1.0.3
+
+- Improve mqtt notification archiving by generating unique qualified topic per item
+
+## 1.0.2
+
+- Validate mis-spelled variables in Scenario Condition templates and generate repairs
+
+## 1.0.1
+
+- Added repairs for configuration issues
+- GitHub actions and pre-commit improvements
+
+## 1.0.0
+
+First public release of productionized home code

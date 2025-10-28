@@ -392,10 +392,7 @@ class SuperNotificationAction(BaseNotificationService):
 
         if notification is not None:
             self.last_notification = notification
-            self.context.archive.archive(notification)
-            if self.context.archive_topic:
-                await self.context.archive_topic.publish(notification)
-
+            await self.context.archive.archive(notification)
             _LOGGER.debug(
                 "SUPERNOTIFY %s deliveries, %s errors, %s skipped",
                 notification.delivered,

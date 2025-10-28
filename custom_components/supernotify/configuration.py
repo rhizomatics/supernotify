@@ -21,7 +21,7 @@ from homeassistant.helpers.config_validation import boolean
 from homeassistant.helpers.network import get_url
 from homeassistant.util import slugify
 
-from custom_components.supernotify.archive import ArchiveTopic, NotificationArchive
+from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.common import ensure_list, safe_get
 from custom_components.supernotify.snoozer import Snoozer
 
@@ -124,21 +124,15 @@ class Context:
         self.media_path: Path | None = Path(media_path) if media_path else None
         archive_config = archive_config or {}
         self.archive: NotificationArchive = NotificationArchive(
+            self.hass,
             bool(archive_config.get(CONF_ENABLED, False)),
             archive_config.get(CONF_ARCHIVE_PATH),
             archive_config.get(CONF_ARCHIVE_DAYS),
+            mqtt_topic=archive_config.get(CONF_ARCHIVE_MQTT_TOPIC),
+            mqtt_qos=int(archive_config.get(CONF_ARCHIVE_MQTT_QOS, 0)),
+            mqtt_retain=boolean(archive_config.get(CONF_ARCHIVE_MQTT_RETAIN, True))
         )
-        archive_topic = archive_config.get(CONF_ARCHIVE_MQTT_TOPIC)
-        self.archive_topic: ArchiveTopic | None = None
-        if archive_topic is not None and self.hass:
-            self.archive_topic = ArchiveTopic(
-                self.hass,
-                archive_topic,
-                int(archive_config.get(CONF_ARCHIVE_MQTT_QOS, 0)),
-                boolean(archive_config.get(CONF_ARCHIVE_MQTT_RETAIN, True)),
-            )
-        else:
-            self.archive_topic = None
+
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
         self.methods: dict[str, DeliveryMethod] = {}
         self._method_configs: dict[str, Any] = method_configs or {}

@@ -5,6 +5,8 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from homeassistant.components.mqtt.client import MQTT
+from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.components.notify.const import DOMAIN
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.config_entries import ConfigEntries
@@ -61,6 +63,9 @@ def mock_hass() -> HomeAssistant:
     hass.data["device_registry"] = Mock(spec=DeviceRegistry)
     hass.data["entity_registry"] = Mock(spec=EntityRegistry)
     hass.data["issue_registry"] = Mock(spec=IssueRegistry)
+    hass.data[DATA_MQTT] = Mock(spec=MqttData)
+    hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
+    hass.data[DATA_MQTT].client.connected = True
     hass.config_entries._entries = {}
     hass.config_entries._domain_index = {}
     return hass

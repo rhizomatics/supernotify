@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 
 import aiofiles
 import anyio
+from homeassistant.components.mqtt.models import DATA_MQTT
 from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant
 
@@ -47,10 +48,10 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
 
 async def test__archive() -> None:
     with tempfile.TemporaryDirectory() as archive:
-        uut = NotificationArchive(True, archive, "7")
+        uut = NotificationArchive(None, True, archive, "7")
         uut.initialize()
         msg = ArchiveCrashDummy()
-        assert uut.archive(msg)
+        assert await uut.archive(msg)
 
         obj_path: anyio.Path = anyio.Path(archive).joinpath(f"{msg.base_filename()}.json")
         assert await obj_path.exists()
@@ -62,7 +63,7 @@ async def test__archive() -> None:
 
 async def test_cleanup_archive() -> None:
     archive = "config/archive/test"
-    uut = NotificationArchive(True, archive, "7")
+    uut = NotificationArchive(None, True, archive, "7")
     uut.initialize()
     old_time = Mock(return_value=Mock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
     new_time = Mock(return_value=Mock(st_ctime=time.time() - (5 * 24 * 60 * 60)))
@@ -83,10 +84,20 @@ async def test_cleanup_archive() -> None:
 
 async def test_archive_size() -> None:
     with tempfile.TemporaryDirectory() as tmp_path:
-        uut = NotificationArchive(True, tmp_path, "7")
+        uut = NotificationArchive(None, True, tmp_path, "7")
         uut.initialize()
         assert uut.enabled
         assert await uut.size() == 0
         async with aiofiles.open(Path(tmp_path) / "test.foo", mode="w") as f:
             await f.write("{}")
         assert await uut.size() == 1
+
+
+async def test_archive_publish(mock_hass: HomeAssistant) -> None:
+    uut = NotificationArchive(hass=mock_hass, mqtt_topic="test.topic", mqtt_qos=3, mqtt_retain=True)
+    uut.initialize()
+    msg = ArchiveCrashDummy()
+    await uut.archive(msg)
+    mock_hass.data[DATA_MQTT].client.async_publish.assert_called_with(  # type: ignore
+        "test.topic/testing", '{"a_dict":{},"a_list":[],"a_str":"","a_int":984}', 3, True
+    )

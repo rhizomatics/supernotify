@@ -9,7 +9,7 @@ import anyio
 import homeassistant.util.dt as dt_util
 from homeassistant.components import mqtt
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.json import save_json
+from homeassistant.helpers.json import json_dumps, save_json
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,19 +37,38 @@ class ArchiveTopic:
     async def publish(self, archive_object: ArchivableObject) -> None:
         payload = archive_object.contents(minimal=True)
         _LOGGER.debug("SUPERNOTIFY Publishing notification to %s", self.topic)
-        await mqtt.async_publish(self._hass, self.topic, payload, qos=self.qos, retain=self.retain)
+        await mqtt.async_publish(
+            self._hass,
+            topic=f"{self.topic}/{archive_object.base_filename()}",
+            payload=json_dumps(payload),
+            qos=self.qos,
+            retain=self.retain,
+        )
 
 
 class NotificationArchive:
     def __init__(
-        self, enabled: bool, archive_path: str | None, archive_days: str | None, purge_minute_interval: str | None = None
+        self,
+        hass: HomeAssistant | None = None,
+        enabled: bool = True,
+        archive_path: str | None = None,
+        archive_days: str | None = None,
+        purge_minute_interval: str | None = None,
+        mqtt_topic: str | None = None,
+        mqtt_qos: int = 0,
+        mqtt_retain: bool = False,
     ) -> None:
+        self.hass = hass
         self.enabled = enabled
         self.last_purge: dt.datetime | None = None
         self.configured_archive_path: str | None = archive_path
         self.archive_path: Path | None = None
         self.archive_days: int = int(archive_days) if archive_days else ARCHIVE_DEFAULT_DAYS
         self.purge_minute_interval = int(purge_minute_interval) if purge_minute_interval else ARCHIVE_PURGE_MIN_INTERVAL
+        self.mqtt_topic = mqtt_topic
+        self.mqtt_qos = mqtt_qos
+        self.mqtt_retain = mqtt_retain
+        self.archive_topic: ArchiveTopic | None = None
 
     def initialize(self) -> None:
         if not self.enabled:
@@ -57,24 +76,27 @@ class NotificationArchive:
             return
         if not self.configured_archive_path:
             _LOGGER.warning("SUPERNOTIFY archive path not configured")
-            return
-        verify_archive_path: Path = Path(self.configured_archive_path)
-        if verify_archive_path and not verify_archive_path.exists():
-            _LOGGER.info("SUPERNOTIFY archive path not found at %s", verify_archive_path)
-            try:
-                verify_archive_path.mkdir(parents=True, exist_ok=True)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY archive path %s cannot be created: %s", verify_archive_path, e)
-        if verify_archive_path and verify_archive_path.exists() and verify_archive_path.is_dir():
-            try:
-                verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
-                self.archive_path = verify_archive_path
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY archive path %s cannot be written: %s", verify_archive_path, e)
-                self.enabled = False
         else:
-            _LOGGER.warning("SUPERNOTIFY archive path %s is not a directory or does not exist", verify_archive_path)
-            self.enabled = False
+            verify_archive_path: Path = Path(self.configured_archive_path)
+            if verify_archive_path and not verify_archive_path.exists():
+                _LOGGER.info("SUPERNOTIFY archive path not found at %s", verify_archive_path)
+                try:
+                    verify_archive_path.mkdir(parents=True, exist_ok=True)
+                except Exception as e:
+                    _LOGGER.warning("SUPERNOTIFY archive path %s cannot be created: %s", verify_archive_path, e)
+            if verify_archive_path and verify_archive_path.exists() and verify_archive_path.is_dir():
+                try:
+                    verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
+                    self.archive_path = verify_archive_path
+                except Exception as e:
+                    _LOGGER.warning("SUPERNOTIFY archive path %s cannot be written: %s", verify_archive_path, e)
+                    self.enabled = False
+            else:
+                _LOGGER.warning("SUPERNOTIFY archive path %s is not a directory or does not exist", verify_archive_path)
+                self.enabled = False
+
+        if self.mqtt_topic is not None and self.hass:
+            self.archive_topic = ArchiveTopic(self.hass, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
 
     async def size(self) -> int:
         path = self.archive_path
@@ -112,22 +134,27 @@ class NotificationArchive:
             _LOGGER.debug("SUPERNOTIFY Skipping archive purge for unknown path %s", self.archive_path)
         return purged
 
-    def archive(self, archive_object: ArchivableObject) -> bool:
-        if not self.enabled or not self.archive_path:
+    async def archive(self, archive_object: ArchivableObject) -> bool:
+        if not self.enabled:
             return False
-        archive_path: str = ""
-        try:
-            filename = f"{archive_object.base_filename()}.json"
-            archive_path = str(self.archive_path.joinpath(filename))
-            save_json(archive_path, archive_object.contents())
-            _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
-            return True
-        except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
+
+        if self.archive_path:
+            archive_path: str = ""
             try:
-                save_json(archive_path, archive_object.contents(minimal=True))
-                _LOGGER.debug("SUPERNOTIFY Archived minimal notification %s", archive_path)
+                filename = f"{archive_object.base_filename()}.json"
+                archive_path = str(self.archive_path.joinpath(filename))
+                save_json(archive_path, archive_object.contents())
+                _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
                 return True
-            except Exception as e2:
-                _LOGGER.warning("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
+            except Exception as e:
+                _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
+                try:
+                    save_json(archive_path, archive_object.contents(minimal=True))
+                    _LOGGER.debug("SUPERNOTIFY Archived minimal notification %s", archive_path)
+                    return True
+                except Exception as e2:
+                    _LOGGER.warning("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
+
+        if self.archive_topic:
+            await self.archive_topic.publish(archive_object)
         return False
