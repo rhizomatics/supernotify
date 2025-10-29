@@ -37,13 +37,16 @@ class ArchiveTopic:
     async def publish(self, archive_object: ArchivableObject) -> None:
         payload = archive_object.contents(minimal=True)
         _LOGGER.debug("SUPERNOTIFY Publishing notification to %s", self.topic)
-        await mqtt.async_publish(
-            self._hass,
-            topic=f"{self.topic}/{archive_object.base_filename()}",
-            payload=json_dumps(payload),
-            qos=self.qos,
-            retain=self.retain,
-        )
+        try:
+            await mqtt.async_publish(
+                self._hass,
+                topic=f"{self.topic}/{archive_object.base_filename()}",
+                payload=json_dumps(payload),
+                qos=self.qos,
+                retain=self.retain,
+            )
+        except Exception:
+            _LOGGER.exception(f"SUPERNOTIFY failed to archive to topic {self.topic}")
 
 
 class NotificationArchive:
@@ -88,6 +91,7 @@ class NotificationArchive:
                 try:
                     verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
                     self.archive_path = verify_archive_path
+                    _LOGGER.info("SUPERNOTIFY archiving notifications to file system at %s", verify_archive_path)
                 except Exception as e:
                     _LOGGER.warning("SUPERNOTIFY archive path %s cannot be written: %s", verify_archive_path, e)
                     self.enabled = False
@@ -97,6 +101,9 @@ class NotificationArchive:
 
         if self.mqtt_topic is not None and self.hass:
             self.archive_topic = ArchiveTopic(self.hass, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
+            _LOGGER.info(
+                f"SUPERNOTIFY Archiving to MQTT topic {self.mqtt_topic}, qos {self.mqtt_qos}, retain {self.mqtt_retain}"
+            )
 
     async def size(self) -> int:
         path = self.archive_path

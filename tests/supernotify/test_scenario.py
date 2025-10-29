@@ -363,12 +363,17 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
                 "condition": "or",
                 "alias": "test complicated logic",
                 "conditions": [
-                    {"condition": "sun", "after": "sunset", "before": "sunrise"},
+                    {
+                        "condition": "and",
+                        "conditions": [
+                            # impossible AND, for test stability
+                            {"condition": "sun", "after": "sunset", "before": "sunrise"},
+                            {"condition": "sun", "before": "sunset", "after": "sunrise"},
+                        ],
+                    },
                     {
                         "condition": "not",
-                        "conditions": [
-                            {"condition": "state", "entity_id": "sensor.issues", "state": "24"}
-                        ],
+                        "conditions": [{"condition": "state", "entity_id": "sensor.issues", "state": "24"}],
                     },
                 ],
             }
