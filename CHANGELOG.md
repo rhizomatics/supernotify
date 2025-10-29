@@ -1,5 +1,9 @@
 # Public releases
 
+## 1.0.4
+
+- Test fixes, archive logging, and archive publish error handling
+
 ## 1.0.3
 
 - Improve mqtt notification archiving by generating unique qualified topic per item
