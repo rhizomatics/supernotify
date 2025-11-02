@@ -8,10 +8,12 @@ from custom_components.supernotify import (
     CONF_DELIVERY_DEFAULTS,
     CONF_PHONE_NUMBER,
     METHOD_SMS,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
     DeliveryConfig,
     MessageOnlyPolicy,
 )
-from custom_components.supernotify.delivery import OPTION_MESSAGE_USAGE, OPTION_SIMPLIFY_TEXT, OPTION_STRIP_URLS
 from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )

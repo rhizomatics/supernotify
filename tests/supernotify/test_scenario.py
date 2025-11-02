@@ -242,11 +242,11 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
         "DevNull": [],
     }
     mock_context.deliveries["siren"] = Delivery(
-        "siren", {CONF_SELECTION: SELECTION_BY_SCENARIO}, GenericDeliveryMethod(mock_hass, mock_context)
+        "siren", {CONF_SELECTION: [SELECTION_BY_SCENARIO]}, GenericDeliveryMethod(mock_hass, mock_context)
     )
-    mock_context.deliveries["plain_email"].selection = SELECTION_BY_SCENARIO
-    mock_context.deliveries["chime"].selection = SELECTION_BY_SCENARIO
-    mock_context.deliveries["mobile"].selection = SELECTION_BY_SCENARIO
+    mock_context.deliveries["plain_email"].selection = [SELECTION_BY_SCENARIO]
+    mock_context.deliveries["chime"].selection = [SELECTION_BY_SCENARIO]
+    mock_context.deliveries["mobile"].selection = [SELECTION_BY_SCENARIO]
 
     mock_context.scenarios = {
         "Alarm": Scenario("Alarm", {}, mock_context.hass),  # type: ignore

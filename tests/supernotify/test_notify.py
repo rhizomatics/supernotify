@@ -43,7 +43,7 @@ DELIVERY: dict[str, dict] = {
     "chime": {CONF_METHOD: METHOD_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
     "alexa_media_player": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
     "chat": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_METHOD: METHOD_PERSISTENT, CONF_SELECTION: SELECTION_BY_SCENARIO},
+    "persistent": {CONF_METHOD: METHOD_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
     "dummy": {CONF_METHOD: "dummy"},
 }
 SCENARIOS: dict[str, dict] = {
@@ -155,7 +155,11 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
     uut = SuperNotificationAction(
         mock_hass,
         deliveries={
-            "generic": {CONF_METHOD: METHOD_GENERIC, CONF_SELECTION: SELECTION_FALLBACK_ON_ERROR, CONF_ACTION: "notify.dummy"},
+            "generic": {
+                CONF_METHOD: METHOD_GENERIC,
+                CONF_SELECTION: [SELECTION_FALLBACK_ON_ERROR],
+                CONF_ACTION: "notify.dummy",
+            },
             "failing": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.make_fail"},
         },
         method_configs=METHOD_DEFAULTS,
@@ -177,7 +181,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
     uut = SuperNotificationAction(
         mock_hass,
         deliveries={
-            "generic": {CONF_METHOD: METHOD_GENERIC, CONF_SELECTION: SELECTION_FALLBACK, CONF_ACTION: "notify.dummy"},
+            "generic": {CONF_METHOD: METHOD_GENERIC, CONF_SELECTION: [SELECTION_FALLBACK], CONF_ACTION: "notify.dummy"},
             "failing": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.make_fail", CONF_PRIORITY: PRIORITY_CRITICAL},
         },
         method_configs=METHOD_DEFAULTS,

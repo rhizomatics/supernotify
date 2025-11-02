@@ -14,7 +14,6 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
-    CONF_CONDITION,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
@@ -30,7 +29,6 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers.condition import async_validate_condition_config
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -112,13 +110,13 @@ async def async_get_service(
     """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
     _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
     _ = discovery_info
-    for delivery in config.get(CONF_DELIVERY, {}).values():
-        if delivery and CONF_CONDITION in delivery:
-            try:
-                await async_validate_condition_config(hass, delivery[CONF_CONDITION])
-            except Exception as e:
-                _LOGGER.error("SUPERNOTIFY delivery %s fails condition: %s", delivery[CONF_CONDITION], e)
-                raise
+    # for delivery in config.get(CONF_DELIVERY, {}).values():
+    #    if delivery and CONF_CONDITION in delivery:
+    #        try:
+    #            await async_validate_condition_config(hass, delivery[CONF_CONDITION])
+    #        except Exception as e:
+    #            _LOGGER.error("SUPERNOTIFY delivery %s fails condition: %s", delivery[CONF_CONDITION], e)
+    #            raise
 
     hass.states.async_set(
         f"{DOMAIN}.configured",

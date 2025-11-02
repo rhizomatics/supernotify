@@ -30,7 +30,7 @@ DELIVERY: dict[str, Any] = {
     "alexa_devices": {CONF_METHOD: METHOD_ALEXA, CONF_ACTION: "notify.send_message"},
     "alexa_media_player": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
     "chat": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_METHOD: METHOD_PERSISTENT, CONF_SELECTION: SELECTION_BY_SCENARIO},
+    "persistent": {CONF_METHOD: METHOD_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
 }
 
 

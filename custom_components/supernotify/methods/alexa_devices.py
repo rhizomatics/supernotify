@@ -5,11 +5,14 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, METHOD_ALEXA, DeliveryConfig, MessageOnlyPolicy
-from custom_components.supernotify.delivery import (
+from custom_components.supernotify import (
+    CONF_DELIVERY_DEFAULTS,
+    METHOD_ALEXA,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    DeliveryConfig,
+    MessageOnlyPolicy,
 )
 from custom_components.supernotify.delivery_method import (
     DeliveryMethod,

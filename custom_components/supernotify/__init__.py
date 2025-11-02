@@ -206,6 +206,7 @@ RESERVED_DELIVERY_NAMES = ["ALL"]
 RESERVED_SCENARIO_NAMES = [SCENARIO_DEFAULT, SCENARIO_NULL]
 RESERVED_DATA_KEYS = [ATTR_DOMAIN, ATTR_SERVICE, "action"]
 
+
 CONF_DUPE_CHECK = "dupe_check"
 CONF_DUPE_POLICY = "dupe_policy"
 CONF_TTL = "ttl"
@@ -413,6 +414,16 @@ class MessageOnlyPolicy(StrEnum):
     COMBINE_TITLE = "COMBINE_TITLE"  # use combined title and message as message, no title
 
 
+OPTION_SIMPLIFY_TEXT = "simplify_text"
+OPTION_STRIP_URLS = "strip_urls"
+OPTION_MESSAGE_USAGE = "message_usage"
+OPTIONS_WITH_DEFAULTS: dict[str, str | bool] = {
+    OPTION_SIMPLIFY_TEXT: False,
+    OPTION_STRIP_URLS: False,
+    OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+}
+
+
 @dataclass
 class ConditionVariables:
     """Variables presented to all condition evaluations
@@ -526,12 +537,13 @@ class DeliveryConfig:
             # use method defaults where no delivery level override
             self.target: Target = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else defaults.target
             self.action: str | None = conf.get(CONF_ACTION) or defaults.action
-            self.options: ConfigType = defaults.options or {}
+            self.options: ConfigType = dict(OPTIONS_WITH_DEFAULTS) or {}
+            self.options.update(defaults.options)
             self.options.update(conf.get(CONF_OPTIONS, {}))
-            self.data: ConfigType = defaults.data or {}
+            self.data: ConfigType = dict(defaults.data) or {}
             self.data.update(conf.get(CONF_DATA, {}))
-            self.selection: str = conf.get(CONF_SELECTION, defaults.selection)
-            self.priority: str = conf.get(CONF_PRIORITY, defaults.priority)
+            self.selection: list[str] = conf.get(CONF_SELECTION, defaults.selection)
+            self.priority: list[str] = conf.get(CONF_PRIORITY, defaults.priority)
         else:
             # construct the method defaults
             self.target = Target(conf.get(CONF_TARGET, {}))

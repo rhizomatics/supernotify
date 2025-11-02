@@ -41,8 +41,8 @@ async def test_delivery_override_method(mock_hass) -> None:  # type: ignore
             "target": ["switch.pillow_vibrate"],
             "selection": "explicit",
         },
-        "regular_alert": {"method": "dummy", "target": ["switch.pillow_vibrate"], "selection": "explicit"},
-        "day_alert": {"method": "dummy", "selection": "explicit"},
+        "regular_alert": {"method": "dummy", "target": ["switch.pillow_vibrate"], "selection": ["explicit"]},
+        "day_alert": {"method": "dummy", "selection": ["explicit"]},
     }
     context = Context(mock_hass, deliveries=delivery_config)
     dummy = DummyDeliveryMethod(mock_hass, context, delivery_config, delivery_defaults={"target": ["media_player.hall"]})

@@ -26,7 +26,7 @@ SIMPLE_CONFIG = {
     "platform": DOMAIN,
     "delivery": {
         "testing": {"method": "notify_entity", "target": ["testy.testy"]},
-        "chime_person": {"method": "chime", "selection": "scenario", "data": {"chime_tune": "person"}},
+        "chime_person": {"method": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
     },
     "archive": {"enabled": True},
     "scenarios": {

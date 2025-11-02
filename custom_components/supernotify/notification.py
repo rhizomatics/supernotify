@@ -52,6 +52,9 @@ from custom_components.supernotify import (
     OCCUPANCY_NONE,
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     SCENARIO_DEFAULT,
@@ -64,9 +67,6 @@ from custom_components.supernotify import (
 from custom_components.supernotify.archive import ArchivableObject
 from custom_components.supernotify.common import DebugTrace, safe_extend
 from custom_components.supernotify.delivery import (
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
     Delivery,
 )
 from custom_components.supernotify.delivery_method import DeliveryMethod
@@ -230,7 +230,7 @@ class Notification(ArchivableObject):
             scenario_disable_deliveries = [
                 d.name
                 for d in self.context.deliveries.values()
-                if d.selection == SELECTION_BY_SCENARIO and d.name not in scenario_enable_deliveries
+                if d.selection == [SELECTION_BY_SCENARIO] and d.name not in scenario_enable_deliveries
             ]
         all_enabled = list(set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries))
         all_disabled = scenario_disable_deliveries + override_disable_deliveries

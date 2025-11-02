@@ -27,21 +27,11 @@ from . import (
     OCCUPANCY_ALL,
     RESERVED_DELIVERY_NAMES,
     DeliveryConfig,
-    MessageOnlyPolicy,
 )
 
 if typing.TYPE_CHECKING:
     from .configuration import Context
     from .delivery_method import DeliveryMethod
-
-OPTION_SIMPLIFY_TEXT = "simplify_text"
-OPTION_STRIP_URLS = "strip_urls"
-OPTION_MESSAGE_USAGE = "message_usage"
-OPTIONS_WITH_DEFAULTS: dict[str, str | bool] = {
-    OPTION_SIMPLIFY_TEXT: False,
-    OPTION_STRIP_URLS: False,
-    OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,8 +56,8 @@ class Delivery(DeliveryConfig):
         if self.name in RESERVED_DELIVERY_NAMES:
             _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", self.name)
             await context.raise_issue(
-                f"method_{self.method}_reserved_delivery_name",
-                issue_key="method_reserved_delivery_name",
+                f"delivery_{self.name}_reserved_name",
+                issue_key="delivery_reserved_name",
                 issue_map={"delivery": self.name},
             )
             errors += 1
@@ -75,18 +65,25 @@ class Delivery(DeliveryConfig):
             _LOGGER.warning("SUPERNOTIFY Invalid action definition for delivery %s (%s)", self.name, self.action)
             await context.raise_issue(
                 f"delivery_{self.name}_invalid_action",
-                issue_key="method_invalid_action",
+                issue_key="delivery_invalid_action",
                 issue_map={"delivery": self.name, "action": self.action or ""},
             )
             errors += 1
 
         if self.condition and context.hass:
-            if not await condition.async_validate_condition_config(context.hass, self.condition):
+            try:
+                await condition.async_validate_condition_config(context.hass, self.condition)
+                passed = True
+                exception = ""
+            except Exception as e:
+                passed = False
+                exception = str(e)
+            if not passed:
                 _LOGGER.warning("SUPERNOTIFY Invalid delivery condition for %s: %s", self.name, self.condition)
                 await context.raise_issue(
                     f"delivery_{self.name}_invalid_condition",
                     issue_key="delivery_invalid_condition",
-                    issue_map={"delivery": self.name, "condition": str(self.condition)},
+                    issue_map={"delivery": self.name, "condition": str(self.condition), "exception": exception},
                 )
                 errors += 1
         return errors == 0
@@ -96,10 +93,6 @@ class Delivery(DeliveryConfig):
         opt: str | bool | None = None
         if option_name in self.options:
             opt = self.options[option_name]
-        if opt is None:
-            opt = self.method.delivery_defaults.options.get(option_name)
-        if opt is None:
-            opt = OPTIONS_WITH_DEFAULTS.get(option_name)
         if opt is None:
             _LOGGER.warning("SUPERNOTIFY No default in %sfor option %s, setting to empty string", self.name, option_name)
             opt = ""

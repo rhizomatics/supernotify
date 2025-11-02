@@ -4,11 +4,14 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, METHOD_ALEXA_MEDIA_PLAYER, DeliveryConfig, MessageOnlyPolicy
-from custom_components.supernotify.delivery import (
+from custom_components.supernotify import (
+    CONF_DELIVERY_DEFAULTS,
+    METHOD_ALEXA_MEDIA_PLAYER,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    DeliveryConfig,
+    MessageOnlyPolicy,
 )
 from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
