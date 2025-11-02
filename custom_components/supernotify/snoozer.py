@@ -5,11 +5,11 @@ from typing import Any
 from homeassistant.core import Event
 
 from custom_components.supernotify.common import format_timestamp, update_dict_list
+from custom_components.supernotify.delivery import Delivery
 
 from . import (
     ATTR_ACTION,
     ATTR_USER_ID,
-    CONF_METHOD,
     CONF_MOBILE_DEVICES,
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Snooze:
-    target: str | None
+    target: str | list[str] | None
     target_type: TargetType
     snoozed_at: float
     snooze_until: float | None = None
@@ -39,7 +39,7 @@ class Snooze:
         self,
         target_type: TargetType,
         recipient_type: RecipientType,
-        target: str | None = None,
+        target: str | list[str] | None = None,
         recipient: str | None = None,
         snooze_for: int | None = None,
         reason: str | None = None,
@@ -74,7 +74,7 @@ class Snooze:
     def active(self) -> bool:
         return self.snooze_until is None or self.snooze_until > time.time()
 
-    def export(self) -> dict:
+    def export(self) -> dict[str, Any]:
         return {
             "target_type": self.target_type,
             "target": self.target,
@@ -188,7 +188,7 @@ class Snoozer:
                 target_type,
                 target,
                 recipient_type,
-            )
+            )  # type: ignore
 
     def purge_snoozes(self) -> None:
         to_del = [k for k, v in self.snoozes.items() if not v.active()]
@@ -200,14 +200,14 @@ class Snoozer:
         self.snoozes.clear()
         return cleared
 
-    def export(self) -> list[dict]:
+    def export(self) -> list[dict[str, Any]]:
         return [s.export() for s in self.snoozes.values()]
 
     def current_snoozes(
         self,
         priority: str = PRIORITY_MEDIUM,
-        delivery_names: list | None = None,
-        delivery_definitions: dict[str, dict] | None = None,
+        delivery_names: list[str] | None = None,
+        delivery_definitions: dict[str, Delivery] | None = None,
     ) -> list[Snooze]:
         delivery_names = delivery_names or []
         delivery_definitions = delivery_definitions or {}
@@ -230,7 +230,7 @@ class Snoozer:
                     case QualifiedTargetType.ACTION:
                         inscope_snoozes.append(snooze)
                     case QualifiedTargetType.METHOD:
-                        if snooze.target in [delivery_definitions.get(d, {}).get(CONF_METHOD) for d in delivery_names]:
+                        if snooze.target in [delivery_definitions[d].method.method for d in delivery_names]:
                             inscope_snoozes.append(snooze)
                     case QualifiedTargetType.CAMERA:
                         inscope_snoozes.append(snooze)
@@ -258,7 +258,7 @@ class Snoozer:
         delivery_name: str,
         delivery_method: "DeliveryMethod",  # type: ignore  # noqa: F821
         all_delivery_names: list[str],
-        delivery_definitions: dict[str, Any],
+        delivery_definitions: dict[str, Delivery],
     ) -> list[dict[str, Any]]:
         inscope_snoozes = self.current_snoozes(priority, all_delivery_names, delivery_definitions)
         for snooze in inscope_snoozes:

@@ -14,12 +14,15 @@ from custom_components.supernotify import (
     DOMAIN,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
+    SCENARIO_DEFAULT,
     SCENARIO_SCHEMA,
     SELECTION_BY_SCENARIO,
     ConditionVariables,
 )
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.methods.generic import GenericDeliveryMethod
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import METHODS
 from custom_components.supernotify.scenario import Scenario
@@ -199,11 +202,11 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     )
 
 
-async def test_scenario_constraint(mock_context: Context) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Mostly": ["siren"], "Alarm": ["chime"]}
-    mock_context.deliveries = {"plain_email": {}, "mobile": {}, "chime": {}, "siren": {}}
+async def test_scenario_constraint(mock_hass: HomeAssistant, mock_context: Context) -> None:
+    mock_context.delivery_by_scenario = {SCENARIO_DEFAULT: ["plain_email", "mobile"], "Mostly": ["siren"], "Alarm": ["chime"]}
+    mock_context.deliveries["siren"] = Delivery("siren", {}, GenericDeliveryMethod(mock_hass, mock_context))
     mock_context.scenarios = {
-        "Alarm": Scenario("Alarm", {}, mock_context.hass),  # type: ignore
+        "Alarm": Scenario("Alarm", {}, mock_hass),
         "Mostly": Scenario(
             "Mostly",
             SCENARIO_SCHEMA({
@@ -218,7 +221,7 @@ async def test_scenario_constraint(mock_context: Context) -> None:
                     ],
                 },
             }),
-            mock_context.hass,  # type: ignore
+            mock_hass,
         ),
     }
     uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
@@ -231,19 +234,20 @@ async def test_scenario_constraint(mock_context: Context) -> None:
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
-async def test_scenario_suppress(mock_context: Context) -> None:
+async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context) -> None:
     mock_context.delivery_by_scenario = {
-        "DEFAULT": ["plain_email", "mobile"],
+        SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
         "Alarm": ["chime"],
         "DevNull": [],
     }
-    mock_context.deliveries = {
-        "plain_email": {CONF_SELECTION: SELECTION_BY_SCENARIO},
-        "mobile": {CONF_SELECTION: SELECTION_BY_SCENARIO},
-        "chime": {CONF_SELECTION: SELECTION_BY_SCENARIO},
-        "siren": {CONF_SELECTION: SELECTION_BY_SCENARIO},
-    }
+    mock_context.deliveries["siren"] = Delivery(
+        "siren", {CONF_SELECTION: SELECTION_BY_SCENARIO}, GenericDeliveryMethod(mock_hass, mock_context)
+    )
+    mock_context.deliveries["plain_email"].selection = SELECTION_BY_SCENARIO
+    mock_context.deliveries["chime"].selection = SELECTION_BY_SCENARIO
+    mock_context.deliveries["mobile"].selection = SELECTION_BY_SCENARIO
+
     mock_context.scenarios = {
         "Alarm": Scenario("Alarm", {}, mock_context.hass),  # type: ignore
         "DevNull": Scenario("DevNull", {}, mock_context.hass),  # type: ignore

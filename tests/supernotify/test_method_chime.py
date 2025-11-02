@@ -4,33 +4,33 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT, CONF_METHOD
 
 from custom_components.supernotify import CONF_DATA, METHOD_CHIME
 from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
 from custom_components.supernotify.notification import Notification
 
 
-async def test_deliver(mock_hass) -> None:  # type: ignore
+async def test_deliver(mock_hass, mock_context) -> None:  # type: ignore
     """Test on_notify_chime"""
-    # context = Context()
-    context = Mock()
-    context.deliveries = {METHOD_CHIME: {}}
+    uut = ChimeDeliveryMethod(
+        mock_hass,
+        mock_context,
+        {"chimes": {CONF_METHOD: METHOD_CHIME, CONF_DEFAULT: True}},
+    )
+    mock_context.deliveries = {"chimes": Delivery("chime", {}, uut)}
 
     device = Mock(identifiers={("alexa_devices", "ffffee8484848484")})
     device_registry = Mock()
     device_registry.async_get.return_value = device
-    context.device_registry = Mock(return_value=device_registry)
+    mock_context.device_registry = Mock(return_value=device_registry)
 
     # await context.initialize()
-    uut = ChimeDeliveryMethod(
-        mock_hass,
-        context,
-        {"chimes": {CONF_METHOD: METHOD_CHIME, CONF_DEFAULT: True}},
-    )
+
     await uut.initialize()
 
     envelope = Envelope(
         "chimes",
-        Notification(context, message="for script only"),
+        Notification(mock_context, message="for script only"),
         targets=[
             "switch.bell_1",
             "script.alarm_2",
@@ -46,7 +46,7 @@ async def test_deliver(mock_hass) -> None:  # type: ignore
 
     mock_hass.services.async_call.assert_has_calls(
         [
-            call("switch", "turn_on", service_data={"entity_id": "switch.bell_1"}),
+            call("switch", "turn_on", service_data={}, target={"entity_id": "switch.bell_1"}),
             call(
                 "alexa_devices",
                 "send_sound",
@@ -55,7 +55,8 @@ async def test_deliver(mock_hass) -> None:  # type: ignore
             call(
                 "siren",
                 "turn_on",
-                service_data={"entity_id": "siren.lobby", "data": {"duration": 10, "volume_level": 1, "tone": "boing_01"}},
+                target={"entity_id": "siren.lobby"},
+                service_data={"data": {"duration": 10, "volume_level": 1, "tone": "boing_01"}},
             ),
             call(
                 "script",
@@ -63,7 +64,7 @@ async def test_deliver(mock_hass) -> None:  # type: ignore
                 service_data={
                     "variables": {
                         "message": "for script only",
-                        "title": "",
+                        "title": None,
                         "priority": "medium",
                         "chime_tune": "boing_01",
                         "chime_volume": 1,
@@ -74,8 +75,8 @@ async def test_deliver(mock_hass) -> None:  # type: ignore
             call(
                 "media_player",
                 "play_media",
+                target={"entity_id": "media_player.living_room"},
                 service_data={
-                    "entity_id": "media_player.living_room",
                     "media_content_id": "boing_01",
                     "media_content_type": "sound",
                 },
@@ -94,7 +95,7 @@ async def test_deliver_alias(mock_hass) -> None:  # type: ignore
         mock_hass,
         context,
         delivery_config,
-        default={
+        delivery_defaults={
             "target": ["media_player.kitchen_alexa", "media_player.hall_echo", "ffff0000eeee1111dddd2222cccc3333"],
             "options": {
                 "chime_aliases": {
@@ -127,15 +128,15 @@ async def test_deliver_alias(mock_hass) -> None:  # type: ignore
 
     mock_hass.services.async_call.assert_has_calls(
         [
-            call("switch", "turn_on", service_data={"entity_id": "switch.chime_ding_dong"}),
+            call("switch", "turn_on", service_data={}, target={"entity_id": "switch.chime_ding_dong"}),
             call(
                 "alexa_devices", "send_sound", service_data={"device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "bell01"}
             ),
             call(
                 "media_player",
                 "play_media",
+                target={"entity_id": "media_player.kitchen_alexa"},
                 service_data={
-                    "entity_id": "media_player.kitchen_alexa",
                     "media_content_type": "sound",
                     "media_content_id": "home/amzn_sfx_doorbell_chime_02",
                 },
@@ -143,8 +144,8 @@ async def test_deliver_alias(mock_hass) -> None:  # type: ignore
             call(
                 "media_player",
                 "play_media",
+                target={"entity_id": "media_player.hall_echo"},
                 service_data={
-                    "entity_id": "media_player.hall_echo",
                     "media_content_type": "sound",
                     "media_content_id": "home/amzn_sfx_doorbell_chime_01",
                 },
@@ -213,12 +214,12 @@ async def test_deliver_to_group(mock_hass) -> None:  # type: ignore
                     }
                 },
             ),
-            call("switch", "turn_on", service_data={"entity_id": "switch.bell_1"}),
+            call("switch", "turn_on", service_data={}, target={"entity_id": "switch.bell_1"}),
             call(
                 "media_player",
                 "play_media",
+                target={"entity_id": "media_player.alexa_1"},
                 service_data={
-                    "entity_id": "media_player.alexa_1",
                     "media_content_type": "sound",
                     "media_content_id": "dive_dive_dive",
                 },

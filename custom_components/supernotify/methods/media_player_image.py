@@ -3,9 +3,7 @@ import re
 import urllib.parse
 from typing import Any
 
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT
-
-from custom_components.supernotify import CONF_TARGETS_REQUIRED, METHOD_MEDIA
+from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, CONF_TARGETS_REQUIRED, METHOD_MEDIA, DeliveryConfig
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 
@@ -21,8 +19,9 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
     method = METHOD_MEDIA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DEFAULT, {})
-        kwargs[CONF_DEFAULT].setdefault(CONF_ACTION, ACTION)
+        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
+        if not kwargs[CONF_DELIVERY_DEFAULTS].action:
+            kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
         kwargs[CONF_TARGETS_REQUIRED] = False
         super().__init__(*args, **kwargs)
 

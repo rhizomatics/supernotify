@@ -5,13 +5,10 @@ from dataclasses import asdict
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.components.trace import async_setup, async_store_trace  # type: ignore[attr-defined]
+from homeassistant.components.trace import async_setup, async_store_trace  # type: ignore[attr-defined,unused-ignore]
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
-from homeassistant.const import (
-    CONF_ALIAS,
-    CONF_CONDITION,
-)
+from homeassistant.const import CONF_ALIAS, CONF_CONDITION, CONF_ENABLED
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import condition
 from homeassistant.helpers import issue_registry as ir
@@ -35,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 class Scenario:
     def __init__(self, name: str, scenario_definition: dict[str, Any], hass: HomeAssistant) -> None:
         self.hass: HomeAssistant = hass
+        self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.condition: ConfigType | None = scenario_definition.get(CONF_CONDITION)
@@ -150,6 +148,7 @@ class Scenario:
         """Return scenario attributes"""
         attrs = {
             "name": self.name,
+            "enabled": self.enabled,
             "alias": self.alias,
             "media": self.media,
             "delivery_selection": self.delivery_selection,
@@ -169,6 +168,8 @@ class Scenario:
 
     async def evaluate(self, condition_variables: ConditionVariables | None = None) -> bool:
         """Evaluate scenario conditions"""
+        if not self.enabled:
+            return False
         if self.condition:
             try:
                 test = await condition.async_from_config(self.hass, self.condition)

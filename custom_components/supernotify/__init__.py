@@ -1,5 +1,7 @@
 """The SuperNotification integration"""
 
+import logging
+import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -7,7 +9,12 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     ATTR_SERVICE,
     CONF_ACTION,
     CONF_ALIAS,
@@ -26,14 +33,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.common import format_timestamp as format_timestamp
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "supernotify"
 
 PLATFORMS = [Platform.NOTIFY]
 TEMPLATE_DIR = "/config/templates/supernotify"
 MEDIA_DIR = "supernotify/media"
+
 
 CONF_ACTIONS = "actions"
 CONF_TITLE = "title"
@@ -50,6 +62,7 @@ CONF_ARCHIVE_MQTT_TOPIC = "mqtt_topic"
 CONF_ARCHIVE_MQTT_QOS = "mqtt_qos"
 CONF_ARCHIVE_MQTT_RETAIN = "mqtt_retain"
 CONF_TEMPLATE = "template"
+CONF_DELIVERY_DEFAULTS = "delivery_defaults"
 CONF_LINKS = "links"
 CONF_PERSON = "person"
 CONF_METHOD = "method"
@@ -90,7 +103,6 @@ CONF_PTZ_METHOD: str = "ptz_method"
 CONF_PTZ_PRESET_DEFAULT: str = "ptz_default_preset"
 CONF_ALT_CAMERA: str = "alt_camera"
 CONF_CAMERAS: str = "cameras"
-CONF_DEFAULT_ACTION: str = "default_action"
 
 OCCUPANCY_ANY_IN = "any_in"
 OCCUPANCY_ANY_OUT = "any_out"
@@ -171,6 +183,7 @@ METHOD_MOBILE_PUSH = "mobile_push"
 METHOD_MEDIA = "media"
 METHOD_CHIME = "chime"
 METHOD_GENERIC = "generic"
+METHOD_NOTIFY_ENTITY = "notify_entity"
 METHOD_PERSISTENT = "persistent"
 METHOD_VALUES = [
     METHOD_SMS,
@@ -182,6 +195,7 @@ METHOD_VALUES = [
     METHOD_MEDIA,
     METHOD_PERSISTENT,
     METHOD_GENERIC,
+    METHOD_NOTIFY_ENTITY,
 ]
 
 SCENARIO_DEFAULT = "DEFAULT"
@@ -198,6 +212,7 @@ CONF_TTL = "ttl"
 CONF_SIZE = "size"
 ATTR_DUPE_POLICY_MTSLP = "dupe_policy_message_title_same_or_lower_priority"
 ATTR_DUPE_POLICY_NONE = "dupe_policy_none"
+TARGET_SCHEMA = vol.Any([cv.entity_id], cv.entity_id, cv.TARGET_FIELDS)
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
 MOBILE_DEVICE_SCHEMA = vol.Schema({
@@ -212,7 +227,7 @@ NOTIFICATION_DUPE_SCHEMA = vol.Schema({
     vol.Optional(CONF_DUPE_POLICY, default=ATTR_DUPE_POLICY_MTSLP): vol.In([ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_NONE]),
 })
 DELIVERY_CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
 })
@@ -223,25 +238,37 @@ LINK_SCHEMA = vol.Schema({
     vol.Required(CONF_DESCRIPTION): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 })
-DELIVERY_CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TARGET): vol.All(cv.ensure_list, [cv.string]),
+DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Method Defaults and Delivery definitions
+    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
-    vol.Optional(CONF_OPTIONS, default=dict): dict,
+    vol.Optional(CONF_OPTIONS): dict,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
-    vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
-    vol.Optional(CONF_PRIORITY, default=PRIORITY_VALUES): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
+    vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
+    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
+})
+DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
+    vol.Optional(CONF_ALIAS): cv.string,
+    vol.Required(CONF_METHOD): vol.In(METHOD_VALUES),
+    vol.Optional(CONF_TEMPLATE): cv.string,
+    vol.Optional(CONF_DEFAULT, default=False): cv.boolean,
+    vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
+    vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
+    vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
 })
 METHOD_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TARGETS_REQUIRED): cv.boolean,
+    vol.Optional(CONF_TARGETS_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
-    vol.Optional(CONF_DEFAULT): DELIVERY_CONFIG_SCHEMA,
+    vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
 })
 RECIPIENT_SCHEMA = vol.Schema({
     vol.Required(CONF_PERSON): cv.entity_id,
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_EMAIL): cv.string,
-    vol.Optional(CONF_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_PHONE_NUMBER): cv.string,
     vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_MOBILE_DEVICES, default=list): vol.All(cv.ensure_list, [MOBILE_DEVICE_SCHEMA]),
@@ -267,20 +294,10 @@ MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_JPEG_OPTS): dict,
 })
 
-DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
-    vol.Optional(CONF_ALIAS): cv.string,
-    vol.Required(CONF_METHOD): vol.In(METHOD_VALUES),
-    vol.Optional(CONF_TEMPLATE): cv.string,
-    vol.Optional(CONF_DEFAULT, default=False): cv.boolean,
-    vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
-    vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-    vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
-    vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
-})
 
 SCENARIO_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): cv.string,
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
     vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
     vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
@@ -447,7 +464,7 @@ class ConditionVariables:
         self.notification_message = message or ""
         self.notification_title = title or ""
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self) -> ConfigType:
         return {
             "applied_scenarios": self.applied_scenarios,
             "required_scenarios": self.required_scenarios,
@@ -456,3 +473,80 @@ class ConditionVariables:
             "notification_title": self.notification_title,
             "occupancy": self.occupancy,
         }
+
+
+class Target:
+    def __init__(self, target: str | list[str] | dict[str, str | list[str]] | None = None) -> None:
+        self.device_id: list[str] = []
+        self.entity_id: list[str] = []
+        self.area_id: list[str] = []
+        self.floor_id: list[str] = []
+        self.label_id: list[str] = []
+        if isinstance(target, list):
+            # simplified and legacy way of assuming list of entities
+            self.entity_id = [t for t in target if not self.is_device(t)]
+            self.device_id = [t for t in target if self.is_device(t)]
+        elif isinstance(target, str):
+            self.entity_id = [target] if not self.is_device(target) else []
+            self.device_id = [target] if self.is_device(target) else []
+        elif target is None:
+            self.entity_id = []
+        elif isinstance(target, dict):
+            self.device_id = ensure_list(target.get(ATTR_DEVICE_ID))
+            self.entity_id = ensure_list(target.get(ATTR_ENTITY_ID))
+            self.area_id = ensure_list(target.get(ATTR_AREA_ID))
+            self.floor_id = ensure_list(target.get(ATTR_FLOOR_ID))
+            self.label_id = ensure_list(target.get(ATTR_LABEL_ID))
+
+    @classmethod
+    def is_device(cls, target: str) -> bool:
+        return re.match(r"^[0-9a-f]{32}$", target) is not None
+
+    def as_dict(self) -> dict[str, list[str]]:
+        d = {}
+        if self.device_id:
+            d["device_id"] = self.device_id
+        if self.entity_id:
+            d["entity_id"] = self.entity_id
+        if self.area_id:
+            d["area_id"] = self.area_id
+        if self.floor_id:
+            d["floor_id"] = self.floor_id
+        if self.label_id:
+            d["label_id"] = self.label_id
+
+        return d
+
+
+class DeliveryConfig:
+    """Shared config for method defaults and Delivery definitions"""
+
+    def __init__(self, conf: ConfigType, defaults: "DeliveryConfig|None" = None) -> None:
+        if defaults is not None:
+            # use method defaults where no delivery level override
+            self.target: Target = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else defaults.target
+            self.action: str | None = conf.get(CONF_ACTION) or defaults.action
+            self.options: ConfigType = defaults.options or {}
+            self.options.update(conf.get(CONF_OPTIONS, {}))
+            self.data: ConfigType = defaults.data or {}
+            self.data.update(conf.get(CONF_DATA, {}))
+            self.selection: str = conf.get(CONF_SELECTION, defaults.selection)
+            self.priority: str = conf.get(CONF_PRIORITY, defaults.priority)
+        else:
+            # construct the method defaults
+            self.target = Target(conf.get(CONF_TARGET, {}))
+            self.action = conf.get(CONF_ACTION)
+            self.options = conf.get(CONF_OPTIONS, {})
+            self.data = conf.get(CONF_DATA, {})
+            self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
+            self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
+
+
+class MethodConfig:
+    def __init__(self, name: str, conf: ConfigType) -> None:
+        self.name = name
+        self.targets_required: bool | None = conf.get(CONF_TARGETS_REQUIRED)
+        self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
+        self.device_discovery: bool | None = conf.get(CONF_DEVICE_DISCOVERY)
+        self.enabled = conf.get(CONF_ENABLED, True)
+        self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})

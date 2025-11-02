@@ -15,6 +15,8 @@ from custom_components.supernotify.envelope import Envelope
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from custom_components.supernotify.delivery import Delivery
+
 RE_VALID_EMAIL = (
     r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
 )
@@ -49,9 +51,9 @@ class EmailDeliveryMethod(DeliveryMethod):
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.targets)
 
         data: dict[str, Any] = envelope.data or {}
-        config = self.delivery_config(envelope.delivery_name)
+        config: Delivery = self.delivery_config(envelope.delivery_name)
         html: str | None = data.get("html")
-        template: str | None = data.get(CONF_TEMPLATE, config.get(CONF_TEMPLATE))
+        template: str | None = data.get(CONF_TEMPLATE, config.template)
         addresses: list[str] = envelope.targets or []
         snapshot_url: str | None = data.get("snapshot_url")
         # TODO: centralize in config

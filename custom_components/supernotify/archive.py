@@ -34,7 +34,7 @@ class ArchiveTopic:
         self.qos = qos
         self.retain = retain
 
-    async def publish(self, archive_object: ArchivableObject) -> None:
+    async def publish(self, archive_object: ArchivableObject) -> bool:
         payload = archive_object.contents(minimal=True)
         _LOGGER.debug("SUPERNOTIFY Publishing notification to %s", self.topic)
         try:
@@ -45,8 +45,10 @@ class ArchiveTopic:
                 qos=self.qos,
                 retain=self.retain,
             )
+            return True
         except Exception:
             _LOGGER.exception(f"SUPERNOTIFY failed to archive to topic {self.topic}")
+            return False
 
 
 class NotificationArchive:
@@ -142,8 +144,9 @@ class NotificationArchive:
         return purged
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
+        archived: bool = False
         if not self.enabled:
-            return False
+            return archived
 
         if self.archive_path:
             archive_path: str = ""
@@ -152,16 +155,18 @@ class NotificationArchive:
                 archive_path = str(self.archive_path.joinpath(filename))
                 save_json(archive_path, archive_object.contents())
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
-                return True
+                archived = True
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
                 try:
                     save_json(archive_path, archive_object.contents(minimal=True))
-                    _LOGGER.debug("SUPERNOTIFY Archived minimal notification %s", archive_path)
-                    return True
+                    _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
+                    archived = True
                 except Exception as e2:
-                    _LOGGER.warning("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
+                    _LOGGER.exception("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
 
         if self.archive_topic:
-            await self.archive_topic.publish(archive_object)
-        return False
+            if await self.archive_topic.publish(archive_object):
+                archived = True
+
+        return archived

@@ -1,6 +1,7 @@
 import asyncio
 import datetime as dt
 import logging
+import string
 import uuid
 from pathlib import Path
 from traceback import format_exception
@@ -8,7 +9,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
-from homeassistant.const import CONF_ENABLED, CONF_NAME, CONF_TARGET, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import CONF_ENABLED, CONF_TARGET, STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers.template import Template
 from jinja2 import TemplateError
 from voluptuous import humanize
@@ -35,17 +36,11 @@ from custom_components.supernotify import (
     ATTR_SCENARIOS_REQUIRE,
     CONF_DATA,
     CONF_DELIVERY,
-    CONF_MESSAGE,
-    CONF_OCCUPANCY,
     CONF_OPTIONS,
     CONF_PERSON,
-    CONF_PRIORITY,
     CONF_PTZ_DELAY,
     CONF_PTZ_METHOD,
     CONF_PTZ_PRESET_DEFAULT,
-    CONF_RECIPIENTS,
-    CONF_SELECTION,
-    CONF_TITLE,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
@@ -68,12 +63,13 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.archive import ArchivableObject
 from custom_components.supernotify.common import DebugTrace, safe_extend
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify.delivery import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    DeliveryMethod,
+    Delivery,
 )
+from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.scenario import Scenario
 
@@ -82,6 +78,9 @@ from .configuration import Context
 from .media_grab import move_camera_to_ptz_preset, select_avail_camera, snap_camera, snap_image, snapshot_from_url
 
 _LOGGER = logging.getLogger(__name__)
+
+
+HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation + string.digits)
 
 
 class Notification(ArchivableObject):
@@ -229,9 +228,9 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             scenario_disable_deliveries = [
-                d
-                for d, dc in self.context.deliveries.items()
-                if dc.get(CONF_SELECTION) == SELECTION_BY_SCENARIO and d not in scenario_enable_deliveries
+                d.name
+                for d in self.context.deliveries.values()
+                if d.selection == SELECTION_BY_SCENARIO and d.name not in scenario_enable_deliveries
             ]
         all_enabled = list(set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries))
         all_disabled = scenario_disable_deliveries + override_disable_deliveries
@@ -284,23 +283,26 @@ class Notification(ArchivableObject):
 
     def message(self, delivery_name: str) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
-        delivery_config: dict[str, Any] = self.context.deliveries.get(delivery_name, {})
-        msg: str | None = delivery_config.get(CONF_MESSAGE, self._message)
-        delivery_method: DeliveryMethod = self.context.delivery_method(delivery_name)
-        message_usage: str = str(delivery_method.option_str(OPTION_MESSAGE_USAGE, delivery_config))
-        if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
-            title = self.title(delivery_name, ignore_usage=True)
-            if title:
-                msg = title
-        elif message_usage.upper() == MessageOnlyPolicy.COMBINE_TITLE:
-            title = self.title(delivery_name, ignore_usage=True)
-            if title:
-                msg = f"{title} {msg}"
-        if (
-            delivery_method.option_bool(OPTION_SIMPLIFY_TEXT, delivery_config) is True
-            or delivery_method.option_bool(OPTION_STRIP_URLS, delivery_config) is True
-        ):
-            msg = delivery_method.simplify(msg, strip_urls=delivery_method.option_bool(OPTION_STRIP_URLS, delivery_config))
+        delivery_config: Delivery | None = self.context.deliveries.get(delivery_name)
+        msg: str | None = None
+        if delivery_config is None:
+            msg = self._message
+        else:
+            msg = delivery_config.message if delivery_config.message is not None else self._message
+            message_usage: str = str(delivery_config.option_str(OPTION_MESSAGE_USAGE))
+            if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
+                title = self.title(delivery_name, ignore_usage=True)
+                if title:
+                    msg = title
+            elif message_usage.upper() == MessageOnlyPolicy.COMBINE_TITLE:
+                title = self.title(delivery_name, ignore_usage=True)
+                if title:
+                    msg = f"{title} {msg}"
+            if (
+                delivery_config.option_bool(OPTION_SIMPLIFY_TEXT) is True
+                or delivery_config.option_bool(OPTION_STRIP_URLS) is True
+            ):
+                msg = delivery_config.method.simplify(msg, strip_urls=delivery_config.option_bool(OPTION_STRIP_URLS))
 
         msg = self._render_scenario_templates(msg, "message_template", "notification_message", delivery_name)
         if msg is None:  # keep mypy happy
@@ -309,21 +311,22 @@ class Notification(ArchivableObject):
 
     def title(self, delivery_name: str, ignore_usage: bool = False) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
-        delivery_config = self.context.deliveries.get(delivery_name, {})
-        delivery_method: DeliveryMethod = self.context.delivery_method(delivery_name)
-        message_usage = delivery_method.option_str(OPTION_MESSAGE_USAGE, delivery_config)
-        if not ignore_usage and message_usage.upper() in (MessageOnlyPolicy.USE_TITLE, MessageOnlyPolicy.COMBINE_TITLE):
-            title = None
+        delivery_config: Delivery | None = self.context.deliveries.get(delivery_name)
+        title: str | None = None
+        if delivery_config is None:
+            title = self._title
         else:
-            title = delivery_config.get(CONF_TITLE, self._title)
-            if (
-                delivery_method.option_bool(OPTION_SIMPLIFY_TEXT, delivery_config) is True
-                or delivery_method.option_bool(OPTION_STRIP_URLS, delivery_config) is True
-            ):
-                title = delivery_method.simplify(
-                    title, strip_urls=delivery_method.option_bool(OPTION_STRIP_URLS, delivery_config)
-                )
-            title = self._render_scenario_templates(title, "title_template", "notification_title", delivery_name)
+            message_usage = delivery_config.option_str(OPTION_MESSAGE_USAGE)
+            if not ignore_usage and message_usage.upper() in (MessageOnlyPolicy.USE_TITLE, MessageOnlyPolicy.COMBINE_TITLE):
+                title = None
+            else:
+                title = delivery_config.title if delivery_config.title is not None else self._title
+                if (
+                    delivery_config.option_bool(OPTION_SIMPLIFY_TEXT) is True
+                    or delivery_config.option_bool(OPTION_STRIP_URLS) is True
+                ):
+                    title = delivery_config.method.simplify(title, strip_urls=delivery_config.option_bool(OPTION_STRIP_URLS))
+        title = self._render_scenario_templates(title, "title_template", "notification_title", delivery_name)
         if title is None:
             return None
         return str(title)
@@ -345,38 +348,41 @@ class Notification(ArchivableObject):
             self.selected_delivery_names,
         )
 
-        for delivery in self.selected_delivery_names:
-            await self.call_delivery_method(delivery)
+        for delivery_name in self.selected_delivery_names:
+            delivery = self.context.deliveries.get(delivery_name)
+            if delivery:
+                await self.call_delivery_method(delivery)
+            else:
+                _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
         if self.delivered == 0 and self.errored == 0:
             for delivery in self.context.fallback_by_default:
-                if delivery not in self.selected_delivery_names:
+                if delivery.name not in self.selected_delivery_names:
                     await self.call_delivery_method(delivery)
 
         if self.delivered == 0 and self.errored > 0:
             for delivery in self.context.fallback_on_error:
-                if delivery not in self.selected_delivery_names:
+                if delivery.name not in self.selected_delivery_names:
                     await self.call_delivery_method(delivery)
 
         return self.delivered > 0
 
-    async def call_delivery_method(self, delivery: str) -> None:
+    async def call_delivery_method(self, delivery: Delivery) -> None:
         try:
-            delivery_method: DeliveryMethod = self.context.delivery_method(delivery)
-            delivery_config = delivery_method.delivery_config(delivery)
+            delivery_method: DeliveryMethod = delivery.method
 
-            delivery_priorities = delivery_config.get(CONF_PRIORITY) or ()
+            delivery_priorities = delivery.priority
             if self.priority and delivery_priorities and self.priority not in delivery_priorities:
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
                 self.skipped += 1
                 return
-            if not await delivery_method.evaluate_delivery_conditions(delivery_config, self.condition_variables):
+            if not await delivery_method.evaluate_delivery_conditions(delivery, self.condition_variables):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
                 self.skipped += 1
                 return
 
-            recipients = self.generate_recipients(delivery, delivery_method)
-            envelopes = self.generate_envelopes(delivery, delivery_method, recipients)
+            recipients = self.generate_recipients(delivery.name, delivery_method)
+            envelopes = self.generate_envelopes(delivery.name, delivery_method, recipients)
             for envelope in envelopes:
                 try:
                     await delivery_method.deliver(envelope)
@@ -387,19 +393,23 @@ class Notification(ArchivableObject):
                     else:
                         self.undelivered_envelopes.append(envelope)
                 except Exception as e2:
-                    _LOGGER.warning("SUPERNOTIFY Failed to deliver %s: %s", envelope.delivery_name, e2)
-                    _LOGGER.debug("SUPERNOTIFY %s", e2, exc_info=True)
+                    _LOGGER.exception("SUPERNOTIFY Failed to deliver %s: %s", envelope.delivery_name, e2)
                     self.errored += 1
                     envelope.delivery_error = format_exception(e2)
                     self.undelivered_envelopes.append(envelope)
 
         except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery)
+            _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery.name)
             _LOGGER.debug("SUPERNOTIFY %s delivery failure", delivery, exc_info=True)
-            self.delivery_errors[delivery] = format_exception(e)
+            self.delivery_errors[delivery.name] = format_exception(e)
 
     def hash(self) -> int:
-        return hash((self._message, self._title))
+        """Alpha hash to reduce noise from messages with timestamps or incrementing counts"""
+
+        def alphaize(v: str | None) -> str | None:
+            return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
+
+        return hash((alphaize(self._message), alphaize(self._title)))
 
     def contents(self, minimal: bool = False) -> dict[str, Any]:
         """ArchiveableObject implementation"""
@@ -474,7 +484,7 @@ class Notification(ArchivableObject):
         return []
 
     def generate_recipients(self, delivery_name: str, delivery_method: DeliveryMethod) -> list[dict[str, Any]]:
-        delivery_config: dict[str, Any] = delivery_method.delivery_config(delivery_name)
+        delivery_config: Delivery = delivery_method.delivery_config(delivery_name)
 
         recipients: list[dict[str, Any]] = []
         if self.target:
@@ -493,20 +503,15 @@ class Notification(ArchivableObject):
             _LOGGER.debug("SUPERNOTIFY %s Overriding with explicit targets: %s", __name__, recipients)
         else:
             # second priority is explicit target on delivery
-            if delivery_config and CONF_TARGET in delivery_config and delivery_config[CONF_TARGET]:
-                recipients.extend({ATTR_TARGET: e} for e in delivery_config.get(CONF_TARGET, []))
-                self.record_resolve(delivery_name, "2b_delivery_config_target", delivery_config.get(CONF_TARGET))
+            if delivery_config and delivery_config.target.entity_id:
+                recipients.extend({ATTR_TARGET: e} for e in delivery_config.target.entity_id if e not in self.context.people)
+                recipients.extend(self.context.people[e] for e in delivery_config.target.entity_id if e in self.context.people)
+                self.record_resolve(delivery_name, "2b_delivery_config_target", delivery_config.target.entity_id)
                 _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, recipients)
 
-            # next priority is explicit recipients on delivery
-            if delivery_config and CONF_RECIPIENTS in delivery_config and delivery_config[CONF_RECIPIENTS]:
-                recipients.extend(delivery_config[CONF_RECIPIENTS])
-                self.record_resolve(delivery_name, "2c_delivery_config_recipient", delivery_config.get(CONF_RECIPIENTS))
-                _LOGGER.debug("SUPERNOTIFY %s Using overridden recipients: %s", delivery_name, recipients)
-
             # If target not specified on service call or delivery, then default to std list of recipients
-            elif not delivery_config or CONF_TARGET not in delivery_config:
-                recipients = self.filter_people_by_occupancy(delivery_config.get(CONF_OCCUPANCY, OCCUPANCY_ALL))
+            elif not delivery_config or not delivery_config.target.entity_id:
+                recipients = self.filter_people_by_occupancy(delivery_config.occupancy)
                 self.record_resolve(delivery_name, "2d_recipients_by_occupancy", recipients)
                 recipients = [
                     r for r in recipients if self.recipients_override is None or r.get(CONF_PERSON) in self.recipients_override
@@ -525,8 +530,8 @@ class Notification(ArchivableObject):
     ) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities
 
-        delivery_config: dict[str, Any] = method.delivery_config(delivery_name)
-        default_data: dict[str, Any] = delivery_config.get(CONF_DATA, {})
+        delivery_config: Delivery = method.delivery_config(delivery_name)
+        default_data: dict[str, Any] = delivery_config.data
         default_targets: list[str] = []
         custom_envelopes: list[Envelope] = []
 
@@ -537,8 +542,8 @@ class Notification(ArchivableObject):
             # reuse standard recipient attributes like email or phone
             safe_extend(recipient_targets, method.recipient_target(recipient))
             # use entities or targets set at a method level for recipient
-            if CONF_DELIVERY in recipient and delivery_config[CONF_NAME] in recipient.get(CONF_DELIVERY, {}):
-                recp_meth_cust = recipient.get(CONF_DELIVERY, {}).get(delivery_config[CONF_NAME], {})
+            if CONF_DELIVERY in recipient and delivery_config.name in recipient.get(CONF_DELIVERY, {}):
+                recp_meth_cust = recipient.get(CONF_DELIVERY, {}).get(delivery_config.name, {})
                 safe_extend(recipient_targets, recp_meth_cust.get(CONF_TARGET, []))
                 custom_data = recp_meth_cust.get(CONF_DATA)
                 enabled = recp_meth_cust.get(CONF_ENABLED, True)

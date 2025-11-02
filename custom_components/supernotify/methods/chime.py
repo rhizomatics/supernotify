@@ -12,17 +12,20 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
 from custom_components.supernotify import (
     ATTR_DATA,
     ATTR_PRIORITY,
-    CONF_DATA,
     CONF_DEVICE_DOMAIN,
     CONF_TARGETS_REQUIRED,
     METHOD_CHIME,
+    Target,
 )
 from custom_components.supernotify.common import ensure_list
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 
 if TYPE_CHECKING:
     from homeassistant.helpers.device_registry import DeviceEntry
+
+    from custom_components.supernotify.delivery import Delivery
 
 RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
 
@@ -57,7 +60,7 @@ class ChimeTargetConfig:
             self.entity_id = target
             self.domain, self.entity_name = target.split(".", 1)
         else:
-            if self.is_device(target):
+            if Target.is_device(target):
                 self.device_id = target
                 self.domain = domain
             else:
@@ -75,10 +78,6 @@ class ChimeTargetConfig:
             return f"ChimeTargetConfig(device_id={self.device_id})"
         return f"ChimeTargetConfig(entity_id={self.entity_id})"
 
-    @classmethod
-    def is_device(cls, target: str) -> bool:
-        return re.match(r"^[0-9a-f]{32}$", target) is not None
-
 
 class ChimeDeliveryMethod(DeliveryMethod):
     method = METHOD_CHIME
@@ -91,18 +90,18 @@ class ChimeDeliveryMethod(DeliveryMethod):
 
     @property
     def chime_aliases(self) -> dict[str, Any]:
-        return self.default_options.get("chime_aliases") or {}
+        return self.delivery_defaults.options.get("chime_aliases") or {}
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
     def select_target(self, target: str) -> bool:
-        return re.fullmatch(RE_VALID_CHIME, target) is not None or ChimeTargetConfig.is_device(target)
+        return re.fullmatch(RE_VALID_CHIME, target) is not None or Target.is_device(target)
 
     async def deliver(self, envelope: Envelope) -> bool:
-        config = self.delivery_config(envelope.delivery_name)
+        config: Delivery = self.delivery_config(envelope.delivery_name)
         data: dict[str, Any] = {}
-        data.update(config.get(CONF_DATA) or {})
+        data.update(config.data)
         data.update(envelope.data or {})
         targets = envelope.targets or []
 
@@ -117,7 +116,7 @@ class ChimeDeliveryMethod(DeliveryMethod):
             targets,
             envelope.delivery_name,
             envelope.data,
-            config.get(CONF_DATA),
+            config.data,
         )
         # expand groups
         expanded_targets = {
@@ -132,11 +131,13 @@ class ChimeDeliveryMethod(DeliveryMethod):
             _LOGGER.debug("SUPERNOTIFY chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
             action_data = None
             try:
-                domain, service, action_data = self.analyze_target(chime_entity_config, data, envelope)
+                domain, service, action_data, target_data = self.analyze_target(chime_entity_config, data, envelope)
                 if domain is not None and service is not None:
                     action_data = self.prune_data(domain, action_data)
 
-                    if await self.call_action(envelope, qualified_action=f"{domain}.{service}", action_data=action_data):
+                    if await self.call_action(
+                        envelope, qualified_action=f"{domain}.{service}", action_data=action_data, target_data=target_data
+                    ):
                         chimes += 1
                 else:
                     _LOGGER.debug("SUPERNOTIFY Chime skipping incomplete service for %s", chime_entity_config.entity_id)
@@ -155,10 +156,10 @@ class ChimeDeliveryMethod(DeliveryMethod):
 
     def analyze_target(
         self, target_config: ChimeTargetConfig, data: dict[str, Any], envelope: Envelope
-    ) -> tuple[str | None, str | None, dict[str, Any]]:
+    ) -> tuple[str | None, str | None, dict[str, Any], dict[str, Any]]:
         if not target_config.entity_id and not target_config.device_id:
             _LOGGER.warning("SUPERNOTIFY Empty chime target")
-            return "", None, {}
+            return "", None, {}, {}
 
         domain: str | None = None
         name: str | None = None
@@ -183,15 +184,16 @@ class ChimeDeliveryMethod(DeliveryMethod):
             domain, name = target_config.entity_id.split(".", 1)
 
         action_data: dict[str, Any] = {}
+        target_data: dict[str, Any] = {}
         action: str | None = None
 
         if domain == "switch":
             action = "turn_on"
-            action_data[ATTR_ENTITY_ID] = target_config.entity_id
+            target_data[ATTR_ENTITY_ID] = target_config.entity_id
 
         elif domain == "siren":
             action = "turn_on"
-            action_data[ATTR_ENTITY_ID] = target_config.entity_id
+            target_data[ATTR_ENTITY_ID] = target_config.entity_id
             action_data[ATTR_DATA] = {}
             if target_config.tune:
                 action_data[ATTR_DATA]["tone"] = target_config.tune
@@ -226,7 +228,7 @@ class ChimeDeliveryMethod(DeliveryMethod):
             if data:
                 action_data.update(data)
             action = "play_media"
-            action_data[ATTR_ENTITY_ID] = target_config.entity_id
+            target_data[ATTR_ENTITY_ID] = target_config.entity_id
             action_data["media_content_type"] = "sound"
             action_data["media_content_id"] = target_config.tune
 
@@ -238,7 +240,7 @@ class ChimeDeliveryMethod(DeliveryMethod):
                 target_config.tune,
             )
 
-        return domain, action, action_data
+        return domain, action, action_data, target_data
 
     def resolve_tune(self, tune_or_alias: str | None) -> dict[str, ChimeTargetConfig]:
         target_configs: dict[str, ChimeTargetConfig] = {}
@@ -257,21 +259,20 @@ class ChimeDeliveryMethod(DeliveryMethod):
 
                 # pass through variables or data if present
                 if target is not None:
-                    target_configs.update({t: ChimeTargetConfig(target=t, **alias_config) for t in ensure_list(target)})  # type: ignore
+                    target_configs.update({t: ChimeTargetConfig(target=t, **alias_config) for t in ensure_list(target)})
                 elif domain in DEVICE_DOMAINS:
                     # bulk apply to all known target devices of this domain
                     bulk_apply = {
-                        dev: ChimeTargetConfig(target=dev, **alias_config)  # type: ignore
-                        for dev in self.targets
-                        if ChimeTargetConfig.is_device(dev)
-                        and dev not in target_configs  # don't overwrite existing specific targets
+                        dev: ChimeTargetConfig(target=dev, **alias_config)
+                        for dev in self.targets.device_id
+                        if dev not in target_configs  # don't overwrite existing specific targets
                     }
                     target_configs.update(bulk_apply)
                 else:
                     # bulk apply to all known target entities of this domain
                     bulk_apply = {
-                        ent: ChimeTargetConfig(target=ent, **alias_config)  # type: ignore
-                        for ent in self.targets
+                        ent: ChimeTargetConfig(target=ent, **alias_config)
+                        for ent in self.targets.entity_id
                         if ent.startswith(f"{alias_config['domain']}.")
                         and ent not in target_configs  # don't overwrite existing specific targets
                     }

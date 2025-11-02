@@ -3,17 +3,15 @@ import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_MESSAGE
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION, CONF_DEFAULT
+from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import (
-    CONF_OPTIONS,
-    METHOD_ALEXA,
-    MessageOnlyPolicy,
-)
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, METHOD_ALEXA, DeliveryConfig, MessageOnlyPolicy
+from custom_components.supernotify.delivery import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+)
+from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -33,12 +31,12 @@ class AlexaDevicesDeliveryMethod(DeliveryMethod):
     method = METHOD_ALEXA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DEFAULT, {})
-        kwargs[CONF_DEFAULT].setdefault(CONF_ACTION, ACTION)
-        kwargs[CONF_DEFAULT].setdefault(CONF_OPTIONS, {})
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_SIMPLIFY_TEXT, True)
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_STRIP_URLS, True)
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.STANDARD)
+        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
+        if not kwargs[CONF_DELIVERY_DEFAULTS].action:
+            kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_SIMPLIFY_TEXT, True)
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_STRIP_URLS, True)
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.STANDARD)
         super().__init__(*args, **kwargs)
 
     def select_target(self, target: str) -> bool:

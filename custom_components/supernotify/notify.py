@@ -5,14 +5,33 @@ import json
 import logging
 from dataclasses import asdict
 from traceback import format_exception
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cachetools import TTLCache
+from homeassistant.components.notify import (
+    NotifyEntity,
+    NotifyEntityFeature,
+)
 from homeassistant.components.notify.legacy import BaseNotificationService
-from homeassistant.const import CONF_CONDITION, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, ServiceCall, SupportsResponse, callback
+from homeassistant.const import (
+    CONF_CONDITION,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers.condition import async_validate_condition_config
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,9 +76,15 @@ from .methods.email import EmailDeliveryMethod
 from .methods.generic import GenericDeliveryMethod
 from .methods.media_player_image import MediaPlayerImageDeliveryMethod
 from .methods.mobile_push import MobilePushDeliveryMethod
+from .methods.notify_entity import NotifyEntityDeliveryMethod
 from .methods.persistent import PersistentDeliveryMethod
 from .methods.sms import SMSDeliveryMethod
 from .notification import Notification
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.delivery import Delivery
+
+    from .scenario import Scenario
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +100,7 @@ METHODS: list[type[DeliveryMethod]] = [
     ChimeDeliveryMethod,
     PersistentDeliveryMethod,
     GenericDeliveryMethod,
+    NotifyEntityDeliveryMethod,
 ]  # No auto-discovery of method plugins so manual class registration required here
 
 
@@ -83,7 +109,7 @@ async def async_get_service(
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> "SuperNotificationAction":
-    """Notify specific component setup - see async_setup_legacy in BaseNotificationService"""
+    """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
     _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
     _ = discovery_info
     for delivery in config.get(CONF_DELIVERY, {}).values():
@@ -242,6 +268,29 @@ async def async_get_service(
     return service
 
 
+class SupernotifyEntity(NotifyEntity):
+    """Implement supernotify as a NotifyEntity platform."""
+
+    _attr_has_entity_name = True
+    _attr_name = "supernotify"
+
+    def __init__(
+        self,
+        unique_id: str,
+        platform: "SuperNotificationAction",
+    ) -> None:
+        """Initialize the SuperNotify entity."""
+        self._attr_unique_id = unique_id
+        self._attr_supported_features = NotifyEntityFeature.TITLE
+        self._platform = platform
+
+    async def async_send_message(
+        self, message: str, title: str | None = None, target: str | list[str] | None = None, data: dict[str, Any] | None = None
+    ) -> None:
+        """Send a message to a user."""
+        await self._platform.async_send_message(message, title=title, target=target, data=data)
+
+
 class SuperNotificationAction(BaseNotificationService):
     """Implement SuperNotification action."""
 
@@ -282,6 +331,7 @@ class SuperNotificationAction(BaseNotificationService):
             METHODS,
         )
         self.unsubscribes: list[CALLBACK_TYPE] = []
+        self.exposed_entities: list[str] = []
         self.dupe_check_config: dict[str, Any] = dupe_check or {}
         self.last_purge: dt.datetime | None = None
         self.notification_cache: TTLCache[tuple[int, str], str] = TTLCache(
@@ -293,6 +343,10 @@ class SuperNotificationAction(BaseNotificationService):
 
         self.expose_entities()
         self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
+        self.unsubscribes.append(
+            async_track_state_change_event(self.hass, self.exposed_entities, self._entity_state_change_listener)
+        )
+
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
             _LOGGER.info("SUPERNOTIFY setting up housekeeping schedule at: %s", housekeeping_schedule)
@@ -326,23 +380,91 @@ class SuperNotificationAction(BaseNotificationService):
                 _LOGGER.error("SUPERNOTIFY failed to unsubscribe: %s", e)
         _LOGGER.info("SUPERNOTIFY shut down")
 
+    async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
+        changes = 0
+        if event is not None:
+            _LOGGER.info(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
+            new_state: State | None = event.data["new_state"]
+            if new_state and event.data["entity_id"].startswith(f"{DOMAIN}.scenario_"):
+                scenario: Scenario | None = self.context.scenarios.get(
+                    event.data["entity_id"].replace(f"{DOMAIN}.scenario_", "")
+                )
+                if scenario is None:
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown scenario {event.data['entity_id']}")
+                else:
+                    if new_state.state == "off" and scenario.enabled:
+                        scenario.enabled = False
+                        _LOGGER.info(f"SUPERNOTIFY Disabling scenario {scenario.name}")
+                        changes += 1
+                    elif new_state.state == "on" and not scenario.enabled:
+                        scenario.enabled = True
+                        _LOGGER.info(f"SUPERNOTIFY Enabling scenario {scenario.name}")
+                        changes += 1
+                    else:
+                        _LOGGER.info(f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
+            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.delivery_"):
+                delivery_config: Delivery | None = self.context.deliveries.get(
+                    event.data["entity_id"].replace(f"{DOMAIN}.delivery_", "")
+                )
+                if delivery_config is None:
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown delivery {event.data['entity_id']}")
+                else:
+                    if new_state.state == "off" and delivery_config.enabled:
+                        delivery_config.enabled = False
+                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {delivery_config.name}")
+                        changes += 1
+                    elif new_state.state == "on" and not delivery_config.enabled:
+                        delivery_config.enabled = True
+                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {delivery_config.name}")
+                        changes += 1
+                    else:
+                        _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
+            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.method_"):
+                method: DeliveryMethod | None = self.context.methods.get(
+                    event.data["entity_id"].replace(f"{DOMAIN}.method_", "")
+                )
+                if method is None:
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown method {event.data['entity_id']}")
+                else:
+                    if new_state.state == "off" and method.enabled:
+                        method.enabled = False
+                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {method.method}")
+                        changes += 1
+                    elif new_state.state == "on" and not method.enabled:
+                        method.enabled = True
+                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {method.method}")
+                        changes += 1
+                    else:
+                        _LOGGER.info(f"SUPERNOTIFY No change to method {method.method}, already {new_state}")
+
+            else:
+                _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
+            if changes:
+                await self.context.update_for_entity_state()
+                _LOGGER.debug(f"SUPERNOTIFY event had {changes} changes triggering updates to states")
+
     def expose_entities(self) -> None:
+        # Create on the fly entities for key internal config and state
+
         for scenario in self.context.scenarios.values():
             self.hass.states.async_set(
                 f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(include_condition=False)
             )
+            self.exposed_entities.append(f"{DOMAIN}.scenario_{scenario.name}")
         for method in self.context.methods.values():
             self.hass.states.async_set(
                 f"{DOMAIN}.method_{method.method}",
                 STATE_ON if len(method.valid_deliveries) > 0 else STATE_OFF,
                 method.attributes(),
             )
+            self.exposed_entities.append(f"{DOMAIN}.method_{method.method}")
         for delivery_name, delivery in self.context._deliveries.items():
             self.hass.states.async_set(
                 f"{DOMAIN}.delivery_{delivery_name}",
                 STATE_ON if str(delivery_name in self.context.deliveries) else STATE_OFF,
                 delivery,
             )
+            self.exposed_entities.append(f"{DOMAIN}.delivery_{delivery_name}")
 
     def dupe_check(self, notification: Notification) -> bool:
         policy = self.dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
@@ -380,7 +502,7 @@ class SuperNotificationAction(BaseNotificationService):
                 elif notification.errored:
                     _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
                 else:
-                    _LOGGER.warning("SUPERNOTIFY No delivery selected for  %s", notification.id)
+                    _LOGGER.warning("SUPERNOTIFY No deliveries made for  %s", notification.id)
 
         except Exception as err:
             # fault barrier of last resort, integration failures should be caught within envelope delivery

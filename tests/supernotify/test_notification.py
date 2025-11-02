@@ -1,9 +1,10 @@
 import tempfile
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_METHOD, CONF_TARGET
+from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
+from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify import (
@@ -16,24 +17,28 @@ from custom_components.supernotify import (
     CONF_DELIVERY,
     CONF_DELIVERY_SELECTION,
     CONF_MEDIA,
-    CONF_RECIPIENTS,
+    CONF_METHOD,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
-    METHOD_EMAIL,
-    METHOD_GENERIC,
     MessageOnlyPolicy,
 )
 from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.methods.email import EmailDeliveryMethod
 from custom_components.supernotify.methods.generic import GenericDeliveryMethod
+from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.scenario import Scenario
 
+from .doubles_lib import build_delivery_from_config
 
-async def test_simple_create(mock_context: Context) -> None:
-    mock_context.deliveries = {"plain_email": {}, "mobile": {"title": "mobile notification"}, "chime": {}}
+
+async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
+    mock_context.deliveries["mobile"] = Delivery(
+        "mobile", {"title": "mobile notification"}, MobilePushDeliveryMethod(mock_hass, mock_context)
+    )
     mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
     uut = Notification(mock_context, "testing 123")
     await uut.initialize()
@@ -49,9 +54,9 @@ async def test_simple_create(mock_context: Context) -> None:
     assert uut.selected_delivery_names == unordered(["plain_email", "mobile"])
 
 
-async def test_explicit_delivery(mock_context: Context) -> None:
+async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context) -> None:
     mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
-    mock_context.deliveries = {"plain_email": {}, "mobile": {}, "chime": {}}
+
     uut = Notification(
         mock_context,
         "testing 123",
@@ -62,70 +67,66 @@ async def test_explicit_delivery(mock_context: Context) -> None:
     assert uut.selected_delivery_names == ["mobile"]
 
 
-async def test_scenario_delivery(mock_context: Context, mock_scenario: Scenario) -> None:
+async def test_scenario_delivery(mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario) -> None:
     mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "mockery": ["chime"]}
-    mock_context.deliveries = {"plain_email": {}, "mobile": {}, "chime": {}}
+
     mock_context.scenarios = {"mockery": mock_scenario}
     uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
-async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
+async def test_explicit_list_of_deliveries(mock_hass: HomeAssistant, mock_context: Context) -> None:
     mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
-    mock_context.deliveries = {"plain_email": {}, "mobile": {}, "chime": {}}
+
     uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
     assert uut.selected_delivery_names == ["mobile"]
 
 
-async def test_generate_recipients_from_entities(mock_context: Context) -> None:
+async def test_generate_recipients_from_entities(mock_hass: HomeAssistant, mock_context: Context) -> None:
     delivery = {
-        "chatty": {
-            CONF_METHOD: METHOD_GENERIC,
-            CONF_ACTION: "custom.tweak",
-            CONF_TARGET: ["custom.light_1", "custom.switch_2"],
-        }
+        "chatty": {CONF_ACTION: "custom.tweak", CONF_TARGET: ["custom.light_1", "custom.switch_2"], CONF_METHOD: "generic"}
     }
-    mock_context.deliveries = delivery
+    mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context)
     uut = Notification(mock_context, "testing 123")
-    generic = GenericDeliveryMethod(mock_context.hass, mock_context, delivery)
+    generic = GenericDeliveryMethod(mock_hass, mock_context, delivery)
     await generic.initialize()
     recipients = uut.generate_recipients("chatty", generic)
     assert recipients == [{"target": "custom.light_1"}, {"target": "custom.switch_2"}]
 
 
-async def test_generate_recipients_from_recipients(mock_context: Context) -> None:
+async def test_generate_recipients_from_recipients(mock_hass: HomeAssistant, mock_context: Context) -> None:
     delivery = {
         "chatty": {
-            CONF_METHOD: METHOD_GENERIC,
             CONF_ACTION: "custom.tweak",
-            CONF_RECIPIENTS: [{"target": "custom.light_1"}, {"person": "joey.soapy"}],
+            CONF_TARGET: {"entity_id": ["custom.light_1", "person.new_home_owner"]},
+            CONF_METHOD: "generic",
         }
     }
-    mock_context.deliveries = delivery
+    mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context)
     uut = Notification(mock_context, "testing 123")
-    generic = GenericDeliveryMethod(mock_context.hass, mock_context, delivery)
+    generic = GenericDeliveryMethod(mock_hass, mock_context, delivery)
     await generic.initialize()
     recipients: list[dict[str, Any]] = uut.generate_recipients("chatty", generic)
-    assert recipients == [{"target": "custom.light_1"}, {"person": "joey.soapy"}]
+    assert recipients == [{"target": "custom.light_1"}, {"person": "person.new_home_owner"}]
 
 
-async def test_explicit_recipients_only_restricts_people_targets(mock_context: Context) -> None:
+async def test_explicit_recipients_only_restricts_people_targets(mock_hass: HomeAssistant, mock_context: Context) -> None:
     delivery = {
-        "chatty": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"]},
-        "mail": {CONF_METHOD: METHOD_EMAIL, CONF_ACTION: "notify.smtp"},
+        "chatty": {CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"], CONF_METHOD: "generic"},
+        "mail": {CONF_ACTION: "notify.smtp", CONF_METHOD: "email"},
     }
     mock_context.people = {"person.bob": {CONF_EMAIL: "bob@test.com"}, "person.jane": {CONF_EMAIL: "jane@test.com"}}
-    mock_context.deliveries = delivery
+    mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context)
     uut = Notification(mock_context, "testing 123")
-    generic = GenericDeliveryMethod(mock_context.hass, mock_context, delivery)
+    generic = GenericDeliveryMethod(mock_hass, mock_context, delivery)
     await generic.initialize()
     recipients = uut.generate_recipients("chatty", generic)
     assert recipients == [{"target": "chan1"}, {"target": "chan2"}]
     bundles = uut.generate_envelopes("chatty", generic, recipients)
     assert bundles == [Envelope("chatty", uut, targets=["chan1", "chan2"])]
-    email = EmailDeliveryMethod(mock_context.hass, mock_context, delivery)  # type: ignore
+    email = EmailDeliveryMethod(mock_hass, mock_context, delivery)
     await email.initialize()
     recipients = uut.generate_recipients("mail", email)
     assert recipients == [{"email": "bob@test.com"}, {"email": "jane@test.com"}]
@@ -151,16 +152,15 @@ async def test_filter_recipients(mock_context: Context) -> None:
 async def test_build_targets_for_simple_case(mock_context: Context) -> None:
     method = GenericDeliveryMethod(mock_context.hass, mock_context, {})
     await method.initialize()
-    # mock_context.deliveries={'testy':method}
+    # mock_context.deliveries={'testy':Delivery("testy",{},method)}
     uut = Notification(mock_context, "testing 123")
     recipients = uut.generate_recipients("", method)
     bundles = uut.generate_envelopes("", method, recipients)
     assert bundles == [Envelope("", uut)]
 
 
-async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(mock_context: Context) -> None:
+async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(mock_hass: HomeAssistant, mock_context: Context) -> None:
     mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
-    mock_context.deliveries = {"plain_email": {}, "mobile": {}, "chime": {}}
     uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile")
@@ -198,8 +198,9 @@ async def test_camera_entity(mock_context: Context) -> None:
         mock_snap_cam.assert_not_called()
 
 
-async def test_message_usage(mock_context: Context, mock_method: DeliveryMethod) -> None:
-    mock_context.deliveries = {"push": {CONF_METHOD: "unit_testing"}}
+async def test_message_usage(mock_hass: HomeAssistant, mock_context: Context, mock_method: DeliveryMethod) -> None:
+    delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
+    mock_context.deliveries = {"push": delivery}
     mock_context.delivery_by_scenario = {"DEFAULT": ["push"]}
     mock_context.delivery_method.return_value = mock_method  # type: ignore[attr-defined]
 
@@ -208,37 +209,36 @@ async def test_message_usage(mock_context: Context, mock_method: DeliveryMethod)
     assert uut.message("push") == "testing 123"
     assert uut.title("push") == "the big title"
 
-    mock_method.option_str.return_value = MessageOnlyPolicy.USE_TITLE  # type: ignore
+    delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
     uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "the big title"
     assert uut.title("push") is None
 
-    mock_method.option_str.return_value = MessageOnlyPolicy.USE_TITLE  # type: ignore
+    delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
     uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") is None
 
-    mock_method.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE  # type: ignore
+    delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
     uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "the big title testing 123"
     assert uut.title("push") is None
 
-    mock_method.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE  # type: ignore
+    delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
     uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") is None
 
 
-async def test_merge(mock_context: Context) -> None:
+async def test_merge(mock_hass: HomeAssistant, mock_context: Context) -> None:
     mock_context.scenarios = {
-        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_context.hass)  # type: ignore
+        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass)
     }
     mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
-    mock_context.deliveries = {"plain_email": {}, "mobile": {}, "chime": {}}
     uut = Notification(
         mock_context,
         "testing 123",

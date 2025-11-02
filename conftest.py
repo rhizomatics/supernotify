@@ -22,13 +22,16 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import (
-    CONF_METHOD,
     CONF_MOBILE_DEVICES,
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
 from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import DeliveryMethod
+from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
+from custom_components.supernotify.methods.email import EmailDeliveryMethod
+from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
 from custom_components.supernotify.snoozer import Snoozer
 
 
@@ -56,6 +59,7 @@ class MockAction(BaseNotificationService):
 def mock_hass() -> HomeAssistant:
     hass = Mock(spec=MockableHomeAssistant)
     hass.states = Mock(StateMachine)
+    hass.states.async_entity_ids.return_value = ["supernotify.test_1", "supernotify.test_1"]
     hass.services = Mock(ServiceRegistry)
     hass.config.internal_url = "http://127.0.0.1:28123"
     hass.config.external_url = "https://my.home"
@@ -76,7 +80,6 @@ def mock_context(mock_hass: HomeAssistant) -> Context:
     context = Mock(spec=Context)
     context.hass = mock_hass
     context.scenarios = {}
-    context.deliveries = {"chime": {}, "gmail": {CONF_METHOD: "email"}}
     context.cameras = {}
     context.snoozer = Snoozer()
     context.delivery_by_scenario = {}
@@ -87,6 +90,13 @@ def mock_context(mock_hass: HomeAssistant) -> Context:
     context.hass_external_url = "http://hass-dev.nabu.casa"
     context.media_path = Path("/nosuchpath")
     context.template_path = Path("/templates_here")
+
+    context.deliveries = {
+        "plain_email": Delivery("plain_email", {}, EmailDeliveryMethod(mock_hass, context)),
+        "mobile": Delivery("mobile", {}, MobilePushDeliveryMethod(mock_hass, context)),
+        "chime": Delivery("chime", {}, ChimeDeliveryMethod(mock_hass, context)),
+    }
+
     context.people = {
         "person.new_home_owner": {CONF_PERSON: "person.new_home_owner"},
         "person.bidey_in": {

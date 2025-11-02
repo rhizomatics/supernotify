@@ -3,12 +3,15 @@ from typing import Any
 
 from homeassistant.components import image
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import CONF_METHOD, CONF_PERSON
 from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.notify import METHODS
 
 
 class DummyDeliveryMethod(DeliveryMethod):
@@ -59,3 +62,10 @@ class MockImageEntity(image.ImageEntity):
 
     async def async_image(self) -> bytes | None:
         return self.bytes
+
+
+def build_delivery_from_config(conf: ConfigType, hass: HomeAssistant, ctx: Context) -> dict[str, Delivery]:
+    def method(method_name: str) -> DeliveryMethod:
+        return next(m for m in METHODS if m.method == method_name)(hass, ctx)
+
+    return {k: Delivery(k, v, method(v[CONF_METHOD])) for k, v in conf.items()}

@@ -1,15 +1,16 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_ENTITY_ID,
-    CONF_ACTION,
 )
 
 from custom_components.supernotify import CONF_DATA, CONF_TARGETS_REQUIRED, METHOD_GENERIC
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.delivery import Delivery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,18 +33,14 @@ class GenericDeliveryMethod(DeliveryMethod):
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}
         targets = envelope.targets or []
-        config = self.delivery_config(envelope.delivery_name)
+        config: Delivery = self.delivery_config(envelope.delivery_name)
         target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets} if targets else {}
 
-        qualified_action = config.get(CONF_ACTION)
+        qualified_action = config.action
         if qualified_action and qualified_action.startswith("notify."):
             action_data = envelope.core_action_data()
             if data is not None:
                 action_data[CONF_DATA] = data
-            if qualified_action == "notify.send_message":
-                allowed_keys: list[str] = [ATTR_MESSAGE, ATTR_TITLE, ATTR_ENTITY_ID]
-                action_data = {k: v for k, v in action_data.items() if k in allowed_keys}
-
         else:
             action_data = data
 

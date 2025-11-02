@@ -2,7 +2,7 @@
 
 import json
 import pathlib
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
@@ -15,6 +15,9 @@ from homeassistant.setup import async_setup_component
 from custom_components.supernotify import DOMAIN, SCENARIO_DEFAULT
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 
+if TYPE_CHECKING:
+    from homeassistant.util.json import JsonObjectType
+
 FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "examples", "maximal.yaml")
 
 
@@ -22,7 +25,7 @@ SIMPLE_CONFIG = {
     "name": DOMAIN,
     "platform": DOMAIN,
     "delivery": {
-        "testing": {"method": "generic", "action": "notify.send_message"},
+        "testing": {"method": "notify_entity", "target": ["testy.testy"]},
         "chime_person": {"method": "chime", "selection": "scenario", "data": {"chime_tune": "person"}},
     },
     "archive": {"enabled": True},
@@ -33,7 +36,7 @@ SIMPLE_CONFIG = {
     "recipients": [{"person": "person.house_owner", "email": "test@testing.com", "phone_number": "+4497177848484"}],
     "methods": {
         "chime": {
-            "default": {
+            "delivery_defaults": {
                 "target": ["media_player.lobby", "switch.doorbell"],
                 "options": {
                     "chime_aliases": {"person": {"media_player": "bell_02", "switch": {"entity_id": "switch.chime_ding"}}}
@@ -123,6 +126,85 @@ async def test_empty_config(hass: HomeAssistant) -> None:
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
 
 
+async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await hass.async_block_till_done()
+    hass.states.async_set("supernotify.scenario_simple", "off")
+    await hass.async_block_till_done()
+    response = await hass.services.async_call(
+        "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert response == {"DEFAULT": ["testing"], "somebody": ["chime_person"]}
+    hass.states.async_set("supernotify.scenario_simple", "on")
+    await hass.async_block_till_done()
+    response = await hass.services.async_call(
+        "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert response == {"DEFAULT": ["testing"], "simple": ["testing"], "somebody": ["chime_person"]}
+
+
+async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await hass.async_block_till_done()
+    hass.states.async_set("supernotify.delivery_testing", "off")
+    await hass.async_block_till_done()
+    response = await hass.services.async_call(
+        "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert response == {"DEFAULT": [], "simple": [], "somebody": ["chime_person"]}
+    hass.states.async_set("supernotify.delivery_testing", "on")
+    await hass.async_block_till_done()
+    response = await hass.services.async_call(
+        "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert response == {"DEFAULT": ["testing"], "simple": ["testing"], "somebody": ["chime_person"]}
+
+
+async def test_exposed_method_events(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    assert await async_setup_component(hass, "media_player", {"media_player": {CONF_PLATFORM: "test"}})
+    assert await async_setup_component(hass, "switch", {"switch": {CONF_PLATFORM: "test"}})
+    assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
+    await hass.async_block_till_done()
+
+    hass.states.async_set("supernotify.method_notify_entity", "off")
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        {"title": "my title", "message": "unit test 9001a", "data": {"delivery": ["testing", "chime_person"]}},
+        blocking=True,
+    )
+    notification: JsonObjectType | None = await hass.services.async_call(
+        "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert notification is not None
+    assert len(notification["delivered_envelopes"]) == 1  # type: ignore[arg-type]
+    assert notification["delivered_envelopes"][0]["delivery_name"] == "chime_person"  # type: ignore
+    assert len(notification["undelivered_envelopes"]) == 0  # type: ignore[arg-type]
+
+    hass.states.async_set("supernotify.method_notify_entity", "on")
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        DOMAIN,
+        {"title": "my title", "message": "unit test 9001b", "data": {"delivery": ["testing", "chime_person"]}},
+        blocking=True,
+    )
+    notification = await hass.services.async_call(
+        "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert notification is not None
+    assert len(notification["delivered_envelopes"]) == 2  # type: ignore
+    assert len(notification["undelivered_envelopes"]) == 0  # type: ignore
+
+
 async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
@@ -153,7 +235,7 @@ async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
     assert isinstance(response["scenarios"], list)
     assert "trace" in response
     assert isinstance(response["trace"], tuple)
-    assert len(response["trace"]) == 3
+    assert len(response["trace"]) == 3  # type: ignore
     enabled, disabled, cvars = response["trace"]
     assert isinstance(enabled, list)
     assert isinstance(disabled, list)
@@ -226,5 +308,6 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
     assert call_record == {
         "domain": "media_player",
         "service": "play_media",
-        "action_data": {"entity_id": "media_player.lobby", "media_content_type": "sound", "media_content_id": "bell_02"},
+        "action_data": {"media_content_type": "sound", "media_content_id": "bell_02"},
+        "target_data": {"entity_id": "media_player.lobby"},
     }

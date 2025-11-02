@@ -298,6 +298,13 @@ Uses the `phone_number` attribute of recipient, and truncates message to fit in 
 
 Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `title_handling` in an `options` section to change the behaviour, either message only or using the title in place of the message.
 
+### Notify Entity
+
+This method uses the new style Home Assistant notify entities, so accepts only a `message`,
+`title` and `target`, plus an optional `data` specific to some entity types. Targets for Notify Entities can be broader than `entity_id`, and can also be a `device`, `label` or `area`, the latter also being an alternate way of calling multiple
+notify entities at once..
+
+
 ### Generic
 
 Use to call any 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.

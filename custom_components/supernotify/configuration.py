@@ -5,16 +5,7 @@ import socket
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import (
-    ATTR_STATE,
-    CONF_DEFAULT,
-    CONF_DEVICE_ID,
-    CONF_ENABLED,
-    CONF_METHOD,
-    CONF_NAME,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
+from homeassistant.const import ATTR_STATE, CONF_DEVICE_ID, CONF_ENABLED, CONF_METHOD, CONF_NAME, STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_validation import boolean
@@ -34,8 +25,6 @@ from . import (
     CONF_ARCHIVE_PATH,
     CONF_CAMERA,
     CONF_DATA,
-    CONF_DEVICE_DISCOVERY,
-    CONF_DEVICE_DOMAIN,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TRACKER,
     CONF_MANUFACTURER,
@@ -44,8 +33,6 @@ from . import (
     CONF_MODEL,
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
-    CONF_SELECTION,
-    CONF_TARGETS_REQUIRED,
     DELIVERY_SELECTION_IMPLICIT,
     DOMAIN,
     SCENARIO_DEFAULT,
@@ -53,13 +40,16 @@ from . import (
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
+    MethodConfig,
 )
 from .scenario import Scenario
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, State
     from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
+    from homeassistant.helpers.typing import ConfigType
 
+    from custom_components.supernotify.delivery import Delivery
     from custom_components.supernotify.delivery_method import DeliveryMethod
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,16 +59,16 @@ class Context:
     def __init__(
         self,
         hass: HomeAssistant | None = None,
-        deliveries: dict[str, Any] | None = None,
+        deliveries: ConfigType | None = None,
         links: list[str] | None = None,
         recipients: list[dict[str, Any]] | None = None,
-        mobile_actions: dict[str, Any] | None = None,
+        mobile_actions: ConfigType | None = None,
         template_path: str | None = None,
         media_path: str | None = None,
         archive_config: dict[str, str] | None = None,
-        scenarios: dict[str, dict[str, Any]] | None = None,
-        method_configs: dict[str, Any] | None = None,
-        cameras: list[dict[str, Any]] | None = None,
+        scenarios: ConfigType | None = None,
+        method_configs: ConfigType | None = None,
+        cameras: list[ConfigType] | None = None,
         method_types: list[type[DeliveryMethod]] | None = None,
     ) -> None:
         self.hass: HomeAssistant | None = None
@@ -115,11 +105,11 @@ class Context:
 
         self.links: list[dict[str, Any]] = ensure_list(links)
         # raw configured deliveries
-        self._deliveries: dict[str, Any] = deliveries if isinstance(deliveries, dict) else {}
+        self._deliveries: ConfigType = deliveries if isinstance(deliveries, dict) else {}
         # validated deliveries
-        self.deliveries: dict[str, Any] = {}
+        self.deliveries: dict[str, Delivery] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
-        self.mobile_actions: dict[str, Any] = mobile_actions or {}
+        self.mobile_actions: ConfigType = mobile_actions or {}
         self.template_path: Path | None = Path(template_path) if template_path else None
         self.media_path: Path | None = Path(media_path) if media_path else None
         archive_config = archive_config or {}
@@ -130,19 +120,21 @@ class Context:
             archive_config.get(CONF_ARCHIVE_DAYS),
             mqtt_topic=archive_config.get(CONF_ARCHIVE_MQTT_TOPIC),
             mqtt_qos=int(archive_config.get(CONF_ARCHIVE_MQTT_QOS, 0)),
-            mqtt_retain=boolean(archive_config.get(CONF_ARCHIVE_MQTT_RETAIN, True))
+            mqtt_retain=boolean(archive_config.get(CONF_ARCHIVE_MQTT_RETAIN, True)),
         )
 
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
         self.methods: dict[str, DeliveryMethod] = {}
-        self._method_configs: dict[str, Any] = method_configs or {}
+        self._method_configs: dict[str, MethodConfig] = (
+            {n: MethodConfig(n, c) for n, c in method_configs.items()} if method_configs else {}
+        )
         self.scenarios: dict[str, Scenario] = {}
         self.people: dict[str, dict[str, Any]] = {}
-        self._config_scenarios: dict[str, Any] = scenarios or {}
-        self.content_scenario_templates: dict[str, Any] = {}
+        self._config_scenarios: ConfigType = scenarios or {}
+        self.content_scenario_templates: ConfigType = {}
         self.delivery_by_scenario: dict[str, list[str]] = {SCENARIO_DEFAULT: []}
-        self.fallback_on_error: dict[str, dict[str, Any]] = {}
-        self.fallback_by_default: dict[str, dict[str, Any]] = {}
+        self.fallback_on_error: list[Delivery] = []
+        self.fallback_by_default: list[Delivery] = []
         self._entity_registry: entity_registry.EntityRegistry | None = None
         self._device_registry: device_registry.DeviceRegistry | None = None
         self._method_types: list[type[DeliveryMethod]] = method_types or []
@@ -176,13 +168,17 @@ class Context:
                 self.media_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
-                self.raise_issue("media_path", "media_path", {"path": str(self.media_path), "error": str(e)})
+                await self.raise_issue("media_path", "media_path", {"path": str(self.media_path), "error": str(e)})
                 self.media_path = None
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
         if self.archive:
             self.archive.initialize()
-        default_deliveries: dict[str, Any] = self.initialize_deliveries()
+        default_deliveries: list[Delivery] = await self.initialize_deliveries()
+        self.initialize_scenarios(default_deliveries, default_scenario=self._create_default_scenario)
+
+    async def update_for_entity_state(self) -> None:
+        default_deliveries: list[Delivery] = await self.initialize_deliveries()
         self.initialize_scenarios(default_deliveries, default_scenario=self._create_default_scenario)
 
     def configure_for_tests(
@@ -191,7 +187,7 @@ class Context:
         self._create_default_scenario = create_default_scenario
         self._method_instances = method_instances
 
-    def raise_issue(
+    async def raise_issue(
         self,
         issue_id: str,
         issue_key: str,
@@ -212,64 +208,51 @@ class Context:
             learn_more_url=learn_more_url,
         )
 
-    def initialize_deliveries(self) -> dict[str, Any]:
-        default_deliveries = {}
-        if self._deliveries:
-            for d, dc in self._deliveries.items():
-                method = self.methods.get(dc[CONF_METHOD])
-                if method:
-                    for k, v in method.default.items():
-                        dc.setdefault(k, v)
-                else:
-                    _LOGGER.warning(f"SUPERNOTIFY Unknown method {dc[CONF_METHOD]} for delivery {d}")
-                    self.raise_issue(
-                        f"delivery_{d}_unknown_method{dc[CONF_METHOD]}",
-                        issue_key="delivery_unknown_method",
-                        issue_map={"delivery": d, "method": dc[CONF_METHOD]},
-                    )
-                    dc[CONF_ENABLED] = False
-                if dc.get(CONF_ENABLED, True):
-                    if SELECTION_FALLBACK_ON_ERROR in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
-                        self.fallback_on_error[d] = dc
-                    if SELECTION_FALLBACK in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
-                        self.fallback_by_default[d] = dc
-                    if SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
-                        default_deliveries[d] = dc
-
-                if not dc.get(CONF_NAME):
-                    dc[CONF_NAME] = d  # for minimal tests
+    async def initialize_deliveries(self) -> list[Delivery]:
+        default_deliveries: list[Delivery] = []
+        for delivery in self.deliveries.values():
+            if delivery.enabled:
+                if SELECTION_FALLBACK_ON_ERROR in delivery.selection:
+                    self.fallback_on_error.append(delivery)
+                if SELECTION_FALLBACK in delivery.selection:
+                    self.fallback_by_default.append(delivery)
+                if SELECTION_DEFAULT in delivery.selection:
+                    default_deliveries.append(delivery)
 
         return default_deliveries
 
-    def initialize_scenarios(self, default_deliveries: dict[str, Any], default_scenario: bool = False) -> None:
+    def initialize_scenarios(self, default_deliveries: list[Delivery], default_scenario: bool = False) -> None:
+        self.delivery_by_scenario = {}
         for scenario_name, scenario in self.scenarios.items():
-            self.delivery_by_scenario.setdefault(scenario_name, [])
-            if scenario.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                scenario_deliveries: list[str] = list(default_deliveries.keys())
-            else:
-                scenario_deliveries = []
-            scenario_definition_delivery = scenario.delivery
-            scenario_deliveries.extend(s for s in scenario_definition_delivery if s not in scenario_deliveries)
+            if scenario.enabled:
+                self.delivery_by_scenario.setdefault(scenario_name, [])
+                if scenario.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
+                    scenario_deliveries: list[str] = [d.name for d in default_deliveries]
+                else:
+                    scenario_deliveries = []
+                scenario_definition_delivery = scenario.delivery
+                scenario_deliveries.extend(s for s in scenario_definition_delivery if s not in scenario_deliveries)
 
-            for scenario_delivery in scenario_deliveries:
-                if safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_ENABLED, True):
-                    self.delivery_by_scenario[scenario_name].append(scenario_delivery)
+                for scenario_delivery in scenario_deliveries:
+                    if safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_ENABLED, True):
+                        if self.deliveries[scenario_delivery].enabled:
+                            self.delivery_by_scenario[scenario_name].append(scenario_delivery)
 
-                scenario_delivery_config = safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_DATA, {})
+                    scenario_delivery_config = safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_DATA, {})
 
-                # extract message and title templates per scenario per delivery
-                for template_field in SCENARIO_TEMPLATE_ATTRS:
-                    template_format = scenario_delivery_config.get(template_field)
-                    if template_format is not None:
-                        self.content_scenario_templates.setdefault(template_field, {})
-                        self.content_scenario_templates[template_field].setdefault(scenario_delivery, [])
-                        self.content_scenario_templates[template_field][scenario_delivery].append(scenario_name)
+                    # extract message and title templates per scenario per delivery
+                    for template_field in SCENARIO_TEMPLATE_ATTRS:
+                        template_format = scenario_delivery_config.get(template_field)
+                        if template_format is not None:
+                            self.content_scenario_templates.setdefault(template_field, {})
+                            self.content_scenario_templates[template_field].setdefault(scenario_delivery, [])
+                            self.content_scenario_templates[template_field][scenario_delivery].append(scenario_name)
 
-        self.delivery_by_scenario[SCENARIO_DEFAULT] = list(default_deliveries.keys())
+        self.delivery_by_scenario[SCENARIO_DEFAULT] = [d.name for d in default_deliveries]
         if default_scenario:
-            for d, dc in self.deliveries.items():
-                if dc.get(CONF_ENABLED, True) and d not in self.delivery_by_scenario[SCENARIO_DEFAULT]:
-                    self.delivery_by_scenario[SCENARIO_DEFAULT].append(d)
+            for d in self.deliveries.values():
+                if d.enabled and d.name not in self.delivery_by_scenario[SCENARIO_DEFAULT]:
+                    self.delivery_by_scenario[SCENARIO_DEFAULT].append(d.name)
 
     async def _register_delivery_methods(
         self,
@@ -284,27 +267,37 @@ class Context:
                 self.deliveries.update(self.methods[delivery_method.method].valid_deliveries)
         if delivery_method_classes and self.hass:
             for delivery_method_class in delivery_method_classes:
-                method_config = self._method_configs.get(delivery_method_class.method, {})
+                method_config: MethodConfig = self._method_configs.get(
+                    delivery_method_class.method, MethodConfig(delivery_method_class.method, {})
+                )
                 self.methods[delivery_method_class.method] = delivery_method_class(
                     self.hass,
                     self,
-                    self._deliveries,
-                    default=method_config.get(CONF_DEFAULT, {}),
-                    device_domain=method_config.get(CONF_DEVICE_DOMAIN, []),
-                    device_discovery=method_config.get(CONF_DEVICE_DISCOVERY, False),
-                    targets_required=method_config.get(CONF_TARGETS_REQUIRED, False),
+                    {d: dc for d, dc in self._deliveries.items() if dc.get(CONF_METHOD) == delivery_method_class.method},
+                    delivery_defaults=method_config.delivery_defaults,
+                    enabled=method_config.enabled,
+                    device_domain=method_config.device_domain,
+                    device_discovery=method_config.device_discovery,
+                    targets_required=method_config.targets_required,
                 )
                 await self.methods[delivery_method_class.method].initialize()
                 self.deliveries.update(self.methods[delivery_method_class.method].valid_deliveries)
 
+        unconfigured_deliveries = [dc for d, dc in self._deliveries.items() if d not in self.deliveries]
+        for bad_del in unconfigured_deliveries:
+            # presumably there was no method for these
+            await self.raise_issue(
+                f"delivery_{bad_del.get(CONF_NAME)}_for_method_{bad_del.get(CONF_METHOD)}_failed_to_configure",
+                issue_key="delivery_unknown_method",
+                issue_map={"delivery": bad_del.get(CONF_NAME), "method": bad_del.get(CONF_METHOD)},
+            )
         _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self.deliveries.keys()))
 
-    def delivery_method(self, delivery: str) -> DeliveryMethod:
-        method_name = self.deliveries.get(delivery, {}).get(CONF_METHOD)
-        method: DeliveryMethod | None = self.methods.get(method_name)
-        if not method:
-            raise ValueError(f"SUPERNOTIFY No method {method_name} for delivery {delivery}")
-        return method
+    def delivery_method(self, delivery_name: str) -> DeliveryMethod:
+        delivery: Delivery | None = self.deliveries.get(delivery_name)
+        if not delivery:
+            raise ValueError(f"SUPERNOTIFY No delivery {delivery}")
+        return delivery.method
 
     def discover_devices(self, discover_domain: str) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []

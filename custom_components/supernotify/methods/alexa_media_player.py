@@ -3,13 +3,14 @@ import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT
 
-from custom_components.supernotify import CONF_OPTIONS, METHOD_ALEXA_MEDIA_PLAYER, MessageOnlyPolicy
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, METHOD_ALEXA_MEDIA_PLAYER, DeliveryConfig, MessageOnlyPolicy
+from custom_components.supernotify.delivery import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+)
+from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -31,12 +32,12 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
     method = METHOD_ALEXA_MEDIA_PLAYER
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DEFAULT, {})
-        kwargs[CONF_DEFAULT].setdefault(CONF_ACTION, ACTION)
-        kwargs[CONF_DEFAULT].setdefault(CONF_OPTIONS, {})
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_SIMPLIFY_TEXT, True)
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_STRIP_URLS, True)
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.STANDARD)
+        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
+        if not kwargs[CONF_DELIVERY_DEFAULTS].action:
+            kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_SIMPLIFY_TEXT, True)
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_STRIP_URLS, True)
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.STANDARD)
         super().__init__(*args, **kwargs)
 
     def select_target(self, target: str) -> bool:
@@ -52,6 +53,7 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
             return False
 
         action_data: dict[str, Any] = {"message": envelope.message, ATTR_DATA: {"type": "announce"}, ATTR_TARGET: media_players}
+        # alexa media player expects a non-std list as target, so don't use notify target arg (which expects dict)
         if envelope.data and envelope.data.get("data"):
             action_data[ATTR_DATA].update(envelope.data.get("data"))
         return await self.call_action(envelope, action_data=action_data)

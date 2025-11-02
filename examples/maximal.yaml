@@ -133,7 +133,7 @@ notify:
             enabled: false
     methods:
       email:
-        default:
+        delivery_defaults:
           action: notify.smtp
           data:
             footer: Delivered by Supernotify (MsgId:{e.notification_id})
@@ -143,7 +143,7 @@ notify:
               optimize: true
               quality: 50
       alexa_media_player:
-        default:
+        delivery_defaults:
           target:
             - media_player.kitchen
             - media_player.bedroom
@@ -153,22 +153,22 @@ notify:
           options:
             title_handling: combine_message
       alexa_devices:
-        default:
+        delivery_defaults:
           target:
             - notify.kitchen_echo_announce
             - notify.bedroom_dot_speak
           options:
             title_handling: replace_message
       sms:
-        default:
+        delivery_defaults:
           action: notify.mikrotik_sms
         targets_required: true
       mobile_push:
-        default:
+        delivery_defaults:
           options:
             timestamp: '%H:%M'
       chime:
-        default:
+        delivery_defaults:
           target:
             - media_player.kitchen
             - media_player.bedroom

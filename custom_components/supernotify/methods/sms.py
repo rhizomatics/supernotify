@@ -3,18 +3,16 @@ import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
-from homeassistant.const import CONF_DEFAULT
 
 from custom_components.supernotify import (
-    CONF_OPTIONS,
+    CONF_DELIVERY_DEFAULTS,
     CONF_PHONE_NUMBER,
     METHOD_SMS,
+    DeliveryConfig,
     MessageOnlyPolicy,
 )
+from custom_components.supernotify.delivery import OPTION_MESSAGE_USAGE, OPTION_SIMPLIFY_TEXT, OPTION_STRIP_URLS
 from custom_components.supernotify.delivery_method import (
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -29,11 +27,10 @@ class SMSDeliveryMethod(DeliveryMethod):
     MAX_MESSAGE_LENGTH = 158
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DEFAULT, {})
-        kwargs[CONF_DEFAULT].setdefault(CONF_OPTIONS, {})
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_SIMPLIFY_TEXT, True)
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_STRIP_URLS, False)
-        kwargs[CONF_DEFAULT][CONF_OPTIONS].setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.COMBINE_TITLE)
+        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_SIMPLIFY_TEXT, True)
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_STRIP_URLS, False)
+        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.COMBINE_TITLE)
         super().__init__(*args, **kwargs)
 
     def select_target(self, target: str) -> bool:
