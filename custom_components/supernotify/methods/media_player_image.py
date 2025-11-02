@@ -23,6 +23,10 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
         super().__init__(*args, **kwargs)
 
     @property
+    def default_options(self) -> dict[str, Any]:
+        return {}
+
+    @property
     def default_action(self) -> str:
         return "media_player.play_media"
 

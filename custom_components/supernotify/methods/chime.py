@@ -89,6 +89,10 @@ class ChimeDeliveryMethod(DeliveryMethod):
         super().__init__(*args, **kwargs)
 
     @property
+    def default_options(self) -> dict[str, Any]:
+        return {}
+
+    @property
     def chime_aliases(self) -> dict[str, Any]:
         return self.delivery_defaults.options.get("chime_aliases") or {}
 
