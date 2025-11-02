@@ -84,13 +84,13 @@ class NotificationArchive:
             _LOGGER.warning("SUPERNOTIFY archive path not configured")
         else:
             verify_archive_path: anyio.Path = anyio.Path(self.configured_archive_path)
-            if verify_archive_path and not verify_archive_path.exists():
+            if verify_archive_path and not await verify_archive_path.exists():
                 _LOGGER.info("SUPERNOTIFY archive path not found at %s", verify_archive_path)
                 try:
                     await verify_archive_path.mkdir(parents=True, exist_ok=True)
                 except Exception as e:
                     _LOGGER.warning("SUPERNOTIFY archive path %s cannot be created: %s", verify_archive_path, e)
-            if verify_archive_path and verify_archive_path.exists() and verify_archive_path.is_dir():
+            if verify_archive_path and await verify_archive_path.exists() and await verify_archive_path.is_dir():
                 try:
                     await verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
                     self.archive_path = verify_archive_path

@@ -57,10 +57,7 @@ class EmailDeliveryMethod(DeliveryMethod):
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             # use sensible defaults for image attachments
-            OPTION_JPEG: {
-                "progressive": "true",
-                "optimize": "true"
-            }
+            OPTION_JPEG: {"progressive": "true", "optimize": "true"},
         }
 
     def select_target(self, target: str) -> bool:

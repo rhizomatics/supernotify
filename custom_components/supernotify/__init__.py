@@ -555,11 +555,11 @@ class DeliveryConfig:
             CONF_OPTIONS: self.options,
             CONF_DATA: self.data,
             CONF_SELECTION: self.selection,
-            CONF_PRIORITY: self.priority
+            CONF_PRIORITY: self.priority,
         }
 
     def __repr__(self) -> str:
-        '''Log friendly representation'''
+        """Log friendly representation"""
         return str(self.as_dict())
 
 
