@@ -52,9 +52,6 @@ from custom_components.supernotify import (
     OCCUPANCY_NONE,
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     SCENARIO_DEFAULT,
@@ -69,7 +66,12 @@ from custom_components.supernotify.common import DebugTrace, safe_extend
 from custom_components.supernotify.delivery import (
     Delivery,
 )
-from custom_components.supernotify.delivery_method import DeliveryMethod
+from custom_components.supernotify.delivery_method import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    DeliveryMethod,
+)
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.scenario import Scenario
 

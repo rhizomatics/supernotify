@@ -14,20 +14,16 @@ DELIVERY = {
 async def test_notify_alexa_media_player(mock_hass) -> None:  # type: ignore
     """Test on_notify_alexa."""
     delivery_config = {
-        "default": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_DEFAULT: True, CONF_ACTION: "notify.alexa_media_player"}
+        "override": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_DEFAULT: True, CONF_ACTION: "notify.alexa_media_player"}
     }
     context = Context(deliveries=delivery_config)
-    uut = AlexaMediaPlayerDeliveryMethod(
-        mock_hass,
-        context,
-        delivery_config,
-    )
+    uut = AlexaMediaPlayerDeliveryMethod(mock_hass, context, delivery_config)
     await uut.initialize()
     context.configure_for_tests(method_instances=[uut])
     await context.initialize()
-    await uut.deliver(
-        Envelope("default", Notification(context, message="hello there"), targets=["media_player.hall", "media_player.toilet"])
-    )
+    notification = Notification(context, message="hello there")
+    await notification.initialize()
+    await uut.deliver(Envelope("default", notification, targets=["media_player.hall", "media_player.toilet"]))
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "alexa_media_player",

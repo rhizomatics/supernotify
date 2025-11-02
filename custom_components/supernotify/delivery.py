@@ -42,7 +42,7 @@ class Delivery(DeliveryConfig):
         self.alias: str | None = conf.get(CONF_ALIAS)
         self.method: DeliveryMethod = method
         method_defaults: DeliveryConfig = self.method.delivery_defaults
-        super().__init__(conf, defaults=method_defaults)
+        super().__init__(conf, delivery_defaults=method_defaults)
         self.template: str | None = conf.get(CONF_TEMPLATE)
         self.default: bool = conf.get(CONF_DEFAULT, False)
         self.message: str | None = conf.get(CONF_MESSAGE)

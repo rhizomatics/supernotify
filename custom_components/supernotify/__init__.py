@@ -414,16 +414,6 @@ class MessageOnlyPolicy(StrEnum):
     COMBINE_TITLE = "COMBINE_TITLE"  # use combined title and message as message, no title
 
 
-OPTION_SIMPLIFY_TEXT = "simplify_text"
-OPTION_STRIP_URLS = "strip_urls"
-OPTION_MESSAGE_USAGE = "message_usage"
-OPTIONS_WITH_DEFAULTS: dict[str, str | bool] = {
-    OPTION_SIMPLIFY_TEXT: False,
-    OPTION_STRIP_URLS: False,
-    OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-}
-
-
 @dataclass
 class ConditionVariables:
     """Variables presented to all condition evaluations
@@ -532,18 +522,17 @@ class Target:
 class DeliveryConfig:
     """Shared config for method defaults and Delivery definitions"""
 
-    def __init__(self, conf: ConfigType, defaults: "DeliveryConfig|None" = None) -> None:
-        if defaults is not None:
+    def __init__(self, conf: ConfigType, delivery_defaults: "DeliveryConfig|None" = None) -> None:
+        if delivery_defaults is not None:
             # use method defaults where no delivery level override
-            self.target: Target = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else defaults.target
-            self.action: str | None = conf.get(CONF_ACTION) or defaults.action
-            self.options: ConfigType = dict(OPTIONS_WITH_DEFAULTS) or {}
-            self.options.update(defaults.options)
+            self.target: Target = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
+            self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
+            self.options: ConfigType = dict(delivery_defaults.options)
             self.options.update(conf.get(CONF_OPTIONS, {}))
-            self.data: ConfigType = dict(defaults.data) or {}
+            self.data: ConfigType = dict(delivery_defaults.data) or {}
             self.data.update(conf.get(CONF_DATA, {}))
-            self.selection: list[str] = conf.get(CONF_SELECTION, defaults.selection)
-            self.priority: list[str] = conf.get(CONF_PRIORITY, defaults.priority)
+            self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
+            self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
         else:
             # construct the method defaults
             self.target = Target(conf.get(CONF_TARGET, {}))
@@ -552,6 +541,26 @@ class DeliveryConfig:
             self.data = conf.get(CONF_DATA, {})
             self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
+
+    def apply_method_options(self, method_options: dict[str, Any]) -> None:
+        method_options = method_options or {}
+        for opt in method_options:
+            if opt not in self.options:
+                self.options[opt] = method_options[opt]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            CONF_TARGET: self.target.as_dict(),
+            CONF_ACTION: self.action,
+            CONF_OPTIONS: self.options,
+            CONF_DATA: self.data,
+            CONF_SELECTION: self.selection,
+            CONF_PRIORITY: self.priority
+        }
+
+    def __repr__(self) -> str:
+        '''Log friendly representation'''
+        return str(self.as_dict())
 
 
 class MethodConfig:

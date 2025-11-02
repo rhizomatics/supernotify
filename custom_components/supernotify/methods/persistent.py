@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from custom_components.supernotify.delivery import Delivery
 
 _LOGGER = logging.getLogger(__name__)
-ACTION = "persistent_notification.create"
 
 
 class PersistentDeliveryMethod(DeliveryMethod):
@@ -23,12 +22,12 @@ class PersistentDeliveryMethod(DeliveryMethod):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
-        kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
         kwargs[CONF_TARGETS_REQUIRED] = False
         super().__init__(*args, **kwargs)
 
-    def validate_action(self, action: str | None) -> bool:
-        return action is None or action == ACTION
+    @property
+    def default_action(self) -> str:
+        return "persistent_notification.create"
 
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}

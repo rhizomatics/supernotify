@@ -7,9 +7,15 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from jinja2 import Environment, FileSystemLoader
 
-from custom_components.supernotify import CONF_TEMPLATE, METHOD_EMAIL
+from custom_components.supernotify import CONF_TEMPLATE, METHOD_EMAIL, MessageOnlyPolicy
 from custom_components.supernotify.configuration import Context
-from custom_components.supernotify.delivery_method import DeliveryMethod
+from custom_components.supernotify.delivery_method import (
+    OPTION_JPEG,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    DeliveryMethod,
+)
 from custom_components.supernotify.envelope import Envelope
 
 if TYPE_CHECKING:
@@ -39,6 +45,23 @@ class EmailDeliveryMethod(DeliveryMethod):
                 _LOGGER.debug("SUPERNOTIFY Loading email templates from %s", self.template_path)
         else:
             _LOGGER.warning("SUPERNOTIFY Email templates not available - no configured path")
+
+    def validate_action(self, action: str | None) -> bool:
+        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        return action is not None
+
+    @property
+    def default_options(self) -> dict[str, Any]:
+        return {
+            OPTION_SIMPLIFY_TEXT: False,
+            OPTION_STRIP_URLS: False,
+            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            # use sensible defaults for image attachments
+            OPTION_JPEG: {
+                "progressive": "true",
+                "optimize": "true"
+            }
+        }
 
     def select_target(self, target: str) -> bool:
         return re.fullmatch(RE_VALID_EMAIL, target) is not None

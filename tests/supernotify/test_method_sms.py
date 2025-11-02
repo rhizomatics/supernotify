@@ -23,12 +23,12 @@ async def test_deliver(mock_hass) -> None:  # type: ignore
         Envelope("smsify", Notification(context, message="hello there", title="testing"), targets=["+447979123456"])
     )
     mock_hass.services.async_call.assert_called_with(
-        "notify", "smsify", service_data={"target": ["+447979123456"], "message": "testing hello there"}
+        "notify", "smsify", service_data={"message": "testing hello there", "target": ["+447979123456"]}
     )
     mock_hass.reset_mock()
     await uut.deliver(
         Envelope("smsify", Notification(context, message="explicit target", title="testing"), targets=["+19876123456"])
     )
     mock_hass.services.async_call.assert_called_with(
-        "notify", "smsify", service_data={"target": ["+19876123456"], "message": "testing explicit target"}
+        "notify", "smsify", service_data={"message": "testing explicit target", "target": ["+19876123456"], }
     )

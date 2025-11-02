@@ -5,16 +5,14 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
 from custom_components.supernotify import (
-    CONF_DELIVERY_DEFAULTS,
     CONF_PHONE_NUMBER,
     METHOD_SMS,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    DeliveryConfig,
     MessageOnlyPolicy,
 )
 from custom_components.supernotify.delivery_method import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -29,11 +27,19 @@ class SMSDeliveryMethod(DeliveryMethod):
     MAX_MESSAGE_LENGTH = 158
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
-        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_SIMPLIFY_TEXT, True)
-        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_STRIP_URLS, False)
-        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.COMBINE_TITLE)
         super().__init__(*args, **kwargs)
+
+    @property
+    def default_options(self) -> dict[str, Any]:
+        return {
+            OPTION_SIMPLIFY_TEXT: True,
+            OPTION_STRIP_URLS: False,
+            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
+        }
+
+    def validate_action(self, action: str | None) -> bool:
+        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        return action is not None
 
     def select_target(self, target: str) -> bool:
         return re.fullmatch(RE_VALID_PHONE, target) is not None

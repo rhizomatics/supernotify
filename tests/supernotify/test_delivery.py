@@ -5,7 +5,6 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify import (
     OCCUPANCY_ALL,
-    OPTIONS_WITH_DEFAULTS,
     PRIORITY_VALUES,
     SELECTION_DEFAULT,
 )
@@ -31,7 +30,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.selection == [SELECTION_DEFAULT]
     assert uut.method.method == "notify_entity"
     assert uut.data == {}
-    assert uut.options == OPTIONS_WITH_DEFAULTS
+    assert uut.options == uut.method.default_options
     assert uut.action == "notify.send_message"
     assert uut.target.entity_id == []
 
@@ -39,8 +38,8 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
 async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_context: Context) -> None:
     uut = Delivery("ALL", {}, NotifyEntityDeliveryMethod(mock_hass, mock_context, {}))
     assert await uut.validate(mock_context) is False
-    mock_context.raise_issue.assert_called_with(
-        "delivery_ALL_reserved_name",  # type: ignore
+    mock_context.raise_issue.assert_called_with(  # type: ignore
+        "delivery_ALL_reserved_name",
         issue_key="delivery_reserved_name",
         issue_map={"delivery": "ALL"},
     )
@@ -50,7 +49,7 @@ async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_
     uut = Delivery("generic", {}, GenericDeliveryMethod(mock_hass, mock_context, {}))
     assert await uut.validate(mock_context) is False
     mock_context.raise_issue.assert_called_with(  # type: ignore
-        "delivery_generic_invalid_action",  
+        "delivery_generic_invalid_action",
         issue_key="delivery_invalid_action",
         issue_map={"action": "", "delivery": "generic"},
     )
@@ -60,9 +59,7 @@ async def test_broken_create_with_bad_condition(mock_hass: HomeAssistant, mock_c
     uut = Delivery("generic", {CONF_CONDITION: {"condition": "xor"}}, GenericDeliveryMethod(mock_hass, mock_context, {}))
     assert await uut.validate(mock_context) is False
     mock_context.raise_issue.assert_called_with(  # type: ignore
-        "delivery_generic_invalid_condition", 
+        "delivery_generic_invalid_condition",
         issue_key="delivery_invalid_condition",
-        issue_map={"condition": "", "delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "'integrations'"},
+        issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "'integrations'"},
     )
-
-

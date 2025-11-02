@@ -8,7 +8,6 @@ from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 
 _LOGGER = logging.getLogger(__name__)
-ACTION = "notify.send_message"
 
 
 class NotifyEntityDeliveryMethod(DeliveryMethod):
@@ -18,12 +17,12 @@ class NotifyEntityDeliveryMethod(DeliveryMethod):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
-        kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
         kwargs[CONF_TARGETS_REQUIRED] = True
         super().__init__(*args, **kwargs)
 
-    def validate_action(self, action: str | None) -> bool:
-        return action is None or action.startswith("notify.")
+    @property
+    def default_action(self) -> str:
+        return "notify.send_message"
 
     async def deliver(self, envelope: Envelope) -> bool:
         action_data = envelope.core_action_data()
@@ -36,4 +35,4 @@ class NotifyEntityDeliveryMethod(DeliveryMethod):
         # label_id
         action_data = envelope.core_action_data()
 
-        return await self.call_action(envelope, ACTION, action_data=action_data, target_data=target_data)
+        return await self.call_action(envelope, self.default_action, action_data=action_data, target_data=target_data)

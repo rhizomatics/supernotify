@@ -25,10 +25,16 @@ from . import (
     CONF_TARGETS_REQUIRED,
     ConditionVariables,
     DeliveryConfig,
+    MessageOnlyPolicy,
     Target,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTION_SIMPLIFY_TEXT = "simplify_text"
+OPTION_STRIP_URLS = "strip_urls"
+OPTION_MESSAGE_USAGE = "message_usage"
+OPTION_JPEG = "jpeg_opts"
 
 
 class DeliveryMethod:
@@ -57,6 +63,9 @@ class DeliveryMethod:
         if isinstance(delivery_defaults, dict):
             delivery_defaults = DeliveryConfig(delivery_defaults)  # test support
         self.delivery_defaults: DeliveryConfig = delivery_defaults or DeliveryConfig({})
+        self.delivery_defaults.apply_method_options(self.default_options)
+        if self.delivery_defaults.action is None:
+            self.delivery_defaults.action = self.default_action
         self.targets_required: bool | None = targets_required
         self.device_domain: list[str] = device_domain or []
         self.device_discovery: bool | None = device_discovery
@@ -88,9 +97,21 @@ class DeliveryMethod:
     def targets(self) -> Target:
         return self.delivery_defaults.target
 
+    @property
+    def default_action(self) -> str | None:
+        return None
+
+    @property
+    def default_options(self) -> dict[str, Any]:
+        return {
+            OPTION_SIMPLIFY_TEXT: False,
+            OPTION_STRIP_URLS: False,
+            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+        }
+
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if delivery method has fixed action or doesn't require one"""
-        return action is None or action.startswith("notify.")
+        return action == self.default_action
 
     async def initialize_deliveries(self) -> dict[str, Delivery]:
         """Validate and initialize deliveries at startup for this method"""

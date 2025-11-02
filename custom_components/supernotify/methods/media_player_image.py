@@ -10,7 +10,6 @@ from custom_components.supernotify.envelope import Envelope
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
-ACTION = "media_player.play_media"
 
 
 class MediaPlayerImageDeliveryMethod(DeliveryMethod):
@@ -20,16 +19,15 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
-        if not kwargs[CONF_DELIVERY_DEFAULTS].action:
-            kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
         kwargs[CONF_TARGETS_REQUIRED] = False
         super().__init__(*args, **kwargs)
 
+    @property
+    def default_action(self) -> str:
+        return "media_player.play_media"
+
     def select_target(self, target: str) -> bool:
         return re.fullmatch(RE_VALID_MEDIA_PLAYER, target) is not None
-
-    def validate_action(self, action: str | None) -> bool:
-        return action is None or action == "media_player.play_media"
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

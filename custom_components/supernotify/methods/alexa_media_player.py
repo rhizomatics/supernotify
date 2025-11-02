@@ -5,21 +5,18 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
 from custom_components.supernotify import (
-    CONF_DELIVERY_DEFAULTS,
     METHOD_ALEXA_MEDIA_PLAYER,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    DeliveryConfig,
     MessageOnlyPolicy,
 )
 from custom_components.supernotify.delivery_method import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
-ACTION = "notify.alexa_media"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +32,23 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
     method = METHOD_ALEXA_MEDIA_PLAYER
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
-        if not kwargs[CONF_DELIVERY_DEFAULTS].action:
-            kwargs[CONF_DELIVERY_DEFAULTS].action = ACTION
-        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_SIMPLIFY_TEXT, True)
-        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_STRIP_URLS, True)
-        kwargs[CONF_DELIVERY_DEFAULTS].options.setdefault(OPTION_MESSAGE_USAGE, MessageOnlyPolicy.STANDARD)
         super().__init__(*args, **kwargs)
+
+    @property
+    def default_action(self) -> str:
+        return "notify.alexa_media"
+
+    def validate_action(self, action: str | None) -> bool:
+        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        return action is not None
+
+    @property
+    def default_options(self) -> dict[str, Any]:
+        return {
+            OPTION_SIMPLIFY_TEXT: True,
+            OPTION_STRIP_URLS: True,
+            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+        }
 
     def select_target(self, target: str) -> bool:
         return re.fullmatch(RE_VALID_ALEXA, target) is not None

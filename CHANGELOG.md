@@ -1,5 +1,9 @@
 # Public releases
 
+## 1.1.1
+
+- Options defaulting for methods improved
+
 ## 1.1.0
 
 - Refactored internal use of dictionaries for delivery config, method defaults and targets to typed classes for easier debugging and testing
