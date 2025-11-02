@@ -67,7 +67,7 @@ class NotificationArchive:
         self.enabled = enabled
         self.last_purge: dt.datetime | None = None
         self.configured_archive_path: str | None = archive_path
-        self.archive_path: Path | None = None
+        self.archive_path: anyio.Path | None = None
         self.archive_days: int = int(archive_days) if archive_days else ARCHIVE_DEFAULT_DAYS
         self.purge_minute_interval = int(purge_minute_interval) if purge_minute_interval else ARCHIVE_PURGE_MIN_INTERVAL
         self.mqtt_topic = mqtt_topic
@@ -75,23 +75,23 @@ class NotificationArchive:
         self.mqtt_retain = mqtt_retain
         self.archive_topic: ArchiveTopic | None = None
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         if not self.enabled:
             _LOGGER.info("SUPERNOTIFY Archive disabled")
             return
         if not self.configured_archive_path:
             _LOGGER.warning("SUPERNOTIFY archive path not configured")
         else:
-            verify_archive_path: Path = Path(self.configured_archive_path)
+            verify_archive_path: anyio.Path = anyio.Path(self.configured_archive_path)
             if verify_archive_path and not verify_archive_path.exists():
                 _LOGGER.info("SUPERNOTIFY archive path not found at %s", verify_archive_path)
                 try:
-                    verify_archive_path.mkdir(parents=True, exist_ok=True)
+                    await verify_archive_path.mkdir(parents=True, exist_ok=True)
                 except Exception as e:
                     _LOGGER.warning("SUPERNOTIFY archive path %s cannot be created: %s", verify_archive_path, e)
             if verify_archive_path and verify_archive_path.exists() and verify_archive_path.is_dir():
                 try:
-                    verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
+                    await verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
                     self.archive_path = verify_archive_path
                     _LOGGER.info("SUPERNOTIFY archiving notifications to file system at %s", verify_archive_path)
                 except Exception as e:
@@ -102,6 +102,13 @@ class NotificationArchive:
                 self.enabled = False
 
         if self.mqtt_topic is not None and self.hass:
+            try:
+                if not await mqtt.async_wait_for_mqtt_client(self.hass):
+                    _LOGGER.error("SUPERNOTIFY MQTT integration is not available, archive publication disabled")
+                    return
+            except Exception:
+                _LOGGER.exception("SUPERNOTIFY MQTT integration failed on archive setup")
+                return
             self.archive_topic = ArchiveTopic(self.hass, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
             _LOGGER.info(
                 f"SUPERNOTIFY Archiving to MQTT topic {self.mqtt_topic}, qos {self.mqtt_qos}, retain {self.mqtt_retain}"
@@ -109,7 +116,7 @@ class NotificationArchive:
 
     async def size(self) -> int:
         path = self.archive_path
-        if path and await anyio.Path(path).exists():
+        if path and await path.exists():
             return sum(1 for p in await aiofiles.os.listdir(path) if p != WRITE_TEST)
         return 0
 
@@ -125,7 +132,7 @@ class NotificationArchive:
         cutoff = dt.datetime.now(dt.UTC) - dt.timedelta(days=self.archive_days)
         cutoff = cutoff.astimezone(dt.UTC)
         purged = 0
-        if self.archive_path and await anyio.Path(self.archive_path).exists():
+        if self.archive_path and await self.archive_path.exists():
             try:
                 archive = await aiofiles.os.scandir(self.archive_path)
                 for entry in archive:

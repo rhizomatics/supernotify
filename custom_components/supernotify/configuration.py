@@ -173,7 +173,7 @@ class Context:
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
         if self.archive:
-            self.archive.initialize()
+            await self.archive.initialize()
         default_deliveries: list[Delivery] = await self.initialize_deliveries()
         self.initialize_scenarios(default_deliveries, default_scenario=self._create_default_scenario)
 
