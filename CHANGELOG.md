@@ -3,6 +3,7 @@
 ## 1.1.1
 
 - Options defaulting for methods improved
+- Archive checks for MQTT client first, and all file IO aio based
 
 ## 1.1.0
 
