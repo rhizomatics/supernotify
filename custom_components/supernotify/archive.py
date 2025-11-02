@@ -36,11 +36,12 @@ class ArchiveTopic:
 
     async def publish(self, archive_object: ArchivableObject) -> bool:
         payload = archive_object.contents(minimal=True)
-        _LOGGER.debug("SUPERNOTIFY Publishing notification to %s", self.topic)
+        topic = f"{self.topic}/{archive_object.base_filename()}"
+        _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
             await mqtt.async_publish(
                 self._hass,
-                topic=f"{self.topic}/{archive_object.base_filename()}",
+                topic=topic,
                 payload=json_dumps(payload),
                 qos=self.qos,
                 retain=self.retain,
