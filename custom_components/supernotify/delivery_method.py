@@ -9,25 +9,18 @@ from typing import Any
 from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
-from homeassistant.const import CONF_ENABLED, CONF_METHOD
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ENABLED, CONF_METHOD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import CallRecord
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, MessageOnlyPolicy, Target
 
-from . import (
-    CONF_DELIVERY_DEFAULTS,
-    CONF_DEVICE_DISCOVERY,
-    CONF_DEVICE_DOMAIN,
-    CONF_TARGETS_REQUIRED,
-    ConditionVariables,
-    DeliveryConfig,
-    MessageOnlyPolicy,
-    Target,
-)
+from . import CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN, CONF_TARGET_REQUIRED
+from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +28,7 @@ OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
 OPTION_JPEG = "jpeg_opts"
+OPTION_TARGET_CATEGORIES = "target_categories"
 
 
 class DeliveryMethod:
@@ -51,22 +45,26 @@ class DeliveryMethod:
         self,
         hass: HomeAssistant,
         context: Context,
+        people_registry: PeopleRegistry,
         deliveries: ConfigType | None = None,
         delivery_defaults: DeliveryConfig | ConfigType | None = None,
-        targets_required: bool | None = True,
+        target_required: bool | None = True,
+        target_categories: list[str] | None = None,
         device_domain: list[str] | None = None,
         device_discovery: bool | None = False,
         enabled: bool = True,
     ) -> None:
         self.hass: HomeAssistant = hass
         self.context: Context = context
+        self.people_registry = PeopleRegistry
         if isinstance(delivery_defaults, dict):
             delivery_defaults = DeliveryConfig(delivery_defaults)  # test support
         self.delivery_defaults: DeliveryConfig = delivery_defaults or DeliveryConfig({})
         self.delivery_defaults.apply_method_options(self.default_options)
         if self.delivery_defaults.action is None:
             self.delivery_defaults.action = self.default_action
-        self.targets_required: bool | None = targets_required
+        self._target_required: bool | None = target_required
+        self._target_categories: list[str] | None = target_categories
         self.device_domain: list[str] = device_domain or []
         self.device_discovery: bool | None = device_discovery
         self.enabled = enabled
@@ -86,20 +84,31 @@ class DeliveryMethod:
                 added: int = 0
                 for d in self.context.discover_devices(domain):
                     discovered += 1
-                    if d.id not in self.delivery_defaults.target.device_id:
+                    if self.delivery_defaults.target is None:
+                        self.delivery_defaults.target = Target()
+                    if d.id not in self.delivery_defaults.target.device_ids:
                         _LOGGER.info(f"SUPERNOTIFY Discovered device {d.name} for {domain}, id {d.id}")
-                        self.delivery_defaults.target.device_id.append(d.id)
+                        self.delivery_defaults.target.device_ids.append(d.id)
                         added += 1
 
                 _LOGGER.info(f"SUPERNOTIFY device discovery for {domain} found {discovered} devices, added {added} new ones")
 
     @property
     def targets(self) -> Target:
-        return self.delivery_defaults.target
+        return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
 
     @property
     def default_action(self) -> str | None:
         return None
+
+    @property
+    def target_required(self) -> bool:
+        return self._target_required if self._target_required is not None else True
+
+    @property
+    def target_categories(self) -> list[str]:
+        """Subclasses that do not allow target_categories to be overridden can replace this with fixed list"""
+        return self._target_categories or [ATTR_ENTITY_ID]
 
     @property
     def default_options(self) -> dict[str, Any]:
@@ -156,7 +165,7 @@ class DeliveryMethod:
         return {
             CONF_METHOD: self.method,
             CONF_ENABLED: self.enabled,
-            CONF_TARGETS_REQUIRED: self.targets_required,
+            CONF_TARGET_REQUIRED: self.target_required,
             CONF_DEVICE_DOMAIN: self.device_domain,
             CONF_DEVICE_DISCOVERY: self.device_discovery,
             CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
@@ -174,19 +183,12 @@ class DeliveryMethod:
 
         """
 
-    def select_target(self, target: str) -> bool:  # noqa: ARG002
-        """Confirm if target appropriate for this delivery method
+    def select_targets(self, target: Target) -> Target:
+        return target
 
-        Args:
-        ----
-            target (str): Target, typically an entity ID, or an email address, phone number
-
-        """
-        return True
-
-    def recipient_target(self, recipient: dict[str, Any]) -> list[str]:  # noqa: ARG002
+    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:  # noqa: ARG002
         """Pick out delivery appropriate target from a single person's (recipient) config"""
-        return []
+        return None
 
     def delivery_config(self, delivery_name: str) -> Delivery:
         return self.valid_deliveries.get(delivery_name) or self.default_delivery or Delivery("", {}, self)
@@ -224,7 +226,9 @@ class DeliveryMethod:
         delivery: Delivery = self.delivery_config(envelope.delivery_name)
         try:
             qualified_action = qualified_action or delivery.action
-            if qualified_action and (action_data.get(ATTR_TARGET) or not self.targets_required or target_data):
+            if qualified_action and (
+                action_data.get(ATTR_TARGET) or action_data.get(ATTR_ENTITY_ID) or not self.target_required or target_data
+            ):
                 domain, service = qualified_action.split(".", 1)
                 start_time = time.time()
                 if target_data:

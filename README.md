@@ -307,7 +307,7 @@ notify entities at once..
 
 ### Generic
 
-Use to call any 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.
+Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.
 
 If action is in `notify` domain, then `message`,`title`,`target` and `data` will be
 passed in the Action (Service) Data, otherwise the `data` supplied will be passed directly
@@ -457,12 +457,13 @@ Use this for additional camera info:
 
 All of these set by passing an `options` block in Delivery config or Method defaults.
 
-|Option         |Methods            |Description                                                  |
-|---------------|-------------------|-------------------------------------------------------------|
-|chime_aliases  |chime              |Map tunes to device name or config                           |
-|jpeg_opts      |mail               |Tune image grabs                                             |
-|title_handling |all                |Use title rather than message, or combined title and message |
-|timestamp      |all                |Add a timestamp to message.                                  |
+|Option           |Methods            |Description                                                  |
+|-----------------|-------------------|-------------------------------------------------------------|
+|chime_aliases    |chime              |Map tunes to device name or config                           |
+|jpeg_opts        |mail               |Tune image grabs                                             |
+|title_handling   |all                |Use title rather than message, or combined title and message |
+|timestamp        |all                |Add a timestamp to message.                                  |
+|target_categories|generic            |Which targets to pass, e.g. `entity_id`,`email`,`other_id`.  |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.
 

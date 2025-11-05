@@ -7,8 +7,8 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from jinja2 import Environment, FileSystemLoader
 
-from custom_components.supernotify import CONF_TEMPLATE, METHOD_EMAIL, MessageOnlyPolicy
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify import ATTR_EMAIL, ATTR_PERSON_ID, CONF_TEMPLATE, METHOD_EMAIL
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery_method import (
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
@@ -17,6 +17,8 @@ from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.people import PeopleRegistry
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -33,8 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 class EmailDeliveryMethod(DeliveryMethod):
     method = METHOD_EMAIL
 
-    def __init__(self, hass: HomeAssistant, context: Context, deliveries: dict[str, Any] | None = None, **kwargs: Any) -> None:
-        super().__init__(hass, context, deliveries, **kwargs)
+    def __init__(self, hass: HomeAssistant, context: Context, people_registry:PeopleRegistry,
+    deliveries: dict[str, Any] | None = None, **kwargs: Any) -> None:
+        super().__init__(hass, context, people_registry, deliveries, **kwargs)
         self.template_path: Path | None = None
         if self.context.template_path:
             self.template_path = self.context.template_path / "email"
@@ -60,21 +63,28 @@ class EmailDeliveryMethod(DeliveryMethod):
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
         }
 
-    def select_target(self, target: str) -> bool:
+    @property
+    def target_categories(self) -> list[str]:
+        return [ATTR_EMAIL]
+
+    def select_targets(self, target: Target) -> Target:
+        return Target({"email": target.email})
+
+    def select_target(self,category:str,  target: str) -> bool:
         return re.fullmatch(RE_VALID_EMAIL, target) is not None
 
-    def recipient_target(self, recipient: dict[str, Any]) -> list[str]:
+    def recipient_target(self, recipient: dict[str, Any]) -> Target|None:
         email = recipient.get(CONF_EMAIL)
-        return [email] if email else []
+        return Target({"email":[email]}) if email else None
 
     async def deliver(self, envelope: Envelope) -> bool:
-        _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.targets)
+        _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)
 
         data: dict[str, Any] = envelope.data or {}
         config: Delivery = self.delivery_config(envelope.delivery_name)
         html: str | None = data.get("html")
         template: str | None = data.get(CONF_TEMPLATE, config.template)
-        addresses: list[str] = envelope.targets or []
+        addresses: list[str] = envelope.target.email or []
         snapshot_url: str | None = data.get("snapshot_url")
         # TODO: centralize in config
         footer_template = data.get("footer")

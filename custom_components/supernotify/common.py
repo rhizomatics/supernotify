@@ -81,13 +81,18 @@ class DebugTrace:
     message: str | None = field(default=None)
     title: str | None = field(default=None)
     data: dict[str, Any] | None = field(default_factory=lambda: {})
-    target: list[str] | str | None = field(default=None)
+    target: dict[str, list[str]] | list[str] | str | None = field(default=None)
     resolved: dict[str, dict[str, Any]] = field(init=False, default_factory=lambda: {})
     delivery_selection: dict[str, list[str]] = field(default_factory=lambda: {})
 
     def contents(
         self,
     ) -> tuple[
-        str | None, str | None, dict[str, Any] | None, list[str] | str | None, dict[str, dict[str, Any]], dict[str, list[str]]
+        str | None,
+        str | None,
+        dict[str, Any] | None,
+        dict[str, list[str]] | list[str] | str | None,
+        dict[str, dict[str, Any]],
+        dict[str, list[str]],
     ]:
         return (self.message, self.title, self.data, self.target, self.resolved, self.delivery_selection)

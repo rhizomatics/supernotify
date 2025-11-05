@@ -25,7 +25,7 @@ SIMPLE_CONFIG = {
     "name": DOMAIN,
     "platform": DOMAIN,
     "delivery": {
-        "testing": {"method": "notify_entity", "target": ["testy.testy"]},
+        "testing": {"method": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
         "chime_person": {"method": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
     },
     "archive": {"enabled": True},
@@ -39,7 +39,7 @@ SIMPLE_CONFIG = {
             "delivery_defaults": {
                 "target": ["media_player.lobby", "switch.doorbell"],
                 "options": {
-                    "chime_aliases": {"person": {"media_player": "bell_02", "switch": {"entity_id": "switch.chime_ding"}}}
+                    "chime_aliases": {"person": {"media_player": "bell_02", "switch": {"target": "switch.chime_ding"}}}
                 },
             }
         }
@@ -71,7 +71,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     uut = hass.data["notify_services"][DOMAIN][0]
-    assert len(uut.context.people) == 2
+    assert len(uut.people_registry.people) == 2
 
     assert "html_email" in uut.context.deliveries
     assert "backup_mail" in uut.context.deliveries
@@ -171,7 +171,7 @@ async def test_exposed_method_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
     await hass.async_block_till_done()
 
-    hass.states.async_set("supernotify.method_notify_entity", "off")
+    hass.states.async_set("supernotify.method_generic", "off")
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,
@@ -188,7 +188,7 @@ async def test_exposed_method_events(hass: HomeAssistant) -> None:
     assert notification["delivered_envelopes"][0]["delivery_name"] == "chime_person"  # type: ignore
     assert len(notification["undelivered_envelopes"]) == 0  # type: ignore[arg-type]
 
-    hass.states.async_set("supernotify.method_notify_entity", "on")
+    hass.states.async_set("supernotify.method_generic", "on")
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,

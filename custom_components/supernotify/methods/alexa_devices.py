@@ -5,10 +5,7 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import (
-    METHOD_ALEXA,
-    MessageOnlyPolicy,
-)
+from custom_components.supernotify import METHOD_ALEXA
 from custom_components.supernotify.delivery_method import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -16,6 +13,7 @@ from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +43,14 @@ class AlexaDevicesDeliveryMethod(DeliveryMethod):
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
         }
 
-    def select_target(self, target: str) -> bool:
+    def select_targets(self, target: Target) -> Target:
+        return Target({"entity_id": [
+            e for e in target.entity_ids if re.fullmatch(r"notify\.[a-z0-9_]+\_(speak|announce)", e) is not None
+            or re.fullmatch(r"group\.[a-z0-9_]+", e) is not None
+
+        ]})
+
+    def select_target(self, category: str, target: str) -> bool:
         return (
             re.fullmatch(r"notify\.[a-z0-9_]+\_(speak|announce)", target) is not None
             or re.fullmatch(r"group\.[a-z0-9_]+", target) is not None
@@ -54,7 +59,7 @@ class AlexaDevicesDeliveryMethod(DeliveryMethod):
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)
 
-        targets = envelope.targets or []
+        targets = envelope.target.entity_ids or []
 
         if not targets:
             _LOGGER.debug("SUPERNOTIFY skipping alexa devices, no targets")

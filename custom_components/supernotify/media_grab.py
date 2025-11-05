@@ -22,7 +22,7 @@ from custom_components.supernotify import (
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
 )
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 
 if TYPE_CHECKING:
     from homeassistant.components.image import ImageEntity

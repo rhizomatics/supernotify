@@ -4,23 +4,18 @@ from typing import Any
 
 from homeassistant.core import Event
 
-from custom_components.supernotify.common import format_timestamp, update_dict_list
-from custom_components.supernotify.delivery import Delivery
-
 from . import (
     ATTR_ACTION,
+    ATTR_PERSON_ID,
     ATTR_USER_ID,
-    CONF_MOBILE_DEVICES,
-    CONF_NOTIFY_ACTION,
     CONF_PERSON,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
-    CommandType,
-    GlobalTargetType,
-    QualifiedTargetType,
-    RecipientType,
-    TargetType,
 )
+from .common import format_timestamp
+from .delivery import Delivery
+from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
+from .people import PeopleRegistry
 
 SNOOZE_TIME = 60 * 60  # TODO: move to configuration
 _LOGGER = logging.getLogger(__name__)
@@ -89,8 +84,9 @@ class Snooze:
 class Snoozer:
     """Manage snoozing"""
 
-    def __init__(self) -> None:
+    def __init__(self, people_registry: PeopleRegistry | None = None) -> None:
         self.snoozes: dict[str, Snooze] = {}
+        self.people_registry: PeopleRegistry | None = people_registry
 
     def handle_command_event(self, event: Event, people: dict[str, Any] | None = None) -> None:
         people = people or {}
@@ -182,13 +178,13 @@ class Snoozer:
             for k in to_del:
                 del self.snoozes[k]
         else:
-            _LOGGER.warning(
+            _LOGGER.warning(  # type: ignore
                 "SUPERNOTIFY Invalid mobile cmd %s (target_type: %s, target: %s, recipient_type: %s)",
                 cmd,
                 target_type,
                 target,
                 recipient_type,
-            )  # type: ignore
+            )
 
     def purge_snoozes(self) -> None:
         to_del = [k for k, v in self.snoozes.items() if not v.active()]
@@ -253,13 +249,13 @@ class Snoozer:
 
     def filter_recipients(
         self,
-        recipients: list[dict[str, Any]],
+        recipients: Target,
         priority: str,
         delivery_name: str,
         delivery_method: "DeliveryMethod",  # type: ignore  # noqa: F821
         all_delivery_names: list[str],
         delivery_definitions: dict[str, Delivery],
-    ) -> list[dict[str, Any]]:
+    ) -> Target:
         inscope_snoozes = self.current_snoozes(priority, all_delivery_names, delivery_definitions)
         for snooze in inscope_snoozes:
             if snooze.recipient_type == RecipientType.USER:
@@ -275,30 +271,19 @@ class Snoozer:
                     or (snooze.target_type == GlobalTargetType.NONCRITICAL and priority != PRIORITY_CRITICAL)
                 ):
                     recipients_to_remove = []
-                    for recipient in recipients:
-                        if recipient.get(CONF_PERSON) == snooze.recipient:
+                    for recipient in recipients.person_ids:
+                        if recipient == snooze.recipient:
                             recipients_to_remove.append(recipient)
                             _LOGGER.info("SUPERNOTIFY Snoozing %s", snooze.recipient)
-                    for r in recipients_to_remove:
-                        recipients.remove(r)
+
+                    recipients.remove(ATTR_PERSON_ID, recipients_to_remove)
 
                 if snooze.target_type == QualifiedTargetType.ACTION:
-                    to_remove: list[dict[str, Any]] = []
-                    to_add: list[dict[str, Any]] = []
-                    for recipient in recipients:
-                        if recipient.get(CONF_PERSON) == snooze.recipient:
-                            alt_mobiles: list[dict[str, Any]] = list(recipient.get(CONF_MOBILE_DEVICES, []))
-                            md_to_remove = []
-                            for md in alt_mobiles:
-                                if md.get(CONF_NOTIFY_ACTION) == snooze.target:
-                                    _LOGGER.debug("SUPERNOTIFY Snoozing %s for %s", snooze.recipient, snooze.target)
-                                    md_to_remove.append(md)
-                            for md in md_to_remove:
-                                alt_mobiles.remove(md)
-                            alt_recipient = dict(recipient.items())
-                            alt_recipient[CONF_MOBILE_DEVICES] = alt_mobiles
+                    to_remove: list[str] = []
+                    for recipient in recipients.actions:
+                        if recipient == snooze.target:
+                            _LOGGER.debug("SUPERNOTIFY Snoozing %s for %s", snooze.recipient, snooze.target)
                             to_remove.append(recipient)
-                            to_add.append(alt_recipient)
-                    if to_add or to_remove:
-                        recipients = update_dict_list(recipients, to_add, to_remove)
+                    if to_remove:
+                        recipients.remove(ATTR_ACTION, to_remove)
         return recipients

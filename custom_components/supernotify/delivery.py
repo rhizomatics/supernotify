@@ -26,17 +26,18 @@ from . import (
     CONF_TITLE,
     OCCUPANCY_ALL,
     RESERVED_DELIVERY_NAMES,
-    DeliveryConfig,
 )
+from .model import DeliveryConfig
 
 if typing.TYPE_CHECKING:
-    from .configuration import Context
+    from .context import Context
     from .delivery_method import DeliveryMethod
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Delivery(DeliveryConfig):
+
     def __init__(self, name: str, conf: ConfigType, method: "DeliveryMethod") -> None:
         self.name: str = name
         self.alias: str | None = conf.get(CONF_ALIAS)
@@ -94,7 +95,7 @@ class Delivery(DeliveryConfig):
         if option_name in self.options:
             opt = self.options[option_name]
         if opt is None:
-            _LOGGER.warning("SUPERNOTIFY No default in %sfor option %s, setting to empty string", self.name, option_name)
+            _LOGGER.debug("SUPERNOTIFY No default in %s for option %s, setting to empty string", self.name, option_name)
             opt = ""
         return opt
 

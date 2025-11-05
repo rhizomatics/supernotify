@@ -8,7 +8,7 @@ from traceback import format_exception
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
+from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import CONF_ENABLED, CONF_TARGET, STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers.template import Template
 from jinja2 import TemplateError
@@ -29,6 +29,7 @@ from custom_components.supernotify import (
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
+    ATTR_PERSON_ID,
     ATTR_PRIORITY,
     ATTR_RECIPIENTS,
     ATTR_SCENARIOS_APPLY,
@@ -58,14 +59,10 @@ from custom_components.supernotify import (
     SCENARIO_NULL,
     SELECTION_BY_SCENARIO,
     STRICT_ACTION_DATA_SCHEMA,
-    ConditionVariables,
-    MessageOnlyPolicy,
 )
 from custom_components.supernotify.archive import ArchivableObject
-from custom_components.supernotify.common import DebugTrace, safe_extend
-from custom_components.supernotify.delivery import (
-    Delivery,
-)
+from custom_components.supernotify.common import DebugTrace
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -73,11 +70,13 @@ from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, Target
 from custom_components.supernotify.scenario import Scenario
 
 from .common import ensure_dict, ensure_list
-from .configuration import Context
+from .context import Context
 from .media_grab import move_camera_to_ptz_preset, select_avail_camera, snap_camera, snap_image, snapshot_from_url
+from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,6 +88,7 @@ class Notification(ArchivableObject):
     def __init__(
         self,
         context: Context,
+        people_registry: PeopleRegistry,
         message: str | None = None,
         title: str | None = None,
         target: list[str] | str | None = None,
@@ -98,6 +98,7 @@ class Notification(ArchivableObject):
         self.debug_trace: DebugTrace = DebugTrace(message=message, title=title, data=action_data, target=target)
         self._message: str | None = message
         self.context: Context = context
+        self.people_registry = people_registry
         action_data = action_data or {}
         self.target: list[str] = ensure_list(target)
         self._title: str | None = title
@@ -152,7 +153,7 @@ class Notification(ArchivableObject):
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
                 _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as implicit for type %s", self.delivery_overrides_type)
 
-        self.occupancy = self.context.determine_occupancy()
+        self.occupancy = self.people_registry.determine_occupancy()
         self.condition_variables = ConditionVariables(
             self.applied_scenario_names,
             self.required_scenario_names,
@@ -383,7 +384,7 @@ class Notification(ArchivableObject):
                 self.skipped += 1
                 return
 
-            recipients = self.generate_recipients(delivery.name, delivery_method)
+            recipients: list[Target] = self.generate_recipients(delivery.name, delivery_method)
             envelopes = self.generate_envelopes(delivery.name, delivery_method, recipients)
             for envelope in envelopes:
                 try:
@@ -415,7 +416,7 @@ class Notification(ArchivableObject):
 
     def contents(self, minimal: bool = False) -> dict[str, Any]:
         """ArchiveableObject implementation"""
-        sanitized = {k: v for k, v in self.__dict__.items() if k not in ("context")}
+        sanitized = {k: v for k, v in self.__dict__.items() if k not in ("context", "people_registry")}
         sanitized["delivered_envelopes"] = [e.contents(minimal=minimal) for e in self.delivered_envelopes]
         sanitized["undelivered_envelopes"] = [e.contents(minimal=minimal) for e in self.undelivered_envelopes]
         sanitized["enabled_scenarios"] = {k: v.contents(minimal=minimal) for k, v in self.enabled_scenarios.items()}
@@ -451,17 +452,17 @@ class Notification(ArchivableObject):
             base.update(getattr(self, attribute))
         return base
 
-    def record_resolve(self, delivery_name: str, category: str, resolved: str | list[Any] | None) -> None:
+    def record_resolve(self, delivery_name: str, stage: str, resolved: Target | list[Target]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
         self.debug_trace.resolved.setdefault(delivery_name, {})
-        self.debug_trace.resolved[delivery_name].setdefault(category, [])
-        if isinstance(resolved, list):
-            self.debug_trace.resolved[delivery_name][category].extend(resolved)
-        else:
-            self.debug_trace.resolved[delivery_name][category].append(resolved)
+        self.debug_trace.resolved[delivery_name].setdefault(stage, [])
+        roll_up = Target()
+        for target in ensure_list(resolved):
+            roll_up += target
+        self.debug_trace.resolved[delivery_name][stage].append(roll_up.as_dict())
 
     def filter_people_by_occupancy(self, occupancy: str) -> list[dict[str, Any]]:
-        people = list(self.context.people.values())
+        people = list(self.people_registry.people.values())
         if occupancy == OCCUPANCY_ALL:
             return people
         if occupancy == OCCUPANCY_NONE:
@@ -485,109 +486,89 @@ class Notification(ArchivableObject):
         _LOGGER.warning("SUPERNOTIFY Unknown occupancy tested: %s", occupancy)
         return []
 
-    def generate_recipients(self, delivery_name: str, delivery_method: DeliveryMethod) -> list[dict[str, Any]]:
+    def generate_recipients(self, delivery_name: str, delivery_method: DeliveryMethod) -> list[Target]:
         delivery_config: Delivery = delivery_method.delivery_config(delivery_name)
+        targets: list[Target] = []
+        custom_person_ids = []
 
-        recipients: list[dict[str, Any]] = []
         if self.target:
-            # first priority is explicit target set on notify call, which overrides everything else
-            for t in self.target:
-                if t in self.context.people:
-                    recipients.append(self.context.people[t])
-                    self.record_resolve(
-                        delivery_name,
-                        "1a_person_target",
-                        t,
-                    )
-                else:
-                    recipients.append({ATTR_TARGET: t})
-                    self.record_resolve(delivery_name, "1b_non_person_target", t)
-            _LOGGER.debug("SUPERNOTIFY %s Overriding with explicit targets: %s", __name__, recipients)
+            # first priority is target recipients on explicit list from action call
+            recipients: Target = Target(self.target)
+        elif delivery_config.target:
+            # second priority is explicit target on delivery config
+            recipients = Target() + delivery_config.target  # add to create by value not ref
         else:
-            # second priority is explicit target on delivery
-            if delivery_config and delivery_config.target.entity_id:
-                recipients.extend({ATTR_TARGET: e} for e in delivery_config.target.entity_id if e not in self.context.people)
-                recipients.extend(self.context.people[e] for e in delivery_config.target.entity_id if e in self.context.people)
-                self.record_resolve(delivery_name, "2b_delivery_config_target", delivery_config.target.entity_id)
-                _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, recipients)
-
             # If target not specified on service call or delivery, then default to std list of recipients
-            elif not delivery_config or not delivery_config.target.entity_id:
-                recipients = self.filter_people_by_occupancy(delivery_config.occupancy)
-                self.record_resolve(delivery_name, "2d_recipients_by_occupancy", recipients)
-                recipients = [
-                    r for r in recipients if self.recipients_override is None or r.get(CONF_PERSON) in self.recipients_override
-                ]
-                self.record_resolve(
-                    delivery_name, "2d_recipient_names_by_occupancy_filtered", [r.get(CONF_PERSON) for r in recipients]
-                )
-                _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery_name, recipients)
+            people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery_config.occupancy)
+            self.record_resolve(
+                delivery_name,
+                "2d_recipients_by_occupancy",
+                Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]}),
+            )
+            people = [p for p in people if self.recipients_override is None or p.get(CONF_PERSON) in self.recipients_override]
+            self.record_resolve(
+                delivery_name,
+                "2d_recipient_names_by_occupancy_filtered",
+                Target({ATTR_PERSON_ID: list(filter(None, [p.get(CONF_PERSON) for p in people]))}),
+            )
+            recipients = Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
+            _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery_name, recipients)
 
-        return self.context.snoozer.filter_recipients(
-            recipients, self.priority, delivery_name, delivery_method, self.selected_delivery_names, self.context.deliveries
-        )
+        # TODO: reinstate snoozing
+        recipients = self.context.snoozer.filter_recipients(
+            recipients, self.priority, delivery_name, delivery_method, self.selected_delivery_names, self.context.deliveries)
 
-    def generate_envelopes(
-        self, delivery_name: str, method: DeliveryMethod, recipients: list[dict[str, Any]]
-    ) -> list[Envelope]:
+        # delivery_target = delivery_method.select_targets(recipients)
+        # if delivery_target:
+        #    recipients = delivery_target
+        #    self.record_resolve(delivery_name, "2b_delivery_config_target", delivery_target)
+        #    _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, delivery_target)
+
+        # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone
+        for person_id in recipients.person_ids:
+            person = self.people_registry.people.get(person_id)
+            if person and person.get(CONF_ENABLED, True):
+                personal_delivery = custom_data = person.get(CONF_DELIVERY, {}).get(delivery_name, {})
+                custom_data = personal_delivery.get(CONF_DATA)
+                personal_target: Target = Target(personal_delivery.get(CONF_TARGET, {}), target_data=custom_data)
+                if personal_target.has_resolved_target():
+                    self.record_resolve(delivery_name, "2e_person_configured_delivery_target", personal_target)
+                derived_target: Target | None = delivery_method.recipient_target(person)
+                if derived_target:
+                    self.record_resolve(delivery_name, "2e_person_derived_target", derived_target)
+                    personal_target += derived_target
+                if personal_target.target_data:
+                    personal_target.extend(ATTR_PERSON_ID, person_id)
+                    custom_person_ids.append(person_id)
+                    targets.append(personal_target)
+                else:
+                    recipients += personal_target
+        recipients.remove("person_id", custom_person_ids)
+
+        targets.append(recipients)
+        # filter the final list for what the delivery method can take
+        filtered_targets = [delivery_method.select_targets(target) for target in targets]
+        self.record_resolve(delivery_name, "3_delivery_filtered_targets", filtered_targets)
+        _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, filtered_targets)
+        return [t.direct() for t in filtered_targets]
+
+    def generate_envelopes(self, delivery_name: str, method: DeliveryMethod, targets: list[Target]) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities
 
         delivery_config: Delivery = method.delivery_config(delivery_name)
         default_data: dict[str, Any] = delivery_config.data
-        default_targets: list[str] = []
-        custom_envelopes: list[Envelope] = []
 
-        for recipient in recipients:
-            recipient_targets: list[str] = []
-            enabled: bool = True
-            custom_data: dict[str, Any] = {}
-            # reuse standard recipient attributes like email or phone
-            safe_extend(recipient_targets, method.recipient_target(recipient))
-            # use entities or targets set at a method level for recipient
-            if CONF_DELIVERY in recipient and delivery_config.name in recipient.get(CONF_DELIVERY, {}):
-                recp_meth_cust = recipient.get(CONF_DELIVERY, {}).get(delivery_config.name, {})
-                safe_extend(recipient_targets, recp_meth_cust.get(CONF_TARGET, []))
-                custom_data = recp_meth_cust.get(CONF_DATA)
-                enabled = recp_meth_cust.get(CONF_ENABLED, True)
-            elif ATTR_TARGET in recipient:
-                # non person recipient
-                safe_extend(default_targets, recipient.get(ATTR_TARGET))
-            if enabled:
-                if custom_data:
-                    envelope_data = {}
-                    envelope_data.update(default_data)
-                    envelope_data.update(self.data)
-                    envelope_data.update(custom_data)
-                    custom_envelopes.append(Envelope(delivery_name, self, recipient_targets, envelope_data))
-                else:
-                    default_targets.extend(recipient_targets)
+        envelopes = []
+        for target in targets:
+            if target.has_resolved_target() or not method.target_required:
+                envelope_data = {}
+                envelope_data.update(default_data)
+                envelope_data.update(self.data)
+                if target.target_data:
+                    envelope_data.update(target.target_data)
+                envelopes.append(Envelope(delivery_name, self, target, envelope_data))
 
-        envelope_data = {}
-        envelope_data.update(default_data)
-        envelope_data.update(self.data)
-
-        bundled_envelopes = [*custom_envelopes, Envelope(delivery_name, self, default_targets, envelope_data)]
-        filtered_envelopes = []
-        for envelope in bundled_envelopes:
-            pre_filter_count = len(envelope.targets)
-            _LOGGER.debug("SUPERNOTIFY Prefiltered targets: %s", envelope.targets)
-            targets = [t for t in envelope.targets if method.select_target(t)]
-            if len(targets) < pre_filter_count:
-                _LOGGER.warning(
-                    "SUPERNOTIFY %s target list filtered out %s",
-                    method.method,
-                    [t for t in envelope.targets if not method.select_target(t)],
-                )
-            if not targets:
-                _LOGGER.debug("SUPERNOTIFY %s No targets resolved out of %s", method.method, pre_filter_count)
-            else:
-                envelope.targets = targets
-                filtered_envelopes.append(envelope)
-
-        if not filtered_envelopes:
-            # not all delivery methods require explicit targets, or can default them internally
-            filtered_envelopes = [Envelope(delivery_name, self, data=envelope_data)]
-        return filtered_envelopes
+        return envelopes
 
     async def grab_image(self, delivery_name: str) -> Path | None:
         snapshot_url = self.media.get(ATTR_MEDIA_SNAPSHOT_URL)

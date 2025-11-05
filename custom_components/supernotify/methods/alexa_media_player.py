@@ -4,10 +4,7 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import (
-    METHOD_ALEXA_MEDIA_PLAYER,
-    MessageOnlyPolicy,
-)
+from custom_components.supernotify import METHOD_ALEXA_MEDIA_PLAYER
 from custom_components.supernotify.delivery_method import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -15,6 +12,7 @@ from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
 
@@ -50,13 +48,19 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
         }
 
-    def select_target(self, target: str) -> bool:
+    def select_target(self,category:str,  target: str) -> bool:
         return re.fullmatch(RE_VALID_ALEXA, target) is not None
+
+    def select_targets(self, target: Target) -> Target:
+        return Target({"entity_id": [
+            e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None
+
+        ]})
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_media %s", envelope.message)
 
-        media_players = envelope.targets or []
+        media_players = envelope.target.entity_ids or []
 
         if not media_players:
             _LOGGER.debug("SUPERNOTIFY skipping alexa media player, no targets")

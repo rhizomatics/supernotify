@@ -16,20 +16,14 @@ from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 from voluptuous import Invalid
 
-from . import (
-    ATTR_DEFAULT,
-    CONF_ACTION_GROUP_NAMES,
-    CONF_DELIVERY,
-    CONF_DELIVERY_SELECTION,
-    CONF_MEDIA,
-    DOMAIN,
-    ConditionVariables,
-)
+from . import ATTR_DEFAULT, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_DELIVERY_SELECTION, CONF_MEDIA, DOMAIN
+from .model import ConditionVariables
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Scenario:
+    
     def __init__(self, name: str, scenario_definition: dict[str, Any], hass: HomeAssistant) -> None:
         self.hass: HomeAssistant = hass
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)

@@ -63,10 +63,9 @@ from . import (
     PLATFORMS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
-    ConditionVariables,
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from .configuration import Context
+from .context import Context
 from .methods.alexa_devices import AlexaDevicesDeliveryMethod
 from .methods.alexa_media_player import AlexaMediaPlayerDeliveryMethod
 from .methods.chime import ChimeDeliveryMethod
@@ -77,7 +76,9 @@ from .methods.mobile_push import MobilePushDeliveryMethod
 from .methods.notify_entity import NotifyEntityDeliveryMethod
 from .methods.persistent import PersistentDeliveryMethod
 from .methods.sms import SMSDeliveryMethod
+from .model import ConditionVariables
 from .notification import Notification
+from .people import PeopleRegistry
 
 if TYPE_CHECKING:
     from custom_components.supernotify.delivery import Delivery
@@ -328,6 +329,9 @@ class SuperNotificationAction(BaseNotificationService):
             cameras,
             METHODS,
         )
+        self.people_registry = PeopleRegistry(hass, recipients, self.context.entity_registry(), self.context.device_registry())
+        # TODO clean up this cyclical dependency
+        self.context.people_registry = self.people_registry
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
         self.dupe_check_config: dict[str, Any] = dupe_check or {}
@@ -338,6 +342,7 @@ class SuperNotificationAction(BaseNotificationService):
 
     async def initialize(self) -> None:
         await self.context.initialize()
+        self.people_registry.initialize()
 
         self.expose_entities()
         self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
@@ -489,7 +494,7 @@ class SuperNotificationAction(BaseNotificationService):
         _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
 
         try:
-            notification = Notification(self.context, message, title, target, data)
+            notification = Notification(self.context, self.people_registry, message, title, target, data)
             await notification.initialize()
             if self.dupe_check(notification):
                 notification.suppress()
@@ -524,15 +529,15 @@ class SuperNotificationAction(BaseNotificationService):
         return self.context.delivery_by_scenario
 
     async def enquire_occupancy(self) -> dict[str, list[dict[str, Any]]]:
-        return self.context.determine_occupancy()
+        return self.people_registry.determine_occupancy()
 
     async def enquire_active_scenarios(self) -> list[str]:
-        occupiers: dict[str, list[dict[str, Any]]] = self.context.determine_occupancy()
+        occupiers: dict[str, list[dict[str, Any]]] = self.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
         return [s.name for s in self.context.scenarios.values() if await s.evaluate(cvars)]
 
     async def trace_active_scenarios(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
-        occupiers: dict[str, list[dict[str, Any]]] = self.context.determine_occupancy()
+        occupiers: dict[str, list[dict[str, Any]]] = self.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
 
         def safe_json(v: Any) -> Any:
@@ -558,7 +563,7 @@ class SuperNotificationAction(BaseNotificationService):
         return self.context.snoozer.clear()
 
     def enquire_people(self) -> list[dict[str, Any]]:
-        return list(self.context.people.values())
+        return list(self.people_registry.people.values())
 
     @callback
     def on_mobile_action(self, event: Event) -> None:
@@ -578,7 +583,7 @@ class SuperNotificationAction(BaseNotificationService):
         event_name = event.data.get(ATTR_ACTION)
         if event_name is None or not event_name.startswith("SUPERNOTIFY_"):
             return  # event not intended for here
-        self.context.snoozer.handle_command_event(event, self.context.people)
+        self.context.snoozer.handle_command_event(event, self.people_registry.people)
 
     @callback
     async def async_nightly_tasks(self, now: dt.datetime) -> None:

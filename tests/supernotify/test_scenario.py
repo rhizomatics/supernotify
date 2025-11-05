@@ -17,14 +17,15 @@ from custom_components.supernotify import (
     SCENARIO_DEFAULT,
     SCENARIO_SCHEMA,
     SELECTION_BY_SCENARIO,
-    ConditionVariables,
 )
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.methods.generic import GenericDeliveryMethod
+from custom_components.supernotify.model import ConditionVariables
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import METHODS
+from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,7 +100,7 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
     assert await uut.evaluate(ConditionVariables([], [], [], PRIORITY_CRITICAL, {}))
 
 
-async def test_select_scenarios(hass: HomeAssistant) -> None:
+async def test_select_scenarios(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
     config = PLATFORM_SCHEMA({
         "platform": "supernotify",
         "scenarios": {
@@ -128,7 +129,7 @@ async def test_select_scenarios(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.outside_temperature", "15")
     await context.initialize()
     assert len(context.scenarios) == 3
-    uut = Notification(context)
+    uut = Notification(context, mock_people_registry)
     await uut.initialize()
     hass.states.async_set("sensor.outside_temperature", "42")
     enabled = await uut.select_scenarios()
@@ -143,7 +144,7 @@ async def test_select_scenarios(hass: HomeAssistant) -> None:
     assert enabled == []
 
 
-async def test_scenario_templating(hass: HomeAssistant) -> None:
+async def test_scenario_templating(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
     config = PLATFORM_SCHEMA({
         "platform": "supernotify",
         "scenarios": {
@@ -175,10 +176,15 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
         scenarios=config["scenarios"],
         deliveries={"smtp": {CONF_METHOD: "email"}, "alexa": {CONF_METHOD: "alexa_devices"}},
         method_types=METHODS,
+        people_registry=mock_people_registry,
     )
     await context.initialize()
     uut = Notification(
-        context, message="Hello from Home", title="Home Notification", action_data={"apply_scenarios": ["softly_softly"]}
+        context,
+        mock_people_registry,
+        message="Hello from Home",
+        title="Home Notification",
+        action_data={"apply_scenarios": ["softly_softly"]},
     )
     await uut.initialize()
     assert uut.message("smtp") == "Hello from Home"
@@ -186,7 +192,9 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     assert uut.message("alexa") == '<amazon:effect name="whispered">Hello from Home</amazon:effect>'
     assert uut.title("alexa") == ""
 
-    uut = Notification(context, message="Please Sir", action_data={"apply_scenarios": ["softly_softly", "emotional"]})
+    uut = Notification(
+        context, mock_people_registry, message="Please Sir", action_data={"apply_scenarios": ["softly_softly", "emotional"]}
+    )
     await uut.initialize()
     assert uut.message("smtp") == "Please Sir"
     assert (
@@ -194,7 +202,9 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
         == '<amazon:emotion name="excited" intensity="medium"><amazon:effect name="whispered">Please Sir</amazon:effect></amazon:emotion>'  # noqa: E501
     )
 
-    uut = Notification(context, message="Please Sir", action_data={"apply_scenarios": ["emotional", "softly_softly"]})
+    uut = Notification(
+        context, mock_people_registry, message="Please Sir", action_data={"apply_scenarios": ["emotional", "softly_softly"]}
+    )
     await uut.initialize()
     assert (
         uut.message("alexa")
@@ -202,9 +212,13 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     )
 
 
-async def test_scenario_constraint(mock_hass: HomeAssistant, mock_context: Context) -> None:
+async def test_scenario_constraint(
+    mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
+) -> None:
     mock_context.delivery_by_scenario = {SCENARIO_DEFAULT: ["plain_email", "mobile"], "Mostly": ["siren"], "Alarm": ["chime"]}
-    mock_context.deliveries["siren"] = Delivery("siren", {}, GenericDeliveryMethod(mock_hass, mock_context))
+    mock_context.deliveries["siren"] = Delivery(
+        "siren", {}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry)
+    )
     mock_context.scenarios = {
         "Alarm": Scenario("Alarm", {}, mock_hass),
         "Mostly": Scenario(
@@ -224,17 +238,20 @@ async def test_scenario_constraint(mock_hass: HomeAssistant, mock_context: Conte
             mock_hass,
         ),
     }
-    uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
+    uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime", "siren")
     uut = Notification(
-        mock_context, "testing 123", action_data={ATTR_SCENARIOS_CONSTRAIN: ["NULL"], ATTR_SCENARIOS_APPLY: ["Alarm"]}
+        mock_context,
+        mock_people_registry,
+        "testing 123",
+        action_data={ATTR_SCENARIOS_CONSTRAIN: ["NULL"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
     )
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
-async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context) -> None:
+async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     mock_context.delivery_by_scenario = {
         SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
@@ -242,7 +259,7 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
         "DevNull": [],
     }
     mock_context.deliveries["siren"] = Delivery(
-        "siren", {CONF_SELECTION: [SELECTION_BY_SCENARIO]}, GenericDeliveryMethod(mock_hass, mock_context)
+        "siren", {CONF_SELECTION: [SELECTION_BY_SCENARIO]}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry)
     )
     mock_context.deliveries["plain_email"].selection = [SELECTION_BY_SCENARIO]
     mock_context.deliveries["chime"].selection = [SELECTION_BY_SCENARIO]
@@ -269,14 +286,14 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
         ),
     }
     # Only deliveries for enabled scenarios
-    uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
+    uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
     await uut.initialize()
     assert uut.applied_scenario_names == ["Alarm"]
     assert uut.selected_scenario_names == ["Mostly"]
     assert uut.selected_delivery_names == unordered("chime", "siren")
 
     # No selected scenarios
-    uut = Notification(mock_context, "testing 123", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL})
+    uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL})
     await uut.initialize()
     assert uut.applied_scenario_names == []
     assert uut.selected_scenario_names == []
@@ -284,7 +301,10 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
 
     # Single scenario with no deliveries
     uut = Notification(
-        mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]}
+        mock_context,
+        mock_people_registry,
+        "testing 123",
+        action_data={ATTR_SCENARIOS_APPLY: ["DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]},
     )
     await uut.initialize()
     assert uut.applied_scenario_names == ["DevNull"]

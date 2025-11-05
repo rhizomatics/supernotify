@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from . import ATTR_TIMESTAMP, CONF_MESSAGE, CONF_TITLE, PRIORITY_MEDIUM
+from .model import Target
 
 if typing.TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
@@ -22,10 +23,10 @@ class Envelope:
         self,
         delivery_name: str,
         notification: "Notification | None" = None,  # noqa: F821 # type: ignore
-        targets: list[str] | None = None,
+        target: Target | None = None,
         data: dict[str, Any] | None = None,
     ) -> None:
-        self.targets: list[str] = targets or []
+        self.target: Target = target or Target()
         self.delivery_name: str = delivery_name
         self._notification = notification
         self.notification_id = None
@@ -95,7 +96,7 @@ class Envelope:
         if other is None or not isinstance(other, Envelope):
             return False
         return bool(
-            self.targets == other.targets
+            self.target == other.target
             and self.delivery_name == other.delivery_name
             and self.data == other.data
             and self.notification_id == other.notification_id

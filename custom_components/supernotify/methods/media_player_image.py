@@ -3,9 +3,10 @@ import re
 import urllib.parse
 from typing import Any
 
-from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, CONF_TARGETS_REQUIRED, METHOD_MEDIA, DeliveryConfig
+from custom_components.supernotify import METHOD_MEDIA
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 
@@ -18,8 +19,6 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
     method = METHOD_MEDIA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_DELIVERY_DEFAULTS, DeliveryConfig({}))
-        kwargs[CONF_TARGETS_REQUIRED] = False
         super().__init__(*args, **kwargs)
 
     @property
@@ -30,14 +29,18 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
     def default_action(self) -> str:
         return "media_player.play_media"
 
-    def select_target(self, target: str) -> bool:
+    def select_targets(self, target: Target) -> Target:
+        return Target({"entity_id": [
+            e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
+
+    def select_target(self, category:str, target: str) -> bool:
         return re.fullmatch(RE_VALID_MEDIA_PLAYER, target) is not None
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)
 
         data: dict[str, Any] = envelope.data or {}
-        media_players: list[str] = envelope.targets or []
+        media_players: list[str] = envelope.target.entity_ids or []
         if not media_players:
             _LOGGER.debug("SUPERNOTIFY skipping media show, no targets")
             return False

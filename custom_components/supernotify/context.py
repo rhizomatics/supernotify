@@ -5,19 +5,13 @@ import socket
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import ATTR_STATE, CONF_DEVICE_ID, CONF_ENABLED, CONF_METHOD, CONF_NAME, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import CONF_ENABLED, CONF_METHOD, CONF_NAME
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_validation import boolean
 from homeassistant.helpers.network import get_url
-from homeassistant.util import slugify
-
-from custom_components.supernotify.archive import NotificationArchive
-from custom_components.supernotify.common import ensure_list, safe_get
-from custom_components.supernotify.snoozer import Snoozer
 
 from . import (
-    ATTR_USER_ID,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
@@ -25,14 +19,6 @@ from . import (
     CONF_ARCHIVE_PATH,
     CONF_CAMERA,
     CONF_DATA,
-    CONF_DEVICE_NAME,
-    CONF_DEVICE_TRACKER,
-    CONF_MANUFACTURER,
-    CONF_MOBILE_DEVICES,
-    CONF_MOBILE_DISCOVERY,
-    CONF_MODEL,
-    CONF_NOTIFY_ACTION,
-    CONF_PERSON,
     DELIVERY_SELECTION_IMPLICIT,
     DOMAIN,
     SCENARIO_DEFAULT,
@@ -40,17 +26,22 @@ from . import (
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
-    MethodConfig,
 )
+from .archive import NotificationArchive
+from .common import ensure_list, safe_get
+from .model import MethodConfig
 from .scenario import Scenario
+from .snoozer import Snoozer
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant, State
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.delivery import Delivery
     from custom_components.supernotify.delivery_method import DeliveryMethod
+
+    from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +61,7 @@ class Context:
         method_configs: ConfigType | None = None,
         cameras: list[ConfigType] | None = None,
         method_types: list[type[DeliveryMethod]] | None = None,
+        people_registry: PeopleRegistry | None = None
     ) -> None:
         self.hass: HomeAssistant | None = None
         self.hass_internal_url: str
@@ -103,6 +95,7 @@ class Context:
         if not self.hass_internal_url or not self.hass_internal_url.startswith("http"):
             _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.hass_internal_url)
 
+        self.people_registry: PeopleRegistry | None = people_registry
         self.links: list[dict[str, Any]] = ensure_list(links)
         # raw configured deliveries
         self._deliveries: ConfigType = deliveries if isinstance(deliveries, dict) else {}
@@ -129,7 +122,6 @@ class Context:
             {n: MethodConfig(n, c) for n, c in method_configs.items()} if method_configs else {}
         )
         self.scenarios: dict[str, Scenario] = {}
-        self.people: dict[str, dict[str, Any]] = {}
         self._config_scenarios: ConfigType = scenarios or {}
         self.content_scenario_templates: ConfigType = {}
         self.delivery_by_scenario: dict[str, list[str]] = {SCENARIO_DEFAULT: []}
@@ -147,8 +139,6 @@ class Context:
         await self._register_delivery_methods(
             delivery_methods=self._method_instances, delivery_method_classes=self._method_types
         )
-
-        self.people = self.setup_people(self._recipients)
 
         if self._config_scenarios and self.hass:
             for scenario_name, scenario_definition in self._config_scenarios.items():
@@ -265,7 +255,7 @@ class Context:
                 self.methods[delivery_method.method] = delivery_method
                 await self.methods[delivery_method.method].initialize()
                 self.deliveries.update(self.methods[delivery_method.method].valid_deliveries)
-        if delivery_method_classes and self.hass:
+        if delivery_method_classes and self.hass and self.people_registry:
             for delivery_method_class in delivery_method_classes:
                 method_config: MethodConfig = self._method_configs.get(
                     delivery_method_class.method, MethodConfig(delivery_method_class.method, {})
@@ -273,12 +263,14 @@ class Context:
                 self.methods[delivery_method_class.method] = delivery_method_class(
                     self.hass,
                     self,
+                    self.people_registry,
                     {d: dc for d, dc in self._deliveries.items() if dc.get(CONF_METHOD) == delivery_method_class.method},
                     delivery_defaults=method_config.delivery_defaults,
                     enabled=method_config.enabled,
                     device_domain=method_config.device_domain,
                     device_discovery=method_config.device_discovery,
-                    targets_required=method_config.targets_required,
+                    target_required=method_config.target_required,
+                    target_categories=method_config.target_categories
                 )
                 await self.methods[delivery_method_class.method].initialize()
                 self.deliveries.update(self.methods[delivery_method_class.method].valid_deliveries)
@@ -324,48 +316,6 @@ class Context:
         )
         return devices
 
-    def setup_people(self, recipients: list[dict[str, Any]] | tuple[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-        people: dict[str, dict[str, Any]] = {}
-        for r in recipients:
-            if r.get(CONF_MOBILE_DISCOVERY):
-                r[CONF_MOBILE_DEVICES].extend(self.mobile_devices_for_person(r[CONF_PERSON]))
-                if r.get(CONF_MOBILE_DEVICES):
-                    _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", r[CONF_PERSON], r[CONF_MOBILE_DEVICES])
-                else:
-                    _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", r[CONF_PERSON])
-            if self.hass:
-                state: State | None = self.hass.states.get(r[CONF_PERSON])
-                if state is not None:
-                    r[ATTR_USER_ID] = state.attributes.get(ATTR_USER_ID)
-            people[r[CONF_PERSON]] = r
-        return people
-
-    def people_state(self) -> list[dict[str, Any]]:
-        results = []
-        if self.hass:
-            for person, person_config in self.people.items():
-                # TODO: possibly rate limit this
-                try:
-                    tracker = self.hass.states.get(person)
-                    if tracker is None:
-                        person_config[ATTR_STATE] = None
-                    else:
-                        person_config[ATTR_STATE] = tracker.state
-                except Exception as e:
-                    _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person, e)
-                results.append(person_config)
-        return results
-
-    def determine_occupancy(self) -> dict[str, list[dict[str, Any]]]:
-        results: dict[str, list[dict[str, Any]]] = {STATE_HOME: [], STATE_NOT_HOME: []}
-        for person_config in self.people_state():
-            if person_config.get(ATTR_STATE) in (None, STATE_HOME):
-                # default to at home if unknown tracker
-                results[STATE_HOME].append(person_config)
-            else:
-                results[STATE_NOT_HOME].append(person_config)
-        return results
-
     def entity_registry(self) -> entity_registry.EntityRegistry | None:
         """Hass entity registry is weird, every component ends up creating its own, with a store, subscribing
         to all entities, so do it once here
@@ -391,58 +341,3 @@ class Context:
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry
-
-    def mobile_devices_for_person(self, person_entity_id: str, validate_targets: bool = False) -> list[dict[str, Any]]:
-        """Auto detect mobile_app targets for a person.
-
-        Targets not currently validated as async registration may not be complete at this stage
-
-        Args:
-        ----
-            person_entity_id (str): _description_
-            validate_targets (bool, optional): _description_. Defaults to False.
-
-        Returns:
-        -------
-            list: mobile target actions for this person
-
-        """
-        mobile_devices = []
-        person_state = self.hass.states.get(person_entity_id) if self.hass else None
-        if not person_state:
-            _LOGGER.warning("SUPERNOTIFY Unable to resolve %s", person_entity_id)
-        else:
-            ent_reg = self.entity_registry()
-            dev_reg = self.device_registry()
-            if not ent_reg or not dev_reg:
-                _LOGGER.warning("SUPERNOTIFY Unable to access entity or device registries for %s", person_entity_id)
-            else:
-                for d_t in person_state.attributes.get("device_trackers", ()):
-                    entity = ent_reg.async_get(d_t)
-                    if entity and entity.platform == "mobile_app" and entity.device_id:
-                        device = dev_reg.async_get(entity.device_id)
-                        if not device:
-                            _LOGGER.warning("SUPERNOTIFY Unable to find device %s", entity.device_id)
-                        else:
-                            notify_action = f"mobile_app_{slugify(device.name)}"
-                            if (
-                                validate_targets
-                                and self.hass
-                                and self.hass.services
-                                and not self.hass.services.has_service("notify", notify_action)
-                            ):
-                                _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", notify_action)
-                            else:
-                                mobile_devices.append({
-                                    CONF_MANUFACTURER: device.manufacturer,
-                                    CONF_MODEL: device.model,
-                                    CONF_NOTIFY_ACTION: notify_action,
-                                    CONF_DEVICE_TRACKER: d_t,
-                                    CONF_DEVICE_ID: device.id,
-                                    CONF_DEVICE_NAME: device.name,
-                                    # CONF_DEVICE_LABELS: device.labels,
-                                })
-                    else:
-                        _LOGGER.debug("SUPERNOTIFY Ignoring device tracker %s", d_t)
-
-        return mobile_devices

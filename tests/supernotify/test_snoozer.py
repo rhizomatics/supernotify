@@ -7,23 +7,22 @@ from custom_components.supernotify import (
     CONF_PERSON,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
-    CommandType,
-    GlobalTargetType,
-    QualifiedTargetType,
-    RecipientType,
 )
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
+from custom_components.supernotify.model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target
+from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.snoozer import Snooze, Snoozer
 
 
 def test_do_nothing_filter_recipients() -> None:
     uut = Snoozer()
-    assert uut.filter_recipients([{CONF_PERSON: "test_1"}], PRIORITY_MEDIUM, "email", {}, ["email"], {}) == [
-        {CONF_PERSON: "test_1"}
-    ]
+    filtered = uut.filter_recipients(
+        Target(["notify.abc", "joe@mctest.com", "person.joe"]), PRIORITY_MEDIUM, "email", {}, ["email"], {}
+    )
+    assert filtered == Target(["notify.abc", "joe@mctest.com", "person.joe"])
 
 
-def test_filter_mobile_device_action(mock_context: Context) -> None:
+def test_filter_mobile_device_action(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     uut: Snoozer = Snoozer()
     uut.register_snooze(
         CommandType.SNOOZE,
@@ -34,13 +33,19 @@ def test_filter_mobile_device_action(mock_context: Context) -> None:
         snooze_for=24 * 60 * 60,
         reason="Action Failure",
     )
-    recipients = uut.filter_recipients(list(mock_context.people.values()), PRIORITY_MEDIUM, "email", {}, ["email"], {})
-    assert recipients == [
-        {CONF_PERSON: "person.new_home_owner"},
-        {CONF_PERSON: "person.bidey_in", CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}]},
-    ]
+    recipients: Target = uut.filter_recipients(
+        Target({"action": ["mobile_app_nophone", "mobile_app.ipad"], "person_id": ["person.bidey_in", "person.test_otest"]}),
+        PRIORITY_MEDIUM,
+        "email",
+        {},
+        ["email"],
+        {},
+    )
+    assert recipients.actions == ["mobile_app.ipad"]  # mobile suppressed
+    assert recipients.person_ids == ["person.bidey_in", "person.test_otest"]  # person untouched
+
     # check that the original recipients haven't been messed with
-    assert mock_context.people["person.bidey_in"] == {
+    assert mock_people_registry.people["person.bidey_in"] == {
         CONF_PERSON: "person.bidey_in",
         CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
     }
@@ -62,19 +67,19 @@ def test_check_notification_for_snooze_global() -> None:
     assert uut.current_snoozes() == [Snooze(GlobalTargetType.EVERYTHING, RecipientType.EVERYONE)]
 
 
-def test_check_notification_for_snooze_qualified(mock_context: Context) -> None:
+def test_check_notification_for_snooze_qualified(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     uut: Snoozer = Snoozer()
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_DELIVERY_chime"}), mock_context.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_DELIVERY_chime"}), mock_people_registry.people
     )
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SILENCE_EVERYONE_CAMERA_Yard"}), mock_context.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SILENCE_EVERYONE_CAMERA_Yard"}), mock_people_registry.people
     )
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_METHOD_email"}), mock_context.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_METHOD_email"}), mock_people_registry.people
     )
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_METHOD_LASER"}), mock_context.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_METHOD_LASER"}), mock_people_registry.people
     )
     assert uut.current_snoozes(delivery_names=["chime", "plain_email"], delivery_definitions=mock_context.deliveries) == [
         Snooze(QualifiedTargetType.DELIVERY, RecipientType.EVERYONE, "chime"),

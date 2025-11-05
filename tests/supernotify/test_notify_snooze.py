@@ -1,3 +1,4 @@
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import Context, Event, HomeAssistant
 
 from custom_components.supernotify import (
@@ -14,10 +15,8 @@ from custom_components.supernotify import (
     METHOD_PERSISTENT,
     METHOD_SMS,
     SELECTION_BY_SCENARIO,
-    GlobalTargetType,
-    QualifiedTargetType,
-    RecipientType,
 )
+from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SuperNotificationAction
 from custom_components.supernotify.snoozer import Snooze
@@ -86,18 +85,18 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
     uut = SuperNotificationAction(
         hass,
         recipients=[
-            {CONF_PERSON: "person.bob_mctest", ATTR_USER_ID: "eee999111"},
-            {CONF_PERSON: "person.jane_macunit", ATTR_USER_ID: "fff444222"},
+            {CONF_PERSON: "person.bob_mctest", CONF_EMAIL: "bob@mctest.com", ATTR_USER_ID: "eee999111"},
+            {CONF_PERSON: "person.jane_macunit", CONF_EMAIL: "jane@macunit.org", ATTR_USER_ID: "fff444222"},
         ],
         deliveries=DELIVERY,
     )
     await uut.initialize()
-    register_mobile_app(uut.context, person="person.bob_mctest")
-    plain_notify = Notification(uut.context, "hello")
+    register_mobile_app(uut.people_registry, person="person.bob_mctest")
+    plain_notify = Notification(uut.context, uut.people_registry, "hello")
     await plain_notify.initialize()
-    assert [p[CONF_PERSON] for p in plain_notify.generate_recipients("email", uut.context.delivery_method("email"))] == [
-        "person.bob_mctest",
-        "person.jane_macunit",
+    assert plain_notify.generate_recipients("email", uut.context.delivery_method("email"))[0].email == [
+        "bob@mctest.com",
+        "jane@macunit.org",
     ]
 
     uut.on_mobile_action(
@@ -107,8 +106,8 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.USER, recipient="person.bob_mctest")
     ]
     await plain_notify.initialize()
-    assert [p[CONF_PERSON] for p in plain_notify.generate_recipients("email", uut.context.delivery_method("email"))] == [
-        "person.jane_macunit"
+    assert plain_notify.generate_recipients("email", uut.context.delivery_method("email"))[0].email == [
+        "jane@macunit.org"
     ]
 
     uut.on_mobile_action(
@@ -116,9 +115,9 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
     )
     assert list(uut.context.snoozer.snoozes.values()) == []
     await plain_notify.initialize()
-    assert [p[CONF_PERSON] for p in plain_notify.generate_recipients("email", uut.context.delivery_method("email"))] == [
-        "person.bob_mctest",
-        "person.jane_macunit",
+    assert plain_notify.generate_recipients("email", uut.context.delivery_method("email"))[0].email == [
+        "bob@mctest.com",
+        "jane@macunit.org",
     ]
 
     uut.shutdown()

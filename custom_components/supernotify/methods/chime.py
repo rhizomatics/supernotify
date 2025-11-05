@@ -5,22 +5,16 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_VARIABLES,
 )
 
-from custom_components.supernotify import (
-    ATTR_DATA,
-    ATTR_PRIORITY,
-    CONF_DEVICE_DOMAIN,
-    CONF_TARGETS_REQUIRED,
-    METHOD_CHIME,
-    Target,
-)
-from custom_components.supernotify.common import ensure_list
+from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, CONF_DEVICE_DOMAIN, METHOD_CHIME
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import Target
 
 if TYPE_CHECKING:
     from homeassistant.helpers.device_registry import DeviceEntry
@@ -44,7 +38,8 @@ DEVICE_DOMAINS = ["alexa_devices"]
 class ChimeTargetConfig:
     def __init__(
         self,
-        target: str,
+        entity_id: str | None = None,
+        device_id: str | None = None,
         tune: str | None = None,
         duration: int | None = None,
         volume: float | None = None,
@@ -52,19 +47,16 @@ class ChimeTargetConfig:
         domain: str | None = None,
         **kwargs: Any,
     ) -> None:
-        self.entity_id: str | None = None
-        self.device_id: str | None = None
+        self.entity_id: str | None = entity_id
+        self.device_id: str | None = device_id
         self.domain: str | None = None
         self.entity_name: str | None = None
-        if "." in target:
-            self.entity_id = target
-            self.domain, self.entity_name = target.split(".", 1)
+        if self.entity_id:
+            self.domain, self.entity_name = self.entity_id.split(".", 1)
+        elif self.device_id:
+            self.domain = domain
         else:
-            if Target.is_device(target):
-                self.device_id = target
-                self.domain = domain
-            else:
-                raise ValueError(f"ChimeTargetConfig target must be entity_id or device_id: {target}")
+            raise ValueError("ChimeTargetConfig target must be entity_id or device_id")
         if kwargs:
             _LOGGER.warning("SUPERNOTIFY ChimeTargetConfig ignoring unexpected args: %s", kwargs)
         self.volume: float | None = volume
@@ -83,7 +75,6 @@ class ChimeDeliveryMethod(DeliveryMethod):
     method = METHOD_CHIME
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_TARGETS_REQUIRED, False)
         # support optional auto discovery
         kwargs.setdefault(CONF_DEVICE_DOMAIN, DEVICE_DOMAINS)
         super().__init__(*args, **kwargs)
@@ -93,21 +84,28 @@ class ChimeDeliveryMethod(DeliveryMethod):
         return {}
 
     @property
+    def target_required(self) -> bool:
+        return False
+
+    @property
     def chime_aliases(self) -> dict[str, Any]:
         return self.delivery_defaults.options.get("chime_aliases") or {}
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
-    def select_target(self, target: str) -> bool:
-        return re.fullmatch(RE_VALID_CHIME, target) is not None or Target.is_device(target)
+    def select_targets(self, target: Target) -> Target:
+        return Target({
+            "entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_CHIME, e) is not None],
+            "device_id": target.device_ids,
+        })
 
     async def deliver(self, envelope: Envelope) -> bool:
         config: Delivery = self.delivery_config(envelope.delivery_name)
         data: dict[str, Any] = {}
         data.update(config.data)
         data.update(envelope.data or {})
-        targets = envelope.targets or []
+        target: Target = envelope.target
 
         # chime_repeat = data.pop("chime_repeat", 1)
         chime_tune: str | None = data.pop("chime_tune", None)
@@ -117,16 +115,20 @@ class ChimeDeliveryMethod(DeliveryMethod):
         _LOGGER.info(
             "SUPERNOTIFY notify_chime: %s -> %s (delivery: %s, env_data:%s, dlv_data:%s)",
             chime_tune,
-            targets,
+            target.entity_ids,
             envelope.delivery_name,
             envelope.data,
             config.data,
         )
         # expand groups
         expanded_targets = {
-            e: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, target=e)
-            for e in expand_entity_ids(self.hass, targets)
+            e: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, entity_id=e)
+            for e in expand_entity_ids(self.hass, target.entity_ids)
         }
+        expanded_targets.update({
+            d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
+            for d in target.device_ids
+        })
         # resolve and include chime aliases
         expanded_targets.update(self.resolve_tune(chime_tune))  # overwrite and extend
 
@@ -249,7 +251,7 @@ class ChimeDeliveryMethod(DeliveryMethod):
     def resolve_tune(self, tune_or_alias: str | None) -> dict[str, ChimeTargetConfig]:
         target_configs: dict[str, ChimeTargetConfig] = {}
         if tune_or_alias is not None:
-            for domain, alias_config in self.chime_aliases.get(tune_or_alias, {}).items():
+            for label, alias_config in self.chime_aliases.get(tune_or_alias, {}).items():
                 if isinstance(alias_config, str):
                     tune = alias_config
                     alias_config = {}
@@ -257,28 +259,33 @@ class ChimeDeliveryMethod(DeliveryMethod):
                     tune = alias_config.get("tune", tune_or_alias)
 
                 alias_config["tune"] = tune
-                alias_config.setdefault("domain", domain)
+                alias_config.setdefault("domain", label)
                 alias_config.setdefault("data", {})
-                target = alias_config.pop("target", None)
+                raw_target = alias_config.pop("target", None)
 
                 # pass through variables or data if present
-                if target is not None:
-                    target_configs.update({t: ChimeTargetConfig(target=t, **alias_config) for t in ensure_list(target)})
-                elif domain in DEVICE_DOMAINS:
+                if raw_target is not None:
+                    target = Target(raw_target)
+                    target_configs.update({t: ChimeTargetConfig(entity_id=t, **alias_config) for t in target.entity_ids})
+                    target_configs.update({t: ChimeTargetConfig(device_id=t, **alias_config) for t in target.device_ids})
+                elif alias_config["domain"] in DEVICE_DOMAINS:
                     # bulk apply to all known target devices of this domain
                     bulk_apply = {
-                        dev: ChimeTargetConfig(target=dev, **alias_config)
-                        for dev in self.targets.device_id
+                        dev: ChimeTargetConfig(device_id=dev, **alias_config)
+                        for dev in self.targets.device_ids
                         if dev not in target_configs  # don't overwrite existing specific targets
+                        and ATTR_DEVICE_ID not in alias_config
                     }
+                    # TODO: Constrain to device domain
                     target_configs.update(bulk_apply)
                 else:
                     # bulk apply to all known target entities of this domain
                     bulk_apply = {
-                        ent: ChimeTargetConfig(target=ent, **alias_config)
-                        for ent in self.targets.entity_id
+                        ent: ChimeTargetConfig(entity_id=ent, **alias_config)
+                        for ent in self.targets.entity_ids
                         if ent.startswith(f"{alias_config['domain']}.")
                         and ent not in target_configs  # don't overwrite existing specific targets
+                        and ATTR_ENTITY_ID not in alias_config
                     }
                     target_configs.update(bulk_apply)
         _LOGGER.debug("SUPERNOTIFY method_chime: Resolved tune %s to %s", tune_or_alias, target_configs)

@@ -4,7 +4,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition
 from homeassistant.helpers import config_validation as cv
 
-from custom_components.supernotify import PRIORITY_CRITICAL, PRIORITY_LOW, PRIORITY_MEDIUM, ConditionVariables
+from custom_components.supernotify import PRIORITY_CRITICAL, PRIORITY_LOW, PRIORITY_MEDIUM
+from custom_components.supernotify.model import ConditionVariables
 
 """ test bed for checking conditions rather than supernotify functionality """
 

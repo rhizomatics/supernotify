@@ -17,24 +17,24 @@ from custom_components.supernotify import (
     PRIORITY_LOW,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
-    QualifiedTargetType,
-    RecipientType,
 )
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
+from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.snoozer import Snooze
 
 if TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
 
 
-async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant) -> None:
+async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
     """Test on_notify_mobile_push."""
     context = Context()
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, {"media_test": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"media_test": {CONF_METHOD: METHOD_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.deliver(
@@ -42,6 +42,7 @@ async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant) -> Non
             "media_test",
             Notification(
                 context,
+                mock_people_registry,
                 message="hello there",
                 action_data={
                     "media": {
@@ -52,7 +53,7 @@ async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant) -> Non
                     "actions": [{"action": "URI", "title": "My Camera App", "url": "http://my.home/app1"}],
                 },
             ),
-            targets=["mobile_app_new_iphone"],
+            target=Target({"action": ["notify.mobile_app_new_iphone"]}),
         ),
     )
     mock_hass.services.async_call.assert_called_with(  # type: ignore
@@ -80,15 +81,21 @@ async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant) -> Non
     )
 
 
-async def test_on_notify_mobile_push_with_explicit_target(mock_hass: HomeAssistant) -> None:
+async def test_on_notify_mobile_push_with_explicit_target(
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+) -> None:
     """Test on_notify_mobile_push."""
     context = Context()
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, {"media_test": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"media_test": {CONF_METHOD: METHOD_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.deliver(
-        Envelope("media_test", Notification(context, message="hello there", title="testing"), targets=["mobile_app_new_iphone"])
+        Envelope(
+            "media_test",
+            Notification(context, mock_people_registry, message="hello there", title="testing"),
+            target=Target({"action": ["notify.mobile_app_new_iphone"]})
+        )
     )
     mock_hass.services.async_call.assert_called_with(  # type: ignore
         "notify",
@@ -101,35 +108,47 @@ async def test_on_notify_mobile_push_with_explicit_target(mock_hass: HomeAssista
     )
 
 
-async def test_on_notify_mobile_push_with_person_derived_targets(mock_hass: HomeAssistant) -> None:
+async def test_on_notify_mobile_push_with_person_derived_targets(
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+) -> None:
     """Test on_notify_mobile_push."""
-    context = Context(
-        recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}]
-    )
+    context = Context()
+    mock_people_registry.people = {"person.test_user": {"person": "person.test_user",
+                    "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}}
+
     await context.initialize()
-    n = Notification(context, message="hello there", title="testing")
-    uut = MobilePushDeliveryMethod(mock_hass, context, {})
-    recipients: list[dict[str, Any]] = n.generate_recipients("dummy", uut)
+    n = Notification(context, mock_people_registry, message="hello there", title="testing")
+    await n.initialize()
+    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {})
+    recipients: list[Target] = n.generate_recipients("dummy", uut)
     assert len(recipients) == 1
-    assert recipients[0]["person"] == "person.test_user"
-    assert recipients[0]["mobile_devices"][0]["notify_action"] == "mobile_app_test_user_iphone"
+    assert len(recipients[0].actions) == 1
+    assert recipients[0].actions[0] == "mobile_app_test_user_iphone"
 
 
-async def test_on_notify_mobile_push_with_critical_priority(mock_hass: HomeAssistant) -> None:
+async def test_on_notify_mobile_push_with_critical_priority(
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+) -> None:
     """Test on_notify_mobile_push."""
     context = Context(
         recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}]
     )
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, {"default": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"default": {CONF_METHOD: METHOD_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.initialize()
     await uut.deliver(
         Envelope(
             "default",
-            Notification(context, message="hello there", title="testing", action_data={CONF_PRIORITY: PRIORITY_CRITICAL}),
-            targets=["mobile_app_test_user_iphone"],
+            Notification(
+                context,
+                mock_people_registry,
+                message="hello there",
+                title="testing",
+                action_data={CONF_PRIORITY: PRIORITY_CRITICAL},
+            ),
+            target=Target({"action": ["notify.mobile_app_test_user_iphone"]}),
         )
     )
     mock_hass.services.async_call.assert_called_with(  # type: ignore
@@ -146,7 +165,9 @@ async def test_on_notify_mobile_push_with_critical_priority(mock_hass: HomeAssis
 
 
 @pytest.mark.parametrize("priority", PRIORITY_VALUES)
-async def test_priority_interpretation(mock_hass: HomeAssistant, priority: LiteralString) -> None:
+async def test_priority_interpretation(
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, priority: LiteralString
+) -> None:
     priority_map = {
         PRIORITY_CRITICAL: "critical",
         PRIORITY_HIGH: "time-sensitive",
@@ -155,13 +176,15 @@ async def test_priority_interpretation(mock_hass: HomeAssistant, priority: Liter
     }
     context = Context()
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, {"default": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"default": {CONF_METHOD: METHOD_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     e: Envelope = Envelope(
         "default",
-        Notification(context, message="hello there", title="testing", action_data={ATTR_PRIORITY: priority}),
-        targets=["mobile_app_test_user_iphone"],
+        Notification(
+            context, mock_people_registry, message="hello there", title="testing", action_data={ATTR_PRIORITY: priority}
+        ),
+        target=Target({"action": ["mobile_app_test_user_iphone"]}),
     )
     await uut.deliver(e)
     call: CallRecord = e.calls[0]
@@ -204,8 +227,10 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
     assert notification["undelivered_envelopes"][0]["data"]["clickAction"] == "android_something"
 
 
-async def test_action_title(mock_hass: HomeAssistant, superconfig: Context, local_server: HTTPServer) -> None:
-    uut = MobilePushDeliveryMethod(mock_hass, superconfig, {})
+async def test_action_title(
+    mock_hass: HomeAssistant, superconfig: Context, local_server: HTTPServer, mock_people_registry: PeopleRegistry
+) -> None:
+    uut = MobilePushDeliveryMethod(mock_hass, superconfig, mock_people_registry, {})
     action_url = local_server.url_for("/action_goes_here")
     local_server.expect_oneshot_request("/action_goes_here").respond_with_data(
         "<html><title>my old action page</title><html>", content_type="text/html"
@@ -218,13 +243,15 @@ async def test_action_title(mock_hass: HomeAssistant, superconfig: Context, loca
     assert await uut.action_title("http://127.0.0.1/no/such/page") is None
 
 
-async def test_on_notify_mobile_push_with_broken_mobile_targets(mock_context: Context) -> None:
+async def test_on_notify_mobile_push_with_broken_mobile_targets(
+    mock_context: Context, mock_people_registry: PeopleRegistry
+) -> None:
     """Test on_notify_mobile_push."""
-    uut = MobilePushDeliveryMethod(mock_context.hass, mock_context, {})
+    uut = MobilePushDeliveryMethod(mock_context.hass, mock_context, mock_people_registry, {})
     e = Envelope(
         "",
-        Notification(mock_context, message="hello there", title="testing"),
-        targets=["mobile_app_nophone"],
+        Notification(mock_context, mock_people_registry, message="hello there", title="testing"),
+        target=Target({"action": ["mobile_app_nophone"]}),
     )
     assert mock_context.hass is not None
     assert mock_context.hass.services is not None

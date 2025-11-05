@@ -3,14 +3,15 @@ from unittest.mock import Mock, call
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT, CONF_METHOD
 
 from custom_components.supernotify import CONF_DATA, METHOD_CHIME
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
+from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 
 
-async def test_deliver(mock_hass, mock_context) -> None:  # type: ignore
+async def test_deliver(mock_hass, mock_context, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_chime"""
     uut = ChimeDeliveryMethod(
         mock_hass,
@@ -30,14 +31,14 @@ async def test_deliver(mock_hass, mock_context) -> None:  # type: ignore
 
     envelope = Envelope(
         "chimes",
-        Notification(mock_context, message="for script only"),
-        targets=[
+        Notification(mock_context, mock_people_registry, message="for script only"),
+        target=Target([
             "switch.bell_1",
             "script.alarm_2",
             "media_player.living_room",
             "siren.lobby",
             "ffff0000eeee1111dddd2222cccc3333",
-        ],
+        ]),
         data={"chime_tune": "boing_01", "chime_duration": 10, "chime_volume": 1},
     )
     await uut.deliver(envelope)
@@ -87,13 +88,14 @@ async def test_deliver(mock_hass, mock_context) -> None:  # type: ignore
     assert len(envelope.calls) == 5
 
 
-async def test_deliver_alias(mock_hass) -> None:  # type: ignore
+async def test_deliver_alias(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_chime"""
     delivery_config = {"chimes": {CONF_METHOD: METHOD_CHIME, CONF_DEFAULT: True, CONF_DATA: {"chime_tune": "doorbell"}}}
     context = Context()
     uut = ChimeDeliveryMethod(
         mock_hass,
         context,
+        mock_people_registry,
         delivery_config,
         delivery_defaults={
             "target": ["media_player.kitchen_alexa", "media_player.hall_echo", "ffff0000eeee1111dddd2222cccc3333"],
@@ -120,7 +122,7 @@ async def test_deliver_alias(mock_hass) -> None:  # type: ignore
     context.configure_for_tests([uut])
     await context.initialize()
 
-    envelope = Envelope("chimes", Notification(context, message="for script only"))
+    envelope = Envelope("chimes", Notification(context, mock_people_registry, message="for script only"))
     await uut.deliver(envelope)
     assert envelope.skipped == 0
     assert envelope.errored == 0
@@ -176,7 +178,7 @@ class MockGroup:
         self.attributes = {ATTR_ENTITY_ID: entities}
 
 
-async def test_deliver_to_group(mock_hass) -> None:  # type: ignore
+async def test_deliver_to_group(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_chime"""
     groups = {
         "group.alexa": MockGroup(["media_player.alexa_1", "media_player.alexa_2"]),
@@ -192,12 +194,18 @@ async def test_deliver_to_group(mock_hass) -> None:  # type: ignore
     context = Context()
     await context.initialize()
     mock_hass.states.get.side_effect = lambda v: groups.get(v)
-    uut = ChimeDeliveryMethod(mock_hass, context, delivery_config)
+    uut = ChimeDeliveryMethod(mock_hass, context, mock_people_registry, delivery_config)
     await uut.initialize()
     context.configure_for_tests([uut])
     await context.initialize()
 
-    await uut.deliver(Envelope("chimes", Notification(context), targets=["group.alexa", "group.chime", "script.siren_2"]))
+    await uut.deliver(
+        Envelope(
+            "chimes",
+            Notification(context, mock_people_registry),
+            target=Target(["group.alexa", "group.chime", "script.siren_2"]),
+        )
+    )
     mock_hass.services.async_call.assert_has_calls(
         [
             call(

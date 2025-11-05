@@ -1,20 +1,11 @@
 """The SuperNotification integration"""
 
 import logging
-import re
-from dataclasses import dataclass, field
-from enum import StrEnum
-from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_AREA_ID,
-    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
-    ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     ATTR_SERVICE,
     CONF_ACTION,
     CONF_ALIAS,
@@ -28,14 +19,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TARGET,
     CONF_URL,
-    STATE_HOME,
-    STATE_NOT_HOME,
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from custom_components.supernotify.common import ensure_list
+from custom_components.supernotify.common import ensure_list as ensure_list
 from custom_components.supernotify.common import format_timestamp as format_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -87,7 +75,8 @@ CONF_DEVICE_LABELS: str = "device_labels"
 CONF_DEVICE_DOMAIN: str = "device_domain"
 CONF_MODEL: str = "model"
 CONF_MESSAGE: str = "message"
-CONF_TARGETS_REQUIRED: str = "targets_required"
+CONF_TARGET_REQUIRED: str = "target_required"
+CONF_TARGET_CATEGORIES: str = "target_categories"
 CONF_MOBILE_DEVICES: str = "mobile_devices"
 CONF_MOBILE_DISCOVERY: str = "mobile_discovery"
 CONF_ACTION_TEMPLATE: str = "action_template"
@@ -142,6 +131,10 @@ ATTR_TIMESTAMP = "timestamp"
 ATTR_DEBUG = "debug"
 ATTR_ACTIONS = "actions"
 ATTR_USER_ID = "user_id"
+ATTR_PERSON_ID = "person_id"
+ATTR_OTHER_ID = "other_id"
+ATTR_EMAIL = "email"
+ATTR_PHONE = "phone"
 
 DELIVERY_SELECTION_IMPLICIT = "implicit"
 DELIVERY_SELECTION_EXPLICIT = "explicit"
@@ -244,14 +237,14 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Method Defaults and Delivery 
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
     vol.Optional(CONF_OPTIONS): dict,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
-    vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
-    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
+    vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
+    vol.Optional(CONF_PRIORITY, default=PRIORITY_VALUES): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
 })
 DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Required(CONF_METHOD): vol.In(METHOD_VALUES),
     vol.Optional(CONF_TEMPLATE): cv.string,
-    vol.Optional(CONF_DEFAULT, default=False): cv.boolean,
+    vol.Optional(CONF_DEFAULT, default=False): cv.boolean,  # should this delivery be implicitly selected
     vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
     vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
@@ -259,7 +252,8 @@ DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
 })
 METHOD_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TARGETS_REQUIRED, default=True): cv.boolean,
+    vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
+    vol.Optional(CONF_TARGET_CATEGORIES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
@@ -378,196 +372,3 @@ ACTION_DATA_SCHEMA = vol.Schema(
 )
 
 STRICT_ACTION_DATA_SCHEMA = ACTION_DATA_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-class TargetType(StrEnum):
-    pass
-
-
-class GlobalTargetType(TargetType):
-    NONCRITICAL = "NONCRITICAL"
-    EVERYTHING = "EVERYTHING"
-
-
-class RecipientType(StrEnum):
-    USER = "USER"
-    EVERYONE = "EVERYONE"
-
-
-class QualifiedTargetType(TargetType):
-    METHOD = "METHOD"
-    DELIVERY = "DELIVERY"
-    CAMERA = "CAMERA"
-    PRIORITY = "PRIORITY"
-    ACTION = "ACTION"
-
-
-class CommandType(StrEnum):
-    SNOOZE = "SNOOZE"
-    SILENCE = "SILENCE"
-    NORMAL = "NORMAL"
-
-
-class MessageOnlyPolicy(StrEnum):
-    STANDARD = "STANDARD"  # independent title and message
-    USE_TITLE = "USE_TITLE"  # use title in place of message, no title
-    COMBINE_TITLE = "COMBINE_TITLE"  # use combined title and message as message, no title
-
-
-@dataclass
-class ConditionVariables:
-    """Variables presented to all condition evaluations
-
-    Attributes
-    ----------
-        applied_scenarios (list[str]): Scenarios that have been applied
-        required_scenarios (list[str]): Scenarios that must be applied
-        constrain_scenarios (list[str]): Only scenarios in this list, or in explicit apply_scenarios, can be applied
-        notification_priority (str): Priority of the notification
-        notification_message (str): Message of the notification
-        notification_title (str): Title of the notification
-        occupancy (list[str]): List of occupancy scenarios
-
-    """
-
-    applied_scenarios: list[str] = field(default_factory=list)
-    required_scenarios: list[str] = field(default_factory=list)
-    constrain_scenarios: list[str] = field(default_factory=list)
-    notification_priority: str = PRIORITY_MEDIUM
-    notification_message: str = ""
-    notification_title: str = ""
-    occupancy: list[str] = field(default_factory=list)
-
-    def __init__(
-        self,
-        applied_scenarios: list[str] | None = None,
-        required_scenarios: list[str] | None = None,
-        constrain_scenarios: list[str] | None = None,
-        delivery_priority: str | None = PRIORITY_MEDIUM,
-        occupiers: dict[str, list[dict[str, Any]]] | None = None,
-        message: str | None = None,
-        title: str | None = None,
-    ) -> None:
-        occupiers = occupiers or {}
-        self.occupancy = []
-        if not occupiers.get(STATE_NOT_HOME) and occupiers.get(STATE_HOME):
-            self.occupancy.append("ALL_HOME")
-        elif occupiers.get(STATE_NOT_HOME) and not occupiers.get(STATE_HOME):
-            self.occupancy.append("ALL_AWAY")
-        if len(occupiers.get(STATE_HOME, [])) == 1:
-            self.occupancy.extend(["LONE_HOME", "SOME_HOME"])
-        elif len(occupiers.get(STATE_HOME, [])) > 1 and occupiers.get(STATE_NOT_HOME):
-            self.occupancy.extend(["MULTI_HOME", "SOME_HOME"])
-        self.applied_scenarios = applied_scenarios or []
-        self.required_scenarios = required_scenarios or []
-        self.constrain_scenarios = constrain_scenarios or []
-        self.notification_priority = delivery_priority or PRIORITY_MEDIUM
-        self.notification_message = message or ""
-        self.notification_title = title or ""
-
-    def as_dict(self) -> ConfigType:
-        return {
-            "applied_scenarios": self.applied_scenarios,
-            "required_scenarios": self.required_scenarios,
-            "constrain_scenarios": self.constrain_scenarios,
-            "notification_message": self.notification_message,
-            "notification_title": self.notification_title,
-            "occupancy": self.occupancy,
-        }
-
-
-class Target:
-    def __init__(self, target: str | list[str] | dict[str, str | list[str]] | None = None) -> None:
-        self.device_id: list[str] = []
-        self.entity_id: list[str] = []
-        self.area_id: list[str] = []
-        self.floor_id: list[str] = []
-        self.label_id: list[str] = []
-        if isinstance(target, list):
-            # simplified and legacy way of assuming list of entities
-            self.entity_id = [t for t in target if not self.is_device(t)]
-            self.device_id = [t for t in target if self.is_device(t)]
-        elif isinstance(target, str):
-            self.entity_id = [target] if not self.is_device(target) else []
-            self.device_id = [target] if self.is_device(target) else []
-        elif target is None:
-            self.entity_id = []
-        elif isinstance(target, dict):
-            self.device_id = ensure_list(target.get(ATTR_DEVICE_ID))
-            self.entity_id = ensure_list(target.get(ATTR_ENTITY_ID))
-            self.area_id = ensure_list(target.get(ATTR_AREA_ID))
-            self.floor_id = ensure_list(target.get(ATTR_FLOOR_ID))
-            self.label_id = ensure_list(target.get(ATTR_LABEL_ID))
-
-    @classmethod
-    def is_device(cls, target: str) -> bool:
-        return re.match(r"^[0-9a-f]{32}$", target) is not None
-
-    def as_dict(self) -> dict[str, list[str]]:
-        d = {}
-        if self.device_id:
-            d["device_id"] = self.device_id
-        if self.entity_id:
-            d["entity_id"] = self.entity_id
-        if self.area_id:
-            d["area_id"] = self.area_id
-        if self.floor_id:
-            d["floor_id"] = self.floor_id
-        if self.label_id:
-            d["label_id"] = self.label_id
-
-        return d
-
-
-class DeliveryConfig:
-    """Shared config for method defaults and Delivery definitions"""
-
-    def __init__(self, conf: ConfigType, delivery_defaults: "DeliveryConfig|None" = None) -> None:
-        if delivery_defaults is not None:
-            # use method defaults where no delivery level override
-            self.target: Target = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
-            self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
-            self.options: ConfigType = dict(delivery_defaults.options)
-            self.options.update(conf.get(CONF_OPTIONS, {}))
-            self.data: ConfigType = dict(delivery_defaults.data) or {}
-            self.data.update(conf.get(CONF_DATA, {}))
-            self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
-            self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
-        else:
-            # construct the method defaults
-            self.target = Target(conf.get(CONF_TARGET, {}))
-            self.action = conf.get(CONF_ACTION)
-            self.options = conf.get(CONF_OPTIONS, {})
-            self.data = conf.get(CONF_DATA, {})
-            self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
-            self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
-
-    def apply_method_options(self, method_options: dict[str, Any]) -> None:
-        method_options = method_options or {}
-        for opt in method_options:
-            if opt not in self.options:
-                self.options[opt] = method_options[opt]
-
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            CONF_TARGET: self.target.as_dict(),
-            CONF_ACTION: self.action,
-            CONF_OPTIONS: self.options,
-            CONF_DATA: self.data,
-            CONF_SELECTION: self.selection,
-            CONF_PRIORITY: self.priority,
-        }
-
-    def __repr__(self) -> str:
-        """Log friendly representation"""
-        return str(self.as_dict())
-
-
-class MethodConfig:
-    def __init__(self, name: str, conf: ConfigType) -> None:
-        self.name = name
-        self.targets_required: bool | None = conf.get(CONF_TARGETS_REQUIRED)
-        self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
-        self.device_discovery: bool | None = conf.get(CONF_DEVICE_DISCOVERY)
-        self.enabled = conf.get(CONF_ENABLED, True)
-        self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})

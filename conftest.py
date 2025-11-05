@@ -26,12 +26,13 @@ from custom_components.supernotify import (
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
 from custom_components.supernotify.methods.email import EmailDeliveryMethod
 from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
+from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.snoozer import Snoozer
 
 
@@ -76,10 +77,32 @@ def mock_hass() -> HomeAssistant:
 
 
 @pytest.fixture
-def mock_context(mock_hass: HomeAssistant) -> Context:
+def mock_people_registry() -> PeopleRegistry:
+    registry = Mock(spec=PeopleRegistry)
+    registry.people = {
+        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner"},
+        "person.bidey_in": {
+            CONF_PERSON: "person.bidey_in",
+            CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
+        },
+    }
+    registry.people_state.return_value = [
+        {CONF_PERSON: "person.new_home_owner", ATTR_STATE: "not_home"},
+        {CONF_PERSON: "person.bidey_in", ATTR_STATE: "home"},
+    ]
+    registry.determine_occupancy.return_value = {
+        STATE_HOME: [{CONF_PERSON: "person.bidey_in"}],
+        STATE_NOT_HOME: [{CONF_PERSON: "person.new_home_owner"}],
+    }
+    return registry
+
+
+@pytest.fixture
+def mock_context(mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> Context:
     context = Mock(spec=Context)
     context.hass = mock_hass
     context.scenarios = {}
+    context.people_registry = mock_people_registry
     context.cameras = {}
     context.snoozer = Snoozer()
     context.delivery_by_scenario = {}
@@ -92,27 +115,10 @@ def mock_context(mock_hass: HomeAssistant) -> Context:
     context.template_path = Path("/templates_here")
 
     context.deliveries = {
-        "plain_email": Delivery("plain_email", {}, EmailDeliveryMethod(mock_hass, context)),
-        "mobile": Delivery("mobile", {}, MobilePushDeliveryMethod(mock_hass, context)),
-        "chime": Delivery("chime", {}, ChimeDeliveryMethod(mock_hass, context)),
+        "plain_email": Delivery("plain_email", {}, EmailDeliveryMethod(mock_hass, context, mock_people_registry)),
+        "mobile": Delivery("mobile", {}, MobilePushDeliveryMethod(mock_hass, context, mock_people_registry)),
+        "chime": Delivery("chime", {}, ChimeDeliveryMethod(mock_hass, context, mock_people_registry)),
     }
-
-    context.people = {
-        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner"},
-        "person.bidey_in": {
-            CONF_PERSON: "person.bidey_in",
-            CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
-        },
-    }
-    context.people_state.return_value = [
-        {CONF_PERSON: "person.new_home_owner", ATTR_STATE: "not_home"},
-        {CONF_PERSON: "person.bidey_in", ATTR_STATE: "home"},
-    ]
-    context.determine_occupancy.return_value = {
-        STATE_HOME: [{CONF_PERSON: "person.bidey_in"}],
-        STATE_NOT_HOME: [{CONF_PERSON: "person.new_home_owner"}],
-    }
-
     return context
 
 
@@ -141,8 +147,8 @@ def mock_scenario() -> AsyncMock:
 
 
 @pytest.fixture
-async def superconfig() -> Context:
-    context = Context()
+async def superconfig(mock_people_registry: PeopleRegistry) -> Context:
+    context = Context(people_registry=mock_people_registry)
     await context.initialize()
     return context
 

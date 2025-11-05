@@ -8,6 +8,7 @@ from homeassistant.components.notify.const import ATTR_DATA
 
 import custom_components.supernotify
 from custom_components.supernotify import (
+    ATTR_ACTION,
     ATTR_ACTION_CATEGORY,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
@@ -17,14 +18,11 @@ from custom_components.supernotify import (
     CONF_MOBILE_DEVICES,
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
-    CONF_TARGETS_REQUIRED,
     METHOD_MOBILE_PUSH,
-    CommandType,
-    QualifiedTargetType,
-    RecipientType,
 )
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import CommandType, QualifiedTargetType, RecipientType, Target
 
 RE_VALID_MOBILE_APP = r"mobile_app_[A-Za-z0-9_]+"
 
@@ -35,21 +33,26 @@ class MobilePushDeliveryMethod(DeliveryMethod):
     method = METHOD_MOBILE_PUSH
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault(CONF_TARGETS_REQUIRED, False)  # notify entities used
         super().__init__(*args, **kwargs)
         self.action_titles: dict[str, str] = {}
 
-    def select_target(self, target: str) -> bool:
-        return re.fullmatch(RE_VALID_MOBILE_APP, target) is not None
+    def select_targets(self, target: Target) -> Target:
+        return Target({ATTR_ACTION: [
+            e for e in target.actions if re.fullmatch(RE_VALID_MOBILE_APP, e) is not None]})
+
+    @property
+    def target_required(self) -> bool:
+        # target might be implicit in the service for mobile devices
+        return False
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
-    def recipient_target(self, recipient: dict[str, Any]) -> list[str]:
+    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         if CONF_PERSON in recipient:
-            services: list[str] = [md.get(CONF_NOTIFY_ACTION) for md in recipient.get(CONF_MOBILE_DEVICES, [])]
-            return list(filter(None, services))
-        return []
+            actions: list[str] = [md.get(CONF_NOTIFY_ACTION) for md in recipient.get(CONF_MOBILE_DEVICES, [])]
+            return Target({ATTR_ACTION: list(filter(None, actions))})
+        return None
 
     async def action_title(self, url: str) -> str | None:
         if url in self.action_titles:
@@ -66,7 +69,7 @@ class MobilePushDeliveryMethod(DeliveryMethod):
         return None
 
     async def deliver(self, envelope: Envelope) -> bool:
-        if not envelope.targets:
+        if not envelope.target.actions:
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False
         data: dict[str, Any] = envelope.data or {}
@@ -74,7 +77,7 @@ class MobilePushDeliveryMethod(DeliveryMethod):
         category = data.get(ATTR_ACTION_CATEGORY, "general")
         action_groups = envelope.action_groups
 
-        _LOGGER.debug("SUPERNOTIFY notify_mobile: %s -> %s", envelope.title, envelope.targets)
+        _LOGGER.debug("SUPERNOTIFY notify_mobile: %s -> %s", envelope.title, envelope.target.actions)
 
         media = envelope.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
@@ -139,7 +142,7 @@ class MobilePushDeliveryMethod(DeliveryMethod):
         action_data = envelope.core_action_data()
         action_data[ATTR_DATA] = data
         hits = 0
-        for mobile_target in envelope.targets:
+        for mobile_target in envelope.target.actions:
             full_target = mobile_target if mobile_target.startswith("notify.") else f"notify.{mobile_target}"
             if await self.call_action(envelope, qualified_action=full_target, action_data=action_data):
                 hits += 1
@@ -148,17 +151,18 @@ class MobilePushDeliveryMethod(DeliveryMethod):
                     mobile_target if not mobile_target.startswith("notify.") else mobile_target.replace("notify.", "")
                 )
                 _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
-                # somewhat hacky way to tie the mobile device back to a recipient to please the snoozing api
-                for recipient in self.context.people.values():
-                    for md in recipient.get(CONF_MOBILE_DEVICES, []):
-                        if md.get(CONF_NOTIFY_ACTION) in (simple_target, mobile_target):
-                            self.context.snoozer.register_snooze(
-                                CommandType.SNOOZE,
-                                target_type=QualifiedTargetType.ACTION,
-                                target=simple_target,
-                                recipient_type=RecipientType.USER,
-                                recipient=recipient[CONF_PERSON],
-                                snooze_for=24 * 60 * 60,
-                                reason="Action Failure",
-                            )
+                if self.context.people_registry:
+                    # somewhat hacky way to tie the mobile device back to a recipient to please the snoozing api
+                    for recipient in self.context.people_registry.people.values():
+                        for md in recipient.get(CONF_MOBILE_DEVICES, []):
+                            if md.get(CONF_NOTIFY_ACTION) in (simple_target, mobile_target):
+                                self.context.snoozer.register_snooze(
+                                    CommandType.SNOOZE,
+                                    target_type=QualifiedTargetType.ACTION,
+                                    target=simple_target,
+                                    recipient_type=RecipientType.USER,
+                                    recipient=recipient[CONF_PERSON],
+                                    snooze_for=24 * 60 * 60,
+                                    reason="Action Failure",
+                                )
         return hits > 0

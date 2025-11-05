@@ -12,7 +12,7 @@ from PIL import Image, ImageChops
 from pytest_httpserver import BlockingHTTPServer
 
 from custom_components.supernotify import PTZ_METHOD_FRIGATE
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.media_grab import (
     move_camera_to_ptz_preset,
     select_avail_camera,

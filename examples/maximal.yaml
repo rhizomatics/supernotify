@@ -162,7 +162,7 @@ notify:
       sms:
         delivery_defaults:
           action: notify.mikrotik_sms
-        targets_required: true
+        target_required: true
       mobile_push:
         delivery_defaults:
           options:

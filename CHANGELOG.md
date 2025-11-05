@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.1.3
+
+
 ## 1.1.2
 
 - Remove method options where not relevant - chime, media_image

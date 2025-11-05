@@ -18,8 +18,9 @@ from custom_components.supernotify import (
     METHOD_SMS,
     SELECTION_BY_SCENARIO,
 )
-from custom_components.supernotify.configuration import Context
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.methods.generic import GenericDeliveryMethod
+from custom_components.supernotify.people import PeopleRegistry
 
 from .hass_setup_lib import register_device
 
@@ -34,29 +35,33 @@ DELIVERY: dict[str, Any] = {
 }
 
 
-async def test_simple_create(hass: HomeAssistant) -> None:
+async def test_simple_create(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
     context = Mock(Context)
-    uut = GenericDeliveryMethod(hass, context, DELIVERY)
+    uut = GenericDeliveryMethod(hass, context, mock_people_registry, DELIVERY)
     await uut.initialize()
     assert list(uut.valid_deliveries.keys()) == [d for d, dc in DELIVERY.items() if dc[CONF_METHOD] == METHOD_GENERIC]
     assert uut.default_delivery is not None
     assert uut.default_delivery.name == "DEFAULT_generic"
 
 
-async def test_default_delivery_defaulted(hass: HomeAssistant) -> None:
+async def test_default_delivery_defaulted(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
     context = Mock(Context)
 
-    uut = GenericDeliveryMethod(hass, context, DELIVERY, delivery_defaults={CONF_ACTION: "notify.slackity"})
+    uut = GenericDeliveryMethod(
+        hass, context, mock_people_registry, DELIVERY, delivery_defaults={CONF_ACTION: "notify.slackity"}
+    )
     await uut.initialize()
     assert uut.default_delivery is not None
     assert uut.default_delivery.action == "notify.slackity"
     assert list(uut.valid_deliveries.keys()) == ["chat"]
 
 
-async def test_method_defaults_used_for_missing_service(hass: HomeAssistant) -> None:
+async def test_method_defaults_used_for_missing_service(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
     delivery = {"chatty": {CONF_METHOD: METHOD_GENERIC, CONF_TARGET: ["chan1", "chan2"]}}
     context = Context(deliveries=delivery)
-    uut = GenericDeliveryMethod(hass, context, delivery, delivery_defaults={CONF_ACTION: "notify.slackity"})
+    uut = GenericDeliveryMethod(
+        hass, context, mock_people_registry, delivery, delivery_defaults={CONF_ACTION: "notify.slackity"}
+    )
     context.configure_for_tests(method_instances=[uut])
     await context.initialize()
 
@@ -68,7 +73,7 @@ async def test_method_defaults_used_for_missing_service(hass: HomeAssistant) -> 
 def test_simplify_text() -> None:
     from custom_components.supernotify.methods.generic import GenericDeliveryMethod
 
-    uut = GenericDeliveryMethod(None, None, {})
+    uut = GenericDeliveryMethod(None, None, None, {})
     assert (
         uut.simplify("Hello_world! Visit https://example.com (it's great) £100 <test>", strip_urls=True)
         == "Hello world! Visit it's great 100 test"
@@ -82,12 +87,14 @@ def test_simplify_text() -> None:
 
 async def test_device_discovery(hass: HomeAssistant) -> None:
     ctx = Context(hass)
-    uut = GenericDeliveryMethod(hass, ctx, {}, device_domain=["unit_testing"], device_discovery=True)
+    people_registry = PeopleRegistry(hass, [], ctx.entity_registry(), ctx.device_registry())
+    uut = GenericDeliveryMethod(hass, ctx, people_registry, {}, device_domain=["unit_testing"], device_discovery=True)
     await uut.initialize()
-    assert uut.delivery_defaults.target.device_id == []
+    assert uut.delivery_defaults.target is None
 
-    dev: DeviceEntry | None = register_device(ctx)
+    dev: DeviceEntry | None = register_device(people_registry)
     assert dev is not None
-    uut = GenericDeliveryMethod(hass, ctx, {}, device_domain=["unit_testing"], device_discovery=True)
+    uut = GenericDeliveryMethod(hass, ctx, people_registry, {}, device_domain=["unit_testing"], device_discovery=True)
     await uut.initialize()
-    assert uut.delivery_defaults.target.device_id == [dev.id]
+    assert uut.delivery_defaults.target is not None
+    assert uut.delivery_defaults.target.device_ids == [dev.id]

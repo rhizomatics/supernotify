@@ -20,6 +20,7 @@ examples = [str(p.name) for p in Path(EXAMPLES_ROOT).iterdir()]
 @pytest.mark.parametrize("config_name", examples)
 async def test_examples(hass: HomeAssistant, config_name: str) -> None:
     config_path: Path = Path(EXAMPLES_ROOT) / config_name
+    hass.states.async_set("alarm_control_panel.home_alarm_control","armed_home")
     config = await hass.async_add_executor_job(load_yaml_config_file, str(config_path))
 
     uut_config = config[CONF_NOTIFY][0]
