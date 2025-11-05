@@ -39,5 +39,4 @@ async def test_notify_alexa_media_player(mock_hass, mock_people_registry) -> Non
 def test_alexa_method_selects_targets(mock_hass, superconfig) -> None:  # type: ignore
     """Test on_notify_alexa."""
     uut = AlexaMediaPlayerDeliveryMethod(mock_hass, superconfig, {"announce": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER}})
-    assert uut.select_target("entity_id", "switch.alexa_1") is False
-    assert uut.select_target("entity_id", "media_player.hall_1") is True
+    assert uut.select_targets(Target(["switch.alexa_1", "media_player.hall_1"])).entity_ids == ["media_player.hall_1"]

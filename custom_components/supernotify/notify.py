@@ -330,7 +330,7 @@ class SuperNotificationAction(BaseNotificationService):
             METHODS,
         )
         self.people_registry = PeopleRegistry(hass, recipients, self.context.entity_registry(), self.context.device_registry())
-        # TODO clean up this cyclical dependency
+        # TODO: clean up this cyclical dependency
         self.context.people_registry = self.people_registry
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []

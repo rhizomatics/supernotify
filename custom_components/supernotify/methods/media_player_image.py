@@ -32,9 +32,6 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
     def select_targets(self, target: Target) -> Target:
         return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
 
-    def select_target(self, category: str, target: str) -> bool:
-        return re.fullmatch(RE_VALID_MEDIA_PLAYER, target) is not None
-
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)
 

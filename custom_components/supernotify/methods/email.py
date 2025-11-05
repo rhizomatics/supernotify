@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
@@ -7,7 +6,7 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from jinja2 import Environment, FileSystemLoader
 
-from custom_components.supernotify import ATTR_EMAIL, CONF_TEMPLATE, METHOD_EMAIL
+from custom_components.supernotify import CONF_TEMPLATE, METHOD_EMAIL
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery_method import (
     OPTION_JPEG,
@@ -69,15 +68,8 @@ class EmailDeliveryMethod(DeliveryMethod):
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
         }
 
-    @property
-    def target_categories(self) -> list[str]:
-        return [ATTR_EMAIL]
-
     def select_targets(self, target: Target) -> Target:
         return Target({"email": target.email})
-
-    def select_target(self, category: str, target: str) -> bool:
-        return re.fullmatch(RE_VALID_EMAIL, target) is not None
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         email = recipient.get(CONF_EMAIL)

@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
@@ -40,13 +39,6 @@ class SMSDeliveryMethod(DeliveryMethod):
 
     def select_targets(self, target: Target) -> Target:
         return Target({"phone": target.phone})
-
-    def select_target(self, category: str, target: str) -> bool:
-        return re.fullmatch(RE_VALID_PHONE, target) is not None
-
-    @property
-    def target_categories(self) -> list[str]:
-        return [ATTR_PHONE]
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         phone = recipient.get(CONF_PHONE_NUMBER)

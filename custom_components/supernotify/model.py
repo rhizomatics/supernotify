@@ -31,7 +31,6 @@ from . import (
     CONF_DEVICE_DOMAIN,
     CONF_PRIORITY,
     CONF_SELECTION,
-    CONF_TARGET_CATEGORIES,
     CONF_TARGET_REQUIRED,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
@@ -109,6 +108,11 @@ class Target:
                 setattr(self, attr, ensure_list(target.get(category)))
             for k in [cat for cat in target if cat not in self.CATEGORIES]:
                 self.other_ids.extend(ensure_list(target.get(k)))
+            self.email = [a for a in self.email if self.is_email(a)]
+            self.phone = [a for a in self.phone if self.is_phone(a)]
+            self.entity_ids = [a for a in self.entity_ids if self.is_entity_id(a)]
+            self.device_ids = [a for a in self.device_ids if self.is_device_id(a)]
+            self.person_ids = [a for a in self.person_ids if self.is_person_id(a)]
 
     @classmethod
     def is_device_id(cls, target: str) -> bool:
@@ -204,7 +208,6 @@ class MethodConfig:
         self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
         self.device_discovery: bool | None = conf.get(CONF_DEVICE_DISCOVERY)
         self.enabled = conf.get(CONF_ENABLED, True)
-        self.target_categories: list[str] = conf.get(CONF_TARGET_CATEGORIES, [ATTR_ENTITY_ID])
         self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})
 
 

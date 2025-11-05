@@ -76,7 +76,6 @@ CONF_DEVICE_DOMAIN: str = "device_domain"
 CONF_MODEL: str = "model"
 CONF_MESSAGE: str = "message"
 CONF_TARGET_REQUIRED: str = "target_required"
-CONF_TARGET_CATEGORIES: str = "target_categories"
 CONF_MOBILE_DEVICES: str = "mobile_devices"
 CONF_MOBILE_DISCOVERY: str = "mobile_discovery"
 CONF_ACTION_TEMPLATE: str = "action_template"
@@ -253,7 +252,6 @@ DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
 })
 METHOD_SCHEMA = vol.Schema({
     vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
-    vol.Optional(CONF_TARGET_CATEGORIES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_EMAIL, CONF_METHOD
+from pytest_unordered import unordered
 
 from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, METHOD_EMAIL
 from custom_components.supernotify.context import Context
@@ -154,20 +155,30 @@ async def test_deliver_with_preformatted_html_and_image(mock_hass, mock_people_r
 def test_good_email_addresses(mock_hass, mock_people_registry):  # type: ignore
     """Test good email addresses."""
     uut = EmailDeliveryMethod(mock_hass, Context(), mock_people_registry, {})
-    assert uut.select_target("email", "test421@example.com")
-    assert uut.select_target("email", "t@example.com")
-    assert uut.select_target("email", "t.1.g@example.com")
-    assert uut.select_target("email", "test-hyphen+ext@example.com")
-    assert uut.select_target("email", "test@sub.topsub.example.com")
-    assert uut.select_target("email", "test+fancy_rules@example.com")
+    assert uut.select_targets(
+        Target([
+            "test421@example.com",
+            "t@example.com",
+            "t.1.g@example.com",
+            "test-hyphen+ext@example.com",
+            "test@sub.topsub.example.com",
+            "test+fancy_rules@example.com",
+        ])
+    ).email == unordered([
+        "test421@example.com",
+        "t@example.com",
+        "t.1.g@example.com",
+        "test-hyphen+ext@example.com",
+        "test@sub.topsub.example.com",
+        "test+fancy_rules@example.com",
+    ])
 
 
 def test_bad_email_addresses(mock_hass, mock_people_registry):  # type: ignore
     """Test good email addresses."""
     uut = EmailDeliveryMethod(mock_hass, Context(), mock_people_registry, {})
-    assert not uut.select_target("email", "test@example@com")
-    assert not uut.select_target("email", "sub.topsub.example.com")
-    assert not uut.select_target("email", "test+fancy_rules@com")
-    assert not uut.select_target("email", "")
-    assert not uut.select_target("email", "@")
-    assert not uut.select_target("email", "a@b")
+
+    assert (
+        uut.select_targets(Target(["test@example@com", "sub.topsub.example.com", "test+fancy_rules@com", "", "@", "a@b"])).email
+        == []
+    )

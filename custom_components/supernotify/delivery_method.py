@@ -49,7 +49,6 @@ class DeliveryMethod:
         deliveries: ConfigType | None = None,
         delivery_defaults: DeliveryConfig | ConfigType | None = None,
         target_required: bool | None = True,
-        target_categories: list[str] | None = None,
         device_domain: list[str] | None = None,
         device_discovery: bool | None = False,
         enabled: bool = True,
@@ -64,7 +63,6 @@ class DeliveryMethod:
         if self.delivery_defaults.action is None:
             self.delivery_defaults.action = self.default_action
         self._target_required: bool | None = target_required
-        self._target_categories: list[str] | None = target_categories
         self.device_domain: list[str] = device_domain or []
         self.device_discovery: bool | None = device_discovery
         self.enabled = enabled
@@ -104,11 +102,6 @@ class DeliveryMethod:
     @property
     def target_required(self) -> bool:
         return self._target_required if self._target_required is not None else True
-
-    @property
-    def target_categories(self) -> list[str]:
-        """Subclasses that do not allow target_categories to be overridden can replace this with fixed list"""
-        return self._target_categories or [ATTR_ENTITY_ID]
 
     @property
     def default_options(self) -> dict[str, Any]:
