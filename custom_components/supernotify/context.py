@@ -61,7 +61,7 @@ class Context:
         method_configs: ConfigType | None = None,
         cameras: list[ConfigType] | None = None,
         method_types: list[type[DeliveryMethod]] | None = None,
-        people_registry: PeopleRegistry | None = None
+        people_registry: PeopleRegistry | None = None,
     ) -> None:
         self.hass: HomeAssistant | None = None
         self.hass_internal_url: str
@@ -270,7 +270,7 @@ class Context:
                     device_domain=method_config.device_domain,
                     device_discovery=method_config.device_discovery,
                     target_required=method_config.target_required,
-                    target_categories=method_config.target_categories
+                    target_categories=method_config.target_categories,
                 )
                 await self.methods[delivery_method_class.method].initialize()
                 self.deliveries.update(self.methods[delivery_method_class.method].valid_deliveries)

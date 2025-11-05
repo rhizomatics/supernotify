@@ -516,7 +516,8 @@ class Notification(ArchivableObject):
 
         # TODO: reinstate snoozing
         recipients = self.context.snoozer.filter_recipients(
-            recipients, self.priority, delivery_name, delivery_method, self.selected_delivery_names, self.context.deliveries)
+            recipients, self.priority, delivery_name, delivery_method, self.selected_delivery_names, self.context.deliveries
+        )
 
         # delivery_target = delivery_method.select_targets(recipients)
         # if delivery_target:

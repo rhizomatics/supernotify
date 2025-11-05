@@ -48,14 +48,11 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
         }
 
-    def select_target(self,category:str,  target: str) -> bool:
+    def select_target(self, category: str, target: str) -> bool:
         return re.fullmatch(RE_VALID_ALEXA, target) is not None
 
     def select_targets(self, target: Target) -> Target:
-        return Target({"entity_id": [
-            e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None
-
-        ]})
+        return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None]})
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_media %s", envelope.message)

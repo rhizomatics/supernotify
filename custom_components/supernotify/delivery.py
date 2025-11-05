@@ -37,7 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Delivery(DeliveryConfig):
-
     def __init__(self, name: str, conf: ConfigType, method: "DeliveryMethod") -> None:
         self.name: str = name
         self.alias: str | None = conf.get(CONF_ALIAS)

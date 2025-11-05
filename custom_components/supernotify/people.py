@@ -26,11 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PeopleRegistry:
-
-    def __init__(self, hass: HomeAssistant,
-                        recipients: list[dict[str, Any]] | None = None,
-                        entity_registry: entity_registry.EntityRegistry | None = None,
-                        device_registry: device_registry.DeviceRegistry | None = None) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        recipients: list[dict[str, Any]] | None = None,
+        entity_registry: entity_registry.EntityRegistry | None = None,
+        device_registry: device_registry.DeviceRegistry | None = None,
+    ) -> None:
         self._hass = hass
         self.people: dict[str, dict[str, Any]] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)

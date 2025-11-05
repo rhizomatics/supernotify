@@ -55,7 +55,7 @@ class BrokenDeliveryMethod(DeliveryMethod):
         super().__init__(*args, **kwargs)
 
     @property
-    def target_required(self)->bool:
+    def target_required(self) -> bool:
         return False
 
     def validate_action(self, action: str | None) -> bool:

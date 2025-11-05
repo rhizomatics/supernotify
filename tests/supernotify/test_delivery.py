@@ -24,7 +24,7 @@ def test_target_in_dict_mode() -> None:
         "person_id": "person.joe_mctoe",
         "device_id": ["000044449999aaaa00003333ffff7777"],
         "other_id": ["@mctoe"],
-        "klaxon": ["dive_dive_dive"]
+        "klaxon": ["dive_dive_dive"],
     })
 
     assert uut.entity_ids == ["media_player.kitchen", "notify.garden"]
@@ -126,7 +126,11 @@ async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_
 
 
 async def test_broken_create_with_bad_condition(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry) -> None:
-    uut = Delivery("generic", {CONF_CONDITION: {"condition": "xor"}}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, {}))
+    uut = Delivery(
+        "generic",
+        {CONF_CONDITION: {"condition": "xor"}},
+        GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, {}),
+    )
     assert await uut.validate(mock_context) is False
     mock_context.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_condition",

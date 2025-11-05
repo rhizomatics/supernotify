@@ -37,8 +37,7 @@ class MobilePushDeliveryMethod(DeliveryMethod):
         self.action_titles: dict[str, str] = {}
 
     def select_targets(self, target: Target) -> Target:
-        return Target({ATTR_ACTION: [
-            e for e in target.actions if re.fullmatch(RE_VALID_MOBILE_APP, e) is not None]})
+        return Target({ATTR_ACTION: [e for e in target.actions if re.fullmatch(RE_VALID_MOBILE_APP, e) is not None]})
 
     @property
     def target_required(self) -> bool:

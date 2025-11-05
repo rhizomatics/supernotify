@@ -7,7 +7,7 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from jinja2 import Environment, FileSystemLoader
 
-from custom_components.supernotify import ATTR_EMAIL, ATTR_PERSON_ID, CONF_TEMPLATE, METHOD_EMAIL
+from custom_components.supernotify import ATTR_EMAIL, CONF_TEMPLATE, METHOD_EMAIL
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery_method import (
     OPTION_JPEG,
@@ -35,8 +35,14 @@ _LOGGER = logging.getLogger(__name__)
 class EmailDeliveryMethod(DeliveryMethod):
     method = METHOD_EMAIL
 
-    def __init__(self, hass: HomeAssistant, context: Context, people_registry:PeopleRegistry,
-    deliveries: dict[str, Any] | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        context: Context,
+        people_registry: PeopleRegistry,
+        deliveries: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(hass, context, people_registry, deliveries, **kwargs)
         self.template_path: Path | None = None
         if self.context.template_path:
@@ -70,12 +76,12 @@ class EmailDeliveryMethod(DeliveryMethod):
     def select_targets(self, target: Target) -> Target:
         return Target({"email": target.email})
 
-    def select_target(self,category:str,  target: str) -> bool:
+    def select_target(self, category: str, target: str) -> bool:
         return re.fullmatch(RE_VALID_EMAIL, target) is not None
 
-    def recipient_target(self, recipient: dict[str, Any]) -> Target|None:
+    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         email = recipient.get(CONF_EMAIL)
-        return Target({"email":[email]}) if email else None
+        return Target({"email": [email]}) if email else None
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)

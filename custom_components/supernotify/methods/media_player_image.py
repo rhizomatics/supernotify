@@ -6,7 +6,7 @@ from typing import Any
 from custom_components.supernotify import METHOD_MEDIA
 from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.model import Target
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 
@@ -30,10 +30,9 @@ class MediaPlayerImageDeliveryMethod(DeliveryMethod):
         return "media_player.play_media"
 
     def select_targets(self, target: Target) -> Target:
-        return Target({"entity_id": [
-            e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
+        return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
 
-    def select_target(self, category:str, target: str) -> bool:
+    def select_target(self, category: str, target: str) -> bool:
         return re.fullmatch(RE_VALID_MEDIA_PLAYER, target) is not None
 
     async def deliver(self, envelope: Envelope) -> bool:

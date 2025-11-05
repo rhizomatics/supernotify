@@ -94,7 +94,7 @@ async def test_on_notify_mobile_push_with_explicit_target(
         Envelope(
             "media_test",
             Notification(context, mock_people_registry, message="hello there", title="testing"),
-            target=Target({"action": ["notify.mobile_app_new_iphone"]})
+            target=Target({"action": ["notify.mobile_app_new_iphone"]}),
         )
     )
     mock_hass.services.async_call.assert_called_with(  # type: ignore
@@ -113,8 +113,9 @@ async def test_on_notify_mobile_push_with_person_derived_targets(
 ) -> None:
     """Test on_notify_mobile_push."""
     context = Context()
-    mock_people_registry.people = {"person.test_user": {"person": "person.test_user",
-                    "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}}
+    mock_people_registry.people = {
+        "person.test_user": {"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}
+    }
 
     await context.initialize()
     n = Notification(context, mock_people_registry, message="hello there", title="testing")

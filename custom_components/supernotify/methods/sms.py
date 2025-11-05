@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import ATTR_PERSON_ID, ATTR_PHONE, CONF_PHONE_NUMBER, METHOD_SMS
+from custom_components.supernotify import ATTR_PHONE, CONF_PHONE_NUMBER, METHOD_SMS
 from custom_components.supernotify.delivery_method import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -41,7 +41,7 @@ class SMSDeliveryMethod(DeliveryMethod):
     def select_targets(self, target: Target) -> Target:
         return Target({"phone": target.phone})
 
-    def select_target(self, category:str, target: str) -> bool:
+    def select_target(self, category: str, target: str) -> bool:
         return re.fullmatch(RE_VALID_PHONE, target) is not None
 
     @property
@@ -50,7 +50,7 @@ class SMSDeliveryMethod(DeliveryMethod):
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         phone = recipient.get(CONF_PHONE_NUMBER)
-        return Target({ATTR_PHONE:[phone]}) if phone else None
+        return Target({ATTR_PHONE: [phone]}) if phone else None
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_sms: %s", envelope.delivery_name)

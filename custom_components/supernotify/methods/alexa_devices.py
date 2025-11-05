@@ -44,11 +44,14 @@ class AlexaDevicesDeliveryMethod(DeliveryMethod):
         }
 
     def select_targets(self, target: Target) -> Target:
-        return Target({"entity_id": [
-            e for e in target.entity_ids if re.fullmatch(r"notify\.[a-z0-9_]+\_(speak|announce)", e) is not None
-            or re.fullmatch(r"group\.[a-z0-9_]+", e) is not None
-
-        ]})
+        return Target({
+            "entity_id": [
+                e
+                for e in target.entity_ids
+                if re.fullmatch(r"notify\.[a-z0-9_]+\_(speak|announce)", e) is not None
+                or re.fullmatch(r"group\.[a-z0-9_]+", e) is not None
+            ]
+        })
 
     def select_target(self, category: str, target: str) -> bool:
         return (

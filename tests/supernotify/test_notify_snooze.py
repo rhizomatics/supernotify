@@ -106,9 +106,7 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.USER, recipient="person.bob_mctest")
     ]
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.delivery_method("email"))[0].email == [
-        "jane@macunit.org"
-    ]
+    assert plain_notify.generate_recipients("email", uut.context.delivery_method("email"))[0].email == ["jane@macunit.org"]
 
     uut.on_mobile_action(
         Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_NORMAL_USER_EVERYTHING"}, context=Context(user_id="eee999111"))

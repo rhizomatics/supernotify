@@ -23,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Scenario:
-    
     def __init__(self, name: str, scenario_definition: dict[str, Any], hass: HomeAssistant) -> None:
         self.hass: HomeAssistant = hass
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)

@@ -23,8 +23,7 @@ class NotifyEntityDeliveryMethod(DeliveryMethod):
         super().__init__(*args, **kwargs)
 
     def select_targets(self, target: Target) -> Target:
-        return Target({"entity_id": [
-            e for e in target.entity_ids if re.fullmatch(RE_NOTIFY_ENTITY, e) is not None]})
+        return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_NOTIFY_ENTITY, e) is not None]})
 
     @property
     def default_action(self) -> str:

@@ -22,7 +22,7 @@ async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
                 CONF_NAME: "teleport",
                 CONF_ACTION: "notify.teleportation",
                 CONF_DEFAULT: True,
-                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["other_id"]}
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["other_id"]},
             }
         },
     )
@@ -45,8 +45,11 @@ async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "teleportation",
-        service_data={ATTR_MESSAGE: "hello there", ATTR_TITLE: "testing", ATTR_DATA: {"cuteness": "very"},
-        ATTR_TARGET: ["weird_generic_1", "weird_generic_2"]
+        service_data={
+            ATTR_MESSAGE: "hello there",
+            ATTR_TITLE: "testing",
+            ATTR_DATA: {"cuteness": "very"},
+            ATTR_TARGET: ["weird_generic_1", "weird_generic_2"],
         },
     )
 
@@ -76,8 +79,4 @@ async def test_not_notify_deliver(mock_hass, mock_people_registry) -> None:  # t
             target=Target(["weird_generic_1", "weird_generic_2"]),
         )
     )
-    mock_hass.services.async_call.assert_called_with(
-        "mqtt",
-        "publish",
-        service_data={"topic": "testing/123", "payload": "boo"}
-    )
+    mock_hass.services.async_call.assert_called_with("mqtt", "publish", service_data={"topic": "testing/123", "payload": "boo"})
