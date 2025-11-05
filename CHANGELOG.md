@@ -1,7 +1,10 @@
 # Public releases
 
 ## 1.1.3
-
+- Move out all people functionality from Context to new PeopleRegistry
+- Move runtime model classes out of __init__
+- Add new Target class that holds and filters recipients
+- Simplify logic for generating recipients and envelopes
 
 ## 1.1.2
 
