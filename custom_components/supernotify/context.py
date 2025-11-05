@@ -269,7 +269,7 @@ class Context:
                     enabled=method_config.enabled,
                     device_domain=method_config.device_domain,
                     device_discovery=method_config.device_discovery,
-                    target_required=method_config.target_required
+                    target_required=method_config.target_required,
                 )
                 await self.methods[delivery_method_class.method].initialize()
                 self.deliveries.update(self.methods[delivery_method_class.method].valid_deliveries)

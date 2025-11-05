@@ -51,4 +51,8 @@ def test_alexa_method_selects_targets(mock_hass, superconfig) -> None:  # type: 
             "notify.kitchen_echo",
             "notify.alexa_media_player_announce",
         ])
-    ).entity_ids == unordered(["notify.living_room_echo_2_speak", "notify.bedroom_echo_announce", "notify.alexa_media_player_announce"])
+    ).entity_ids == unordered([
+        "notify.living_room_echo_2_speak",
+        "notify.bedroom_echo_announce",
+        "notify.alexa_media_player_announce",
+    ])
