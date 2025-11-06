@@ -1,4 +1,4 @@
-# Recipe - Alex Whispering
+# Recipe - Alexa Whispering
 
 ## Purpose
 
