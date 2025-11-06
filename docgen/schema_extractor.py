@@ -59,8 +59,8 @@ def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -
 
 
 def schema_doc() -> None:
-    Path("docs/schemas").mkdir(exist_ok=True)
-    Path("docs/schemas/js").mkdir(exist_ok=True)
+    Path("docs/developer/schemas").mkdir(exist_ok=True)
+    Path("docs/developer/schemas/js").mkdir(exist_ok=True)
 
     v_schemas = {s: getattr(custom_components.supernotify, s) for s in TOP_LEVEL_SCHEMAS}
     for vol_schema in v_schemas.values():
@@ -84,7 +84,7 @@ def schema_doc() -> None:
                 schema_path = f.name
 
             lines = generate_from_schema(schema_path, config=config)
-            doc_filename = f"schemas/{schema_name}.md"
+            doc_filename = f"developer/schemas/{schema_name}.md"
             with mkdocs_gen_files.open(doc_filename, "w") as df:
                 df.write(lines)
         except Exception:
