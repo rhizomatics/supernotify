@@ -35,6 +35,7 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
         )
         await uut.initialize()
         await uut.async_send_message("just a test", target="person.bob")
+
         assert uut.last_notification is not None
         obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
         assert await obj_path.exists()

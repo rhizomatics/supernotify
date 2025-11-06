@@ -77,7 +77,7 @@ from .methods.mqtt import MQTTDeliveryMethod
 from .methods.notify_entity import NotifyEntityDeliveryMethod
 from .methods.persistent import PersistentDeliveryMethod
 from .methods.sms import SMSDeliveryMethod
-from .model import ConditionVariables
+from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry
 
@@ -499,7 +499,7 @@ class SuperNotificationAction(BaseNotificationService):
             notification = Notification(self.context, self.people_registry, message, title, target, data)
             await notification.initialize()
             if self.dupe_check(notification):
-                notification.suppress()
+                notification.suppress(SuppressionReason.DUPE)
             else:
                 if await notification.deliver():
                     self.sent += 1

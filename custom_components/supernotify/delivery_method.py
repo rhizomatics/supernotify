@@ -228,6 +228,7 @@ class DeliveryMethod:
                     envelope.calls.append(
                         CallRecord(time.time() - start_time, domain, service, dict(action_data), dict(target_data))
                     )
+                    # TODO: add a debug mode with return response and blocking True
                     await self.hass.services.async_call(domain, service, service_data=action_data, target=target_data)
                 else:
                     envelope.calls.append(CallRecord(time.time() - start_time, domain, service, dict(action_data), None))

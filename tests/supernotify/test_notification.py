@@ -13,8 +13,8 @@ from custom_components.supernotify import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_SCENARIOS_APPLY,
+    CONF_DATA,
     CONF_DELIVERY,
-    CONF_DELIVERY_SELECTION,
     CONF_MEDIA,
     CONF_METHOD,
     CONF_OPTIONS,
@@ -57,17 +57,40 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mo
 
 
 async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
+    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile", "chime"]}
 
+    # string forces explicit selection
     uut = Notification(
         mock_context,
         mock_people_registry,
         "testing 123",
-        action_data={CONF_DELIVERY_SELECTION: DELIVERY_SELECTION_EXPLICIT, CONF_DELIVERY: "mobile"},
+        action_data={CONF_DELIVERY: "mobile"},
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_EXPLICIT
     assert uut.selected_delivery_names == ["mobile"]
+
+    # list forces explicit selection
+    uut = Notification(
+        mock_context,
+        mock_people_registry,
+        "testing 123",
+        action_data={CONF_DELIVERY: ["mobile", "chime"]},
+    )
+    await uut.initialize()
+    assert uut.delivery_selection == DELIVERY_SELECTION_EXPLICIT
+    assert uut.selected_delivery_names == unordered(["mobile", "chime"])
+
+    # dict doesn't force explicit selection
+    uut = Notification(
+        mock_context,
+        mock_people_registry,
+        "testing 123",
+        action_data={CONF_DELIVERY: {"mobile": {CONF_DATA: {"foo": "bar"}}}},
+    )
+    await uut.initialize()
+    assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
+    assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
 
 
 async def test_scenario_delivery(

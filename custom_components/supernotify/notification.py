@@ -70,7 +70,7 @@ from custom_components.supernotify.delivery_method import (
     DeliveryMethod,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, Target
+from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target
 from custom_components.supernotify.scenario import Scenario
 
 from .common import ensure_dict, ensure_list
@@ -137,7 +137,7 @@ class Notification(ArchivableObject):
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self.people_by_occupancy: list[dict[str, Any]] = []
-        self.globally_disabled: bool = False
+        self.suppressed: SuppressionReason | None = None
         self.occupancy: dict[str, list[dict[str, Any]]] = {}
         self.condition_variables: ConditionVariables | None = None
 
@@ -176,7 +176,7 @@ class Notification(ArchivableObject):
         if self.required_scenario_names and not any(s in enabled_scenario_names for s in self.required_scenario_names):
             _LOGGER.info("SUPERNOTIFY suppressing notification, no required scenarios enabled")
             self.selected_delivery_names = []
-            self.globally_disabled = True
+            self.suppress(SuppressionReason.NO_SCENARIO)
         else:
             for s in enabled_scenario_names:
                 scenario_obj = self.context.scenarios.get(s)
@@ -184,7 +184,8 @@ class Notification(ArchivableObject):
                     self.enabled_scenarios[s] = scenario_obj
 
             self.selected_delivery_names = self.select_deliveries()
-            self.globally_disabled = self.context.snoozer.is_global_snooze(self.priority)
+            if self.context.snoozer.is_global_snooze(self.priority):
+                self.suppress(SuppressionReason.SNOOZED)
             self.default_media_from_actions()
             self.apply_enabled_scenarios()
 
@@ -233,7 +234,9 @@ class Notification(ArchivableObject):
             scenario_disable_deliveries = [
                 d.name
                 for d in self.context.deliveries.values()
-                if d.selection == [SELECTION_BY_SCENARIO] and d.name not in scenario_enable_deliveries
+                if d.selection == [SELECTION_BY_SCENARIO]
+                and d.name not in scenario_enable_deliveries
+                and (d.name not in override_enable_deliveries or self.delivery_selection != DELIVERY_SELECTION_EXPLICIT)
             ]
         all_enabled = list(set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries))
         all_disabled = scenario_disable_deliveries + override_disable_deliveries
@@ -334,12 +337,12 @@ class Notification(ArchivableObject):
             return None
         return str(title)
 
-    def suppress(self) -> None:
-        self.globally_disabled = True
-        _LOGGER.info("SUPERNOTIFY Suppressing notification (%s)", self.id)
+    def suppress(self, reason: SuppressionReason) -> None:
+        self.suppressed = reason
+        _LOGGER.info(f"SUPERNOTIFY Suppressing notification, reason:{reason}, id:{self.id}")
 
     async def deliver(self) -> bool:
-        if self.globally_disabled:
+        if self.suppressed is not None:
             _LOGGER.info("SUPERNOTIFY Suppressing globally silenced/snoozed notification (%s)", self.id)
             self.skipped += 1
             return False

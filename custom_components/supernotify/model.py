@@ -317,6 +317,12 @@ class ConditionVariables:
         }
 
 
+class SuppressionReason(StrEnum):
+    SNOOZED = "SNOOZED"
+    DUPE = "DUPE"
+    NO_SCENARIO = "NO_SCENARIO"
+
+
 class TargetType(StrEnum):
     pass
 

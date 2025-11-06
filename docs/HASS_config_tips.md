@@ -1,4 +1,4 @@
-# Home Assistant Notification General Tips
+# General Notification Tips
 
 Hints and suggestions for configuring non-SuperNotify notification in HomeAssistant.
 

@@ -1,5 +1,10 @@
 # Public releases
 
+## 1.1.4
+- Explicit delivery selection in action overrides scenario disablement
+- Extended and reorganized documentation
+- Suppressed notifications now have a reason recorded, DUPE, SNOOZED, NO_SCENARIO
+
 ## 1.1.3
 - Move out all people functionality from Context to new PeopleRegistry
 - Move runtime model classes out of `__init__.py`

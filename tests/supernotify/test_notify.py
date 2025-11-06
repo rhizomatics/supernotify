@@ -71,7 +71,7 @@ METHOD_DEFAULTS: dict[str, dict] = {
 }
 
 
-async def test_send_message_with_scenario_mismatch(mock_hass: Mock) -> None:
+async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> None:
     uut = SuperNotificationAction(
         mock_hass,
         deliveries=DELIVERY,
@@ -84,24 +84,59 @@ async def test_send_message_with_scenario_mismatch(mock_hass: Mock) -> None:
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
-        data={"delivery_selection": DELIVERY_SELECTION_EXPLICIT, "delivery": {"pigeon": {}, "persistent": {}}},
+        data={"delivery_selection": DELIVERY_SELECTION_EXPLICIT},
     )
     mock_hass.services.async_call.assert_not_called()
     mock_hass.reset_mock()
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
-        data={
-            "delivery_selection": DELIVERY_SELECTION_EXPLICIT,
-            "delivery": {"pigeon": {}, "persistent": {}},
-            "apply_scenarios": ["scenario1"],
-        },
+        data={"delivery": ["persistent"]},  # explicit selection implied by delivery list
     )
+    # explicit delivery selection overrides everything else
     mock_hass.services.async_call.assert_called_with(
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
     )
+    mock_hass.reset_mock()
+    await uut.async_send_message(
+        title="test_title",
+        message="testing 123",
+        data={
+            "delivery_selection": DELIVERY_SELECTION_EXPLICIT,
+            "apply_scenarios": ["scenario1"],
+        },
+    )
+    # scenario switches one delivery on
+    mock_hass.services.async_call.assert_called_with(
+        "persistent_notification",
+        "create",
+        service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
+    )
+
+
+async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
+    uut = SuperNotificationAction(
+        mock_hass,
+        deliveries=DELIVERY,
+        scenarios=SCENARIOS,
+        recipients=RECIPIENTS,
+        method_configs=METHOD_DEFAULTS,
+        dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
+    )
+    await uut.initialize()
+    await uut.async_send_message(message="testing 123", data={"delivery": "text"})
+    assert mock_hass.services.async_call.call_count == 1
+    mock_hass.services.async_call.assert_called_with(
+        "notify",
+        "sms",
+        service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
+    )
+    # contra-test
+    mock_hass.services.async_call.reset_mock()
+    await uut.async_send_message(message="testing 123")
+    assert mock_hass.services.async_call.call_count == 3
 
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:
