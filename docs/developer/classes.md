@@ -1,6 +1,6 @@
 # Core Classes
 
-!!! info 
+!!! info
 
     See the [Class Diagram](class_diagram.md) for how these relate to each other.
 

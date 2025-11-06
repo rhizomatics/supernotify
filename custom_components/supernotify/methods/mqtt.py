@@ -24,8 +24,7 @@ class MQTTDeliveryMethod(DeliveryMethod):
 
     @property
     def default_options(self) -> dict[str, Any]:
-        return {
-        }
+        return {}
 
     @property
     def default_action(self) -> str:

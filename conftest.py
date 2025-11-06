@@ -80,7 +80,7 @@ def mock_hass() -> HomeAssistant:
 def mock_people_registry() -> PeopleRegistry:
     registry = Mock(spec=PeopleRegistry)
     registry.people = {
-        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner",ATTR_STATE: "not_home"},
+        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner", ATTR_STATE: "not_home"},
         "person.bidey_in": {
             CONF_PERSON: "person.bidey_in",
             ATTR_STATE: "home",

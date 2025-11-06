@@ -75,4 +75,3 @@ direction LR
     DeliveryMethod <|--  MediaPlayerImageDeliveryMethod
     DeliveryMethod <|--  NotifyEntityDeliveryMethod
 ```
-

@@ -32,9 +32,9 @@ Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
       {% if duration is not defined %}
       {% set duration = 30 %}
       {% endif %}
-      {"warning": 
+      {"warning":
         {"duration": {{int(duration,30)}},
-         "mode": "{{tone|default("emergency")}}", 
+         "mode": "{{tone|default("emergency")}}",
          "strobe": true,
          "strobe_duty_cycle": 10,
          "strobe_level": "very_high"
@@ -49,7 +49,7 @@ Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
     available_tones:
       - emergency
       - stop
-    
+
 ```
 
 ### Other Ideas
