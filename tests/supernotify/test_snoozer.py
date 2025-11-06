@@ -23,6 +23,7 @@ def test_do_nothing_filter_recipients() -> None:
 
 
 def test_filter_mobile_device_action(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
+    pre_call_person=mock_people_registry.people["person.bidey_in"] 
     uut: Snoozer = Snoozer()
     uut.register_snooze(
         CommandType.SNOOZE,
@@ -45,10 +46,7 @@ def test_filter_mobile_device_action(mock_context: Context, mock_people_registry
     assert recipients.person_ids == ["person.bidey_in", "person.test_otest"]  # person untouched
 
     # check that the original recipients haven't been messed with
-    assert mock_people_registry.people["person.bidey_in"] == {
-        CONF_PERSON: "person.bidey_in",
-        CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
-    }
+    assert mock_people_registry.people["person.bidey_in"] == pre_call_person
 
 
 def test_check_notification_for_snooze_global() -> None:

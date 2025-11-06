@@ -1,9 +1,8 @@
 mkdocstrings
-mkdocstrings-python>=1.10.5
+mkdocstrings-python
 mkdocs-minify-plugin
 pymdown-extensions
 mkdocs-material
-mkdocs-mermaid2-plugin
 mkdocs-autorefs
 mkdocs-coverage
 mkdocs-pagetree-plugin

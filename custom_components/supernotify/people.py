@@ -53,8 +53,7 @@ class PeopleRegistry:
                     r[ATTR_USER_ID] = state.attributes.get(ATTR_USER_ID)
             self.people[r[CONF_PERSON]] = r
 
-    def people_state(self) -> list[dict[str, Any]]:
-        results = []
+    def refresh_tracker_state(self) -> None:
         if self._hass:
             for person, person_config in self.people.items():
                 # TODO: possibly rate limit this
@@ -66,12 +65,11 @@ class PeopleRegistry:
                         person_config[ATTR_STATE] = tracker.state
                 except Exception as e:
                     _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person, e)
-                results.append(person_config)
-        return results
 
     def determine_occupancy(self) -> dict[str, list[dict[str, Any]]]:
         results: dict[str, list[dict[str, Any]]] = {STATE_HOME: [], STATE_NOT_HOME: []}
-        for person_config in self.people_state():
+        self.refresh_tracker_state()
+        for person_config in self.people.values():
             if person_config.get(ATTR_STATE) in (None, STATE_HOME):
                 # default to at home if unknown tracker
                 results[STATE_HOME].append(person_config)

@@ -1,50 +1,8 @@
 # Core Classes
 
-## Simplified Class Diagram
+!!! info 
 
-```mermaid
-classDiagram
-
-    class Notification {
-    }
-    class Envelope {
-	    deliver()
-    }
-    class DeliveryMethod {
-    }
-    class MethodConfig {
-    }
-    class Target {
-        List~string~ entity_ids
-        List~string~ device_ids
-        List~string~ person_ids
-        List~string~ email
-        List~string~ phone
-        List~string~ other_ids
-    }
-    class DeliveryConfig {
-    }
-    class Context {
-    }
-    class Scenario {
-    }
-    class Snoozer {
-    }
-    class Snooze {
-    }
-    class PeopleRegistry {
-    }
-
-    Notification "1" *-- "*" Envelope
-    Envelope "1" ..> "1" DeliveryMethod
-    DeliveryMethod "1" *-- "1" MethodConfig
-    Envelope "1" *-- "1" Target
-    DeliveryMethod "1" *-- "*" DeliveryConfig
-    Context "1" o-- "0..*" Scenario
-    Snoozer "1" *-- "0..*" Snooze
-    Context "1" -- "1" Snoozer
-    Context "1" -- "1" PeopleRegistry
-```
+    See the [Class Diagram](class_diagram.md) for how these relate to each other.
 
 ::: custom_components.supernotify.delivery_method.DeliveryMethod
     handler: python

@@ -80,16 +80,13 @@ def mock_hass() -> HomeAssistant:
 def mock_people_registry() -> PeopleRegistry:
     registry = Mock(spec=PeopleRegistry)
     registry.people = {
-        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner"},
+        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner",ATTR_STATE: "not_home"},
         "person.bidey_in": {
             CONF_PERSON: "person.bidey_in",
+            ATTR_STATE: "home",
             CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
         },
     }
-    registry.people_state.return_value = [
-        {CONF_PERSON: "person.new_home_owner", ATTR_STATE: "not_home"},
-        {CONF_PERSON: "person.bidey_in", ATTR_STATE: "home"},
-    ]
     registry.determine_occupancy.return_value = {
         STATE_HOME: [{CONF_PERSON: "person.bidey_in"}],
         STATE_NOT_HOME: [{CONF_PERSON: "person.new_home_owner"}],
