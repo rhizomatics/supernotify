@@ -2,9 +2,10 @@
 
 ## 1.1.3
 - Move out all people functionality from Context to new PeopleRegistry
-- Move runtime model classes out of __init__
+- Move runtime model classes out of `__init__.py`
 - Add new Target class that holds and filters recipients
 - Simplify logic for generating recipients and envelopes
+- Experimental new MQTTDeliveryMethod
 
 ## 1.1.2
 

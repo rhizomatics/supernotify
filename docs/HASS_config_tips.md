@@ -18,9 +18,9 @@ Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
 
 
 ``` yaml
-  - unique_id: downstairs_hall_heiman
-    name: "Downstairs Hall Siren"
-    object_id: downstairs
+   - unique_id: downstairs_east_wing_heiman
+    name: "Scullery Siren"
+    default_entity_id: siren.downstairs
     json_attributes_topic: "zigbee2mqtt/Downstairs Siren"
     command_topic: "zigbee2mqtt/Downstairs Siren/set"
     availability:
@@ -29,10 +29,12 @@ Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
         payload_available: online
         payload_not_available: offline
     command_template: >
-      {"warning":
+      {% if duration is not defined %}
+      {% set duration = 30 %}
+      {% endif %}
+      {"warning": 
         {"duration": {{int(duration,30)}},
-         "level":"{% if volume_level is none or volume_level >= 0.75%}very_high{% elif volume_level >= 0.5%}high{% elif volume_level>=0.25 %}medium{% else %}low{% endif %}",
-         "mode": "{{tone|default("emergency")}}",
+         "mode": "{{tone|default("emergency")}}", 
          "strobe": true,
          "strobe_duty_cycle": 10,
          "strobe_level": "very_high"
@@ -43,16 +45,11 @@ Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
     optimistic: false
     retain: true
     support_duration: true
-    support_volume_set: true
+    support_volume_set: false
     available_tones:
       - emergency
-      - fire
-      - burgular
       - stop
-      - police_panic
-      - emergency_panic
-      - fire_panic
-
+    
 ```
 
 ### Other Ideas

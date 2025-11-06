@@ -2,9 +2,6 @@ from homeassistant.core import Event
 
 from custom_components.supernotify import (
     ATTR_ACTION,
-    CONF_MOBILE_DEVICES,
-    CONF_NOTIFY_ACTION,
-    CONF_PERSON,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
 )
@@ -23,7 +20,7 @@ def test_do_nothing_filter_recipients() -> None:
 
 
 def test_filter_mobile_device_action(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    pre_call_person=mock_people_registry.people["person.bidey_in"] 
+    pre_call_person = mock_people_registry.people["person.bidey_in"]
     uut: Snoozer = Snoozer()
     uut.register_snooze(
         CommandType.SNOOZE,

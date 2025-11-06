@@ -73,6 +73,7 @@ from .methods.email import EmailDeliveryMethod
 from .methods.generic import GenericDeliveryMethod
 from .methods.media_player_image import MediaPlayerImageDeliveryMethod
 from .methods.mobile_push import MobilePushDeliveryMethod
+from .methods.mqtt import MQTTDeliveryMethod
 from .methods.notify_entity import NotifyEntityDeliveryMethod
 from .methods.persistent import PersistentDeliveryMethod
 from .methods.sms import SMSDeliveryMethod
@@ -92,6 +93,7 @@ SNOOZE_TIME = 60 * 60  # TODO: move to configuration
 METHODS: list[type[DeliveryMethod]] = [
     EmailDeliveryMethod,
     SMSDeliveryMethod,
+    MQTTDeliveryMethod,
     AlexaDevicesDeliveryMethod,
     AlexaMediaPlayerDeliveryMethod,
     MobilePushDeliveryMethod,
