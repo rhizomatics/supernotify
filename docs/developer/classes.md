@@ -4,11 +4,14 @@
 classDiagram
 
   Notification "1" *-- "*" Envelope
-  Notification "1" *-- "1" ConditionVariables
   Envelope "1" ..> "1" DeliveryMethod
+  DeliveryMethod "1" *-- "1" MethodConfig
+  Envelope "1" *-- "1" Target
+  DeliveryMethod "1" *-- "*" DeliveryConfig
   Context "1" o-- "0..*" Scenario
-  Context "1" o-- "0..*" Snooze
+  Snoozer "1" o-- "0..*" Snooze
   Context "1" *-- "1" Snoozer
+  Context "1" *-- "1" PeopleRegistry
 ```
 
 ::: custom_components.supernotify.delivery_method.DeliveryMethod
@@ -30,10 +33,26 @@ classDiagram
     handler: python
     heading_level: 2
 
+::: custom_components.supernotify.model.Target
+    handler: python
+    heading_level: 2
+
+::: custom_components.supernotify.model.DeliveryConfig
+    handler: python
+    heading_level: 2
+
+::: custom_components.supernotify.model.MethodConfig
+    handler: python
+    heading_level: 2
+
 ::: custom_components.supernotify.snoozer.Snooze
     handler: python
     heading_level: 2
 
-::: custom_components.supernotify.ConditionVariables
+::: custom_components.supernotify.model.ConditionVariables
+    handler: python
+    heading_level: 2
+
+::: custom_components.supernotify.people.PeopleRegistry
     handler: python
     heading_level: 2
