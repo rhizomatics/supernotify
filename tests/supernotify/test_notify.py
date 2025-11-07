@@ -10,42 +10,42 @@ from custom_components.supernotify import (
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DUPE_POLICY,
-    CONF_METHOD,
     CONF_OPTIONS,
     CONF_PHONE_NUMBER,
     CONF_PRIORITY,
     CONF_SELECTION,
     CONF_TARGET,
     CONF_TARGET_REQUIRED,
+    CONF_TRANSPORT,
     DELIVERY_SCHEMA,
     DELIVERY_SELECTION_EXPLICIT,
-    METHOD_ALEXA_MEDIA_PLAYER,
-    METHOD_CHIME,
-    METHOD_EMAIL,
-    METHOD_GENERIC,
-    METHOD_PERSISTENT,
-    METHOD_SMS,
     PRIORITY_CRITICAL,
     SCENARIO_DEFAULT,
     SELECTION_BY_SCENARIO,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
+    TRANSPORT_ALEXA_MEDIA_PLAYER,
+    TRANSPORT_CHIME,
+    TRANSPORT_EMAIL,
+    TRANSPORT_GENERIC,
+    TRANSPORT_PERSISTENT,
+    TRANSPORT_SMS,
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SuperNotificationAction
-from tests.supernotify.doubles_lib import BrokenDeliveryMethod, DummyDeliveryMethod
+from tests.supernotify.doubles_lib import BrokenTransport, DummyTransport
 
 DELIVERY: dict[str, dict] = {
-    "email": {CONF_METHOD: METHOD_EMAIL, CONF_ACTION: "notify.smtp"},
-    "text": {CONF_METHOD: METHOD_SMS, CONF_ACTION: "notify.sms"},
-    "chime": {CONF_METHOD: METHOD_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
-    "alexa_media_player": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
-    "chat": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_METHOD: METHOD_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
-    "dummy": {CONF_METHOD: "dummy"},
+    "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
+    "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
+    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
+    "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
+    "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
+    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
+    "dummy": {CONF_TRANSPORT: "dummy"},
 }
 SCENARIOS: dict[str, dict] = {
     SCENARIO_DEFAULT: {CONF_DELIVERY: {"alexa_devices": {}, "chime": {}, "text": {}, "email": {}, "chat": {}}},
@@ -64,9 +64,9 @@ RECIPIENTS: list[dict] = [
     {"person": "person.bidey_in", CONF_PHONE_NUMBER: "+4489393013834", CONF_DELIVERY: {"dummy": {CONF_TARGET: ["abc789"]}}},
 ]
 
-METHOD_DEFAULTS: dict[str, dict] = {
-    METHOD_GENERIC: {"delivery_defaults": {CONF_ACTION: "notify.slackity", CONF_ENTITY_ID: ["entity.1", "entity.2"]}},
-    METHOD_EMAIL: {"delivery_defaults": {CONF_OPTIONS: {"jpeg_opts": {"progressive": True}}}},
+TRANSPORT_DEFAULTS: dict[str, dict] = {
+    TRANSPORT_GENERIC: {"delivery_defaults": {CONF_ACTION: "notify.slackity", CONF_ENTITY_ID: ["entity.1", "entity.2"]}},
+    TRANSPORT_EMAIL: {"delivery_defaults": {CONF_OPTIONS: {"jpeg_opts": {"progressive": True}}}},
     "dummy": {CONF_TARGET_REQUIRED: False},
 }
 
@@ -77,7 +77,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         deliveries=DELIVERY,
         scenarios=SCENARIOS,
         recipients=RECIPIENTS,
-        method_configs=METHOD_DEFAULTS,
+        transport_configs=TRANSPORT_DEFAULTS,
         dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
     )
     await uut.initialize()
@@ -91,7 +91,8 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
-        data={"delivery": ["persistent"]},  # explicit selection implied by delivery list
+        # explicit selection implied by delivery list
+        data={"delivery": ["persistent"]},
     )
     # explicit delivery selection overrides everything else
     mock_hass.services.async_call.assert_called_with(
@@ -122,7 +123,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
         deliveries=DELIVERY,
         scenarios=SCENARIOS,
         recipients=RECIPIENTS,
-        method_configs=METHOD_DEFAULTS,
+        transport_configs=TRANSPORT_DEFAULTS,
         dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
     )
     await uut.initialize()
@@ -140,9 +141,9 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
 
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:
-    uut = SuperNotificationAction(mock_hass, deliveries=DELIVERY, method_configs=METHOD_DEFAULTS, recipients=RECIPIENTS)
-    dummy = DummyDeliveryMethod(mock_hass, uut.context, uut.people_registry, {})
-    uut.context.configure_for_tests(method_instances=[dummy])
+    uut = SuperNotificationAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    dummy = DummyTransport(mock_hass, uut.context, uut.people_registry, {})
+    uut.context.configure_for_tests(transport_instancess=[dummy])
     await uut.initialize()
 
     assert dummy is not None
@@ -165,10 +166,12 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
 
 
 async def test_broken_delivery(mock_hass: HomeAssistant, mock_people_registry) -> None:
-    delivery_config = {"broken": {CONF_METHOD: "broken"}}
-    uut = SuperNotificationAction(mock_hass, deliveries=delivery_config, method_configs=METHOD_DEFAULTS, recipients=RECIPIENTS)
-    broken = BrokenDeliveryMethod(mock_hass, uut.context, mock_people_registry, delivery_config)
-    uut.context.configure_for_tests(method_instances=[broken])
+    delivery_config = {"broken": {CONF_TRANSPORT: "broken"}}
+    uut = SuperNotificationAction(
+        mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS
+    )
+    broken = BrokenTransport(mock_hass, uut.context, mock_people_registry, delivery_config)
+    uut.context.configure_for_tests(transport_instancess=[broken])
     await uut.initialize()
 
     await uut.async_send_message(
@@ -197,13 +200,13 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         mock_hass,
         deliveries={
             "generic": {
-                CONF_METHOD: METHOD_GENERIC,
+                CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_SELECTION: [SELECTION_FALLBACK_ON_ERROR],
                 CONF_ACTION: "notify.dummy",
             },
-            "failing": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.make_fail"},
+            "failing": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.make_fail"},
         },
-        method_configs=METHOD_DEFAULTS,
+        transport_configs=TRANSPORT_DEFAULTS,
     )
 
     def call_service(domain, service, service_data=None):
@@ -222,10 +225,10 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
     uut = SuperNotificationAction(
         mock_hass,
         deliveries={
-            "generic": {CONF_METHOD: METHOD_GENERIC, CONF_SELECTION: [SELECTION_FALLBACK], CONF_ACTION: "notify.dummy"},
-            "failing": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.make_fail", CONF_PRIORITY: PRIORITY_CRITICAL},
+            "generic": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_SELECTION: [SELECTION_FALLBACK], CONF_ACTION: "notify.dummy"},
+            "failing": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.make_fail", CONF_PRIORITY: PRIORITY_CRITICAL},
         },
-        method_configs=METHOD_DEFAULTS,
+        transport_configs=TRANSPORT_DEFAULTS,
     )
 
     await uut.initialize()
@@ -237,7 +240,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
 
 async def test_send_message_with_condition(hass: HomeAssistant) -> None:
     delivery = {
-        CONF_METHOD: METHOD_GENERIC,
+        CONF_TRANSPORT: TRANSPORT_GENERIC,
         CONF_ACTION: "testing.mock_notification",
         CONF_CONDITION: {
             CONF_CONDITION: "or",

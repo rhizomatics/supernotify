@@ -201,7 +201,7 @@ class Target:
         return d
 
 
-class MethodConfig:
+class TransportConfig:
     def __init__(self, name: str, conf: ConfigType) -> None:
         self.name = name
         self.target_required: bool | None = conf.get(CONF_TARGET_REQUIRED)
@@ -212,11 +212,11 @@ class MethodConfig:
 
 
 class DeliveryConfig:
-    """Shared config for method defaults and Delivery definitions"""
+    """Shared config for transport defaults and Delivery definitions"""
 
     def __init__(self, conf: ConfigType, delivery_defaults: "DeliveryConfig|None" = None) -> None:
         if delivery_defaults is not None:
-            # use method defaults where no delivery level override
+            # use transport defaults where no delivery level override
             self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
             self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
             self.options: ConfigType = dict(delivery_defaults.options)
@@ -226,7 +226,7 @@ class DeliveryConfig:
             self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
             self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
         else:
-            # construct the method defaults
+            # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
             self.action = conf.get(CONF_ACTION)
             self.options = conf.get(CONF_OPTIONS, {})
@@ -234,11 +234,11 @@ class DeliveryConfig:
             self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
 
-    def apply_method_options(self, method_options: dict[str, Any]) -> None:
-        method_options = method_options or {}
-        for opt in method_options:
+    def apply_transport_options(self, transport_options: dict[str, Any]) -> None:
+        transport_options = transport_options or {}
+        for opt in transport_options:
             if opt not in self.options:
-                self.options[opt] = method_options[opt]
+                self.options[opt] = transport_options[opt]
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -338,7 +338,7 @@ class RecipientType(StrEnum):
 
 
 class QualifiedTargetType(TargetType):
-    METHOD = "METHOD"
+    TRANSPORT = "TRANSPORT"
     DELIVERY = "DELIVERY"
     CAMERA = "CAMERA"
     PRIORITY = "PRIORITY"

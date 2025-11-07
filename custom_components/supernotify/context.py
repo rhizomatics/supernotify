@@ -5,7 +5,7 @@ import socket
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import CONF_ENABLED, CONF_METHOD, CONF_NAME
+from homeassistant.const import CONF_ENABLED, CONF_NAME
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.config_validation import boolean
@@ -18,6 +18,7 @@ from . import (
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
     CONF_CAMERA,
+    CONF_TRANSPORT,
     DOMAIN,
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
@@ -25,7 +26,7 @@ from . import (
 )
 from .archive import NotificationArchive
 from .common import ensure_list
-from .model import MethodConfig
+from .model import TransportConfig
 from .scenario import ScenarioRegistry
 from .snoozer import Snoozer
 
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.delivery import Delivery
-    from custom_components.supernotify.delivery_method import DeliveryMethod
+    from custom_components.supernotify.transport import Transport
 
     from .people import PeopleRegistry
 
@@ -54,9 +55,9 @@ class Context:
         media_path: str | None = None,
         archive_config: dict[str, str] | None = None,
         scenarios: ConfigType | None = None,
-        method_configs: ConfigType | None = None,
+        transport_configs: ConfigType | None = None,
         cameras: list[ConfigType] | None = None,
-        method_types: list[type[DeliveryMethod]] | None = None,
+        transport_types: list[type[Transport]] | None = None,
         people_registry: PeopleRegistry | None = None,
     ) -> None:
         self.hass: HomeAssistant | None = None
@@ -114,9 +115,9 @@ class Context:
         )
 
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
-        self.methods: dict[str, DeliveryMethod] = {}
-        self._method_configs: dict[str, MethodConfig] = (
-            {n: MethodConfig(n, c) for n, c in method_configs.items()} if method_configs else {}
+        self.transports: dict[str, Transport] = {}
+        self._transport_configs: dict[str, TransportConfig] = (
+            {n: TransportConfig(n, c) for n, c in transport_configs.items()} if transport_configs else {}
         )
 
         self._fallback_on_error: list[Delivery] = []
@@ -124,14 +125,14 @@ class Context:
         self._default_deliveries: list[Delivery] = []
         self._entity_registry: entity_registry.EntityRegistry | None = None
         self._device_registry: device_registry.DeviceRegistry | None = None
-        self._method_types: list[type[DeliveryMethod]] = method_types or []
+        self._transport_types: list[type[Transport]] = transport_types or []
         self.snoozer = Snoozer()
         # test harness support
-        self._method_instances: list[DeliveryMethod] | None = None
+        self._transport_instancess: list[Transport] | None = None
 
     async def initialize(self) -> None:
-        await self._register_delivery_methods(
-            delivery_methods=self._method_instances, delivery_method_classes=self._method_types
+        await self._register_delivery_transports(
+            delivery_transports=self._transport_instancess, transport_classes=self._transport_types
         )
 
         if self.template_path and not self.template_path.exists():
@@ -154,10 +155,10 @@ class Context:
         self.initialize_deliveries()
 
     def configure_for_tests(
-        self, method_instances: list[DeliveryMethod] | None = None, create_default_scenario: bool = False
+        self, transport_instancess: list[Transport] | None = None, create_default_scenario: bool = False
     ) -> None:
         self.scenario_registry.default_scenario_for_testing = create_default_scenario
-        self._method_instances = method_instances
+        self._transport_instancess = transport_instancess
 
     async def raise_issue(
         self,
@@ -203,43 +204,43 @@ class Context:
         """Deliveries switched on all the time for implicit selection"""
         return [d for d in self._default_deliveries if d.enabled]
 
-    async def _register_delivery_methods(
+    async def _register_delivery_transports(
         self,
-        delivery_methods: list[DeliveryMethod] | None = None,
-        delivery_method_classes: list[type[DeliveryMethod]] | None = None,
+        delivery_transports: list[Transport] | None = None,
+        transport_classes: list[type[Transport]] | None = None,
     ) -> None:
-        """Use configure_for_tests() to set delivery_methods to mocks or manually created fixtures"""
-        if delivery_methods:
-            for delivery_method in delivery_methods:
-                self.methods[delivery_method.method] = delivery_method
-                await self.methods[delivery_method.method].initialize()
-                self.deliveries.update(self.methods[delivery_method.method].valid_deliveries)
-        if delivery_method_classes and self.hass and self.people_registry:
-            for delivery_method_class in delivery_method_classes:
-                method_config: MethodConfig = self._method_configs.get(
-                    delivery_method_class.method, MethodConfig(delivery_method_class.method, {})
+        """Use configure_for_tests() to set delivery_transports to mocks or manually created fixtures"""
+        if delivery_transports:
+            for transport in delivery_transports:
+                self.transports[transport.transport] = transport
+                await self.transports[transport.transport].initialize()
+                self.deliveries.update(self.transports[transport.transport].valid_deliveries)
+        if transport_classes and self.hass and self.people_registry:
+            for transport_class in transport_classes:
+                transport_config: TransportConfig = self._transport_configs.get(
+                    transport_class.transport, TransportConfig(transport_class.transport, {})
                 )
-                self.methods[delivery_method_class.method] = delivery_method_class(
+                self.transports[transport_class.transport] = transport_class(
                     self.hass,
                     self,
                     self.people_registry,
-                    {d: dc for d, dc in self._deliveries.items() if dc.get(CONF_METHOD) == delivery_method_class.method},
-                    delivery_defaults=method_config.delivery_defaults,
-                    enabled=method_config.enabled,
-                    device_domain=method_config.device_domain,
-                    device_discovery=method_config.device_discovery,
-                    target_required=method_config.target_required,
+                    {d: dc for d, dc in self._deliveries.items() if dc.get(CONF_TRANSPORT) == transport_class.transport},
+                    delivery_defaults=transport_config.delivery_defaults,
+                    enabled=transport_config.enabled,
+                    device_domain=transport_config.device_domain,
+                    device_discovery=transport_config.device_discovery,
+                    target_required=transport_config.target_required,
                 )
-                await self.methods[delivery_method_class.method].initialize()
-                self.deliveries.update(self.methods[delivery_method_class.method].valid_deliveries)
+                await self.transports[transport_class.transport].initialize()
+                self.deliveries.update(self.transports[transport_class.transport].valid_deliveries)
 
         unconfigured_deliveries = [dc for d, dc in self._deliveries.items() if d not in self.deliveries]
         for bad_del in unconfigured_deliveries:
-            # presumably there was no method for these
+            # presumably there was no transport for these
             await self.raise_issue(
-                f"delivery_{bad_del.get(CONF_NAME)}_for_method_{bad_del.get(CONF_METHOD)}_failed_to_configure",
-                issue_key="delivery_unknown_method",
-                issue_map={"delivery": bad_del.get(CONF_NAME), "method": bad_del.get(CONF_METHOD)},
+                f"delivery_{bad_del.get(CONF_NAME)}_for_transport_{bad_del.get(CONF_TRANSPORT)}_failed_to_configure",
+                issue_key="delivery_unknown_transport",
+                issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
             )
         _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self.deliveries.keys()))
 

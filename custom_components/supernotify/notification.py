@@ -63,15 +63,15 @@ from custom_components.supernotify import (
 from custom_components.supernotify.archive import ArchivableObject
 from custom_components.supernotify.common import DebugTrace
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.delivery_method import (
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    DeliveryMethod,
-)
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target
 from custom_components.supernotify.scenario import Scenario
+from custom_components.supernotify.transport import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    Transport,
+)
 
 from .common import ensure_dict, ensure_list
 from .context import Context
@@ -112,7 +112,7 @@ class Notification(ArchivableObject):
         self.delivery_error: list[str] | None = None
 
         self.validate_action_data(action_data)
-        # for compatibility with other notify calls, pass thru surplus data to underlying delivery methods
+        # for compatibility with other notify calls, pass thru surplus data to underlying delivery transports
         self.data: dict[str, Any] = {k: v for k, v in action_data.items() if k not in STRICT_ACTION_DATA_SCHEMA(action_data)}
         action_data = {k: v for k, v in action_data.items() if k not in self.data}
 
@@ -310,7 +310,7 @@ class Notification(ArchivableObject):
                 delivery_config.option_bool(OPTION_SIMPLIFY_TEXT) is True
                 or delivery_config.option_bool(OPTION_STRIP_URLS) is True
             ):
-                msg = delivery_config.method.simplify(msg, strip_urls=delivery_config.option_bool(OPTION_STRIP_URLS))
+                msg = delivery_config.transport.simplify(msg, strip_urls=delivery_config.option_bool(OPTION_STRIP_URLS))
 
         msg = self._render_scenario_templates(msg, "message_template", "notification_message", delivery_name)
         if msg is None:  # keep mypy happy
@@ -333,7 +333,7 @@ class Notification(ArchivableObject):
                     delivery_config.option_bool(OPTION_SIMPLIFY_TEXT) is True
                     or delivery_config.option_bool(OPTION_STRIP_URLS) is True
                 ):
-                    title = delivery_config.method.simplify(title, strip_urls=delivery_config.option_bool(OPTION_STRIP_URLS))
+                    title = delivery_config.transport.simplify(title, strip_urls=delivery_config.option_bool(OPTION_STRIP_URLS))
         title = self._render_scenario_templates(title, "title_template", "notification_title", delivery_name)
         if title is None:
             return None
@@ -359,41 +359,41 @@ class Notification(ArchivableObject):
         for delivery_name in self.selected_delivery_names:
             delivery = self.context.deliveries.get(delivery_name)
             if delivery:
-                await self.call_delivery_method(delivery)
+                await self.call_transport(delivery)
             else:
                 _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
         if self.delivered == 0 and self.errored == 0:
             for delivery in self.context.fallback_by_default_deliveries:
                 if delivery.name not in self.selected_delivery_names:
-                    await self.call_delivery_method(delivery)
+                    await self.call_transport(delivery)
 
         if self.delivered == 0 and self.errored > 0:
             for delivery in self.context.fallback_on_error_deliveries:
                 if delivery.name not in self.selected_delivery_names:
-                    await self.call_delivery_method(delivery)
+                    await self.call_transport(delivery)
 
         return self.delivered > 0
 
-    async def call_delivery_method(self, delivery: Delivery) -> None:
+    async def call_transport(self, delivery: Delivery) -> None:
         try:
-            delivery_method: DeliveryMethod = delivery.method
+            transport: Transport = delivery.transport
 
             delivery_priorities = delivery.priority
             if self.priority and delivery_priorities and self.priority not in delivery_priorities:
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
                 self.skipped += 1
                 return
-            if not await delivery_method.evaluate_delivery_conditions(delivery, self.condition_variables):
+            if not await transport.evaluate_delivery_conditions(delivery, self.condition_variables):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
                 self.skipped += 1
                 return
 
-            recipients: list[Target] = self.generate_recipients(delivery.name, delivery_method)
-            envelopes = self.generate_envelopes(delivery.name, delivery_method, recipients)
+            recipients: list[Target] = self.generate_recipients(delivery.name, transport)
+            envelopes = self.generate_envelopes(delivery.name, transport, recipients)
             for envelope in envelopes:
                 try:
-                    await delivery_method.deliver(envelope)
+                    await transport.deliver(envelope)
                     self.delivered += envelope.delivered
                     self.errored += envelope.errored
                     if envelope.delivered:
@@ -493,8 +493,8 @@ class Notification(ArchivableObject):
         _LOGGER.warning("SUPERNOTIFY Unknown occupancy tested: %s", occupancy)
         return []
 
-    def generate_recipients(self, delivery_name: str, delivery_method: DeliveryMethod) -> list[Target]:
-        delivery_config: Delivery = delivery_method.delivery_config(delivery_name)
+    def generate_recipients(self, delivery_name: str, transport: Transport) -> list[Target]:
+        delivery_config: Delivery = transport.delivery_config(delivery_name)
         targets: list[Target] = []
         custom_person_ids = []
 
@@ -523,10 +523,10 @@ class Notification(ArchivableObject):
 
         # TODO: reinstate snoozing
         recipients = self.context.snoozer.filter_recipients(
-            recipients, self.priority, delivery_name, delivery_method, self.selected_delivery_names, self.context.deliveries
+            recipients, self.priority, delivery_name, transport, self.selected_delivery_names, self.context.deliveries
         )
 
-        # delivery_target = delivery_method.select_targets(recipients)
+        # delivery_target = transport.select_targets(recipients)
         # if delivery_target:
         #    recipients = delivery_target
         #    self.record_resolve(delivery_name, "2b_delivery_config_target", delivery_target)
@@ -541,7 +541,7 @@ class Notification(ArchivableObject):
                 personal_target: Target = Target(personal_delivery.get(CONF_TARGET, {}), target_data=custom_data)
                 if personal_target.has_resolved_target():
                     self.record_resolve(delivery_name, "2e_person_configured_delivery_target", personal_target)
-                derived_target: Target | None = delivery_method.recipient_target(person)
+                derived_target: Target | None = transport.recipient_target(person)
                 if derived_target:
                     self.record_resolve(delivery_name, "2e_person_derived_target", derived_target)
                     personal_target += derived_target
@@ -554,21 +554,21 @@ class Notification(ArchivableObject):
         recipients.remove("person_id", custom_person_ids)
 
         targets.append(recipients)
-        # filter the final list for what the delivery method can take
-        filtered_targets = [delivery_method.select_targets(target) for target in targets]
+        # filter the final list for what the transport can take
+        filtered_targets = [transport.select_targets(target) for target in targets]
         self.record_resolve(delivery_name, "3_delivery_filtered_targets", filtered_targets)
         _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, filtered_targets)
         return [t.direct() for t in filtered_targets]
 
-    def generate_envelopes(self, delivery_name: str, method: DeliveryMethod, targets: list[Target]) -> list[Envelope]:
+    def generate_envelopes(self, delivery_name: str, transport: Transport, targets: list[Target]) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities
 
-        delivery_config: Delivery = method.delivery_config(delivery_name)
+        delivery_config: Delivery = transport.delivery_config(delivery_name)
         default_data: dict[str, Any] = delivery_config.data
 
         envelopes = []
         for target in targets:
-            if target.has_resolved_target() or not method.target_required:
+            if target.has_resolved_target() or not transport.target_required:
                 envelope_data = {}
                 envelope_data.update(default_data)
                 envelope_data.update(self.data)

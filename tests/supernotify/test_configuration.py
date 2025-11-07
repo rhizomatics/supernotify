@@ -9,14 +9,14 @@ from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 
-from .doubles_lib import DummyDeliveryMethod
+from .doubles_lib import DummyTransport
 from .hass_setup_lib import register_mobile_app
 
 
 async def test_default_recipients(mock_hass, mock_people_registry) -> None:  # type: ignore
     context = Context(mock_hass, recipients=[{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}])
-    dummy = DummyDeliveryMethod(mock_hass, context, mock_people_registry, {})
-    context.configure_for_tests(method_instances=[dummy], create_default_scenario=True)
+    dummy = DummyTransport(mock_hass, context, mock_people_registry, {})
+    context.configure_for_tests(transport_instancess=[dummy], create_default_scenario=True)
     await context.initialize()
     context.scenario_registry = ScenarioRegistry({})
     await context.scenario_registry.initialize(context.deliveries, context.default_deliveries, {}, mock_hass)
@@ -29,8 +29,8 @@ async def test_default_recipients(mock_hass, mock_people_registry) -> None:  # t
 
 async def test_default_recipients_with_override(mock_hass, mock_people_registry) -> None:  # type: ignore
     context = Context(mock_hass, recipients=[{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}])
-    dummy = DummyDeliveryMethod(mock_hass, context, mock_people_registry, {})
-    context.configure_for_tests(method_instances=[dummy], create_default_scenario=True)
+    dummy = DummyTransport(mock_hass, context, mock_people_registry, {})
+    context.configure_for_tests(transport_instancess=[dummy], create_default_scenario=True)
     await context.initialize()
     context.scenario_registry = ScenarioRegistry({})
     await context.scenario_registry.initialize(context.deliveries, context.default_deliveries, {}, mock_hass)
@@ -41,21 +41,21 @@ async def test_default_recipients_with_override(mock_hass, mock_people_registry)
     assert dummy.test_calls == [Envelope("dummy", uut, target=Target(["dummy.new_home_owner"]))]
 
 
-async def test_delivery_override_method(mock_hass, mock_people_registry) -> None:  # type: ignore
+async def test_delivery_override_transport(mock_hass, mock_people_registry) -> None:  # type: ignore
     delivery_config = {
         "quiet_alert": {
-            "method": "dummy",
+            "transport": "dummy",
             "target": ["switch.pillow_vibrate"],
             "selection": "explicit",
         },
-        "regular_alert": {"method": "dummy", "target": ["switch.pillow_vibrate"], "selection": ["explicit"]},
-        "day_alert": {"method": "dummy", "selection": ["explicit"]},
+        "regular_alert": {"transport": "dummy", "target": ["switch.pillow_vibrate"], "selection": ["explicit"]},
+        "day_alert": {"transport": "dummy", "selection": ["explicit"]},
     }
     context = Context(mock_hass, deliveries=delivery_config)
-    dummy = DummyDeliveryMethod(
+    dummy = DummyTransport(
         mock_hass, context, mock_people_registry, delivery_config, delivery_defaults={"target": ["media_player.hall"]}
     )
-    context.configure_for_tests(method_instances=[dummy], create_default_scenario=True)
+    context.configure_for_tests(transport_instancess=[dummy], create_default_scenario=True)
     await context.initialize()
 
     uut = Notification(
@@ -80,7 +80,7 @@ async def test_delivery_override_method(mock_hass, mock_people_registry) -> None
     assert envelope.target.entity_ids == ["switch.pillow_vibrate"]
 
     uut = Notification(
-        context, mock_people_registry, "testing defaulting to method defaults", action_data={"delivery": ["day_alert"]}
+        context, mock_people_registry, "testing defaulting to transport defaults", action_data={"delivery": ["day_alert"]}
     )
     await uut.initialize()
 

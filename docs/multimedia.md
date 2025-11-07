@@ -2,7 +2,7 @@
 
 ## Images and Video
 
-These are most commonly used with *Mobile Push* and *Email* delivery methods.
+These are most commonly used with *Mobile Push* and *Email* delivery transports.
 
 Images can be included by:
 
@@ -10,16 +10,16 @@ Images can be included by:
 - image entity, for example an [MQTT Image](https://www.home-assistant.io/integrations/image.mqtt/), ideal for Frigate or cameras that stream to MQTT
 - `snapshot_url`
 
-Additionally a video clip can be referenced by `clip_url` where supported by a delivery method (currently mobile push only).
+Additionally a video clip can be referenced by `clip_url` where supported by a transport (currently mobile push only).
 
 ### PTZ ( Pan, Tilt, Zoom ) Camera Support
 
 Supernotify can ask a camera to move and zoom to a pre-set position before an image snapshot is taken. So for
 example, if a person rings the doorbell, a camera could zoom in to take a close-up for the notification.
 
-Set the (optional) PTZ preset referenced in the `data` section, whether in method, delivery or scenario config,
+Set the (optional) PTZ preset referenced in the `data` section, whether in transport, delivery or scenario config,
 or in the notify `action` call. Additionally, a PTZ delay can be set to wait for camera movement before snapshot taken,
-and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an additional PTZ will be commanded to return to the `ptz_default_preset` defined for the camera.This image will taken once and then reused across all supporting delivery methods.
+and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an additional PTZ will be commanded to return to the `ptz_default_preset` defined for the camera.This image will taken once and then reused across all supporting delivery transports.
 
 ### Automatically Fixing Camera Issues
 
@@ -59,5 +59,5 @@ Use this for additional camera info:
 * For ONVIF or Frigate cameras set up for PTZ
   * Home preset can be defined using `ptz_default_preset` so camera can be reset after taking a snapshot
   * Delay between PTZ command and snapshot can be defined using `ptz_delay`
-  * Choose between ONVIF or Frigate PTZ control using `ptz_method`
+  * Choose between ONVIF or Frigate PTZ control using `ptz_transport`
     * Note that ONVIF may have numeric reference for presets while Frigate uses labels

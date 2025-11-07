@@ -5,20 +5,20 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import METHOD_ALEXA
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify import TRANSPORT_ALEXA
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    DeliveryMethod,
+    Transport,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AlexaDevicesDeliveryMethod(DeliveryMethod):
+class AlexaDevicesTransport(Transport):
     """Notify via Home Assistant's built-in Alexa Devices integration
 
     options:
@@ -26,7 +26,7 @@ class AlexaDevicesDeliveryMethod(DeliveryMethod):
 
     """
 
-    method = METHOD_ALEXA
+    transport = TRANSPORT_ALEXA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

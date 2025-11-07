@@ -11,6 +11,6 @@ Per delivery / scenario limits
 randomization for greetings and sounds
 
 ## Misc
-Method overrides for scenarios
+Transport overrides for scenarios
 MQTT Publish action
 Time ranges for notifications

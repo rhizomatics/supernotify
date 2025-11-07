@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify import (
     ATTR_NOTIFICATION_ID,
-    METHOD_PERSISTENT,
+    TRANSPORT_PERSISTENT,
 )
-from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.delivery import Delivery
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class PersistentDeliveryMethod(DeliveryMethod):
-    method = METHOD_PERSISTENT
+class PersistentTransport(Transport):
+    transport = TRANSPORT_PERSISTENT
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

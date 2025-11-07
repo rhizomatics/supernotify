@@ -3,20 +3,20 @@ import re
 import urllib.parse
 from typing import Any
 
-from custom_components.supernotify import METHOD_MEDIA
-from custom_components.supernotify.delivery_method import DeliveryMethod
+from custom_components.supernotify import TRANSPORT_MEDIA
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transport import Transport
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MediaPlayerImageDeliveryMethod(DeliveryMethod):
+class MediaPlayerImageTransport(Transport):
     """Requires Alex Media Player integration"""
 
-    method = METHOD_MEDIA
+    transport = TRANSPORT_MEDIA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

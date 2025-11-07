@@ -30,8 +30,8 @@ for sending only to people in or out of the property
   * Cameras can be repositioned using PTZ before and after a snapshot is taken.
   * See the [Multimedia](multimedia.md) documentation for more information.
 * Defaulting of targets and data in static config, and overridable at notification time
-* Generic support for any notification method
-  * Plus canned delivery methods to simplify common cases, especially for tricky ones like Apple Push
+* Generic support for any notification transport
+  * Plus canned delivery transports to simplify common cases, especially for tricky ones like Apple Push
 * Reloadable configuration
 * Tunable duplicate notification detection
 * Well-behaved `notify` extension, so can use data templating, `notify.group` and other notify features.
@@ -101,14 +101,14 @@ fine tuning delivery configurations, or using existing notification blueprints, 
 
  See the [Recipes](recipes/index.md) for more ideas.
 
-## Delivery Methods
+## Transports
 
-*Delivery Methods* are the basic difference between regular Notify Groups and Supernotify. While a Notify Group
+*Transports* are the basic difference between regular Notify Groups and Supernotify. While a Notify Group
 seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`.
 
-Delivery Methods adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
+Transports adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
 
-See [Delivery Methods](methods.md) page for the full list and more detail on each.
+See [Transports](transports.md) page for the full list and more detail on each.
 
 ## Flexible Configuration
 
@@ -124,7 +124,7 @@ Priority order of application
 | Recipient delivery override          | Runtime call    |                                                  |
 | Scenario delivery override           | Runtime call    | Multiple scenarios applied in no special order   |
 | Delivery definition                  | Startup         | `message` and `title` override Action Data      |
-| Method defaults                      | Startup         |                                                  |
+| Transport defaults                      | Startup         |                                                  |
 | Target notification action defaults  | Downstream call |                                                  |
 
 
@@ -132,7 +132,7 @@ Priority order of application
 2. Recipient delivery override
 3. Scenario delivery override
 4. Delivery definition
-5. Method defaults
+5. Transport defaults
 6. Target notification action defaults, e.g. mail recipients ( this isn't applied inside Supernotify )
 
 
@@ -148,7 +148,7 @@ See the [Scenarios](scenarios.md) page for more detail.
 
 ## Condition Variables
 
-`Scenario` and `DeliveryMethod` conditions have access to everything that any other Home Assistant conditions can
+`Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can
 access, such as entities, templating etc. In addition, Supernotify makes additional variables
 automatically available:
 

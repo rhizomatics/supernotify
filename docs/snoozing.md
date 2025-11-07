@@ -12,7 +12,7 @@ Snooze context is also logged in the debug trace, which can be archived to the f
 ### Mobile Actions for Snoozing
 
 Mobile actions will be handled according to scheme, where the command is one of `SNOOZE`,`SILENCE` or `NORMAL`, recipient
-type is one of `USER`,`EVERYONE`, and target type is one of `NONCRITICAL`,`EVERYTHING`,`METHOD`,`DELIVERY`,`CAMERA`,`PRIORITY` or `ACTION`.
+type is one of `USER`,`EVERYONE`, and target type is one of `NONCRITICAL`,`EVERYTHING`,`TRANSPORT`,`DELIVERY`,`CAMERA`,`PRIORITY` or `ACTION`.
 
 The user is determined by matching the mobile device id in the event to the registry of mobile devices per
 person in Supernotify, either manually configured or automatically discovered.

@@ -18,12 +18,12 @@ from homeassistant.helpers.typing import ConfigType
 from . import (
     CONF_DATA,
     CONF_MESSAGE,
-    CONF_METHOD,
     CONF_OCCUPANCY,
     CONF_PRIORITY,
     CONF_SELECTION,
     CONF_TEMPLATE,
     CONF_TITLE,
+    CONF_TRANSPORT,
     OCCUPANCY_ALL,
     RESERVED_DELIVERY_NAMES,
 )
@@ -31,18 +31,18 @@ from .model import DeliveryConfig
 
 if typing.TYPE_CHECKING:
     from .context import Context
-    from .delivery_method import DeliveryMethod
+    from .transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Delivery(DeliveryConfig):
-    def __init__(self, name: str, conf: ConfigType, method: "DeliveryMethod") -> None:
+    def __init__(self, name: str, conf: ConfigType, transport: "Transport") -> None:
         self.name: str = name
         self.alias: str | None = conf.get(CONF_ALIAS)
-        self.method: DeliveryMethod = method
-        method_defaults: DeliveryConfig = self.method.delivery_defaults
-        super().__init__(conf, delivery_defaults=method_defaults)
+        self.transport: Transport = transport
+        transport_defaults: DeliveryConfig = self.transport.delivery_defaults
+        super().__init__(conf, delivery_defaults=transport_defaults)
         self.template: str | None = conf.get(CONF_TEMPLATE)
         self.default: bool = conf.get(CONF_DEFAULT, False)
         self.message: str | None = conf.get(CONF_MESSAGE)
@@ -61,7 +61,7 @@ class Delivery(DeliveryConfig):
                 issue_map={"delivery": self.name},
             )
             errors += 1
-        if not self.method.validate_action(self.action):
+        if not self.transport.validate_action(self.action):
             _LOGGER.warning("SUPERNOTIFY Invalid action definition for delivery %s (%s)", self.name, self.action)
             await context.raise_issue(
                 f"delivery_{self.name}_invalid_action",
@@ -89,7 +89,7 @@ class Delivery(DeliveryConfig):
         return errors == 0
 
     def option(self, option_name: str) -> str | bool:
-        """Get an option value from delivery config or method default options"""
+        """Get an option value from delivery config or transport default options"""
         opt: str | bool | None = None
         if option_name in self.options:
             opt = self.options[option_name]
@@ -108,7 +108,7 @@ class Delivery(DeliveryConfig):
         return {
             CONF_NAME: self.name,
             CONF_ALIAS: self.alias,
-            CONF_METHOD: self.method.method,
+            CONF_TRANSPORT: self.transport.transport,
             CONF_TEMPLATE: self.template,
             CONF_DEFAULT: self.default,
             CONF_MESSAGE: self.message,

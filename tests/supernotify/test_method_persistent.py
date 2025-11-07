@@ -1,18 +1,18 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import CONF_DEFAULT
 
-from custom_components.supernotify import ATTR_NOTIFICATION_ID, CONF_METHOD, METHOD_PERSISTENT
+from custom_components.supernotify import ATTR_NOTIFICATION_ID, CONF_TRANSPORT, TRANSPORT_PERSISTENT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.persistent import PersistentDeliveryMethod
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.persistent import PersistentTransport
 
 
 async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_persistent"""
     context = Context()
     await context.initialize()
-    uut = PersistentDeliveryMethod(mock_hass, context, {"pn": {CONF_METHOD: METHOD_PERSISTENT, CONF_DEFAULT: True}})
+    uut = PersistentTransport(mock_hass, context, {"pn": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_DEFAULT: True}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.initialize()

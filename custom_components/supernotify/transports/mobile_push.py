@@ -18,19 +18,19 @@ from custom_components.supernotify import (
     CONF_MOBILE_DEVICES,
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
-    METHOD_MOBILE_PUSH,
+    TRANSPORT_MOBILE_PUSH,
 )
-from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import CommandType, QualifiedTargetType, RecipientType, Target
+from custom_components.supernotify.transport import Transport
 
 RE_VALID_MOBILE_APP = r"mobile_app_[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MobilePushDeliveryMethod(DeliveryMethod):
-    method = METHOD_MOBILE_PUSH
+class MobilePushTransport(Transport):
+    transport = TRANSPORT_MOBILE_PUSH
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

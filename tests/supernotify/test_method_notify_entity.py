@@ -1,23 +1,23 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
-from homeassistant.const import ATTR_ENTITY_ID, CONF_METHOD, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 
-from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, METHOD_NOTIFY_ENTITY
+from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, CONF_TRANSPORT, TRANSPORT_NOTIFY_ENTITY
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.notify_entity import NotifyEntityDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
 
 async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
     context = Context()
-    uut = NotifyEntityDeliveryMethod(
+    uut = NotifyEntityTransport(
         mock_hass,
         context,
         mock_people_registry,
         {
             "ping": {
-                CONF_METHOD: METHOD_NOTIFY_ENTITY,
+                CONF_TRANSPORT: TRANSPORT_NOTIFY_ENTITY,
                 CONF_NAME: "teleport",
             }
         },
@@ -33,7 +33,7 @@ async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
                 mock_people_registry,
                 message="hello there",
                 title="testing",
-                action_data={CONF_DELIVERY: {"teleport": {CONF_DATA: {"cuteness": "not_on_this_method"}}}},
+                action_data={CONF_DELIVERY: {"teleport": {CONF_DATA: {"cuteness": "not_on_this_transport"}}}},
             ),
             target=Target(["notify.pong", "weird_generic_a"]),
         )

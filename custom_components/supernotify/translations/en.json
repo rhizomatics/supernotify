@@ -40,9 +40,9 @@
             "title":"Invalid Condition for Scenario",
             "description":"Scenario definition {scenario} contains a condition that cannor be evaluated by Home Assistant"
         },
-        "delivery_unknown_method":{
-            "title":"Unknown Method for Delivery",
-            "description":"Delivery configuration {delivery} refers to a method {method} that is not provided by SuperNotify"
+        "delivery_unknown_transport":{
+            "title":"Unknown Transport for Delivery",
+            "description":"Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify"
         },
         "media_path":{
             "title":"Media Path Cannot be Used",

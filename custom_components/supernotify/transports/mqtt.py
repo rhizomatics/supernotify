@@ -4,20 +4,20 @@ from typing import Any
 
 from homeassistant.components.mqtt.const import ATTR_TOPIC
 
-from custom_components.supernotify import METHOD_MQTT
-from custom_components.supernotify.delivery_method import (
-    DeliveryMethod,
-)
+from custom_components.supernotify import TRANSPORT_MQTT
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transport import (
+    Transport,
+)
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MQTTDeliveryMethod(DeliveryMethod):
-    method = METHOD_MQTT
+class MQTTTransport(Transport):
+    transport = TRANSPORT_MQTT
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -35,7 +35,7 @@ class MQTTDeliveryMethod(DeliveryMethod):
         return False
 
     def validate_action(self, action: str | None) -> bool:
-        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.default_action
 
     def select_targets(self, target: Target) -> Target:  # noqa: ARG002

@@ -1,22 +1,18 @@
 from homeassistant.const import (
     CONF_DEFAULT,
-    CONF_METHOD,
     CONF_NAME,
 )
 
-from custom_components.supernotify import (
-    CONF_DATA,
-    METHOD_MQTT,
-)
+from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_MQTT
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.methods.mqtt import MQTTDeliveryMethod
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.mqtt import MQTTTransport
 
 
 async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry) -> None:  # type: ignore
     deliveries = {
         "dive_dive_dive": {
-            CONF_METHOD: METHOD_MQTT,
+            CONF_TRANSPORT: TRANSPORT_MQTT,
             CONF_NAME: "dive_dive_dive",
             CONF_DEFAULT: True,
             CONF_DATA: {
@@ -31,7 +27,7 @@ async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry) 
     mock_scenario_registry.delivery_by_scenario = {"DEFAULT": ["dive_dive_dive"]}
     context.scenario_registry = mock_scenario_registry
 
-    uut = MQTTDeliveryMethod(mock_hass, context, mock_people_registry, deliveries=deliveries)
+    uut = MQTTTransport(mock_hass, context, mock_people_registry, deliveries=deliveries)
 
     await uut.initialize()
     context.configure_for_tests([uut])

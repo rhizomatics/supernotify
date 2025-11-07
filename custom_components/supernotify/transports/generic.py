@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.notify.const import ATTR_TARGET
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 
-from custom_components.supernotify import CONF_DATA, METHOD_GENERIC
+from custom_components.supernotify import CONF_DATA, TRANSPORT_GENERIC
 from custom_components.supernotify.common import ensure_list
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy
+from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
-    DeliveryMethod,
+    Transport,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy
 
 if TYPE_CHECKING:
     from custom_components.supernotify.delivery import Delivery
@@ -22,10 +22,10 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class GenericDeliveryMethod(DeliveryMethod):
+class GenericTransport(Transport):
     """Call any service, including non-notify ones, like switch.turn_on or mqtt.publish"""
 
-    method = METHOD_GENERIC
+    transport = TRANSPORT_GENERIC
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -47,7 +47,7 @@ class GenericDeliveryMethod(DeliveryMethod):
     def validate_action(self, action: str | None) -> bool:
         if action is not None and "." in action:
             return True
-        _LOGGER.warning("SUPERNOTIFY generic method must have a qualified action name, e.g. notify.foo")
+        _LOGGER.warning("SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
     async def deliver(self, envelope: Envelope) -> bool:

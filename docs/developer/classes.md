@@ -4,7 +4,7 @@
 
     See the [Class Diagram](class_diagram.md) for how these relate to each other.
 
-::: custom_components.supernotify.delivery_method.DeliveryMethod
+::: custom_components.supernotify.transport.Transport
     handler: python
     heading_level: 2
 
@@ -31,7 +31,7 @@
     handler: python
     heading_level: 2
 
-::: custom_components.supernotify.model.MethodConfig
+::: custom_components.supernotify.model.TransportConfig
     handler: python
     heading_level: 2
 

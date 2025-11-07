@@ -1,22 +1,22 @@
 from unittest.mock import Mock, call
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT, CONF_METHOD
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT
 
-from custom_components.supernotify import CONF_DATA, METHOD_CHIME
+from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_CHIME
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.chime import ChimeTransport
 
 
 async def test_deliver(mock_hass, mock_context, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_chime"""
-    uut = ChimeDeliveryMethod(
+    uut = ChimeTransport(
         mock_hass,
         mock_context,
-        {"chimes": {CONF_METHOD: METHOD_CHIME, CONF_DEFAULT: True}},
+        {"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DEFAULT: True}},
     )
     mock_context.deliveries = {"chimes": Delivery("chime", {}, uut)}
 
@@ -90,9 +90,9 @@ async def test_deliver(mock_hass, mock_context, mock_people_registry) -> None:  
 
 async def test_deliver_alias(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_chime"""
-    delivery_config = {"chimes": {CONF_METHOD: METHOD_CHIME, CONF_DEFAULT: True, CONF_DATA: {"chime_tune": "doorbell"}}}
+    delivery_config = {"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DEFAULT: True, CONF_DATA: {"chime_tune": "doorbell"}}}
     context = Context()
-    uut = ChimeDeliveryMethod(
+    uut = ChimeTransport(
         mock_hass,
         context,
         mock_people_registry,
@@ -186,7 +186,7 @@ async def test_deliver_to_group(mock_hass, mock_people_registry) -> None:  # typ
     }
     delivery_config = {
         "chimes": {
-            CONF_METHOD: METHOD_CHIME,
+            CONF_TRANSPORT: TRANSPORT_CHIME,
             CONF_DEFAULT: True,
             CONF_DATA: {"chime_tune": "dive_dive_dive"},
         }
@@ -194,7 +194,7 @@ async def test_deliver_to_group(mock_hass, mock_people_registry) -> None:  # typ
     context = Context()
     await context.initialize()
     mock_hass.states.get.side_effect = lambda v: groups.get(v)
-    uut = ChimeDeliveryMethod(mock_hass, context, mock_people_registry, delivery_config)
+    uut = ChimeTransport(mock_hass, context, mock_people_registry, delivery_config)
     await uut.initialize()
     context.configure_for_tests([uut])
     await context.initialize()

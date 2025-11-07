@@ -6,18 +6,18 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from jinja2 import Environment, FileSystemLoader
 
-from custom_components.supernotify import CONF_TEMPLATE, METHOD_EMAIL
+from custom_components.supernotify import CONF_TEMPLATE, TRANSPORT_EMAIL
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.transport import (
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    DeliveryMethod,
+    Transport,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
-from custom_components.supernotify.people import PeopleRegistry
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -31,8 +31,8 @@ RE_VALID_EMAIL = (
 _LOGGER = logging.getLogger(__name__)
 
 
-class EmailDeliveryMethod(DeliveryMethod):
-    method = METHOD_EMAIL
+class EmailTransport(Transport):
+    transport = TRANSPORT_EMAIL
 
     def __init__(
         self,
@@ -55,7 +55,7 @@ class EmailDeliveryMethod(DeliveryMethod):
             _LOGGER.warning("SUPERNOTIFY Email templates not available - no configured path")
 
     def validate_action(self, action: str | None) -> bool:
-        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
     @property

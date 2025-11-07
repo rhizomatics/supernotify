@@ -7,7 +7,7 @@ Enrich email with a html message without impacting notifications sent via SMS, A
 ## Implementation
 
 To send a glob of html to include in email, set `message_html` in action data. This will be ignored
-by other delivery methods that don't handle email. This can be also be used to have a notification
+by other delivery transports that don't handle email. This can be also be used to have a notification
 with only a title ( that gets picked up for mobile push, alexa and other brief communications ) with
 a much more detailed body only for email.
 

@@ -35,7 +35,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from custom_components.supernotify.archive import ARCHIVE_PURGE_MIN_INTERVAL
-from custom_components.supernotify.delivery_method import DeliveryMethod
+from custom_components.supernotify.transport import Transport
 
 from . import (
     ATTR_ACTION,
@@ -53,11 +53,11 @@ from . import (
     CONF_HOUSEKEEPING_TIME,
     CONF_LINKS,
     CONF_MEDIA_PATH,
-    CONF_METHODS,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
     CONF_SIZE,
     CONF_TEMPLATE_PATH,
+    CONF_TRANSPORTS,
     CONF_TTL,
     DOMAIN,
     PLATFORMS,
@@ -66,21 +66,21 @@ from . import (
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .context import Context
-from .methods.alexa_devices import AlexaDevicesDeliveryMethod
-from .methods.alexa_media_player import AlexaMediaPlayerDeliveryMethod
-from .methods.chime import ChimeDeliveryMethod
-from .methods.email import EmailDeliveryMethod
-from .methods.generic import GenericDeliveryMethod
-from .methods.media_player_image import MediaPlayerImageDeliveryMethod
-from .methods.mobile_push import MobilePushDeliveryMethod
-from .methods.mqtt import MQTTDeliveryMethod
-from .methods.notify_entity import NotifyEntityDeliveryMethod
-from .methods.persistent import PersistentDeliveryMethod
-from .methods.sms import SMSDeliveryMethod
 from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry
 from .scenario import ScenarioRegistry
+from .transports.alexa_devices import AlexaDevicesTransport
+from .transports.alexa_media_player import AlexaMediaPlayerTransport
+from .transports.chime import ChimeTransport
+from .transports.email import EmailTransport
+from .transports.generic import GenericTransport
+from .transports.media_player_image import MediaPlayerImageTransport
+from .transports.mobile_push import MobilePushTransport
+from .transports.mqtt import MQTTTransport
+from .transports.notify_entity import NotifyEntityTransport
+from .transports.persistent import PersistentTransport
+from .transports.sms import SMSTransport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.delivery import Delivery
@@ -92,19 +92,19 @@ _LOGGER = logging.getLogger(__name__)
 
 SNOOZE_TIME = 60 * 60  # TODO: move to configuration
 
-METHODS: list[type[DeliveryMethod]] = [
-    EmailDeliveryMethod,
-    SMSDeliveryMethod,
-    MQTTDeliveryMethod,
-    AlexaDevicesDeliveryMethod,
-    AlexaMediaPlayerDeliveryMethod,
-    MobilePushDeliveryMethod,
-    MediaPlayerImageDeliveryMethod,
-    ChimeDeliveryMethod,
-    PersistentDeliveryMethod,
-    GenericDeliveryMethod,
-    NotifyEntityDeliveryMethod,
-]  # No auto-discovery of method plugins so manual class registration required here
+TRANSPORTS: list[type[Transport]] = [
+    EmailTransport,
+    SMSTransport,
+    MQTTTransport,
+    AlexaDevicesTransport,
+    AlexaMediaPlayerTransport,
+    MobilePushTransport,
+    MediaPlayerImageTransport,
+    ChimeTransport,
+    PersistentTransport,
+    GenericTransport,
+    NotifyEntityTransport,
+]  # No auto-discovery of transport plugins so manual class registration required here
 
 
 async def async_get_service(
@@ -137,7 +137,7 @@ async def async_get_service(
             CONF_HOUSEKEEPING: config.get(CONF_HOUSEKEEPING, {}),
             CONF_ACTION_GROUPS: config.get(CONF_ACTION_GROUPS, {}),
             CONF_SCENARIOS: list(config.get(CONF_SCENARIOS, {}).keys()),
-            CONF_METHODS: config.get(CONF_METHODS, {}),
+            CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
             CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
             CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
         },
@@ -157,7 +157,7 @@ async def async_get_service(
         mobile_actions=config[CONF_ACTION_GROUPS],
         scenarios=config[CONF_SCENARIOS],
         links=config[CONF_LINKS],
-        method_configs=config[CONF_METHODS],
+        transport_configs=config[CONF_TRANSPORTS],
         cameras=config[CONF_CAMERAS],
         dupe_check=config[CONF_DUPE_CHECK],
     )
@@ -309,7 +309,7 @@ class SuperNotificationAction(BaseNotificationService):
         mobile_actions: dict[str, Any] | None = None,
         scenarios: dict[str, dict[str, Any]] | None = None,
         links: list[str] | None = None,
-        method_configs: dict[str, Any] | None = None,
+        transport_configs: dict[str, Any] | None = None,
         cameras: list[dict[str, Any]] | None = None,
         dupe_check: dict[str, Any] | None = None,
     ) -> None:
@@ -329,9 +329,9 @@ class SuperNotificationAction(BaseNotificationService):
             media_path,
             archive,
             scenarios,
-            method_configs or {},
+            transport_configs or {},
             cameras,
-            METHODS,
+            TRANSPORTS,
         )
         self.people_registry = PeopleRegistry(hass, recipients, self.context.entity_registry(), self.context.device_registry())
         self.scenario_registry = ScenarioRegistry(scenarios or {})
@@ -432,23 +432,23 @@ class SuperNotificationAction(BaseNotificationService):
                         changes += 1
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
-            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.method_"):
-                method: DeliveryMethod | None = self.context.methods.get(
-                    event.data["entity_id"].replace(f"{DOMAIN}.method_", "")
+            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.transport_"):
+                transport: Transport | None = self.context.transports.get(
+                    event.data["entity_id"].replace(f"{DOMAIN}.transport_", "")
                 )
-                if method is None:
-                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown method {event.data['entity_id']}")
+                if transport is None:
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown methtransportod {event.data['entity_id']}")
                 else:
-                    if new_state.state == "off" and method.enabled:
-                        method.enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {method.method}")
+                    if new_state.state == "off" and transport.enabled:
+                        transport.enabled = False
+                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {transport.transport}")
                         changes += 1
-                    elif new_state.state == "on" and not method.enabled:
-                        method.enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {method.method}")
+                    elif new_state.state == "on" and not transport.enabled:
+                        transport.enabled = True
+                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {transport.transport}")
                         changes += 1
                     else:
-                        _LOGGER.info(f"SUPERNOTIFY No change to method {method.method}, already {new_state}")
+                        _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.transport}, already {new_state}")
 
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
@@ -464,13 +464,13 @@ class SuperNotificationAction(BaseNotificationService):
                 f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(include_condition=False)
             )
             self.exposed_entities.append(f"{DOMAIN}.scenario_{scenario.name}")
-        for method in self.context.methods.values():
+        for transport in self.context.transports.values():
             self.hass.states.async_set(
-                f"{DOMAIN}.method_{method.method}",
-                STATE_ON if len(method.valid_deliveries) > 0 else STATE_OFF,
-                method.attributes(),
+                f"{DOMAIN}.transport_{transport.transport}",
+                STATE_ON if len(transport.valid_deliveries) > 0 else STATE_OFF,
+                transport.attributes(),
             )
-            self.exposed_entities.append(f"{DOMAIN}.method_{method.method}")
+            self.exposed_entities.append(f"{DOMAIN}.transport_{transport.transport}")
         for delivery_name, delivery in self.context._deliveries.items():
             self.hass.states.async_set(
                 f"{DOMAIN}.delivery_{delivery_name}",
@@ -498,7 +498,7 @@ class SuperNotificationAction(BaseNotificationService):
     async def async_send_message(
         self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any
     ) -> None:
-        """Send a message via chosen method."""
+        """Send a message via chosen transport."""
         data = kwargs.get(ATTR_DATA, {})
         notification = None
         _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)

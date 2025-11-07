@@ -13,11 +13,11 @@ direction LR
     }
     class Envelope {
     }
-    class DeliveryMethod {
+    class Transport {
         deliver()
         select_targets()
     }
-    class MethodConfig {
+    class TransportConfig {
     }
     class Target {
         List~string~ entity_ids
@@ -43,35 +43,35 @@ direction LR
         refresh_tracker_state()
         mobile_devices_for_person()
     }
-    namespace methods {
-        class EmailDeliveryMethod{}
-        class SMSDeliveryMethod{}
-        class AlexaDevicesDeliveryMethod{}
-        class AlexaMediaPlayerDeliveryMethod{}
-        class MobilePushDeliveryMethod{}
-        class ChimeDeliveryMethod{}
-        class PersistentDeliveryMethod{}
-        class GenericDeliveryMethod{}
-        class MediaPlayerImageDeliveryMethod{}
-        class NotifyEntityDeliveryMethod{}
+    namespace transports {
+        class EmailTransport{}
+        class SMSTransport{}
+        class AlexaDevicesTransport{}
+        class AlexaMediaPlayerTransport{}
+        class MobilePushTransport{}
+        class ChimeTransport{}
+        class PersistentTransport{}
+        class GenericTransport{}
+        class MediaPlayerImageTransport{}
+        class NotifyEntityTransport{}
     }
 
     Notification "1" *-- "*" Envelope
-    Envelope "1" ..> "1" DeliveryMethod
+    Envelope "1" ..> "1" Transport
     Envelope "1" *-- "1" Target
-    DeliveryMethod "1" *-- "*" DeliveryConfig
+    Transport "1" *-- "*" DeliveryConfig
     Context "1" o-- "0..*" Scenario
     Snoozer "1" *-- "0..*" Snooze
     Context "1" -- "1" Snoozer
     Context "1" -- "1" PeopleRegistry
-    DeliveryMethod <|--  EmailDeliveryMethod
-    DeliveryMethod <|--  SMSDeliveryMethod
-    DeliveryMethod <|--  AlexaDevicesDeliveryMethod
-    DeliveryMethod <|--  AlexaMediaPlayerDeliveryMethod
-    DeliveryMethod <|--  MobilePushDeliveryMethod
-    DeliveryMethod <|--  ChimeDeliveryMethod
-    DeliveryMethod <|--  PersistentDeliveryMethod
-    DeliveryMethod <|--  GenericDeliveryMethod
-    DeliveryMethod <|--  MediaPlayerImageDeliveryMethod
-    DeliveryMethod <|--  NotifyEntityDeliveryMethod
+    Transport <|--  EmailTransport
+    Transport <|--  SMSTransport
+    Transport <|--  AlexaDevicesTransport
+    Transport <|--  AlexaMediaPlayerTransport
+    Transport <|--  MobilePushTransport
+    Transport <|--  ChimeTransport
+    Transport <|--  PersistentTransport
+    Transport <|--  GenericTransport
+    Transport <|--  MediaPlayerImageTransport
+    Transport <|--  NotifyEntityTransport
 ```

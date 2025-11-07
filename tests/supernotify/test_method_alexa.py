@@ -1,23 +1,23 @@
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_METHOD
+from homeassistant.const import CONF_ACTION, CONF_DEFAULT
 from pytest_unordered import unordered
 
-from custom_components.supernotify import METHOD_ALEXA
+from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_ALEXA
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.alexa_devices import AlexaDevicesDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
 
 DELIVERY = {
-    "alexa_devices": {CONF_METHOD: METHOD_ALEXA, CONF_ACTION: "notify.send_message"},
+    "alexa_devices": {CONF_TRANSPORT: TRANSPORT_ALEXA, CONF_ACTION: "notify.send_message"},
 }
 
 
 async def test_notify_alexa(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_alexa."""
     context = Context()
-    delivery_config = {"default": {CONF_METHOD: METHOD_ALEXA, CONF_DEFAULT: True}}
-    uut = AlexaDevicesDeliveryMethod(mock_hass, context, delivery_config)
+    delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_ALEXA, CONF_DEFAULT: True}}
+    uut = AlexaDevicesTransport(mock_hass, context, delivery_config)
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.initialize()
@@ -39,9 +39,9 @@ async def test_notify_alexa(mock_hass, mock_people_registry) -> None:  # type: i
     )
 
 
-def test_alexa_method_selects_targets(mock_hass, superconfig) -> None:  # type: ignore
+def test_alexa_transport_selects_targets(mock_hass, superconfig) -> None:  # type: ignore
     """Test on_notify_alexa."""
-    uut = AlexaDevicesDeliveryMethod(mock_hass, superconfig, {"announce": {CONF_METHOD: METHOD_ALEXA}})
+    uut = AlexaDevicesTransport(mock_hass, superconfig, {"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA}})
     assert uut.select_targets(
         Target([
             "switch.alexa_1",

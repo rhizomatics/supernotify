@@ -225,8 +225,8 @@ class Snoozer:
                             inscope_snoozes.append(snooze)
                     case QualifiedTargetType.ACTION:
                         inscope_snoozes.append(snooze)
-                    case QualifiedTargetType.METHOD:
-                        if snooze.target in [delivery_definitions[d].method.method for d in delivery_names]:
+                    case QualifiedTargetType.TRANSPORT:
+                        if snooze.target in [delivery_definitions[d].transport.transport for d in delivery_names]:
                             inscope_snoozes.append(snooze)
                     case QualifiedTargetType.CAMERA:
                         inscope_snoozes.append(snooze)
@@ -252,7 +252,7 @@ class Snoozer:
         recipients: Target,
         priority: str,
         delivery_name: str,
-        delivery_method: "DeliveryMethod",  # type: ignore  # noqa: F821
+        transport: "Transport",  # type: ignore  # noqa: F821
         all_delivery_names: list[str],
         delivery_definitions: dict[str, Delivery],
     ) -> Target:
@@ -262,7 +262,7 @@ class Snoozer:
                 # assume the everyone checks are made before notification gets this far
                 if (
                     (snooze.target_type == QualifiedTargetType.DELIVERY and snooze.target == delivery_name)
-                    or (snooze.target_type == QualifiedTargetType.METHOD and snooze.target == delivery_method.method)
+                    or (snooze.target_type == QualifiedTargetType.TRANSPORT and snooze.target == transport.transport)
                     or (
                         snooze.target_type == QualifiedTargetType.PRIORITY
                         and (snooze.target == priority or (isinstance(snooze.target, list) and priority in snooze.target))

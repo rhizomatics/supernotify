@@ -10,11 +10,11 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
     CONF_VARIABLES,
 )
 
-from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, CONF_DEVICE_DOMAIN, METHOD_CHIME
+from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, CONF_DEVICE_DOMAIN, TRANSPORT_CHIME
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from homeassistant.helpers.device_registry import DeviceEntry
@@ -71,8 +71,8 @@ class ChimeTargetConfig:
         return f"ChimeTargetConfig(entity_id={self.entity_id})"
 
 
-class ChimeDeliveryMethod(DeliveryMethod):
-    method = METHOD_CHIME
+class ChimeTransport(Transport):
+    transport = TRANSPORT_CHIME
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         # support optional auto discovery
@@ -288,5 +288,5 @@ class ChimeDeliveryMethod(DeliveryMethod):
                         and ATTR_ENTITY_ID not in alias_config
                     }
                     target_configs.update(bulk_apply)
-        _LOGGER.debug("SUPERNOTIFY method_chime: Resolved tune %s to %s", tune_or_alias, target_configs)
+        _LOGGER.debug("SUPERNOTIFY transport_chime: Resolved tune %s to %s", tune_or_alias, target_configs)
         return target_configs

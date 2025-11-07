@@ -6,7 +6,7 @@ When *Alexa Devices* integration stops working, have an alternative, here *Alexa
 
 ## Implementation
 
-Define both deliveries and use the `enabled` status on method to select which one active ( or enable/disable dynamically
+Define both deliveries and use the `enabled` status on transport to select which one active ( or enable/disable dynamically
 by changing the entity in Home Assistant between `on` and `off`).
 
 This means that scenarios, or automations sending notifications, can refer to both Alexa integrations, and the broken one can quickly be switched off centrally and the alternative enabled.
@@ -16,13 +16,13 @@ This means that scenarios, or automations sending notifications, can refer to bo
 ```yaml
 deliveries:
  alexa_backup_announce:
-      method: alexa_media_player
+      transport: alexa_media_player
       occupancy: any_in
       selection: scenario
       enabled: false
 
     alexa_announce:
-      method: alexa_devices
+      transport: alexa_devices
       occupancy: any_in
       selection: scenario
       enabled: true

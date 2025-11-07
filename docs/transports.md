@@ -1,6 +1,6 @@
-# Delivery Methods
+# Transports
 
-## Built-in Methods
+## Built-in Transports
 
 ### Mobile Push
 
@@ -106,7 +106,7 @@ See also [Script](https://www.home-assistant.io/integrations/script/) in HomeAss
 NOTE: Requires the [`Alexa Media Player`](https://github.com/alandtse/alexa_media_player) integration
 to be installed on Home Assistant.
 
-Supply `media_player` entities as targets and this method will make appropriate `media_player.play_media`
+Supply `media_player` entities as targets and this transport will make appropriate `media_player.play_media`
 action calls to them, passing the sound name provided in `tune` field.
 
 See https://github.com/alandtse/alexa_media_player/wiki#known-available-sounds for
@@ -122,13 +122,13 @@ The list of sounds can be found on the [Alexa API](https://alexa.amazon.com/api/
 One oddity of this integration is that although it generates traditional entity IDs for notifying Alexa devices,
 sending a sound ( or command ) requires a long and obscure `device_id` (a 32 character random hexadecimal pseudo-UUID).
 While you can find these from the *Devices* section of the *Alexa Devices* integration config, or using the *Action*
-feature of *Developer Tools* and switching to yaml mode, the easiest way is to **automatically register** all Alexa devices by using `device_discovery: True` on the method configuration. (Sometimes you may end up with odd devices like headphones or firesticks
+feature of *Developer Tools* and switching to yaml mode, the easiest way is to **automatically register** all Alexa devices by using `device_discovery: True` on the transport configuration. (Sometimes you may end up with odd devices like headphones or firesticks
 that Alexa knows about but don't make sense for HomeAssistant usage - these can be disabled from the *Alexa Devices* integration config).
 
 #### Example
 
 ```yaml
-methods:
+transports:
   chime:
     device_discovery: True
     target:
@@ -143,7 +143,7 @@ methods:
                 media_player:
                     # resolves to media_player/play_media with sound configured for this path
                     tune: home/amzn_sfx_doorbell_chime_02
-                    # entity_id list defaults to `target` of method default or action call
+                    # entity_id list defaults to `target` of transport default or action call
                     # this entry can also be shortcut as `media_player: home/amzn_sfx_doorbell_chime_02`
                 media_player_alt:
                     # Not all the media players are Amazon Alexa based, so override for other flavours
@@ -200,7 +200,7 @@ Since SMS sends a single message with no title, by default the message and title
 
 ### Notify Entity
 
-This method uses the new style Home Assistant notify entities, so accepts only a `message`,
+This transport uses the new style Home Assistant notify entities, so accepts only a `message`,
 `title` and `target`, plus an optional `data` specific to some entity types. Targets for Notify Entities can be broader than `entity_id`, and can also be a `device`, `label` or `area`, the latter also being an alternate way of calling multiple
 notify entities at once..
 
@@ -271,7 +271,7 @@ The `title_handling` option can be set to `combine_message` or `replace_message`
 
 Place a notification on Home Assistant application screen.
 
-Pass a notification ID, either fixed in the method or delivery configuration, or passed in the action `data`.
+Pass a notification ID, either fixed in the transport or delivery configuration, or passed in the action `data`.
 
 See the [Home Assistant Integration Documents](https://www.home-assistant.io/integrations/persistent_notification/) for more information.
 
@@ -283,15 +283,15 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
 
 
-## Customizing Delivery Methods
+## Customizing Transports
 
 ### Options
 
-Most methods support an additional set of options, some common ones for handling titles
-or suppressing URLs, and some specific to a method.
+Most transports support an additional set of options, some common ones for handling titles
+or suppressing URLs, and some specific to a transport.
 
 In this example, image attachments for emails get tuned ( since these are commonly needed, the email
-delivery method defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
+delivery transport defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
 
 ```yaml
  email:
@@ -306,9 +306,9 @@ delivery method defaults to always having `progressive` and `optimize` being tru
 
 ### Table of Options
 
-All of these set by passing an `options` block in Delivery config or Method defaults.
+All of these set by passing an `options` block in Delivery config or Transport defaults.
 
-|Option           |Methods            |Description                                                  |
+|Option           |Transports            |Description                                                  |
 |-----------------|-------------------|-------------------------------------------------------------|
 |chime_aliases    |chime              |Map tunes to device name or config                           |
 |jpeg_opts        |mail               |Tune image grabs                                             |

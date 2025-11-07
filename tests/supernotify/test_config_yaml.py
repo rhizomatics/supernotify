@@ -25,8 +25,8 @@ SIMPLE_CONFIG = {
     "name": DOMAIN,
     "platform": DOMAIN,
     "delivery": {
-        "testing": {"method": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
-        "chime_person": {"method": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
+        "testing": {"transport": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
+        "chime_person": {"transport": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
     },
     "archive": {"enabled": True},
     "scenarios": {
@@ -34,7 +34,7 @@ SIMPLE_CONFIG = {
         "somebody": {"delivery_selection": "explicit", "delivery": {"chime_person": {}}},
     },
     "recipients": [{"person": "person.house_owner", "email": "test@testing.com", "phone_number": "+4497177848484"}],
-    "methods": {
+    "transports": {
         "chime": {
             "delivery_defaults": {
                 "target": ["media_player.lobby", "switch.doorbell"],
@@ -164,14 +164,14 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
     assert response == {"DEFAULT": ["testing"], "simple": ["testing"], "somebody": ["chime_person"]}
 
 
-async def test_exposed_method_events(hass: HomeAssistant) -> None:
+async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     assert await async_setup_component(hass, "media_player", {"media_player": {CONF_PLATFORM: "test"}})
     assert await async_setup_component(hass, "switch", {"switch": {CONF_PLATFORM: "test"}})
     assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
     await hass.async_block_till_done()
 
-    hass.states.async_set("supernotify.method_generic", "off")
+    hass.states.async_set("supernotify.transport_generic", "off")
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,
@@ -188,7 +188,7 @@ async def test_exposed_method_events(hass: HomeAssistant) -> None:
     assert notification["delivered_envelopes"][0]["delivery_name"] == "chime_person"  # type: ignore
     assert len(notification["undelivered_envelopes"]) == 0  # type: ignore[arg-type]
 
-    hass.states.async_set("supernotify.method_generic", "on")
+    hass.states.async_set("supernotify.transport_generic", "on")
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,

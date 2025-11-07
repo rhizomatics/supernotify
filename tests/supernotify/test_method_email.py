@@ -1,22 +1,22 @@
 from pathlib import Path
 
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_EMAIL, CONF_METHOD
+from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_EMAIL
 from pytest_unordered import unordered
 
-from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, METHOD_EMAIL
+from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, CONF_TRANSPORT, TRANSPORT_EMAIL
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.email import EmailDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.email import EmailTransport
 
 
 async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_email."""
     context = Context(recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}])
-    delivery_config = {"plain_email": {CONF_METHOD: METHOD_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}}
+    delivery_config = {"plain_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}}
     await context.initialize()
-    uut = EmailDeliveryMethod(mock_hass, context, mock_people_registry, delivery_config)
+    uut = EmailTransport(mock_hass, context, mock_people_registry, delivery_config)
     await uut.initialize()
     context.configure_for_tests([uut])
     await context.initialize()
@@ -48,13 +48,13 @@ async def test_deliver_with_template(mock_hass, mock_people_registry) -> None:  
     )
     delivery_config = {
         "default": {
-            CONF_METHOD: METHOD_EMAIL,
+            CONF_TRANSPORT: TRANSPORT_EMAIL,
             CONF_ACTION: "notify.smtp",
             CONF_TEMPLATE: "minimal_test.html.j2",
             CONF_DEFAULT: True,
         }
     }
-    uut = EmailDeliveryMethod(mock_hass, context, mock_people_registry, delivery_config)
+    uut = EmailTransport(mock_hass, context, mock_people_registry, delivery_config)
     await uut.initialize()
     context.configure_for_tests([uut])
     await context.initialize()
@@ -80,11 +80,11 @@ async def test_deliver_with_template(mock_hass, mock_people_registry) -> None:  
 async def test_deliver_with_preformatted_html(mock_hass, mock_people_registry) -> None:  # type: ignore
     context = Context(recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}])
 
-    uut = EmailDeliveryMethod(
+    uut = EmailTransport(
         mock_hass,
         context,
         mock_people_registry,
-        {"default": {CONF_METHOD: METHOD_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
+        {"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
     )
     await uut.initialize()
     context.configure_for_tests([uut])
@@ -114,11 +114,11 @@ async def test_deliver_with_preformatted_html(mock_hass, mock_people_registry) -
 async def test_deliver_with_preformatted_html_and_image(mock_hass, mock_people_registry) -> None:  # type: ignore
     context = Context(recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}])
 
-    uut = EmailDeliveryMethod(
+    uut = EmailTransport(
         mock_hass,
         context,
         mock_people_registry,
-        {"default": {CONF_METHOD: METHOD_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
+        {"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
     )
     await uut.initialize()
     context.configure_for_tests([uut])
@@ -154,7 +154,7 @@ async def test_deliver_with_preformatted_html_and_image(mock_hass, mock_people_r
 
 def test_good_email_addresses(mock_hass, mock_people_registry):  # type: ignore
     """Test good email addresses."""
-    uut = EmailDeliveryMethod(mock_hass, Context(), mock_people_registry, {})
+    uut = EmailTransport(mock_hass, Context(), mock_people_registry, {})
     assert uut.select_targets(
         Target([
             "test421@example.com",
@@ -176,7 +176,7 @@ def test_good_email_addresses(mock_hass, mock_people_registry):  # type: ignore
 
 def test_bad_email_addresses(mock_hass, mock_people_registry):  # type: ignore
     """Test good email addresses."""
-    uut = EmailDeliveryMethod(mock_hass, Context(), mock_people_registry, {})
+    uut = EmailTransport(mock_hass, Context(), mock_people_registry, {})
 
     assert (
         uut.select_targets(Target(["test@example@com", "sub.topsub.example.com", "test+fancy_rules@com", "", "@", "a@b"])).email

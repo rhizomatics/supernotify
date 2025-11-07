@@ -5,16 +5,16 @@ from custom_components.supernotify import (
     ATTR_ACTION,
     ATTR_USER_ID,
     CONF_ACTION,
-    CONF_METHOD,
     CONF_PERSON,
     CONF_SELECTION,
-    METHOD_ALEXA_MEDIA_PLAYER,
-    METHOD_CHIME,
-    METHOD_EMAIL,
-    METHOD_GENERIC,
-    METHOD_PERSISTENT,
-    METHOD_SMS,
+    CONF_TRANSPORT,
     SELECTION_BY_SCENARIO,
+    TRANSPORT_ALEXA_MEDIA_PLAYER,
+    TRANSPORT_CHIME,
+    TRANSPORT_EMAIL,
+    TRANSPORT_GENERIC,
+    TRANSPORT_PERSISTENT,
+    TRANSPORT_SMS,
 )
 from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.notification import Notification
@@ -23,13 +23,13 @@ from custom_components.supernotify.snoozer import Snooze
 from tests.supernotify.hass_setup_lib import register_mobile_app
 
 DELIVERY: dict[str, dict] = {
-    "email": {CONF_METHOD: METHOD_EMAIL, CONF_ACTION: "notify.smtp"},
-    "text": {CONF_METHOD: METHOD_SMS, CONF_ACTION: "notify.sms"},
-    "chime": {CONF_METHOD: METHOD_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
-    "alexa_media_player": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
-    "chat": {CONF_METHOD: METHOD_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_METHOD: METHOD_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
-    "dummy": {CONF_METHOD: "dummy"},
+    "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
+    "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
+    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
+    "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
+    "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
+    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
+    "dummy": {CONF_TRANSPORT: "dummy"},
 }
 
 
@@ -94,7 +94,7 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
     register_mobile_app(uut.people_registry, person="person.bob_mctest")
     plain_notify = Notification(uut.context, uut.people_registry, "hello")
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].method)[0].email == [
+    assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].transport)[0].email == [
         "bob@mctest.com",
         "jane@macunit.org",
     ]
@@ -106,14 +106,14 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.USER, recipient="person.bob_mctest")
     ]
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].method)[0].email == ["jane@macunit.org"]
+    assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].transport)[0].email == ["jane@macunit.org"]
 
     uut.on_mobile_action(
         Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_NORMAL_USER_EVERYTHING"}, context=Context(user_id="eee999111"))
     )
     assert list(uut.context.snoozer.snoozes.values()) == []
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].method)[0].email == [
+    assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].transport)[0].email == [
         "bob@mctest.com",
         "jane@macunit.org",
     ]

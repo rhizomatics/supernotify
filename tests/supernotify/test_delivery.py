@@ -10,10 +10,10 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.methods.generic import GenericDeliveryMethod
-from custom_components.supernotify.methods.notify_entity import NotifyEntityDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
 
 def test_target_in_dict_mode() -> None:
@@ -85,7 +85,7 @@ def test_category_access() -> None:
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    uut = Delivery("unit_testing", {}, NotifyEntityDeliveryMethod(mock_hass, mock_context, mock_people_registry, {}))
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_hass, mock_context, mock_people_registry, {}))
     assert await uut.validate(mock_context)
     assert uut.name == "unit_testing"
     assert uut.enabled is True
@@ -98,15 +98,15 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mo
     assert uut.condition is None
     assert uut.priority == PRIORITY_VALUES
     assert uut.selection == [SELECTION_DEFAULT]
-    assert uut.method.method == "notify_entity"
+    assert uut.transport.transport == "notify_entity"
     assert uut.data == {}
-    assert uut.options == uut.method.default_options
+    assert uut.options == uut.transport.default_options
     assert uut.action == "notify.send_message"
     assert uut.target is None
 
 
 async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_context: Context) -> None:
-    uut = Delivery("ALL", {}, NotifyEntityDeliveryMethod(mock_hass, mock_context, {}))
+    uut = Delivery("ALL", {}, NotifyEntityTransport(mock_hass, mock_context, {}))
     assert await uut.validate(mock_context) is False
     mock_context.raise_issue.assert_called_with(  # type: ignore
         "delivery_ALL_reserved_name",
@@ -116,7 +116,7 @@ async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_
 
 
 async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry) -> None:
-    uut = Delivery("generic", {}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, {}))
+    uut = Delivery("generic", {}, GenericTransport(mock_hass, mock_context, mock_people_registry, {}))
     assert await uut.validate(mock_context) is False
     mock_context.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_action",
@@ -129,7 +129,7 @@ async def test_broken_create_with_bad_condition(mock_hass: HomeAssistant, mock_c
     uut = Delivery(
         "generic",
         {CONF_CONDITION: {"condition": "xor"}},
-        GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, {}),
+        GenericTransport(mock_hass, mock_context, mock_people_registry, {}),
     )
     assert await uut.validate(mock_context) is False
     mock_context.raise_issue.assert_called_with(  # type: ignore

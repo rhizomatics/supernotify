@@ -16,30 +16,30 @@ from custom_components.supernotify import (
     CONF_DATA,
     CONF_DELIVERY,
     CONF_MEDIA,
-    CONF_METHOD,
     CONF_OPTIONS,
     CONF_PERSON,
+    CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.delivery_method import OPTION_TARGET_CATEGORIES, DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.email import EmailDeliveryMethod
-from custom_components.supernotify.methods.generic import GenericDeliveryMethod
-from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
 from custom_components.supernotify.model import MessageOnlyPolicy, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario
+from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES, Transport
+from custom_components.supernotify.transports.email import EmailTransport
+from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
 from .doubles_lib import build_delivery_from_config
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     mock_context.deliveries["mobile"] = Delivery(
-        "mobile", {"title": "mobile notification"}, MobilePushDeliveryMethod(mock_hass, mock_context, mock_people_registry)
+        "mobile", {"title": "mobile notification"}, MobilePushTransport(mock_hass, mock_context, mock_people_registry)
     )
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
     uut = Notification(mock_context, mock_people_registry, "testing 123")
@@ -118,11 +118,11 @@ async def test_generate_recipients_from_entities(
     mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
     delivery = {
-        "chatty": {CONF_ACTION: "custom.tweak", CONF_TARGET: ["custom.light_1", "custom.switch_2"], CONF_METHOD: "generic"}
+        "chatty": {CONF_ACTION: "custom.tweak", CONF_TARGET: ["custom.light_1", "custom.switch_2"], CONF_TRANSPORT: "generic"}
     }
     mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context, mock_people_registry)
     uut = Notification(mock_context, mock_people_registry, "testing 123")
-    generic = GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, delivery)
+    generic = GenericTransport(mock_hass, mock_context, mock_people_registry, delivery)
     await generic.initialize()
     recipients: list[Target] = uut.generate_recipients("chatty", generic)
     assert recipients[0].entity_ids == ["custom.light_1", "custom.switch_2"]
@@ -135,7 +135,7 @@ async def test_generate_recipients_from_recipients(
         "chatty": {
             CONF_ACTION: "custom.tweak",
             CONF_TARGET: {"entity_id": ["custom.light_1"], "person_id": ["person.new_home_owner"]},
-            CONF_METHOD: "generic",
+            CONF_TRANSPORT: "generic",
             CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "other_id"]},
         }
     }
@@ -147,7 +147,7 @@ async def test_generate_recipients_from_recipients(
     }
     mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context, mock_people_registry)
     uut = Notification(mock_context, mock_people_registry, "testing 123")
-    generic = GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, delivery)
+    generic = GenericTransport(mock_hass, mock_context, mock_people_registry, delivery)
     await generic.initialize()
     recipients: list[Target] = uut.generate_recipients("chatty", generic)
     assert recipients[0].entity_ids == ["custom.light_1"]
@@ -158,8 +158,8 @@ async def test_explicit_recipients_only_restricts_people_targets(
     mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
     delivery = {
-        "chatty": {CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"], CONF_METHOD: "generic"},
-        "mail": {CONF_ACTION: "notify.smtp", CONF_METHOD: "email"},
+        "chatty": {CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"], CONF_TRANSPORT: "generic"},
+        "mail": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: "email"},
     }
     mock_people_registry.people = {
         "person.bob": {CONF_PERSON: "person.bob", CONF_EMAIL: "bob@test.com"},
@@ -167,13 +167,13 @@ async def test_explicit_recipients_only_restricts_people_targets(
     }
     mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context, mock_people_registry)
     uut = Notification(mock_context, mock_people_registry, "testing 123")
-    generic = GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry, delivery)
+    generic = GenericTransport(mock_hass, mock_context, mock_people_registry, delivery)
     await generic.initialize()
     recipients: list[Target] = uut.generate_recipients("chatty", generic)
     assert recipients[0].other_ids == ["chan1", "chan2"]
     bundles = uut.generate_envelopes("chatty", generic, recipients)
     assert bundles == [Envelope("chatty", uut, target=Target(["chan1", "chan2"]))]
-    email = EmailDeliveryMethod(mock_hass, mock_context, mock_people_registry, delivery)
+    email = EmailTransport(mock_hass, mock_context, mock_people_registry, delivery)
     await email.initialize()
     recipients = uut.generate_recipients("mail", email)
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
@@ -197,12 +197,12 @@ async def test_filter_recipients(mock_context: Context, mock_people_registry: Pe
 
 
 async def test_build_targets_for_simple_case(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    method = GenericDeliveryMethod(mock_context.hass, mock_context, mock_people_registry, {})
-    await method.initialize()
-    # mock_context.deliveries={'testy':Delivery("testy",{},method)}
+    transport = GenericTransport(mock_context.hass, mock_context, mock_people_registry, {})
+    await transport.initialize()
+    # mock_context.deliveries={'testy':Delivery("testy",{},transport)}
     uut = Notification(mock_context, mock_people_registry, "testing 123")
-    recipients: list[Target] = uut.generate_recipients("", method)
-    bundles = uut.generate_envelopes("", method, recipients)
+    recipients: list[Target] = uut.generate_recipients("", transport)
+    bundles = uut.generate_envelopes("", transport, recipients)
     assert bundles == [Envelope("", uut)]
 
 
@@ -258,7 +258,7 @@ async def test_camera_entity(mock_context: Context, mock_people_registry: People
 
 
 async def test_message_usage(
-    mock_hass: HomeAssistant, mock_context: Context, mock_method: DeliveryMethod, mock_people_registry: PeopleRegistry
+    mock_hass: HomeAssistant, mock_context: Context, mock_transport: Transport, mock_people_registry: PeopleRegistry
 ) -> None:
     delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
     mock_context.deliveries = {"push": delivery}

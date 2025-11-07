@@ -7,18 +7,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from custom_components.supernotify import CONF_METHOD, CONF_PERSON
+from custom_components.supernotify import CONF_PERSON, CONF_TRANSPORT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.delivery_method import DeliveryMethod
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
-from custom_components.supernotify.notify import METHODS
+from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.transport import Transport
 
 
-class DummyDeliveryMethod(DeliveryMethod):
-    method = "dummy"
+class DummyTransport(Transport):
+    transport = "dummy"
 
     def __init__(
         self,
@@ -28,7 +28,7 @@ class DummyDeliveryMethod(DeliveryMethod):
         deliveries: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        deliveries = deliveries or {"dummy": {CONF_METHOD: "dummy"}}
+        deliveries = deliveries or {"dummy": {CONF_TRANSPORT: "dummy"}}
         super().__init__(hass, context, people_registry, deliveries, **kwargs)
         self.test_calls: list[Envelope] = []
 
@@ -48,8 +48,8 @@ class DummyDeliveryMethod(DeliveryMethod):
         return True
 
 
-class BrokenDeliveryMethod(DeliveryMethod):
-    method = "broken"
+class BrokenTransport(Transport):
+    transport = "broken"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -79,7 +79,7 @@ class MockImageEntity(image.ImageEntity):
 
 
 def build_delivery_from_config(conf: ConfigType, hass: HomeAssistant, ctx: Context, p_r: PeopleRegistry) -> dict[str, Delivery]:
-    def method(method_name: str) -> DeliveryMethod:
-        return next(m for m in METHODS if m.method == method_name)(hass, ctx, p_r)
+    def transport(transport_name: str) -> Transport:
+        return next(t for t in TRANSPORTS if t.transport == transport_name)(hass, ctx, p_r)
 
-    return {k: Delivery(k, v, method(v[CONF_METHOD])) for k, v in conf.items()}
+    return {k: Delivery(k, v, transport(v[CONF_TRANSPORT])) for k, v in conf.items()}

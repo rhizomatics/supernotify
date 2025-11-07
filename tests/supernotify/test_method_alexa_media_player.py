@@ -1,26 +1,26 @@
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_METHOD
+from homeassistant.const import CONF_ACTION, CONF_DEFAULT
 
-from custom_components.supernotify import METHOD_ALEXA_MEDIA_PLAYER
+from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_ALEXA_MEDIA_PLAYER
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.alexa_media_player import AlexaMediaPlayerDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.alexa_media_player import AlexaMediaPlayerTransport
 
 DELIVERY = {
-    "alexa_media_player": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
+    "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
 }
 
 
 async def test_notify_alexa_media_player(mock_hass, mock_people_registry) -> None:  # type: ignore
     """Test on_notify_alexa."""
     delivery_config = {
-        "override": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER, CONF_DEFAULT: True, CONF_ACTION: "notify.alexa_media_player"}
+        "override": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_DEFAULT: True, CONF_ACTION: "notify.alexa_media_player"}
     }
     context = Context(deliveries=delivery_config)
-    uut = AlexaMediaPlayerDeliveryMethod(mock_hass, context, mock_people_registry, delivery_config)
+    uut = AlexaMediaPlayerTransport(mock_hass, context, mock_people_registry, delivery_config)
     await uut.initialize()
-    context.configure_for_tests(method_instances=[uut])
+    context.configure_for_tests(transport_instancess=[uut])
     await context.initialize()
     notification = Notification(context, mock_people_registry, message="hello there")
     await notification.initialize()
@@ -36,7 +36,7 @@ async def test_notify_alexa_media_player(mock_hass, mock_people_registry) -> Non
     )
 
 
-def test_alexa_method_selects_targets(mock_hass, superconfig) -> None:  # type: ignore
+def test_alexa_transport_selects_targets(mock_hass, superconfig) -> None:  # type: ignore
     """Test on_notify_alexa."""
-    uut = AlexaMediaPlayerDeliveryMethod(mock_hass, superconfig, {"announce": {CONF_METHOD: METHOD_ALEXA_MEDIA_PLAYER}})
+    uut = AlexaMediaPlayerTransport(mock_hass, superconfig, {"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}})
     assert uut.select_targets(Target(["switch.alexa_1", "media_player.hall_1"])).entity_ids == ["media_player.hall_1"]

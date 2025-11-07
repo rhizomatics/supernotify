@@ -4,22 +4,22 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import METHOD_ALEXA_MEDIA_PLAYER
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify import TRANSPORT_ALEXA_MEDIA_PLAYER
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    DeliveryMethod,
+    Transport,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
+class AlexaMediaPlayerTransport(Transport):
     """Notify via Amazon Alexa announcements
 
     options:
@@ -27,7 +27,7 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
 
     """
 
-    method = METHOD_ALEXA_MEDIA_PLAYER
+    transport = TRANSPORT_ALEXA_MEDIA_PLAYER
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -37,7 +37,7 @@ class AlexaMediaPlayerDeliveryMethod(DeliveryMethod):
         return "notify.alexa_media"
 
     def validate_action(self, action: str | None) -> bool:
-        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
     @property

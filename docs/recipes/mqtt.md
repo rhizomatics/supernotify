@@ -6,14 +6,14 @@ Notify by publishing to an MQTT topic, for example a siren that doesn't support 
 
 ## Implementation
 
-Uses the **Generic** method.
+Uses the **Generic** transport.
 
 ## Example Configuration
 
 ```yaml
 delivery:
   downstairs_siren:
-      method: generic
+      transport: generic
       action: mqtt.publish
       selection: scenario
       priority:

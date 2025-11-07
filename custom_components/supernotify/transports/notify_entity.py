@@ -4,20 +4,20 @@ from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 
-from custom_components.supernotify import METHOD_NOTIFY_ENTITY
-from custom_components.supernotify.delivery_method import DeliveryMethod
+from custom_components.supernotify import TRANSPORT_NOTIFY_ENTITY
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 
 RE_NOTIFY_ENTITY = r"notify.\.[A-Za-z0-9_]+"
 
 
-class NotifyEntityDeliveryMethod(DeliveryMethod):
+class NotifyEntityTransport(Transport):
     """Call any notify entity"""
 
-    method = METHOD_NOTIFY_ENTITY
+    transport = TRANSPORT_NOTIFY_ENTITY
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -33,7 +33,7 @@ class NotifyEntityDeliveryMethod(DeliveryMethod):
         action_data = envelope.core_action_data()
         targets = envelope.target.entity_ids or []
         if not targets:
-            raise ValueError("No targets for notify entity method")
+            raise ValueError("No targets for notify entity transport")
         target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets}
         # area_id
         # device_id

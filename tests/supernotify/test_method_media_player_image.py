@@ -1,11 +1,11 @@
-from homeassistant.const import CONF_DEFAULT, CONF_METHOD, CONF_NAME
+from homeassistant.const import CONF_DEFAULT, CONF_NAME
 
-from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, METHOD_MEDIA
+from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, CONF_TRANSPORT, TRANSPORT_MEDIA
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.media_player_image import MediaPlayerImageDeliveryMethod
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.media_player_image import MediaPlayerImageTransport
 
 
 async def test_notify_media_image(mock_hass, mock_people_registry) -> None:  # type: ignore
@@ -13,11 +13,11 @@ async def test_notify_media_image(mock_hass, mock_people_registry) -> None:  # t
     context = Context()
     context.hass_external_url = "https://myserver"
 
-    uut = MediaPlayerImageDeliveryMethod(
+    uut = MediaPlayerImageTransport(
         mock_hass,
         context,
         mock_people_registry,
-        {"alexa_show": {CONF_METHOD: METHOD_MEDIA, CONF_NAME: "alexa_show", CONF_DEFAULT: True}},
+        {"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA, CONF_NAME: "alexa_show", CONF_DEFAULT: True}},
     )
     await uut.initialize()
     context.configure_for_tests([uut])

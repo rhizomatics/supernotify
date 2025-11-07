@@ -9,7 +9,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ENABLED, CONF_METHOD
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ENABLED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition
 from homeassistant.helpers.typing import ConfigType
@@ -19,7 +19,7 @@ from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, MessageOnlyPolicy, Target
 
-from . import CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN, CONF_TARGET_REQUIRED
+from . import CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN, CONF_TARGET_REQUIRED, CONF_TRANSPORT
 from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,14 +31,14 @@ OPTION_JPEG = "jpeg_opts"
 OPTION_TARGET_CATEGORIES = "target_categories"
 
 
-class DeliveryMethod:
-    """Base class for delivery methods.
+class Transport:
+    """Base class for delivery transports.
 
     Sub classes integrste with Home Assistant notification services
     or alternative notification mechanisms.
     """
 
-    method: str
+    transport: str
 
     @abstractmethod
     def __init__(
@@ -59,7 +59,7 @@ class DeliveryMethod:
         if isinstance(delivery_defaults, dict):
             delivery_defaults = DeliveryConfig(delivery_defaults)  # test support
         self.delivery_defaults: DeliveryConfig = delivery_defaults or DeliveryConfig({})
-        self.delivery_defaults.apply_method_options(self.default_options)
+        self.delivery_defaults.apply_transport_options(self.default_options)
         if self.delivery_defaults.action is None:
             self.delivery_defaults.action = self.default_action
         self._target_required: bool | None = target_required
@@ -73,8 +73,8 @@ class DeliveryMethod:
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
-        if self.method is None:
-            raise ValueError("No delivery method configured")
+        if self.transport is None:
+            raise ValueError("No transport configured")
         self.valid_deliveries = await self.initialize_deliveries()
         if self.device_discovery:
             for domain in self.device_domain:
@@ -112,17 +112,17 @@ class DeliveryMethod:
         }
 
     def validate_action(self, action: str | None) -> bool:
-        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.default_action
 
     async def initialize_deliveries(self) -> dict[str, Delivery]:
-        """Validate and initialize deliveries at startup for this method"""
+        """Validate and initialize deliveries at startup for this transport"""
         valid_deliveries: dict[str, Delivery] = {}
 
         for d, dc in self._delivery_configs.items():
-            if dc.get(CONF_METHOD) != self.method:
+            if dc.get(CONF_TRANSPORT) != self.transport:
                 # this *should* only happen in unit tests
-                _LOGGER.warning(f"SUPERNOTIFY Unexpected delivery {d} for method {self.method}")
+                _LOGGER.warning(f"SUPERNOTIFY Unexpected delivery {d} for transport {self.transport}")
                 continue
             # don't care about ENABLED here since disabled deliveries can be overridden later
             delivery = Delivery(d, dc, self)
@@ -138,16 +138,16 @@ class DeliveryMethod:
                     _LOGGER.debug("SUPERNOTIFY Multiple default deliveries, skipping %s", d)
 
         if not self.default_delivery:
-            method_definition: DeliveryConfig = self.delivery_defaults
-            if method_definition:
-                _LOGGER.info("SUPERNOTIFY Building default delivery for %s from method %s", self.method, method_definition)
-                self.default_delivery = Delivery(f"DEFAULT_{self.method}", {}, self)
+            transport_definition: DeliveryConfig = self.delivery_defaults
+            if transport_definition:
+                _LOGGER.info("SUPERNOTIFY Building default delivery for %s from transport %s", self.transport, transport_definition)
+                self.default_delivery = Delivery(f"DEFAULT_{self.transport}", {}, self)
             else:
-                _LOGGER.debug("SUPERNOTIFY No default delivery or method_definition for method %s", self.method)
+                _LOGGER.debug("SUPERNOTIFY No default delivery or transport_definition for transport %s", self.transport)
 
         _LOGGER.debug(
-            "SUPERNOTIFY Validated method %s, default delivery %s, default action %s, valid deliveries: %s",
-            self.method,
+            "SUPERNOTIFY Validated transport %s, default delivery %s, default action %s, valid deliveries: %s",
+            self.transport,
             self.default_delivery,
             self.delivery_defaults.action,
             valid_deliveries,
@@ -156,7 +156,7 @@ class DeliveryMethod:
 
     def attributes(self) -> dict[str, Any]:
         return {
-            CONF_METHOD: self.method,
+            CONF_TRANSPORT: self.transport,
             CONF_ENABLED: self.enabled,
             CONF_TARGET_REQUIRED: self.target_required,
             CONF_DEVICE_DOMAIN: self.device_domain,
@@ -246,7 +246,7 @@ class DeliveryMethod:
             envelope.failed_calls.append(
                 CallRecord(time.time() - start_time, domain, service, action_data, target_data, exception=str(e))
             )
-            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.method, qualified_action, action_data)
+            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.transport, qualified_action, action_data)
             envelope.errored += 1
             envelope.delivery_error = format_exception(e)
             return False
@@ -262,7 +262,7 @@ class DeliveryMethod:
         return None
 
     def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
-        """Simplify text for delivery methods with speaking or plain text interfaces"""
+        """Simplify text for delivery transports with speaking or plain text interfaces"""
         if not text:
             return None
         if strip_urls:

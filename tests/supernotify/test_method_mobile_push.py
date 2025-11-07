@@ -8,23 +8,23 @@ from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import (
     ATTR_PRIORITY,
-    CONF_METHOD,
     CONF_PRIORITY,
+    CONF_TRANSPORT,
     DOMAIN,
-    METHOD_MOBILE_PUSH,
     PRIORITY_CRITICAL,
     PRIORITY_HIGH,
     PRIORITY_LOW,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
+    TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
 from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.snoozer import Snooze
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
@@ -34,7 +34,7 @@ async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant, mock_p
     """Test on_notify_mobile_push."""
     context = Context()
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"media_test": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.deliver(
@@ -87,7 +87,7 @@ async def test_on_notify_mobile_push_with_explicit_target(
     """Test on_notify_mobile_push."""
     context = Context()
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"media_test": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.deliver(
@@ -120,7 +120,7 @@ async def test_on_notify_mobile_push_with_person_derived_targets(
     await context.initialize()
     n = Notification(context, mock_people_registry, message="hello there", title="testing")
     await n.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {})
+    uut = MobilePushTransport(mock_hass, context, mock_people_registry, {})
     recipients: list[Target] = n.generate_recipients("dummy", uut)
     assert len(recipients) == 1
     assert len(recipients[0].actions) == 1
@@ -135,7 +135,7 @@ async def test_on_notify_mobile_push_with_critical_priority(
         recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}]
     )
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"default": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     await uut.initialize()
@@ -177,7 +177,7 @@ async def test_priority_interpretation(
     }
     context = Context()
     await context.initialize()
-    uut = MobilePushDeliveryMethod(mock_hass, context, mock_people_registry, {"default": {CONF_METHOD: METHOD_MOBILE_PUSH}})
+    uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
     e: Envelope = Envelope(
@@ -198,7 +198,7 @@ INTEGRATION_CONFIG = {
     "name": DOMAIN,
     "platform": DOMAIN,
     "delivery": {
-        "push": {CONF_METHOD: METHOD_MOBILE_PUSH},
+        "push": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
     },
     "recipients": [{"person": "person.house_owner", "mobile_devices": {"notify_action": "notify.mobile_app_new_iphone"}}],
 }
@@ -231,7 +231,7 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
 async def test_action_title(
     mock_hass: HomeAssistant, superconfig: Context, local_server: HTTPServer, mock_people_registry: PeopleRegistry
 ) -> None:
-    uut = MobilePushDeliveryMethod(mock_hass, superconfig, mock_people_registry, {})
+    uut = MobilePushTransport(mock_hass, superconfig, mock_people_registry, {})
     action_url = local_server.url_for("/action_goes_here")
     local_server.expect_oneshot_request("/action_goes_here").respond_with_data(
         "<html><title>my old action page</title><html>", content_type="text/html"
@@ -248,7 +248,7 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets(
     mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
     """Test on_notify_mobile_push."""
-    uut = MobilePushDeliveryMethod(mock_context.hass, mock_context, mock_people_registry, {})
+    uut = MobilePushTransport(mock_context.hass, mock_context, mock_people_registry, {})
     e = Envelope(
         "",
         Notification(mock_context, mock_people_registry, message="hello there", title="testing"),

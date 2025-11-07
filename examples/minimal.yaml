@@ -3,5 +3,5 @@
     platform: supernotify
     delivery:
       email:
-        method: email
+        transport: email
         action: notify.smtp

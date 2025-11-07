@@ -53,8 +53,8 @@ CONF_TEMPLATE = "template"
 CONF_DELIVERY_DEFAULTS = "delivery_defaults"
 CONF_LINKS = "links"
 CONF_PERSON = "person"
-CONF_METHOD = "method"
-CONF_METHODS = "methods"
+CONF_TRANSPORT = "transport"
+CONF_TRANSPORTS = "transports"
 CONF_DELIVERY = "delivery"
 CONF_SELECTION = "selection"
 
@@ -167,29 +167,29 @@ PRIORITY_MEDIUM = "medium"
 PRIORITY_LOW = "low"
 
 PRIORITY_VALUES = [PRIORITY_LOW, PRIORITY_MEDIUM, PRIORITY_HIGH, PRIORITY_CRITICAL]
-METHOD_SMS = "sms"
-METHOD_MQTT = "mqtt"
-METHOD_EMAIL = "email"
-METHOD_ALEXA = "alexa_devices"
-METHOD_ALEXA_MEDIA_PLAYER = "alexa_media_player"
-METHOD_MOBILE_PUSH = "mobile_push"
-METHOD_MEDIA = "media"
-METHOD_CHIME = "chime"
-METHOD_GENERIC = "generic"
-METHOD_NOTIFY_ENTITY = "notify_entity"
-METHOD_PERSISTENT = "persistent"
-METHOD_VALUES = [
-    METHOD_SMS,
-    METHOD_MQTT,
-    METHOD_ALEXA,
-    METHOD_ALEXA_MEDIA_PLAYER,
-    METHOD_MOBILE_PUSH,
-    METHOD_CHIME,
-    METHOD_EMAIL,
-    METHOD_MEDIA,
-    METHOD_PERSISTENT,
-    METHOD_GENERIC,
-    METHOD_NOTIFY_ENTITY,
+TRANSPORT_SMS = "sms"
+TRANSPORT_MQTT = "mqtt"
+TRANSPORT_EMAIL = "email"
+TRANSPORT_ALEXA = "alexa_devices"
+TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
+TRANSPORT_MOBILE_PUSH = "mobile_push"
+TRANSPORT_MEDIA = "media"
+TRANSPORT_CHIME = "chime"
+TRANSPORT_GENERIC = "generic"
+TRANSPORT_NOTIFY_ENTITY = "notify_entity"
+TRANSPORT_PERSISTENT = "persistent"
+TRANSPORT_VALUES = [
+    TRANSPORT_SMS,
+    TRANSPORT_MQTT,
+    TRANSPORT_ALEXA,
+    TRANSPORT_ALEXA_MEDIA_PLAYER,
+    TRANSPORT_MOBILE_PUSH,
+    TRANSPORT_CHIME,
+    TRANSPORT_EMAIL,
+    TRANSPORT_MEDIA,
+    TRANSPORT_PERSISTENT,
+    TRANSPORT_GENERIC,
+    TRANSPORT_NOTIFY_ENTITY,
 ]
 
 SCENARIO_DEFAULT = "DEFAULT"
@@ -233,7 +233,7 @@ LINK_SCHEMA = vol.Schema({
     vol.Required(CONF_DESCRIPTION): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 })
-DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Method Defaults and Delivery definitions
+DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
     vol.Optional(CONF_OPTIONS): dict,
@@ -243,7 +243,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Method Defaults and Delivery 
 })
 DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
-    vol.Required(CONF_METHOD): vol.In(METHOD_VALUES),
+    vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
     vol.Optional(CONF_TEMPLATE): cv.string,
     vol.Optional(CONF_DEFAULT, default=False): cv.boolean,  # should this delivery be implicitly selected
     vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
@@ -252,7 +252,7 @@ DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
     vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
 })
-METHOD_SCHEMA = vol.Schema({
+TRANSPORT_SCHEMA = vol.Schema({
     vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
@@ -347,7 +347,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
     vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),
     vol.Optional(CONF_SCENARIOS, default=dict): {cv.string: SCENARIO_SCHEMA},
-    vol.Optional(CONF_METHODS, default=dict): {cv.string: METHOD_SCHEMA},
+    vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
     vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
 })
 SUPERNOTIFY_SCHEMA = PLATFORM_SCHEMA

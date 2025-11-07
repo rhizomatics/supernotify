@@ -38,7 +38,7 @@ more_attention:
 ```
 
 In this example, selecting the scenario by name in a notification call switches on
-a set of delivery methods, which saves repetitive declaration in many notification calls. Delivery
+a set of delivery transports, which saves repetitive declaration in many notification calls. Delivery
 Selection is made `implicit` so not switching off any other deliveries that would have applied.
 
 ```yaml

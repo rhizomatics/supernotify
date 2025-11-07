@@ -3,23 +3,23 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import ATTR_PHONE, CONF_PHONE_NUMBER, METHOD_SMS
-from custom_components.supernotify.delivery_method import (
+from custom_components.supernotify import ATTR_PHONE, CONF_PHONE_NUMBER, TRANSPORT_SMS
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    DeliveryMethod,
+    Transport,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class SMSDeliveryMethod(DeliveryMethod):
-    method = METHOD_SMS
+class SMSTransport(Transport):
+    transport = TRANSPORT_SMS
     MAX_MESSAGE_LENGTH = 158
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -34,7 +34,7 @@ class SMSDeliveryMethod(DeliveryMethod):
         }
 
     def validate_action(self, action: str | None) -> bool:
-        """Override in subclass if delivery method has fixed action or doesn't require one"""
+        """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
     def select_targets(self, target: Target) -> Target:

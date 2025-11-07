@@ -12,7 +12,7 @@ notify:
       mqtt_retain: False
     delivery:
       html_email:
-        method: email
+        transport: email
         template: default.html.j2
         condition:
             condition: or
@@ -32,41 +32,41 @@ notify:
           - low
 
       backup_mail:
-        method: email
+        transport: email
         selection:
           - fallback
       text_message:
-        method: sms
+        transport: sms
         action: notify.mikrotik_sms
         occupancy: only_out
         priority:
           - critical
           - high
       alexa_announce:
-        method: alexa_devices
+        transport: alexa_devices
         occupancy: any_in
       mobile_push:
-        method: mobile_push
+        transport: mobile_push
       expensive_api_call:
-        method: generic
+        transport: generic
         action: notify.megacorp_api
         selection:
           - scenario
           - fallback_on_error
       alexa_show:
-        method: media
+        transport: media
         action: media_player.play_media
         target:
           - media_player.kitchen_2
       play_chimes:
-        method: chime
+        transport: chime
         target:
           - script.chime_ding_dong
           - switch.chime_sax
           - media_player.echo_lobby
         occupancy: any_in
       alexa_red_alert:
-        method: generic
+        transport: generic
         action: notify.alexa_media_player
         selection: scenario
         message: '<audio src="soundbank://soundlibrary/home/scifi/amzn_sfx_scifi_alarm_04"/>'
@@ -76,13 +76,13 @@ notify:
         target: group.alexa_devices
 
       doorbell_chime_alexa:
-        method: chime
+        transport: chime
         target:
           - media_player.echo_lobby
         data:
           chime_tune: amzn_sfx_doorbell_chime_01
       upstairs_siren:
-        method: generic
+        transport: generic
         action: mqtt.publish
         priority:
           - critical
@@ -90,7 +90,7 @@ notify:
           topic: zigbee2mqtt/Upstairs Siren/set
           payload: '{"warning": {"duration": 30, "mode": "emergency", "strobe": true }}'
       sleigh_bells:
-        method: chime
+        transport: chime
         alias: Xmas
         target:
           - media_player.echo_lobby
@@ -131,7 +131,7 @@ notify:
         delivery:
           text_message:
             enabled: false
-    methods:
+    transports:
       email:
         delivery_defaults:
           action: notify.smtp

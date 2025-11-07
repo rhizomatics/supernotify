@@ -9,8 +9,8 @@ from custom_components.supernotify import (
     ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
-    CONF_METHOD,
     CONF_SELECTION,
+    CONF_TRANSPORT,
     DOMAIN,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
@@ -21,12 +21,12 @@ from custom_components.supernotify import (
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.methods.generic import GenericDeliveryMethod
 from custom_components.supernotify.model import ConditionVariables
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.notify import METHODS
+from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario, ScenarioRegistry
+from custom_components.supernotify.transports.generic import GenericTransport
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,8 +175,8 @@ async def test_scenario_templating(hass: HomeAssistant, mock_people_registry: Pe
     reg = ScenarioRegistry(config["scenarios"])
     context = Context(
         hass,
-        deliveries={"smtp": {CONF_METHOD: "email"}, "alexa": {CONF_METHOD: "alexa_devices"}},
-        method_types=METHODS,
+        deliveries={"smtp": {CONF_TRANSPORT: "email"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}},
+        transport_types=TRANSPORTS,
         people_registry=mock_people_registry,
     )
     await context.initialize()
@@ -223,9 +223,7 @@ async def test_scenario_constraint(
         "Mostly": ["siren"],
         "Alarm": ["chime"],
     }
-    mock_context.deliveries["siren"] = Delivery(
-        "siren", {}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry)
-    )
+    mock_context.deliveries["siren"] = Delivery("siren", {}, GenericTransport(mock_hass, mock_context, mock_people_registry))
     mock_context.scenario_registry.scenarios = {
         "Alarm": Scenario("Alarm", {}, mock_hass),
         "Mostly": Scenario(
@@ -266,7 +264,7 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
         "DevNull": [],
     }
     mock_context.deliveries["siren"] = Delivery(
-        "siren", {CONF_SELECTION: [SELECTION_BY_SCENARIO]}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry)
+        "siren", {CONF_SELECTION: [SELECTION_BY_SCENARIO]}, GenericTransport(mock_hass, mock_context, mock_people_registry)
     )
     mock_context.deliveries["plain_email"].selection = [SELECTION_BY_SCENARIO]
     mock_context.deliveries["chime"].selection = [SELECTION_BY_SCENARIO]

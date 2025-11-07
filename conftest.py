@@ -28,13 +28,13 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.delivery_method import DeliveryMethod
-from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
-from custom_components.supernotify.methods.email import EmailDeliveryMethod
-from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.snoozer import Snoozer
+from custom_components.supernotify.transport import Transport
+from custom_components.supernotify.transports.chime import ChimeTransport
+from custom_components.supernotify.transports.email import EmailTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
 
 class MockableHomeAssistant(HomeAssistant):
@@ -124,9 +124,9 @@ def mock_context(
     context.template_path = Path("/templates_here")
 
     context.deliveries = {
-        "plain_email": Delivery("plain_email", {}, EmailDeliveryMethod(mock_hass, context, mock_people_registry)),
-        "mobile": Delivery("mobile", {}, MobilePushDeliveryMethod(mock_hass, context, mock_people_registry)),
-        "chime": Delivery("chime", {}, ChimeDeliveryMethod(mock_hass, context, mock_people_registry)),
+        "plain_email": Delivery("plain_email", {}, EmailTransport(mock_hass, context, mock_people_registry)),
+        "mobile": Delivery("mobile", {}, MobilePushTransport(mock_hass, context, mock_people_registry)),
+        "chime": Delivery("chime", {}, ChimeTransport(mock_hass, context, mock_people_registry)),
     }
     return context
 
@@ -139,8 +139,8 @@ def mock_notify(hass: HomeAssistant) -> MockAction:
 
 
 @pytest.fixture
-def mock_method() -> AsyncMock:
-    m = AsyncMock(spec=DeliveryMethod)
+def mock_transport() -> AsyncMock:
+    m = AsyncMock(spec=Transport)
     m.name = "unit_test"
     m.delivery_config = Mock(return_value={})
     m.deliver = AsyncMock(return_value=True)
