@@ -179,7 +179,7 @@ class Notification(ArchivableObject):
             self.suppress(SuppressionReason.NO_SCENARIO)
         else:
             for s in enabled_scenario_names:
-                scenario_obj = self.context.scenarios.get(s)
+                scenario_obj = self.context.scenario_registry.scenarios.get(s)
                 if scenario_obj is not None:
                     self.enabled_scenarios[s] = scenario_obj
 
@@ -217,9 +217,9 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario_name in self.enabled_scenarios:
-                scenario_enable_deliveries.extend(self.context.delivery_by_scenario.get(scenario_name, ()))
+                scenario_enable_deliveries.extend(self.context.scenario_registry.delivery_by_scenario.get(scenario_name, ()))
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                default_enable_deliveries = self.context.delivery_by_scenario.get(SCENARIO_DEFAULT, [])
+                default_enable_deliveries = self.context.scenario_registry.delivery_by_scenario.get(SCENARIO_DEFAULT, [])
 
         override_enable_deliveries = []
         override_disable_deliveries = []
@@ -271,7 +271,9 @@ class Notification(ArchivableObject):
     def _render_scenario_templates(
         self, original: str | None, template_field: str, matching_ctx: str, delivery_name: str
     ) -> str | None:
-        template_scenario_names = self.context.content_scenario_templates.get(template_field, {}).get(delivery_name, [])
+        template_scenario_names = self.context.scenario_registry.content_scenario_templates.get(template_field, {}).get(
+            delivery_name, []
+        )
         if not template_scenario_names:
             return original
         context_vars = self.condition_variables.as_dict() if self.condition_variables else {}
@@ -362,12 +364,12 @@ class Notification(ArchivableObject):
                 _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
         if self.delivered == 0 and self.errored == 0:
-            for delivery in self.context.fallback_by_default:
+            for delivery in self.context.fallback_by_default_deliveries:
                 if delivery.name not in self.selected_delivery_names:
                     await self.call_delivery_method(delivery)
 
         if self.delivered == 0 and self.errored > 0:
-            for delivery in self.context.fallback_on_error:
+            for delivery in self.context.fallback_on_error_deliveries:
                 if delivery.name not in self.selected_delivery_names:
                     await self.call_delivery_method(delivery)
 
@@ -439,11 +441,13 @@ class Notification(ArchivableObject):
 
     def delivery_scenarios(self, delivery_name: str) -> dict[str, Scenario]:
         return {
-            s: obj for s, obj in self.enabled_scenarios.items() if delivery_name in self.context.delivery_by_scenario.get(s, [])
+            s: obj
+            for s, obj in self.enabled_scenarios.items()
+            if delivery_name in self.context.scenario_registry.delivery_by_scenario.get(s, [])
         }
 
     async def select_scenarios(self) -> list[str]:
-        return [s.name for s in self.context.scenarios.values() if await s.evaluate(self.condition_variables)]
+        return [s.name for s in self.context.scenario_registry.scenarios.values() if await s.evaluate(self.condition_variables)]
 
     def merge(self, attribute: str, delivery_name: str) -> dict[str, Any]:
         delivery: dict[str, Any] = self.delivery_overrides.get(delivery_name, {})

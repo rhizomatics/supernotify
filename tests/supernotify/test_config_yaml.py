@@ -75,7 +75,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert "html_email" in uut.context.deliveries
     assert "backup_mail" in uut.context.deliveries
-    assert "backup_mail" not in uut.context.delivery_by_scenario[SCENARIO_DEFAULT]
+    assert "backup_mail" not in uut.context.scenario_registry.delivery_by_scenario[SCENARIO_DEFAULT]
     assert "text_message" in uut.context.deliveries
     assert "alexa_announce" in uut.context.deliveries
     assert "mobile_push" in uut.context.deliveries
@@ -85,7 +85,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "sleigh_bells" in uut.context.deliveries
     assert "upstairs_siren" in uut.context.deliveries
     assert "expensive_api_call" in uut.context.deliveries
-    assert "expensive_api_call" not in uut.context.delivery_by_scenario[SCENARIO_DEFAULT]
+    assert "expensive_api_call" not in uut.context.scenario_registry.delivery_by_scenario[SCENARIO_DEFAULT]
 
     assert len(uut.context.deliveries) == 12
 

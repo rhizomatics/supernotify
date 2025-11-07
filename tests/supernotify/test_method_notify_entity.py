@@ -41,9 +41,6 @@ async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "send_message",
-        service_data={
-            ATTR_MESSAGE: "hello there",
-            ATTR_TITLE: "testing"
-        },
-        target={ATTR_ENTITY_ID: ["notify.pong"]}
+        service_data={ATTR_MESSAGE: "hello there", ATTR_TITLE: "testing"},
+        target={ATTR_ENTITY_ID: ["notify.pong"]},
     )

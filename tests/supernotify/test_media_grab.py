@@ -104,7 +104,7 @@ async def test_snap_image(mock_context: Context, image_type: str) -> None:
         retrieved_image = Image.open(snap_image_path)
 
     original_image = Image.open(image_path)
-    assert 'exif' not in retrieved_image.info
+    assert "exif" not in retrieved_image.info
     assert retrieved_image.size == original_image.size
     if image_type in UNLOSSY_FORMATS:
         diff = ImageChops.difference(retrieved_image, original_image)

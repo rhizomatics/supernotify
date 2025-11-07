@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.1.5
+- New tests for mqtt and notify entity handling and media grabbing
+
 ## 1.1.4
 - Explicit delivery selection in action overrides scenario disablement
 - Extended and reorganized documentation

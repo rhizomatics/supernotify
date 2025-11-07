@@ -7,6 +7,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.scenario import ScenarioRegistry
 
 from .doubles_lib import DummyDeliveryMethod
 from .hass_setup_lib import register_mobile_app
@@ -17,6 +18,8 @@ async def test_default_recipients(mock_hass, mock_people_registry) -> None:  # t
     dummy = DummyDeliveryMethod(mock_hass, context, mock_people_registry, {})
     context.configure_for_tests(method_instances=[dummy], create_default_scenario=True)
     await context.initialize()
+    context.scenario_registry = ScenarioRegistry({})
+    await context.scenario_registry.initialize(context.deliveries, context.default_deliveries, {}, mock_hass)
 
     uut = Notification(context, mock_people_registry)
     await uut.initialize()
@@ -29,6 +32,8 @@ async def test_default_recipients_with_override(mock_hass, mock_people_registry)
     dummy = DummyDeliveryMethod(mock_hass, context, mock_people_registry, {})
     context.configure_for_tests(method_instances=[dummy], create_default_scenario=True)
     await context.initialize()
+    context.scenario_registry = ScenarioRegistry({})
+    await context.scenario_registry.initialize(context.deliveries, context.default_deliveries, {}, mock_hass)
 
     uut = Notification(context, mock_people_registry, "testing", action_data={CONF_RECIPIENTS: ["person.new_home_owner"]})
     await uut.initialize()

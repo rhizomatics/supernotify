@@ -26,7 +26,7 @@ from custom_components.supernotify.model import ConditionVariables
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import METHODS
 from custom_components.supernotify.people import PeopleRegistry
-from custom_components.supernotify.scenario import Scenario
+from custom_components.supernotify.scenario import Scenario, ScenarioRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
     assert await uut.evaluate(ConditionVariables([], [], [], PRIORITY_CRITICAL, {}))
 
 
-async def test_select_scenarios(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
+async def test_select_scenarios(hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     config = PLATFORM_SCHEMA({
         "platform": "supernotify",
         "scenarios": {
@@ -125,11 +125,12 @@ async def test_select_scenarios(hass: HomeAssistant, mock_people_registry: Peopl
             },
         },
     })
-    context = Context(hass, scenarios=config["scenarios"])
+    reg = ScenarioRegistry(config["scenarios"])
     hass.states.async_set("sensor.outside_temperature", "15")
-    await context.initialize()
-    assert len(context.scenarios) == 3
-    uut = Notification(context, mock_people_registry)
+    await reg.initialize({}, [], {}, hass)
+    assert len(reg.scenarios) == 3
+    mock_context.scenario_registry = reg
+    uut = Notification(mock_context, mock_people_registry)
     await uut.initialize()
     hass.states.async_set("sensor.outside_temperature", "42")
     enabled = await uut.select_scenarios()
@@ -171,14 +172,16 @@ async def test_scenario_templating(hass: HomeAssistant, mock_people_registry: Pe
             },
         },
     })
+    reg = ScenarioRegistry(config["scenarios"])
     context = Context(
         hass,
-        scenarios=config["scenarios"],
         deliveries={"smtp": {CONF_METHOD: "email"}, "alexa": {CONF_METHOD: "alexa_devices"}},
         method_types=METHODS,
         people_registry=mock_people_registry,
     )
     await context.initialize()
+    await reg.initialize(context.deliveries, [], {}, hass)
+    context.scenario_registry = reg
     uut = Notification(
         context,
         mock_people_registry,
@@ -215,11 +218,15 @@ async def test_scenario_templating(hass: HomeAssistant, mock_people_registry: Pe
 async def test_scenario_constraint(
     mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
-    mock_context.delivery_by_scenario = {SCENARIO_DEFAULT: ["plain_email", "mobile"], "Mostly": ["siren"], "Alarm": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {
+        SCENARIO_DEFAULT: ["plain_email", "mobile"],
+        "Mostly": ["siren"],
+        "Alarm": ["chime"],
+    }
     mock_context.deliveries["siren"] = Delivery(
         "siren", {}, GenericDeliveryMethod(mock_hass, mock_context, mock_people_registry)
     )
-    mock_context.scenarios = {
+    mock_context.scenario_registry.scenarios = {
         "Alarm": Scenario("Alarm", {}, mock_hass),
         "Mostly": Scenario(
             "Mostly",
@@ -252,7 +259,7 @@ async def test_scenario_constraint(
 
 
 async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    mock_context.delivery_by_scenario = {
+    mock_context.scenario_registry.delivery_by_scenario = {
         SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
         "Alarm": ["chime"],
@@ -265,7 +272,7 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
     mock_context.deliveries["chime"].selection = [SELECTION_BY_SCENARIO]
     mock_context.deliveries["mobile"].selection = [SELECTION_BY_SCENARIO]
 
-    mock_context.scenarios = {
+    mock_context.scenario_registry.scenarios = {
         "Alarm": Scenario("Alarm", {}, mock_context.hass),  # type: ignore
         "DevNull": Scenario("DevNull", {}, mock_context.hass),  # type: ignore
         "Mostly": Scenario(

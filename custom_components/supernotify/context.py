@@ -18,19 +18,15 @@ from . import (
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
     CONF_CAMERA,
-    CONF_DATA,
-    DELIVERY_SELECTION_IMPLICIT,
     DOMAIN,
-    SCENARIO_DEFAULT,
-    SCENARIO_TEMPLATE_ATTRS,
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
 )
 from .archive import NotificationArchive
-from .common import ensure_list, safe_get
+from .common import ensure_list
 from .model import MethodConfig
-from .scenario import Scenario
+from .scenario import ScenarioRegistry
 from .snoozer import Snoozer
 
 if TYPE_CHECKING:
@@ -96,6 +92,7 @@ class Context:
             _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.hass_internal_url)
 
         self.people_registry: PeopleRegistry | None = people_registry
+        self.scenario_registry: ScenarioRegistry = ScenarioRegistry(scenarios or {})
         self.links: list[dict[str, Any]] = ensure_list(links)
         # raw configured deliveries
         self._deliveries: ConfigType = deliveries if isinstance(deliveries, dict) else {}
@@ -121,32 +118,21 @@ class Context:
         self._method_configs: dict[str, MethodConfig] = (
             {n: MethodConfig(n, c) for n, c in method_configs.items()} if method_configs else {}
         )
-        self.scenarios: dict[str, Scenario] = {}
-        self._config_scenarios: ConfigType = scenarios or {}
-        self.content_scenario_templates: ConfigType = {}
-        self.delivery_by_scenario: dict[str, list[str]] = {SCENARIO_DEFAULT: []}
-        self.fallback_on_error: list[Delivery] = []
-        self.fallback_by_default: list[Delivery] = []
+
+        self._fallback_on_error: list[Delivery] = []
+        self._fallback_by_default: list[Delivery] = []
+        self._default_deliveries: list[Delivery] = []
         self._entity_registry: entity_registry.EntityRegistry | None = None
         self._device_registry: device_registry.DeviceRegistry | None = None
         self._method_types: list[type[DeliveryMethod]] = method_types or []
         self.snoozer = Snoozer()
         # test harness support
-        self._create_default_scenario: bool = False
         self._method_instances: list[DeliveryMethod] | None = None
 
     async def initialize(self) -> None:
         await self._register_delivery_methods(
             delivery_methods=self._method_instances, delivery_method_classes=self._method_types
         )
-
-        if self._config_scenarios and self.hass:
-            for scenario_name, scenario_definition in self._config_scenarios.items():
-                scenario = Scenario(scenario_name, scenario_definition, self.hass)
-                if await scenario.validate(
-                    valid_deliveries=list(self.deliveries), valid_action_groups=list(self.mobile_actions)
-                ):
-                    self.scenarios[scenario_name] = scenario
 
         if self.template_path and not self.template_path.exists():
             _LOGGER.warning("SUPERNOTIFY template path not found at %s", self.template_path)
@@ -164,17 +150,13 @@ class Context:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
         if self.archive:
             await self.archive.initialize()
-        default_deliveries: list[Delivery] = await self.initialize_deliveries()
-        self.initialize_scenarios(default_deliveries, default_scenario=self._create_default_scenario)
 
-    async def update_for_entity_state(self) -> None:
-        default_deliveries: list[Delivery] = await self.initialize_deliveries()
-        self.initialize_scenarios(default_deliveries, default_scenario=self._create_default_scenario)
+        self.initialize_deliveries()
 
     def configure_for_tests(
         self, method_instances: list[DeliveryMethod] | None = None, create_default_scenario: bool = False
     ) -> None:
-        self._create_default_scenario = create_default_scenario
+        self.scenario_registry.default_scenario_for_testing = create_default_scenario
         self._method_instances = method_instances
 
     async def raise_issue(
@@ -198,51 +180,28 @@ class Context:
             learn_more_url=learn_more_url,
         )
 
-    async def initialize_deliveries(self) -> list[Delivery]:
-        default_deliveries: list[Delivery] = []
+    def initialize_deliveries(self) -> None:
         for delivery in self.deliveries.values():
             if delivery.enabled:
                 if SELECTION_FALLBACK_ON_ERROR in delivery.selection:
-                    self.fallback_on_error.append(delivery)
+                    self._fallback_on_error.append(delivery)
                 if SELECTION_FALLBACK in delivery.selection:
-                    self.fallback_by_default.append(delivery)
+                    self._fallback_by_default.append(delivery)
                 if SELECTION_DEFAULT in delivery.selection:
-                    default_deliveries.append(delivery)
+                    self._default_deliveries.append(delivery)
 
-        return default_deliveries
+    @property
+    def fallback_by_default_deliveries(self) -> list[Delivery]:
+        return [d for d in self._fallback_by_default if d.enabled]
 
-    def initialize_scenarios(self, default_deliveries: list[Delivery], default_scenario: bool = False) -> None:
-        self.delivery_by_scenario = {}
-        for scenario_name, scenario in self.scenarios.items():
-            if scenario.enabled:
-                self.delivery_by_scenario.setdefault(scenario_name, [])
-                if scenario.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                    scenario_deliveries: list[str] = [d.name for d in default_deliveries]
-                else:
-                    scenario_deliveries = []
-                scenario_definition_delivery = scenario.delivery
-                scenario_deliveries.extend(s for s in scenario_definition_delivery if s not in scenario_deliveries)
+    @property
+    def fallback_on_error_deliveries(self) -> list[Delivery]:
+        return [d for d in self._fallback_on_error if d.enabled]
 
-                for scenario_delivery in scenario_deliveries:
-                    if safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_ENABLED, True):
-                        if self.deliveries[scenario_delivery].enabled:
-                            self.delivery_by_scenario[scenario_name].append(scenario_delivery)
-
-                    scenario_delivery_config = safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_DATA, {})
-
-                    # extract message and title templates per scenario per delivery
-                    for template_field in SCENARIO_TEMPLATE_ATTRS:
-                        template_format = scenario_delivery_config.get(template_field)
-                        if template_format is not None:
-                            self.content_scenario_templates.setdefault(template_field, {})
-                            self.content_scenario_templates[template_field].setdefault(scenario_delivery, [])
-                            self.content_scenario_templates[template_field][scenario_delivery].append(scenario_name)
-
-        self.delivery_by_scenario[SCENARIO_DEFAULT] = [d.name for d in default_deliveries]
-        if default_scenario:
-            for d in self.deliveries.values():
-                if d.enabled and d.name not in self.delivery_by_scenario[SCENARIO_DEFAULT]:
-                    self.delivery_by_scenario[SCENARIO_DEFAULT].append(d.name)
+    @property
+    def default_deliveries(self) -> list[Delivery]:
+        """Deliveries switched on all the time for implicit selection"""
+        return [d for d in self._default_deliveries if d.enabled]
 
     async def _register_delivery_methods(
         self,
@@ -283,12 +242,6 @@ class Context:
                 issue_map={"delivery": bad_del.get(CONF_NAME), "method": bad_del.get(CONF_METHOD)},
             )
         _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self.deliveries.keys()))
-
-    def delivery_method(self, delivery_name: str) -> DeliveryMethod:
-        delivery: Delivery | None = self.deliveries.get(delivery_name)
-        if not delivery:
-            raise ValueError(f"SUPERNOTIFY No delivery {delivery}")
-        return delivery.method
 
     def discover_devices(self, discover_domain: str) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []

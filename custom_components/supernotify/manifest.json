@@ -1,7 +1,7 @@
 {
     "domain":"supernotify",
     "name":"Supernotify",
-    "version":"1.1.4",
+    "version":"1.1.5",
     "after_dependencies":["mobile_app"],
     "dependencies":["person"],
     "requirements":["Pillow","bs4","aiofiles","cachetools","httpx"

@@ -285,13 +285,13 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
 
 ## Customizing Delivery Methods
 
-### Options 
+### Options
 
 Most methods support an additional set of options, some common ones for handling titles
 or suppressing URLs, and some specific to a method.
 
 In this example, image attachments for emails get tuned ( since these are commonly needed, the email
-delivery method defaults to always having `progressive` and `optimize` being true, unless explcitly overridden)
+delivery method defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
 
 ```yaml
  email:
@@ -317,4 +317,3 @@ All of these set by passing an `options` block in Delivery config or Method defa
 |target_categories|generic            |Which targets to pass, e.g. `entity_id`,`email`,`other_id`.  |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.
-

@@ -14,7 +14,7 @@ Additionally a video clip can be referenced by `clip_url` where supported by a d
 
 ### PTZ ( Pan, Tilt, Zoom ) Camera Support
 
-Supernotify can ask a camera to move and zoom to a pre-set position befor an image snapshot is taken. So for
+Supernotify can ask a camera to move and zoom to a pre-set position before an image snapshot is taken. So for
 example, if a person rings the doorbell, a camera could zoom in to take a close-up for the notification.
 
 Set the (optional) PTZ preset referenced in the `data` section, whether in method, delivery or scenario config,
@@ -24,9 +24,9 @@ and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an add
 ### Automatically Fixing Camera Issues
 
 Some cameras, like Hikvision, add JPEG comment blocks which confuse the very simplistic media
-detection in the SMTP integration, and leads to spurious log entries. 
+detection in the SMTP integration, and leads to spurious log entries.
 
-Supernotify will automatically rewrite JPEGs into simpler standard forms to avoid this, and optionally `jpeg_opts` can be set, for example to reduce image quality for smaller email attachments. 
+Supernotify will automatically rewrite JPEGs into simpler standard forms to avoid this, and optionally `jpeg_opts` can be set, for example to reduce image quality for smaller email attachments.
 
 See the *Saving* section under **JPEG** on the [PIL Image Writer documentation[(https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#)] for the full set of options available.
 

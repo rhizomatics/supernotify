@@ -80,11 +80,13 @@ from .methods.sms import SMSDeliveryMethod
 from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry
+from .scenario import ScenarioRegistry
 
 if TYPE_CHECKING:
     from custom_components.supernotify.delivery import Delivery
 
     from .scenario import Scenario
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -332,8 +334,11 @@ class SuperNotificationAction(BaseNotificationService):
             METHODS,
         )
         self.people_registry = PeopleRegistry(hass, recipients, self.context.entity_registry(), self.context.device_registry())
+        self.scenario_registry = ScenarioRegistry(scenarios or {})
         # TODO: clean up this cyclical dependency
         self.context.people_registry = self.people_registry
+        self.context.scenario_registry = self.scenario_registry
+
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
         self.dupe_check_config: dict[str, Any] = dupe_check or {}
@@ -345,6 +350,9 @@ class SuperNotificationAction(BaseNotificationService):
     async def initialize(self) -> None:
         await self.context.initialize()
         self.people_registry.initialize()
+        await self.scenario_registry.initialize(
+            self.context.deliveries, self.context.default_deliveries, self.context.mobile_actions, self.hass
+        )
 
         self.expose_entities()
         self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
@@ -391,7 +399,7 @@ class SuperNotificationAction(BaseNotificationService):
             _LOGGER.info(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
             new_state: State | None = event.data["new_state"]
             if new_state and event.data["entity_id"].startswith(f"{DOMAIN}.scenario_"):
-                scenario: Scenario | None = self.context.scenarios.get(
+                scenario: Scenario | None = self.scenario_registry.scenarios.get(
                     event.data["entity_id"].replace(f"{DOMAIN}.scenario_", "")
                 )
                 if scenario is None:
@@ -445,13 +453,13 @@ class SuperNotificationAction(BaseNotificationService):
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
             if changes:
-                await self.context.update_for_entity_state()
+                self.scenario_registry.refresh(self.context.deliveries, self.context.default_deliveries)
                 _LOGGER.debug(f"SUPERNOTIFY event had {changes} changes triggering updates to states")
 
     def expose_entities(self) -> None:
         # Create on the fly entities for key internal config and state
 
-        for scenario in self.context.scenarios.values():
+        for scenario in self.scenario_registry.scenarios.values():
             self.hass.states.async_set(
                 f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(include_condition=False)
             )
@@ -528,7 +536,7 @@ class SuperNotificationAction(BaseNotificationService):
             )
 
     def enquire_deliveries_by_scenario(self) -> dict[str, list[str]]:
-        return self.context.delivery_by_scenario
+        return self.scenario_registry.delivery_by_scenario
 
     async def enquire_occupancy(self) -> dict[str, list[dict[str, Any]]]:
         return self.people_registry.determine_occupancy()
@@ -536,7 +544,7 @@ class SuperNotificationAction(BaseNotificationService):
     async def enquire_active_scenarios(self) -> list[str]:
         occupiers: dict[str, list[dict[str, Any]]] = self.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
-        return [s.name for s in self.context.scenarios.values() if await s.evaluate(cvars)]
+        return [s.name for s in self.scenario_registry.scenarios.values() if await s.evaluate(cvars)]
 
     async def trace_active_scenarios(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
         occupiers: dict[str, list[dict[str, Any]]] = self.people_registry.determine_occupancy()
@@ -548,7 +556,7 @@ class SuperNotificationAction(BaseNotificationService):
         enabled = []
         disabled = []
         dcvars = asdict(cvars)
-        for s in self.context.scenarios.values():
+        for s in self.scenario_registry.scenarios.values():
             if await s.trace(cvars):
                 enabled.append(safe_json(s.attributes(include_trace=True)))
             else:
@@ -556,7 +564,7 @@ class SuperNotificationAction(BaseNotificationService):
         return enabled, disabled, dcvars
 
     def enquire_scenarios(self) -> dict[str, dict[str, Any]]:
-        return {s.name: s.attributes(include_condition=False) for s in self.context.scenarios.values()}
+        return {s.name: s.attributes(include_condition=False) for s in self.scenario_registry.scenarios.values()}
 
     def enquire_snoozes(self) -> list[dict[str, Any]]:
         return self.context.snoozer.export()

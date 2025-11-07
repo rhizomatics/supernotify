@@ -33,6 +33,7 @@ from custom_components.supernotify.methods.chime import ChimeDeliveryMethod
 from custom_components.supernotify.methods.email import EmailDeliveryMethod
 from custom_components.supernotify.methods.mobile_push import MobilePushDeliveryMethod
 from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.snoozer import Snoozer
 
 
@@ -95,17 +96,28 @@ def mock_people_registry() -> PeopleRegistry:
 
 
 @pytest.fixture
-def mock_context(mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> Context:
+def mock_scenario_registry() -> ScenarioRegistry:
+    registry = Mock(spec=ScenarioRegistry)
+    registry.scenarios = {}
+    registry.delivery_by_scenario = {}
+    registry.content_scenario_templates = {}
+    return registry
+
+
+@pytest.fixture
+def mock_context(
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, mock_scenario_registry: ScenarioRegistry
+) -> Context:
     context = Mock(spec=Context)
     context.hass = mock_hass
-    context.scenarios = {}
+    context.scenario_registry = mock_scenario_registry
     context.people_registry = mock_people_registry
     context.cameras = {}
     context.snoozer = Snoozer()
-    context.delivery_by_scenario = {}
-    context.fallback_by_default = []
+    context.scenario_registry.delivery_by_scenario = {}
+    context._fallback_by_default = []
     context.mobile_actions = {}
-    context.content_scenario_templates = {}
+    context.scenario_registry.content_scenario_templates = {}
     context.hass_internal_url = "http://hass-dev"
     context.hass_external_url = "http://hass-dev.nabu.casa"
     context.media_path = Path("/nosuchpath")

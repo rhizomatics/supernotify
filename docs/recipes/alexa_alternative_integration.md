@@ -44,4 +44,3 @@ scenarios:
         alexa_announce:
         alexa_backup_announce:
 ```
-

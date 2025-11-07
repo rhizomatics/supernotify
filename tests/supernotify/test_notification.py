@@ -41,7 +41,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mo
     mock_context.deliveries["mobile"] = Delivery(
         "mobile", {"title": "mobile notification"}, MobilePushDeliveryMethod(mock_hass, mock_context, mock_people_registry)
     )
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
     uut = Notification(mock_context, mock_people_registry, "testing 123")
     await uut.initialize()
     assert uut.enabled_scenarios == {}
@@ -57,7 +57,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mo
 
 
 async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile", "chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile", "chime"]}
 
     # string forces explicit selection
     uut = Notification(
@@ -96,9 +96,9 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
 async def test_scenario_delivery(
     mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario, mock_people_registry: PeopleRegistry
 ) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "mockery": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "mockery": ["chime"]}
 
-    mock_context.scenarios = {"mockery": mock_scenario}
+    mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
     uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
@@ -107,7 +107,7 @@ async def test_scenario_delivery(
 async def test_explicit_list_of_deliveries(
     mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
 
     uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
@@ -209,7 +209,7 @@ async def test_build_targets_for_simple_case(mock_context: Context, mock_people_
 async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(
     mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
     uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile")
@@ -262,8 +262,7 @@ async def test_message_usage(
 ) -> None:
     delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
     mock_context.deliveries = {"push": delivery}
-    mock_context.delivery_by_scenario = {"DEFAULT": ["push"]}
-    mock_context.delivery_method.return_value = mock_method  # type: ignore[attr-defined]
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["push"]}
 
     uut = Notification(mock_context, mock_people_registry, "testing 123", title="the big title")
     await uut.initialize()
@@ -296,10 +295,10 @@ async def test_message_usage(
 
 
 async def test_merge(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    mock_context.scenarios = {
+    mock_context.scenario_registry.scenarios = {
         "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass)
     }
-    mock_context.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
     uut = Notification(
         mock_context,
         mock_people_registry,
