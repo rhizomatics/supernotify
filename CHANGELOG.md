@@ -2,6 +2,7 @@
 
 ## 1.1.5
 - New tests for mqtt and notify entity handling and media grabbing
+- ScenarioRegistry added to move scenario logic out of `Context`
 
 ## 1.1.4
 - Explicit delivery selection in action overrides scenario disablement
