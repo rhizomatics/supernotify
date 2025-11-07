@@ -71,7 +71,7 @@ async def snapshot_from_url(
             image_path: Path = Path(media_dir) / f"{notification_id}.{media_ext}"
             image: Image.Image = Image.open(io.BytesIO(await r.content.read()))
             # rewrite to remove metadata, incl custom CCTV comments that confusie python MIMEImage
-            clean_image: Image.Image = Image.new(image.mode, image.size)
+            clean_image: Image.Image = Image.new(image.mode, image.size, None)
             clean_image.putdata(image.getdata())
             buffer = BytesIO()
             img_args = {}

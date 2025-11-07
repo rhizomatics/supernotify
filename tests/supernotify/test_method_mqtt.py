@@ -1,6 +1,16 @@
-from homeassistant.const import CONF_DEFAULT, CONF_METHOD, CONF_NAME
 
-from custom_components.supernotify import CONF_DATA, METHOD_MQTT
+
+from homeassistant.const import (
+    CONF_DEFAULT,
+    CONF_METHOD,
+    CONF_NAME,
+)
+
+from custom_components.supernotify import (
+    CONF_DATA,
+    CONF_METHOD,
+    METHOD_MQTT,
+)
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.methods.mqtt import MQTTDeliveryMethod
 from custom_components.supernotify.notification import Notification
@@ -21,12 +31,14 @@ async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
         }
     }
     context = Context(deliveries=deliveries)
-    uut = MQTTDeliveryMethod(mock_hass, context, mock_people_registry, deliveries=deliveries)
+    uut = MQTTDeliveryMethod(
+        mock_hass, context, mock_people_registry, deliveries=deliveries)
 
     await uut.initialize()
     context.configure_for_tests([uut])
     await context.initialize()
-    notification = Notification(context, mock_people_registry, message="Will be ignored", title="Also Ignored")
+    notification = Notification(
+        context, mock_people_registry, message="Will be ignored", title="Also Ignored")
     await notification.initialize()
     await notification.deliver()
 
