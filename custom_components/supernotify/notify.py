@@ -112,7 +112,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> "SuperNotificationAction":
+) -> "SupernotifyAction":
     """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
     _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
     _ = discovery_info
@@ -147,7 +147,7 @@ async def async_get_service(
     hass.states.async_set(f"{DOMAIN}.sent", "0")
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    service = SuperNotificationAction(
+    service = SupernotifyAction(
         hass,
         deliveries=config[CONF_DELIVERY],
         template_path=config[CONF_TEMPLATE_PATH],
@@ -281,7 +281,7 @@ class SupernotifyEntity(NotifyEntity):
     def __init__(
         self,
         unique_id: str,
-        platform: "SuperNotificationAction",
+        platform: "SupernotifyAction",
     ) -> None:
         """Initialize the SuperNotify entity."""
         self._attr_unique_id = unique_id
@@ -295,8 +295,8 @@ class SupernotifyEntity(NotifyEntity):
         await self._platform.async_send_message(message, title=title, target=target, data=data)
 
 
-class SuperNotificationAction(BaseNotificationService):
-    """Implement SuperNotification action."""
+class SupernotifyAction(BaseNotificationService):
+    """Implement SuperNotify Action"""
 
     def __init__(
         self,

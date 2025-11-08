@@ -1,5 +1,10 @@
 # Public releases
 
+## 1.1.6
+- HomeAssistant logic moved from `Context` to `HomeAssistantAccess`
+- Initialization logic moved from `Context` to `SupernotifyAction`
+- References to `SupernotifyAction` now consistent rather than `SuperNotificationAction`
+
 ## 1.1.5
 - New tests for mqtt and notify entity handling and media grabbing
 - ScenarioRegistry added to move scenario logic out of `Context`

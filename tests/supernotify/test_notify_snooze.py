@@ -18,7 +18,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.notify import SuperNotificationAction
+from custom_components.supernotify.notify import SupernotifyAction
 from custom_components.supernotify.snoozer import Snooze
 from tests.supernotify.hass_setup_lib import register_mobile_app
 
@@ -34,7 +34,7 @@ DELIVERY: dict[str, dict] = {
 
 
 def test_snooze_delivery(mock_hass: HomeAssistant) -> None:
-    uut = SuperNotificationAction(mock_hass)
+    uut = SupernotifyAction(mock_hass)
 
     uut.on_mobile_action(Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_DELIVERY_foo"}))
     assert list(uut.context.snoozer.snoozes.values()) == [
@@ -58,7 +58,7 @@ def test_snooze_delivery(mock_hass: HomeAssistant) -> None:
 
 
 def test_snooze_everything(mock_hass: HomeAssistant) -> None:
-    uut = SuperNotificationAction(mock_hass)
+    uut = SupernotifyAction(mock_hass)
     uut.on_mobile_action(Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_EVERYTHING"}))
     assert list(uut.context.snoozer.snoozes.values()) == [
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.EVERYONE)
@@ -82,7 +82,7 @@ def test_snooze_everything(mock_hass: HomeAssistant) -> None:
 
 
 async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
-    uut = SuperNotificationAction(
+    uut = SupernotifyAction(
         hass,
         recipients=[
             {CONF_PERSON: "person.bob_mctest", CONF_EMAIL: "bob@mctest.com", ATTR_USER_ID: "eee999111"},
@@ -122,7 +122,7 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
 
 
 def test_clear_snoozes(mock_hass: HomeAssistant) -> None:
-    uut = SuperNotificationAction(mock_hass)
+    uut = SupernotifyAction(mock_hass)
     uut.on_mobile_action(Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_EVERYTHING"}))
     assert list(uut.context.snoozer.snoozes.values()) == [
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.EVERYONE)

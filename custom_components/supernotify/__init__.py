@@ -1,4 +1,4 @@
-"""The SuperNotification integration"""
+"""The Supernotify integration"""
 
 import logging
 
