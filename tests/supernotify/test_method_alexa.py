@@ -2,7 +2,6 @@ from homeassistant.const import CONF_ACTION, CONF_DEFAULT
 from pytest_unordered import unordered
 
 from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_ALEXA
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
@@ -13,9 +12,9 @@ DELIVERY = {
 }
 
 
-async def test_notify_alexa(mock_hass, mock_people_registry) -> None:  # type: ignore
+async def test_notify_alexa(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
     """Test on_notify_alexa."""
-    context = Context()
+    context = superconfig
     delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_ALEXA, CONF_DEFAULT: True}}
     uut = AlexaDevicesTransport(mock_hass, context, delivery_config)
     context.configure_for_tests([uut])

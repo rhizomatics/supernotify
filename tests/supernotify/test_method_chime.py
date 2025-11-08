@@ -3,7 +3,6 @@ from unittest.mock import Mock, call
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT
 
 from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_CHIME
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
@@ -23,7 +22,7 @@ async def test_deliver(mock_hass, mock_context, mock_people_registry) -> None:  
     device = Mock(identifiers={("alexa_devices", "ffffee8484848484")})
     device_registry = Mock()
     device_registry.async_get.return_value = device
-    mock_context.device_registry = Mock(return_value=device_registry)
+    mock_context.hass_access.device_registry = Mock(return_value=device_registry)
 
     # await context.initialize()
 
@@ -88,10 +87,10 @@ async def test_deliver(mock_hass, mock_context, mock_people_registry) -> None:  
     assert len(envelope.calls) == 5
 
 
-async def test_deliver_alias(mock_hass, mock_people_registry) -> None:  # type: ignore
+async def test_deliver_alias(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
     """Test on_notify_chime"""
     delivery_config = {"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DEFAULT: True, CONF_DATA: {"chime_tune": "doorbell"}}}
-    context = Context()
+    context = superconfig
     uut = ChimeTransport(
         mock_hass,
         context,
@@ -178,7 +177,7 @@ class MockGroup:
         self.attributes = {ATTR_ENTITY_ID: entities}
 
 
-async def test_deliver_to_group(mock_hass, mock_people_registry) -> None:  # type: ignore
+async def test_deliver_to_group(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
     """Test on_notify_chime"""
     groups = {
         "group.alexa": MockGroup(["media_player.alexa_1", "media_player.alexa_2"]),
@@ -191,7 +190,7 @@ async def test_deliver_to_group(mock_hass, mock_people_registry) -> None:  # typ
             CONF_DATA: {"chime_tune": "dive_dive_dive"},
         }
     }
-    context = Context()
+    context = superconfig
     await context.initialize()
     mock_hass.states.get.side_effect = lambda v: groups.get(v)
     uut = ChimeTransport(mock_hass, context, mock_people_registry, delivery_config)

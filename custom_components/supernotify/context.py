@@ -5,6 +5,11 @@ import socket
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+if TYPE_CHECKING:
+    from homeassistant.core import State
+
+    from .scenario import ScenarioRegistry
+    from .snoozer import Snoozer
 from homeassistant.const import CONF_ENABLED, CONF_NAME
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers import issue_registry as ir
@@ -27,8 +32,6 @@ from . import (
 from .archive import NotificationArchive
 from .common import ensure_list
 from .model import TransportConfig
-from .scenario import ScenarioRegistry
-from .snoozer import Snoozer
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -46,6 +49,10 @@ _LOGGER = logging.getLogger(__name__)
 class Context:
     def __init__(
         self,
+        hass_access: HomeAssistantAccess,
+        people_registry: PeopleRegistry,
+        scenario_registry: ScenarioRegistry,
+        snoozer: Snoozer,
         hass: HomeAssistant | None = None,
         deliveries: ConfigType | None = None,
         links: list[str] | None = None,
@@ -54,11 +61,9 @@ class Context:
         template_path: str | None = None,
         media_path: str | None = None,
         archive_config: dict[str, str] | None = None,
-        scenarios: ConfigType | None = None,
         transport_configs: ConfigType | None = None,
         cameras: list[ConfigType] | None = None,
         transport_types: list[type[Transport]] | None = None,
-        people_registry: PeopleRegistry | None = None,
     ) -> None:
         self.hass: HomeAssistant | None = None
         self.hass_internal_url: str
@@ -92,8 +97,9 @@ class Context:
         if not self.hass_internal_url or not self.hass_internal_url.startswith("http"):
             _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.hass_internal_url)
 
-        self.people_registry: PeopleRegistry | None = people_registry
-        self.scenario_registry: ScenarioRegistry = ScenarioRegistry(scenarios or {})
+        self.people_registry: PeopleRegistry = people_registry
+        self.scenario_registry: ScenarioRegistry = scenario_registry
+        self.hass_access: HomeAssistantAccess = hass_access
         self.links: list[dict[str, Any]] = ensure_list(links)
         # raw configured deliveries
         self._deliveries: ConfigType = deliveries if isinstance(deliveries, dict) else {}
@@ -123,17 +129,13 @@ class Context:
         self._fallback_on_error: list[Delivery] = []
         self._fallback_by_default: list[Delivery] = []
         self._default_deliveries: list[Delivery] = []
-        self._entity_registry: entity_registry.EntityRegistry | None = None
-        self._device_registry: device_registry.DeviceRegistry | None = None
         self._transport_types: list[type[Transport]] = transport_types or []
-        self.snoozer = Snoozer()
+        self.snoozer = snoozer
         # test harness support
-        self._transport_instancess: list[Transport] | None = None
+        self._transport_instances: list[Transport] | None = None
 
     async def initialize(self) -> None:
-        await self._register_delivery_transports(
-            delivery_transports=self._transport_instancess, transport_classes=self._transport_types
-        )
+        await self._register_transports(transports=self._transport_instances, transport_classes=self._transport_types)
 
         if self.template_path and not self.template_path.exists():
             _LOGGER.warning("SUPERNOTIFY template path not found at %s", self.template_path)
@@ -145,7 +147,7 @@ class Context:
                 self.media_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
-                await self.raise_issue("media_path", "media_path", {"path": str(self.media_path), "error": str(e)})
+                await self.hass_access.raise_issue("media_path", "media_path", {"path": str(self.media_path), "error": str(e)})
                 self.media_path = None
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
@@ -155,31 +157,10 @@ class Context:
         self.initialize_deliveries()
 
     def configure_for_tests(
-        self, transport_instancess: list[Transport] | None = None, create_default_scenario: bool = False
+        self, transport_instances: list[Transport] | None = None, create_default_scenario: bool = False
     ) -> None:
         self.scenario_registry.default_scenario_for_testing = create_default_scenario
-        self._transport_instancess = transport_instancess
-
-    async def raise_issue(
-        self,
-        issue_id: str,
-        issue_key: str,
-        issue_map: dict[str, str],
-        severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
-        learn_more_url: str = "https://supernotify.rhizomatics.github.io",
-    ) -> None:
-        if not self.hass:
-            return
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=False,
-            translation_key=issue_key,
-            translation_placeholders=issue_map,
-            severity=severity,
-            learn_more_url=learn_more_url,
-        )
+        self._transport_instances = transport_instances
 
     def initialize_deliveries(self) -> None:
         for delivery in self.deliveries.values():
@@ -204,14 +185,14 @@ class Context:
         """Deliveries switched on all the time for implicit selection"""
         return [d for d in self._default_deliveries if d.enabled]
 
-    async def _register_delivery_transports(
+    async def _register_transports(
         self,
-        delivery_transports: list[Transport] | None = None,
+        transports: list[Transport] | None = None,
         transport_classes: list[type[Transport]] | None = None,
     ) -> None:
-        """Use configure_for_tests() to set delivery_transports to mocks or manually created fixtures"""
-        if delivery_transports:
-            for transport in delivery_transports:
+        """Use configure_for_tests() to set transports to mocks or manually created fixtures"""
+        if transports:
+            for transport in transports:
                 self.transports[transport.transport] = transport
                 await self.transports[transport.transport].initialize()
                 self.deliveries.update(self.transports[transport.transport].valid_deliveries)
@@ -237,12 +218,55 @@ class Context:
         unconfigured_deliveries = [dc for d, dc in self._deliveries.items() if d not in self.deliveries]
         for bad_del in unconfigured_deliveries:
             # presumably there was no transport for these
-            await self.raise_issue(
+            await self.hass_access.raise_issue(
                 f"delivery_{bad_del.get(CONF_NAME)}_for_transport_{bad_del.get(CONF_TRANSPORT)}_failed_to_configure",
                 issue_key="delivery_unknown_transport",
                 issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
             )
         _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self.deliveries.keys()))
+
+
+class HomeAssistantAccess:
+    def __init__(self, hass: HomeAssistant | None = None) -> None:
+        self._hass = hass
+        self._entity_registry: entity_registry.EntityRegistry | None = None
+        self._device_registry: device_registry.DeviceRegistry | None = None
+
+    def get_state(self, entity_id: str) -> State | None:
+        if not self._hass:
+            return None
+        return self._hass.states.get(entity_id)
+
+    def set_state(self, entity_id: str, state: str) -> None:
+        if not self._hass:
+            return
+        self._hass.states.set(entity_id, state)
+
+    def has_service(self, domain: str, service: str) -> bool:
+        if not self._hass:
+            return False
+        return self._hass.services.has_service(domain, service)
+
+    async def raise_issue(
+        self,
+        issue_id: str,
+        issue_key: str,
+        issue_map: dict[str, str],
+        severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
+        learn_more_url: str = "https://supernotify.rhizomatics.github.io",
+    ) -> None:
+        if not self._hass:
+            return
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            translation_key=issue_key,
+            translation_placeholders=issue_map,
+            severity=severity,
+            learn_more_url=learn_more_url,
+        )
 
     def discover_devices(self, discover_domain: str) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
@@ -275,9 +299,9 @@ class Context:
         """  # noqa: D205
         if self._entity_registry is not None:
             return self._entity_registry
-        if self.hass:
+        if self._hass:
             try:
-                self._entity_registry = entity_registry.async_get(self.hass)
+                self._entity_registry = entity_registry.async_get(self._hass)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
         return self._entity_registry
@@ -288,9 +312,9 @@ class Context:
         """  # noqa: D205
         if self._device_registry is not None:
             return self._device_registry
-        if self.hass:
+        if self._hass:
             try:
-                self._device_registry = device_registry.async_get(self.hass)
+                self._device_registry = device_registry.async_get(self._hass)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry

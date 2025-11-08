@@ -55,7 +55,7 @@ class Delivery(DeliveryConfig):
         errors = 0
         if self.name in RESERVED_DELIVERY_NAMES:
             _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", self.name)
-            await context.raise_issue(
+            await context.hass_access.raise_issue(
                 f"delivery_{self.name}_reserved_name",
                 issue_key="delivery_reserved_name",
                 issue_map={"delivery": self.name},
@@ -63,7 +63,7 @@ class Delivery(DeliveryConfig):
             errors += 1
         if not self.transport.validate_action(self.action):
             _LOGGER.warning("SUPERNOTIFY Invalid action definition for delivery %s (%s)", self.name, self.action)
-            await context.raise_issue(
+            await context.hass_access.raise_issue(
                 f"delivery_{self.name}_invalid_action",
                 issue_key="delivery_invalid_action",
                 issue_map={"delivery": self.name, "action": self.action or ""},
@@ -80,7 +80,7 @@ class Delivery(DeliveryConfig):
                 exception = str(e)
             if not passed:
                 _LOGGER.warning("SUPERNOTIFY Invalid delivery condition for %s: %s", self.name, self.condition)
-                await context.raise_issue(
+                await context.hass_access.raise_issue(
                     f"delivery_{self.name}_invalid_condition",
                     issue_key="delivery_invalid_condition",
                     issue_map={"delivery": self.name, "condition": str(self.condition), "exception": exception},

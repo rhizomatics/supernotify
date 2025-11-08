@@ -2,7 +2,6 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_
 from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_NAME
 
 from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, CONF_OPTIONS, CONF_TRANSPORT, TRANSPORT_GENERIC
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
@@ -10,8 +9,8 @@ from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.generic import GenericTransport
 
 
-async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
-    context = Context()
+async def test_deliver(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
+    context = superconfig
     uut = GenericTransport(
         mock_hass,
         context,
@@ -54,8 +53,8 @@ async def test_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
     )
 
 
-async def test_not_notify_deliver(mock_hass, mock_people_registry) -> None:  # type: ignore
-    context = Context()
+async def test_not_notify_deliver(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
+    context = superconfig
     await context.initialize()
     uut = GenericTransport(
         mock_hass,

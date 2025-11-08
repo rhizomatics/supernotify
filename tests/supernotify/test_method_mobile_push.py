@@ -30,10 +30,11 @@ if TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
 
 
-async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
+async def test_on_notify_mobile_push_with_media(
+    uninitialized_superconfig: Context, mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+) -> None:
     """Test on_notify_mobile_push."""
-    context = Context()
-    await context.initialize()
+    context = uninitialized_superconfig
     uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
@@ -82,11 +83,10 @@ async def test_on_notify_mobile_push_with_media(mock_hass: HomeAssistant, mock_p
 
 
 async def test_on_notify_mobile_push_with_explicit_target(
-    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, superconfig: Context
 ) -> None:
     """Test on_notify_mobile_push."""
-    context = Context()
-    await context.initialize()
+    context = superconfig
     uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
@@ -109,10 +109,10 @@ async def test_on_notify_mobile_push_with_explicit_target(
 
 
 async def test_on_notify_mobile_push_with_person_derived_targets(
-    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, superconfig: Context
 ) -> None:
     """Test on_notify_mobile_push."""
-    context = Context()
+    context = superconfig
     mock_people_registry.people = {
         "person.test_user": {"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}
     }
@@ -128,13 +128,12 @@ async def test_on_notify_mobile_push_with_person_derived_targets(
 
 
 async def test_on_notify_mobile_push_with_critical_priority(
-    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, uninitialized_superconfig: Context
 ) -> None:
     """Test on_notify_mobile_push."""
-    context = Context(
-        recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}]
-    )
-    await context.initialize()
+    context = uninitialized_superconfig
+    context._recipients = [{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}]
+
     uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
@@ -167,7 +166,7 @@ async def test_on_notify_mobile_push_with_critical_priority(
 
 @pytest.mark.parametrize("priority", PRIORITY_VALUES)
 async def test_priority_interpretation(
-    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, priority: LiteralString
+    mock_hass: HomeAssistant, mock_people_registry: PeopleRegistry, superconfig: Context, priority: LiteralString
 ) -> None:
     priority_map = {
         PRIORITY_CRITICAL: "critical",
@@ -175,8 +174,7 @@ async def test_priority_interpretation(
         PRIORITY_LOW: "passive",
         PRIORITY_MEDIUM: "active",
     }
-    context = Context()
-    await context.initialize()
+    context = superconfig
     uut = MobilePushTransport(mock_hass, context, mock_people_registry, {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
     context.configure_for_tests([uut])
     await context.initialize()
@@ -224,7 +222,8 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
         await hass.services.async_call("supernotify", "enquire_last_notification", None, blocking=True, return_response=True),
     )
     assert notification is not None
-    assert "undelivered_envelopes" in notification  # no android integration in test env
+    # no android integration in test env
+    assert "undelivered_envelopes" in notification
     assert notification["undelivered_envelopes"][0]["data"]["clickAction"] == "android_something"
 
 
@@ -256,7 +255,9 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets(
     )
     assert mock_context.hass is not None
     assert mock_context.hass.services is not None
-    mock_context.hass.services.async_call.side_effect = Exception("Boom!")  # type: ignore
+    mock_context.hass.services.async_call.side_effect = Exception(  # type: ignore
+        "Boom!"
+    )  # type: ignore
     await uut.deliver(e)
     expected_snooze = Snooze(QualifiedTargetType.ACTION, RecipientType.USER, "mobile_app_nophone", "person.bidey_in")
     assert mock_context.snoozer.snoozes == {"ACTION_mobile_app_nophone_person.bidey_in": expected_snooze}

@@ -176,7 +176,7 @@ class ChimeTransport(Transport):
                 domain = target_config.domain
             else:
                 # discover domain from device registry
-                device_registry = self.context.device_registry()
+                device_registry = self.context.hass_access.device_registry()
                 if device_registry:
                     device: DeviceEntry | None = device_registry.async_get(target_config.device_id)
                     if device and "alexa_devices" in [d for d, _id in device.identifiers]:

@@ -71,7 +71,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     uut = hass.data["notify_services"][DOMAIN][0]
-    assert len(uut.people_registry.people) == 2
+    assert len(uut.context.people_registry.people) == 2
 
     assert "html_email" in uut.context.deliveries
     assert "backup_mail" in uut.context.deliveries

@@ -2,7 +2,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
 from custom_components.supernotify import CONF_PERSON, CONF_RECIPIENTS
-from custom_components.supernotify.context import Context
+from custom_components.supernotify.context import HomeAssistantAccess
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
@@ -13,10 +13,12 @@ from .doubles_lib import DummyTransport
 from .hass_setup_lib import register_mobile_app
 
 
-async def test_default_recipients(mock_hass, mock_people_registry) -> None:  # type: ignore
-    context = Context(mock_hass, recipients=[{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}])
+async def test_default_recipients(uninitialized_superconfig, mock_hass, mock_hass_access, mock_people_registry) -> None:  # type: ignore
+    context = uninitialized_superconfig
+    context._recipients = [{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}]
+
     dummy = DummyTransport(mock_hass, context, mock_people_registry, {})
-    context.configure_for_tests(transport_instancess=[dummy], create_default_scenario=True)
+    context.configure_for_tests(transport_instances=[dummy], create_default_scenario=True)
     await context.initialize()
     context.scenario_registry = ScenarioRegistry({})
     await context.scenario_registry.initialize(context.deliveries, context.default_deliveries, {}, mock_hass)
@@ -27,10 +29,12 @@ async def test_default_recipients(mock_hass, mock_people_registry) -> None:  # t
     assert dummy.test_calls == [Envelope("dummy", uut, target=Target(["dummy.new_home_owner", "dummy.bidey_in"]))]
 
 
-async def test_default_recipients_with_override(mock_hass, mock_people_registry) -> None:  # type: ignore
-    context = Context(mock_hass, recipients=[{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}])
+async def test_default_recipients_with_override(uninitialized_superconfig, mock_hass, mock_people_registry) -> None:  # type: ignore
+    context = uninitialized_superconfig
+    context._recipients = [{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}]
+
     dummy = DummyTransport(mock_hass, context, mock_people_registry, {})
-    context.configure_for_tests(transport_instancess=[dummy], create_default_scenario=True)
+    context.configure_for_tests(transport_instances=[dummy], create_default_scenario=True)
     await context.initialize()
     context.scenario_registry = ScenarioRegistry({})
     await context.scenario_registry.initialize(context.deliveries, context.default_deliveries, {}, mock_hass)
@@ -41,7 +45,7 @@ async def test_default_recipients_with_override(mock_hass, mock_people_registry)
     assert dummy.test_calls == [Envelope("dummy", uut, target=Target(["dummy.new_home_owner"]))]
 
 
-async def test_delivery_override_transport(mock_hass, mock_people_registry) -> None:  # type: ignore
+async def test_delivery_override_transport(uninitialized_superconfig, mock_hass, mock_people_registry) -> None:  # type: ignore
     delivery_config = {
         "quiet_alert": {
             "transport": "dummy",
@@ -51,11 +55,12 @@ async def test_delivery_override_transport(mock_hass, mock_people_registry) -> N
         "regular_alert": {"transport": "dummy", "target": ["switch.pillow_vibrate"], "selection": ["explicit"]},
         "day_alert": {"transport": "dummy", "selection": ["explicit"]},
     }
-    context = Context(mock_hass, deliveries=delivery_config)
+    context = uninitialized_superconfig
+    context._deliveries = delivery_config
     dummy = DummyTransport(
         mock_hass, context, mock_people_registry, delivery_config, delivery_defaults={"target": ["media_player.hall"]}
     )
-    context.configure_for_tests(transport_instancess=[dummy], create_default_scenario=True)
+    context.configure_for_tests(transport_instances=[dummy], create_default_scenario=True)
     await context.initialize()
 
     uut = Notification(
@@ -90,8 +95,8 @@ async def test_delivery_override_transport(mock_hass, mock_people_registry) -> N
 
 
 def test_autoresolve_mobile_devices_for_no_devices(hass: HomeAssistant) -> None:
-    ctx = Context()
-    uut = PeopleRegistry(hass, [], ctx.entity_registry(), ctx.device_registry())
+    hass_access: HomeAssistantAccess = HomeAssistantAccess(hass)
+    uut = PeopleRegistry([], hass_access)
     uut.initialize()
     assert uut.mobile_devices_for_person("person.test_user") == []
 
@@ -101,7 +106,8 @@ def test_autoresolve_mobile_devices_for_devices(
     device_registry: device_registry.DeviceRegistry,
     entity_registry: entity_registry.EntityRegistry,
 ) -> None:
-    uut = PeopleRegistry(hass, [], entity_registry, device_registry)
+    hass_access: HomeAssistantAccess = HomeAssistantAccess(hass)
+    uut = PeopleRegistry([], hass_access)
     uut.initialize()
     device = register_mobile_app(uut, person="person.test_user", device_name="phone_bob", title="Bobs Phone")
     assert device is not None

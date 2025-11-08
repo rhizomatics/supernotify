@@ -18,7 +18,7 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.context import Context
+from custom_components.supernotify.context import Context, HomeAssistantAccess
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.transports.generic import GenericTransport
 
@@ -54,11 +54,14 @@ async def test_default_delivery_defaulted(hass: HomeAssistant, mock_people_regis
     assert list(uut.valid_deliveries.keys()) == ["chat"]
 
 
-async def test_transport_defaults_used_for_missing_service(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
+async def test_transport_defaults_used_for_missing_service(
+    hass: HomeAssistant, mock_people_registry: PeopleRegistry, uninitialized_superconfig: Context
+) -> None:
     delivery = {"chatty": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_TARGET: ["chan1", "chan2"]}}
-    context = Context(deliveries=delivery)
+    context = uninitialized_superconfig
+    context._deliveries = delivery
     uut = GenericTransport(hass, context, mock_people_registry, delivery, delivery_defaults={CONF_ACTION: "notify.slackity"})
-    context.configure_for_tests(transport_instancess=[uut])
+    context.configure_for_tests(transport_instances=[uut])
     await context.initialize()
 
     await uut.initialize()
@@ -81,14 +84,18 @@ def test_simplify_text() -> None:
     assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
 
 
-async def test_device_discovery(hass: HomeAssistant) -> None:
-    ctx = Context(hass)
-    people_registry = PeopleRegistry(hass, [], ctx.entity_registry(), ctx.device_registry())
+async def test_device_discovery(hass: HomeAssistant, superconfig, mock_hass_access: HomeAssistantAccess) -> None:
+    hass_access: HomeAssistantAccess = HomeAssistantAccess(hass)
+    ctx = superconfig
+    ctx.hass_access = hass_access
+    await ctx.initialize()
+
+    people_registry = PeopleRegistry([], hass_access)
     uut = GenericTransport(hass, ctx, people_registry, {}, device_domain=["unit_testing"], device_discovery=True)
     await uut.initialize()
     assert uut.delivery_defaults.target is None
 
-    dev: DeviceEntry | None = register_device(people_registry)
+    dev: DeviceEntry | None = register_device(hass_access)
     assert dev is not None
     uut = GenericTransport(hass, ctx, people_registry, {}, device_domain=["unit_testing"], device_discovery=True)
     await uut.initialize()

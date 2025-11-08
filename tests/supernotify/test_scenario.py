@@ -145,7 +145,9 @@ async def test_select_scenarios(hass: HomeAssistant, mock_context: Context, mock
     assert enabled == []
 
 
-async def test_scenario_templating(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
+async def test_scenario_templating(
+    hass: HomeAssistant, mock_people_registry: PeopleRegistry, uninitialized_superconfig: Context
+) -> None:
     config = PLATFORM_SCHEMA({
         "platform": "supernotify",
         "scenarios": {
@@ -173,12 +175,10 @@ async def test_scenario_templating(hass: HomeAssistant, mock_people_registry: Pe
         },
     })
     reg = ScenarioRegistry(config["scenarios"])
-    context = Context(
-        hass,
-        deliveries={"smtp": {CONF_TRANSPORT: "email"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}},
-        transport_types=TRANSPORTS,
-        people_registry=mock_people_registry,
-    )
+    context = uninitialized_superconfig
+
+    context._deliveries = {"smtp": {CONF_TRANSPORT: "email"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}}
+    context._transport_types = TRANSPORTS
     await context.initialize()
     await reg.initialize(context.deliveries, [], {}, hass)
     context.scenario_registry = reg
@@ -271,8 +271,8 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
     mock_context.deliveries["mobile"].selection = [SELECTION_BY_SCENARIO]
 
     mock_context.scenario_registry.scenarios = {
-        "Alarm": Scenario("Alarm", {}, mock_context.hass),  # type: ignore
-        "DevNull": Scenario("DevNull", {}, mock_context.hass),  # type: ignore
+        "Alarm": Scenario("Alarm", {}, mock_context.hass),
+        "DevNull": Scenario("DevNull", {}, mock_context.hass),
         "Mostly": Scenario(
             "Mostly",
             SCENARIO_SCHEMA({

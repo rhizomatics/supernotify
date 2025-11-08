@@ -1,16 +1,15 @@
 from homeassistant.const import CONF_DEFAULT, CONF_NAME
 
 from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, CONF_TRANSPORT, TRANSPORT_MEDIA
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.media_player_image import MediaPlayerImageTransport
 
 
-async def test_notify_media_image(mock_hass, mock_people_registry) -> None:  # type: ignore
+async def test_notify_media_image(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
     """Test on_notify_alexa."""
-    context = Context()
+    context = superconfig
     context.hass_external_url = "https://myserver"
 
     uut = MediaPlayerImageTransport(

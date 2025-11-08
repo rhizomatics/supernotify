@@ -4,12 +4,11 @@ from homeassistant.const import (
 )
 
 from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_MQTT
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.mqtt import MQTTTransport
 
 
-async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry) -> None:  # type: ignore
+async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry, uninitialized_superconfig) -> None:  # type: ignore
     deliveries = {
         "dive_dive_dive": {
             CONF_TRANSPORT: TRANSPORT_MQTT,
@@ -23,7 +22,8 @@ async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry) 
             },
         }
     }
-    context = Context(deliveries=deliveries)
+    context = uninitialized_superconfig
+    context._deliveries = deliveries
     mock_scenario_registry.delivery_by_scenario = {"DEFAULT": ["dive_dive_dive"]}
     context.scenario_registry = mock_scenario_registry
 

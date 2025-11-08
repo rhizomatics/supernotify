@@ -91,8 +91,8 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         deliveries=DELIVERY,
     )
     await uut.initialize()
-    register_mobile_app(uut.people_registry, person="person.bob_mctest")
-    plain_notify = Notification(uut.context, uut.people_registry, "hello")
+    register_mobile_app(uut.context.people_registry, person="person.bob_mctest")
+    plain_notify = Notification(uut.context, uut.context.people_registry, "hello")
     await plain_notify.initialize()
     assert plain_notify.generate_recipients("email", uut.context.deliveries["email"].transport)[0].email == [
         "bob@mctest.com",

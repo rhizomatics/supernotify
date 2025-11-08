@@ -142,8 +142,8 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:
     uut = SuperNotificationAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
-    dummy = DummyTransport(mock_hass, uut.context, uut.people_registry, {})
-    uut.context.configure_for_tests(transport_instancess=[dummy])
+    dummy = DummyTransport(mock_hass, uut.context, uut.context.people_registry, {})
+    uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
 
     assert dummy is not None
@@ -171,7 +171,7 @@ async def test_broken_delivery(mock_hass: HomeAssistant, mock_people_registry) -
         mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS
     )
     broken = BrokenTransport(mock_hass, uut.context, mock_people_registry, delivery_config)
-    uut.context.configure_for_tests(transport_instancess=[broken])
+    uut.context.configure_for_tests(transport_instances=[broken])
     await uut.initialize()
 
     await uut.async_send_message(

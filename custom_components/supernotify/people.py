@@ -2,7 +2,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_STATE, CONF_DEVICE_ID, STATE_HOME, STATE_NOT_HOME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util import slugify
 
@@ -18,22 +17,19 @@ from . import (
     CONF_PERSON,
 )
 from .common import ensure_list
+from .context import HomeAssistantAccess
 
 if TYPE_CHECKING:
     from homeassistant.core import State
+    from homeassistant.helpers.device_registry import DeviceRegistry
+    from homeassistant.helpers.entity_registry import EntityRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class PeopleRegistry:
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        recipients: list[dict[str, Any]] | None = None,
-        entity_registry: entity_registry.EntityRegistry | None = None,
-        device_registry: device_registry.DeviceRegistry | None = None,
-    ) -> None:
-        self._hass = hass
+    def __init__(self, recipients: list[dict[str, Any]], hass_access: HomeAssistantAccess) -> None:
+        self.hass_access = hass_access
         self.people: dict[str, dict[str, Any]] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.entity_registry = entity_registry
@@ -47,24 +43,23 @@ class PeopleRegistry:
                     _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", r[CONF_PERSON], r[CONF_MOBILE_DEVICES])
                 else:
                     _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", r[CONF_PERSON])
-            if self._hass:
-                state: State | None = self._hass.states.get(r[CONF_PERSON])
-                if state is not None:
-                    r[ATTR_USER_ID] = state.attributes.get(ATTR_USER_ID)
+
+            state: State | None = self.hass_access.get_state(r[CONF_PERSON])
+            if state is not None:
+                r[ATTR_USER_ID] = state.attributes.get(ATTR_USER_ID)
             self.people[r[CONF_PERSON]] = r
 
     def refresh_tracker_state(self) -> None:
-        if self._hass:
-            for person, person_config in self.people.items():
-                # TODO: possibly rate limit this
-                try:
-                    tracker = self._hass.states.get(person)
-                    if tracker is None:
-                        person_config[ATTR_STATE] = None
-                    else:
-                        person_config[ATTR_STATE] = tracker.state
-                except Exception as e:
-                    _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person, e)
+        for person, person_config in self.people.items():
+            # TODO: possibly rate limit this
+            try:
+                tracker: State | None = self.hass_access.get_state(person)
+                if tracker is None:
+                    person_config[ATTR_STATE] = None
+                else:
+                    person_config[ATTR_STATE] = tracker.state
+            except Exception as e:
+                _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person, e)
 
     def determine_occupancy(self) -> dict[str, list[dict[str, Any]]]:
         results: dict[str, list[dict[str, Any]]] = {STATE_HOME: [], STATE_NOT_HOME: []}
@@ -93,12 +88,12 @@ class PeopleRegistry:
 
         """
         mobile_devices = []
-        person_state = self._hass.states.get(person_entity_id) if self._hass else None
+        person_state = self.hass_access.get_state(person_entity_id)
         if not person_state:
             _LOGGER.warning("SUPERNOTIFY Unable to resolve %s", person_entity_id)
         else:
-            ent_reg = self.entity_registry
-            dev_reg = self.device_registry
+            ent_reg: EntityRegistry | None = self.hass_access.entity_registry()
+            dev_reg: DeviceRegistry | None = self.hass_access.device_registry()
             if not ent_reg or not dev_reg:
                 _LOGGER.warning("SUPERNOTIFY Unable to access entity or device registries for %s", person_entity_id)
             else:
@@ -110,12 +105,7 @@ class PeopleRegistry:
                             _LOGGER.warning("SUPERNOTIFY Unable to find device %s", entity.device_id)
                         else:
                             notify_action = f"mobile_app_{slugify(device.name)}"
-                            if (
-                                validate_targets
-                                and self._hass
-                                and self._hass.services
-                                and not self._hass.services.has_service("notify", notify_action)
-                            ):
+                            if validate_targets and not self.hass_access.has_service("notify", notify_action):
                                 _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", notify_action)
                             else:
                                 mobile_devices.append({

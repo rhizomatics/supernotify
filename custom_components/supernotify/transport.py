@@ -80,7 +80,7 @@ class Transport:
             for domain in self.device_domain:
                 discovered: int = 0
                 added: int = 0
-                for d in self.context.discover_devices(domain):
+                for d in self.context.hass_access.discover_devices(domain):
                     discovered += 1
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()
@@ -140,7 +140,9 @@ class Transport:
         if not self.default_delivery:
             transport_definition: DeliveryConfig = self.delivery_defaults
             if transport_definition:
-                _LOGGER.info("SUPERNOTIFY Building default delivery for %s from transport %s", self.transport, transport_definition)
+                _LOGGER.info(
+                    "SUPERNOTIFY Building default delivery for %s from transport %s", self.transport, transport_definition
+                )
                 self.default_delivery = Delivery(f"DEFAULT_{self.transport}", {}, self)
             else:
                 _LOGGER.debug("SUPERNOTIFY No default delivery or transport_definition for transport %s", self.transport)
