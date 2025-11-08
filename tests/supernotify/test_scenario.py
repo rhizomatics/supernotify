@@ -19,7 +19,7 @@ from custom_components.supernotify import (
     SELECTION_BY_SCENARIO,
 )
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from custom_components.supernotify.context import Context
+from custom_components.supernotify.context import Context, HomeAssistantAccess
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import ConditionVariables
 from custom_components.supernotify.notification import Notification
@@ -176,6 +176,8 @@ async def test_scenario_templating(
     })
     reg = ScenarioRegistry(config["scenarios"])
     context = uninitialized_superconfig
+    hass_access = HomeAssistantAccess(hass)  # relies on a real hass Template class
+    context.hass_access = hass_access
 
     context._deliveries = {"smtp": {CONF_TRANSPORT: "email"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}}
     context._transport_types = TRANSPORTS
@@ -287,7 +289,7 @@ async def test_scenario_suppress(mock_hass: HomeAssistant, mock_context: Context
                     ],
                 },
             }),
-            mock_context.hass,  # type: ignore
+            mock_context.hass,
         ),
     }
     # Only deliveries for enabled scenarios

@@ -8,10 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from . import ATTR_TIMESTAMP, CONF_MESSAGE, CONF_TITLE, PRIORITY_MEDIUM
+from .media_grab import grab_image
 from .model import Target
 
 if typing.TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
+
+    from .notification import Notification
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ class Envelope:
     def __init__(
         self,
         delivery_name: str,
-        notification: "Notification | None" = None,  # noqa: F821 # type: ignore
+        notification: "Notification | None" = None,
         target: Target | None = None,
         data: dict[str, Any] | None = None,
     ) -> None:
@@ -37,7 +40,7 @@ class Envelope:
         self.title: str | None = None
         self.message_html: str | None = None
         self.data: dict[str, Any] = {}
-        self.actions: list[dict[str, Any]] = []
+        self.actions: dict[str, Any] = {}
         delivery_config_data: dict[str, Any] = {}
         if notification:
             self.notification_id = notification.id
@@ -67,7 +70,7 @@ class Envelope:
         """Grab an image from a camera, snapshot URL, MQTT Image etc"""
         image_path: Path | None = None
         if self._notification:
-            image_path = await self._notification.grab_image(self.delivery_name)
+            image_path = await grab_image(self._notification, self.delivery_name, self._notification.context)
         return image_path
 
     def core_action_data(self) -> dict[str, Any]:

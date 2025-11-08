@@ -16,13 +16,23 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from PIL import Image
 
 from custom_components.supernotify import (
+    ATTR_JPEG_OPTS,
+    ATTR_MEDIA_CAMERA_DELAY,
+    ATTR_MEDIA_CAMERA_ENTITY_ID,
+    ATTR_MEDIA_CAMERA_PTZ_PRESET,
+    ATTR_MEDIA_SNAPSHOT_URL,
     CONF_ALT_CAMERA,
     CONF_CAMERA,
     CONF_DEVICE_TRACKER,
+    CONF_OPTIONS,
+    CONF_PTZ_DELAY,
+    CONF_PTZ_METHOD,
+    CONF_PTZ_PRESET_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
 )
-from custom_components.supernotify.context import Context
+
+from .context import Context
 
 if TYPE_CHECKING:
     from homeassistant.components.image import ImageEntity
@@ -241,3 +251,66 @@ def select_avail_camera(hass: HomeAssistant, cameras: dict[str, Any], camera_ent
         _LOGGER.warning("SUPERNOTIFY Unable to select available camera: %s", e)
 
     return avail_camera_entity_id
+
+
+async def grab_image(notification: "Notification", delivery_name: str, context: Context) -> Path | None:  # noqa: F821
+    snapshot_url = notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
+    camera_entity_id = notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+    delivery_config = notification.delivery_data(delivery_name)
+    jpeg_opts = notification.media.get(ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(ATTR_JPEG_OPTS))
+
+    if not snapshot_url and not camera_entity_id:
+        return None
+
+    image_path: Path | None = None
+    if notification.snapshot_image_path is not None:
+        return notification.snapshot_image_path  # type: ignore
+    if snapshot_url and context.media_path and context.hass:
+        image_path = await snapshot_from_url(
+            context.hass, snapshot_url, notification.id, context.media_path, context.hass_internal_url, jpeg_opts
+        )
+    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass and context.media_path:
+        image_path = await snap_image(context, camera_entity_id, context.media_path, notification.id, jpeg_opts)
+    elif camera_entity_id:
+        if not context.hass or not context.media_path:
+            _LOGGER.warning("SUPERNOTIFY No homeassistant ref or media path for camera %s", camera_entity_id)
+            return None
+        active_camera_entity_id = select_avail_camera(context.hass, context.cameras, camera_entity_id)
+        if active_camera_entity_id:
+            camera_config = context.cameras.get(active_camera_entity_id, {})
+            camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
+            camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
+            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
+            camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
+            _LOGGER.debug(
+                "SUPERNOTIFY snapping camera %s, ptz %s->%s, delay %s secs",
+                active_camera_entity_id,
+                camera_ptz_preset,
+                camera_ptz_preset_default,
+                camera_delay,
+            )
+            if camera_ptz_preset:
+                await move_camera_to_ptz_preset(
+                    context.hass, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
+                )
+            if camera_delay:
+                _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
+                await asyncio.sleep(camera_delay)
+            image_path = await snap_camera(
+                context.hass,
+                active_camera_entity_id,
+                media_path=context.media_path,
+                max_camera_wait=15,
+                jpeg_opts=jpeg_opts,
+            )
+            if camera_ptz_preset and camera_ptz_preset_default:
+                await move_camera_to_ptz_preset(
+                    context.hass, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
+                )
+
+    if image_path is None:
+        _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
+        return None
+    # TODO: replace poking inside notification
+    notification.snapshot_image_path = image_path
+    return image_path

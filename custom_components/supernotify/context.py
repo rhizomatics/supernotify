@@ -5,6 +5,8 @@ import socket
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.template import Template
+
 if TYPE_CHECKING:
     from homeassistant.core import State
 
@@ -246,6 +248,9 @@ class HomeAssistantAccess:
         if not self._hass:
             return False
         return self._hass.services.has_service(domain, service)
+
+    def template(self, template_format: str) -> Template:
+        return Template(template_format, self._hass)
 
     async def raise_issue(
         self,

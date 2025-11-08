@@ -1,16 +1,13 @@
-import asyncio
 import datetime as dt
 import logging
 import string
 import uuid
-from pathlib import Path
 from traceback import format_exception
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import CONF_ENABLED, CONF_TARGET, STATE_HOME, STATE_NOT_HOME
-from homeassistant.helpers.template import Template
 from jinja2 import TemplateError
 from voluptuous import humanize
 
@@ -21,11 +18,7 @@ from custom_components.supernotify import (
     ATTR_DEBUG,
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
-    ATTR_JPEG_OPTS,
     ATTR_MEDIA,
-    ATTR_MEDIA_CAMERA_DELAY,
-    ATTR_MEDIA_CAMERA_ENTITY_ID,
-    ATTR_MEDIA_CAMERA_PTZ_PRESET,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
@@ -37,11 +30,7 @@ from custom_components.supernotify import (
     ATTR_SCENARIOS_REQUIRE,
     CONF_DATA,
     CONF_DELIVERY,
-    CONF_OPTIONS,
     CONF_PERSON,
-    CONF_PTZ_DELAY,
-    CONF_PTZ_METHOD,
-    CONF_PTZ_PRESET_DEFAULT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
@@ -75,8 +64,10 @@ from custom_components.supernotify.transport import (
 
 from .common import ensure_dict, ensure_list
 from .context import Context
-from .media_grab import move_camera_to_ptz_preset, select_avail_camera, snap_camera, snap_image, snapshot_from_url
 from .people import PeopleRegistry
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -283,7 +274,7 @@ class Notification(ArchivableObject):
             try:
                 template_format = scen_obj.delivery.get(delivery_name, {}).get(CONF_DATA, {}).get(template_field)
                 if template_format is not None:
-                    template = Template(template_format, self.context.hass)
+                    template = self.context.hass_access.template(template_format)
                     rendered = template.async_render(variables=context_vars)
             except TemplateError as e:
                 _LOGGER.warning("SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, delivery_name, e)
@@ -577,64 +568,3 @@ class Notification(ArchivableObject):
                 envelopes.append(Envelope(delivery_name, self, target, envelope_data))
 
         return envelopes
-
-    async def grab_image(self, delivery_name: str) -> Path | None:
-        snapshot_url = self.media.get(ATTR_MEDIA_SNAPSHOT_URL)
-        camera_entity_id = self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
-        delivery_config = self.delivery_data(delivery_name)
-        jpeg_opts = self.media.get(ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(ATTR_JPEG_OPTS))
-
-        if not snapshot_url and not camera_entity_id:
-            return None
-
-        image_path: Path | None = None
-        if self.snapshot_image_path is not None:
-            return self.snapshot_image_path
-        if snapshot_url and self.context.media_path and self.context.hass:
-            image_path = await snapshot_from_url(
-                self.context.hass, snapshot_url, self.id, self.context.media_path, self.context.hass_internal_url, jpeg_opts
-            )
-        elif camera_entity_id and camera_entity_id.startswith("image.") and self.context.hass and self.context.media_path:
-            image_path = await snap_image(self.context, camera_entity_id, self.context.media_path, self.id, jpeg_opts)
-        elif camera_entity_id:
-            if not self.context.hass or not self.context.media_path:
-                _LOGGER.warning("SUPERNOTIFY No homeassistant ref or media path for camera %s", camera_entity_id)
-                return None
-            active_camera_entity_id = select_avail_camera(self.context.hass, self.context.cameras, camera_entity_id)
-            if active_camera_entity_id:
-                camera_config = self.context.cameras.get(active_camera_entity_id, {})
-                camera_delay = self.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
-                camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
-                camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
-                camera_ptz_preset = self.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
-                _LOGGER.debug(
-                    "SUPERNOTIFY snapping camera %s, ptz %s->%s, delay %s secs",
-                    active_camera_entity_id,
-                    camera_ptz_preset,
-                    camera_ptz_preset_default,
-                    camera_delay,
-                )
-                if camera_ptz_preset:
-                    await move_camera_to_ptz_preset(
-                        self.context.hass, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
-                    )
-                if camera_delay:
-                    _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
-                    await asyncio.sleep(camera_delay)
-                image_path = await snap_camera(
-                    self.context.hass,
-                    active_camera_entity_id,
-                    media_path=self.context.media_path,
-                    max_camera_wait=15,
-                    jpeg_opts=jpeg_opts,
-                )
-                if camera_ptz_preset and camera_ptz_preset_default:
-                    await move_camera_to_ptz_preset(
-                        self.context.hass, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
-                    )
-
-        if image_path is None:
-            _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
-            return None
-        self.snapshot_image_path = image_path
-        return image_path

@@ -19,6 +19,7 @@ from homeassistant.core import EventBus, HomeAssistant, ServiceRegistry, State, 
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.helpers.template import Template
 from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import (
@@ -128,6 +129,7 @@ def mock_hass_access(mock_hass: HomeAssistant) -> HomeAssistantAccess:
     mocked = AsyncMock(spec=HomeAssistantAccess)
     mocked._hass = mock_hass
     mocked._hass.get_state = Mock(return_value=Mock(spec=State))
+    mocked.template = Mock(return_value=Mock(spec=Template))
     return mocked
 
 

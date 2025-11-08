@@ -4,6 +4,7 @@
 - HomeAssistant logic moved from `Context` to `HomeAssistantAccess`
 - Initialization logic moved from `Context` to `SupernotifyAction`
 - References to `SupernotifyAction` now consistent rather than `SuperNotificationAction`
+- Move camera PTZ and image handling from `Notification` to `media_grab.py`
 
 ## 1.1.5
 - New tests for mqtt and notify entity handling and media grabbing
