@@ -3,13 +3,14 @@ from pathlib import Path
 from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_EMAIL
 from pytest_unordered import unordered
 
-from conftest import TestingContext
 from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, CONF_TRANSPORT, TRANSPORT_EMAIL
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.email import EmailTransport
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_deliver() -> None:

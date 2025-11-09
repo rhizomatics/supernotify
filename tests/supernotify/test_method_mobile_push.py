@@ -32,7 +32,7 @@ from custom_components.supernotify.transports.mobile_push import MobilePushTrans
 
 if TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
-from conftest import TestingContext
+from .hass_setup_lib import TestingContext
 
 
 async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: Context, mock_hass: HomeAssistant) -> None:

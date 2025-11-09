@@ -1,11 +1,12 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import CONF_DEFAULT
 
-from conftest import TestingContext
 from custom_components.supernotify import ATTR_NOTIFICATION_ID, CONF_TRANSPORT, TRANSPORT_PERSISTENT
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_deliver() -> None:  # type: ignore

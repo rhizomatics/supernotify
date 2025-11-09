@@ -1,12 +1,13 @@
 from homeassistant.const import CONF_DEFAULT, CONF_NAME
 
-from conftest import TestingContext
 from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, CONF_TRANSPORT, TRANSPORT_MEDIA
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.media_player_image import MediaPlayerImageTransport
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_notify_media_image() -> None:

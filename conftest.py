@@ -1,5 +1,4 @@
 from collections.abc import Generator
-from copy import deepcopy
 from pathlib import Path
 from ssl import SSLContext
 from typing import Any
@@ -10,18 +9,17 @@ from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.components.notify.const import DOMAIN
 from homeassistant.components.notify.legacy import BaseNotificationService
-from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
+from homeassistant.config_entries import ConfigEntryItems
 from homeassistant.const import (
     ATTR_STATE,
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import EventBus, HomeAssistant, ServiceRegistry, State, StateMachine, SupportsResponse, callback
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
+from homeassistant.core import HomeAssistant, ServiceRegistry, State, StateMachine, SupportsResponse, callback
+from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
 from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import (
@@ -32,7 +30,6 @@ from custom_components.supernotify import (
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.snoozer import Snoozer
@@ -40,12 +37,7 @@ from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
-
-
-class MockableHomeAssistant(HomeAssistant):
-    config: ConfigEntries = Mock(spec=ConfigEntries)  # type: ignore
-    services: ServiceRegistry = AsyncMock(spec=ServiceRegistry)
-    bus: EventBus = Mock(spec=EventBus)
+from tests.supernotify.hass_setup_lib import MockableHomeAssistant
 
 
 class MockAction(BaseNotificationService):
@@ -60,94 +52,6 @@ class MockAction(BaseNotificationService):
         self, message: str = "", title: str | None = None, target: str | None = None, **kwargs: dict[str, Any]
     ) -> None:
         self.calls.append((message, title, target, kwargs))
-
-
-class TestingContext(Context):
-    def __init__(
-        self,
-        real_hass: bool = False,
-        deliveries: dict[str, Any] | None = None,
-        scenarios: ConfigType | None = None,
-        recipients: list[dict[str, Any]] | None = None,
-        default_scenario_for_testing: bool = False,
-        mobile_actions: ConfigType | None = None,
-        transport_configs: ConfigType | None = None,
-        transport_instances: list[Transport] | None = None,
-        transport_types: list[type[Transport]] | None = None,
-        devices: list[tuple[str, str, bool]] | None = None,
-        entities: dict[str, Any] | None = None,
-        hass_external_url: str | None = None,
-        homeassistant: HomeAssistant | None = None,
-        **kwargs: Any,
-    ) -> None:
-        self.hass: HomeAssistant
-        self.devices = {
-            did: Mock(spec=DeviceEntry, id=did, disabled=False, discover=discover, identifiers=[(ddomain, did)])
-            for ddomain, did, discover in devices or []
-        }
-        self.entities = entities
-        if homeassistant:  # real class or own mock
-            self.hass = homeassistant
-        else:
-            self.hass = Mock(spec=MockableHomeAssistant)
-            self.hass.states = Mock(StateMachine)
-            self.hass.services = Mock(ServiceRegistry)
-            self.hass.services.async_call = AsyncMock()
-            self.hass.config.internal_url = "http://127.0.0.1:28123"
-            self.hass.config.external_url = hass_external_url or "https://my.home"
-            self.hass.data = {}
-            self.device_registry = AsyncMock(spec=DeviceRegistry)
-            self.device_registry.devices = {did: dev for did, dev in self.devices.items() if dev.discover}
-            self.device_registry.async_get = lambda did: self.devices.get(did)
-            self.hass.data["device_registry"] = self.device_registry
-            self.entity_registry = AsyncMock(spec=EntityRegistry)
-            if self.entities:
-                self.hass.states.get.side_effect = lambda v: self.entities.get(v)
-            self.hass.data["entity_registry"] = self.entity_registry
-            self.issue_registry = AsyncMock(spec=IssueRegistry)
-            self.hass.data["issue_registry"] = self.issue_registry
-            self.hass.data[DATA_MQTT] = Mock(spec=MqttData)
-            self.hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
-            self.hass.data[DATA_MQTT].client.connected = True
-            self.hass.config_entries._entries = ConfigEntryItems(self.hass)
-        self.deliveries: dict[str, Any] = deepcopy(deliveries) if deliveries else {}
-        self.scenarios: ConfigType = deepcopy(scenarios) if scenarios else {}
-        self.recipients: list[dict[str, Any]] = deepcopy(recipients) if recipients else []
-        self.transport_configs: ConfigType = deepcopy(transport_configs) if transport_configs else {}
-        self.mobile_actions: ConfigType = deepcopy(mobile_actions) if mobile_actions else {}
-        self.hass_external_url = hass_external_url
-
-        hass_access = HomeAssistantAPI(self.hass)
-        people_registry = PeopleRegistry(self.recipients or [], hass_access)
-        scenario_registry = ScenarioRegistry(self.scenarios or {})
-
-        if not transport_instances:
-            transport_types = transport_types or TRANSPORTS
-
-        delivery_registry = DeliveryRegistry(
-            deliveries=self.deliveries or {},
-            transport_instances=transport_instances or None,
-            transport_types=transport_types,
-            transport_configs=self.transport_configs or {},
-        )
-
-        super().__init__(hass_access, people_registry, scenario_registry, delivery_registry, Snoozer(), **kwargs)
-
-    async def test_initialize(self, transport_instances: list[Transport] | None = None) -> None:
-        if transport_instances:
-            self.delivery_registry._transport_instances = transport_instances
-        await self.initialize()
-        self.hass_access.initialize()
-        if self.hass_external_url:
-            self.hass_access.external_url = self.hass_external_url
-        self.people_registry.initialize()
-        await self.delivery_registry.initialize(self)
-        await self.scenario_registry.initialize(
-            self.delivery_registry.deliveries, self.delivery_registry.default_deliveries, self.mobile_actions, self.hass_access
-        )
-
-    def transport(self, transport_name: str) -> Transport:
-        return self.delivery_registry.transports[transport_name]
 
 
 @pytest.fixture

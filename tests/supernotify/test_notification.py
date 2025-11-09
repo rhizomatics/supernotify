@@ -6,7 +6,6 @@ from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
 from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
-from conftest import TestingContext
 from custom_components.supernotify import (
     ATTR_DATA,
     ATTR_MEDIA,
@@ -37,6 +36,8 @@ from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:

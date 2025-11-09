@@ -5,7 +5,6 @@ from homeassistant.const import CONF_ACTION, CONF_TARGET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from conftest import TestingContext
 from custom_components.supernotify import (
     CONF_DELIVERY_DEFAULTS,
     CONF_SELECTION,
@@ -21,6 +20,8 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.transports.generic import GenericTransport
+
+from .hass_setup_lib import TestingContext
 
 DELIVERY: dict[str, Any] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},

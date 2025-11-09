@@ -3,14 +3,13 @@ from typing import cast
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
-from conftest import TestingContext
 from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, CONF_PERSON, CONF_RECIPIENTS, CONF_TRANSPORT
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 
 from .doubles_lib import DummyTransport
-from .hass_setup_lib import register_mobile_app
+from .hass_setup_lib import TestingContext, register_mobile_app
 
 
 async def test_default_recipients() -> None:

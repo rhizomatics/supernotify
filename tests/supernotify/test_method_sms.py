@@ -1,11 +1,12 @@
 from homeassistant.const import CONF_ACTION, CONF_DEFAULT
 
-from conftest import TestingContext
 from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_SMS
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_deliver() -> None:

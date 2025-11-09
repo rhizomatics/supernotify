@@ -2,13 +2,14 @@ from unittest.mock import call
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT
 
-from conftest import TestingContext
 from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_CHIME
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.chime import ChimeTransport
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_deliver() -> None:
