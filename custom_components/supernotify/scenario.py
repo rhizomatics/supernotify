@@ -50,10 +50,10 @@ class ScenarioRegistry:
         deliveries: dict[str, Delivery],
         default_deliveries: list[Delivery],
         mobile_actions: ConfigType,
-        hass_access: HomeAssistantAPI,
+        hass_api: HomeAssistantAPI,
     ) -> None:
         for scenario_name, scenario_definition in self._config.items():
-            scenario = Scenario(scenario_name, scenario_definition, hass_access)
+            scenario = Scenario(scenario_name, scenario_definition, hass_api)
             if await scenario.validate(valid_deliveries=list(deliveries), valid_action_groups=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
         self.refresh(deliveries, default_deliveries, self.default_scenario_for_testing)
@@ -95,8 +95,8 @@ class ScenarioRegistry:
 
 
 class Scenario:
-    def __init__(self, name: str, scenario_definition: dict[str, Any], hass_access: HomeAssistantAPI) -> None:
-        self.hass_access: HomeAssistantAPI = hass_access
+    def __init__(self, name: str, scenario_definition: dict[str, Any], hass_api: HomeAssistantAPI) -> None:
+        self.hass_api: HomeAssistantAPI = hass_api
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
@@ -115,7 +115,7 @@ class Scenario:
             error: str | None = None
             try:
                 # note: basic template syntax within conditions already validated by voluptuous checks
-                await self.hass_access.evaluate_condition(self.condition, ConditionVariables(), strict=True, validate=True)
+                await self.hass_api.evaluate_condition(self.condition, ConditionVariables(), strict=True, validate=True)
             except vol.Invalid as vi:
                 _LOGGER.error(
                     f"SUPERNOTIFY Condition definition for scenario {self.name} fails Home Assistant schema check {vi}"
@@ -125,7 +125,7 @@ class Scenario:
                 _LOGGER.error("SUPERNOTIFY Disabling scenario %s with error validating %s: %s", self.name, self.condition, e)
                 error = f"Unknown error {e}"
             if error is not None:
-                self.hass_access.raise_issue(
+                self.hass_api.raise_issue(
                     f"scenario_{self.name}_condition",
                     is_fixable=False,
                     issue_key="scenario_condition",
@@ -141,7 +141,7 @@ class Scenario:
                 if delivery_name not in valid_deliveries:
                     _LOGGER.error(f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
                     invalid_deliveries.append(delivery_name)
-                    self.hass_access.raise_issue(
+                    self.hass_api.raise_issue(
                         f"scenario_{self.name}_delivery_{delivery_name}",
                         is_fixable=False,
                         issue_key="scenario_delivery",
@@ -158,7 +158,7 @@ class Scenario:
                 if action_group_name not in valid_action_groups:
                     _LOGGER.error(f"SUPERNOTIFY Unknown delivery {action_group_name} removed from scenario {self.name}")
                     invalid_action_groups.append(action_group_name)
-                    self.hass_access.raise_issue(
+                    self.hass_api.raise_issue(
                         f"scenario_{self.name}_action_group_{action_group_name}",
                         is_fixable=False,
                         issue_key="scenario_delivery",
@@ -197,7 +197,7 @@ class Scenario:
         result: bool | None = False
         if self.enabled and self.condition:
             try:
-                result = await self.hass_access.evaluate_condition(self.condition, condition_variables)
+                result = await self.hass_api.evaluate_condition(self.condition, condition_variables)
                 if result is None:
                     _LOGGER.warning("SUPERNOTIFY Scenario condition empty result")
             except Exception as e:
@@ -215,7 +215,7 @@ class Scenario:
         result: bool | None = False
         trace: ActionTrace | None = None
         if self.enabled and self.condition:
-            result, trace = await self.hass_access.trace_condition(
+            result, trace = await self.hass_api.trace_condition(
                 self.condition, condition_variables, strict=strict, validate=validate, trace_name=f"scenario_{self.name}"
             )
             if trace:

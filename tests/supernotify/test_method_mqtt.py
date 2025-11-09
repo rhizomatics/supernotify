@@ -38,7 +38,7 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
     await notification.initialize()
     await notification.deliver()
 
-    context.hass_access.call_service.assert_called_with(
+    context.hass_api.call_service.assert_called_with(
         "mqtt",
         "publish",
         service_data={

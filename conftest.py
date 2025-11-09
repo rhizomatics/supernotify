@@ -27,6 +27,7 @@ from custom_components.supernotify import (
     CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
+from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -94,9 +95,9 @@ def mock_hass(
 
 
 @pytest.fixture
-def mock_people_registry(mock_hass_access: HomeAssistantAPI) -> PeopleRegistry:
+def mock_people_registry(mock_hass_api: HomeAssistantAPI) -> PeopleRegistry:
     registry = Mock(spec=PeopleRegistry)
-    registry.hass_access = mock_hass_access
+    registry.hass_api = mock_hass_api
     registry.people = {
         "person.new_home_owner": {CONF_PERSON: "person.new_home_owner", ATTR_STATE: "not_home"},
         "person.bidey_in": {
@@ -133,7 +134,7 @@ def mock_delivery_registry() -> DeliveryRegistry:
 
 
 @pytest.fixture
-def mock_hass_access(mock_hass: HomeAssistant) -> HomeAssistantAPI:
+def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked = AsyncMock(spec=HomeAssistantAPI)
     mocked._hass = mock_hass
     mocked._hass.get_state = Mock(return_value=Mock(spec=State))
@@ -146,20 +147,20 @@ def mock_context(
     mock_hass: HomeAssistant,
     mock_people_registry: PeopleRegistry,
     mock_scenario_registry: ScenarioRegistry,
-    mock_hass_access: HomeAssistantAPI,
+    mock_hass_api: HomeAssistantAPI,
     mock_delivery_registry: DeliveryRegistry,
 ) -> Context:
     context = Mock(spec=Context)
     context.scenario_registry = mock_scenario_registry
     context.people_registry = mock_people_registry
     context.delivery_registry = mock_delivery_registry
-    context.hass_access = mock_hass_access
+    context.hass_api = mock_hass_api
     context.cameras = {}
     context.snoozer = Snoozer()
     context._fallback_by_default = []
     context.mobile_actions = {}
-    context.hass_access.internal_url = "http://hass-dev"
-    context.hass_access.external_url = "http://hass-dev.nabu.casa"
+    context.hass_api.internal_url = "http://hass-dev"
+    context.hass_api.external_url = "http://hass-dev.nabu.casa"
     context.media_path = Path("/nosuchpath")
     context.template_path = Path("/templates_here")
 
@@ -200,22 +201,23 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
     config = uninitialized_unmocked_config
     await config.initialize()
     config.people_registry.initialize()
-    hass_access = HomeAssistantAPI(mock_hass)
+    hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
     await config.scenario_registry.initialize(
-        config.delivery_registry.deliveries, config.delivery_registry.default_deliveries, {}, hass_access
+        config.delivery_registry.deliveries, config.delivery_registry.default_deliveries, {}, hass_api
     )
     return config
 
 
 @pytest.fixture
 def uninitialized_unmocked_config(
-    mock_hass_access: HomeAssistantAPI,
+    mock_hass_api: HomeAssistantAPI,
 ) -> Context:
-    people_registry = PeopleRegistry([], mock_hass_access)
+    people_registry = PeopleRegistry([], mock_hass_api)
     scenario_registry = ScenarioRegistry({})
     delivery_registry = DeliveryRegistry({})
-    return Context(mock_hass_access, people_registry, scenario_registry, delivery_registry, Snoozer())
+    archive = NotificationArchive({}, mock_hass_api)
+    return Context(mock_hass_api, people_registry, scenario_registry, delivery_registry, archive, Snoozer())
 
 
 @pytest.fixture

@@ -93,9 +93,9 @@ async def test_snap_camera(mock_hass) -> None:
 async def test_snap_image(mock_context: Context, image_type: str) -> None:
     image_path = IMAGE_PATH / f"example_image.{image_type}"
     image_entity = MockImageEntity(image_path)
-    if mock_context.hass_access._hass:
-        mock_context.hass_access._hass.data["image"] = Mock(spec=EntityComponent)
-        mock_context.hass_access._hass.data["image"].get_entity = Mock(return_value=image_entity)
+    if mock_context.hass_api._hass:
+        mock_context.hass_api._hass.data["image"] = Mock(spec=EntityComponent)
+        mock_context.hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path: Path = Path(tmp_dir)

@@ -50,7 +50,7 @@ class Transport:
         device_discovery: bool | None = False,
         enabled: bool = True,
     ) -> None:
-        self.hass_access: HomeAssistantAPI = context.hass_access
+        self.hass_api: HomeAssistantAPI = context.hass_api
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         self.context: Context = context
@@ -75,7 +75,7 @@ class Transport:
             for domain in self.device_domain:
                 discovered: int = 0
                 added: int = 0
-                for d in self.hass_access.discover_devices(domain):
+                for d in self.hass_api.discover_devices(domain):
                     discovered += 1
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()
@@ -153,7 +153,7 @@ class Transport:
         if delivery.condition is None:
             return True
 
-        return await self.hass_access.evaluate_condition(delivery.condition, condition_variables)
+        return await self.hass_api.evaluate_condition(delivery.condition, condition_variables)
 
     async def call_action(
         self,
@@ -178,10 +178,10 @@ class Transport:
                         CallRecord(time.time() - start_time, domain, service, dict(action_data), dict(target_data))
                     )
                     # TODO: add a debug mode with return response and blocking True
-                    await self.hass_access.call_service(domain, service, service_data=action_data, target_data=target_data)
+                    await self.hass_api.call_service(domain, service, service_data=action_data, target_data=target_data)
                 else:
                     envelope.calls.append(CallRecord(time.time() - start_time, domain, service, dict(action_data), None))
-                    await self.hass_access.call_service(domain, service, service_data=action_data)
+                    await self.hass_api.call_service(domain, service, service_data=action_data)
                 envelope.delivered = 1
             else:
                 _LOGGER.debug(

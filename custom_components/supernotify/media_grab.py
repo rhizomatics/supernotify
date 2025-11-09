@@ -139,9 +139,9 @@ async def snap_image(
     image_path: anyio.Path | None = None
     try:
         image_entity: ImageEntity | None = None
-        if context.hass_access._hass:
+        if context.hass_api._hass:
             # TODO: must be a better hass method than this
-            image_entity = context.hass_access._hass.data["image"].get_entity(entity_id)
+            image_entity = context.hass_api._hass.data["image"].get_entity(entity_id)
         if image_entity:
             bitmap: bytes | None = await image_entity.async_image()
             if bitmap is None:
@@ -268,22 +268,22 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
     image_path: Path | None = None
     if notification.snapshot_image_path is not None:
         return notification.snapshot_image_path  # type: ignore
-    if snapshot_url and context.media_path and context.hass_access:
+    if snapshot_url and context.media_path and context.hass_api:
         image_path = await snapshot_from_url(
-            context.hass_access._hass,
+            context.hass_api._hass,
             snapshot_url,
             notification.id,
             context.media_path,
-            context.hass_access.internal_url,
+            context.hass_api.internal_url,
             jpeg_opts,
         )
-    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass_access._hass and context.media_path:
+    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass_api._hass and context.media_path:
         image_path = await snap_image(context, camera_entity_id, context.media_path, notification.id, jpeg_opts)
     elif camera_entity_id:
-        if not context.hass_access._hass or not context.media_path:
+        if not context.hass_api._hass or not context.media_path:
             _LOGGER.warning("SUPERNOTIFY No homeassistant ref or media path for camera %s", camera_entity_id)
             return None
-        active_camera_entity_id = select_avail_camera(context.hass_access._hass, context.cameras, camera_entity_id)
+        active_camera_entity_id = select_avail_camera(context.hass_api._hass, context.cameras, camera_entity_id)
         if active_camera_entity_id:
             camera_config = context.cameras.get(active_camera_entity_id, {})
             camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
@@ -299,13 +299,13 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             )
             if camera_ptz_preset:
                 await move_camera_to_ptz_preset(
-                    context.hass_access._hass, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
+                    context.hass_api._hass, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
                 )
             if camera_delay:
                 _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
                 await asyncio.sleep(camera_delay)
             image_path = await snap_camera(
-                context.hass_access._hass,
+                context.hass_api._hass,
                 active_camera_entity_id,
                 media_path=context.media_path,
                 max_camera_wait=15,
@@ -313,7 +313,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             )
             if camera_ptz_preset and camera_ptz_preset_default:
                 await move_camera_to_ptz_preset(
-                    context.hass_access._hass, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
+                    context.hass_api._hass, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
                 )
 
     if image_path is None:

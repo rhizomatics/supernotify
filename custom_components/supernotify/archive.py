@@ -7,9 +7,21 @@ from typing import Any
 import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
+from homeassistant.const import CONF_ENABLED
+from homeassistant.helpers import condition as condition
 from homeassistant.helpers.json import save_json
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+from . import (
+    CONF_ARCHIVE_DAYS,
+    CONF_ARCHIVE_MQTT_QOS,
+    CONF_ARCHIVE_MQTT_RETAIN,
+    CONF_ARCHIVE_MQTT_TOPIC,
+    CONF_ARCHIVE_PATH,
+    CONF_ARCHIVE_PURGE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +40,8 @@ class ArchivableObject:
 
 
 class ArchiveTopic:
-    def __init__(self, hass_access: HomeAssistantAPI, topic: str, qos: int = 0, retain: bool = True) -> None:
-        self.hass_access = hass_access
+    def __init__(self, hass_api: HomeAssistantAPI, topic: str, qos: int = 0, retain: bool = True) -> None:
+        self.hass_api = hass_api
         self.topic = topic
         self.qos = qos
         self.retain = retain
@@ -39,7 +51,7 @@ class ArchiveTopic:
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
-            await self.hass_access.mqtt_publish(
+            await self.hass_api.mqtt_publish(
                 topic=topic,
                 payload=payload,
                 qos=self.qos,
@@ -54,25 +66,20 @@ class ArchiveTopic:
 class NotificationArchive:
     def __init__(
         self,
-        hass_access: HomeAssistantAPI,
-        enabled: bool = True,
-        archive_path: str | None = None,
-        archive_days: str | None = None,
-        purge_minute_interval: str | None = None,
-        mqtt_topic: str | None = None,
-        mqtt_qos: int = 0,
-        mqtt_retain: bool = False,
+        config: ConfigType,
+        hass_api: HomeAssistantAPI,
     ) -> None:
-        self.hass_access = hass_access
-        self.enabled = enabled
+        self.hass_api = hass_api
+        self.enabled = bool(config.get(CONF_ENABLED, False))
+        self.configured_archive_path: str | None = config.get(CONF_ARCHIVE_PATH)
+        self.archive_days = int(config.get(CONF_ARCHIVE_DAYS, ARCHIVE_DEFAULT_DAYS))
+        self.mqtt_topic: str | None = config.get(CONF_ARCHIVE_MQTT_TOPIC)
+        self.mqtt_qos: int = int(config.get(CONF_ARCHIVE_MQTT_QOS, 0))
+        self.mqtt_retain: bool = bool(config.get(CONF_ARCHIVE_MQTT_RETAIN, True))
+
         self.last_purge: dt.datetime | None = None
-        self.configured_archive_path: str | None = archive_path
         self.archive_path: anyio.Path | None = None
-        self.archive_days: int = int(archive_days) if archive_days else ARCHIVE_DEFAULT_DAYS
-        self.purge_minute_interval = int(purge_minute_interval) if purge_minute_interval else ARCHIVE_PURGE_MIN_INTERVAL
-        self.mqtt_topic = mqtt_topic
-        self.mqtt_qos = mqtt_qos
-        self.mqtt_retain = mqtt_retain
+        self.purge_minute_interval = int(config.get(CONF_ARCHIVE_PURGE_INTERVAL, ARCHIVE_PURGE_MIN_INTERVAL))
         self.archive_topic: ArchiveTopic | None = None
 
     async def initialize(self) -> None:
@@ -102,8 +109,8 @@ class NotificationArchive:
                 self.enabled = False
 
         if self.mqtt_topic is not None:
-            if await self.hass_access.mqtt_available(raise_on_error=False):
-                self.archive_topic = ArchiveTopic(self.hass_access, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
+            if await self.hass_api.mqtt_available(raise_on_error=False):
+                self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
                 _LOGGER.info(
                     f"SUPERNOTIFY Archiving to MQTT topic {self.mqtt_topic}, qos {self.mqtt_qos}, retain {self.mqtt_retain}"
                 )

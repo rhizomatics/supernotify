@@ -120,7 +120,7 @@ class ChimeTransport(Transport):
         # expand groups
         expanded_targets = {
             e: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, entity_id=e)
-            for e in self.hass_access.expand_group(target.entity_ids)
+            for e in self.hass_api.expand_group(target.entity_ids)
         }
         expanded_targets.update({
             d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
@@ -173,7 +173,7 @@ class ChimeTransport(Transport):
             if target_config.domain is not None and target_config.domain in DEVICE_DOMAINS:
                 domain = target_config.domain
             else:
-                domain = self.hass_access.domain_for_device(target_config.device_id, DEVICE_DOMAINS)
+                domain = self.hass_api.domain_for_device(target_config.device_id, DEVICE_DOMAINS)
 
         elif target_config.entity_id and "." in target_config.entity_id:
             domain, name = target_config.entity_id.split(".", 1)

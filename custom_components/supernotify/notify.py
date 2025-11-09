@@ -65,6 +65,7 @@ from . import (
     PRIORITY_VALUES,
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
+from .archive import NotificationArchive
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
@@ -322,19 +323,19 @@ class SupernotifyAction(BaseNotificationService):
         self.failures: int = 0
         self.housekeeping: dict[str, Any] = housekeeping or {}
         self.sent: int = 0
-        hass_access = HomeAssistantAPI(hass)
+        hass_api = HomeAssistantAPI(hass)
         self.context = Context(
-            hass_access,
-            PeopleRegistry(recipients or [], hass_access),
+            hass_api,
+            PeopleRegistry(recipients or [], hass_api),
             ScenarioRegistry(scenarios or {}),
             DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
+            NotificationArchive(archive or {}, hass_api),
             Snoozer(),
             links or [],
             recipients or [],
             mobile_actions,
             template_path,
             media_path,
-            archive_config=archive,
             cameras=cameras,
         )
 
@@ -348,15 +349,16 @@ class SupernotifyAction(BaseNotificationService):
 
     async def initialize(self) -> None:
         await self.context.initialize()
-        self.context.hass_access.initialize()
+        self.context.hass_api.initialize()
         self.context.people_registry.initialize()
         await self.context.delivery_registry.initialize(self.context)
         await self.context.scenario_registry.initialize(
             self.context.delivery_registry.deliveries,
             self.context.delivery_registry.default_deliveries,
             self.context.mobile_actions,
-            self.context.hass_access,
+            self.context.hass_api,
         )
+        await self.context.archive.initialize()
 
         self.expose_entities()
         self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))

@@ -33,7 +33,7 @@ async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
             target=Target(["notify.pong", "weird_generic_a"]),
         )
     )
-    context.hass_access.call_service.assert_called_with(
+    context.hass_api.call_service.assert_called_with(
         "notify",
         "send_message",
         service_data={ATTR_MESSAGE: "hello there", ATTR_TITLE: "testing"},

@@ -29,7 +29,7 @@ async def test_notify_alexa(mock_hass, unmocked_config) -> None:  # type: ignore
             target=Target(["notify.bedroom_echo_announce"]),
         )
     )
-    unmocked_config.hass_access.call_service.assert_called_with(
+    unmocked_config.hass_api.call_service.assert_called_with(
         "notify",
         "send_message",
         service_data={"message": "hello there"},

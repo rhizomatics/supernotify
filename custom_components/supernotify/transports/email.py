@@ -137,9 +137,9 @@ class EmailTransport(Transport):
                 "envelope": envelope,
                 "subheading": "Home Assistant Notification",
                 "server": {
-                    "name": self.hass_access.hass_name,
-                    "internal_url": self.hass_access.internal_url,
-                    "external_url": self.hass_access.external_url,
+                    "name": self.hass_api.hass_name,
+                    "internal_url": self.hass_api.internal_url,
+                    "external_url": self.hass_api.external_url,
                 },
                 "preformatted_html": preformatted_html,
                 "img": None,

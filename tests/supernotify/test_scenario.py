@@ -30,25 +30,25 @@ from custom_components.supernotify.transports.generic import GenericTransport
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_simple_create(mock_hass_access: HomeAssistantAPI) -> None:
-    uut = Scenario("testing", {}, mock_hass_access)
+async def test_simple_create(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = Scenario("testing", {}, mock_hass_api)
     assert await uut.validate()
     assert not uut.default
     assert await uut.validate()
     assert not await uut.evaluate()
 
 
-async def test_simple_trace(mock_hass_access: HomeAssistantAPI) -> None:
-    uut = Scenario("testing", {}, mock_hass_access)
+async def test_simple_trace(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = Scenario("testing", {}, mock_hass_api)
     assert await uut.validate()
     assert not uut.default
     assert await uut.validate()
     assert not await uut.trace()
 
 
-async def test_validate(mock_hass_access: HomeAssistantAPI) -> None:
+async def test_validate(mock_hass_api: HomeAssistantAPI) -> None:
     uut = Scenario(
-        "testing", {"delivery": {"good": {}, "bad": {}, "ok": {}}, "action_groups": ["lights", "snoozes"]}, mock_hass_access
+        "testing", {"delivery": {"good": {}, "bad": {}, "ok": {}}, "action_groups": ["lights", "snoozes"]}, mock_hass_api
     )
     await uut.validate(valid_deliveries=["good", "ok"], valid_action_groups=["snoozes"])
     assert "bad" not in uut.delivery
@@ -57,7 +57,7 @@ async def test_validate(mock_hass_access: HomeAssistantAPI) -> None:
     assert "lights" not in uut.action_groups
     assert "snoozes" in uut.action_groups
 
-    mock_hass_access.raise_issue.assert_called_with(  # type: ignore
+    mock_hass_api.raise_issue.assert_called_with(  # type: ignore
         "scenario_testing_action_group_lights",
         is_fixable=False,
         issue_key="scenario_delivery",
@@ -68,7 +68,7 @@ async def test_validate(mock_hass_access: HomeAssistantAPI) -> None:
 
 
 async def test_conditional_create(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
@@ -88,7 +88,7 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
                 ],
             },
         }),
-        hass_access,
+        hass_api,
     )
     assert await uut.validate()
     assert not uut.default
@@ -101,7 +101,7 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
 
 
 async def test_select_scenarios(hass: HomeAssistant, mock_context: Context) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     config = PLATFORM_SCHEMA({
         "platform": "supernotify",
         "scenarios": {
@@ -128,7 +128,7 @@ async def test_select_scenarios(hass: HomeAssistant, mock_context: Context) -> N
     })
     reg = ScenarioRegistry(config["scenarios"])
     hass.states.async_set("sensor.outside_temperature", "15")
-    await reg.initialize({}, [], {}, hass_access)
+    await reg.initialize({}, [], {}, hass_api)
     assert len(reg.scenarios) == 3
     mock_context.scenario_registry = reg
     uut = Notification(mock_context)
@@ -147,7 +147,7 @@ async def test_select_scenarios(hass: HomeAssistant, mock_context: Context) -> N
 
 
 async def test_scenario_templating(hass: HomeAssistant, uninitialized_unmocked_config: Context) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     config = PLATFORM_SCHEMA({
         "platform": "supernotify",
         "scenarios": {
@@ -177,13 +177,13 @@ async def test_scenario_templating(hass: HomeAssistant, uninitialized_unmocked_c
     reg = ScenarioRegistry(config["scenarios"])
     context = uninitialized_unmocked_config
     # relies on a real hass Template class
-    hass_access = HomeAssistantAPI(hass)
-    context.hass_access = hass_access
+    hass_api = HomeAssistantAPI(hass)
+    context.hass_api = hass_api
 
     context.delivery_registry._deliveries = {"smtp": {CONF_TRANSPORT: "email"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}}
     context.delivery_registry._transport_types = TRANSPORTS
     await context.delivery_registry.initialize(context)
-    await reg.initialize(context.delivery_registry.deliveries, [], {}, hass_access)
+    await reg.initialize(context.delivery_registry.deliveries, [], {}, hass_api)
     context.scenario_registry = reg
     uut = Notification(
         context,
@@ -214,7 +214,7 @@ async def test_scenario_templating(hass: HomeAssistant, uninitialized_unmocked_c
 
 
 async def test_scenario_constraint(hass: HomeAssistant, mock_context: Context) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     mock_context.scenario_registry.delivery_by_scenario = {
         SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
@@ -222,7 +222,7 @@ async def test_scenario_constraint(hass: HomeAssistant, mock_context: Context) -
     }
     mock_context.delivery_registry.deliveries["siren"] = Delivery("siren", {}, GenericTransport(mock_context))
     mock_context.scenario_registry.scenarios = {
-        "Alarm": Scenario("Alarm", {}, hass_access),
+        "Alarm": Scenario("Alarm", {}, hass_api),
         "Mostly": Scenario(
             "Mostly",
             SCENARIO_SCHEMA({
@@ -237,7 +237,7 @@ async def test_scenario_constraint(hass: HomeAssistant, mock_context: Context) -
                     ],
                 },
             }),
-            hass_access,
+            hass_api,
         ),
     }
     uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
@@ -253,7 +253,7 @@ async def test_scenario_constraint(hass: HomeAssistant, mock_context: Context) -
 
 
 async def test_scenario_suppress(hass: HomeAssistant, mock_context: Context) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     mock_context.scenario_registry.delivery_by_scenario = {
         SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
@@ -268,8 +268,8 @@ async def test_scenario_suppress(hass: HomeAssistant, mock_context: Context) -> 
     mock_context.delivery_registry.deliveries["mobile"].selection = [SELECTION_BY_SCENARIO]
 
     mock_context.scenario_registry.scenarios = {
-        "Alarm": Scenario("Alarm", {}, hass_access),
-        "DevNull": Scenario("DevNull", {}, hass_access),
+        "Alarm": Scenario("Alarm", {}, hass_api),
+        "DevNull": Scenario("DevNull", {}, hass_api),
         "Mostly": Scenario(
             "Mostly",
             SCENARIO_SCHEMA({
@@ -284,7 +284,7 @@ async def test_scenario_suppress(hass: HomeAssistant, mock_context: Context) -> 
                     ],
                 },
             }),
-            hass_access,
+            hass_api,
         ),
     }
     # Only deliveries for enabled scenarios
@@ -314,7 +314,7 @@ async def test_scenario_suppress(hass: HomeAssistant, mock_context: Context) -> 
 
 
 async def test_attributes(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
@@ -339,7 +339,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
                 ],
             },
         }),
-        hass_access,
+        hass_api,
     )
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
     assert await uut.validate()
@@ -350,13 +350,13 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
 
 async def test_secondary_scenario(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
             CONF_CONDITION: {"condition": "template", "value_template": '{{"scenario-possible-danger" in applied_scenarios}}'}
         }),
-        hass_access,
+        hass_api,
     )
     assert await uut.validate()
     cvars = ConditionVariables(["scenario-no-danger", "sunny"], [], [], PRIORITY_MEDIUM, {})
@@ -368,7 +368,7 @@ async def test_secondary_scenario(hass: HomeAssistant) -> None:
 
 
 async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
@@ -377,13 +377,13 @@ async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
                 "value_template": '{{weather == "sunny" and "danger" in applied_scenarios}}',
             }
         }),
-        hass_access,
+        hass_api,
     )
     assert not await uut.validate()
 
 
 async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     hass.states.async_set("sensor.issues", "23")
     uut = Scenario(
         "testing",
@@ -407,7 +407,7 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
                 ],
             }
         }),
-        hass_access,
+        hass_api,
     )
     assert await uut.validate()
     assert await uut.evaluate(ConditionVariables())
@@ -416,11 +416,11 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
 
 
 async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({CONF_CONDITION: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
-        hass_access,
+        hass_api,
     )
     hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 12})
     assert await uut.validate()
@@ -430,13 +430,13 @@ async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
 
 
 async def test_trace(hass: HomeAssistant) -> None:
-    hass_access = HomeAssistantAPI(hass)
+    hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
             CONF_CONDITION: {"condition": "template", "value_template": "{{'scenario-alert' in applied_scenarios}}"}
         }),
-        hass_access,
+        hass_api,
     )
     assert await uut.validate()
     assert not uut.default

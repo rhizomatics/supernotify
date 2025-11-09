@@ -80,8 +80,8 @@ class MobilePushTransport(Transport):
 
         media = envelope.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
-        clip_url: str | None = self.hass_access.abs_url(media.get(ATTR_MEDIA_CLIP_URL))
-        snapshot_url: str | None = self.hass_access.abs_url(media.get(ATTR_MEDIA_SNAPSHOT_URL))
+        clip_url: str | None = self.hass_api.abs_url(media.get(ATTR_MEDIA_CLIP_URL))
+        snapshot_url: str | None = self.hass_api.abs_url(media.get(ATTR_MEDIA_SNAPSHOT_URL))
         # options = data.get(CONF_OPTIONS, {})
 
         match envelope.priority:
@@ -120,7 +120,7 @@ class MobilePushTransport(Transport):
 
         data.setdefault("actions", [])
         for action in envelope.actions:
-            app_url: str | None = self.hass_access.abs_url(action.get(ATTR_ACTION_URL))
+            app_url: str | None = self.hass_api.abs_url(action.get(ATTR_ACTION_URL))
             if app_url:
                 app_url_title = action.get(ATTR_ACTION_URL_TITLE) or self.action_title(app_url) or "Click for Action"
                 action[ATTR_ACTION_URL_TITLE] = app_url_title

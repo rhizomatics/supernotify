@@ -109,7 +109,7 @@ async def test_device_discovery(unmocked_config: Context) -> None:
     await uut.initialize()
     assert uut.delivery_defaults.target is None
     dev: DeviceEntry = Mock(spec=DeviceEntry, id="abc123")
-    unmocked_config.hass_access.discover_devices = Mock(  # type: ignore
+    unmocked_config.hass_api.discover_devices = Mock(  # type: ignore
         return_value=[dev]
     )
 

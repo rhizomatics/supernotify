@@ -40,7 +40,7 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
             target=Target(["media_player.hall", "media_player.toilet"]),
         )
     )
-    uninitialized_unmocked_config.hass_access.call_service.assert_called_with(  # type: ignore
+    uninitialized_unmocked_config.hass_api.call_service.assert_called_with(  # type: ignore
         "notify",
         "alexa_media_player_custom",
         service_data={

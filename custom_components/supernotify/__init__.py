@@ -91,6 +91,7 @@ CONF_PTZ_METHOD: str = "ptz_method"
 CONF_PTZ_PRESET_DEFAULT: str = "ptz_default_preset"
 CONF_ALT_CAMERA: str = "alt_camera"
 CONF_CAMERAS: str = "cameras"
+CONF_ARCHIVE_PURGE_INTERVAL: str = "purge_interval"
 
 OCCUPANCY_ANY_IN = "any_in"
 OCCUPANCY_ANY_OUT = "any_out"
@@ -330,6 +331,7 @@ ARCHIVE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ARCHIVE_MQTT_TOPIC): cv.string,
     vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
     vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
+    vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
 })
 
 HOUSEKEEPING_SCHEMA = vol.Schema({

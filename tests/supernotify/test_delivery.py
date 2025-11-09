@@ -107,7 +107,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
 async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_context: Context) -> None:
     uut = Delivery("ALL", {}, NotifyEntityTransport(mock_context))
     assert await uut.validate(mock_context) is False
-    mock_context.hass_access.raise_issue.assert_called_with(  # type: ignore
+    mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_ALL_reserved_name",
         issue_key="delivery_reserved_name",
         issue_map={"delivery": "ALL"},
@@ -117,7 +117,7 @@ async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_
 async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_context: Context) -> None:
     uut = Delivery("generic", {}, GenericTransport(mock_context))
     assert await uut.validate(mock_context) is False
-    mock_context.hass_access.raise_issue.assert_called_with(  # type: ignore
+    mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_action",
         issue_key="delivery_invalid_action",
         issue_map={"action": "", "delivery": "generic"},
@@ -125,14 +125,14 @@ async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_
 
 
 async def test_broken_create_with_bad_condition(mock_context: Context) -> None:
-    mock_context.hass_access.evaluate_condition = AsyncMock(side_effect=Exception("integrations"))  # type: ignore
+    mock_context.hass_api.evaluate_condition = AsyncMock(side_effect=Exception("integrations"))  # type: ignore
     uut = Delivery(
         "generic",
         {CONF_CONDITION: {"condition": "xor"}},
         GenericTransport(mock_context, delivery_defaults={CONF_ACTION: "notify.notify"}),
     )
     assert await uut.validate(mock_context) is False
-    mock_context.hass_access.raise_issue.assert_called_with(  # type: ignore
+    mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_condition",
         issue_key="delivery_invalid_condition",
         issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "integrations"},

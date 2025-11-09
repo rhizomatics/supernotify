@@ -296,9 +296,9 @@ async def test_message_usage(mock_context: Context) -> None:
     assert uut.title("push") is None
 
 
-async def test_merge(mock_hass_access: HomeAssistantAPI, mock_context: Context) -> None:
+async def test_merge(mock_hass_api: HomeAssistantAPI, mock_context: Context) -> None:
     mock_context.scenario_registry.scenarios = {
-        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass_access)
+        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass_api)
     }
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
     uut = Notification(

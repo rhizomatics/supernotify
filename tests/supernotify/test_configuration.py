@@ -85,8 +85,8 @@ async def test_delivery_override_transport() -> None:
 
 
 def test_autoresolve_mobile_devices_for_no_devices(hass: HomeAssistant) -> None:
-    hass_access: HomeAssistantAPI = HomeAssistantAPI(hass)
-    uut = PeopleRegistry([], hass_access)
+    hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
+    uut = PeopleRegistry([], hass_api)
     uut.initialize()
     assert uut.mobile_devices_for_person("person.test_user") == []
 
@@ -96,8 +96,8 @@ def test_autoresolve_mobile_devices_for_devices(
     device_registry: device_registry.DeviceRegistry,
     entity_registry: entity_registry.EntityRegistry,
 ) -> None:
-    hass_access: HomeAssistantAPI = HomeAssistantAPI(hass)
-    uut = PeopleRegistry([], hass_access)
+    hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
+    uut = PeopleRegistry([], hass_api)
     uut.initialize()
     device = register_mobile_app(uut, person="person.test_user", device_name="phone_bob", title="Bobs Phone")
     assert device is not None

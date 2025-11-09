@@ -274,7 +274,7 @@ class Notification(ArchivableObject):
             try:
                 template_format = scen_obj.delivery.get(delivery_name, {}).get(CONF_DATA, {}).get(template_field)
                 if template_format is not None:
-                    template = self.context.hass_access.template(template_format)
+                    template = self.context.hass_api.template(template_format)
                     rendered = template.async_render(variables=context_vars)
             except TemplateError as e:
                 _LOGGER.warning("SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, delivery_name, e)

@@ -87,8 +87,8 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         message="testing 123",
         data={"delivery_selection": DELIVERY_SELECTION_EXPLICIT},
     )
-    uut.context.hass_access._hass.services.async_call.assert_not_called()  # type: ignore
-    uut.context.hass_access._hass.services.async_call.reset_mock()  # type: ignore
+    uut.context.hass_api._hass.services.async_call.assert_not_called()  # type: ignore
+    uut.context.hass_api._hass.services.async_call.reset_mock()  # type: ignore
 
     await uut.async_send_message(
         title="test_title",
@@ -97,7 +97,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         data={"delivery": ["persistent"]},
     )
     # explicit delivery selection overrides everything else
-    uut.context.hass_access._hass.services.async_call.assert_called_with(  # type: ignore
+    uut.context.hass_api._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
@@ -106,7 +106,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         target=None,
         return_response=False,
     )
-    uut.context.hass_access._hass.services.async_call.reset_mock()  # type: ignore
+    uut.context.hass_api._hass.services.async_call.reset_mock()  # type: ignore
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
@@ -116,7 +116,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         },
     )
     # scenario switches one delivery on
-    uut.context.hass_access._hass.services.async_call.assert_called_with(  # type: ignore
+    uut.context.hass_api._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
