@@ -58,22 +58,17 @@ class HomeAssistantAPI:
         if self._hass:
             self.hass_name = self._hass.config.location_name
             try:
-                self.internal_url = get_url(
-                    self._hass, prefer_external=False)
+                self.internal_url = get_url(self._hass, prefer_external=False)
             except Exception as e:
                 self.internal_url = f"http://{socket.gethostname()}"
-                _LOGGER.warning(
-                    "SUPERNOTIFY could not get internal hass url, defaulting to %s: %s", self.internal_url, e)
+                _LOGGER.warning("SUPERNOTIFY could not get internal hass url, defaulting to %s: %s", self.internal_url, e)
             try:
-                self.external_url = get_url(
-                    self._hass, prefer_external=True)
+                self.external_url = get_url(self._hass, prefer_external=True)
             except Exception as e:
-                _LOGGER.warning(
-                    "SUPERNOTIFY could not get external hass url, defaulting to internal url: %s", e)
+                _LOGGER.warning("SUPERNOTIFY could not get external hass url, defaulting to internal url: %s", e)
                 self.external_url = self.internal_url
         else:
-            _LOGGER.warning(
-                "SUPERNOTIFY Configured without HomeAssistant instance")
+            _LOGGER.warning("SUPERNOTIFY Configured without HomeAssistant instance")
 
         _LOGGER.debug(
             "SUPERNOTIFY Configured for HomeAssistant instance %s at %s , %s",
@@ -83,8 +78,7 @@ class HomeAssistantAPI:
         )
 
         if not self.internal_url or not self.internal_url.startswith("http"):
-            _LOGGER.warning(
-                "SUPERNOTIFY invalid internal hass url %s", self.internal_url)
+            _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.internal_url)
 
     def in_hass_loop(self) -> bool:
         return self._hass is not None and self._hass.loop_thread_id == threading.get_ident()
@@ -107,20 +101,15 @@ class HomeAssistantAPI:
             return False
         return self._hass.services.has_service(domain, service)
 
-    async def call_service(self, domain: str, service: str,
-                           service_data: dict[str, Any] | None = None,
-                           target_data: dict[str, Any] | None = None) -> ServiceResponse | None:
+    async def call_service(
+        self, domain: str, service: str, service_data: dict[str, Any] | None = None, target_data: dict[str, Any] | None = None
+    ) -> ServiceResponse | None:
         if not self._hass:
             raise ValueError("HomeAssistant not available")
 
-        return await self._hass.services.async_call(domain,
-                                                    service,
-                                                    service_data=service_data,
-                                                    blocking=False,
-                                                    context=None,
-                                                    target=target_data,
-                                                    return_response=False
-                                                    )
+        return await self._hass.services.async_call(
+            domain, service, service_data=service_data, blocking=False, context=None, target=target_data, return_response=False
+        )
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         if self._hass is None:
@@ -130,11 +119,14 @@ class HomeAssistantAPI:
     def template(self, template_format: str) -> Template:
         return Template(template_format, self._hass)
 
-    async def trace_condition(self, condition_config: ConfigType,
-                                 condition_variables: ConditionVariables | None = None,
-                                 strict: bool = False,
-                                 validate: bool = False,
-                                 trace_name: str | None = None) -> tuple[bool | None, ActionTrace | None]:
+    async def trace_condition(
+        self,
+        condition_config: ConfigType,
+        condition_variables: ConditionVariables | None = None,
+        strict: bool = False,
+        validate: bool = False,
+        trace_name: str | None = None,
+    ) -> tuple[bool | None, ActionTrace | None]:
         result: bool | None = None
         this_trace: ActionTrace | None = None
         if self._hass:
@@ -144,17 +136,19 @@ class HomeAssistantAPI:
                 cond_trace.set_trace(trace_get())
                 this_trace = cond_trace
                 with trace_path(["condition", "conditions"]) as _tp:
-                    result = await self.evaluate_condition(condition_config,
-                                                            condition_variables,
-                                                            strict=strict,
-                                                            validate=validate)
+                    result = await self.evaluate_condition(
+                        condition_config, condition_variables, strict=strict, validate=validate
+                    )
                 _LOGGER.debug(cond_trace.as_dict())
         return result, this_trace
 
-    async def evaluate_condition(self, condition_config: ConfigType,
-                                 condition_variables: ConditionVariables | None = None,
-                                 strict: bool = False,
-                                 validate: bool = False) -> bool | None:
+    async def evaluate_condition(
+        self,
+        condition_config: ConfigType,
+        condition_variables: ConditionVariables | None = None,
+        strict: bool = False,
+        validate: bool = False,
+    ) -> bool | None:
         if self._hass is None:
             raise ValueError("HomeAssistant not available")
 
@@ -189,7 +183,7 @@ class HomeAssistantAPI:
         issue_map: dict[str, str],
         severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
         learn_more_url: str = "https://supernotify.rhizomatics.github.io",
-        is_fixable: bool = False
+        is_fixable: bool = False,
     ) -> None:
         if not self._hass:
             return
@@ -201,15 +195,14 @@ class HomeAssistantAPI:
             translation_placeholders=issue_map,
             severity=severity,
             learn_more_url=learn_more_url,
-            is_fixable=is_fixable
+            is_fixable=is_fixable,
         )
 
     def discover_devices(self, discover_domain: str) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
         if dev_reg is None:
-            _LOGGER.warning(
-                f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
+            _LOGGER.warning(f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
             return []
 
         all_devs = enabled_devs = found_devs = 0
@@ -219,15 +212,15 @@ class HomeAssistantAPI:
                 enabled_devs += 1
                 for identifier in dev.identifiers:
                     if identifier and len(identifier) > 1 and identifier[0] == discover_domain:
-                        _LOGGER.debug(
-                            "SUPERNOTIFY discovered device %s for identifier %s", dev.name, identifier)
+                        _LOGGER.debug("SUPERNOTIFY discovered device %s for identifier %s", dev.name, identifier)
                         devices.append(dev)
                         found_devs += 1
                     elif identifier and len(identifier) != 2:
                         # HomeKit has triples for identifiers, other domains may behave similarly
 
                         _LOGGER.debug(  # type: ignore
-                            "SUPERNOTIFY Unexpected device %s identifier: %s", dev.name, identifier)
+                            "SUPERNOTIFY Unexpected device %s identifier: %s", dev.name, identifier
+                        )
         _LOGGER.info(
             f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, enabled={enabled_devs}, found={found_devs}"
         )
@@ -259,8 +252,7 @@ class HomeAssistantAPI:
             try:
                 self._entity_registry = entity_registry.async_get(self._hass)
             except Exception as e:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to get entity registry: %s", e)
+                _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
         return self._entity_registry
 
     def device_registry(self) -> device_registry.DeviceRegistry | None:
@@ -273,8 +265,7 @@ class HomeAssistantAPI:
             try:
                 self._device_registry = device_registry.async_get(self._hass)
             except Exception as e:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to get device registry: %s", e)
+                _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry
 
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
@@ -287,17 +278,18 @@ class HomeAssistantAPI:
                     raise
         return False
 
-    async def mqtt_publish(self, topic: str, payload: Any = None,
-        qos: int = 0, retain: bool = False, raise_on_error: bool = True) -> None:
+    async def mqtt_publish(
+        self, topic: str, payload: Any = None, qos: int = 0, retain: bool = False, raise_on_error: bool = True
+    ) -> None:
         if self._hass:
             try:
                 await mqtt.async_publish(
-                        self._hass,
-                        topic=topic,
-                        payload=json_dumps(payload),
-                        qos=qos,
-                        retain=retain,
-                    )
+                    self._hass,
+                    topic=topic,
+                    payload=json_dumps(payload),
+                    qos=qos,
+                    retain=retain,
+                )
             except Exception:
                 _LOGGER.exception(f"SUPERNOTIFY MQTT publish failed to {topic}")
                 if raise_on_error:
@@ -305,7 +297,6 @@ class HomeAssistantAPI:
 
 
 def force_strict_template_mode(condition: ConfigType, undo: bool = False) -> None:
-
     class TemplateWrapper:
         def __init__(self, obj: Template) -> None:
             self._obj = obj

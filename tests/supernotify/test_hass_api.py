@@ -1,5 +1,3 @@
-
-
 import socket
 
 import pytest
@@ -50,20 +48,14 @@ async def test_evaluates_good_false_condition(hass: HomeAssistant) -> None:
 
 async def test_evaluates_ignores_missing_vars(hass: HomeAssistant) -> None:
     hass_access = HomeAssistantAPI(hass)
-    condition = cv.CONDITION_SCHEMA({
-        "condition": "template",
-        "value_template": "{{ notification_priority == 'critical' }}"}
-    )
+    condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ notification_priority == 'critical' }}"})
     assert await hass_access.evaluate_condition(condition) is False
 
 
 async def test_evaluates_detects_missing_vars(hass: HomeAssistant) -> None:
     hass_access = HomeAssistantAPI(hass)
 
-    condition = cv.CONDITION_SCHEMA({
-        "condition": "template",
-        "value_template": "{{ notification_priority == 'critical' }}"}
-    )
+    condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ notification_priority == 'critical' }}"})
     with pytest.raises(HomeAssistantError):
         assert await hass_access.evaluate_condition(condition, strict=True) is False
 
@@ -83,7 +75,7 @@ def test_roundtrips_entity_state(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-async def test_async_roundtrips_entity_state(hass: HomeAssistant) -> None:  # noqa: RUF029
+async def test_async_roundtrips_entity_state(hass: HomeAssistant) -> None:
     hass_access = HomeAssistantAPI(hass)
 
     assert hass_access.get_state("entity.testablity") is None
