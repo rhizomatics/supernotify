@@ -15,8 +15,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
-      id-token: write
-      attestations: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -44,7 +43,9 @@ jobs:
       uses: "hacs/action@main"
       with:
         category: "integration"
-        ignore: brands
+        ignore: brands"
+    - name: HACS Hassfest
+      uses: "home-assistant/actions/hassfest@master"
     - name: Upload pytest test results
       uses: actions/upload-artifact@v5
       with:
@@ -60,5 +61,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         REQUIREMENTS: requirements_docs.txt
-    - name: Attest Build Provenance
-      uses: actions/attest-build-provenance@v3.0.0
