@@ -1,16 +1,28 @@
 {
-    "domain":"supernotify",
-    "name":"Supernotify",
-    "version":"1.2.0",
-    "after_dependencies":["mobile_app","mqtt","trace"],
-    "dependencies":["person"],
-    "requirements":["Pillow","bs4","aiofiles","cachetools","httpx"
+    "domain": "supernotify",
+    "name": "Supernotify",
+    "after_dependencies": [
+        "mobile_app",
+        "mqtt",
+        "trace"
     ],
-    "iot_class":"local_push",
-    "integration_type": "service",
+    "codeowners": [
+        "@jey"
+    ],
     "config_flow": false,
+    "dependencies": [
+        "person"
+    ],
     "documentation": "https://supernotify.rhizomatics.github.io",
+    "integration_type": "service",
+    "iot_class": "local_push",
     "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",
-    "codeowners":["@jey"]
-
-    }
+    "requirements": [
+        "Pillow",
+        "bs4",
+        "aiofiles",
+        "cachetools",
+        "httpx"
+    ],
+    "version": "1.2.0"
+}
