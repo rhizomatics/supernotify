@@ -6,6 +6,7 @@ from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
 from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
+from conftest import TestingContext
 from custom_components.supernotify import (
     ATTR_DATA,
     ATTR_MEDIA,
@@ -21,29 +22,29 @@ from custom_components.supernotify import (
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
+    TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import MessageOnlyPolicy, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario
-from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES, Transport
+from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
-from .doubles_lib import build_delivery_from_config
 
-
-async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    mock_context.deliveries["mobile"] = Delivery(
-        "mobile", {"title": "mobile notification"}, MobilePushTransport(mock_hass, mock_context, mock_people_registry)
+async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
+    mock_context.delivery_registry.deliveries["mobile"] = Delivery(
+        "mobile", {"title": "mobile notification"}, MobilePushTransport(mock_context)
     )
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
+    uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.enabled_scenarios == {}
     assert uut.applied_scenario_names == []
@@ -57,13 +58,12 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mo
     assert uut.selected_delivery_names == unordered(["plain_email", "mobile"])
 
 
-async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
+async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context) -> None:
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile", "chime"]}
 
     # string forces explicit selection
     uut = Notification(
         mock_context,
-        mock_people_registry,
         "testing 123",
         action_data={CONF_DELIVERY: "mobile"},
     )
@@ -74,7 +74,6 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     # list forces explicit selection
     uut = Notification(
         mock_context,
-        mock_people_registry,
         "testing 123",
         action_data={CONF_DELIVERY: ["mobile", "chime"]},
     )
@@ -85,7 +84,6 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     # dict doesn't force explicit selection
     uut = Notification(
         mock_context,
-        mock_people_registry,
         "testing 123",
         action_data={CONF_DELIVERY: {"mobile": {CONF_DATA: {"foo": "bar"}}}},
     )
@@ -94,96 +92,102 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
 
 
-async def test_scenario_delivery(
-    mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario, mock_people_registry: PeopleRegistry
-) -> None:
+async def test_scenario_delivery(mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario) -> None:
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "mockery": ["chime"]}
 
     mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
-    uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
-async def test_explicit_list_of_deliveries(
-    mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
-) -> None:
+async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
 
-    uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+    uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
     assert uut.selected_delivery_names == ["mobile"]
 
 
-async def test_generate_recipients_from_entities(
-    mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
-) -> None:
-    delivery = {
-        "chatty": {CONF_ACTION: "custom.tweak", CONF_TARGET: ["custom.light_1", "custom.switch_2"], CONF_TRANSPORT: "generic"}
-    }
-    mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context, mock_people_registry)
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
-    generic = GenericTransport(mock_hass, mock_context, mock_people_registry, delivery)
-    await generic.initialize()
+async def test_generate_recipients_from_entities() -> None:
+    ctx = TestingContext(
+        deliveries={
+            "chatty": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light_1", "custom.switch_2"],
+                CONF_TRANSPORT: "generic",
+            }
+        }
+    )
+    await ctx.test_initialize()
+    generic = ctx.transport(TRANSPORT_GENERIC)
+
+    uut = Notification(ctx, "testing 123")
+
     recipients: list[Target] = uut.generate_recipients("chatty", generic)
     assert recipients[0].entity_ids == ["custom.light_1", "custom.switch_2"]
 
 
-async def test_generate_recipients_from_recipients(
-    mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
-) -> None:
-    delivery = {
-        "chatty": {
-            CONF_ACTION: "custom.tweak",
-            CONF_TARGET: {"entity_id": ["custom.light_1"], "person_id": ["person.new_home_owner"]},
-            CONF_TRANSPORT: "generic",
-            CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "other_id"]},
-        }
-    }
-    mock_people_registry.people = {
-        "person.new_home_owner": {
-            CONF_PERSON: "person.new_home_owner",
-            CONF_DELIVERY: {"chatty": {CONF_TARGET: ["@foo", "@bar"]}},
-        }
-    }
-    mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context, mock_people_registry)
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
-    generic = GenericTransport(mock_hass, mock_context, mock_people_registry, delivery)
+async def test_generate_recipients_from_recipients() -> None:
+    ctx = TestingContext(
+        recipients=[
+            {
+                CONF_PERSON: "person.new_home_owner",
+                CONF_DELIVERY: {"chatty": {CONF_TARGET: ["@foo", "@bar"]}},
+            }
+        ],
+        deliveries={
+            "chatty": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: {"entity_id": ["custom.light_1"], "person_id": ["person.new_home_owner"]},
+                CONF_TRANSPORT: "generic",
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "other_id"]},
+            }
+        },
+    )
+    await ctx.test_initialize()
+    generic = ctx.transport(TRANSPORT_GENERIC)
+
+    uut = Notification(ctx, "testing 123")
+    generic = GenericTransport(ctx)
     await generic.initialize()
     recipients: list[Target] = uut.generate_recipients("chatty", generic)
     assert recipients[0].entity_ids == ["custom.light_1"]
     assert recipients[0].other_ids == ["@foo", "@bar"]
 
 
-async def test_explicit_recipients_only_restricts_people_targets(
-    mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
-) -> None:
-    delivery = {
-        "chatty": {CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"], CONF_TRANSPORT: "generic"},
-        "mail": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: "email"},
-    }
-    mock_people_registry.people = {
-        "person.bob": {CONF_PERSON: "person.bob", CONF_EMAIL: "bob@test.com"},
-        "person.jane": {CONF_PERSON: "person.jane", CONF_EMAIL: "jane@test.com"},
-    }
-    mock_context.deliveries = build_delivery_from_config(delivery, mock_hass, mock_context, mock_people_registry)
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
-    generic = GenericTransport(mock_hass, mock_context, mock_people_registry, delivery)
-    await generic.initialize()
+async def test_explicit_recipients_only_restricts_people_targets() -> None:
+    ctx = TestingContext(
+        recipients=[
+            {CONF_PERSON: "person.bob", CONF_EMAIL: "bob@test.com"},
+            {CONF_PERSON: "person.jane", CONF_EMAIL: "jane@test.com"},
+        ],
+        deliveries={
+            "chatty": {CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"], CONF_TRANSPORT: "generic"},
+            "mail": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: "email"},
+        },
+    )
+    await ctx.test_initialize()
+    generic = ctx.transport(TRANSPORT_GENERIC)
+
+    uut = Notification(ctx, "testing 123")
+
     recipients: list[Target] = uut.generate_recipients("chatty", generic)
     assert recipients[0].other_ids == ["chan1", "chan2"]
     bundles = uut.generate_envelopes("chatty", generic, recipients)
-    assert bundles == [Envelope("chatty", uut, target=Target(["chan1", "chan2"]))]
-    email = EmailTransport(mock_hass, mock_context, mock_people_registry, delivery)
+    assert bundles == [Envelope(Delivery("chatty", ctx.deliveries["chatty"], generic), uut, target=Target(["chan1", "chan2"]))]
+    email = EmailTransport(ctx)
     await email.initialize()
     recipients = uut.generate_recipients("mail", email)
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
     bundles = uut.generate_envelopes("mail", email, recipients)
-    assert bundles == [Envelope("mail", uut, target=Target(["bob@test.com", "jane@test.com"]))]
+    assert bundles == [
+        Envelope(Delivery("mail", ctx.deliveries["mail"], email), uut, target=Target(["bob@test.com", "jane@test.com"]))
+    ]
 
 
 async def test_filter_recipients(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
+    uut = Notification(mock_context, "testing 123")
     await uut.initialize()
 
     assert len(uut.filter_people_by_occupancy("all_in")) == 0
@@ -197,21 +201,23 @@ async def test_filter_recipients(mock_context: Context, mock_people_registry: Pe
     assert {r["person"] for r in uut.filter_people_by_occupancy("only_in")} == {"person.bidey_in"}
 
 
-async def test_build_targets_for_simple_case(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    transport = GenericTransport(mock_context.hass, mock_context, mock_people_registry, {})
-    await transport.initialize()
+async def test_build_targets_for_simple_case() -> None:
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    generic = ctx.transport(TRANSPORT_GENERIC)
+
     # mock_context.deliveries={'testy':Delivery("testy",{},transport)}
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
-    recipients: list[Target] = uut.generate_recipients("", transport)
-    bundles = uut.generate_envelopes("", transport, recipients)
-    assert bundles == [Envelope("", uut)]
+    uut = Notification(ctx, "testing 123")
+    recipients: list[Target] = uut.generate_recipients("", generic)
+    bundles = uut.generate_envelopes("", generic, recipients)
+    assert bundles == [Envelope(Delivery("DEFAULT_generic", {}, generic), uut)]
 
 
 async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(
     mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
 ) -> None:
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
-    uut = Notification(mock_context, mock_people_registry, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
+    uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile")
 
@@ -219,15 +225,12 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(
 async def test_snapshot_url(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     uut = Notification(
         mock_context,
-        mock_people_registry,
         "testing 123",
         action_data={CONF_MEDIA: {ATTR_MEDIA_SNAPSHOT_URL: "/my_local_image"}},
     )
     await uut.initialize()
     original_image_path: Path = Path(tempfile.gettempdir()) / "image_a.jpg"
-    with patch(
-        "custom_components.supernotify.media_grab.snapshot_from_url", return_value=original_image_path
-    ) as mock_snapshot:
+    with patch("custom_components.supernotify.media_grab.snapshot_from_url", return_value=original_image_path) as mock_snapshot:
         retrieved_image_path = await grab_image(uut, "example", uut.context)
         assert retrieved_image_path == original_image_path
         assert mock_snapshot.called
@@ -241,7 +244,6 @@ async def test_snapshot_url(mock_context: Context, mock_people_registry: PeopleR
 async def test_camera_entity(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
     uut = Notification(
         mock_context,
-        mock_people_registry,
         "testing 123",
         action_data={CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"}},
     )
@@ -258,51 +260,48 @@ async def test_camera_entity(mock_context: Context, mock_people_registry: People
         mock_snap_cam.assert_not_called()
 
 
-async def test_message_usage(
-    mock_hass: HomeAssistant, mock_context: Context, mock_transport: Transport, mock_people_registry: PeopleRegistry
-) -> None:
+async def test_message_usage(mock_context: Context) -> None:
     delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
-    mock_context.deliveries = {"push": delivery}
+    mock_context.delivery_registry.deliveries = {"push": delivery}
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["push"]}
 
-    uut = Notification(mock_context, mock_people_registry, "testing 123", title="the big title")
+    uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") == "the big title"
 
     delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
-    uut = Notification(mock_context, mock_people_registry, "testing 123", title="the big title")
+    uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "the big title"
     assert uut.title("push") is None
 
     delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
+    uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") is None
 
     delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
-    uut = Notification(mock_context, mock_people_registry, "testing 123", title="the big title")
+    uut = Notification(mock_context, "testing 123", title="the big title")
     await uut.initialize()
     assert uut.message("push") == "the big title testing 123"
     assert uut.title("push") is None
 
     delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
-    uut = Notification(mock_context, mock_people_registry, "testing 123")
+    uut = Notification(mock_context, "testing 123")
     await uut.initialize()
     assert uut.message("push") == "testing 123"
     assert uut.title("push") is None
 
 
-async def test_merge(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
+async def test_merge(mock_hass_access: HomeAssistantAPI, mock_context: Context) -> None:
     mock_context.scenario_registry.scenarios = {
-        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass)
+        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass_access)
     }
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
     uut = Notification(
         mock_context,
-        mock_people_registry,
         "testing 123",
         action_data={
             ATTR_SCENARIOS_APPLY: "Alarm",

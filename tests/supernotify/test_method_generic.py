@@ -1,7 +1,11 @@
+from unittest.mock import call
+
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_NAME
 
+from conftest import TestingContext
 from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, CONF_OPTIONS, CONF_TRANSPORT, TRANSPORT_GENERIC
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
@@ -9,13 +13,9 @@ from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.generic import GenericTransport
 
 
-async def test_deliver(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
-    context = superconfig
-    uut = GenericTransport(
-        mock_hass,
-        context,
-        mock_people_registry,
-        {
+async def test_deliver() -> None:
+    context = TestingContext(
+        deliveries={
             "teleport": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_NAME: "teleport",
@@ -23,17 +23,18 @@ async def test_deliver(mock_hass, mock_people_registry, superconfig) -> None:  #
                 CONF_DEFAULT: True,
                 CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["other_id"]},
             }
-        },
+        }
     )
+
+    uut = GenericTransport(context)
+    await context.test_initialize(transport_instances=[uut])
     await uut.initialize()
-    context.configure_for_tests([uut])
-    await context.initialize()
+
     await uut.deliver(
         Envelope(
-            "teleport",
+            Delivery("teleport", context.deliveries["teleport"], uut),
             Notification(
                 context,
-                mock_people_registry,
                 message="hello there",
                 title="testing",
                 action_data={CONF_DELIVERY: {"teleport": {CONF_DATA: {"cuteness": "very"}}}},
@@ -41,36 +42,40 @@ async def test_deliver(mock_hass, mock_people_registry, superconfig) -> None:  #
             target=Target(["weird_generic_1", "weird_generic_2"]),
         )
     )
-    mock_hass.services.async_call.assert_called_with(
-        "notify",
-        "teleportation",
-        service_data={
-            ATTR_MESSAGE: "hello there",
-            ATTR_TITLE: "testing",
-            ATTR_DATA: {"cuteness": "very"},
-            ATTR_TARGET: ["weird_generic_1", "weird_generic_2"],
-        },
-    )
+    context.hass.services.async_call.assert_has_calls([  # type: ignore
+        call(
+            "notify",
+            "teleportation",
+            service_data={
+                ATTR_MESSAGE: "hello there",
+                ATTR_TITLE: "testing",
+                ATTR_DATA: {"cuteness": "very"},
+                ATTR_TARGET: ["weird_generic_1", "weird_generic_2"],
+            },
+            blocking=False,
+            context=None,
+            target=None,
+            return_response=False,
+        )
+    ])
 
 
-async def test_not_notify_deliver(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
-    context = superconfig
-    await context.initialize()
-    uut = GenericTransport(
-        mock_hass,
-        context,
-        mock_people_registry,
-        {"broker": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_NAME: "broker", CONF_ACTION: "mqtt.publish", CONF_DEFAULT: True}},
+async def test_not_notify_deliver() -> None:  # type: ignore
+    context = TestingContext(
+        deliveries={
+            "broker": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_NAME: "broker", CONF_ACTION: "mqtt.publish", CONF_DEFAULT: True}
+        }
     )
+
+    uut = GenericTransport(context)
+    await context.test_initialize(transport_instances=[uut])
     await uut.initialize()
-    context.configure_for_tests([uut])
-    await context.initialize()
+
     await uut.deliver(
         Envelope(
-            "broker",
+            Delivery("broker", context.deliveries["broker"], uut),
             Notification(
                 context,
-                mock_people_registry,
                 message="hello there",
                 title="testing",
                 action_data={CONF_DELIVERY: {"broker": {CONF_DATA: {"topic": "testing/123", "payload": "boo"}}}},
@@ -78,4 +83,12 @@ async def test_not_notify_deliver(mock_hass, mock_people_registry, superconfig) 
             target=Target(["weird_generic_1", "weird_generic_2"]),
         )
     )
-    mock_hass.services.async_call.assert_called_with("mqtt", "publish", service_data={"topic": "testing/123", "payload": "boo"})
+    context.hass.services.async_call.assert_called_with(  # type: ignore
+        "mqtt",
+        "publish",
+        service_data={"topic": "testing/123", "payload": "boo"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )

@@ -17,7 +17,7 @@ from . import (
     CONF_PERSON,
 )
 from .common import ensure_list
-from .context import HomeAssistantAccess
+from .hass_api import HomeAssistantAPI
 
 if TYPE_CHECKING:
     from homeassistant.core import State
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PeopleRegistry:
-    def __init__(self, recipients: list[dict[str, Any]], hass_access: HomeAssistantAccess) -> None:
+    def __init__(self, recipients: list[dict[str, Any]], hass_access: HomeAssistantAPI) -> None:
         self.hass_access = hass_access
         self.people: dict[str, dict[str, Any]] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
@@ -37,6 +37,10 @@ class PeopleRegistry:
 
     def initialize(self) -> None:
         for r in self._recipients:
+            if CONF_PERSON not in r or not r[CONF_PERSON]:
+                _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with no 'person' key:%s", r)
+                continue
+
             if r.get(CONF_MOBILE_DISCOVERY):
                 r[CONF_MOBILE_DEVICES].extend(self.mobile_devices_for_person(r[CONF_PERSON]))
                 if r.get(CONF_MOBILE_DEVICES):

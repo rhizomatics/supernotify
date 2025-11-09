@@ -3,7 +3,6 @@ from typing import Any
 
 from homeassistant.components import image
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -13,7 +12,6 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notify import TRANSPORTS
-from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.transport import Transport
 
 
@@ -22,14 +20,10 @@ class DummyTransport(Transport):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         context: Context,
-        people_registry: PeopleRegistry,
-        deliveries: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        deliveries = deliveries or {"dummy": {CONF_TRANSPORT: "dummy"}}
-        super().__init__(hass, context, people_registry, deliveries, **kwargs)
+        super().__init__(context, **kwargs)
         self.test_calls: list[Envelope] = []
 
     def validate_action(self, action: str | None) -> bool:
@@ -78,8 +72,8 @@ class MockImageEntity(image.ImageEntity):
         return self.bytes
 
 
-def build_delivery_from_config(conf: ConfigType, hass: HomeAssistant, ctx: Context, p_r: PeopleRegistry) -> dict[str, Delivery]:
+def build_delivery_from_config(conf: ConfigType, ctx: Context) -> dict[str, Delivery]:
     def transport(transport_name: str) -> Transport:
-        return next(t for t in TRANSPORTS if t.transport == transport_name)(hass, ctx, p_r)
+        return next(t for t in TRANSPORTS if t.transport == transport_name)(ctx)
 
     return {k: Delivery(k, v, transport(v[CONF_TRANSPORT])) for k, v in conf.items()}

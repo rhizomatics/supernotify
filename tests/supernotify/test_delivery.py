@@ -1,6 +1,6 @@
-from homeassistant.const import (
-    CONF_CONDITION,
-)
+from unittest.mock import AsyncMock
+
+from homeassistant.const import CONF_ACTION, CONF_CONDITION
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify import (
@@ -11,7 +11,6 @@ from custom_components.supernotify import (
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
-from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
@@ -84,8 +83,8 @@ def test_category_access() -> None:
     assert uut.for_category("other_id") == ["@mctoe", "@mctoe2"]
 
 
-async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_hass, mock_context, mock_people_registry, {}))
+async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_context))
     assert await uut.validate(mock_context)
     assert uut.name == "unit_testing"
     assert uut.enabled is True
@@ -106,7 +105,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context, mo
 
 
 async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_context: Context) -> None:
-    uut = Delivery("ALL", {}, NotifyEntityTransport(mock_hass, mock_context, {}))
+    uut = Delivery("ALL", {}, NotifyEntityTransport(mock_context))
     assert await uut.validate(mock_context) is False
     mock_context.hass_access.raise_issue.assert_called_with(  # type: ignore
         "delivery_ALL_reserved_name",
@@ -115,8 +114,8 @@ async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_
     )
 
 
-async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry) -> None:
-    uut = Delivery("generic", {}, GenericTransport(mock_hass, mock_context, mock_people_registry, {}))
+async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_context: Context) -> None:
+    uut = Delivery("generic", {}, GenericTransport(mock_context))
     assert await uut.validate(mock_context) is False
     mock_context.hass_access.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_action",
@@ -125,15 +124,16 @@ async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_
     )
 
 
-async def test_broken_create_with_bad_condition(mock_hass: HomeAssistant, mock_context: Context, mock_people_registry) -> None:
+async def test_broken_create_with_bad_condition(mock_context: Context) -> None:
+    mock_context.hass_access.evaluate_condition = AsyncMock(side_effect=Exception("integrations"))  # type: ignore
     uut = Delivery(
         "generic",
         {CONF_CONDITION: {"condition": "xor"}},
-        GenericTransport(mock_hass, mock_context, mock_people_registry, {}),
+        GenericTransport(mock_context, delivery_defaults={CONF_ACTION: "notify.notify"}),
     )
     assert await uut.validate(mock_context) is False
     mock_context.hass_access.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_condition",
         issue_key="delivery_invalid_condition",
-        issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "'integrations'"},
+        issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "integrations"},
     )

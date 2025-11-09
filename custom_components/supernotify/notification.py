@@ -64,7 +64,6 @@ from custom_components.supernotify.transport import (
 
 from .common import ensure_dict, ensure_list
 from .context import Context
-from .people import PeopleRegistry
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -79,7 +78,6 @@ class Notification(ArchivableObject):
     def __init__(
         self,
         context: Context,
-        people_registry: PeopleRegistry,
         message: str | None = None,
         title: str | None = None,
         target: list[str] | str | None = None,
@@ -89,7 +87,7 @@ class Notification(ArchivableObject):
         self.debug_trace: DebugTrace = DebugTrace(message=message, title=title, data=action_data, target=target)
         self._message: str | None = message
         self.context: Context = context
-        self.people_registry = people_registry
+        self.people_registry = context.people_registry
         action_data = action_data or {}
         self.target: list[str] = ensure_list(target)
         self._title: str | None = title
@@ -120,7 +118,7 @@ class Notification(ArchivableObject):
         self.data.update(action_data.get(ATTR_DATA, {}))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
-        self.actions: dict[str, Any] = action_data.get(ATTR_ACTIONS) or {}
+        self.actions: list[dict[str, Any]] = action_data.get(ATTR_ACTIONS) or []
         self.delivery_results: dict[str, Any] = {}
         self.delivery_errors: dict[str, Any] = {}
 
@@ -216,7 +214,9 @@ class Notification(ArchivableObject):
         override_disable_deliveries = []
 
         for delivery, delivery_override in self.delivery_overrides.items():
-            if (delivery_override is None or delivery_override.get(CONF_ENABLED, True)) and delivery in self.context.deliveries:
+            if (
+                delivery_override is None or delivery_override.get(CONF_ENABLED, True)
+            ) and delivery in self.context.delivery_registry.deliveries:
                 override_enable_deliveries.append(delivery)
             elif delivery_override is not None and not delivery_override.get(CONF_ENABLED, True):
                 override_disable_deliveries.append(delivery)
@@ -224,7 +224,7 @@ class Notification(ArchivableObject):
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             scenario_disable_deliveries = [
                 d.name
-                for d in self.context.deliveries.values()
+                for d in self.context.delivery_registry.deliveries.values()
                 if d.selection == [SELECTION_BY_SCENARIO]
                 and d.name not in scenario_enable_deliveries
                 and (d.name not in override_enable_deliveries or self.delivery_selection != DELIVERY_SELECTION_EXPLICIT)
@@ -282,7 +282,7 @@ class Notification(ArchivableObject):
 
     def message(self, delivery_name: str) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
-        delivery_config: Delivery | None = self.context.deliveries.get(delivery_name)
+        delivery_config: Delivery | None = self.context.delivery_registry.deliveries.get(delivery_name)
         msg: str | None = None
         if delivery_config is None:
             msg = self._message
@@ -310,7 +310,7 @@ class Notification(ArchivableObject):
 
     def title(self, delivery_name: str, ignore_usage: bool = False) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
-        delivery_config: Delivery | None = self.context.deliveries.get(delivery_name)
+        delivery_config: Delivery | None = self.context.delivery_registry.deliveries.get(delivery_name)
         title: str | None = None
         if delivery_config is None:
             title = self._title
@@ -348,19 +348,19 @@ class Notification(ArchivableObject):
         )
 
         for delivery_name in self.selected_delivery_names:
-            delivery = self.context.deliveries.get(delivery_name)
+            delivery = self.context.delivery_registry.deliveries.get(delivery_name)
             if delivery:
                 await self.call_transport(delivery)
             else:
                 _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
         if self.delivered == 0 and self.errored == 0:
-            for delivery in self.context.fallback_by_default_deliveries:
+            for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
                 if delivery.name not in self.selected_delivery_names:
                     await self.call_transport(delivery)
 
         if self.delivered == 0 and self.errored > 0:
-            for delivery in self.context.fallback_on_error_deliveries:
+            for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
                 if delivery.name not in self.selected_delivery_names:
                     await self.call_transport(delivery)
 
@@ -514,7 +514,12 @@ class Notification(ArchivableObject):
 
         # TODO: reinstate snoozing
         recipients = self.context.snoozer.filter_recipients(
-            recipients, self.priority, delivery_name, transport, self.selected_delivery_names, self.context.deliveries
+            recipients,
+            self.priority,
+            delivery_name,
+            transport,
+            self.selected_delivery_names,
+            self.context.delivery_registry.deliveries,
         )
 
         # delivery_target = transport.select_targets(recipients)
@@ -565,6 +570,6 @@ class Notification(ArchivableObject):
                 envelope_data.update(self.data)
                 if target.target_data:
                     envelope_data.update(target.target_data)
-                envelopes.append(Envelope(delivery_name, self, target, envelope_data))
+                envelopes.append(Envelope(delivery_config, self, target, envelope_data))
 
         return envelopes

@@ -57,10 +57,10 @@ Switches are simple binary affairs, however some sirens can also have a choice o
 level and durations. The following generic chime tunings are passed to the siren.
 
 | Chime Option   | Siren Data Field |
-| -------------- | ---------------- |
+|----------------|------------------|
 | chime_tune     | tone             |
 | chime_volume   | volume           |
-| chime_duration | duration       |
+| chime_duration | duration         |
 
 
 Supernotify passes on the `data` structure exactly as it is on the regular Home Assistant actions,
@@ -239,6 +239,17 @@ Also supports `message_html` override to supply html that will be ignored for ot
 types, and does not require templates. In this case, HTML will automatically be tagged onto the
 end to include any attached images.
 
+HTML templates have an `alert` variable for context.
+
+| Attribute         | Description                                                                     |
+|-------------------|---------------------------------------------------------------------------------|
+| title             | Notification title                                                              |
+| envelope          | Delivery Envelope                                                               |
+| subheading        | Defaults to "Home Assistant Notification"                                       |
+| server            | Access to `name`,`internal_url` and `external_url` of this HomeAssistant server |
+| preformatted_html | HTML supplied to the notify action, for example by an Automation                |
+| img               | Snapshot image attachment                                                       |
+
 ### Media Image
 
 Show an image on a media player, e.g. an Alexa Show ( where that actually works, depending on model )
@@ -308,12 +319,12 @@ delivery transport defaults to always having `progressive` and `optimize` being 
 
 All of these set by passing an `options` block in Delivery config or Transport defaults.
 
-|Option           |Transports            |Description                                                  |
-|-----------------|-------------------|-------------------------------------------------------------|
-|chime_aliases    |chime              |Map tunes to device name or config                           |
-|jpeg_opts        |mail               |Tune image grabs                                             |
-|title_handling   |all                |Use title rather than message, or combined title and message |
-|timestamp        |all                |Add a timestamp to message.                                  |
-|target_categories|generic            |Which targets to pass, e.g. `entity_id`,`email`,`other_id`.  |
+| Option            | Transports | Description                                                  |
+|-------------------|------------|--------------------------------------------------------------|
+| chime_aliases     | chime      | Map tunes to device name or config                           |
+| jpeg_opts         | mail       | Tune image grabs                                             |
+| title_handling    | all        | Use title rather than message, or combined title and message |
+| timestamp         | all        | Add a timestamp to message.                                  |
+| target_categories | generic    | Which targets to pass, e.g. `entity_id`,`email`,`other_id`.  |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.

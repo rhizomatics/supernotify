@@ -8,7 +8,7 @@ from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.mqtt import MQTTTransport
 
 
-async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry, uninitialized_superconfig) -> None:  # type: ignore
+async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked_config) -> None:  # type: ignore
     deliveries = {
         "dive_dive_dive": {
             CONF_TRANSPORT: TRANSPORT_MQTT,
@@ -22,22 +22,23 @@ async def test_deliver(mock_hass, mock_people_registry, mock_scenario_registry, 
             },
         }
     }
-    context = uninitialized_superconfig
-    context._deliveries = deliveries
+    context = uninitialized_unmocked_config
+    context.delivery_registry._deliveries = deliveries
     mock_scenario_registry.delivery_by_scenario = {"DEFAULT": ["dive_dive_dive"]}
     context.scenario_registry = mock_scenario_registry
 
-    uut = MQTTTransport(mock_hass, context, mock_people_registry, deliveries=deliveries)
+    uut = MQTTTransport(context)
 
     await uut.initialize()
     context.configure_for_tests([uut])
     await context.initialize()
+    await context.delivery_registry.initialize(context)
 
-    notification = Notification(context, mock_people_registry, message="Will be ignored", title="Also Ignored")
+    notification = Notification(context, message="Will be ignored", title="Also Ignored")
     await notification.initialize()
     await notification.deliver()
 
-    mock_hass.services.async_call.assert_called_with(
+    context.hass_access.call_service.assert_called_with(
         "mqtt",
         "publish",
         service_data={

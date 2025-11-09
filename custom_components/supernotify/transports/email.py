@@ -3,14 +3,12 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import CONF_EMAIL
-from homeassistant.core import HomeAssistant
 from jinja2 import Environment, FileSystemLoader
 
 from custom_components.supernotify import CONF_TEMPLATE, TRANSPORT_EMAIL
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import MessageOnlyPolicy, Target
-from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.transport import (
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
@@ -36,16 +34,13 @@ class EmailTransport(Transport):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         context: Context,
-        people_registry: PeopleRegistry,
-        deliveries: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(hass, context, people_registry, deliveries, **kwargs)
+        super().__init__(context, **kwargs)
         self.template_path: Path | None = None
-        if self.context.template_path:
-            self.template_path = self.context.template_path / "email"
+        if context.template_path:
+            self.template_path = context.template_path / "email"
             if not self.template_path.exists():
                 _LOGGER.warning("SUPERNOTIFY Email templates not available at %s", self.template_path)
                 self.template_path = None
@@ -141,7 +136,11 @@ class EmailTransport(Transport):
                 "title": action_data.get(ATTR_TITLE),
                 "envelope": envelope,
                 "subheading": "Home Assistant Notification",
-                "configuration": self.context,
+                "server": {
+                    "name": self.hass_access.hass_name,
+                    "internal_url": self.hass_access.internal_url,
+                    "external_url": self.hass_access.external_url,
+                },
                 "preformatted_html": preformatted_html,
                 "img": None,
             }

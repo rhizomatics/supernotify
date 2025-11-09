@@ -32,6 +32,7 @@ from custom_components.supernotify import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.context import Context
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
@@ -86,8 +87,9 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         message="testing 123",
         data={"delivery_selection": DELIVERY_SELECTION_EXPLICIT},
     )
-    mock_hass.services.async_call.assert_not_called()
-    mock_hass.reset_mock()
+    uut.context.hass_access._hass.services.async_call.assert_not_called()  # type: ignore
+    uut.context.hass_access._hass.services.async_call.reset_mock()  # type: ignore
+
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
@@ -95,12 +97,16 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         data={"delivery": ["persistent"]},
     )
     # explicit delivery selection overrides everything else
-    mock_hass.services.async_call.assert_called_with(
+    uut.context.hass_access._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )
-    mock_hass.reset_mock()
+    uut.context.hass_access._hass.services.async_call.reset_mock()  # type: ignore
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
@@ -110,10 +116,14 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         },
     )
     # scenario switches one delivery on
-    mock_hass.services.async_call.assert_called_with(
+    uut.context.hass_access._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )
 
 
@@ -133,6 +143,10 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
         "notify",
         "sms",
         service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )
     # contra-test
     mock_hass.services.async_call.reset_mock()
@@ -142,7 +156,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:
     uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
-    dummy = DummyTransport(mock_hass, uut.context, uut.context.people_registry, {})
+    dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
 
@@ -156,21 +170,19 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
     assert len(dummy.test_calls) == 2
     assert dummy.test_calls == [
         Envelope(
-            "dummy",
+            Delivery("dummy", {}, dummy),
             uut.last_notification,
             target=Target(["dummy.new_home_owner", "xyz123"], target_data={"emoji_id": 912393}),
             data={"emoji_id": 912393},
         ),
-        Envelope("dummy", uut.last_notification, target=Target(["dummy.bidey_in", "abc789"])),
+        Envelope(Delivery("dummy", {}, dummy), uut.last_notification, target=Target(["dummy.bidey_in", "abc789"])),
     ]
 
 
-async def test_broken_delivery(mock_hass: HomeAssistant, mock_people_registry) -> None:
+async def test_broken_delivery(mock_hass: HomeAssistant) -> None:
     delivery_config = {"broken": {CONF_TRANSPORT: "broken"}}
-    uut = SupernotifyAction(
-        mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS
-    )
-    broken = BrokenTransport(mock_hass, uut.context, mock_people_registry, delivery_config)
+    uut = SupernotifyAction(mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    broken = BrokenTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[broken])
     await uut.initialize()
 
@@ -209,7 +221,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         transport_configs=TRANSPORT_DEFAULTS,
     )
 
-    def call_service(domain, service, service_data=None):
+    def call_service(domain, service, service_data=None, **kwargs):
         if service == "make_fail":
             raise ValueError("just because")
 
@@ -217,7 +229,13 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
     await uut.initialize()
     await uut.async_send_message("just a test", data={"priority": "low", "delivery": "failing"})
     mock_hass.services.async_call.assert_called_with(  # type: ignore
-        "notify", "dummy", service_data={"message": "just a test"}
+        "notify",
+        "dummy",
+        service_data={"message": "just a test"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )
 
 
@@ -233,8 +251,14 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
 
     await uut.initialize()
     await uut.async_send_message("just a test", data={"priority": "low", "delivery": "failing"})
-    mock_hass.services.async_call.assert_called_once_with(  # type: ignore
-        "notify", "dummy", service_data={"message": "just a test"}
+    mock_hass.services.async_call.assert_called_with(  # type: ignore
+        "notify",
+        "dummy",
+        service_data={"message": "just a test"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )
 
 
@@ -269,15 +293,18 @@ async def test_send_message_with_condition(hass: HomeAssistant) -> None:
         "mock_notification",
         mock_service_log,
     )
+    hass.states.async_set("alarm_control_panel.home_alarm_control", "disarmed")
+    await hass.async_block_till_done()
+
     delivery_config = {"testablity": DELIVERY_SCHEMA(delivery)}
     uut = SupernotifyAction(hass, deliveries=delivery_config, recipients=RECIPIENTS)
     await uut.initialize()
-    hass.states.async_set("alarm_control_panel.home_alarm_control", "disarmed")
 
     await uut.async_send_message(title="test_title", message="testing 123")
     await hass.async_block_till_done()
     assert calls_service_data == []
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_away")
+    await hass.async_block_till_done()
 
     await uut.async_send_message(
         title="test_title",
@@ -307,21 +334,19 @@ async def test_send_message_with_condition(hass: HomeAssistant) -> None:
     assert calls_service_data == [{"test": "unit"}]
 
 
-async def test_dupe_check_suppresses_same_priority_and_message(mock_hass: HomeAssistant, mock_people_registry) -> None:
-    context = Mock(spec=Context)
+async def test_dupe_check_suppresses_same_priority_and_message(mock_hass: HomeAssistant, mock_context: Context) -> None:
     uut = SupernotifyAction(mock_hass)
     await uut.initialize()
-    n1 = Notification(context, mock_people_registry, "message here", "title here")
+    n1 = Notification(mock_context, "message here", "title here")
     assert uut.dupe_check(n1) is False
-    n2 = Notification(context, mock_people_registry, "message here", "title here")
+    n2 = Notification(mock_context, "message here", "title here")
     assert uut.dupe_check(n2) is True
 
 
-async def test_dupe_check_allows_higher_priority_and_same_message(mock_hass: HomeAssistant, mock_people_registry) -> None:
-    context = Mock(Context)
+async def test_dupe_check_allows_higher_priority_and_same_message(mock_hass: HomeAssistant, mock_context: Context) -> None:
     uut = SupernotifyAction(mock_hass)
     await uut.initialize()
-    n1 = Notification(context, mock_people_registry, "message here", "title here")
+    n1 = Notification(mock_context, "message here", "title here")
     assert uut.dupe_check(n1) is False
-    n2 = Notification(context, mock_people_registry, "message here", "title here", action_data={ATTR_PRIORITY: "high"})
+    n2 = Notification(mock_context, "message here", "title here", action_data={ATTR_PRIORITY: "high"})
     assert uut.dupe_check(n2) is False

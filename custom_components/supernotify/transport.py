@@ -3,24 +3,24 @@
 import logging
 import time
 from abc import abstractmethod
-from dataclasses import asdict
 from traceback import format_exception
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ENABLED
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import condition
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, MessageOnlyPolicy, Target
 
 from . import CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN, CONF_TARGET_REQUIRED, CONF_TRANSPORT
-from .people import PeopleRegistry
+
+if TYPE_CHECKING:
+    from .delivery import Delivery, DeliveryRegistry
+    from .hass_api import HomeAssistantAPI
+    from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,19 +43,18 @@ class Transport:
     @abstractmethod
     def __init__(
         self,
-        hass: HomeAssistant,
         context: Context,
-        people_registry: PeopleRegistry,
-        deliveries: ConfigType | None = None,
         delivery_defaults: DeliveryConfig | ConfigType | None = None,
         target_required: bool | None = True,
         device_domain: list[str] | None = None,
         device_discovery: bool | None = False,
         enabled: bool = True,
     ) -> None:
-        self.hass: HomeAssistant = hass
+        self.hass_access: HomeAssistantAPI = context.hass_access
+        self.people_registry: PeopleRegistry = context.people_registry
+        self.delivery_registry: DeliveryRegistry = context.delivery_registry
         self.context: Context = context
-        self.people_registry = PeopleRegistry
+
         if isinstance(delivery_defaults, dict):
             delivery_defaults = DeliveryConfig(delivery_defaults)  # test support
         self.delivery_defaults: DeliveryConfig = delivery_defaults or DeliveryConfig({})
@@ -67,20 +66,16 @@ class Transport:
         self.device_discovery: bool | None = device_discovery
         self.enabled = enabled
 
-        self.default_delivery: Delivery | None = None
-        self.valid_deliveries: dict[str, Delivery] = {}
-        self._delivery_configs: ConfigType = deliveries or {}
-
     async def initialize(self) -> None:
         """Async post-construction initialization"""
         if self.transport is None:
             raise ValueError("No transport configured")
-        self.valid_deliveries = await self.initialize_deliveries()
+
         if self.device_discovery:
             for domain in self.device_domain:
                 discovered: int = 0
                 added: int = 0
-                for d in self.context.hass_access.discover_devices(domain):
+                for d in self.hass_access.discover_devices(domain):
                     discovered += 1
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()
@@ -115,47 +110,6 @@ class Transport:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.default_action
 
-    async def initialize_deliveries(self) -> dict[str, Delivery]:
-        """Validate and initialize deliveries at startup for this transport"""
-        valid_deliveries: dict[str, Delivery] = {}
-
-        for d, dc in self._delivery_configs.items():
-            if dc.get(CONF_TRANSPORT) != self.transport:
-                # this *should* only happen in unit tests
-                _LOGGER.warning(f"SUPERNOTIFY Unexpected delivery {d} for transport {self.transport}")
-                continue
-            # don't care about ENABLED here since disabled deliveries can be overridden later
-            delivery = Delivery(d, dc, self)
-            if not await delivery.validate(self.context):
-                _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
-            else:
-                valid_deliveries[d] = delivery
-
-                if delivery.default and not self.default_delivery:
-                    # pick the first delivery with default flag set as the default
-                    self.default_delivery = delivery
-                elif delivery.default and self.default_delivery and delivery.name != self.default_delivery.name:
-                    _LOGGER.debug("SUPERNOTIFY Multiple default deliveries, skipping %s", d)
-
-        if not self.default_delivery:
-            transport_definition: DeliveryConfig = self.delivery_defaults
-            if transport_definition:
-                _LOGGER.info(
-                    "SUPERNOTIFY Building default delivery for %s from transport %s", self.transport, transport_definition
-                )
-                self.default_delivery = Delivery(f"DEFAULT_{self.transport}", {}, self)
-            else:
-                _LOGGER.debug("SUPERNOTIFY No default delivery or transport_definition for transport %s", self.transport)
-
-        _LOGGER.debug(
-            "SUPERNOTIFY Validated transport %s, default delivery %s, default action %s, valid deliveries: %s",
-            self.transport,
-            self.default_delivery,
-            self.delivery_defaults.action,
-            valid_deliveries,
-        )
-        return valid_deliveries
-
     def attributes(self) -> dict[str, Any]:
         return {
             CONF_TRANSPORT: self.transport,
@@ -164,8 +118,6 @@ class Transport:
             CONF_DEVICE_DOMAIN: self.device_domain,
             CONF_DEVICE_DISCOVERY: self.device_discovery,
             CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
-            "default_delivery": self.default_delivery,
-            "deliveries": list(self.valid_deliveries.keys()),
         }
 
     @abstractmethod
@@ -185,8 +137,8 @@ class Transport:
         """Pick out delivery appropriate target from a single person's (recipient) config"""
         return None
 
-    def delivery_config(self, delivery_name: str) -> Delivery:
-        return self.valid_deliveries.get(delivery_name) or self.default_delivery or Delivery("", {}, self)
+    def delivery_config(self, delivery_name: str) -> "Delivery":
+        return self.delivery_registry.delivery_config(delivery_name, self.transport)
 
     def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> Any:
         if data is not None:
@@ -194,19 +146,14 @@ class Transport:
         return action_data
 
     async def evaluate_delivery_conditions(
-        self, delivery_config: Delivery, condition_variables: ConditionVariables | None
+        self, delivery: "Delivery", condition_variables: ConditionVariables | None
     ) -> bool | None:
         if not self.enabled:
             return False
-        if delivery_config.condition is None:
+        if delivery.condition is None:
             return True
 
-        try:
-            test = await condition.async_from_config(self.hass, delivery_config.condition)
-            return test(self.hass, asdict(condition_variables) if condition_variables else None)
-        except Exception as e:
-            _LOGGER.error("SUPERNOTIFY Condition eval failed: %s", e)
-            raise
+        return await self.hass_access.evaluate_condition(delivery.condition, condition_variables)
 
     async def call_action(
         self,
@@ -218,7 +165,7 @@ class Transport:
         action_data = action_data or {}
         start_time = time.time()
         domain = service = None
-        delivery: Delivery = self.delivery_config(envelope.delivery_name)
+        delivery: Delivery = envelope.delivery
         try:
             qualified_action = qualified_action or delivery.action
             if qualified_action and (
@@ -231,10 +178,10 @@ class Transport:
                         CallRecord(time.time() - start_time, domain, service, dict(action_data), dict(target_data))
                     )
                     # TODO: add a debug mode with return response and blocking True
-                    await self.hass.services.async_call(domain, service, service_data=action_data, target=target_data)
+                    await self.hass_access.call_service(domain, service, service_data=action_data, target_data=target_data)
                 else:
                     envelope.calls.append(CallRecord(time.time() - start_time, domain, service, dict(action_data), None))
-                    await self.hass.services.async_call(domain, service, service_data=action_data)
+                    await self.hass_access.call_service(domain, service, service_data=action_data)
                 envelope.delivered = 1
             else:
                 _LOGGER.debug(
@@ -252,16 +199,6 @@ class Transport:
             envelope.errored += 1
             envelope.delivery_error = format_exception(e)
             return False
-
-    def abs_url(self, fragment: str | None, prefer_external: bool = True) -> str | None:
-        base_url = self.context.hass_external_url if prefer_external else self.context.hass_internal_url
-        if fragment:
-            if fragment.startswith("http"):
-                return fragment
-            if fragment.startswith("/"):
-                return base_url + fragment
-            return base_url + "/" + fragment
-        return None
 
     def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
         """Simplify text for delivery transports with speaking or plain text interfaces"""

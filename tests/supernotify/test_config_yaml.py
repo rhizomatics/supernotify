@@ -73,21 +73,21 @@ async def test_reload(hass: HomeAssistant) -> None:
     uut = hass.data["notify_services"][DOMAIN][0]
     assert len(uut.context.people_registry.people) == 2
 
-    assert "html_email" in uut.context.deliveries
-    assert "backup_mail" in uut.context.deliveries
+    assert "html_email" in uut.context.delivery_registry.deliveries
+    assert "backup_mail" in uut.context.delivery_registry.deliveries
     assert "backup_mail" not in uut.context.scenario_registry.delivery_by_scenario[SCENARIO_DEFAULT]
-    assert "text_message" in uut.context.deliveries
-    assert "alexa_announce" in uut.context.deliveries
-    assert "mobile_push" in uut.context.deliveries
-    assert "alexa_show" in uut.context.deliveries
-    assert "play_chimes" in uut.context.deliveries
-    assert "doorbell_chime_alexa" in uut.context.deliveries
-    assert "sleigh_bells" in uut.context.deliveries
-    assert "upstairs_siren" in uut.context.deliveries
-    assert "expensive_api_call" in uut.context.deliveries
+    assert "text_message" in uut.context.delivery_registry.deliveries
+    assert "alexa_announce" in uut.context.delivery_registry.deliveries
+    assert "mobile_push" in uut.context.delivery_registry.deliveries
+    assert "alexa_show" in uut.context.delivery_registry.deliveries
+    assert "play_chimes" in uut.context.delivery_registry.deliveries
+    assert "doorbell_chime_alexa" in uut.context.delivery_registry.deliveries
+    assert "sleigh_bells" in uut.context.delivery_registry.deliveries
+    assert "upstairs_siren" in uut.context.delivery_registry.deliveries
+    assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in uut.context.scenario_registry.delivery_by_scenario[SCENARIO_DEFAULT]
 
-    assert len(uut.context.deliveries) == 12
+    assert len(uut.context.delivery_registry.deliveries) == 12
 
 
 async def test_call_action(hass: HomeAssistant) -> None:

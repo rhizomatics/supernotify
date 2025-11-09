@@ -1,7 +1,13 @@
 # Public releases
 
+## 1.2.0
+- `DeliveryRegistry` now has the delivery functionality from `Context` and `Transport`
+- `DeliveryMethod` is now `Transport`
+- Tests simplified with a new configurable `TestingContext`
+- Moved mqtt, states, device, condition etc access into `HomeAssistantAPI` from across the code base
+
 ## 1.1.6
-- HomeAssistant logic moved from `Context` to `HomeAssistantAccess`
+- HomeAssistant logic moved from `Context` to `HomeAssistantAPI`
 - Initialization logic moved from `Context` to `SupernotifyAction`
 - References to `SupernotifyAction` now consistent rather than `SuperNotificationAction`
 - Move camera PTZ and image handling from `Notification` to `media_grab.py`

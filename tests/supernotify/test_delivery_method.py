@@ -1,12 +1,13 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from unittest.mock import Mock
 
 from homeassistant.const import CONF_ACTION, CONF_TARGET
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntry
 
-if TYPE_CHECKING:
-    from homeassistant.helpers.device_registry import DeviceEntry
+from conftest import TestingContext
 from custom_components.supernotify import (
+    CONF_DELIVERY_DEFAULTS,
     CONF_SELECTION,
     CONF_TRANSPORT,
     SELECTION_BY_SCENARIO,
@@ -18,11 +19,8 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.context import Context, HomeAssistantAccess
-from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.context import Context
 from custom_components.supernotify.transports.generic import GenericTransport
-
-from .hass_setup_lib import register_device
 
 DELIVERY: dict[str, Any] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
@@ -35,44 +33,65 @@ DELIVERY: dict[str, Any] = {
 }
 
 
-async def test_simple_create(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
-    context = Mock(Context)
-    uut = GenericTransport(hass, context, mock_people_registry, DELIVERY)
-    await uut.initialize()
-    assert list(uut.valid_deliveries.keys()) == [d for d, dc in DELIVERY.items() if dc[CONF_TRANSPORT] == TRANSPORT_GENERIC]
-    assert uut.default_delivery is not None
-    assert uut.default_delivery.name == "DEFAULT_generic"
+async def test_simple_create_with_defined_default_delivery() -> None:
+    ctx = TestingContext(deliveries=DELIVERY, transport_types=[GenericTransport])
+    ctx.deliveries["chat"]["default"] = True
+    await ctx.test_initialize()
+
+    assert list(ctx.delivery_registry.deliveries.keys()) == ["chat"]
+    assert ctx.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC] is not None
+    assert ctx.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC].name == "chat"
 
 
-async def test_default_delivery_defaulted(hass: HomeAssistant, mock_people_registry: PeopleRegistry) -> None:
-    context = Mock(Context)
+async def test_simple_create_with_defined_delivery() -> None:
+    context = TestingContext(deliveries=DELIVERY, transport_types=[GenericTransport])
+    await context.test_initialize()
 
-    uut = GenericTransport(hass, context, mock_people_registry, DELIVERY, delivery_defaults={CONF_ACTION: "notify.slackity"})
-    await uut.initialize()
-    assert uut.default_delivery is not None
-    assert uut.default_delivery.action == "notify.slackity"
-    assert list(uut.valid_deliveries.keys()) == ["chat"]
+    assert list(context.delivery_registry.deliveries.keys()) == ["chat"]
+    assert context.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC] is not None
+    assert context.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC].name == "DEFAULT_generic"
 
 
-async def test_transport_defaults_used_for_missing_service(
-    hass: HomeAssistant, mock_people_registry: PeopleRegistry, uninitialized_superconfig: Context
-) -> None:
+async def test_simple_create_with_only_default_deliveries(mock_context: Context) -> None:
+    ctx = TestingContext(deliveries={}, transport_types=[GenericTransport])
+    await ctx.test_initialize()
+
+    assert list(ctx.delivery_registry.deliveries.keys()) == []
+    assert ctx.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC] is not None
+    assert ctx.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC].name == "DEFAULT_generic"
+
+
+async def test_default_delivery_defaulted() -> None:
+    context = TestingContext(
+        deliveries=DELIVERY,
+        transport_configs={TRANSPORT_GENERIC: {CONF_DELIVERY_DEFAULTS: {CONF_ACTION: "notify.slackity"}}},
+        transport_types=[GenericTransport],
+    )
+    await context.test_initialize()
+
+    assert context.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC] is not None
+    assert context.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC].name == "DEFAULT_generic"
+    assert context.delivery_registry.default_delivery_by_transport[TRANSPORT_GENERIC].action == "notify.slackity"
+
+
+async def test_transport_defaults_used_for_missing_service(hass: HomeAssistant, uninitialized_unmocked_config: Context) -> None:
     delivery = {"chatty": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_TARGET: ["chan1", "chan2"]}}
-    context = uninitialized_superconfig
-    context._deliveries = delivery
-    uut = GenericTransport(hass, context, mock_people_registry, delivery, delivery_defaults={CONF_ACTION: "notify.slackity"})
+    context = uninitialized_unmocked_config
+    context.delivery_registry._deliveries = delivery
+    uut = GenericTransport(context, delivery_defaults={CONF_ACTION: "notify.slackity"})
     context.configure_for_tests(transport_instances=[uut])
     await context.initialize()
+    await context.delivery_registry.initialize(context)
 
     await uut.initialize()
-    assert list(uut.valid_deliveries.keys()) == ["chatty"]
-    assert uut.valid_deliveries["chatty"].action == "notify.slackity"
+    assert list(uut.delivery_registry.deliveries.keys()) == ["chatty"]
+    assert uut.delivery_registry.deliveries["chatty"].action == "notify.slackity"
 
 
-def test_simplify_text() -> None:
+def test_simplify_text(mock_context: Context) -> None:
     from custom_components.supernotify.transports.generic import GenericTransport
 
-    uut = GenericTransport(None, None, None, {})
+    uut = GenericTransport(mock_context)
     assert (
         uut.simplify("Hello_world! Visit https://example.com (it's great) £100 <test>", strip_urls=True)
         == "Hello world! Visit it's great 100 test"
@@ -84,20 +103,16 @@ def test_simplify_text() -> None:
     assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
 
 
-async def test_device_discovery(hass: HomeAssistant, superconfig, mock_hass_access: HomeAssistantAccess) -> None:
-    hass_access: HomeAssistantAccess = HomeAssistantAccess(hass)
-    ctx = superconfig
-    ctx.hass_access = hass_access
-    await ctx.initialize()
-
-    people_registry = PeopleRegistry([], hass_access)
-    uut = GenericTransport(hass, ctx, people_registry, {}, device_domain=["unit_testing"], device_discovery=True)
+async def test_device_discovery(unmocked_config: Context) -> None:
+    uut = GenericTransport(unmocked_config, device_domain=["unit_testing"], device_discovery=True)
     await uut.initialize()
     assert uut.delivery_defaults.target is None
+    dev: DeviceEntry = Mock(spec=DeviceEntry, id="abc123")
+    unmocked_config.hass_access.discover_devices = Mock(  # type: ignore
+        return_value=[dev]
+    )
 
-    dev: DeviceEntry | None = register_device(hass_access)
-    assert dev is not None
-    uut = GenericTransport(hass, ctx, people_registry, {}, device_domain=["unit_testing"], device_discovery=True)
+    uut = GenericTransport(unmocked_config, device_domain=["unit_testing"], device_discovery=True)
     await uut.initialize()
     assert uut.delivery_defaults.target is not None
     assert uut.delivery_defaults.target.device_ids == [dev.id]

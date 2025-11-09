@@ -80,8 +80,8 @@ class MobilePushTransport(Transport):
 
         media = envelope.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
-        clip_url: str | None = self.abs_url(media.get(ATTR_MEDIA_CLIP_URL))
-        snapshot_url: str | None = self.abs_url(media.get(ATTR_MEDIA_SNAPSHOT_URL))
+        clip_url: str | None = self.hass_access.abs_url(media.get(ATTR_MEDIA_CLIP_URL))
+        snapshot_url: str | None = self.hass_access.abs_url(media.get(ATTR_MEDIA_SNAPSHOT_URL))
         # options = data.get(CONF_OPTIONS, {})
 
         match envelope.priority:
@@ -120,7 +120,7 @@ class MobilePushTransport(Transport):
 
         data.setdefault("actions", [])
         for action in envelope.actions:
-            app_url: str | None = self.abs_url(action.get(ATTR_ACTION_URL))
+            app_url: str | None = self.hass_access.abs_url(action.get(ATTR_ACTION_URL))
             if app_url:
                 app_url_title = action.get(ATTR_ACTION_URL_TITLE) or self.action_title(app_url) or "Click for Action"
                 action[ATTR_ACTION_URL_TITLE] = app_url_title
@@ -150,9 +150,9 @@ class MobilePushTransport(Transport):
                     mobile_target if not mobile_target.startswith("notify.") else mobile_target.replace("notify.", "")
                 )
                 _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
-                if self.context.people_registry:
+                if self.people_registry:
                     # somewhat hacky way to tie the mobile device back to a recipient to please the snoozing api
-                    for recipient in self.context.people_registry.people.values():
+                    for recipient in self.people_registry.people.values():
                         for md in recipient.get(CONF_MOBILE_DEVICES, []):
                             if md.get(CONF_NOTIFY_ACTION) in (simple_target, mobile_target):
                                 self.context.snoozer.register_snooze(

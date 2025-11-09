@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
 import anyio
-from homeassistant.components.mqtt.models import DATA_MQTT
 from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant
 
@@ -15,6 +14,7 @@ from custom_components.supernotify import (
     CONF_ARCHIVE_PATH,
 )
 from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notify import SupernotifyAction
 
 
@@ -47,9 +47,9 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
         assert reobj["delivered_envelopes"] == uut.last_notification.delivered_envelopes
 
 
-async def test__archive() -> None:
+async def test_file_archive(mock_hass_access: HomeAssistantAPI) -> None:
     with tempfile.TemporaryDirectory() as archive:
-        uut = NotificationArchive(None, True, archive, "7")
+        uut = NotificationArchive(mock_hass_access, True, archive, "7")
         await uut.initialize()
         msg = ArchiveCrashDummy()
         assert await uut.archive(msg)
@@ -62,9 +62,9 @@ async def test__archive() -> None:
         assert reobj["a_int"] == 984
 
 
-async def test_cleanup_archive() -> None:
+async def test_cleanup_archive(mock_hass_access: HomeAssistantAPI) -> None:
     archive = "config/archive/test"
-    uut = NotificationArchive(None, True, archive, "7")
+    uut = NotificationArchive(mock_hass_access, True, archive, "7")
     await uut.initialize()
     old_time = Mock(return_value=Mock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
     new_time = Mock(return_value=Mock(st_ctime=time.time() - (5 * 24 * 60 * 60)))
@@ -83,9 +83,9 @@ async def test_cleanup_archive() -> None:
     assert first_purge == uut.last_purge
 
 
-async def test_archive_size() -> None:
+async def test_archive_size(mock_hass_access: HomeAssistantAPI) -> None:
     with tempfile.TemporaryDirectory() as tmp_path:
-        uut = NotificationArchive(None, True, tmp_path, "7")
+        uut = NotificationArchive(mock_hass_access, True, tmp_path, "7")
         await uut.initialize()
         assert uut.enabled
         assert await uut.size() == 0
@@ -94,25 +94,20 @@ async def test_archive_size() -> None:
         assert await uut.size() == 1
 
 
-async def test_archive_publish(mock_hass: HomeAssistant) -> None:
-    uut = NotificationArchive(hass=mock_hass, mqtt_topic="test.topic", mqtt_qos=3, mqtt_retain=True)
-    with patch(
-        "custom_components.supernotify.archive.mqtt.async_wait_for_mqtt_client", AsyncMock(return_value=True)
-    ) as _mocked:
-        await uut.initialize()
-        msg = ArchiveCrashDummy()
-        assert await uut.archive(msg)
-        mock_hass.data[DATA_MQTT].client.async_publish.assert_called_with(  # type: ignore
-            "test.topic/testing", '{"a_dict":{},"a_list":[],"a_str":"","a_int":984}', 3, True
-        )
+async def test_archive_publish(mock_hass_access: HomeAssistantAPI) -> None:
+    uut = NotificationArchive(mock_hass_access, mqtt_topic="test.topic", mqtt_qos=3, mqtt_retain=True)
 
-    mock_hass.data[DATA_MQTT].client.async_publish.reset_mock()  # type: ignore
-
-    uut = NotificationArchive(hass=mock_hass, mqtt_topic="test.topic", mqtt_qos=3, mqtt_retain=True)
-    with patch(
-        "custom_components.supernotify.archive.mqtt.async_wait_for_mqtt_client", AsyncMock(return_value=False)
-    ) as _mocked:
-        await uut.initialize()
-        msg = ArchiveCrashDummy()
-        assert await uut.archive(msg) is False
-        mock_hass.data[DATA_MQTT].client.async_publish.assert_not_called()  # type: ignore
+    await uut.initialize()
+    msg = ArchiveCrashDummy()
+    assert await uut.archive(msg)
+    mock_hass_access.mqtt_publish.assert_called_with(  # type: ignore
+        topic="test.topic/testing", payload={"a_dict": {}, "a_list": [], "a_str": "", "a_int": 984}, qos=3, retain=True
+    )
+    mock_hass_access.mqtt_publish.reset_mock()  # type: ignore
+    mock_hass_access.mqtt_publish.async_publish.reset_mock()  # type: ignore
+    uut = NotificationArchive(mock_hass_access, mqtt_topic="test.topic", mqtt_qos=3, mqtt_retain=True)
+    mock_hass_access.mqtt_available = AsyncMock(return_value=False)  # type: ignore
+    await uut.initialize()
+    msg = ArchiveCrashDummy()
+    assert await uut.archive(msg) is False
+    mock_hass_access.mqtt_publish.assert_not_called()  # type: ignore

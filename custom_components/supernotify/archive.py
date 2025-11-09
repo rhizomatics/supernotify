@@ -7,9 +7,9 @@ from typing import Any
 import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
-from homeassistant.components import mqtt
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.json import json_dumps, save_json
+from homeassistant.helpers.json import save_json
+
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ class ArchivableObject:
 
 
 class ArchiveTopic:
-    def __init__(self, hass: HomeAssistant, topic: str, qos: int = 0, retain: bool = True) -> None:
-        self._hass = hass
+    def __init__(self, hass_access: HomeAssistantAPI, topic: str, qos: int = 0, retain: bool = True) -> None:
+        self.hass_access = hass_access
         self.topic = topic
         self.qos = qos
         self.retain = retain
@@ -39,23 +39,22 @@ class ArchiveTopic:
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
-            await mqtt.async_publish(
-                self._hass,
+            await self.hass_access.mqtt_publish(
                 topic=topic,
-                payload=json_dumps(payload),
+                payload=payload,
                 qos=self.qos,
                 retain=self.retain,
             )
             return True
         except Exception:
-            _LOGGER.exception(f"SUPERNOTIFY failed to archive to topic {self.topic}")
+            _LOGGER.warning(f"SUPERNOTIFY failed to archive to topic {self.topic}")
             return False
 
 
 class NotificationArchive:
     def __init__(
         self,
-        hass: HomeAssistant | None = None,
+        hass_access: HomeAssistantAPI,
         enabled: bool = True,
         archive_path: str | None = None,
         archive_days: str | None = None,
@@ -64,7 +63,7 @@ class NotificationArchive:
         mqtt_qos: int = 0,
         mqtt_retain: bool = False,
     ) -> None:
-        self.hass = hass
+        self.hass_access = hass_access
         self.enabled = enabled
         self.last_purge: dt.datetime | None = None
         self.configured_archive_path: str | None = archive_path
@@ -102,18 +101,12 @@ class NotificationArchive:
                 _LOGGER.warning("SUPERNOTIFY archive path %s is not a directory or does not exist", verify_archive_path)
                 self.enabled = False
 
-        if self.mqtt_topic is not None and self.hass:
-            try:
-                if not await mqtt.async_wait_for_mqtt_client(self.hass):
-                    _LOGGER.error("SUPERNOTIFY MQTT integration is not available, archive publication disabled")
-                    return
-            except Exception:
-                _LOGGER.exception("SUPERNOTIFY MQTT integration failed on archive setup")
-                return
-            self.archive_topic = ArchiveTopic(self.hass, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
-            _LOGGER.info(
-                f"SUPERNOTIFY Archiving to MQTT topic {self.mqtt_topic}, qos {self.mqtt_qos}, retain {self.mqtt_retain}"
-            )
+        if self.mqtt_topic is not None:
+            if await self.hass_access.mqtt_available(raise_on_error=False):
+                self.archive_topic = ArchiveTopic(self.hass_access, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain)
+                _LOGGER.info(
+                    f"SUPERNOTIFY Archiving to MQTT topic {self.mqtt_topic}, qos {self.mqtt_qos}, retain {self.mqtt_retain}"
+                )
 
     async def size(self) -> int:
         path = self.archive_path

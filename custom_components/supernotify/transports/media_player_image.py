@@ -46,7 +46,7 @@ class MediaPlayerImageTransport(Transport):
             _LOGGER.debug("SUPERNOTIFY skipping media player, no image url")
             return False
         # absolutize relative URL for external URl, probably preferred by Alexa Show etc
-        snapshot_url = urllib.parse.urljoin(self.context.hass_external_url, snapshot_url)
+        snapshot_url = urllib.parse.urljoin(self.hass_access.external_url, snapshot_url)
 
         action_data: dict[str, Any] = {
             "media_content_id": snapshot_url,

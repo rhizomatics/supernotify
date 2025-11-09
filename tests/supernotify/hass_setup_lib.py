@@ -9,7 +9,7 @@ from homeassistant.core import ServiceCall, SupportsResponse
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.util import slugify
 
-from custom_components.supernotify.context import HomeAssistantAccess
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.people import PeopleRegistry
 
 if TYPE_CHECKING:
@@ -79,7 +79,7 @@ def register_mobile_app(
 
 
 def register_device(
-    hass_access: HomeAssistantAccess | None = None,
+    hass_access: HomeAssistantAPI | None = None,
     device_id: str = "00001111222233334444555566667777",
     domain: str = "unit_testing",
     domain_id: str = "test_01",

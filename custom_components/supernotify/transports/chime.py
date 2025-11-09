@@ -2,7 +2,6 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_DEVICE_ID,
@@ -17,8 +16,6 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.device_registry import DeviceEntry
-
     from custom_components.supernotify.delivery import Delivery
 
 RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
@@ -123,7 +120,7 @@ class ChimeTransport(Transport):
         # expand groups
         expanded_targets = {
             e: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, entity_id=e)
-            for e in expand_entity_ids(self.hass, target.entity_ids)
+            for e in self.hass_access.expand_group(target.entity_ids)
         }
         expanded_targets.update({
             d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
@@ -171,21 +168,13 @@ class ChimeTransport(Transport):
         name: str | None = None
 
         # Alexa Devices use device_id not entity_id for sounds
-        if target_config.device_id is not None:
-            if target_config.domain is not None:
+        # TODO: use method or delivery config vs fixed local constant for domains
+        if target_config.device_id is not None and DEVICE_DOMAINS:
+            if target_config.domain is not None and target_config.domain in DEVICE_DOMAINS:
                 domain = target_config.domain
             else:
-                # discover domain from device registry
-                device_registry = self.context.hass_access.device_registry()
-                if device_registry:
-                    device: DeviceEntry | None = device_registry.async_get(target_config.device_id)
-                    if device and "alexa_devices" in [d for d, _id in device.identifiers]:
-                        domain = "alexa_devices"
-                if domain is None:
-                    _LOGGER.warning(
-                        "SUPERNOTIFY A target that looks like a device_id can't be matched to supported integration: %s",
-                        target_config.device_id,
-                    )
+                domain = self.hass_access.domain_for_device(target_config.device_id, DEVICE_DOMAINS)
+
         elif target_config.entity_id and "." in target_config.entity_id:
             domain, name = target_config.entity_id.split(".", 1)
 

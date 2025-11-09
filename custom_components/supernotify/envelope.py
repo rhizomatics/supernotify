@@ -14,6 +14,7 @@ from .model import Target
 if typing.TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
 
+    from .delivery import Delivery
     from .notification import Notification
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,13 +25,14 @@ class Envelope:
 
     def __init__(
         self,
-        delivery_name: str,
+        delivery: "Delivery",
         notification: "Notification | None" = None,
         target: Target | None = None,
         data: dict[str, Any] | None = None,
     ) -> None:
         self.target: Target = target or Target()
-        self.delivery_name: str = delivery_name
+        self.delivery_name: str = delivery.name
+        self.delivery: Delivery = delivery
         self._notification = notification
         self.notification_id = None
         self.media = None
@@ -40,7 +42,7 @@ class Envelope:
         self.title: str | None = None
         self.message_html: str | None = None
         self.data: dict[str, Any] = {}
-        self.actions: dict[str, Any] = {}
+        self.actions: list[dict[str, Any]] = []
         delivery_config_data: dict[str, Any] = {}
         if notification:
             self.notification_id = notification.id
@@ -48,10 +50,10 @@ class Envelope:
             self.action_groups = notification.action_groups
             self.actions = notification.actions
             self.priority = notification.priority
-            self.message = notification.message(delivery_name)
+            self.message = notification.message(delivery.name)
             self.message_html = notification.message_html
-            self.title = notification.title(delivery_name)
-            delivery_config_data = notification.delivery_data(delivery_name)
+            self.title = notification.title(delivery.name)
+            delivery_config_data = notification.delivery_data(delivery.name)
 
         if data:
             self.data = copy.deepcopy(delivery_config_data) if delivery_config_data else {}

@@ -65,7 +65,9 @@ from . import (
     PRIORITY_VALUES,
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from .context import Context, HomeAssistantAccess
+from .context import Context
+from .delivery import DeliveryRegistry
+from .hass_api import HomeAssistantAPI
 from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry
@@ -320,23 +322,20 @@ class SupernotifyAction(BaseNotificationService):
         self.failures: int = 0
         self.housekeeping: dict[str, Any] = housekeeping or {}
         self.sent: int = 0
-        hass_access = HomeAssistantAccess(hass)
+        hass_access = HomeAssistantAPI(hass)
         self.context = Context(
             hass_access,
             PeopleRegistry(recipients or [], hass_access),
             ScenarioRegistry(scenarios or {}),
+            DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
             Snoozer(),
-            hass,
-            deliveries,
             links or [],
             recipients or [],
             mobile_actions,
             template_path,
             media_path,
             archive_config=archive,
-            transport_configs=transport_configs or {},
             cameras=cameras,
-            transport_types=TRANSPORTS,
         )
 
         self.unsubscribes: list[CALLBACK_TYPE] = []
@@ -349,9 +348,14 @@ class SupernotifyAction(BaseNotificationService):
 
     async def initialize(self) -> None:
         await self.context.initialize()
+        self.context.hass_access.initialize()
         self.context.people_registry.initialize()
+        await self.context.delivery_registry.initialize(self.context)
         await self.context.scenario_registry.initialize(
-            self.context.deliveries, self.context.default_deliveries, self.context.mobile_actions, self.hass
+            self.context.delivery_registry.deliveries,
+            self.context.delivery_registry.default_deliveries,
+            self.context.mobile_actions,
+            self.context.hass_access,
         )
 
         self.expose_entities()
@@ -416,7 +420,7 @@ class SupernotifyAction(BaseNotificationService):
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
             elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.delivery_"):
-                delivery_config: Delivery | None = self.context.deliveries.get(
+                delivery_config: Delivery | None = self.context.delivery_registry.deliveries.get(
                     event.data["entity_id"].replace(f"{DOMAIN}.delivery_", "")
                 )
                 if delivery_config is None:
@@ -433,7 +437,7 @@ class SupernotifyAction(BaseNotificationService):
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
             elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.transport_"):
-                transport: Transport | None = self.context.transports.get(
+                transport: Transport | None = self.context.delivery_registry.transports.get(
                     event.data["entity_id"].replace(f"{DOMAIN}.transport_", "")
                 )
                 if transport is None:
@@ -453,7 +457,9 @@ class SupernotifyAction(BaseNotificationService):
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
             if changes:
-                self.context.scenario_registry.refresh(self.context.deliveries, self.context.default_deliveries)
+                self.context.scenario_registry.refresh(
+                    self.context.delivery_registry.deliveries, self.context.delivery_registry.default_deliveries
+                )
                 _LOGGER.debug(f"SUPERNOTIFY event had {changes} changes triggering updates to states")
 
     def expose_entities(self) -> None:
@@ -464,17 +470,19 @@ class SupernotifyAction(BaseNotificationService):
                 f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(include_condition=False)
             )
             self.exposed_entities.append(f"{DOMAIN}.scenario_{scenario.name}")
-        for transport in self.context.transports.values():
+        for transport in self.context.delivery_registry.transports.values():
             self.hass.states.async_set(
                 f"{DOMAIN}.transport_{transport.transport}",
-                STATE_ON if len(transport.valid_deliveries) > 0 else STATE_OFF,
+                STATE_ON
+                if len([d for d in self.context.delivery_registry.deliveries.values() if d.transport == transport]) > 0
+                else STATE_OFF,
                 transport.attributes(),
             )
             self.exposed_entities.append(f"{DOMAIN}.transport_{transport.transport}")
-        for delivery_name, delivery in self.context._deliveries.items():
+        for delivery_name, delivery in self.context.delivery_registry._deliveries.items():
             self.hass.states.async_set(
                 f"{DOMAIN}.delivery_{delivery_name}",
-                STATE_ON if str(delivery_name in self.context.deliveries) else STATE_OFF,
+                STATE_ON if str(delivery_name in self.context.delivery_registry.deliveries) else STATE_OFF,
                 delivery,
             )
             self.exposed_entities.append(f"{DOMAIN}.delivery_{delivery_name}")
@@ -504,7 +512,7 @@ class SupernotifyAction(BaseNotificationService):
         _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
 
         try:
-            notification = Notification(self.context, self.context.people_registry, message, title, target, data)
+            notification = Notification(self.context, message, title, target, data)
             await notification.initialize()
             if self.dupe_check(notification):
                 notification.suppress(SuppressionReason.DUPE)

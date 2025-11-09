@@ -76,7 +76,9 @@ def test_check_notification_for_snooze_qualified(mock_context: Context, mock_peo
     uut.handle_command_event(
         Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_TRANSPORT_LASER"}), mock_people_registry.people
     )
-    assert uut.current_snoozes(delivery_names=["chime", "plain_email"], delivery_definitions=mock_context.deliveries) == [
+    assert uut.current_snoozes(
+        delivery_names=["chime", "plain_email"], delivery_definitions=mock_context.delivery_registry.deliveries
+    ) == [
         Snooze(QualifiedTargetType.DELIVERY, RecipientType.EVERYONE, "chime"),
         Snooze(QualifiedTargetType.CAMERA, RecipientType.EVERYONE, "Yard"),
         Snooze(QualifiedTargetType.TRANSPORT, RecipientType.EVERYONE, "email"),

@@ -1,32 +1,32 @@
 from homeassistant.const import CONF_DEFAULT, CONF_NAME
 
+from conftest import TestingContext
 from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, CONF_TRANSPORT, TRANSPORT_MEDIA
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.media_player_image import MediaPlayerImageTransport
 
 
-async def test_notify_media_image(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
+async def test_notify_media_image() -> None:
     """Test on_notify_alexa."""
-    context = superconfig
-    context.hass_external_url = "https://myserver"
-
-    uut = MediaPlayerImageTransport(
-        mock_hass,
-        context,
-        mock_people_registry,
-        {"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA, CONF_NAME: "alexa_show", CONF_DEFAULT: True}},
+    context = TestingContext(
+        deliveries={"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA, CONF_NAME: "alexa_show", CONF_DEFAULT: True}},
+        hass_external_url="https://myserver",
     )
+
+    uut = MediaPlayerImageTransport(context)
+    await context.test_initialize(transport_instances=[uut])
     await uut.initialize()
-    context.configure_for_tests([uut])
-    await context.initialize()
+
+    uut = MediaPlayerImageTransport(context)
+
     await uut.deliver(
         Envelope(
-            "alexa_show",
+            Delivery("alexa_show", context.deliveries["alexa_show"], uut),
             Notification(
                 context,
-                mock_people_registry,
                 "hello there",
                 action_data={ATTR_DELIVERY: {"alexa_show": {CONF_DATA: {"snapshot_url": "/ftp/pic.jpeg"}}}},
             ),
@@ -34,7 +34,7 @@ async def test_notify_media_image(mock_hass, mock_people_registry, superconfig) 
         )
     )
 
-    mock_hass.services.async_call.assert_called_with(
+    context.hass.services.async_call.assert_called_with(  # type: ignore
         "media_player",
         "play_media",
         service_data={
@@ -42,4 +42,8 @@ async def test_notify_media_image(mock_hass, mock_people_registry, superconfig) 
             "media_content_id": "https://myserver/ftp/pic.jpeg",
             "media_content_type": "image",
         },
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )

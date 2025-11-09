@@ -1,23 +1,26 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import CONF_DEFAULT
 
+from conftest import TestingContext
 from custom_components.supernotify import ATTR_NOTIFICATION_ID, CONF_TRANSPORT, TRANSPORT_PERSISTENT
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transports.persistent import PersistentTransport
 
 
-async def test_deliver(mock_hass, mock_people_registry, superconfig) -> None:  # type: ignore
+async def test_deliver() -> None:  # type: ignore
     """Test on_notify_persistent"""
-    context = superconfig
-    await context.initialize()
-    uut = PersistentTransport(mock_hass, context, {"pn": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_DEFAULT: True}})
-    context.configure_for_tests([uut])
-    await context.initialize()
-    await uut.initialize()
-    await uut.deliver(Envelope("pn", Notification(context, mock_people_registry, "hello there", title="testing")))
-    mock_hass.services.async_call.assert_called_with(
+    ctx = TestingContext(deliveries={"pn": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_DEFAULT: True}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_PERSISTENT)
+
+    await uut.deliver(Envelope(Delivery("pn", ctx.deliveries["pn"], uut), Notification(ctx, "hello there", title="testing")))
+    ctx.hass.services.async_call.assert_called_with(  # type:ignore
         "persistent_notification",
         "create",
         service_data={ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_NOTIFICATION_ID: None},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
     )
