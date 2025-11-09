@@ -5,6 +5,8 @@
 - `DeliveryMethod` is now `Transport`
 - Tests simplified with a new configurable `TestingContext`
 - Moved mqtt, states, device, condition etc access into `HomeAssistantAPI` from across the code base
+- `NotificationArchive` now owns its own Config interpretation and is built from notify
+- Context is now a passive ref container plus a little FS path maniuplation
 
 ## 1.1.6
 - HomeAssistant logic moved from `Context` to `HomeAssistantAPI`
