@@ -2,7 +2,7 @@
     "domain":"supernotify",
     "name":"Supernotify",
     "version":"1.2.0",
-    "after_dependencies":["mobile_app"],
+    "after_dependencies":["mobile_app","mqtt","trace"],
     "dependencies":["person"],
     "requirements":["Pillow","bs4","aiofiles","cachetools","httpx"
     ],
