@@ -11,15 +11,15 @@
 
 **Easy multi-channel rich notifications.**
 
-An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, chimes and template based HTML emails. 
+An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, chimes and template based HTML emails.
 
 Supernotify lets you make a simple, single notification action from
 all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage.
 
 !!! warning
 
-    Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases. 
-  
+    Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
+
     You can however do a lot with very little config, using the example configurations and recipes in the documentation.
 
 
@@ -30,26 +30,26 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
   - Adaptors automatically tune notification data for each integration
   - For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](recipes/frigate_emails.md) for more info.
 * Go beyond `notify` integrations
-  - Chimes, sirens, SMS, Alexa Announcements and Sounds, API calls, MQTT devices 
+  - Chimes, sirens, SMS, Alexa Announcements and Sounds, API calls, MQTT devices
   - All the standard `notify` and  `notify.group` implementations available, including the modern `NotifyEntity` based ones
   - Greatly simplified use of Mobile Push notifications, e.g. for iPhone
   - Standard HomeAssistant behaviour, including data templating and `notify.group`
 * Conditional Notifications
-  - Using standard Home Assistant `condition` 
+  - Using standard Home Assistant `condition`
   - Extra condition variables added, including message and priority
   - Combine with occupancy detection to easily tune notifications based on who is in, message priority, even the content of the message
 * **Scenarios** for simple concise configuration
   - Package up common chunks of config and conditional logic
-  - Have them applied on-demand in actions (`red_alert`,`nerdy`) or automatically based on conditions (`everyone_home_day`,`frigate_person`). 
+  - Have them applied on-demand in actions (`red_alert`,`nerdy`) or automatically based on conditions (`everyone_home_day`,`frigate_person`).
   - See the [Alexa Whispering](recipes/alexa_whisper.md), [Home Alone](recipes/home_alone.md) and [Bedtime](recipes/bedtime.md) for simple to use examples.
 * Unified Person model
-  - Currently missing from Home Assistant. 
+  - Currently missing from Home Assistant.
   - Define an email, SMS number or mobile device, and then use the `person` entity in notification actions, Supernotify works out which attribute to use where
 * Easy **HTML email templates**
   - Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
   - Default general template supplied
 * Mobile Actions
-  - Set up a single set of consistent mobile actions across multiple notifications and re-use across many notifications
+  - Set up a single set of consistent mobile actions across multiple notifications and reuse across many notifications
   - Include *snoozing* actions to silence based on criteria
 * Flexible Image Snapshots
   - Supports cameras, MQTT Images and image URLs.
