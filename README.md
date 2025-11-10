@@ -42,7 +42,7 @@ for sending only to people in or out of the property
 
 ## Installation
 
-* Add the [Supernotif Git Repo](https://github.com/rhizomatics/supernotify) to HACS as custom repo
+* Add the [Supernotify Git Repo](https://github.com/rhizomatics/supernotify) to HACS as custom repo
 * Select *SuperNotify* in the list of available integrations in HACS and install
 * Add a `notify` config for the `supernotify` integration,
     * See `examples` directory for working minimal and maximal configuration examples.
