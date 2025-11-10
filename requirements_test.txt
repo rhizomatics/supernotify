@@ -1,7 +1,7 @@
 pytest==8.4.2
 pytest-cov
 pytest-socket>=0.7.0
-pytest-homeassistant-custom-component>=0.13.287
+pytest-homeassistant-custom-component>=0.13.295
 pytest-asyncio
 pytest-unordered
 pytest-mock

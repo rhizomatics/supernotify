@@ -8,6 +8,7 @@
   - This is to support future resolution of [issue [#8](https://github.com/rhizomatics/supernotify/issues/8)]
 - Notification now records a `missed` count, where transport runs without error but makes no deliveries
 - `NotifyEntity` now always auto-generates a default Delivery unless the transport is explicitly disabled
+- HomeAssistant target version now 2025.11
 
 ## 1.2.1
 - HACS Hassfest validator added
