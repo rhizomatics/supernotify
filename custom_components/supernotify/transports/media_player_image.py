@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class MediaPlayerImageTransport(Transport):
     """Requires Alex Media Player integration"""
 
-    transport = TRANSPORT_MEDIA
+    name = TRANSPORT_MEDIA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

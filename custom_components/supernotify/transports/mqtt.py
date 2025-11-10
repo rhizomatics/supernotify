@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MQTTTransport(Transport):
-    transport = TRANSPORT_MQTT
+    name = TRANSPORT_MQTT
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

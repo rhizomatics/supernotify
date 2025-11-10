@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
@@ -10,13 +10,9 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
 )
 
 from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, CONF_DEVICE_DOMAIN, TRANSPORT_CHIME
-from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.transport import Transport
-
-if TYPE_CHECKING:
-    from custom_components.supernotify.delivery import Delivery
 
 RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
 
@@ -69,7 +65,7 @@ class ChimeTargetConfig:
 
 
 class ChimeTransport(Transport):
-    transport = TRANSPORT_CHIME
+    name = TRANSPORT_CHIME
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         # support optional auto discovery
@@ -98,9 +94,8 @@ class ChimeTransport(Transport):
         })
 
     async def deliver(self, envelope: Envelope) -> bool:
-        config: Delivery = self.delivery_config(envelope.delivery_name)
         data: dict[str, Any] = {}
-        data.update(config.data)
+        data.update(envelope.delivery.data)
         data.update(envelope.data or {})
         target: Target = envelope.target
 
@@ -115,7 +110,7 @@ class ChimeTransport(Transport):
             target.entity_ids,
             envelope.delivery_name,
             envelope.data,
-            config.data,
+            envelope.delivery.data,
         )
         # expand groups
         expanded_targets = {

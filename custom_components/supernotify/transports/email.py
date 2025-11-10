@@ -20,7 +20,6 @@ from custom_components.supernotify.transport import (
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from custom_components.supernotify.delivery import Delivery
 
 RE_VALID_EMAIL = (
     r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
@@ -30,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EmailTransport(Transport):
-    transport = TRANSPORT_EMAIL
+    name = TRANSPORT_EMAIL
 
     def __init__(
         self,
@@ -74,9 +73,8 @@ class EmailTransport(Transport):
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)
 
         data: dict[str, Any] = envelope.data or {}
-        config: Delivery = self.delivery_config(envelope.delivery_name)
         html: str | None = data.get("html")
-        template: str | None = data.get(CONF_TEMPLATE, config.template)
+        template: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
         addresses: list[str] = envelope.target.email or []
         snapshot_url: str | None = data.get("snapshot_url")
         # TODO: centralize in config

@@ -16,6 +16,7 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
@@ -93,8 +94,9 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
     await uut.initialize()
     register_mobile_app(uut.context.people_registry, person="person.bob_mctest")
     plain_notify = Notification(uut.context, "hello")
+    delivery = Delivery("email", DELIVERY["email"], uut.context.delivery_registry.transports["email"])
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.delivery_registry.deliveries["email"].transport)[0].email == [
+    assert plain_notify.generate_recipients(delivery)[0].email == [
         "bob@mctest.com",
         "jane@macunit.org",
     ]
@@ -106,16 +108,14 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.USER, recipient="person.bob_mctest")
     ]
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.delivery_registry.deliveries["email"].transport)[0].email == [
-        "jane@macunit.org"
-    ]
+    assert plain_notify.generate_recipients(delivery)[0].email == ["jane@macunit.org"]
 
     uut.on_mobile_action(
         Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_NORMAL_USER_EVERYTHING"}, context=Context(user_id="eee999111"))
     )
     assert list(uut.context.snoozer.snoozes.values()) == []
     await plain_notify.initialize()
-    assert plain_notify.generate_recipients("email", uut.context.delivery_registry.deliveries["email"].transport)[0].email == [
+    assert plain_notify.generate_recipients(delivery)[0].email == [
         "bob@mctest.com",
         "jane@macunit.org",
     ]

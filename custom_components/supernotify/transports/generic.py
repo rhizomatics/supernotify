@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.notify.const import ATTR_TARGET
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
@@ -16,16 +16,13 @@ from custom_components.supernotify.transport import (
     Transport,
 )
 
-if TYPE_CHECKING:
-    from custom_components.supernotify.delivery import Delivery
-
 _LOGGER = logging.getLogger(__name__)
 
 
 class GenericTransport(Transport):
     """Call any service, including non-notify ones, like switch.turn_on or mqtt.publish"""
 
-    transport = TRANSPORT_GENERIC
+    name = TRANSPORT_GENERIC
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -52,9 +49,8 @@ class GenericTransport(Transport):
 
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}
-        config: Delivery = self.delivery_config(envelope.delivery_name)
 
-        qualified_action = config.action
+        qualified_action = envelope.delivery.action
         if qualified_action and qualified_action.startswith("notify."):
             action_data = envelope.core_action_data()
             if data and qualified_action != "notify.send_message":
@@ -63,12 +59,12 @@ class GenericTransport(Transport):
             action_data = data
 
         target_data: dict[str, Any] = {}
-        if config.action == "notify.send_message":
+        if envelope.delivery.action == "notify.send_message":
             # amongst the wild west of notifty handling, at least care for the modern core one
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
         else:
             all_targets: list[str] = []
-            for category in ensure_list(config.option(OPTION_TARGET_CATEGORIES)):
+            for category in ensure_list(envelope.delivery.option(OPTION_TARGET_CATEGORIES)):
                 all_targets.extend(envelope.target.for_category(category))
             if all_targets:
                 action_data[ATTR_TARGET] = all_targets

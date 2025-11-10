@@ -42,13 +42,22 @@ SIMPLE_CONFIG = {
                     "chime_aliases": {"person": {"media_player": "bell_02", "switch": {"target": "switch.chime_ding"}}}
                 },
             }
-        }
+        },
+        "email": {"enabled": False, "delivery_defaults": {"action": "notify.smtp"}},
     },
 }
 
 
 def test_schema() -> None:
     assert PLATFORM_SCHEMA(SIMPLE_CONFIG)
+
+
+async def test_transport_setup(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await hass.async_block_till_done()
+    assert hass.states.get("supernotify.transport_chime").state == "on"  # type: ignore
+    assert hass.states.get("supernotify.transport_generic").state == "on"  # type: ignore
+    assert hass.states.get("supernotify.transport_email").state == "off"  # type: ignore
 
 
 async def test_reload(hass: HomeAssistant) -> None:
@@ -124,6 +133,49 @@ async def test_empty_config(hass: HomeAssistant) -> None:
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
+    notification: JsonObjectType | None = await hass.services.async_call(
+        "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert notification is not None
+
+
+async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> None:
+    assert await async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {"name": DOMAIN, "platform": DOMAIN},
+            ]
+        },
+    )
+    assert await async_setup_component(
+        hass, "file", {"file": [{"platform": "notify", "name": "notilog", "filepath": "notify.log"}]}
+    )
+
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
+    await hass.services.async_call(
+        NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test", "target": ["notify.notilog"]}, blocking=True
+    )
+    notification: JsonObjectType | None = await hass.services.async_call(
+        "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert notification is not None
+    assert len(notification["delivered_envelopes"]) == 1  # type: ignore[arg-type]
+    assert len(notification["undelivered_envelopes"]) == 0  # type: ignore[arg-type]
+
+    await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
+    notification = await hass.services.async_call(
+        "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert notification is not None
+    assert len(notification["delivered_envelopes"]) == 0  # type: ignore[arg-type]
+    assert len(notification["undelivered_envelopes"]) == 0  # type: ignore[arg-type]
 
 
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
@@ -179,7 +231,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
         {"title": "my title", "message": "unit test 9001a", "data": {"delivery": ["testing", "chime_person"]}},
         blocking=True,
     )
-    notification: JsonObjectType | None = await hass.services.async_call(
+    notification = await hass.services.async_call(
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()

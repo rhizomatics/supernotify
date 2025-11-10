@@ -123,11 +123,12 @@ async def test_on_notify_mobile_push_with_person_derived_targets() -> None:
     )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
+    delivery = Delivery("dummy", {}, uut)
 
     n = Notification(ctx, message="hello there", title="testing")
     await n.initialize()
-    uut = MobilePushTransport(ctx)
-    recipients: list[Target] = n.generate_recipients("dummy", uut)
+
+    recipients: list[Target] = n.generate_recipients(delivery)
     assert len(recipients) == 1
     assert len(recipients[0].actions) == 1
     assert recipients[0].actions[0] == "mobile_app_test_user_iphone"

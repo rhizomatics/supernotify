@@ -26,7 +26,7 @@ from homeassistant.util import slugify
 
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.delivery import DeliveryRegistry
+from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
@@ -44,6 +44,13 @@ class MockableHomeAssistant(HomeAssistant):
 
 
 class TestingContext(Context):
+    """Build a test context and associated services for unit testing.
+
+    All supernotify components are real and not mocked. HomeAssistant is optionally mocked.
+    """
+
+    __test__ = False
+
     def __init__(
         self,
         real_hass: bool = False,
@@ -131,6 +138,9 @@ class TestingContext(Context):
 
     def transport(self, transport_name: str) -> Transport:
         return self.delivery_registry.transports[transport_name]
+
+    def delivery(self, delivery_name: str) -> Delivery:
+        return self.delivery_registry.deliveries[delivery_name]
 
 
 def register_mobile_app(

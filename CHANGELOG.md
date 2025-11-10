@@ -1,12 +1,19 @@
 # Public releases
 
+## 1.2.1
+- HACS Hassfest validator added
+- A delivery for `NorifyEntity` is now auto-generated for an empty platform config
+- The old unused 'default delivery by transport' removed
+- `transport.transport` is now `transport.name`
+- Simplified notification logic by passing new `Delivery` object and avoiding re-lookups
+
 ## 1.2.0
 - `DeliveryRegistry` now has the delivery functionality from `Context` and `Transport`
 - `DeliveryMethod` is now `Transport`
 - Tests simplified with a new configurable `TestingContext`
 - Moved mqtt, states, device, condition etc access into `HomeAssistantAPI` from across the code base
 - `NotificationArchive` now owns its own Config interpretation and is built from notify
-- Context is now a passive ref container plus a little FS path maniuplation
+- Context is now a passive ref container plus a little FS path manipulation
 
 ## 1.1.6
 - HomeAssistant logic moved from `Context` to `HomeAssistantAPI`

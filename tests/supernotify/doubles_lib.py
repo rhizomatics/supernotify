@@ -16,7 +16,7 @@ from custom_components.supernotify.transport import Transport
 
 
 class DummyTransport(Transport):
-    transport = "dummy"
+    name = "dummy"
 
     def __init__(
         self,
@@ -43,7 +43,7 @@ class DummyTransport(Transport):
 
 
 class BrokenTransport(Transport):
-    transport = "broken"
+    name = "broken"
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -74,6 +74,6 @@ class MockImageEntity(image.ImageEntity):
 
 def build_delivery_from_config(conf: ConfigType, ctx: Context) -> dict[str, Delivery]:
     def transport(transport_name: str) -> Transport:
-        return next(t for t in TRANSPORTS if t.transport == transport_name)(ctx)
+        return next(t for t in TRANSPORTS if t.name == transport_name)(ctx)
 
     return {k: Delivery(k, v, transport(v[CONF_TRANSPORT])) for k, v in conf.items()}

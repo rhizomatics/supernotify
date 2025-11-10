@@ -11,13 +11,13 @@ from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_NOTIFY_ENTITY = r"notify.\.[A-Za-z0-9_]+"
+RE_NOTIFY_ENTITY = r"notify\.[A-Za-z0-9_]+"
 
 
 class NotifyEntityTransport(Transport):
     """Call any notify entity"""
 
-    transport = TRANSPORT_NOTIFY_ENTITY
+    name = TRANSPORT_NOTIFY_ENTITY
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -28,6 +28,10 @@ class NotifyEntityTransport(Transport):
     @property
     def default_action(self) -> str:
         return "notify.send_message"
+
+    @property
+    def auto_configure(self) -> bool:
+        return True
 
     async def deliver(self, envelope: Envelope) -> bool:
         action_data = envelope.core_action_data()

@@ -108,7 +108,7 @@ class Delivery(DeliveryConfig):
         return {
             CONF_NAME: self.name,
             CONF_ALIAS: self.alias,
-            CONF_TRANSPORT: self.transport.transport,
+            CONF_TRANSPORT: self.transport.name,
             CONF_TEMPLATE: self.template,
             CONF_DEFAULT: self.default,
             CONF_MESSAGE: self.message,
@@ -131,7 +131,8 @@ class DeliveryRegistry:
         deliveries: ConfigType | None = None,
         transport_configs: ConfigType | None = None,
         transport_types: list[type[Transport]] | None = None,
-        transport_instances: list[Transport] | None = None,  # for unit tests only
+        # for unit tests only
+        transport_instances: list[Transport] | None = None,
     ) -> None:
         # raw configured deliveries
         self._deliveries: ConfigType = deliveries if isinstance(deliveries, dict) else {}
@@ -145,13 +146,14 @@ class DeliveryRegistry:
         self._fallback_on_error: list[Delivery] = []
         self._fallback_by_default: list[Delivery] = []
         self._default_deliveries: list[Delivery] = []
-        self.default_delivery_by_transport: dict[str, Delivery] = {}
         self._transport_types: list[type[Transport]] = transport_types or []
         # test harness support
         self._transport_instances: list[Transport] | None = transport_instances
 
     async def initialize(self, context: "Context") -> None:
         await self.initialize_transports(context)
+        if not self.deliveries:
+            self.autogenerate_deliveries()
         self.initialize_deliveries()
 
     def initialize_deliveries(self) -> None:
@@ -163,12 +165,6 @@ class DeliveryRegistry:
                     self._fallback_by_default.append(delivery)
                 if SELECTION_DEFAULT in delivery.selection:
                     self._default_deliveries.append(delivery)
-
-    def delivery_config(self, delivery_name: str, transport_name: str) -> Delivery:
-        try:
-            return self.deliveries.get(delivery_name) or self.default_delivery_by_transport[transport_name]
-        except KeyError as e:
-            raise ValueError(f"Missing transport {transport_name} in delivery register") from e
 
     @property
     def fallback_by_default_deliveries(self) -> list[Delivery]:
@@ -187,13 +183,13 @@ class DeliveryRegistry:
         """Use configure_for_tests() to set transports to mocks or manually created fixtures"""
         if self._transport_instances:
             for transport in self._transport_instances:
-                self.transports[transport.transport] = transport
+                self.transports[transport.name] = transport
                 await transport.initialize()
                 await self.initialize_transport_deliveries(context, transport)
         if self._transport_types:
             for transport_class in self._transport_types:
                 transport_config: TransportConfig = self._transport_configs.get(
-                    transport_class.transport, TransportConfig(transport_class.transport, {})
+                    transport_class.name, TransportConfig(transport_class.name, {})
                 )
                 transport = transport_class(
                     context,
@@ -203,10 +199,10 @@ class DeliveryRegistry:
                     device_discovery=transport_config.device_discovery,
                     target_required=transport_config.target_required,
                 )
-                self.transports[transport_class.transport] = transport
+                self.transports[transport_class.name] = transport
                 await transport.initialize()
                 await self.initialize_transport_deliveries(context, transport)
-                self.transports[transport_class.transport] = transport
+                self.transports[transport_class.name] = transport
 
         unconfigured_deliveries = [dc for d, dc in self._deliveries.items() if d not in self.deliveries]
         for bad_del in unconfigured_deliveries:
@@ -222,7 +218,7 @@ class DeliveryRegistry:
         """Validate and initialize deliveries at startup for this transport"""
         validated_deliveries: dict[str, Delivery] = {}
         deliveries_for_this_transport = {
-            d: dc for d, dc in self._deliveries.items() if dc.get(CONF_TRANSPORT) == transport.transport
+            d: dc for d, dc in self._deliveries.items() if dc.get(CONF_TRANSPORT) == transport.name
         }
         for d, dc in deliveries_for_this_transport.items():
             # don't care about ENABLED here since disabled deliveries can be overridden later
@@ -231,36 +227,39 @@ class DeliveryRegistry:
                 _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
             else:
                 validated_deliveries[d] = delivery
-                if delivery.default:
-                    if (
-                        transport.transport not in self.default_delivery_by_transport
-                        or self.default_delivery_by_transport[transport.transport].name == delivery.name
-                    ):
-                        # pick the first delivery with default flag set as the default
-                        self.default_delivery_by_transport[transport.transport] = delivery
-                    elif delivery.name != self.default_delivery_by_transport[transport.transport].name:
-                        _LOGGER.debug("SUPERNOTIFY Multiple default deliveries, skipping %s", d)
-                    else:
-                        _LOGGER.warning("SUPERNOTIFY Unreachable code in default deliveries, skipping %s", d)
-
-        if transport.transport not in self.default_delivery_by_transport:
-            transport_definition: DeliveryConfig = transport.delivery_defaults
-            if transport_definition:
-                _LOGGER.info(
-                    "SUPERNOTIFY Building default delivery for %s from transport %s", transport.transport, transport_definition
-                )
-                default_delivery = Delivery(f"DEFAULT_{transport.transport}", {}, transport)
-                # validated_deliveries[default_delivery.name]=default_delivery
-                self.default_delivery_by_transport[transport.transport] = default_delivery
-            else:
-                _LOGGER.debug("SUPERNOTIFY No default delivery or transport_definition for transport %s", transport.transport)
 
         self.deliveries.update(validated_deliveries)
 
         _LOGGER.debug(
-            "SUPERNOTIFY Validated transport %s, default delivery %s, default action %s, valid deliveries: %s",
-            transport.transport,
-            self.default_delivery_by_transport[transport.transport],
+            "SUPERNOTIFY Validated transport %s, default action %s, valid deliveries: %s",
+            transport.name,
             transport.delivery_defaults.action,
             [d for d in self.deliveries.values() if d.enabled and d.transport == transport],
         )
+
+    def autogenerate_deliveries(self) -> None:
+        # If the config has no deliveries, check if a default delivery should be auto-generated
+        # where there is a empty config, supernotify can at least handle NotifyEntities sensibly
+        if self.deliveries:
+            return
+        autogenerated: dict[str, Delivery] = {}
+        for transport in self.transports.values():
+            transport_definition: DeliveryConfig = transport.delivery_defaults
+            _LOGGER.debug(
+                "SUPERNOTIFY Building default delivery for %s from transport %s", transport.name, transport_definition
+            )
+            if transport.auto_configure and transport.validate_action(transport_definition.action):
+                # auto generate a delivery that will be implicitly selected
+                default_delivery = Delivery(f"DEFAULT_{transport.name}", transport_definition.as_dict(), transport)
+                default_delivery.enabled = transport.enabled
+                default_delivery.default = True
+                autogenerated[default_delivery.name] = default_delivery
+                _LOGGER.info(
+                    "SUPERNOTIFY Auto-generating a default delivery for %s from transport %s",
+                    transport.name,
+                    transport_definition,
+                )
+            else:
+                _LOGGER.debug("SUPERNOTIFY No default delivery or transport_definition for transport %s", transport.name)
+        if autogenerated:
+            self.deliveries.update(autogenerated)

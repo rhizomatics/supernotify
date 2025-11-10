@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SMSTransport(Transport):
-    transport = TRANSPORT_SMS
+    name = TRANSPORT_SMS
     MAX_MESSAGE_LENGTH = 158
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

@@ -27,7 +27,7 @@ class AlexaMediaPlayerTransport(Transport):
 
     """
 
-    transport = TRANSPORT_ALEXA_MEDIA_PLAYER
+    name = TRANSPORT_ALEXA_MEDIA_PLAYER
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

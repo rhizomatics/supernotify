@@ -97,7 +97,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.condition is None
     assert uut.priority == PRIORITY_VALUES
     assert uut.selection == [SELECTION_DEFAULT]
-    assert uut.transport.transport == "notify_entity"
+    assert uut.transport.name == "notify_entity"
     assert uut.data == {}
     assert uut.options == uut.transport.default_options
     assert uut.action == "notify.send_message"

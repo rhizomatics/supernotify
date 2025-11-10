@@ -38,7 +38,7 @@ class Transport:
     or alternative notification mechanisms.
     """
 
-    transport: str
+    name: str
 
     @abstractmethod
     def __init__(
@@ -68,7 +68,7 @@ class Transport:
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
-        if self.transport is None:
+        if self.name is None:
             raise ValueError("No transport configured")
 
         if self.device_discovery:
@@ -95,6 +95,10 @@ class Transport:
         return None
 
     @property
+    def auto_configure(self) -> bool:
+        return False
+
+    @property
     def target_required(self) -> bool:
         return self._target_required if self._target_required is not None else True
 
@@ -112,7 +116,7 @@ class Transport:
 
     def attributes(self) -> dict[str, Any]:
         return {
-            CONF_TRANSPORT: self.transport,
+            CONF_TRANSPORT: self.name,
             CONF_ENABLED: self.enabled,
             CONF_TARGET_REQUIRED: self.target_required,
             CONF_DEVICE_DOMAIN: self.device_domain,
@@ -136,9 +140,6 @@ class Transport:
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:  # noqa: ARG002
         """Pick out delivery appropriate target from a single person's (recipient) config"""
         return None
-
-    def delivery_config(self, delivery_name: str) -> "Delivery":
-        return self.delivery_registry.delivery_config(delivery_name, self.transport)
 
     def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> Any:
         if data is not None:
@@ -195,7 +196,7 @@ class Transport:
             envelope.failed_calls.append(
                 CallRecord(time.time() - start_time, domain, service, action_data, target_data, exception=str(e))
             )
-            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.transport, qualified_action, action_data)
+            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.name, qualified_action, action_data)
             envelope.errored += 1
             envelope.delivery_error = format_exception(e)
             return False

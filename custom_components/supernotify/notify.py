@@ -447,14 +447,14 @@ class SupernotifyAction(BaseNotificationService):
                 else:
                     if new_state.state == "off" and transport.enabled:
                         transport.enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {transport.transport}")
+                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {transport.name}")
                         changes += 1
                     elif new_state.state == "on" and not transport.enabled:
                         transport.enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {transport.transport}")
+                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {transport.name}")
                         changes += 1
                     else:
-                        _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.transport}, already {new_state}")
+                        _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.name}, already {new_state}")
 
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
@@ -474,13 +474,13 @@ class SupernotifyAction(BaseNotificationService):
             self.exposed_entities.append(f"{DOMAIN}.scenario_{scenario.name}")
         for transport in self.context.delivery_registry.transports.values():
             self.hass.states.async_set(
-                f"{DOMAIN}.transport_{transport.transport}",
+                f"{DOMAIN}.transport_{transport.name}",
                 STATE_ON
                 if len([d for d in self.context.delivery_registry.deliveries.values() if d.transport == transport]) > 0
                 else STATE_OFF,
                 transport.attributes(),
             )
-            self.exposed_entities.append(f"{DOMAIN}.transport_{transport.transport}")
+            self.exposed_entities.append(f"{DOMAIN}.transport_{transport.name}")
         for delivery_name, delivery in self.context.delivery_registry._deliveries.items():
             self.hass.states.async_set(
                 f"{DOMAIN}.delivery_{delivery_name}",

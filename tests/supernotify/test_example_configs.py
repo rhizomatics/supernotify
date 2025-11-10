@@ -36,6 +36,7 @@ async def test_examples(hass: HomeAssistant, config_name: str) -> None:
         for d, dc in uut_config.get(CONF_DELIVERY, {}).items()
         if dc.get(CONF_ENABLED, True) and SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT])
     ]
+
     assert services is not None
     assert services["DEFAULT"] == unordered(expected_defaults)
 

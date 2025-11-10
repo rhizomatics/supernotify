@@ -121,11 +121,11 @@ async def test_generate_recipients_from_entities() -> None:
         }
     )
     await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = ctx.delivery("chatty")
 
     uut = Notification(ctx, "testing 123")
 
-    recipients: list[Target] = uut.generate_recipients("chatty", generic)
+    recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].entity_ids == ["custom.light_1", "custom.switch_2"]
 
 
@@ -148,11 +148,12 @@ async def test_generate_recipients_from_recipients() -> None:
     )
     await ctx.test_initialize()
     generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = ctx.delivery("chatty")
 
     uut = Notification(ctx, "testing 123")
     generic = GenericTransport(ctx)
     await generic.initialize()
-    recipients: list[Target] = uut.generate_recipients("chatty", generic)
+    recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].entity_ids == ["custom.light_1"]
     assert recipients[0].other_ids == ["@foo", "@bar"]
 
@@ -170,18 +171,20 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     )
     await ctx.test_initialize()
     generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = ctx.delivery("chatty")
 
     uut = Notification(ctx, "testing 123")
 
-    recipients: list[Target] = uut.generate_recipients("chatty", generic)
+    recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].other_ids == ["chan1", "chan2"]
-    bundles = uut.generate_envelopes("chatty", generic, recipients)
+    bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [Envelope(Delivery("chatty", ctx.deliveries["chatty"], generic), uut, target=Target(["chan1", "chan2"]))]
     email = EmailTransport(ctx)
     await email.initialize()
-    recipients = uut.generate_recipients("mail", email)
+    delivery = ctx.delivery("mail")
+    recipients = uut.generate_recipients(delivery)
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
-    bundles = uut.generate_envelopes("mail", email, recipients)
+    bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
         Envelope(Delivery("mail", ctx.deliveries["mail"], email), uut, target=Target(["bob@test.com", "jane@test.com"]))
     ]
@@ -206,12 +209,13 @@ async def test_build_targets_for_simple_case() -> None:
     ctx = TestingContext()
     await ctx.test_initialize()
     generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = Delivery("simple", {}, generic)
 
     # mock_context.deliveries={'testy':Delivery("testy",{},transport)}
     uut = Notification(ctx, "testing 123")
-    recipients: list[Target] = uut.generate_recipients("", generic)
-    bundles = uut.generate_envelopes("", generic, recipients)
-    assert bundles == [Envelope(Delivery("DEFAULT_generic", {}, generic), uut)]
+    recipients: list[Target] = uut.generate_recipients(delivery)
+    bundles = uut.generate_envelopes(delivery, recipients)
+    assert bundles == [Envelope(Delivery("simple", {}, generic), uut)]
 
 
 async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(

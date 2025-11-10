@@ -129,7 +129,6 @@ def mock_delivery_registry() -> DeliveryRegistry:
     registry.deliveries = {}
     registry.transports = {}
     registry.default_deliveries = []
-    registry.default_delivery_by_transport = {}
     return registry
 
 

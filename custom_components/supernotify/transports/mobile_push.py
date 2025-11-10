@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MobilePushTransport(Transport):
-    transport = TRANSPORT_MOBILE_PUSH
+    name = TRANSPORT_MOBILE_PUSH
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

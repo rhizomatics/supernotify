@@ -1,5 +1,5 @@
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from custom_components.supernotify import (
     ATTR_NOTIFICATION_ID,
@@ -9,14 +9,11 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.transport import Transport
 
-if TYPE_CHECKING:
-    from custom_components.supernotify.delivery import Delivery
-
 _LOGGER = logging.getLogger(__name__)
 
 
 class PersistentTransport(Transport):
-    transport = TRANSPORT_PERSISTENT
+    name = TRANSPORT_PERSISTENT
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -34,9 +31,8 @@ class PersistentTransport(Transport):
 
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}
-        config: Delivery = self.delivery_config(envelope.delivery_name)
 
-        notification_id = data.get(ATTR_NOTIFICATION_ID) or config.data.get(ATTR_NOTIFICATION_ID)
+        notification_id = data.get(ATTR_NOTIFICATION_ID) or envelope.delivery.data.get(ATTR_NOTIFICATION_ID)
         action_data = envelope.core_action_data()
         action_data["notification_id"] = notification_id
 
