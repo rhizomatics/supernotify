@@ -1,5 +1,4 @@
 from homeassistant.const import (
-    CONF_DEFAULT,
     CONF_NAME,
 )
 
@@ -13,7 +12,6 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
         "dive_dive_dive": {
             CONF_TRANSPORT: TRANSPORT_MQTT,
             CONF_NAME: "dive_dive_dive",
-            CONF_DEFAULT: True,
             CONF_DATA: {
                 "topic": "zigbee2mqtt/Downstairs Siren/set",
                 "payload": {
@@ -24,7 +22,6 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
     }
     context = uninitialized_unmocked_config
     context.delivery_registry._deliveries = deliveries
-    mock_scenario_registry.delivery_by_scenario = {"DEFAULT": ["dive_dive_dive"]}
     context.scenario_registry = mock_scenario_registry
 
     uut = MQTTTransport(context)

@@ -7,7 +7,6 @@ from homeassistant.helpers import issue_registry as ir
 from . import (
     CONF_DATA,
     DELIVERY_SELECTION_IMPLICIT,
-    SCENARIO_DEFAULT,
     SCENARIO_TEMPLATE_ATTRS,
 )
 from .common import safe_get
@@ -38,17 +37,16 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ScenarioRegistry:
-    def __init__(self, scenario_configs: ConfigType | None = None, default_scenario_for_testing: bool = False) -> None:
+    def __init__(self, scenario_configs: ConfigType | None = None) -> None:
         self._config: ConfigType = scenario_configs or {}
         self.scenarios: dict[str, Scenario] = {}
         self.content_scenario_templates: ConfigType = {}
-        self.delivery_by_scenario: dict[str, list[str]] = {SCENARIO_DEFAULT: []}
-        self.default_scenario_for_testing: bool = default_scenario_for_testing
+        self.delivery_by_scenario: dict[str, list[str]] = {}
 
     async def initialize(
         self,
         deliveries: dict[str, Delivery],
-        default_deliveries: list[Delivery],
+        implicit_deliveries: list[Delivery],
         mobile_actions: ConfigType,
         hass_api: HomeAssistantAPI,
     ) -> None:
@@ -56,17 +54,15 @@ class ScenarioRegistry:
             scenario = Scenario(scenario_name, scenario_definition, hass_api)
             if await scenario.validate(valid_deliveries=list(deliveries), valid_action_groups=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
-        self.refresh(deliveries, default_deliveries, self.default_scenario_for_testing)
+        self.refresh(deliveries, implicit_deliveries)
 
-    def refresh(
-        self, deliveries: dict[str, Delivery], default_deliveries: list[Delivery], default_scenario: bool = False
-    ) -> None:
+    def refresh(self, deliveries: dict[str, Delivery], implicit_deliveries: list[Delivery]) -> None:
         self.delivery_by_scenario = {}
         for scenario_name, scenario in self.scenarios.items():
             if scenario.enabled:
                 self.delivery_by_scenario.setdefault(scenario_name, [])
                 if scenario.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                    scenario_deliveries: list[str] = [d.name for d in default_deliveries]
+                    scenario_deliveries: list[str] = [d.name for d in implicit_deliveries]
                 else:
                     scenario_deliveries = []
                 scenario_definition_delivery = scenario.delivery
@@ -86,12 +82,6 @@ class ScenarioRegistry:
                             self.content_scenario_templates.setdefault(template_field, {})
                             self.content_scenario_templates[template_field].setdefault(scenario_delivery, [])
                             self.content_scenario_templates[template_field][scenario_delivery].append(scenario_name)
-
-        self.delivery_by_scenario[SCENARIO_DEFAULT] = [d.name for d in default_deliveries]
-        if default_scenario:
-            for d in deliveries.values():
-                if d.enabled and d.name not in self.delivery_by_scenario[SCENARIO_DEFAULT]:
-                    self.delivery_by_scenario[SCENARIO_DEFAULT].append(d.name)
 
 
 class Scenario:

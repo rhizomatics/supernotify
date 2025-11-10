@@ -128,7 +128,6 @@ def mock_delivery_registry() -> DeliveryRegistry:
     registry = AsyncMock(spec=DeliveryRegistry)
     registry.deliveries = {}
     registry.transports = {}
-    registry.default_deliveries = []
     return registry
 
 
@@ -172,6 +171,11 @@ def mock_context(
 
 
 @pytest.fixture
+def deliveries(mock_context: Context) -> dict[str, Delivery]:
+    return mock_context.delivery_registry.deliveries
+
+
+@pytest.fixture
 def mock_notify(hass: HomeAssistant) -> MockAction:
     mock_action: MockAction = MockAction()
     hass.services.async_register(DOMAIN, "mock", mock_action, supports_response=SupportsResponse.NONE)  # type: ignore
@@ -203,7 +207,7 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
     hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
     await config.scenario_registry.initialize(
-        config.delivery_registry.deliveries, config.delivery_registry.default_deliveries, {}, hass_api
+        config.delivery_registry.deliveries, config.delivery_registry.implicit_deliveries, {}, hass_api
     )
     return config
 

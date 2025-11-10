@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_ACTION,
     CONF_ALIAS,
     CONF_CONDITION,
-    CONF_DEFAULT,
     CONF_DESCRIPTION,
     CONF_EMAIL,
     CONF_ENABLED,
@@ -193,12 +192,11 @@ TRANSPORT_VALUES = [
     TRANSPORT_NOTIFY_ENTITY,
 ]
 
-SCENARIO_DEFAULT = "DEFAULT"
 SCENARIO_NULL = "NULL"
 SCENARIO_TEMPLATE_ATTRS = ("message_template", "title_template")
 
 RESERVED_DELIVERY_NAMES = ["ALL"]
-RESERVED_SCENARIO_NAMES = [SCENARIO_DEFAULT, SCENARIO_NULL]
+RESERVED_SCENARIO_NAMES = [SCENARIO_NULL]
 RESERVED_DATA_KEYS = [ATTR_DOMAIN, ATTR_SERVICE, "action"]
 
 
@@ -246,7 +244,6 @@ DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
     vol.Optional(CONF_TEMPLATE): cv.string,
-    vol.Optional(CONF_DEFAULT, default=False): cv.boolean,  # should this delivery be implicitly selected
     vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
     vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,

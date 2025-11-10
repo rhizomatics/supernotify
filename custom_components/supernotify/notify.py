@@ -170,6 +170,9 @@ async def async_get_service(
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
         return service.expose_entities()
 
+    def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:
+        return service.enquire_implicit_deliveries()
+
     def supplemental_action_enquire_deliveries_by_scenario(_call: ServiceCall) -> dict[str, Any]:
         return service.enquire_deliveries_by_scenario()
 
@@ -211,6 +214,12 @@ async def async_get_service(
             "days": service.context.archive.archive_days if days is None else days,
         }
 
+    hass.services.async_register(
+        DOMAIN,
+        "enquire_implicit_deliveries",
+        supplemental_action_enquire_implicit_deliveries,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         "enquire_deliveries_by_scenario",
@@ -354,7 +363,7 @@ class SupernotifyAction(BaseNotificationService):
         await self.context.delivery_registry.initialize(self.context)
         await self.context.scenario_registry.initialize(
             self.context.delivery_registry.deliveries,
-            self.context.delivery_registry.default_deliveries,
+            self.context.delivery_registry.implicit_deliveries,
             self.context.mobile_actions,
             self.context.hass_api,
         )
@@ -398,6 +407,46 @@ class SupernotifyAction(BaseNotificationService):
             except Exception as e:
                 _LOGGER.error("SUPERNOTIFY failed to unsubscribe: %s", e)
         _LOGGER.info("SUPERNOTIFY shut down")
+
+    async def async_send_message(
+        self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any
+    ) -> None:
+        """Send a message via chosen transport."""
+        data = kwargs.get(ATTR_DATA, {})
+        notification = None
+        _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
+
+        try:
+            notification = Notification(self.context, message, title, target, data)
+            await notification.initialize()
+            if self.dupe_check(notification):
+                notification.suppress(SuppressionReason.DUPE)
+            else:
+                if await notification.deliver():
+                    self.sent += 1
+                    self.hass.states.async_set(f"{DOMAIN}.sent", str(self.sent))
+                elif notification.errored:
+                    _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
+                else:
+                    _LOGGER.warning("SUPERNOTIFY No deliveries made for  %s", notification.id)
+
+        except Exception as err:
+            # fault barrier of last resort, integration failures should be caught within envelope delivery
+            _LOGGER.exception("SUPERNOTIFY Failed to send message %s", message)
+            self.failures += 1
+            if notification is not None:
+                notification.delivery_error = format_exception(err)
+            self.hass.states.async_set(f"{DOMAIN}.failures", str(self.failures))
+
+        if notification is not None:
+            self.last_notification = notification
+            await self.context.archive.archive(notification)
+            _LOGGER.debug(
+                "SUPERNOTIFY %s deliveries, %s errors, %s skipped",
+                notification.delivered,
+                notification.errored,
+                notification.skipped,
+            )
 
     async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
         changes = 0
@@ -460,7 +509,7 @@ class SupernotifyAction(BaseNotificationService):
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
             if changes:
                 self.context.scenario_registry.refresh(
-                    self.context.delivery_registry.deliveries, self.context.delivery_registry.default_deliveries
+                    self.context.delivery_registry.deliveries, self.context.delivery_registry.implicit_deliveries
                 )
                 _LOGGER.debug(f"SUPERNOTIFY event had {changes} changes triggering updates to states")
 
@@ -505,45 +554,14 @@ class SupernotifyAction(BaseNotificationService):
         self.notification_cache[notification_hash, notification.priority] = notification.id
         return dupe
 
-    async def async_send_message(
-        self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any
-    ) -> None:
-        """Send a message via chosen transport."""
-        data = kwargs.get(ATTR_DATA, {})
-        notification = None
-        _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
-
-        try:
-            notification = Notification(self.context, message, title, target, data)
-            await notification.initialize()
-            if self.dupe_check(notification):
-                notification.suppress(SuppressionReason.DUPE)
-            else:
-                if await notification.deliver():
-                    self.sent += 1
-                    self.hass.states.async_set(f"{DOMAIN}.sent", str(self.sent))
-                elif notification.errored:
-                    _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
-                else:
-                    _LOGGER.warning("SUPERNOTIFY No deliveries made for  %s", notification.id)
-
-        except Exception as err:
-            # fault barrier of last resort, integration failures should be caught within envelope delivery
-            _LOGGER.exception("SUPERNOTIFY Failed to send message %s", message)
-            self.failures += 1
-            if notification is not None:
-                notification.delivery_error = format_exception(err)
-            self.hass.states.async_set(f"{DOMAIN}.failures", str(self.failures))
-
-        if notification is not None:
-            self.last_notification = notification
-            await self.context.archive.archive(notification)
-            _LOGGER.debug(
-                "SUPERNOTIFY %s deliveries, %s errors, %s skipped",
-                notification.delivered,
-                notification.errored,
-                notification.skipped,
-            )
+    def enquire_implicit_deliveries(self) -> dict[str, Any]:
+        v: dict[str, list[str]] = {}
+        for t in self.context.delivery_registry.transports:
+            for d in self.context.delivery_registry.implicit_deliveries:
+                if d.transport.name == t:
+                    v.setdefault(t, [])
+                    v[t].append(d.name)
+        return v
 
     def enquire_deliveries_by_scenario(self) -> dict[str, list[str]]:
         return self.context.scenario_registry.delivery_by_scenario

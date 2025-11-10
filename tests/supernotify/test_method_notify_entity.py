@@ -49,3 +49,8 @@ async def test_target_selection() -> None:
     uut = ctx.transport(TRANSPORT_NOTIFY_ENTITY)
 
     assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])).entity_ids == ["notify.pong"]
+
+
+async def test_selects_group_targets() -> None:
+    pass
+    # TODO: write when groups handled

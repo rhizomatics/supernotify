@@ -8,9 +8,8 @@ from homeassistant.config import (
 from homeassistant.const import CONF_ENABLED, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from pytest_unordered import unordered
 
-from custom_components.supernotify import CONF_DELIVERY, CONF_NOTIFY, CONF_SELECTION, SELECTION_DEFAULT
+from custom_components.supernotify import CONF_DELIVERY, CONF_NOTIFY, CONF_SELECTION, CONF_TRANSPORT, SELECTION_DEFAULT
 
 EXAMPLES_ROOT = "examples"
 
@@ -30,15 +29,15 @@ async def test_examples(hass: HomeAssistant, config_name: str) -> None:
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, service_name)
-    services = await hass.services.async_call(platform, "enquire_deliveries_by_scenario", blocking=True, return_response=True)
-    expected_defaults = [
-        d
-        for d, dc in uut_config.get(CONF_DELIVERY, {}).items()
-        if dc.get(CONF_ENABLED, True) and SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT])
-    ]
+    deliveries = await hass.services.async_call(platform, "enquire_implicit_deliveries", blocking=True, return_response=True)
+    expected_defaults: dict[str, list[str]] = {}
+    for d, dc in uut_config.get(CONF_DELIVERY, {}).items():
+        if dc.get(CONF_ENABLED, True) and SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
+            expected_defaults.setdefault(dc[CONF_TRANSPORT], [])
+            expected_defaults[dc[CONF_TRANSPORT]].append(d)
 
-    assert services is not None
-    assert services["DEFAULT"] == unordered(expected_defaults)
+    assert deliveries is not None
+    assert deliveries == expected_defaults
 
     await hass.services.async_call(
         DOMAIN,

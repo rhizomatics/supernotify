@@ -212,14 +212,15 @@ class HomeAssistantAPI:
                 enabled_devs += 1
                 for identifier in dev.identifiers:
                     if identifier and len(identifier) > 1 and identifier[0] == discover_domain:
-                        _LOGGER.debug("SUPERNOTIFY discovered device %s for identifier %s", dev.name, identifier)
+                        _LOGGER.debug("SUPERNOTIFY discovered device %s for id %s", dev.name, identifier)
                         devices.append(dev)
                         found_devs += 1
-                    elif identifier and len(identifier) != 2:
+                    elif identifier:
                         # HomeKit has triples for identifiers, other domains may behave similarly
-
+                        _LOGGER.debug("SUPERNOTIFY Unexpected device %s id: %s", dev.name, identifier)
+                    else:
                         _LOGGER.debug(  # type: ignore
-                            "SUPERNOTIFY Unexpected device %s identifier: %s", dev.name, identifier
+                            "SUPERNOTIFY Unexpected device %s without id", dev.name
                         )
         _LOGGER.info(
             f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, enabled={enabled_devs}, found={found_devs}"

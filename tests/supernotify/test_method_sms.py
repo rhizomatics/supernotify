@@ -1,4 +1,4 @@
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT
+from homeassistant.const import CONF_ACTION
 
 from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_SMS
 from custom_components.supernotify.delivery import Delivery
@@ -11,9 +11,7 @@ from .hass_setup_lib import TestingContext
 
 async def test_deliver() -> None:
     """Test on_notify_email."""
-    ctx = TestingContext(
-        deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_DEFAULT: True, CONF_ACTION: "notify.smsify"}}
-    )
+    ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 

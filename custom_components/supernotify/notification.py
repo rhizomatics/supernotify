@@ -44,7 +44,6 @@ from custom_components.supernotify import (
     OCCUPANCY_ONLY_OUT,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
-    SCENARIO_DEFAULT,
     SCENARIO_NULL,
     SELECTION_BY_SCENARIO,
     STRICT_ACTION_DATA_SCHEMA,
@@ -211,7 +210,7 @@ class Notification(ArchivableObject):
             for scenario_name in self.enabled_scenarios:
                 scenario_enable_deliveries.extend(self.context.scenario_registry.delivery_by_scenario.get(scenario_name, ()))
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                default_enable_deliveries = self.context.scenario_registry.delivery_by_scenario.get(SCENARIO_DEFAULT, [])
+                default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
 
         override_enable_deliveries = []
         override_disable_deliveries = []

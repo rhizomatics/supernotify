@@ -57,7 +57,6 @@ class TestingContext(Context):
         deliveries: dict[str, Any] | None = None,
         scenarios: ConfigType | None = None,
         recipients: list[dict[str, Any]] | None = None,
-        default_scenario_for_testing: bool = False,
         mobile_actions: ConfigType | None = None,
         transport_configs: ConfigType | None = None,
         transport_instances: list[Transport] | None = None,
@@ -133,7 +132,7 @@ class TestingContext(Context):
         self.people_registry.initialize()
         await self.delivery_registry.initialize(self)
         await self.scenario_registry.initialize(
-            self.delivery_registry.deliveries, self.delivery_registry.default_deliveries, self.mobile_actions, self.hass_api
+            self.delivery_registry.deliveries, self.delivery_registry.implicit_deliveries, self.mobile_actions, self.hass_api
         )
 
     def transport(self, transport_name: str) -> Transport:
@@ -209,6 +208,7 @@ def register_device(
     domain: str = "unit_testing",
     domain_id: str = "test_01",
     title: str = "test fixture",
+    identifiers: Any = None,
 ) -> DeviceEntry | None:
     config_entry = config_entries.ConfigEntry(
         domain=domain,
@@ -235,6 +235,6 @@ def register_device(
     if device_registry:
         device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
-            identifiers={(domain, f"{domain_id}")},
+            identifiers=identifiers or {(domain, f"{domain_id}")},
         )
     return device_entry

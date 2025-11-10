@@ -6,6 +6,9 @@
 - The old unused 'default delivery by transport' removed
 - `transport.transport` is now `transport.name`
 - Simplified notification logic by passing new `Delivery` object and avoiding re-lookups
+- Removed `default` for Delivery which had been replaced long ago by `selection` enum
+- Removed `DEFAULT` scenario and replaced by *Implicit Deliveries* managed by `DeliveryRegistry`
+- Added more tests for `hass_api`
 
 ## 1.2.0
 - `DeliveryRegistry` now has the delivery functionality from `Context` and `Transport`

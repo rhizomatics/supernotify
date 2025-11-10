@@ -1,4 +1,4 @@
-from homeassistant.const import CONF_DEFAULT, CONF_NAME
+from homeassistant.const import CONF_NAME
 
 from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, CONF_TRANSPORT, TRANSPORT_MEDIA
 from custom_components.supernotify.delivery import Delivery
@@ -13,7 +13,7 @@ from .hass_setup_lib import TestingContext
 async def test_notify_media_image() -> None:
     """Test on_notify_alexa."""
     context = TestingContext(
-        deliveries={"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA, CONF_NAME: "alexa_show", CONF_DEFAULT: True}},
+        deliveries={"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA, CONF_NAME: "alexa_show"}},
         hass_external_url="https://myserver",
     )
 

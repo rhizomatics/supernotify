@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT, CONF_EMAIL
+from homeassistant.const import CONF_ACTION, CONF_EMAIL
 from pytest_unordered import unordered
 
 from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, CONF_TRANSPORT, TRANSPORT_EMAIL
@@ -17,7 +17,7 @@ async def test_deliver() -> None:
     """Test on_notify_email."""
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
-        deliveries={"plain_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
+        deliveries={"plain_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
     )
     await context.test_initialize()
     uut = context.transport(TRANSPORT_EMAIL)
@@ -49,12 +49,7 @@ async def test_deliver_with_template() -> None:
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
         deliveries={
-            "test_email": {
-                CONF_TRANSPORT: TRANSPORT_EMAIL,
-                CONF_ACTION: "notify.smtp",
-                CONF_TEMPLATE: "minimal_test.html.j2",
-                CONF_DEFAULT: True,
-            }
+            "test_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_TEMPLATE: "minimal_test.html.j2"}
         },
         template_path=Path("tests/supernotify/fixtures/templates"),
     )
@@ -88,7 +83,7 @@ async def test_deliver_with_template() -> None:
 async def test_deliver_with_preformatted_html() -> None:
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
-        deliveries={"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
+        deliveries={"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
     )
 
     await context.test_initialize()
@@ -125,7 +120,7 @@ async def test_deliver_with_preformatted_html() -> None:
 async def test_deliver_with_preformatted_html_and_image() -> None:
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
-        deliveries={"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_DEFAULT: True}},
+        deliveries={"default": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
     )
 
     await context.test_initialize()

@@ -2,6 +2,17 @@
 
 ## Built-in Transports
 
+### Notify Entity
+
+This transport uses the new style Home Assistant notify entities, so accepts only a `message`,
+`title` and `target`, plus an optional `data` specific to some entity types.
+
+Targets for Notify Entities can be broader than `entity_id`, and can also be a `device`, `label` or `area`, the latter also being an alternate way of calling multiple notify entities at once.
+
+If no Deliveries are define for Supernotify ( or there's no configuration at all), then a default Delivery is
+automatically generated for Notify Entity transport. This means that where calls to Supernotify reference
+the same Notify Entity targets as `notify.send_message`, it will be able to deliver these.
+
 ### Mobile Push
 
 Send a push message out, with option for camera integration, mobile actions, and
@@ -197,12 +208,6 @@ This can work with any SMS notification integration by setting the `action` valu
 Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
 
 Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `title_handling` in an `options` section to change the behaviour, either message only or using the title in place of the message.
-
-### Notify Entity
-
-This transport uses the new style Home Assistant notify entities, so accepts only a `message`,
-`title` and `target`, plus an optional `data` specific to some entity types. Targets for Notify Entities can be broader than `entity_id`, and can also be a `device`, `label` or `area`, the latter also being an alternate way of calling multiple
-notify entities at once..
 
 
 ### Generic

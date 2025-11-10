@@ -20,7 +20,6 @@ from custom_components.supernotify import (
     DELIVERY_SCHEMA,
     DELIVERY_SELECTION_EXPLICIT,
     PRIORITY_CRITICAL,
-    SCENARIO_DEFAULT,
     SELECTION_BY_SCENARIO,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
@@ -49,7 +48,6 @@ DELIVERY: dict[str, dict] = {
     "dummy": {CONF_TRANSPORT: "dummy"},
 }
 SCENARIOS: dict[str, dict] = {
-    SCENARIO_DEFAULT: {CONF_DELIVERY: {"alexa_devices": {}, "chime": {}, "text": {}, "email": {}, "chat": {}}},
     "scenario1": {CONF_DELIVERY: {"persistent": {}}},
     "scenario2": {CONF_DELIVERY: {"persistent": {}}},
 }

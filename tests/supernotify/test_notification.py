@@ -18,10 +18,13 @@ from custom_components.supernotify import (
     CONF_MEDIA,
     CONF_OPTIONS,
     CONF_PERSON,
+    CONF_TITLE,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
+    TRANSPORT_EMAIL,
     TRANSPORT_GENERIC,
+    TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
@@ -35,17 +38,21 @@ from custom_components.supernotify.scenario import Scenario
 from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.generic import GenericTransport
-from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
 from .hass_setup_lib import TestingContext
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
-    mock_context.delivery_registry.deliveries["mobile"] = Delivery(
-        "mobile", {"title": "mobile notification"}, MobilePushTransport(mock_context)
+    ctx = TestingContext(
+        deliveries={
+            "mobile": {CONF_TITLE: "mobile notification", CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
+            "plain_email": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: TRANSPORT_EMAIL},
+        },
     )
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"]}
-    uut = Notification(mock_context, "testing 123")
+    await ctx.test_initialize()
+
+    # mock_context.delivery_registry.implicit_delivery_names=["plain_email", "mobile"]
+    uut = Notification(ctx, "testing 123")
     await uut.initialize()
     assert uut.enabled_scenarios == {}
     assert uut.applied_scenario_names == []
@@ -59,8 +66,8 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.selected_delivery_names == unordered(["plain_email", "mobile"])
 
 
-async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context) -> None:
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile", "chime"]}
+async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, deliveries: dict[str, Delivery]) -> None:
+    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
 
     # string forces explicit selection
     uut = Notification(
@@ -93,9 +100,10 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
 
 
-async def test_scenario_delivery(mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario) -> None:
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "mockery": ["chime"]}
-
+async def test_scenario_delivery(
+    mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]
+) -> None:
+    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
     mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
     uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
@@ -219,12 +227,14 @@ async def test_build_targets_for_simple_case() -> None:
 
 
 async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(
-    mock_hass: HomeAssistant, mock_context: Context, mock_people_registry: PeopleRegistry
+    mock_context: Context, deliveries: dict[str, Delivery]
 ) -> None:
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
     uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile")
+    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
 async def test_snapshot_url(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:

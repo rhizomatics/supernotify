@@ -1,4 +1,4 @@
-from homeassistant.const import CONF_ACTION, CONF_DEFAULT
+from homeassistant.const import CONF_ACTION
 
 from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_ALEXA_MEDIA_PLAYER
 from custom_components.supernotify.context import Context
@@ -20,7 +20,6 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
     delivery_config = {
         "override": {
             CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER,
-            CONF_DEFAULT: True,
             CONF_ACTION: "notify.alexa_media_player_custom",
         }
     }

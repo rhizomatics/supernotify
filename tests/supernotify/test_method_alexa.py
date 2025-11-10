@@ -16,7 +16,7 @@ DELIVERY = {
 async def test_notify_alexa(mock_hass, unmocked_config) -> None:  # type: ignore
     """Test on_notify_alexa."""
     context = unmocked_config
-    # delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_ALEXA, CONF_DEFAULT: True}}
+
     uut = AlexaDevicesTransport(context)
     context.configure_for_tests([uut])
     await context.initialize()

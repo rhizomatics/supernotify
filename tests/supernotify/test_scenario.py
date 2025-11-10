@@ -13,7 +13,6 @@ from custom_components.supernotify import (
     CONF_TRANSPORT,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
-    SCENARIO_DEFAULT,
     SCENARIO_SCHEMA,
     SELECTION_BY_SCENARIO,
 )
@@ -216,10 +215,14 @@ async def test_scenario_templating(hass: HomeAssistant, uninitialized_unmocked_c
 async def test_scenario_constraint(hass: HomeAssistant, mock_context: Context) -> None:
     hass_api = HomeAssistantAPI(hass)
     mock_context.scenario_registry.delivery_by_scenario = {
-        SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
         "Alarm": ["chime"],
     }
+
+    mock_context.delivery_registry.implicit_deliveries = [  # type: ignore
+        mock_context.delivery_registry.deliveries["plain_email"],
+        mock_context.delivery_registry.deliveries["mobile"],
+    ]
     mock_context.delivery_registry.deliveries["siren"] = Delivery("siren", {}, GenericTransport(mock_context))
     mock_context.scenario_registry.scenarios = {
         "Alarm": Scenario("Alarm", {}, hass_api),
@@ -255,7 +258,6 @@ async def test_scenario_constraint(hass: HomeAssistant, mock_context: Context) -
 async def test_scenario_suppress(hass: HomeAssistant, mock_context: Context) -> None:
     hass_api = HomeAssistantAPI(hass)
     mock_context.scenario_registry.delivery_by_scenario = {
-        SCENARIO_DEFAULT: ["plain_email", "mobile"],
         "Mostly": ["siren"],
         "Alarm": ["chime"],
         "DevNull": [],

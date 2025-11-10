@@ -77,8 +77,5 @@ class Context:
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
 
-    def configure_for_tests(
-        self, transport_instances: list[Transport] | None = None, create_default_scenario: bool = False
-    ) -> None:
-        self.scenario_registry.default_scenario_for_testing = create_default_scenario
+    def configure_for_tests(self, transport_instances: list[Transport] | None = None) -> None:
         self.delivery_registry._transport_instances = transport_instances

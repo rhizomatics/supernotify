@@ -88,7 +88,6 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert await uut.validate(mock_context)
     assert uut.name == "unit_testing"
     assert uut.enabled is True
-    assert uut.default is False
     assert uut.occupancy == OCCUPANCY_ALL
     assert uut.message is None
     assert uut.title is None

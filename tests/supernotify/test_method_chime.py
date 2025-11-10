@@ -1,6 +1,6 @@
 from unittest.mock import call
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_DEFAULT
+from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_CHIME
 from custom_components.supernotify.delivery import Delivery
@@ -15,7 +15,7 @@ from .hass_setup_lib import TestingContext
 async def test_deliver() -> None:
     """Test on_notify_chime"""
     context = TestingContext(
-        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DEFAULT: True}},
+        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}},
         devices=[("alexa_devices", "ffff0000eeee1111dddd2222cccc3333", False)],
     )
 
@@ -129,7 +129,7 @@ async def test_deliver_alias() -> None:
                 },
             }
         },
-        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DEFAULT: True, CONF_DATA: {"chime_tune": "doorbell"}}},
+        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "doorbell"}}},
     )
 
     uut = ChimeTransport(context, delivery_defaults=context.transport_configs[TRANSPORT_CHIME])
@@ -224,7 +224,6 @@ async def test_deliver_to_group() -> None:
         deliveries={
             "chimes": {
                 CONF_TRANSPORT: TRANSPORT_CHIME,
-                CONF_DEFAULT: True,
                 CONF_DATA: {"chime_tune": "dive_dive_dive"},
             }
         },
