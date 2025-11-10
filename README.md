@@ -9,36 +9,66 @@
 [![Dependabot Updates](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/rhizomatics/supernotify/actions/workflows/dependabot/dependabot-updates)
 
 
-Easy multi-channel rich notifications.
+**Easy multi-channel rich notifications.**
 
-An extension of HomeAssistant's built in `notify.notify` that can greatly simplify multiple notification channels and
-complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, chimes and template based HTML emails. Can substitute directly for existing notifications to mobile push, email, etc.
+An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, chimes and template based HTML emails. 
+
+Supernotify lets you make a simple, single notification action from
+all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage.
+
+!!! warning
+
+    Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases. 
+  
+    You can however do a lot with very little config, using the example configurations and recipes in the documentation.
+
 
 ## Features
 
-* Send out notifications on multiple channels from one call, removing repetitive config and code from automations
-* Standard `notify` implementation so easy to switch out for other notify implementations, or `notify.group`
-* Conditional notification using standard Home Assistant `condition` config
-* Reuse chunks of conditional logic as *scenarios* across multiple notifications
-* Streamlined conditionals for selecting channels per priority and scenario, or
-for sending only to people in or out of the property
-* Use `person` for all notification configuration, regardless of channel
-  * Unified Person model currently missing from Home Assistant
-* HTML email templates, using Jinja2, with a general default template supplied
-* Single set up of consistent mobile actions across multiple notifications
-* Flexible image snapshots, supporting cameras, MQTT Images and image URLs.
-  * Cameras can be repositioned using PTZ before and after a snapshot is taken.
+* One Action -> Multiple Notifications
+  - Remove repetitive config and code from automations
+  - Adaptors automatically tune notification data for each integration
+  - For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](recipes/frigate_emails.md) for more info.
+* Go beyond `notify` integrations
+  - Chimes, sirens, SMS, Alexa Announcements and Sounds, API calls, MQTT devices 
+  - All the standard `notify` and  `notify.group` implementations available, including the modern `NotifyEntity` based ones
+  - Greatly simplified use of Mobile Push notifications, e.g. for iPhone
+  - Standard HomeAssistant behaviour, including data templating and `notify.group`
+* Conditional Notifications
+  - Using standard Home Assistant `condition` 
+  - Extra condition variables added, including message and priority
+  - Combine with occupancy detection to easily tune notifications based on who is in, message priority, even the content of the message
+* **Scenarios** for simple concise configuration
+  - Package up common chunks of config and conditional logic
+  - Have them applied on-demand in actions (`red_alert`,`nerdy`) or automatically based on conditions (`everyone_home_day`,`frigate_person`). 
+  - See the [Alexa Whispering](recipes/alexa_whisper.md), [Home Alone](recipes/home_alone.md) and [Bedtime](recipes/bedtime.md) for simple to use examples.
+* Unified Person model
+  - Currently missing from Home Assistant. 
+  - Define an email, SMS number or mobile device, and then use the `person` entity in notification actions, Supernotify works out which attribute to use where
+* Easy **HTML email templates**
+  - Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
+  - Default general template supplied
+* Mobile Actions
+  - Set up a single set of consistent mobile actions across multiple notifications and re-use across many notifications
+  - Include *snoozing* actions to silence based on criteria
+* Flexible Image Snapshots
+  - Supports cameras, MQTT Images and image URLs.
+  * Reposition cameras to PTZ presets before and after a snapshot is taken, including special support for Frigate PTZ presets
   * See the [Multimedia](multimedia.md) documentation for more information.
-* Defaulting of targets and data in static config, and overridable at notification time
-* Generic support for any notification transport
-  * Plus canned delivery transports to simplify common cases, especially for tricky ones like Apple Push
-* Reloadable configuration
-* Tunable duplicate notification detection
-* Well-behaved `notify` extension, so can use data templating, `notify.group` and other notify features.
-* Refactor out repetitive configuration for ease of maintenance
-* Debugging support,
-  * Optional archival of message structures to file system and/or MQTT topic
-  * Additional actions ( previously known as services ) to pull back live configuration or last known notification details.
+* Multi-level configuration
+  - Set defaults, including lists of targets at
+    - Transport level, for example `alexa_devices`
+    - Delivery level, for example `Alexa Announce`,`Alexa Speak`
+    - On the Action call for each notification
+    - On a Scenario to apply to arbitrary deliveries
+* Duplicate Notification Suppression
+  - Tune how long to wait before re-allowing
+  - Can be combined with snoozing for specific people or transports
+* Notification Archival and Debug Support
+  * Optionally archive notifications to file system and/or MQTT topic
+  * Includes full debug information, including occupancy assumptions, delivery and target selections
+  * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details.
+  * Deliveries, Transports and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
 ## Installation
 

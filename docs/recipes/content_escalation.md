@@ -6,12 +6,9 @@ Make a notification more impactful if it has certain words in it.
 
 ## Implementation
 
-Uses a **Scenario** and ability of standard templating to see and make logic checks
-on the notification message.
+Uses a **Scenario** and ability of standard templating to see and make logic checks on the notification message.
 
-In this case a Frigate notification of a person detection is usually a medium priority, however
-if the alarm state indicates the house is empty, these are sent as text message, email and mobile
-push just to make sure it gets through.
+In this case a Frigate notification is usually a medium priority, however if the phrase `person was detected` is in the message, and the alarm state indicates the house is empty, these are sent as text message, email and mobile push just to make sure it gets through.
 
 ## Example Configuration
 

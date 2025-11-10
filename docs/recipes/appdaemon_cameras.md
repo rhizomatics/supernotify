@@ -2,8 +2,7 @@
 
 ## Purpose
 
-Call supernotify from *AppDaemon* python code, triggered by a driveway magnetic detector, and
-including an image from CCTV camera, and additional config for mobile actions.
+Call supernotify from *AppDaemon* python code, triggered by a driveway magnetic detector, and including an image from CCTV camera, and additional config for mobile actions.
 
 Before taking the image, move the camera to a PTZ preset for a better view.
 

@@ -9,10 +9,10 @@ import typing
 from types import FunctionType
 
 import mkdocs_gen_files
-from json_schema_for_humans.generate import generate_from_schema
-from json_schema_for_humans.generation_configuration import GenerationConfiguration
+from json_schema_for_humans.generate import generate_from_schema  # type: ignore
+from json_schema_for_humans.generation_configuration import GenerationConfiguration  # type: ignore
 from voluptuous import Any
-from voluptuous_openapi import convert
+from voluptuous_openapi import convert  # type: ignore
 
 import custom_components.supernotify
 

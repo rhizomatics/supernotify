@@ -12,6 +12,7 @@ in this case one called `alexa_inform`.
 ## Example Configuration
 
 ```yaml
+scenarios:
   routine:
       alias: regular low level announcements
       condition:

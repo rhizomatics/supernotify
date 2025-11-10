@@ -2,8 +2,7 @@
 
 ## Purpose
 
-One of the notification integration transports isn't behaving as expected and you
-want more detailed information.
+One of the notification integration transports isn't behaving as expected and you want more detailed information.
 
 ## Implementation
 
