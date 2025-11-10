@@ -9,6 +9,7 @@
 - Simplified notification logic by passing new `Delivery` object and avoiding re-lookups
 - Removed `default` for Delivery which had been replaced long ago by `selection` enum
 - Removed `DEFAULT` scenario and replaced by *Implicit Deliveries* managed by `DeliveryRegistry`
+- Added new `enquire_implicit_deliveries` Action
 - Added more tests for `hass_api`
 
 ## 1.2.0
