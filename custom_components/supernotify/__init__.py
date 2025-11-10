@@ -1,6 +1,7 @@
 """The Supernotify integration"""
 
 import logging
+from enum import StrEnum
 
 import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA
@@ -26,6 +27,13 @@ from custom_components.supernotify.common import ensure_list as ensure_list
 from custom_components.supernotify.common import format_timestamp as format_timestamp
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class SelectionRank(StrEnum):
+    FIRST = "FIRST"
+    ANY = "ANY"
+    LAST = "LAST"
+
 
 DOMAIN = "supernotify"
 
@@ -56,6 +64,7 @@ CONF_TRANSPORT = "transport"
 CONF_TRANSPORTS = "transports"
 CONF_DELIVERY = "delivery"
 CONF_SELECTION = "selection"
+CONF_SELECTION_RANK = "selection_rank"
 
 CONF_DATA: str = "data"
 CONF_OPTIONS: str = "options"
@@ -72,6 +81,7 @@ CONF_DEVICE_TRACKER: str = "device_tracker"
 CONF_DEVICE_NAME: str = "device_name"
 CONF_DEVICE_LABELS: str = "device_labels"
 CONF_DEVICE_DOMAIN: str = "device_domain"
+
 CONF_MODEL: str = "model"
 CONF_MESSAGE: str = "message"
 CONF_TARGET_REQUIRED: str = "target_required"
@@ -237,8 +247,14 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
     vol.Optional(CONF_OPTIONS): dict,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
+    vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
     vol.Optional(CONF_PRIORITY, default=PRIORITY_VALUES): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
+    vol.Optional(CONF_SELECTION_RANK, default=SelectionRank.ANY): vol.In([
+        SelectionRank.ANY,
+        SelectionRank.FIRST,
+        SelectionRank.LAST,
+    ]),
 })
 DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
@@ -251,7 +267,6 @@ DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
 })
 TRANSPORT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,

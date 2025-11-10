@@ -18,6 +18,7 @@ from custom_components.supernotify import (
     CONF_MEDIA,
     CONF_OPTIONS,
     CONF_PERSON,
+    CONF_SELECTION_RANK,
     CONF_TITLE,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
@@ -25,6 +26,7 @@ from custom_components.supernotify import (
     TRANSPORT_EMAIL,
     TRANSPORT_GENERIC,
     TRANSPORT_MOBILE_PUSH,
+    SelectionRank,
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
@@ -63,7 +65,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
     assert uut.recipients_override is None
-    assert uut.selected_delivery_names == unordered(["plain_email", "mobile"])
+    assert uut.selected_delivery_names == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
 async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, deliveries: dict[str, Delivery]) -> None:
@@ -330,3 +332,43 @@ async def test_merge(mock_hass_api: HomeAssistantAPI, mock_context: Context) -> 
         "snapshot_url": "/foo/123",
     }
     assert uut.merge(ATTR_DATA, "plain_email") == {}
+
+
+async def test_delivery_selection_order() -> None:
+    ctx = TestingContext(
+        deliveries={
+            "fallback": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light"],
+                CONF_TRANSPORT: "generic",
+                CONF_SELECTION_RANK: SelectionRank.LAST,
+            },
+            "eager": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light1"],
+                CONF_TRANSPORT: "generic",
+                CONF_SELECTION_RANK: SelectionRank.FIRST,
+            },
+            "whatever": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light2"],
+                CONF_TRANSPORT: "generic",
+                CONF_SELECTION_RANK: SelectionRank.ANY,
+            },
+            "or_whatever": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light3"],
+                CONF_TRANSPORT: "generic",
+                CONF_SELECTION_RANK: SelectionRank.ANY,
+            },
+            "naturally_last": {CONF_TARGET: ["notify.me"], CONF_TRANSPORT: "notify_entity"},
+        }
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+
+    assert len(uut.selected_delivery_names) == 5
+    assert uut.selected_delivery_names[0] == "eager"
+    assert uut.selected_delivery_names[1:3] == unordered("whatever", "or_whatever")
+    assert uut.selected_delivery_names[-2:] == unordered("fallback", "naturally_last")

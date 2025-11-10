@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.con
 from custom_components.supernotify import CONF_DATA, TRANSPORT_GENERIC
 from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
 from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -28,18 +28,16 @@ class GenericTransport(Transport):
         super().__init__(*args, **kwargs)
 
     @property
-    def target_required(self) -> bool:
-        # target might be implicit in the service depending on how generic configured
-        return False
-
-    @property
-    def default_options(self) -> dict[str, Any]:
-        return {
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.target_required = False
+        config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
+        return config
 
     def validate_action(self, action: str | None) -> bool:
         if action is not None and "." in action:

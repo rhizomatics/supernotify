@@ -3,12 +3,13 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import CONF_EMAIL
+from homeassistant.helpers.typing import ConfigType
 from jinja2 import Environment, FileSystemLoader
 
 from custom_components.supernotify import CONF_TEMPLATE, TRANSPORT_EMAIL
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
 from custom_components.supernotify.transport import (
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
@@ -31,12 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 class EmailTransport(Transport):
     name = TRANSPORT_EMAIL
 
-    def __init__(
-        self,
-        context: Context,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(context, **kwargs)
+    def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
+        super().__init__(context, transport_config)
         self.template_path: Path | None = None
         if context.template_path:
             self.template_path = context.template_path / "email"
@@ -53,14 +50,16 @@ class EmailTransport(Transport):
         return action is not None
 
     @property
-    def default_options(self) -> dict[str, Any]:
-        return {
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             # use sensible defaults for image attachments
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
         }
+        return config
 
     def select_targets(self, target: Target) -> Target:
         return Target({"email": target.email})

@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify import TRANSPORT_ALEXA
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
 from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -32,16 +32,15 @@ class AlexaDevicesTransport(Transport):
         super().__init__(*args, **kwargs)
 
     @property
-    def default_action(self) -> str:
-        return "notify.send_message"
-
-    @property
-    def default_options(self) -> dict[str, Any]:
-        return {
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.action = "notify.send_message"
+        config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
         }
+        return config
 
     def select_targets(self, target: Target) -> Target:
         return Target({

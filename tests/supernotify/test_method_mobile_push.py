@@ -119,7 +119,7 @@ async def test_on_notify_mobile_push_with_explicit_target() -> None:
 async def test_on_notify_mobile_push_with_person_derived_targets() -> None:
     """Test on_notify_mobile_push."""
     ctx = TestingContext(
-        recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}]
+        recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "notify.mobile_app_test_user_iphone"}]}]
     )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
@@ -131,13 +131,15 @@ async def test_on_notify_mobile_push_with_person_derived_targets() -> None:
     recipients: list[Target] = n.generate_recipients(delivery)
     assert len(recipients) == 1
     assert len(recipients[0].actions) == 1
-    assert recipients[0].actions[0] == "mobile_app_test_user_iphone"
+    assert recipients[0].actions[0] == "notify.mobile_app_test_user_iphone"
 
 
 async def test_on_notify_mobile_push_with_critical_priority() -> None:
     """Test on_notify_mobile_push."""
     ctx = TestingContext(
-        recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "mobile_app_test_user_iphone"}]}],
+        recipients=[
+            {"person": "person.test_user", "mobile_devices": [{"notify_action": "notify.mobile_app_test_user_iphone"}]}
+        ],
         deliveries={"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}},
     )
     await ctx.test_initialize()

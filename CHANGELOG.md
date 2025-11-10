@@ -1,5 +1,12 @@
 # Public releases
 
+## 1.2.2
+- Consolidated all transport defaults in a single method
+- Simplified handling of transport and delivery config defaults
+- Moved `target_required` from transport to delivery config, since could vary per delivery for generic transport
+- Added `selection_rank` for delivery, and made *Notify Entity* transport resolve last
+  - This is to support future resolution of [issue [#8](https://github.com/rhizomatics/supernotify/issues/8)]
+
 ## 1.2.1
 - HACS Hassfest validator added
 - A delivery for `NotifyEntity` is now auto-generated for an empty platform config

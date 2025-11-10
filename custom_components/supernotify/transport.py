@@ -13,9 +13,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, MessageOnlyPolicy, Target
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, Target, TransportConfig
 
-from . import CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN, CONF_TARGET_REQUIRED, CONF_TRANSPORT
+from . import (
+    CONF_DELIVERY_DEFAULTS,
+    CONF_DEVICE_DISCOVERY,
+    CONF_DEVICE_DOMAIN,
+    CONF_TRANSPORT,
+)
 
 if TYPE_CHECKING:
     from .delivery import Delivery, DeliveryRegistry
@@ -41,30 +46,18 @@ class Transport:
     name: str
 
     @abstractmethod
-    def __init__(
-        self,
-        context: Context,
-        delivery_defaults: DeliveryConfig | ConfigType | None = None,
-        target_required: bool | None = True,
-        device_domain: list[str] | None = None,
-        device_discovery: bool | None = False,
-        enabled: bool = True,
-    ) -> None:
+    def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
         self.hass_api: HomeAssistantAPI = context.hass_api
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         self.context: Context = context
 
-        if isinstance(delivery_defaults, dict):
-            delivery_defaults = DeliveryConfig(delivery_defaults)  # test support
-        self.delivery_defaults: DeliveryConfig = delivery_defaults or DeliveryConfig({})
-        self.delivery_defaults.apply_transport_options(self.default_options)
-        if self.delivery_defaults.action is None:
-            self.delivery_defaults.action = self.default_action
-        self._target_required: bool | None = target_required
-        self.device_domain: list[str] = device_domain or []
-        self.device_discovery: bool | None = device_discovery
-        self.enabled = enabled
+        self.transport_config = TransportConfig(transport_config or {}, class_config=self.default_config)
+
+        self.delivery_defaults: DeliveryConfig = self.transport_config.delivery_defaults
+        self.device_domain: list[str] = self.transport_config.device_domain or []
+        self.device_discovery: bool | None = self.transport_config.device_discovery
+        self.enabled = self.transport_config.enabled
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
@@ -91,34 +84,21 @@ class Transport:
         return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
 
     @property
-    def default_action(self) -> str | None:
-        return None
+    def default_config(self) -> TransportConfig:
+        return TransportConfig()
 
     @property
     def auto_configure(self) -> bool:
         return False
 
-    @property
-    def target_required(self) -> bool:
-        return self._target_required if self._target_required is not None else True
-
-    @property
-    def default_options(self) -> dict[str, Any]:
-        return {
-            OPTION_SIMPLIFY_TEXT: False,
-            OPTION_STRIP_URLS: False,
-            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-        }
-
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
-        return action == self.default_action
+        return action == self.delivery_defaults.action
 
     def attributes(self) -> dict[str, Any]:
         return {
             CONF_TRANSPORT: self.name,
             CONF_ENABLED: self.enabled,
-            CONF_TARGET_REQUIRED: self.target_required,
             CONF_DEVICE_DOMAIN: self.device_domain,
             CONF_DEVICE_DISCOVERY: self.device_discovery,
             CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
@@ -170,7 +150,7 @@ class Transport:
         try:
             qualified_action = qualified_action or delivery.action
             if qualified_action and (
-                action_data.get(ATTR_TARGET) or action_data.get(ATTR_ENTITY_ID) or not self.target_required or target_data
+                action_data.get(ATTR_TARGET) or action_data.get(ATTR_ENTITY_ID) or not delivery.target_required or target_data
             ):
                 domain, service = qualified_action.split(".", 1)
                 start_time = time.time()

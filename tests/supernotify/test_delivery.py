@@ -3,11 +3,7 @@ from unittest.mock import AsyncMock
 from homeassistant.const import CONF_ACTION, CONF_CONDITION
 from homeassistant.core import HomeAssistant
 
-from custom_components.supernotify import (
-    OCCUPANCY_ALL,
-    PRIORITY_VALUES,
-    SELECTION_DEFAULT,
-)
+from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, OCCUPANCY_ALL, PRIORITY_VALUES, SELECTION_DEFAULT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
@@ -84,7 +80,7 @@ def test_category_access() -> None:
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
-    uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_context))
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_context, {}))
     assert await uut.validate(mock_context)
     assert uut.name == "unit_testing"
     assert uut.enabled is True
@@ -98,7 +94,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.selection == [SELECTION_DEFAULT]
     assert uut.transport.name == "notify_entity"
     assert uut.data == {}
-    assert uut.options == uut.transport.default_options
+    assert uut.options == uut.transport.delivery_defaults.options
     assert uut.action == "notify.send_message"
     assert uut.target is None
 
@@ -128,7 +124,7 @@ async def test_broken_create_with_bad_condition(mock_context: Context) -> None:
     uut = Delivery(
         "generic",
         {CONF_CONDITION: {"condition": "xor"}},
-        GenericTransport(mock_context, delivery_defaults={CONF_ACTION: "notify.notify"}),
+        GenericTransport(mock_context, {CONF_DELIVERY_DEFAULTS: {CONF_ACTION: "notify.notify"}}),
     )
     assert await uut.validate(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore

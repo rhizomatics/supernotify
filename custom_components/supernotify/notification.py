@@ -47,6 +47,7 @@ from custom_components.supernotify import (
     SCENARIO_NULL,
     SELECTION_BY_SCENARIO,
     STRICT_ACTION_DATA_SCHEMA,
+    SelectionRank,
 )
 from custom_components.supernotify.archive import ArchivableObject
 from custom_components.supernotify.common import DebugTrace
@@ -98,6 +99,7 @@ class Notification(ArchivableObject):
         self.delivered: int = 0
         self.errored: int = 0
         self.skipped: int = 0
+        self.missed: int = 0
         self.delivered_envelopes: list[Envelope] = []
         self.undelivered_envelopes: list[Envelope] = []
         self.delivery_error: list[str] | None = None
@@ -240,7 +242,11 @@ class Notification(ArchivableObject):
             self.debug_trace.delivery_selection["default_enable_deliveries"] = default_enable_deliveries
             self.debug_trace.delivery_selection["scenario_disable_deliveries"] = scenario_disable_deliveries
 
-        return [d for d in all_enabled if d not in all_disabled]
+        unsorted_objs: list[Delivery] = [self.delivery_registry.deliveries[d] for d in all_enabled if d not in all_disabled]
+        first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
+        anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
+        last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]
+        return first + anywhere + last
 
     def default_media_from_actions(self) -> None:
         """If no media defined, look for iOS / Android actions that have media defined"""
@@ -386,7 +392,8 @@ class Notification(ArchivableObject):
             envelopes = self.generate_envelopes(delivery, recipients)
             for envelope in envelopes:
                 try:
-                    await transport.deliver(envelope)
+                    if not await transport.deliver(envelope):
+                        self.missed += 1
                     self.delivered += envelope.delivered
                     self.errored += envelope.errored
                     if envelope.delivered:
@@ -565,7 +572,7 @@ class Notification(ArchivableObject):
 
         envelopes = []
         for target in targets:
-            if target.has_resolved_target() or not delivery.transport.target_required:
+            if target.has_resolved_target() or not delivery.target_required:
                 envelope_data = {}
                 envelope_data.update(default_data)
                 envelope_data.update(self.data)

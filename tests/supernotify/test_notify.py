@@ -57,7 +57,7 @@ RECIPIENTS: list[dict] = [
         "person": "person.new_home_owner",
         "email": "me@tester.net",
         CONF_PHONE_NUMBER: "+2301015050503",
-        "mobile_devices": [{"notify_action": "mobile_app_new_iphone"}],
+        "mobile_devices": [{"notify_action": "notify.mobile_app_new_iphone"}],
         CONF_DELIVERY: {"dummy": {CONF_DATA: {"emoji_id": 912393}, CONF_TARGET: ["xyz123"]}},
     },
     {"person": "person.bidey_in", CONF_PHONE_NUMBER: "+4489393013834", CONF_DELIVERY: {"dummy": {CONF_TARGET: ["abc789"]}}},
@@ -66,7 +66,7 @@ RECIPIENTS: list[dict] = [
 TRANSPORT_DEFAULTS: dict[str, dict] = {
     TRANSPORT_GENERIC: {"delivery_defaults": {CONF_ACTION: "notify.slackity", CONF_ENTITY_ID: ["entity.1", "entity.2"]}},
     TRANSPORT_EMAIL: {"delivery_defaults": {CONF_OPTIONS: {"jpeg_opts": {"progressive": True}}}},
-    "dummy": {CONF_TARGET_REQUIRED: False},
+    "dummy": {"delivery_defaults": {CONF_TARGET_REQUIRED: False}},
 }
 
 
@@ -264,6 +264,7 @@ async def test_send_message_with_condition(hass: HomeAssistant) -> None:
     delivery = {
         CONF_TRANSPORT: TRANSPORT_GENERIC,
         CONF_ACTION: "testing.mock_notification",
+        CONF_TARGET_REQUIRED: False,
         CONF_CONDITION: {
             CONF_CONDITION: "or",
             CONF_CONDITIONS: [

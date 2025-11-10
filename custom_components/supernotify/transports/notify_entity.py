@@ -4,14 +4,20 @@ from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 
-from custom_components.supernotify import TRANSPORT_NOTIFY_ENTITY
+from custom_components.supernotify import TRANSPORT_NOTIFY_ENTITY, SelectionRank
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
-from custom_components.supernotify.transport import Transport
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.transport import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    Transport,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 RE_NOTIFY_ENTITY = r"notify\.[A-Za-z0-9_]+"
+FIXED_ACTION = "notify.send_message"
 
 
 class NotifyEntityTransport(Transport):
@@ -27,8 +33,16 @@ class NotifyEntityTransport(Transport):
         return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_NOTIFY_ENTITY, e) is not None]})
 
     @property
-    def default_action(self) -> str:
-        return "notify.send_message"
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.action = FIXED_ACTION
+        config.delivery_defaults.selection_rank = SelectionRank.LAST
+        config.delivery_defaults.options = {
+            OPTION_SIMPLIFY_TEXT: False,
+            OPTION_STRIP_URLS: False,
+            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+        }
+        return config
 
     @property
     def auto_configure(self) -> bool:
@@ -45,4 +59,4 @@ class NotifyEntityTransport(Transport):
         # label_id
         action_data = envelope.core_action_data()
 
-        return await self.call_action(envelope, self.default_action, action_data=action_data, target_data=target_data)
+        return await self.call_action(envelope, FIXED_ACTION, action_data=action_data, target_data=target_data)

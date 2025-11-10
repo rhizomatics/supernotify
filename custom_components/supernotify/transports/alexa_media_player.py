@@ -6,7 +6,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
 from custom_components.supernotify import TRANSPORT_ALEXA_MEDIA_PLAYER
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
 from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -33,20 +33,19 @@ class AlexaMediaPlayerTransport(Transport):
         super().__init__(*args, **kwargs)
 
     @property
-    def default_action(self) -> str:
-        return "notify.alexa_media"
-
-    def validate_action(self, action: str | None) -> bool:
-        """Override in subclass if transport has fixed action or doesn't require one"""
-        return action is not None
-
-    @property
-    def default_options(self) -> dict[str, Any]:
-        return {
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.action = "notify.alexa_media"
+        config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
         }
+        return config
+
+    def validate_action(self, action: str | None) -> bool:
+        """Override in subclass if transport has fixed action or doesn't require one"""
+        return action is not None
 
     def select_targets(self, target: Target) -> Target:
         return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None]})

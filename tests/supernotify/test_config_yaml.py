@@ -82,6 +82,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     uut = hass.data["notify_services"][DOMAIN][0]
     assert len(uut.context.people_registry.people) == 2
 
+    assert "DEFAULT_notify_entity" in uut.context.delivery_registry.deliveries
     assert "html_email" in uut.context.delivery_registry.deliveries
     assert "backup_mail" in uut.context.delivery_registry.deliveries
     assert "backup_mail" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
@@ -96,7 +97,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    assert len(uut.context.delivery_registry.deliveries) == 12
+    assert len(uut.context.delivery_registry.deliveries) == 13
 
 
 async def test_call_action(hass: HomeAssistant) -> None:
@@ -194,7 +195,7 @@ async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["testing"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["testing", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
 
 async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
@@ -206,14 +207,14 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": [], "somebody": ["chime_person"]}
+    assert response == {"simple": ["DEFAULT_notify_entity"], "somebody": ["chime_person"]}
     hass.states.async_set("supernotify.delivery_testing", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["testing"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["testing", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
 
 async def test_exposed_transport_events(hass: HomeAssistant) -> None:
@@ -270,7 +271,7 @@ async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["testing"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["testing", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
     response = await hass.services.async_call(
         "supernotify", "enquire_active_scenarios", None, blocking=True, return_response=True

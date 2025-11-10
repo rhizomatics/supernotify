@@ -10,6 +10,7 @@ from homeassistant import config_entries
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
+from homeassistant.const import CONF_NAME
 from homeassistant.core import (
     EventBus,
     HomeAssistant,
@@ -24,6 +25,7 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
+from custom_components.supernotify import CONF_TRANSPORT
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
@@ -119,7 +121,7 @@ class TestingContext(Context):
             transport_types=transport_types,
             transport_configs=self.transport_configs or {},
         )
-
+        self.initialized: bool = False
         super().__init__(hass_api, people_registry, scenario_registry, delivery_registry, archive, Snoozer(), **kwargs)
 
     async def test_initialize(self, transport_instances: list[Transport] | None = None) -> None:
@@ -134,12 +136,21 @@ class TestingContext(Context):
         await self.scenario_registry.initialize(
             self.delivery_registry.deliveries, self.delivery_registry.implicit_deliveries, self.mobile_actions, self.hass_api
         )
+        self.initialized = True
 
     def transport(self, transport_name: str) -> Transport:
-        return self.delivery_registry.transports[transport_name]
+        if self.initialized:
+            return self.delivery_registry.transports[transport_name]
+        return next(t for t in TRANSPORTS if t.name == transport_name)(self)
 
     def delivery(self, delivery_name: str) -> Delivery:
         return self.delivery_registry.deliveries[delivery_name]
+
+    def add_delivery(self, delivery_name: str, transport: str, **kwargs: Any) -> None:
+        self.delivery_registry._deliveries[delivery_name] = {CONF_NAME: delivery_name, CONF_TRANSPORT: transport, **kwargs}
+        if self.initialized:
+            delivery = Delivery(delivery_name, {CONF_TRANSPORT: transport, **kwargs}, self.transport(transport))
+            self.delivery_registry.deliveries[delivery_name] = delivery
 
 
 def register_mobile_app(

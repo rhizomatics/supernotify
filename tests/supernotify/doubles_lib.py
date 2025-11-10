@@ -10,7 +10,7 @@ from custom_components.supernotify import CONF_PERSON, CONF_TRANSPORT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import Target, TransportConfig
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
@@ -20,10 +20,10 @@ class DummyTransport(Transport):
 
     def __init__(
         self,
-        context: Context,
+        *args: Any,
         **kwargs: Any,
     ) -> None:
-        super().__init__(context, **kwargs)
+        super().__init__(*args, **kwargs)
         self.test_calls: list[Envelope] = []
 
     def validate_action(self, action: str | None) -> bool:
@@ -49,8 +49,13 @@ class BrokenTransport(Transport):
         super().__init__(*args, **kwargs)
 
     @property
-    def target_required(self) -> bool:
-        return False
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.target_required = False
+        return config
+
+    def select_targets(self, target: Target) -> Target:
+        return Target()
 
     def validate_action(self, action: str | None) -> bool:
         return True

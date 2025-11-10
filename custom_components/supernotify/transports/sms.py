@@ -5,7 +5,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
 from custom_components.supernotify import ATTR_PHONE, CONF_PHONE_NUMBER, TRANSPORT_SMS
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
 from custom_components.supernotify.transport import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
@@ -26,12 +26,14 @@ class SMSTransport(Transport):
         super().__init__(*args, **kwargs)
 
     @property
-    def default_options(self) -> dict[str, Any]:
-        return {
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
         }
+        return config
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

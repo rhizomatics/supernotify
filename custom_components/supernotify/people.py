@@ -115,7 +115,7 @@ class PeopleRegistry:
                                 mobile_devices.append({
                                     CONF_MANUFACTURER: device.manufacturer,
                                     CONF_MODEL: device.model,
-                                    CONF_NOTIFY_ACTION: notify_action,
+                                    CONF_NOTIFY_ACTION: f"notify.{notify_action}",
                                     CONF_DEVICE_TRACKER: d_t,
                                     CONF_DEVICE_ID: device.id,
                                     CONF_DEVICE_NAME: device.name,

@@ -2,7 +2,7 @@ from unittest.mock import call
 
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_CHIME
+from custom_components.supernotify import CONF_DATA, CONF_DEVICE_DISCOVERY, CONF_TRANSPORT, TRANSPORT_CHIME
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
@@ -19,7 +19,7 @@ async def test_deliver() -> None:
         devices=[("alexa_devices", "ffff0000eeee1111dddd2222cccc3333", False)],
     )
 
-    uut = ChimeTransport(context, device_discovery=True)
+    uut = ChimeTransport(context, {CONF_DEVICE_DISCOVERY: True})
     await context.test_initialize(transport_instances=[uut])
     await uut.initialize()
 
@@ -109,32 +109,33 @@ async def test_deliver_alias() -> None:
     context = TestingContext(
         transport_configs={
             TRANSPORT_CHIME: {
-                "target": ["media_player.kitchen_alexa", "media_player.hall_echo", "ffff0000eeee1111dddd2222cccc3333"],
-                "options": {
-                    "chime_aliases": {
-                        "doorbell": {
-                            "media_player_hall": {
-                                "tune": "home/amzn_sfx_doorbell_chime_01",
-                                "target": "media_player.hall_echo",
-                            },
-                            "media_player": "home/amzn_sfx_doorbell_chime_02",
-                            "alexa_devices": "bell01",
-                            "switch": {"target": "switch.chime_ding_dong"},
-                            "script": {
-                                "target": "script.front_door_bell",
-                                "data": {"variables": {"visitor_name": "Guest"}},
-                            },
+                "delivery_defaults": {
+                    "target": ["media_player.kitchen_alexa", "media_player.hall_echo", "ffff0000eeee1111dddd2222cccc3333"],
+                    "options": {
+                        "chime_aliases": {
+                            "doorbell": {
+                                "media_player_hall": {
+                                    "tune": "home/amzn_sfx_doorbell_chime_01",
+                                    "target": "media_player.hall_echo",
+                                },
+                                "media_player": "home/amzn_sfx_doorbell_chime_02",
+                                "alexa_devices": "bell01",
+                                "switch": {"target": "switch.chime_ding_dong"},
+                                "script": {
+                                    "target": "script.front_door_bell",
+                                    "data": {"variables": {"visitor_name": "Guest"}},
+                                },
+                            }
                         }
-                    }
+                    },
                 },
             }
         },
         deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "doorbell"}}},
     )
 
-    uut = ChimeTransport(context, delivery_defaults=context.transport_configs[TRANSPORT_CHIME])
-    await context.test_initialize(transport_instances=[uut])
-    await uut.initialize()
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_CHIME)
 
     envelope: Envelope = Envelope(
         Delivery("chimes", context.deliveries["chimes"], uut), Notification(context, message="for script only")
@@ -233,7 +234,7 @@ async def test_deliver_to_group() -> None:
         },
     )
 
-    uut = ChimeTransport(context, device_discovery=True)
+    uut = ChimeTransport(context, {CONF_DEVICE_DISCOVERY: True})
     await context.test_initialize(transport_instances=[uut])
     await uut.initialize()
 

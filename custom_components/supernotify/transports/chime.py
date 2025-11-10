@@ -9,9 +9,9 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
     CONF_VARIABLES,
 )
 
-from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, CONF_DEVICE_DOMAIN, TRANSPORT_CHIME
+from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, TRANSPORT_CHIME
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import Target, TransportConfig
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
@@ -25,6 +25,7 @@ DATA_SCHEMA_RESTRICT: dict[str, list[str]] = {
     "siren": ["data", "entity_id"],
     "alexa_devices": ["sound", "device_id"],
 }  # TODO: source directly from component schema
+
 DEVICE_DOMAINS = ["alexa_devices"]
 
 
@@ -68,17 +69,15 @@ class ChimeTransport(Transport):
     name = TRANSPORT_CHIME
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        # support optional auto discovery
-        kwargs.setdefault(CONF_DEVICE_DOMAIN, DEVICE_DOMAINS)
         super().__init__(*args, **kwargs)
 
     @property
-    def default_options(self) -> dict[str, Any]:
-        return {}
-
-    @property
-    def target_required(self) -> bool:
-        return False
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.options = {}
+        config.delivery_defaults.target_required = False
+        config.device_domain = DEVICE_DOMAINS
+        return config
 
     @property
     def chime_aliases(self) -> dict[str, Any]:
@@ -125,6 +124,9 @@ class ChimeTransport(Transport):
         expanded_targets.update(self.resolve_tune(chime_tune))  # overwrite and extend
 
         chimes = 0
+        if not expanded_targets:
+            _LOGGER.info("SUPERNOTIFY skipping chime, no targets")
+            return False
         for chime_entity_config in expanded_targets.values():
             _LOGGER.debug("SUPERNOTIFY chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
             action_data = None

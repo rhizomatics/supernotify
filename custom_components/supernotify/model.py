@@ -31,10 +31,12 @@ from . import (
     CONF_DEVICE_DOMAIN,
     CONF_PRIORITY,
     CONF_SELECTION,
+    CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     SELECTION_DEFAULT,
+    SelectionRank,
 )
 from .common import ensure_list
 
@@ -202,13 +204,20 @@ class Target:
 
 
 class TransportConfig:
-    def __init__(self, name: str, conf: ConfigType) -> None:
-        self.name = name
-        self.target_required: bool | None = conf.get(CONF_TARGET_REQUIRED)
-        self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
-        self.device_discovery: bool | None = conf.get(CONF_DEVICE_DISCOVERY)
-        self.enabled = conf.get(CONF_ENABLED, True)
-        self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})
+    def __init__(self, conf: ConfigType | None = None, class_config: "TransportConfig|None" = None) -> None:
+        conf = conf or {}
+        if class_config is not None:
+            self.device_domain: list[str] = conf.get(CONF_DEVICE_DOMAIN, class_config.device_domain)
+            self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
+            self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
+            self.delivery_defaults: DeliveryConfig = DeliveryConfig(
+                conf.get(CONF_DELIVERY_DEFAULTS, {}), class_config.delivery_defaults or None
+            )
+        else:
+            self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
+            self.device_discovery = conf.get(CONF_DEVICE_DISCOVERY, False)
+            self.enabled = conf.get(CONF_ENABLED, True)
+            self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})
 
 
 class DeliveryConfig:
@@ -218,27 +227,29 @@ class DeliveryConfig:
         if delivery_defaults is not None:
             # use transport defaults where no delivery level override
             self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
+            self.target_required: bool = conf.get(CONF_TARGET_REQUIRED, delivery_defaults.target_required)
             self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
-            self.options: ConfigType = dict(delivery_defaults.options)
-            self.options.update(conf.get(CONF_OPTIONS, {}))
+
             self.data: ConfigType = dict(delivery_defaults.data) or {}
             self.data.update(conf.get(CONF_DATA, {}))
             self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
             self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
+            self.selection_rank: SelectionRank = conf.get(CONF_SELECTION_RANK, delivery_defaults.selection_rank)
+            self.options: ConfigType = conf.get(CONF_OPTIONS, {})
+            # only override options not set in config
+            for opt in delivery_defaults.options:
+                self.options.setdefault(opt, delivery_defaults.options[opt])
+
         else:
             # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
+            self.target_required = conf.get(CONF_TARGET_REQUIRED, True)
             self.action = conf.get(CONF_ACTION)
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})
             self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
-
-    def apply_transport_options(self, transport_options: dict[str, Any]) -> None:
-        transport_options = transport_options or {}
-        for opt in transport_options:
-            if opt not in self.options:
-                self.options[opt] = transport_options[opt]
+            self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
 
     def as_dict(self) -> dict[str, Any]:
         return {

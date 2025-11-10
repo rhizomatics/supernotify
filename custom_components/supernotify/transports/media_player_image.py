@@ -5,7 +5,7 @@ from typing import Any
 
 from custom_components.supernotify import TRANSPORT_MEDIA
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import Target, TransportConfig
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
@@ -22,12 +22,11 @@ class MediaPlayerImageTransport(Transport):
         super().__init__(*args, **kwargs)
 
     @property
-    def default_options(self) -> dict[str, Any]:
-        return {}
-
-    @property
-    def default_action(self) -> str:
-        return "media_player.play_media"
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.action = "media_player.play_media"
+        config.delivery_defaults.options = {}
+        return config
 
     def select_targets(self, target: Target) -> Target:
         return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})

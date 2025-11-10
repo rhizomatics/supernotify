@@ -21,10 +21,22 @@ from custom_components.supernotify import (
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import CommandType, QualifiedTargetType, RecipientType, Target
-from custom_components.supernotify.transport import Transport
+from custom_components.supernotify.model import (
+    CommandType,
+    MessageOnlyPolicy,
+    QualifiedTargetType,
+    RecipientType,
+    Target,
+    TransportConfig,
+)
+from custom_components.supernotify.transport import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    Transport,
+)
 
-RE_VALID_MOBILE_APP = r"mobile_app_[A-Za-z0-9_]+"
+RE_VALID_MOBILE_APP = r"notify.mobile_app_[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +52,15 @@ class MobilePushTransport(Transport):
         return Target({ATTR_ACTION: [e for e in target.actions if re.fullmatch(RE_VALID_MOBILE_APP, e) is not None]})
 
     @property
-    def target_required(self) -> bool:
-        # target might be implicit in the service for mobile devices
-        return False
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.target_required = False
+        config.delivery_defaults.options = {
+            OPTION_SIMPLIFY_TEXT: False,
+            OPTION_STRIP_URLS: False,
+            OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+        }
+        return config
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
