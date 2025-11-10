@@ -6,6 +6,7 @@
 - Moved `target_required` from transport to delivery config, since could vary per delivery for generic transport
 - Added `selection_rank` for delivery, and made *Notify Entity* transport resolve last
   - This is to support future resolution of [issue [#8](https://github.com/rhizomatics/supernotify/issues/8)]
+- Notification now records a `missed` count, where transport runs without error but makes no deliveries
 
 ## 1.2.1
 - HACS Hassfest validator added
