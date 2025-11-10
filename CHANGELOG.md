@@ -2,7 +2,8 @@
 
 ## 1.2.1
 - HACS Hassfest validator added
-- A delivery for `NorifyEntity` is now auto-generated for an empty platform config
+- A delivery for `NotifyEntity` is now auto-generated for an empty platform config
+  - If any deliveries are configured, then `NotifyEntity` must be included if needed, since won't be auto-generated
 - The old unused 'default delivery by transport' removed
 - `transport.transport` is now `transport.name`
 - Simplified notification logic by passing new `Delivery` object and avoiding re-lookups
