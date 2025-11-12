@@ -24,13 +24,14 @@ from . import (
     CONF_TITLE,
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
+    OPTION_TARGET_CATEGORIES,
     RESERVED_DELIVERY_NAMES,
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
 )
 from .context import Context
-from .model import DeliveryConfig
+from .model import DeliveryConfig, Target
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +86,14 @@ class Delivery(DeliveryConfig):
                 )
                 errors += 1
         return errors == 0
+
+    def select_targets(self, target: Target) -> Target:
+        if hasattr(self.transport, "select_targets"):
+            # some transports have regexes or other custom selections
+            return self.transport.select_targets(target)
+        if OPTION_TARGET_CATEGORIES in self.options:
+            return Target({k: v for k, v in target.targets.items() if k in self.options[OPTION_TARGET_CATEGORIES]})
+        return target
 
     def option(self, option_name: str) -> str | bool:
         """Get an option value from delivery config or transport default options"""

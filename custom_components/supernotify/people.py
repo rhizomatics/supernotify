@@ -10,10 +10,10 @@ from . import (
     CONF_DEVICE_NAME,
     CONF_DEVICE_TRACKER,
     CONF_MANUFACTURER,
+    CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
     CONF_MODEL,
-    CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
 from .common import ensure_list
@@ -108,14 +108,14 @@ class PeopleRegistry:
                         if not device:
                             _LOGGER.warning("SUPERNOTIFY Unable to find device %s", entity.device_id)
                         else:
-                            notify_action = f"mobile_app_{slugify(device.name)}"
-                            if validate_targets and not self.hass_api.has_service("notify", notify_action):
-                                _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", notify_action)
+                            mobile_app_id = f"mobile_app_{slugify(device.name)}"
+                            if validate_targets and not self.hass_api.has_service("notify", mobile_app_id):
+                                _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
                             else:
                                 mobile_devices.append({
                                     CONF_MANUFACTURER: device.manufacturer,
                                     CONF_MODEL: device.model,
-                                    CONF_NOTIFY_ACTION: f"notify.{notify_action}",
+                                    CONF_MOBILE_APP_ID: mobile_app_id,
                                     CONF_DEVICE_TRACKER: d_t,
                                     CONF_DEVICE_ID: device.id,
                                     CONF_DEVICE_NAME: device.name,

@@ -3,14 +3,17 @@ import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
+from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import TRANSPORT_ALEXA_MEDIA_PLAYER
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
-from custom_components.supernotify.transport import (
+from custom_components.supernotify import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    TRANSPORT_ALEXA_MEDIA_PLAYER,
+)
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.transport import (
     Transport,
 )
 
@@ -48,7 +51,7 @@ class AlexaMediaPlayerTransport(Transport):
         return action is not None
 
     def select_targets(self, target: Target) -> Target:
-        return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None]})
+        return Target({ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None]})
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_media %s", envelope.message)

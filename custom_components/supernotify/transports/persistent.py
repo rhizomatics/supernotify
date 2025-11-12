@@ -6,7 +6,7 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TransportConfig
+from custom_components.supernotify.model import TransportConfig
 from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,9 +24,6 @@ class PersistentTransport(Transport):
         config.delivery_defaults.action = "persistent_notification.create"
         config.delivery_defaults.target_required = False
         return config
-
-    def select_targets(self, target: Target) -> Target:  # noqa: ARG002
-        return Target()
 
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}

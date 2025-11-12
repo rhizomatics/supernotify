@@ -132,7 +132,7 @@ async def test_device_discovery(unmocked_config: Context) -> None:
     uut = GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True})
     await uut.initialize()
     assert uut.delivery_defaults.target is None
-    dev: DeviceEntry = Mock(spec=DeviceEntry, id="abc123")
+    dev: DeviceEntry = Mock(spec=DeviceEntry, id="11112222ffffeeee00009999ddddcccc")
     unmocked_config.hass_api.discover_devices = Mock(  # type: ignore
         return_value=[dev]
     )

@@ -18,7 +18,8 @@ def test_target_in_dict_mode() -> None:
         "phone": "+43985951039393",
         "person_id": "person.joe_mctoe",
         "device_id": ["000044449999aaaa00003333ffff7777"],
-        "other_id": ["@mctoe"],
+        "telegram": "@myhome",
+        "slack": ["big_kid"],
         "klaxon": ["dive_dive_dive"],
     })
 
@@ -27,7 +28,9 @@ def test_target_in_dict_mode() -> None:
     assert uut.phone == ["+43985951039393"]
     assert uut.device_ids == ["000044449999aaaa00003333ffff7777"]
     assert uut.email == ["joe.mctoe@kmail.com"]
-    assert uut.other_ids == ["@mctoe", "dive_dive_dive"]
+    assert uut.custom_ids("klaxon") == ["dive_dive_dive"]
+    assert uut.custom_ids("telegram") == ["@myhome"]
+    assert uut.custom_ids("slack") == ["big_kid"]
     assert uut.label_ids == []
     assert uut.floor_ids == []
     assert uut.area_ids == []
@@ -48,7 +51,7 @@ def test_target_in_list_mode() -> None:
     assert uut.phone == ["+43985951039393"]
     assert uut.device_ids == ["000044449999aaaa00003333ffff7777"]
     assert uut.email == ["joe.mctoe@kmail.com"]
-    assert uut.other_ids == ["@mctoe"]
+    assert uut.custom_ids("_UNKNOWN_") == ["@mctoe"]
     assert uut.label_ids == []
     assert uut.floor_ids == []
     assert uut.area_ids == []
@@ -75,8 +78,9 @@ def test_category_access() -> None:
     uut.extend("label_id", "tag1")
     uut.extend("label_id", ["tag1", "tag2"])
     assert uut.for_category("label_id") == ["tag1", "tag2"]
-    uut.extend("other_id", "@mctoe2")
-    assert uut.for_category("other_id") == ["@mctoe", "@mctoe2"]
+    uut.extend("_UNKNOWN_", "@mctoe2")
+    assert uut.for_category("_UNKNOWN_") == ["@mctoe", "@mctoe2"]
+    assert uut.custom_ids("_UNKNOWN_") == ["@mctoe", "@mctoe2"]
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:

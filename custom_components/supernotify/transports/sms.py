@@ -3,13 +3,18 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import ATTR_PHONE, CONF_PHONE_NUMBER, TRANSPORT_SMS
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
-from custom_components.supernotify.transport import (
+from custom_components.supernotify import (
+    ATTR_PHONE,
+    CONF_PHONE_NUMBER,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    TRANSPORT_SMS,
+)
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.transport import (
     Transport,
 )
 
@@ -32,15 +37,13 @@ class SMSTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
+            OPTION_TARGET_CATEGORIES: [ATTR_PHONE],
         }
         return config
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
-
-    def select_targets(self, target: Target) -> Target:
-        return Target({"phone": target.phone})
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         phone = recipient.get(CONF_PHONE_NUMBER)

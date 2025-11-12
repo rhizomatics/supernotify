@@ -42,6 +42,9 @@ from custom_components.supernotify import (
     OCCUPANCY_NONE,
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     SCENARIO_NULL,
@@ -55,12 +58,6 @@ from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target
 from custom_components.supernotify.scenario import Scenario
-from custom_components.supernotify.transport import (
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    Transport,
-)
 
 from .common import ensure_dict, ensure_list
 from .context import Context
@@ -69,6 +66,9 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from custom_components.supernotify.people import PeopleRegistry
+    from custom_components.supernotify.transport import (
+        Transport,
+    )
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -531,12 +531,6 @@ class Notification(ArchivableObject):
             self.context.delivery_registry.deliveries,
         )
 
-        # delivery_target = transport.select_targets(recipients)
-        # if delivery_target:
-        #    recipients = delivery_target
-        #    self.record_resolve(delivery_name, "2b_delivery_config_target", delivery_target)
-        #    _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, delivery_target)
-
         # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone
         for person_id in recipients.person_ids:
             person = self.people_registry.people.get(person_id)
@@ -560,7 +554,7 @@ class Notification(ArchivableObject):
 
         targets.append(recipients)
         # filter the final list for what the transport can take
-        filtered_targets = [delivery.transport.select_targets(target) for target in targets]
+        filtered_targets = [delivery.select_targets(target) for target in targets]
         self.record_resolve(delivery.name, "3_delivery_filtered_targets", filtered_targets)
         _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, filtered_targets)
         return [t.direct() for t in filtered_targets]

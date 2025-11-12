@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 import httpx
@@ -8,16 +7,20 @@ from homeassistant.components.notify.const import ATTR_DATA
 
 import custom_components.supernotify
 from custom_components.supernotify import (
-    ATTR_ACTION,
     ATTR_ACTION_CATEGORY,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
+    ATTR_MOBILE_APP_ID,
+    CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
-    CONF_NOTIFY_ACTION,
     CONF_PERSON,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -30,13 +33,8 @@ from custom_components.supernotify.model import (
     TransportConfig,
 )
 from custom_components.supernotify.transport import (
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
     Transport,
 )
-
-RE_VALID_MOBILE_APP = r"notify.mobile_app_[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +46,6 @@ class MobilePushTransport(Transport):
         super().__init__(*args, **kwargs)
         self.action_titles: dict[str, str] = {}
 
-    def select_targets(self, target: Target) -> Target:
-        return Target({ATTR_ACTION: [e for e in target.actions if re.fullmatch(RE_VALID_MOBILE_APP, e) is not None]})
-
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
@@ -59,6 +54,7 @@ class MobilePushTransport(Transport):
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            OPTION_TARGET_CATEGORIES: [ATTR_MOBILE_APP_ID],
         }
         return config
 
@@ -67,8 +63,8 @@ class MobilePushTransport(Transport):
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         if CONF_PERSON in recipient:
-            actions: list[str] = [md.get(CONF_NOTIFY_ACTION) for md in recipient.get(CONF_MOBILE_DEVICES, [])]
-            return Target({ATTR_ACTION: list(filter(None, actions))})
+            actions: list[str] = [md.get(CONF_MOBILE_APP_ID) for md in recipient.get(CONF_MOBILE_DEVICES, [])]
+            return Target({ATTR_MOBILE_APP_ID: list(filter(None, actions))})
         return None
 
     async def action_title(self, url: str) -> str | None:
@@ -86,7 +82,7 @@ class MobilePushTransport(Transport):
         return None
 
     async def deliver(self, envelope: Envelope) -> bool:
-        if not envelope.target.actions:
+        if not envelope.target.mobile_app_ids:
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False
         data: dict[str, Any] = envelope.data or {}
@@ -94,7 +90,7 @@ class MobilePushTransport(Transport):
         category = data.get(ATTR_ACTION_CATEGORY, "general")
         action_groups = envelope.action_groups
 
-        _LOGGER.debug("SUPERNOTIFY notify_mobile: %s -> %s", envelope.title, envelope.target.actions)
+        _LOGGER.debug("SUPERNOTIFY notify_mobile: %s -> %s", envelope.title, envelope.target.mobile_app_ids)
 
         media = envelope.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
@@ -159,7 +155,7 @@ class MobilePushTransport(Transport):
         action_data = envelope.core_action_data()
         action_data[ATTR_DATA] = data
         hits = 0
-        for mobile_target in envelope.target.actions:
+        for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if mobile_target.startswith("notify.") else f"notify.{mobile_target}"
             if await self.call_action(envelope, qualified_action=full_target, action_data=action_data):
                 hits += 1
@@ -172,10 +168,10 @@ class MobilePushTransport(Transport):
                     # somewhat hacky way to tie the mobile device back to a recipient to please the snoozing api
                     for recipient in self.people_registry.people.values():
                         for md in recipient.get(CONF_MOBILE_DEVICES, []):
-                            if md.get(CONF_NOTIFY_ACTION) in (simple_target, mobile_target):
+                            if md.get(CONF_MOBILE_APP_ID) in (simple_target, mobile_target):
                                 self.context.snoozer.register_snooze(
                                     CommandType.SNOOZE,
-                                    target_type=QualifiedTargetType.ACTION,
+                                    target_type=QualifiedTargetType.MOBILE,
                                     target=simple_target,
                                     recipient_type=RecipientType.USER,
                                     recipient=recipient[CONF_PERSON],

@@ -70,7 +70,7 @@ CONF_DATA: str = "data"
 CONF_OPTIONS: str = "options"
 CONF_MOBILE: str = "mobile"
 CONF_NOTIFY: str = "notify"
-CONF_NOTIFY_ACTION: str = "notify_action"
+CONF_MOBILE_APP_ID: str = "mobile_app_id"
 CONF_PHONE_NUMBER: str = "phone_number"
 CONF_PRIORITY: str = "priority"
 CONF_OCCUPANCY: str = "occupancy"
@@ -141,7 +141,7 @@ ATTR_DEBUG = "debug"
 ATTR_ACTIONS = "actions"
 ATTR_USER_ID = "user_id"
 ATTR_PERSON_ID = "person_id"
-ATTR_OTHER_ID = "other_id"
+ATTR_MOBILE_APP_ID = "mobile_app_id"
 ATTR_EMAIL = "email"
 ATTR_PHONE = "phone"
 
@@ -202,6 +202,12 @@ TRANSPORT_VALUES = [
     TRANSPORT_NOTIFY_ENTITY,
 ]
 
+OPTION_SIMPLIFY_TEXT = "simplify_text"
+OPTION_STRIP_URLS = "strip_urls"
+OPTION_MESSAGE_USAGE = "message_usage"
+OPTION_JPEG = "jpeg_opts"
+OPTION_TARGET_CATEGORIES = "target_categories"
+
 SCENARIO_NULL = "NULL"
 SCENARIO_TEMPLATE_ATTRS = ("message_template", "title_template")
 
@@ -222,7 +228,7 @@ DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool,
 MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MANUFACTURER): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
-    vol.Optional(CONF_NOTIFY_ACTION): cv.string,
+    vol.Optional(CONF_MOBILE_APP_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKER): cv.entity_id,
 })
 NOTIFICATION_DUPE_SCHEMA = vol.Schema({

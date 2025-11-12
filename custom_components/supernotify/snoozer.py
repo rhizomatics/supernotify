@@ -6,6 +6,7 @@ from homeassistant.core import Event
 
 from . import (
     ATTR_ACTION,
+    ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_USER_ID,
     CONF_PERSON,
@@ -223,7 +224,7 @@ class Snoozer:
                     case QualifiedTargetType.PRIORITY:
                         if snooze.target == priority:
                             inscope_snoozes.append(snooze)
-                    case QualifiedTargetType.ACTION:
+                    case QualifiedTargetType.MOBILE:
                         inscope_snoozes.append(snooze)
                     case QualifiedTargetType.TRANSPORT:
                         if snooze.target in [delivery_definitions[d].transport.name for d in delivery_names]:
@@ -278,12 +279,12 @@ class Snoozer:
 
                     recipients.remove(ATTR_PERSON_ID, recipients_to_remove)
 
-                if snooze.target_type == QualifiedTargetType.ACTION:
+                if snooze.target_type == QualifiedTargetType.MOBILE:
                     to_remove: list[str] = []
-                    for recipient in recipients.actions:
+                    for recipient in recipients.mobile_app_ids:
                         if recipient == snooze.target:
                             _LOGGER.debug("SUPERNOTIFY Snoozing %s for %s", snooze.recipient, snooze.target)
                             to_remove.append(recipient)
                     if to_remove:
-                        recipients.remove(ATTR_ACTION, to_remove)
+                        recipients.remove(ATTR_MOBILE_APP_ID, to_remove)
         return recipients

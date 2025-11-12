@@ -249,7 +249,7 @@ notify:
           {
             "manufacturer": "Apple",
             "model": "iPhone15,2",
-            "notify_action": "notify.mobile_app_joephonepro",
+            "mobile_app_id": "mobile_app_joephonepro",
             "device_tracker": "device_tracker.joephonepro",
             "device_id": "a0591c4af99b6a4037f7346f390e9918",
             "device_name": "jPhonePro"
@@ -267,7 +267,7 @@ notify:
           {
             "manufacturer": "Apple",
             "model": "iPhone13,2",
-            "notify_action": "notify.mobile_app_jane_s_iphone_13",
+            "mobile_app_id": "mobile_app_jane_s_iphone_13",
             "device_tracker": "device_tracker.jane_s_iphone_13",
             "device_id": "71ba297a58a3b601e1646c54d0e23dbf",
             "device_name": "Jane's iPhone 13"

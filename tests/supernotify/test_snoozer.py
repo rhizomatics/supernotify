@@ -24,7 +24,7 @@ def test_filter_mobile_device_action(mock_context: Context, mock_people_registry
     uut: Snoozer = Snoozer()
     uut.register_snooze(
         CommandType.SNOOZE,
-        target_type=QualifiedTargetType.ACTION,
+        target_type=QualifiedTargetType.MOBILE,
         target="mobile_app_nophone",
         recipient_type=RecipientType.USER,
         recipient="person.bidey_in",
@@ -32,14 +32,17 @@ def test_filter_mobile_device_action(mock_context: Context, mock_people_registry
         reason="Action Failure",
     )
     recipients: Target = uut.filter_recipients(
-        Target({"action": ["mobile_app_nophone", "mobile_app.ipad"], "person_id": ["person.bidey_in", "person.test_otest"]}),
+        Target({
+            "mobile_app_id": ["mobile_app_nophone", "mobile_app_ipad"],
+            "person_id": ["person.bidey_in", "person.test_otest"],
+        }),
         PRIORITY_MEDIUM,
         "email",
         {},
         ["email"],
         {},
     )
-    assert recipients.actions == ["mobile_app.ipad"]  # mobile suppressed
+    assert recipients.mobile_app_ids == ["mobile_app_ipad"]  # mobile suppressed
     assert recipients.person_ids == ["person.bidey_in", "person.test_otest"]  # person untouched
 
     # check that the original recipients haven't been messed with

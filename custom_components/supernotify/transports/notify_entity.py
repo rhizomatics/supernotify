@@ -4,13 +4,16 @@ from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 
-from custom_components.supernotify import TRANSPORT_NOTIFY_ENTITY, SelectionRank
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
-from custom_components.supernotify.transport import (
+from custom_components.supernotify import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    TRANSPORT_NOTIFY_ENTITY,
+    SelectionRank,
+)
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.transport import (
     Transport,
 )
 
@@ -30,7 +33,7 @@ class NotifyEntityTransport(Transport):
 
     def select_targets(self, target: Target) -> Target:
         # TODO: handle group expansion
-        return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_NOTIFY_ENTITY, e) is not None]})
+        return Target({ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_NOTIFY_ENTITY, e) is not None]})
 
     @property
     def default_config(self) -> TransportConfig:

@@ -1,8 +1,12 @@
+import copy
+import logging
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar
 
+# This import brings in a bunch of other dependency noises, make it manual until py3.14/lazy import/HA updated
+# from homeassistant.components.mobile_app import DOMAIN as MOBILE_APP_DOMAIN
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -20,9 +24,8 @@ from homeassistant.core import valid_entity_id
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
-    ATTR_ACTION,
     ATTR_EMAIL,
-    ATTR_OTHER_ID,
+    ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_PHONE,
     CONF_DATA,
@@ -40,81 +43,128 @@ from . import (
 )
 from .common import ensure_list
 
+_LOGGER = logging.getLogger(__name__)
+
+# See note on import of homeassistant.components.mobile_app
+MOBILE_APP_DOMAIN = "mobile_app"
+
 
 class Target:
-    DIRECT_CATEGORIES: ClassVar[dict[str, str]] = {
-        ATTR_ENTITY_ID: "entity_ids",
-        ATTR_DEVICE_ID: "device_ids",
-        ATTR_EMAIL: "email",
-        ATTR_PHONE: "phone",
-        ATTR_OTHER_ID: "other_ids",
-        ATTR_ACTION: "actions",
-    }
-    INDIRECT_CATEGORIES: ClassVar[dict[str, str]] = {
-        ATTR_PERSON_ID: "person_ids",
-        ATTR_AREA_ID: "area_ids",
-        ATTR_FLOOR_ID: "floor_ids",
-        ATTR_LABEL_ID: "label_ids",
-    }
-    CATEGORIES = DIRECT_CATEGORIES | INDIRECT_CATEGORIES
+    # actual targets, that can positively identified with a validator
+    DIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_ENTITY_ID, ATTR_DEVICE_ID, ATTR_EMAIL, ATTR_PHONE, ATTR_MOBILE_APP_ID]
+    # references that lead to targets, that can positively identified with a validator
+    AUTO_INDIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_PERSON_ID]
+    # references that lead to targets, that can't be positively identified with a validator
+    EXPLICIT_INDIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID]
+    INDIRECT_CATEGORIES = EXPLICIT_INDIRECT_CATEGORIES + AUTO_INDIRECT_CATEGORIES
+    CATEGORIES = DIRECT_CATEGORIES + INDIRECT_CATEGORIES
+    AUTO_CATEGORIES = DIRECT_CATEGORIES + AUTO_INDIRECT_CATEGORIES
+
+    DEFAULT_CUSTOM_CATEGORY = "_UNKNOWN_"
 
     def __init__(
         self, target: str | list[str] | dict[str, str | list[str]] | None = None, target_data: dict[str, Any] | None = None
     ) -> None:
-        # core home assistant direct target types
-        self.device_ids: list[str] = []
-        self.entity_ids: list[str] = []
-        # core home assistant indirect target selector types
-        self.area_ids: list[str] = []
-        self.floor_ids: list[str] = []
-        self.label_ids: list[str] = []
-        # other target types
-        self.email: list[str] = []
-        self.phone: list[str] = []
-        self.other_ids: list[str] = []
-        self.actions: list[str] = []
-        # other target selector types
-        self.person_ids: list[str] = []
-
-        # target specific action data
         self.target_data = target_data
 
         # once resolved, indirect selectors removed
         self.resolved = False
 
+        self.targets: dict[str, list[str]] = {}
+        self.custom_categories = []
+        matched: list[str]
+
+        if isinstance(target, str):
+            target = [target]
+
         if isinstance(target, list):
-            # simplified and legacy way of assuming list of entities
-            for t in target:
-                if self.is_entity_id(t):
-                    self.entity_ids.append(t)
-                elif self.is_device_id(t):
-                    self.device_ids.append(t)
-                elif self.is_email(t):
-                    self.email.append(t)
-                elif self.is_phone(t):
-                    self.phone.append(t)
-                elif self.is_person_id(t):
-                    self.person_ids.append(t)
+            # simplified and legacy way of assuming list of entities that can be discriminated by validator
+            targets_left = list(target)
+            for category in self.AUTO_CATEGORIES:
+                validator = getattr(self, f"is_{category}", None)
+                if validator is not None:
+                    matched = []
+                    for t in targets_left:
+                        if t not in matched and validator(t):
+                            self.targets.setdefault(category, [])
+                            self.targets[category].append(t)
+                            matched.append(t)
+                    targets_left = [t for t in targets_left if t not in matched]
                 else:
-                    self.other_ids.append(t)
-        elif isinstance(target, str):
-            self.entity_ids = [target] if not self.is_device_id(target) else []
-            self.device_ids = [target] if self.is_device_id(target) else []
-            self.email = [target] if self.is_email(target) else []
-            self.person_ids = [target] if self.is_person_id(target) else []
-            self.phone = [target] if self.is_phone(target) else []
-        elif target is None:
-            self.entity_ids = []
+                    _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+                if not targets_left:
+                    break
+            if targets_left:
+                self.custom_categories.append(self.DEFAULT_CUSTOM_CATEGORY)
+                self.targets[self.DEFAULT_CUSTOM_CATEGORY] = targets_left
+
         elif isinstance(target, dict):
-            for category, attr in self.CATEGORIES.items():
-                setattr(self, attr, ensure_list(target.get(category)))
-            for k in [cat for cat in target if cat not in self.CATEGORIES]:
-                self.other_ids.extend(ensure_list(target.get(k)))
-            self.email = [a for a in self.email if self.is_email(a)]
-            self.phone = [a for a in self.phone if self.is_phone(a)]
-            self.entity_ids = [a for a in self.entity_ids if self.is_entity_id(a)]
-            self.device_ids = [a for a in self.device_ids if self.is_device_id(a)]
-            self.person_ids = [a for a in self.person_ids if self.is_person_id(a)]
+            matched = []
+            for category in target:
+                targets = ensure_list(target[category])
+                if category in self.CATEGORIES:
+                    validator = getattr(self, f"is_{category}", None)
+                    if validator is not None:
+                        for t in targets:
+                            if t not in matched and validator(t):
+                                self.targets.setdefault(category, [])
+                                self.targets[category].append(t)
+                                matched.append(t)
+                            else:
+                                _LOGGER.warning("SUPERNOTIFY Target skipped invqualid %s target: %s", category, t)
+                    else:
+                        _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+
+                else:
+                    self.custom_categories.append(category)
+                    self.targets[category] = targets
+        elif target is None:
+            pass  # empty constructor is valid case for target building
+        else:
+            _LOGGER.warning("SUPERNOTIFY Target created with no valid targets: %s", target)
+
+    # Targets by category
+
+    @property
+    def email(self) -> list[str]:
+        return self.targets.get(ATTR_EMAIL, [])
+
+    @property
+    def entity_ids(self) -> list[str]:
+        return self.targets.get(ATTR_ENTITY_ID, [])
+
+    @property
+    def person_ids(self) -> list[str]:
+        return self.targets.get(ATTR_PERSON_ID, [])
+
+    @property
+    def device_ids(self) -> list[str]:
+        return self.targets.get(ATTR_DEVICE_ID, [])
+
+    @property
+    def phone(self) -> list[str]:
+        return self.targets.get(ATTR_PHONE, [])
+
+    @property
+    def mobile_app_ids(self) -> list[str]:
+        return self.targets.get(ATTR_MOBILE_APP_ID, [])
+
+    def custom_ids(self, category: str) -> list[str]:
+        return self.targets.get(category, []) if category in self.custom_categories else []
+
+    @property
+    def area_ids(self) -> list[str]:
+        return self.targets.get(ATTR_AREA_ID, [])
+
+    @property
+    def floor_ids(self) -> list[str]:
+        return self.targets.get(ATTR_FLOOR_ID, [])
+
+    @property
+    def label_ids(self) -> list[str]:
+        return self.targets.get(ATTR_LABEL_ID, [])
+
+    # Selectors / validators
 
     @classmethod
     def is_device_id(cls, target: str) -> bool:
@@ -126,7 +176,15 @@ class Target:
 
     @classmethod
     def is_person_id(cls, target: str) -> bool:
-        return valid_entity_id(target) and target.startswith("person.")
+        return target.startswith("person.") and valid_entity_id(target)
+
+    @classmethod
+    def is_phone(cls, target: str) -> bool:
+        return re.fullmatch(r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$", target) is not None
+
+    @classmethod
+    def is_mobile_app_id(cls, target: str) -> bool:
+        return not valid_entity_id(target) and target.startswith(f"{MOBILE_APP_DOMAIN}_")
 
     @classmethod
     def is_email(cls, target: str) -> bool:
@@ -139,29 +197,40 @@ class Target:
         )
 
     def has_resolved_target(self) -> bool:
-        return any((self.entity_ids, self.device_ids, self.other_ids, self.email, self.phone, self.actions))
-
-    @classmethod
-    def is_phone(cls, target: str) -> bool:
-        return re.fullmatch(r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$", target) is not None
+        return any(targets for category, targets in self.targets.items() if category not in self.INDIRECT_CATEGORIES)
 
     def for_category(self, category: str) -> list[str]:
-        if category in self.CATEGORIES:
-            return cast("list[str]", getattr(self, self.CATEGORIES[category]))
-        return []
+        return self.targets.get(category, [])
+
+    @property
+    def direct_categories(self) -> list[str]:
+        return self.DIRECT_CATEGORIES + self.custom_categories
 
     def direct(self) -> "Target":
-        t = Target(target_data=self.target_data)
-        for attr in self.DIRECT_CATEGORIES.values():
-            setattr(t, attr, getattr(self, attr))
-        return t
+        return Target(
+            {cat: targets for cat, targets in self.targets.items() if cat in self.direct_categories},
+            target_data=self.target_data,
+        )
+
+    def extend(self, category: str, targets: list[str] | str) -> None:
+        targets = ensure_list(targets)
+        self.targets.setdefault(category, [])
+        self.targets[category].extend(t for t in targets if t not in self.targets[category])
+
+    def remove(self, category: str, targets: list[str] | str) -> None:
+        targets = ensure_list(targets)
+        if category in self.targets:
+            self.targets[category] = [t for t in self.targets[category] if t not in targets]
 
     def __add__(self, other: "Target") -> "Target":
         """Create a new target by adding another to this one"""
         new = Target()
-        for category in self.CATEGORIES:
-            new.extend(category, self.for_category(category))
-            new.extend(category, other.for_category(category))
+        categories = set(list(self.targets.keys()) + list(other.targets.keys()))
+        for category in categories:
+            new.targets[category] = []
+            new.targets[category].extend(self.targets.get(category, []))
+            new.targets[category].extend(other.targets.get(category, []))
+
         new.target_data = dict(self.target_data) if self.target_data else None
         if other.target_data:
             if new.target_data is None:
@@ -180,27 +249,10 @@ class Target:
             return NotImplemented
         if self.target_data != other.target_data:
             return False
-        return all(self.for_category(category) == other.for_category(category) for category in self.CATEGORIES)
-
-    def extend(self, category: str, targets: list[str] | str) -> None:
-        if category in self.CATEGORIES:
-            attr = getattr(self, self.CATEGORIES[category])
-            attr.extend([t for t in ensure_list(targets) if t not in attr])
-
-    def remove(self, category: str, targets: list[str] | str) -> None:
-        if category in self.CATEGORIES:
-            attr = getattr(self, self.CATEGORIES[category])
-            for t in targets:
-                if t in attr:
-                    attr.remove(t)
+        return all(self.targets.get(category, []) == other.targets.get(category, []) for category in self.CATEGORIES)
 
     def as_dict(self) -> dict[str, list[str]]:
-        d = {}
-        for category, attr_name in self.CATEGORIES.items():
-            attr = getattr(self, attr_name)
-            if attr:
-                d[category] = attr
-        return d
+        return copy.deepcopy(self.targets)
 
 
 class TransportConfig:
@@ -353,7 +405,7 @@ class QualifiedTargetType(TargetType):
     DELIVERY = "DELIVERY"
     CAMERA = "CAMERA"
     PRIORITY = "PRIORITY"
-    ACTION = "ACTION"
+    MOBILE = "MOBILE"
 
 
 class CommandType(StrEnum):
@@ -365,4 +417,5 @@ class CommandType(StrEnum):
 class MessageOnlyPolicy(StrEnum):
     STANDARD = "STANDARD"  # independent title and message
     USE_TITLE = "USE_TITLE"  # use title in place of message, no title
-    COMBINE_TITLE = "COMBINE_TITLE"  # use combined title and message as message, no title
+    # use combined title and message as message, no title
+    COMBINE_TITLE = "COMBINE_TITLE"

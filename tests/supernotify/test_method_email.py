@@ -1,14 +1,12 @@
 from pathlib import Path
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
-from pytest_unordered import unordered
 
 from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, CONF_TRANSPORT, TRANSPORT_EMAIL
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transports.email import EmailTransport
 
 from .hass_setup_lib import TestingContext
 
@@ -157,36 +155,4 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
         context=None,
         target=None,
         return_response=False,
-    )
-
-
-def test_good_email_addresses(unmocked_config):  # type: ignore
-    """Test good email addresses."""
-    uut = EmailTransport(unmocked_config)
-    assert uut.select_targets(
-        Target([
-            "test421@example.com",
-            "t@example.com",
-            "t.1.g@example.com",
-            "test-hyphen+ext@example.com",
-            "test@sub.topsub.example.com",
-            "test+fancy_rules@example.com",
-        ])
-    ).email == unordered([
-        "test421@example.com",
-        "t@example.com",
-        "t.1.g@example.com",
-        "test-hyphen+ext@example.com",
-        "test@sub.topsub.example.com",
-        "test+fancy_rules@example.com",
-    ])
-
-
-def test_bad_email_addresses(unmocked_config):  # type: ignore
-    """Test good email addresses."""
-    uut = EmailTransport(unmocked_config)
-
-    assert (
-        uut.select_targets(Target(["test@example@com", "sub.topsub.example.com", "test+fancy_rules@com", "", "@", "a@b"])).email
-        == []
     )

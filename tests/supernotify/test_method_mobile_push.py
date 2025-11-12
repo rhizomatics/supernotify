@@ -9,8 +9,8 @@ from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import (
     ATTR_PRIORITY,
+    CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
-    CONF_NOTIFY_ACTION,
     CONF_PERSON,
     CONF_PRIORITY,
     CONF_TRANSPORT,
@@ -56,7 +56,7 @@ async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: C
                     "actions": [{"action": "URI", "title": "My Camera App", "url": "http://my.home/app1"}],
                 },
             ),
-            target=Target({"action": ["notify.mobile_app_new_iphone"]}),
+            target=Target({"mobile_app_id": ["mobile_app_new_iphone"]}),
         ),
     )
     ctx.hass.services.async_call.assert_called_with(  # type:ignore
@@ -98,7 +98,7 @@ async def test_on_notify_mobile_push_with_explicit_target() -> None:
         Envelope(
             Delivery("media_test", ctx.deliveries["media_test"], uut),
             Notification(ctx, message="hello there", title="testing"),
-            target=Target({"action": ["notify.mobile_app_new_iphone"]}),
+            target=Target({"mobile_app_id": ["mobile_app_new_iphone"]}),
         )
     )
     ctx.hass.services.async_call.assert_called_with(  # type:ignore
@@ -119,7 +119,7 @@ async def test_on_notify_mobile_push_with_explicit_target() -> None:
 async def test_on_notify_mobile_push_with_person_derived_targets() -> None:
     """Test on_notify_mobile_push."""
     ctx = TestingContext(
-        recipients=[{"person": "person.test_user", "mobile_devices": [{"notify_action": "notify.mobile_app_test_user_iphone"}]}]
+        recipients=[{"person": "person.test_user", "mobile_devices": [{"mobile_app_id": "mobile_app_test_user_iphone"}]}]
     )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
@@ -130,16 +130,14 @@ async def test_on_notify_mobile_push_with_person_derived_targets() -> None:
 
     recipients: list[Target] = n.generate_recipients(delivery)
     assert len(recipients) == 1
-    assert len(recipients[0].actions) == 1
-    assert recipients[0].actions[0] == "notify.mobile_app_test_user_iphone"
+    assert len(recipients[0].mobile_app_ids) == 1
+    assert recipients[0].mobile_app_ids[0] == "mobile_app_test_user_iphone"
 
 
 async def test_on_notify_mobile_push_with_critical_priority() -> None:
     """Test on_notify_mobile_push."""
     ctx = TestingContext(
-        recipients=[
-            {"person": "person.test_user", "mobile_devices": [{"notify_action": "notify.mobile_app_test_user_iphone"}]}
-        ],
+        recipients=[{"person": "person.test_user", "mobile_devices": [{"mobile_app_id": "mobile_app_test_user_iphone"}]}],
         deliveries={"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}},
     )
     await ctx.test_initialize()
@@ -154,7 +152,7 @@ async def test_on_notify_mobile_push_with_critical_priority() -> None:
                 title="testing",
                 action_data={CONF_PRIORITY: PRIORITY_CRITICAL},
             ),
-            target=Target({"action": ["notify.mobile_app_test_user_iphone"]}),
+            target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
         )
     )
     ctx.hass.services.async_call.assert_called_with(  # type:ignore
@@ -190,9 +188,10 @@ async def test_priority_interpretation(mock_hass: HomeAssistant, unmocked_config
     e: Envelope = Envelope(
         Delivery("default", delivery_config["default"], uut),
         Notification(context, message="hello there", title="testing", action_data={ATTR_PRIORITY: priority}),
-        target=Target({"action": ["mobile_app_test_user_iphone"]}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
     )
     await uut.deliver(e)
+    assert e.calls
     call: CallRecord = e.calls[0]
     assert call.action_data is not None
     assert "data" in call.action_data
@@ -205,7 +204,7 @@ INTEGRATION_CONFIG = {
     "delivery": {
         "push": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
     },
-    "recipients": [{"person": "person.house_owner", "mobile_devices": {"notify_action": "notify.mobile_app_new_iphone"}}],
+    "recipients": [{"person": "person.house_owner", "mobile_devices": {"mobile_app_id": "mobile_app_new_iphone"}}],
 }
 
 
@@ -255,7 +254,7 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
             {
                 CONF_PERSON: "person.bidey_in",
                 ATTR_STATE: "home",
-                CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
+                CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
             },
         ]
     )
@@ -265,7 +264,7 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
     e = Envelope(
         Delivery("", {}, uut),
         Notification(ctx, message="hello there", title="testing"),
-        target=Target({"action": ["mobile_app_nophone"]}),
+        target=Target({"mobile_app_id": ["mobile_app_nophone"]}),
     )
     assert ctx.hass is not None
     assert ctx.hass.services is not None
@@ -273,6 +272,6 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
         "Boom!"
     )
     await uut.deliver(e)
-    expected_snooze = Snooze(QualifiedTargetType.ACTION, RecipientType.USER, "mobile_app_nophone", "person.bidey_in")
-    assert ctx.snoozer.snoozes == {"ACTION_mobile_app_nophone_person.bidey_in": expected_snooze}
+    expected_snooze = Snooze(QualifiedTargetType.MOBILE, RecipientType.USER, "mobile_app_nophone", "person.bidey_in")
+    assert ctx.snoozer.snoozes == {"MOBILE_mobile_app_nophone_person.bidey_in": expected_snooze}
     assert ctx.snoozer.current_snoozes() == [expected_snooze]

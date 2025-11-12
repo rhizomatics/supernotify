@@ -28,6 +28,7 @@ from custom_components.supernotify import (
     CONF_PTZ_DELAY,
     CONF_PTZ_METHOD,
     CONF_PTZ_PRESET_DEFAULT,
+    OPTION_JPEG,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
 )
@@ -260,7 +261,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
     snapshot_url = notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
     camera_entity_id = notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
     delivery_config = notification.delivery_data(delivery_name)
-    jpeg_opts = notification.media.get(ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(ATTR_JPEG_OPTS))
+    jpeg_opts = notification.media.get(ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_JPEG))
 
     if not snapshot_url and not camera_entity_id:
         return None

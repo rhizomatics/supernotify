@@ -1,3 +1,5 @@
+from typing import cast
+
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 
@@ -46,7 +48,7 @@ async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
 async def test_target_selection() -> None:
     ctx = TestingContext(transport_types=[NotifyEntityTransport])
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_NOTIFY_ENTITY)
+    uut: NotifyEntityTransport = cast("NotifyEntityTransport", ctx.transport(TRANSPORT_NOTIFY_ENTITY))
 
     assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])).entity_ids == ["notify.pong"]
 

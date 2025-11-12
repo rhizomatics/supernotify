@@ -3,6 +3,8 @@ import re
 import urllib.parse
 from typing import Any
 
+from homeassistant.const import ATTR_ENTITY_ID
+
 from custom_components.supernotify import TRANSPORT_MEDIA
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target, TransportConfig
@@ -29,7 +31,7 @@ class MediaPlayerImageTransport(Transport):
         return config
 
     def select_targets(self, target: Target) -> Target:
-        return Target({"entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
+        return Target({ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

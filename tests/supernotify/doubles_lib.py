@@ -54,9 +54,6 @@ class BrokenTransport(Transport):
         config.delivery_defaults.target_required = False
         return config
 
-    def select_targets(self, target: Target) -> Target:
-        return Target()
-
     def validate_action(self, action: str | None) -> bool:
         return True
 

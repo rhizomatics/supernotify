@@ -126,7 +126,7 @@ notify:
         mobile_devices:
           - manufacturer: nokia
             model: 6110
-            notify_action: notify.mobile_old
+            mobile_app_id: notify.mobile_old
             device_tracker: device_tracker.nokia_6110
         delivery:
           text_message:

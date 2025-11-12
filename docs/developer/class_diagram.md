@@ -25,7 +25,11 @@ direction LR
         List~string~ person_ids
         List~string~ email
         List~string~ phone
-        List~string~ other_ids
+        Dict~string,List~ other_ids
+    }
+    class Delivery{
+        validate()
+        select_targets()
     }
     class DeliveryConfig {
     }
@@ -64,6 +68,8 @@ direction LR
     Snoozer "1" *-- "0..*" Snooze
     Context "1" -- "1" Snoozer
     Context "1" -- "1" PeopleRegistry
+    DeliveryConfig <|-- TransportConfig
+    DeliveryConfig <|-- Delivery
     Transport <|--  EmailTransport
     Transport <|--  SMSTransport
     Transport <|--  AlexaDevicesTransport

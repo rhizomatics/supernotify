@@ -4,15 +4,18 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_TARGET
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 
-from custom_components.supernotify import CONF_DATA, TRANSPORT_GENERIC
-from custom_components.supernotify.common import ensure_list
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
-from custom_components.supernotify.transport import (
+from custom_components.supernotify import (
+    CONF_DATA,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
+    TRANSPORT_GENERIC,
+)
+from custom_components.supernotify.common import ensure_list
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
+from custom_components.supernotify.transport import (
     Transport,
 )
 

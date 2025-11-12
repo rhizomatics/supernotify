@@ -23,6 +23,7 @@ from custom_components.supernotify import (
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
+    OPTION_TARGET_CATEGORIES,
     TRANSPORT_EMAIL,
     TRANSPORT_GENERIC,
     TRANSPORT_MOBILE_PUSH,
@@ -37,9 +38,7 @@ from custom_components.supernotify.model import MessageOnlyPolicy, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario
-from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.email import EmailTransport
-from custom_components.supernotify.transports.generic import GenericTransport
 
 from .hass_setup_lib import TestingContext
 
@@ -152,20 +151,18 @@ async def test_generate_recipients_from_recipients() -> None:
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: {"entity_id": ["custom.light_1"], "person_id": ["person.new_home_owner"]},
                 CONF_TRANSPORT: "generic",
-                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "other_id"]},
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "_UNKNOWN_"]},
             }
         },
     )
     await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
     delivery = ctx.delivery("chatty")
 
     uut = Notification(ctx, "testing 123")
-    generic = GenericTransport(ctx)
-    await generic.initialize()
+
     recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].entity_ids == ["custom.light_1"]
-    assert recipients[0].other_ids == ["@foo", "@bar"]
+    assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar"]
 
 
 async def test_explicit_recipients_only_restricts_people_targets() -> None:
@@ -175,18 +172,23 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
             {CONF_PERSON: "person.jane", CONF_EMAIL: "jane@test.com"},
         ],
         deliveries={
-            "chatty": {CONF_ACTION: "notify.slackity", CONF_TARGET: ["chan1", "chan2"], CONF_TRANSPORT: "generic"},
+            "chatty": {
+                CONF_ACTION: "notify.slackity",
+                CONF_TARGET: ["chan1", "chan2"],
+                CONF_TRANSPORT: "generic",
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "_UNKNOWN_"]},
+            },
             "mail": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: "email"},
         },
     )
     await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
     delivery = ctx.delivery("chatty")
+    generic = ctx.transport(TRANSPORT_GENERIC)
 
     uut = Notification(ctx, "testing 123")
 
     recipients: list[Target] = uut.generate_recipients(delivery)
-    assert recipients[0].other_ids == ["chan1", "chan2"]
+    assert recipients[0].custom_ids("_UNKNOWN_") == ["chan1", "chan2"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [Envelope(Delivery("chatty", ctx.deliveries["chatty"], generic), uut, target=Target(["chan1", "chan2"]))]
     email = EmailTransport(ctx)

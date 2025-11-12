@@ -34,9 +34,6 @@ class MQTTTransport(Transport):
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is self.delivery_defaults.action
 
-    def select_targets(self, target: Target) -> Target:  # noqa: ARG002
-        return Target()
-
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:  # noqa: ARG002
         return None
 

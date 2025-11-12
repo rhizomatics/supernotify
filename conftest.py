@@ -23,8 +23,8 @@ from homeassistant.helpers.template import Template
 from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import (
+    CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
-    CONF_NOTIFY_ACTION,
     CONF_PERSON,
 )
 from custom_components.supernotify.archive import NotificationArchive
@@ -103,7 +103,7 @@ def mock_people_registry(mock_hass_api: HomeAssistantAPI) -> PeopleRegistry:
         "person.bidey_in": {
             CONF_PERSON: "person.bidey_in",
             ATTR_STATE: "home",
-            CONF_MOBILE_DEVICES: [{CONF_NOTIFY_ACTION: "mobile_app_iphone"}, {CONF_NOTIFY_ACTION: "mobile_app_nophone"}],
+            CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
         },
     }
     registry.determine_occupancy.return_value = {

@@ -88,8 +88,8 @@ class ChimeTransport(Transport):
 
     def select_targets(self, target: Target) -> Target:
         return Target({
-            "entity_id": [e for e in target.entity_ids if re.fullmatch(RE_VALID_CHIME, e) is not None],
-            "device_id": target.device_ids,
+            ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_VALID_CHIME, e) is not None],
+            ATTR_DEVICE_ID: target.device_ids,
         })
 
     async def deliver(self, envelope: Envelope) -> bool:

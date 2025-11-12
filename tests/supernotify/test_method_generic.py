@@ -3,12 +3,18 @@ from unittest.mock import call
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import CONF_ACTION, CONF_NAME
 
-from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, CONF_OPTIONS, CONF_TRANSPORT, TRANSPORT_GENERIC
+from custom_components.supernotify import (
+    CONF_DATA,
+    CONF_DELIVERY,
+    CONF_OPTIONS,
+    CONF_TRANSPORT,
+    OPTION_TARGET_CATEGORIES,
+    TRANSPORT_GENERIC,
+)
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transport import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .hass_setup_lib import TestingContext
@@ -21,7 +27,7 @@ async def test_deliver() -> None:
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_NAME: "teleport",
                 CONF_ACTION: "notify.teleportation",
-                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["other_id"]},
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["_UNKNOWN_"]},
             }
         }
     )

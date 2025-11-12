@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ENABLED
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_ENABLED
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import CallRecord
@@ -28,12 +28,6 @@ if TYPE_CHECKING:
     from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
-
-OPTION_SIMPLIFY_TEXT = "simplify_text"
-OPTION_STRIP_URLS = "strip_urls"
-OPTION_MESSAGE_USAGE = "message_usage"
-OPTION_JPEG = "jpeg_opts"
-OPTION_TARGET_CATEGORIES = "target_categories"
 
 
 class Transport:
@@ -74,7 +68,7 @@ class Transport:
                         self.delivery_defaults.target = Target()
                     if d.id not in self.delivery_defaults.target.device_ids:
                         _LOGGER.info(f"SUPERNOTIFY Discovered device {d.name} for {domain}, id {d.id}")
-                        self.delivery_defaults.target.device_ids.append(d.id)
+                        self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
                         added += 1
 
                 _LOGGER.info(f"SUPERNOTIFY device discovery for {domain} found {discovered} devices, added {added} new ones")
@@ -113,9 +107,6 @@ class Transport:
             envelope (Envelope): envelope to be delivered
 
         """
-
-    def select_targets(self, target: Target) -> Target:
-        return target
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:  # noqa: ARG002
         """Pick out delivery appropriate target from a single person's (recipient) config"""

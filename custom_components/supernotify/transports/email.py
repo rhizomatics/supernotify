@@ -6,15 +6,20 @@ from homeassistant.const import CONF_EMAIL
 from homeassistant.helpers.typing import ConfigType
 from jinja2 import Environment, FileSystemLoader
 
-from custom_components.supernotify import CONF_TEMPLATE, TRANSPORT_EMAIL
-from custom_components.supernotify.context import Context
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
-from custom_components.supernotify.transport import (
+from custom_components.supernotify import (
+    ATTR_EMAIL,
+    CONF_TEMPLATE,
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    TRANSPORT_EMAIL,
+)
+from custom_components.supernotify.context import Context
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.transport import (
     Transport,
 )
 
@@ -56,17 +61,15 @@ class EmailTransport(Transport):
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            OPTION_TARGET_CATEGORIES: [ATTR_EMAIL],
             # use sensible defaults for image attachments
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
         }
         return config
 
-    def select_targets(self, target: Target) -> Target:
-        return Target({"email": target.email})
-
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         email = recipient.get(CONF_EMAIL)
-        return Target({"email": [email]}) if email else None
+        return Target({ATTR_EMAIL: [email]}) if email else None
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)
