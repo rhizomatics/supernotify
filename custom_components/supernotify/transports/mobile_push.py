@@ -29,7 +29,6 @@ from custom_components.supernotify.model import (
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
-    Target,
     TransportConfig,
 )
 from custom_components.supernotify.transport import (
@@ -60,12 +59,6 @@ class MobilePushTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
-
-    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
-        if CONF_PERSON in recipient:
-            actions: list[str] = [md.get(CONF_MOBILE_APP_ID) for md in recipient.get(CONF_MOBILE_DEVICES, [])]
-            return Target({ATTR_MOBILE_APP_ID: list(filter(None, actions))})
-        return None
 
     async def action_title(self, url: str) -> str | None:
         if url in self.action_titles:

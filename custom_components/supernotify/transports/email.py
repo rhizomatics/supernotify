@@ -2,7 +2,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.const import CONF_EMAIL
 from homeassistant.helpers.typing import ConfigType
 from jinja2 import Environment, FileSystemLoader
 
@@ -18,7 +17,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -66,10 +65,6 @@ class EmailTransport(Transport):
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
         }
         return config
-
-    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
-        email = recipient.get(CONF_EMAIL)
-        return Target({ATTR_EMAIL: [email]}) if email else None
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)

@@ -222,7 +222,7 @@ CONF_TTL = "ttl"
 CONF_SIZE = "size"
 ATTR_DUPE_POLICY_MTSLP = "dupe_policy_message_title_same_or_lower_priority"
 ATTR_DUPE_POLICY_NONE = "dupe_policy_none"
-TARGET_SCHEMA = vol.Any([cv.entity_id], cv.entity_id, cv.TARGET_FIELDS)
+TARGET_SCHEMA = vol.Any(dict[str, list[str]], dict[str, str], [cv.entity_id], cv.entity_id, cv.TARGET_FIELDS)
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
 MOBILE_DEVICE_SCHEMA = vol.Schema({

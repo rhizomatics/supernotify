@@ -1,5 +1,6 @@
 """Supernotify service, extending BaseNotificationService"""
 
+import copy
 import datetime as dt
 import json
 import logging
@@ -56,6 +57,7 @@ from . import (
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
     CONF_SIZE,
+    CONF_TARGET,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
     CONF_TTL,
@@ -601,7 +603,11 @@ class SupernotifyAction(BaseNotificationService):
         return self.context.snoozer.clear()
 
     def enquire_people(self) -> list[dict[str, Any]]:
-        return list(self.context.people_registry.people.values())
+        response = copy.deepcopy(self.context.people_registry.people)
+        for p in response.values():
+            if CONF_TARGET in p:
+                p[CONF_TARGET] = p[CONF_TARGET].as_dict()
+        return list(response.values())
 
     @callback
     def on_mobile_action(self, event: Event) -> None:

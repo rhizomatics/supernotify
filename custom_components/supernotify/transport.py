@@ -108,10 +108,6 @@ class Transport:
 
         """
 
-    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:  # noqa: ARG002
-        """Pick out delivery appropriate target from a single person's (recipient) config"""
-        return None
-
     def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> Any:
         if data is not None:
             action_data[key] = data

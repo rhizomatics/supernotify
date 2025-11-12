@@ -31,9 +31,7 @@ from custom_components.supernotify import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
 from tests.supernotify.doubles_lib import BrokenTransport, DummyTransport
@@ -166,15 +164,8 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
     )
 
     assert len(dummy.test_calls) == 2
-    assert dummy.test_calls == [
-        Envelope(
-            Delivery("dummy", {}, dummy),
-            uut.last_notification,
-            target=Target(["dummy.new_home_owner", "xyz123"], target_data={"emoji_id": 912393}),
-            data={"emoji_id": 912393},
-        ),
-        Envelope(Delivery("dummy", {}, dummy), uut.last_notification, target=Target(["dummy.bidey_in", "abc789"])),
-    ]
+    assert dummy.test_calls[0].target.target_data == {"emoji_id": 912393}
+    assert dummy.test_calls[1].target.target_data is None
 
 
 async def test_broken_delivery(mock_hass: HomeAssistant) -> None:

@@ -2,15 +2,14 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components import image
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from custom_components.supernotify import CONF_PERSON, CONF_TRANSPORT
+from custom_components.supernotify import CONF_TRANSPORT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TransportConfig
+from custom_components.supernotify.model import TransportConfig
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
@@ -28,13 +27,6 @@ class DummyTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
-
-    def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
-        if recipient:
-            person: str | None = recipient.get(CONF_PERSON)
-            if person:
-                return Target({ATTR_ENTITY_ID: [person.replace("person.", "dummy.")]})
-        return None
 
     async def deliver(self, envelope: Envelope) -> bool:
         self.test_calls.append(envelope)

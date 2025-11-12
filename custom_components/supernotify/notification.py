@@ -425,6 +425,11 @@ class Notification(ArchivableObject):
         sanitized["delivered_envelopes"] = [e.contents(minimal=minimal) for e in self.delivered_envelopes]
         sanitized["undelivered_envelopes"] = [e.contents(minimal=minimal) for e in self.undelivered_envelopes]
         sanitized["enabled_scenarios"] = {k: v.contents(minimal=minimal) for k, v in self.enabled_scenarios.items()}
+        for state, person_objs in sanitized["occupancy"].items():
+            sanitized["occupancy"][state] = [
+                {"person": person_obj["person"], "state": person_obj.get("state"), "user_id": person_obj.get("user_id")}
+                for person_obj in person_objs
+            ]
 
         if self.debug_trace:
             sanitized["debug_trace"] = self.debug_trace.contents()
@@ -535,21 +540,28 @@ class Notification(ArchivableObject):
         for person_id in recipients.person_ids:
             person = self.people_registry.people.get(person_id)
             if person and person.get(CONF_ENABLED, True):
-                personal_delivery = custom_data = person.get(CONF_DELIVERY, {}).get(delivery.name, {})
-                custom_data = personal_delivery.get(CONF_DATA)
-                personal_target: Target = Target(personal_delivery.get(CONF_TARGET, {}), target_data=custom_data)
-                if personal_target.has_resolved_target():
-                    self.record_resolve(delivery.name, "2e_person_configured_delivery_target", personal_target)
-                derived_target: Target | None = delivery.transport.recipient_target(person)
-                if derived_target:
-                    self.record_resolve(delivery.name, "2e_person_derived_target", derived_target)
-                    personal_target += derived_target
-                if personal_target.target_data:
-                    personal_target.extend(ATTR_PERSON_ID, person_id)
+                recipient_target = Target()
+                personal_target: Target | None = person.get(CONF_TARGET)
+                if personal_target is not None and personal_target.has_resolved_target():
+                    self.record_resolve(delivery.name, "2a_person_configured_delivery_target", personal_target)
+                    recipient_target += personal_target
+                personal_delivery: dict[str, Any] | None = person.get(CONF_DELIVERY, {}).get(delivery.name)
+                if personal_delivery:
+                    # TODO: replace all this hackery with people/people_registry improvements
+                    if personal_delivery.get(CONF_ENABLED, True) and personal_delivery.get(CONF_TARGET):
+                        personal_delivery_target: Target | None = Target(
+                            personal_delivery.get(CONF_TARGET), target_data=personal_delivery.get(CONF_DATA)
+                        )
+                        if personal_delivery_target is not None and personal_delivery_target.has_resolved_target():
+                            self.record_resolve(delivery.name, "2b_person_configured_delivery_target", personal_delivery_target)
+                            recipient_target += personal_delivery_target
+
+                if recipient_target.target_data:
+                    recipient_target.extend(ATTR_PERSON_ID, person_id)
                     custom_person_ids.append(person_id)
-                    targets.append(personal_target)
+                    targets.append(recipient_target)
                 else:
-                    recipients += personal_target
+                    recipients += recipient_target
         recipients.remove("person_id", custom_person_ids)
 
         targets.append(recipients)

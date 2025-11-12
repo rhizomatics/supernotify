@@ -5,6 +5,9 @@
   - This means target category selection for generic deliveries is configured per delivery, e.g. telegram and discord
 - `Target` overhauled to simplify repetitive logic, minimize getattr use, and allow custom domains
 - Custom target domains now supported, so can have a `discord` target in addition to the standard `entity_id`,`email` etc
+- `action` for mobile app notifications is now `mobile_app_id` to be clearer and avoid ambiguity with mobile push actions
+- All personal target resolution now done at start up, and a `Target` object added to people registry entries
+  - Easier to debug target selection now, and the email/sms/mobile_push transports are simpler
 
 ## 1.2.2
 - Consolidated all transport defaults in a single method

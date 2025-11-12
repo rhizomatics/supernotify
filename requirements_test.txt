@@ -6,6 +6,7 @@ pytest-asyncio
 pytest-unordered
 pytest-mock
 pytest-xdist
+pytest-icdiff
 types-aiofiles
 types-cachetools
 pre-commit

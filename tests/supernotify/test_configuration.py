@@ -3,7 +3,7 @@ from typing import cast
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
-from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, CONF_PERSON, CONF_RECIPIENTS, CONF_TRANSPORT
+from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, CONF_PERSON, CONF_RECIPIENTS, CONF_TARGET, CONF_TRANSPORT
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
@@ -14,7 +14,7 @@ from .hass_setup_lib import TestingContext, register_mobile_app
 
 async def test_default_recipients() -> None:
     context = TestingContext(
-        recipients=[{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}],
+        recipients=[{CONF_PERSON: "person.new_home_owner", CONF_TARGET: "dummy.1"}, {CONF_PERSON: "person.bidey_in"}],
         deliveries={"testing": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
     )
@@ -24,12 +24,12 @@ async def test_default_recipients() -> None:
     await uut.initialize()
     await uut.deliver()
     dummy: DummyTransport = cast("DummyTransport", context.delivery_registry.transports["dummy"])
-    assert dummy.test_calls[0].target.entity_ids == ["dummy.new_home_owner", "dummy.bidey_in"]
+    assert dummy.test_calls[0].target.entity_ids == ["dummy.1"]
 
 
 async def test_default_recipients_with_override() -> None:
     context = TestingContext(
-        recipients=[{CONF_PERSON: "person.new_home_owner"}, {CONF_PERSON: "person.bidey_in"}],
+        recipients=[{CONF_PERSON: "person.new_home_owner", CONF_TARGET: "dummy.1"}, {CONF_PERSON: "person.bidey_in"}],
         deliveries={"testing": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
     )
@@ -39,7 +39,7 @@ async def test_default_recipients_with_override() -> None:
     await uut.initialize()
     await uut.deliver()
     dummy: DummyTransport = cast("DummyTransport", context.delivery_registry.transports["dummy"])
-    assert dummy.test_calls[0].target.entity_ids == ["dummy.new_home_owner"]
+    assert dummy.test_calls[0].target.entity_ids == ["dummy.1"]
 
 
 async def test_delivery_override_transport() -> None:

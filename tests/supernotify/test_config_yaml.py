@@ -33,7 +33,15 @@ SIMPLE_CONFIG = {
         "simple": {"delivery_selection": "implicit"},
         "somebody": {"delivery_selection": "explicit", "delivery": {"chime_person": {}}},
     },
-    "recipients": [{"person": "person.house_owner", "email": "test@testing.com", "phone_number": "+4497177848484"}],
+    "recipients": [
+        {
+            "person": "person.house_owner",
+            "email": "test@testing.com",
+            "phone_number": "+4497177848484",
+            "delivery": {"chime": {"target": "switch.office_bell", "data": {"volume": "whisper"}}},
+            "target": {"discord": "@mickey", "telegram": "mickey.mouse", "812Mhz": ["039392", "84834"]},
+        }
+    ],
     "transports": {
         "chime": {
             "delivery_defaults": {
@@ -238,7 +246,8 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert notification is not None
     assert len(notification["delivered_envelopes"]) == 1  # type: ignore[arg-type]
-    assert notification["delivered_envelopes"][0]["delivery_name"] == "chime_person"  # type: ignore
+    # type: ignore
+    assert notification["delivered_envelopes"][0]["delivery_name"] == "chime_person"
     assert len(notification["undelivered_envelopes"]) == 0  # type: ignore[arg-type]
 
     hass.states.async_set("supernotify.transport_generic", "on")
@@ -356,11 +365,41 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
     ]
     assert len(delivered_chimes) == 1
 
-    call_record: dict[str, Any] = delivered_chimes[0]["calls"][0]  # type: ignore
+    # type: ignore
+    call_record: dict[str, Any] = delivered_chimes[0]["calls"][0]
     del call_record["elapsed"]
     assert call_record == {
         "domain": "media_player",
         "service": "play_media",
         "action_data": {"media_content_type": "sound", "media_content_id": "bell_02"},
         "target_data": {"entity_id": "media_player.lobby"},
+    }
+
+
+async def test_people_configured(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await hass.async_block_till_done()
+    response: ServiceResponse = await hass.services.async_call(
+        "supernotify", "enquire_people", None, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert response is not None
+    assert "people" in response
+    assert isinstance(response, dict)
+    assert len(response["people"]) == 1  # type: ignore
+    assert isinstance(response["people"], list)
+    assert response["people"][0] == {
+        "person": "person.house_owner",
+        "email": "test@testing.com",
+        "phone_number": "+4497177848484",
+        "delivery": {"chime": {"target": "switch.office_bell", "data": {"volume": "whisper"}, "enabled": True}},
+        "target": {
+            "discord": ["@mickey"],
+            "telegram": ["mickey.mouse"],
+            "812Mhz": ["039392", "84834"],
+            "email": ["test@testing.com"],
+            "phone": ["+4497177848484"],
+        },
+        "mobile_discovery": True,
+        "mobile_devices": [],
     }

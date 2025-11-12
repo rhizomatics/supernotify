@@ -143,7 +143,8 @@ async def test_generate_recipients_from_recipients() -> None:
         recipients=[
             {
                 CONF_PERSON: "person.new_home_owner",
-                CONF_DELIVERY: {"chatty": {CONF_TARGET: ["@foo", "@bar"]}},
+                CONF_TARGET: ["@foo", "@bar"],
+                CONF_DELIVERY: {"chatty": {CONF_TARGET: ["@fee", "@fum"]}},
             }
         ],
         deliveries={
@@ -162,7 +163,7 @@ async def test_generate_recipients_from_recipients() -> None:
 
     recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].entity_ids == ["custom.light_1"]
-    assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar"]
+    assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar", "@fee", "@fum"]
 
 
 async def test_explicit_recipients_only_restricts_people_targets() -> None:

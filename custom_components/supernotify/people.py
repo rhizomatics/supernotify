@@ -6,18 +6,28 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util import slugify
 
 from . import (
+    ATTR_EMAIL,
+    ATTR_MOBILE_APP_ID,
+    ATTR_PHONE,
     ATTR_USER_ID,
+    CONF_ALIAS,
+    CONF_DATA,
+    CONF_DELIVERY,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TRACKER,
+    CONF_EMAIL,
     CONF_MANUFACTURER,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
     CONF_MODEL,
     CONF_PERSON,
+    CONF_PHONE_NUMBER,
+    CONF_TARGET,
 )
 from .common import ensure_list
 from .hass_api import HomeAssistantAPI
+from .model import Target
 
 if TYPE_CHECKING:
     from homeassistant.core import State
@@ -41,17 +51,46 @@ class PeopleRegistry:
                 _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with no 'person' key:%s", r)
                 continue
 
+            if r.get(CONF_TARGET):
+                r[CONF_TARGET] = Target(r[CONF_TARGET], target_data=r.get(CONF_DATA))
+            else:
+                r[CONF_TARGET] = Target()
+            if r.get(CONF_EMAIL):
+                r[CONF_TARGET].extend(ATTR_EMAIL, r[CONF_EMAIL])
+            if r.get(CONF_PHONE_NUMBER):
+                r[CONF_TARGET].extend(ATTR_PHONE, r[CONF_PHONE_NUMBER])
+
             if r.get(CONF_MOBILE_DISCOVERY):
                 r[CONF_MOBILE_DEVICES].extend(self.mobile_devices_for_person(r[CONF_PERSON]))
                 if r.get(CONF_MOBILE_DEVICES):
                     _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", r[CONF_PERSON], r[CONF_MOBILE_DEVICES])
                 else:
                     _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", r[CONF_PERSON])
+            if r.get(CONF_MOBILE_DEVICES):
+                r[CONF_TARGET].extend(ATTR_MOBILE_APP_ID, [d[CONF_MOBILE_APP_ID] for d in r[CONF_MOBILE_DEVICES]])
 
             state: State | None = self.hass_api.get_state(r[CONF_PERSON])
             if state is not None:
                 r[ATTR_USER_ID] = state.attributes.get(ATTR_USER_ID)
-            self.people[r[CONF_PERSON]] = r
+
+            # TODO: replace dicts with typed classes and remove inconsistency of Target for target and {} for delivery
+            self.people[r[CONF_PERSON]] = {
+                k: v
+                for k, v in r.items()
+                if k
+                in (
+                    CONF_PERSON,
+                    CONF_ALIAS,
+                    CONF_TARGET,
+                    CONF_EMAIL,
+                    CONF_TARGET,
+                    CONF_PHONE_NUMBER,
+                    ATTR_USER_ID,
+                    CONF_MOBILE_DISCOVERY,
+                    CONF_MOBILE_DEVICES,
+                    CONF_DELIVERY,
+                )
+            }
 
     def refresh_tracker_state(self) -> None:
         for person, person_config in self.people.items():
