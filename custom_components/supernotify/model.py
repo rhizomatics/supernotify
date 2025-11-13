@@ -38,6 +38,7 @@ from . import (
     CONF_TARGET_REQUIRED,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
+    RE_DEVICE_ID,
     SELECTION_DEFAULT,
     SelectionRank,
 )
@@ -57,21 +58,20 @@ class Target:
     # references that lead to targets, that can't be positively identified with a validator
     EXPLICIT_INDIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID]
     INDIRECT_CATEGORIES = EXPLICIT_INDIRECT_CATEGORIES + AUTO_INDIRECT_CATEGORIES
-    CATEGORIES = DIRECT_CATEGORIES + INDIRECT_CATEGORIES
     AUTO_CATEGORIES = DIRECT_CATEGORIES + AUTO_INDIRECT_CATEGORIES
+
+    CATEGORIES = DIRECT_CATEGORIES + INDIRECT_CATEGORIES
 
     DEFAULT_CUSTOM_CATEGORY = "_UNKNOWN_"
 
     def __init__(
         self, target: str | list[str] | dict[str, str | list[str]] | None = None, target_data: dict[str, Any] | None = None
     ) -> None:
-        self.target_data = target_data
-
+        self.target_data: dict[str, Any] | None = target_data
         # once resolved, indirect selectors removed
-        self.resolved = False
-
+        self.resolved: bool = False
         self.targets: dict[str, list[str]] = {}
-        self.custom_categories = []
+
         matched: list[str]
 
         if isinstance(target, str):
@@ -95,14 +95,13 @@ class Target:
                 if not targets_left:
                     break
             if targets_left:
-                self.custom_categories.append(self.DEFAULT_CUSTOM_CATEGORY)
                 self.targets[self.DEFAULT_CUSTOM_CATEGORY] = targets_left
 
         elif isinstance(target, dict):
             matched = []
             for category in target:
                 targets = ensure_list(target[category])
-                if category in self.CATEGORIES:
+                if category in self.AUTO_CATEGORIES:
                     validator = getattr(self, f"is_{category}", None)
                     if validator is not None:
                         for t in targets:
@@ -112,11 +111,14 @@ class Target:
                                 matched.append(t)
                             else:
                                 _LOGGER.warning("SUPERNOTIFY Target skipped invqualid %s target: %s", category, t)
+                    elif category in self.CATEGORIES:
+                        self.targets.setdefault(category, [])
+                        self.targets[category].append(t)
+                        matched.append(t)
                     else:
                         _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
 
                 else:
-                    self.custom_categories.append(category)
                     self.targets[category] = targets
         elif target is None:
             pass  # empty constructor is valid case for target building
@@ -150,7 +152,7 @@ class Target:
         return self.targets.get(ATTR_MOBILE_APP_ID, [])
 
     def custom_ids(self, category: str) -> list[str]:
-        return self.targets.get(category, []) if category in self.custom_categories else []
+        return self.targets.get(category, []) if category not in self.CATEGORIES else []
 
     @property
     def area_ids(self) -> list[str]:
@@ -168,7 +170,7 @@ class Target:
 
     @classmethod
     def is_device_id(cls, target: str) -> bool:
-        return re.match(r"^[0-9a-f]{32}$", target) is not None
+        return re.match(RE_DEVICE_ID, target) is not None
 
     @classmethod
     def is_entity_id(cls, target: str) -> bool:
@@ -204,7 +206,7 @@ class Target:
 
     @property
     def direct_categories(self) -> list[str]:
-        return self.DIRECT_CATEGORIES + self.custom_categories
+        return self.DIRECT_CATEGORIES + [cat for cat in self.targets if cat not in self.CATEGORIES]
 
     def direct(self) -> "Target":
         return Target(
@@ -222,9 +224,15 @@ class Target:
         if category in self.targets:
             self.targets[category] = [t for t in self.targets[category] if t not in targets]
 
+    def safe_copy(self) -> "Target":
+        copied = Target(dict(self.targets), target_data=self.target_data)
+        copied.resolved = self.resolved
+        return copied
+
     def __add__(self, other: "Target") -> "Target":
         """Create a new target by adding another to this one"""
         new = Target()
+        new.resolved = self.resolved and other.resolved
         categories = set(list(self.targets.keys()) + list(other.targets.keys()))
         for category in categories:
             new.targets[category] = []
@@ -237,6 +245,18 @@ class Target:
                 new.target_data = dict(other.target_data)
             else:
                 new.target_data.update(other.target_data)
+        return new
+
+    def __sub__(self, other: "Target") -> "Target":
+        """Create a new target by removing another from this one, ignoring target_data and resolved"""
+        new = Target()
+        new.resolved = self.resolved
+        new.target_data = self.target_data
+        categories = set(list(self.targets.keys()) + list(other.targets.keys()))
+        for category in categories:
+            new.targets[category] = []
+            new.targets[category].extend(t for t in self.targets.get(category, []) if t not in other.targets.get(category, []))
+
         return new
 
     def __eq__(self, other: object) -> bool:

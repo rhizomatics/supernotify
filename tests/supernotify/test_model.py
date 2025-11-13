@@ -1,6 +1,78 @@
 from custom_components.supernotify.model import Target
 
 
+def test_target_in_dict_mode() -> None:
+    uut = Target({
+        "email": ["joe.mctoe@kmail.com"],
+        "entity_id": ["media_player.kitchen", "notify.garden"],
+        "phone": "+43985951039393",
+        "person_id": "person.joe_mctoe",
+        "device_id": ["000044449999aaaa00003333ffff7777"],
+        "telegram": "@myhome",
+        "slack": ["big_kid"],
+        "klaxon": ["dive_dive_dive"],
+    })
+
+    assert uut.entity_ids == ["media_player.kitchen", "notify.garden"]
+    assert uut.person_ids == ["person.joe_mctoe"]
+    assert uut.phone == ["+43985951039393"]
+    assert uut.device_ids == ["000044449999aaaa00003333ffff7777"]
+    assert uut.email == ["joe.mctoe@kmail.com"]
+    assert uut.custom_ids("klaxon") == ["dive_dive_dive"]
+    assert uut.custom_ids("telegram") == ["@myhome"]
+    assert uut.custom_ids("slack") == ["big_kid"]
+    assert uut.label_ids == []
+    assert uut.floor_ids == []
+    assert uut.area_ids == []
+
+
+def test_target_in_list_mode() -> None:
+    uut = Target([
+        "joe.mctoe@kmail.com",
+        "media_player.kitchen",
+        "+43985951039393",
+        "person.joe_mctoe",
+        "notify.garden",
+        "000044449999aaaa00003333ffff7777",
+        "@mctoe",
+    ])
+    assert uut.entity_ids == ["media_player.kitchen", "notify.garden"]
+    assert uut.person_ids == ["person.joe_mctoe"]
+    assert uut.phone == ["+43985951039393"]
+    assert uut.device_ids == ["000044449999aaaa00003333ffff7777"]
+    assert uut.email == ["joe.mctoe@kmail.com"]
+    assert uut.custom_ids("_UNKNOWN_") == ["@mctoe"]
+    assert uut.label_ids == []
+    assert uut.floor_ids == []
+    assert uut.area_ids == []
+
+
+def test_target_in_scalar_mode() -> None:
+    assert Target("media_player.kitchen").entity_ids == ["media_player.kitchen"]
+    assert Target("000044449999aaaa00003333ffff7777").device_ids == ["000044449999aaaa00003333ffff7777"]
+    assert Target("person.joe_mctoe").person_ids == ["person.joe_mctoe"]
+    assert Target([]).entity_ids == []
+
+
+def test_category_access() -> None:
+    uut = Target([
+        "joe.mctoe@kmail.com",
+        "media_player.kitchen",
+        "+43985951039393",
+        "person.joe_mctoe",
+        "notify.garden",
+        "000044449999aaaa00003333ffff7777",
+        "@mctoe",
+    ])
+    assert uut.for_category("entity_id") == ["media_player.kitchen", "notify.garden"]
+    uut.extend("label_id", "tag1")
+    uut.extend("label_id", ["tag1", "tag2"])
+    assert uut.for_category("label_id") == ["tag1", "tag2"]
+    uut.extend("_UNKNOWN_", "@mctoe2")
+    assert uut.for_category("_UNKNOWN_") == ["@mctoe", "@mctoe2"]
+    assert uut.custom_ids("_UNKNOWN_") == ["@mctoe", "@mctoe2"]
+
+
 def test_target_correctly_selects_valid_emails() -> None:
     good = [
         "test421@example.com",
@@ -71,3 +143,26 @@ def test_addition() -> None:
     new = uut + Target(["light.hall"])
     assert new.entity_ids == ["switch.lounge", "light.hall"]
     assert new.target_data == {"foo": 123, "bar": True}
+
+
+def test_minus() -> None:
+    target1 = Target({
+        "label_id": "tag001",
+        "person_id": ["person.cuth_bert"],
+        "telegram": "@bob",
+        "redsky": "bobby3",
+        "email": ["me@mctest.org"],
+        "entity_id": ["switch.alarm_bell", "siren.downstairs"],
+    })
+    target2 = target1 - (
+        Target({
+            "label_id": "tag001",
+            "person_id": ["person.cuth_bert"],
+            "telegram": "@bob",
+            "email": ["you@mctest.org"],
+            "x": "@bob885845",
+            "entity_id": ["siren.downstairs", "siren.upstairs"],
+        })
+    )
+
+    assert target2 == Target({"email": ["me@mctest.org"], "entity_id": ["switch.alarm_bell"]})

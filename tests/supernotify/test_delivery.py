@@ -10,77 +10,14 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
-
-def test_target_in_dict_mode() -> None:
-    uut = Target({
-        "email": ["joe.mctoe@kmail.com"],
-        "entity_id": ["media_player.kitchen", "notify.garden"],
-        "phone": "+43985951039393",
-        "person_id": "person.joe_mctoe",
-        "device_id": ["000044449999aaaa00003333ffff7777"],
-        "telegram": "@myhome",
-        "slack": ["big_kid"],
-        "klaxon": ["dive_dive_dive"],
-    })
-
-    assert uut.entity_ids == ["media_player.kitchen", "notify.garden"]
-    assert uut.person_ids == ["person.joe_mctoe"]
-    assert uut.phone == ["+43985951039393"]
-    assert uut.device_ids == ["000044449999aaaa00003333ffff7777"]
-    assert uut.email == ["joe.mctoe@kmail.com"]
-    assert uut.custom_ids("klaxon") == ["dive_dive_dive"]
-    assert uut.custom_ids("telegram") == ["@myhome"]
-    assert uut.custom_ids("slack") == ["big_kid"]
-    assert uut.label_ids == []
-    assert uut.floor_ids == []
-    assert uut.area_ids == []
+from .hass_setup_lib import TestingContext
 
 
-def test_target_in_list_mode() -> None:
-    uut = Target([
-        "joe.mctoe@kmail.com",
-        "media_player.kitchen",
-        "+43985951039393",
-        "person.joe_mctoe",
-        "notify.garden",
-        "000044449999aaaa00003333ffff7777",
-        "@mctoe",
-    ])
-    assert uut.entity_ids == ["media_player.kitchen", "notify.garden"]
-    assert uut.person_ids == ["person.joe_mctoe"]
-    assert uut.phone == ["+43985951039393"]
-    assert uut.device_ids == ["000044449999aaaa00003333ffff7777"]
-    assert uut.email == ["joe.mctoe@kmail.com"]
-    assert uut.custom_ids("_UNKNOWN_") == ["@mctoe"]
-    assert uut.label_ids == []
-    assert uut.floor_ids == []
-    assert uut.area_ids == []
-
-
-def test_target_in_scalar_mode() -> None:
-    assert Target("media_player.kitchen").entity_ids == ["media_player.kitchen"]
-    assert Target("000044449999aaaa00003333ffff7777").device_ids == ["000044449999aaaa00003333ffff7777"]
-    assert Target("person.joe_mctoe").person_ids == ["person.joe_mctoe"]
-    assert Target([]).entity_ids == []
-
-
-def test_category_access() -> None:
-    uut = Target([
-        "joe.mctoe@kmail.com",
-        "media_player.kitchen",
-        "+43985951039393",
-        "person.joe_mctoe",
-        "notify.garden",
-        "000044449999aaaa00003333ffff7777",
-        "@mctoe",
-    ])
-    assert uut.for_category("entity_id") == ["media_player.kitchen", "notify.garden"]
-    uut.extend("label_id", "tag1")
-    uut.extend("label_id", ["tag1", "tag2"])
-    assert uut.for_category("label_id") == ["tag1", "tag2"]
-    uut.extend("_UNKNOWN_", "@mctoe2")
-    assert uut.for_category("_UNKNOWN_") == ["@mctoe", "@mctoe2"]
-    assert uut.custom_ids("_UNKNOWN_") == ["@mctoe", "@mctoe2"]
+async def test_target_selection() -> None:
+    ctx = TestingContext(transport_types=[NotifyEntityTransport])
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
+    assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])) == Target(["notify.pong"])
 
 
 async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:

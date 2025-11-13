@@ -1,9 +1,17 @@
-from typing import cast
-
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 
-from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, CONF_TRANSPORT, TRANSPORT_NOTIFY_ENTITY
+from custom_components.supernotify import (
+    CONF_ACTION,
+    CONF_DATA,
+    CONF_DELIVERY,
+    CONF_OPTIONS,
+    CONF_TRANSPORT,
+    OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
+    TRANSPORT_GENERIC,
+    TRANSPORT_NOTIFY_ENTITY,
+)
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
@@ -45,14 +53,37 @@ async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
     )
 
 
-async def test_target_selection() -> None:
-    ctx = TestingContext(transport_types=[NotifyEntityTransport])
-    await ctx.test_initialize()
-    uut: NotifyEntityTransport = cast("NotifyEntityTransport", ctx.transport(TRANSPORT_NOTIFY_ENTITY))
-
-    assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])).entity_ids == ["notify.pong"]
-
-
 async def test_selects_group_targets() -> None:
     pass
     # TODO: write when groups handled
+
+
+async def test_doesnt_double_deliver() -> None:
+    context = TestingContext(
+        deliveries={
+            "custom": {
+                CONF_TRANSPORT: TRANSPORT_GENERIC,
+                CONF_ACTION: "notify.custom",
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID], OPTION_TARGET_INCLUDE_RE: [r".*(2|3)"]},
+            }
+        },
+    )
+
+    await context.test_initialize()
+
+    notification = Notification(
+        context,
+        message="only once please",
+        target=["notify.entity_1", "notify.entity_2", "notify.entity_3"],
+    )
+    await notification.initialize()
+    await notification.deliver()
+    assert notification.selected_delivery_names == ["custom", "DEFAULT_notify_entity"]
+
+    assert len(notification.delivered_envelopes) == 2
+
+    assert notification.delivered_envelopes[0].delivery_name == "custom"
+    assert notification.delivered_envelopes[0].target.entity_ids == ["notify.entity_2", "notify.entity_3"]
+
+    assert notification.delivered_envelopes[1].delivery_name == "DEFAULT_notify_entity"
+    assert notification.delivered_envelopes[1].target.entity_ids == ["notify.entity_1"]

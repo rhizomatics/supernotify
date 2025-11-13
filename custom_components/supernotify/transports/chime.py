@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
@@ -9,7 +8,14 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
     CONF_VARIABLES,
 )
 
-from custom_components.supernotify import ATTR_DATA, ATTR_PRIORITY, TRANSPORT_CHIME
+from custom_components.supernotify import (
+    ATTR_DATA,
+    ATTR_PRIORITY,
+    OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
+    RE_DEVICE_ID,
+    TRANSPORT_CHIME,
+)
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target, TransportConfig
 from custom_components.supernotify.transport import Transport
@@ -77,6 +83,10 @@ class ChimeTransport(Transport):
         config.delivery_defaults.options = {}
         config.delivery_defaults.target_required = False
         config.device_domain = DEVICE_DOMAINS
+        config.delivery_defaults.options = {
+            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
+            OPTION_TARGET_INCLUDE_RE: [RE_VALID_CHIME, RE_DEVICE_ID],
+        }
         return config
 
     @property
@@ -85,12 +95,6 @@ class ChimeTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
-
-    def select_targets(self, target: Target) -> Target:
-        return Target({
-            ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_VALID_CHIME, e) is not None],
-            ATTR_DEVICE_ID: target.device_ids,
-        })
 
     async def deliver(self, envelope: Envelope) -> bool:
         data: dict[str, Any] = {}

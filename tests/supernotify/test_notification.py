@@ -57,7 +57,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     await uut.initialize()
     assert uut.enabled_scenarios == {}
     assert uut.applied_scenario_names == []
-    assert uut.target == []
+    assert uut.target is None
     assert uut.message("plain_email") == "testing 123"
     assert uut.title("mobile") == "mobile notification"
     assert uut.priority == "medium"

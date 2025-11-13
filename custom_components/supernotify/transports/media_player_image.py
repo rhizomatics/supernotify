@@ -1,13 +1,14 @@
 import logging
-import re
 import urllib.parse
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+)
 
-from custom_components.supernotify import TRANSPORT_MEDIA
+from custom_components.supernotify import OPTION_TARGET_CATEGORIES, OPTION_TARGET_INCLUDE_RE, TRANSPORT_MEDIA
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TransportConfig
+from custom_components.supernotify.model import TransportConfig
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
@@ -27,11 +28,11 @@ class MediaPlayerImageTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "media_player.play_media"
-        config.delivery_defaults.options = {}
+        config.delivery_defaults.options = {
+            OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER],
+            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+        }
         return config
-
-    def select_targets(self, target: Target) -> Target:
-        return Target({ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_VALID_MEDIA_PLAYER, e) is not None]})
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

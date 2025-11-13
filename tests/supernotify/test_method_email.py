@@ -140,7 +140,7 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
     await notification.initialize()
     notification.snapshot_image_path = Path("/local/picture.jpg")
     await uut.deliver(
-        Envelope(Delivery("default", context.deliveries["default"], uut), notification, target=Target(notification.target))
+        Envelope(Delivery("default", context.deliveries["default"], uut), notification, target=notification.target)
     )
     context.hass.services.async_call.assert_called_with(  # type:ignore
         "notify",

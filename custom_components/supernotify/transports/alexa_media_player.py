@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
@@ -9,10 +8,12 @@ from custom_components.supernotify import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -43,15 +44,14 @@ class AlexaMediaPlayerTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            OPTION_TARGET_INCLUDE_RE: [RE_VALID_ALEXA],
         }
         return config
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
-
-    def select_targets(self, target: Target) -> Target:
-        return Target({ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_VALID_ALEXA, e) is not None]})
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_media %s", envelope.message)

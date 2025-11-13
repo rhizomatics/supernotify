@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Any
 
 from homeassistant.const import (
@@ -25,6 +26,7 @@ from . import (
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
     OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
     RESERVED_DELIVERY_NAMES,
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
@@ -88,12 +90,14 @@ class Delivery(DeliveryConfig):
         return errors == 0
 
     def select_targets(self, target: Target) -> Target:
-        if hasattr(self.transport, "select_targets"):
-            # some transports have regexes or other custom selections
-            return self.transport.select_targets(target)
-        if OPTION_TARGET_CATEGORIES in self.options:
-            return Target({k: v for k, v in target.targets.items() if k in self.options[OPTION_TARGET_CATEGORIES]})
-        return target
+        def selected(category: str, targets: list[str]) -> list[str]:
+            if OPTION_TARGET_CATEGORIES in self.options and category not in self.options[OPTION_TARGET_CATEGORIES]:
+                return []
+            if OPTION_TARGET_INCLUDE_RE in self.options:
+                return [t for t in targets if any(re.fullmatch(r, t) for r in self.options[OPTION_TARGET_INCLUDE_RE])]
+            return targets
+
+        return Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
 
     def option(self, option_name: str) -> str | bool:
         """Get an option value from delivery config or transport default options"""

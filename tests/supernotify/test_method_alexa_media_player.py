@@ -50,12 +50,9 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
     )
 
 
-async def test_alexa_transport_selects_targets() -> None:
+def test_alexa_transport_selects_targets() -> None:
     """Test on_notify_alexa."""
     context = TestingContext(deliveries={"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}})
-
-    uut = AlexaMediaPlayerTransport(context)
-    await context.test_initialize(transport_instances=[uut])
-    await uut.initialize()
+    uut = Delivery("unit_testing", {}, AlexaMediaPlayerTransport(context, {}))
 
     assert uut.select_targets(Target(["switch.alexa_1", "media_player.hall_1"])).entity_ids == ["media_player.hall_1"]

@@ -47,7 +47,7 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
             blob: str = "".join(await stream.readlines())
             reobj = json.loads(blob)
         assert reobj["_message"] == "just a test"
-        assert reobj["target"] == ["person.bob"]
+        assert reobj["target"] == {"person_id": ["person.bob"]}
         assert reobj["delivered_envelopes"] == uut.last_notification.delivered_envelopes
 
 

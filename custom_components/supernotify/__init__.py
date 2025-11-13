@@ -207,6 +207,9 @@ OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
 OPTION_JPEG = "jpeg_opts"
 OPTION_TARGET_CATEGORIES = "target_categories"
+OPTION_UNIQUE_TARGETS = "unique_targets"
+OPTION_TARGET_INCLUDE_RE = "target_include_re"
+RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
 SCENARIO_NULL = "NULL"
 SCENARIO_TEMPLATE_ATTRS = ("message_template", "title_template")

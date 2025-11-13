@@ -45,6 +45,7 @@ from custom_components.supernotify import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     SCENARIO_NULL,
@@ -92,7 +93,8 @@ class Notification(ArchivableObject):
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         action_data = action_data or {}
-        self.target: list[str] = ensure_list(target)
+        self.target: Target | None = Target(target) if target else None
+        self.selected: Target = Target()
         self._title: str | None = title
         self.id = str(uuid.uuid1())
         self.snapshot_image_path: Path | None = None
@@ -425,6 +427,11 @@ class Notification(ArchivableObject):
         sanitized["delivered_envelopes"] = [e.contents(minimal=minimal) for e in self.delivered_envelopes]
         sanitized["undelivered_envelopes"] = [e.contents(minimal=minimal) for e in self.undelivered_envelopes]
         sanitized["enabled_scenarios"] = {k: v.contents(minimal=minimal) for k, v in self.enabled_scenarios.items()}
+        if sanitized["target"]:
+            sanitized["target"] = sanitized["target"].as_dict()
+        if sanitized["selected"]:
+            sanitized["selected"] = sanitized["selected"].as_dict()
+
         for state, person_objs in sanitized["occupancy"].items():
             sanitized["occupancy"][state] = [
                 {"person": person_obj["person"], "state": person_obj.get("state"), "user_id": person_obj.get("user_id")}
@@ -505,7 +512,7 @@ class Notification(ArchivableObject):
 
         if self.target:
             # first priority is target recipients on explicit list from action call
-            recipients: Target = Target(self.target)
+            recipients: Target = self.target.safe_copy()
         elif delivery.target:
             # second priority is explicit target on delivery config
             recipients = Target() + delivery.target  # add to create by value not ref
@@ -569,7 +576,12 @@ class Notification(ArchivableObject):
         filtered_targets = [delivery.select_targets(target) for target in targets]
         self.record_resolve(delivery.name, "3_delivery_filtered_targets", filtered_targets)
         _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, filtered_targets)
-        return [t.direct() for t in filtered_targets]
+        direct_targets = [t.direct() for t in filtered_targets]
+        if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
+            direct_targets = [t - self.selected for t in direct_targets]
+        for direct_target in direct_targets:
+            self.selected += direct_target
+        return direct_targets
 
     def generate_envelopes(self, delivery: Delivery, targets: list[Target]) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities

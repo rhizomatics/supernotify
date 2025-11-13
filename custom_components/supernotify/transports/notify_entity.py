@@ -1,5 +1,4 @@
 import logging
-import re
 from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
@@ -8,11 +7,14 @@ from custom_components.supernotify import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
+    OPTION_UNIQUE_TARGETS,
     TRANSPORT_NOTIFY_ENTITY,
     SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -31,10 +33,6 @@ class NotifyEntityTransport(Transport):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
-    def select_targets(self, target: Target) -> Target:
-        # TODO: handle group expansion
-        return Target({ATTR_ENTITY_ID: [e for e in target.entity_ids if re.fullmatch(RE_NOTIFY_ENTITY, e) is not None]})
-
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
@@ -44,6 +42,9 @@ class NotifyEntityTransport(Transport):
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            OPTION_UNIQUE_TARGETS: True,
+            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            OPTION_TARGET_INCLUDE_RE: [RE_NOTIFY_ENTITY],
         }
         return config
 

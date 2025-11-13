@@ -1,13 +1,19 @@
 import logging
-import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import OPTION_MESSAGE_USAGE, OPTION_SIMPLIFY_TEXT, OPTION_STRIP_URLS, TRANSPORT_ALEXA
+from custom_components.supernotify import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
+    TRANSPORT_ALEXA,
+)
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, Target, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -36,18 +42,10 @@ class AlexaDevicesTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            OPTION_TARGET_INCLUDE_RE: [r"notify\.[a-z0-9_]+\_(speak|announce)", r"group\.[a-z0-9_]+"],
         }
         return config
-
-    def select_targets(self, target: Target) -> Target:
-        return Target({
-            ATTR_ENTITY_ID: [
-                e
-                for e in target.entity_ids
-                if re.fullmatch(r"notify\.[a-z0-9_]+\_(speak|announce)", e) is not None
-                or re.fullmatch(r"group\.[a-z0-9_]+", e) is not None
-            ]
-        })
 
     async def deliver(self, envelope: Envelope) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)

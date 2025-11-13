@@ -40,9 +40,8 @@ async def test_notify_alexa(mock_hass, unmocked_config) -> None:  # type: ignore
 
 
 def test_alexa_transport_selects_targets(mock_hass, unmocked_config) -> None:  # type: ignore
-    """Test on_notify_alexa."""
-    # deliveries = {"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA}}
-    uut = AlexaDevicesTransport(unmocked_config)
+
+    uut = Delivery("unit_testing", {}, AlexaDevicesTransport(unmocked_config, {}))
     assert uut.select_targets(
         Target([
             "switch.alexa_1",
