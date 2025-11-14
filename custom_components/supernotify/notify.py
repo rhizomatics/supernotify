@@ -526,17 +526,15 @@ class SupernotifyAction(BaseNotificationService):
         for transport in self.context.delivery_registry.transports.values():
             self.hass.states.async_set(
                 f"{DOMAIN}.transport_{transport.name}",
-                STATE_ON
-                if len([d for d in self.context.delivery_registry.deliveries.values() if d.transport == transport]) > 0
-                else STATE_OFF,
+                STATE_ON if transport.enabled else STATE_OFF,
                 transport.attributes(),
             )
             self.exposed_entities.append(f"{DOMAIN}.transport_{transport.name}")
-        for delivery_name, delivery in self.context.delivery_registry._deliveries.items():
+        for delivery_name, delivery in self.context.delivery_registry.deliveries.items():
             self.hass.states.async_set(
-                f"{DOMAIN}.delivery_{delivery_name}",
-                STATE_ON if str(delivery_name in self.context.delivery_registry.deliveries) else STATE_OFF,
-                delivery,
+                f"{DOMAIN}.delivery_{delivery.name}",
+                STATE_ON if delivery.enabled else STATE_OFF,
+                delivery.as_dict(),
             )
             self.exposed_entities.append(f"{DOMAIN}.delivery_{delivery_name}")
 

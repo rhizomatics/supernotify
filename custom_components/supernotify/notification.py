@@ -515,6 +515,25 @@ class Notification(ArchivableObject):
         recipients: Target = Target()
         custom_person_ids = []
 
+        if not self.target and delivery.target_definition != TARGET_DEFINITION_FIXED:
+            # If target not specified on service call or delivery, then default to std list of recipients
+            people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
+            self.record_resolve(
+                delivery.name,
+                "2d_recipients_by_occupancy",
+                Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]}),
+            )
+            people = [p for p in people if self.recipients_override is None or p.get(CONF_PERSON) in self.recipients_override]
+            self.record_resolve(
+                delivery.name,
+                "2d_recipient_names_by_occupancy_filtered",
+                Target({ATTR_PERSON_ID: list(filter(None, [p.get(CONF_PERSON) for p in people]))}),
+            )
+            recipients = Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
+            _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery.name, recipients)
+        else:
+            _LOGGER.info("SUPERNOTIFY No usage target meeting criteria for %s", delivery.name)
+
         if delivery.target_definition == TARGET_DEFINITION_DEFAULT:
             # first priority is target recipients on explicit list from action call
             if self.target:
@@ -538,25 +557,6 @@ class Notification(ArchivableObject):
         else:
             _LOGGER.debug("SUPERNOTIFY Unexpected code branch for delivery %s", delivery.name)
             # second priority is explicit target on delivery config
-
-        if not recipients.has_targets() and delivery.target_definition != TARGET_DEFINITION_FIXED:
-            # If target not specified on service call or delivery, then default to std list of recipients
-            people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
-            self.record_resolve(
-                delivery.name,
-                "2d_recipients_by_occupancy",
-                Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]}),
-            )
-            people = [p for p in people if self.recipients_override is None or p.get(CONF_PERSON) in self.recipients_override]
-            self.record_resolve(
-                delivery.name,
-                "2d_recipient_names_by_occupancy_filtered",
-                Target({ATTR_PERSON_ID: list(filter(None, [p.get(CONF_PERSON) for p in people]))}),
-            )
-            recipients = Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
-            _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery.name, recipients)
-        else:
-            _LOGGER.info("SUPERNOTIFY No usage target meeting criteria for %s", delivery.name)
 
         # TODO: reinstate snoozing
         recipients = self.context.snoozer.filter_recipients(

@@ -236,9 +236,8 @@ class Target:
         new = Target()
         categories = set(list(self.targets.keys()) + list(other.targets.keys()))
         for category in categories:
-            new.targets[category] = []
-            new.targets[category].extend(self.targets.get(category, []))
-            new.targets[category].extend(other.targets.get(category, []))
+            new.targets[category] = list(self.targets.get(category, []))
+            new.targets[category].extend(t for t in other.targets.get(category, []) if t not in new.targets[category])
 
         new.target_data = dict(self.target_data) if self.target_data else None
         if other.target_data:

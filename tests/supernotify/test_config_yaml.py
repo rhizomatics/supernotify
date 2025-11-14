@@ -27,6 +27,7 @@ SIMPLE_CONFIG = {
     "platform": DOMAIN,
     "delivery": {
         "testing": {"transport": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
+        "plain_email": {"transport": "email"},
         "chime_person": {"transport": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
     },
     "archive": {"enabled": True},
@@ -66,7 +67,9 @@ async def test_transport_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert hass.states.get("supernotify.transport_chime").state == "on"  # type: ignore
     assert hass.states.get("supernotify.transport_generic").state == "on"  # type: ignore
-    assert hass.states.get("supernotify.transport_email").state == "off"  # type: ignore
+    assert hass.states.get("supernotify.transport_email").state == "off"
+    assert hass.states.get("supernotify.delivery_plain_email").state == "off"
+    assert hass.states.get("supernotify.delivery_testing").state == "on"  # type: ignore
 
 
 async def test_reload(hass: HomeAssistant) -> None:

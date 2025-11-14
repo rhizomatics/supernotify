@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A delivery has its own special list of targets, which musn't be overridden by
+A delivery has its own special list of targets, which must not be overridden by
 anything else, including explicit targets set in a notification action call.
 
 ## Implementation
@@ -28,4 +28,3 @@ so these addresses are fixed and not overridden.
 
 ### Other transports
 This will work identically for any transport, there's nothing generic specific in how it works
-

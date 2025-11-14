@@ -283,7 +283,7 @@ DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
     vol.Optional(CONF_TEMPLATE): cv.string,
     vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
     vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_ENABLED): cv.boolean,
     vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
     vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
 })

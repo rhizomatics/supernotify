@@ -48,7 +48,7 @@ class Delivery(DeliveryConfig):
         self.template: str | None = conf.get(CONF_TEMPLATE)
         self.message: str | None = conf.get(CONF_MESSAGE)
         self.title: str | None = conf.get(CONF_TITLE)
-        self.enabled: bool = conf.get(CONF_ENABLED, True)
+        self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
         self.occupancy: str = conf.get(CONF_OCCUPANCY, OCCUPANCY_ALL)
         self.condition: ConfigType | None = conf.get(CONF_CONDITION)
 
