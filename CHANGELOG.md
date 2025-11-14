@@ -7,6 +7,9 @@ in the same notification call, for example by *Alexa Devices*, it won't be calle
 announcement. Closes issue[#8](https://github.com/rhizomatics/supernotify/issues/8)
 - *Deliver* can now have a list of target inclusion regexes, useful for excluding Alexa `_speak` devices
 or for custom notifications using *Generic* transport
+- *Target* definition for *Delivery* or *Transport* can now be more flexible
+  - Allows a structured dict, a single value, or list of strings.
+  - Structure only required where category can't be inferred, so entity_ids, device_ids, email and phone numbers are fine
 - *Deliver* has a new `target_definition` key, taking values of `fixed`,`default` or `merge`.
   - `default` only uses the Delivery target if there's no target on the notification action call
   - `merge` combines the targets in the Delivery with any on the action call
