@@ -64,14 +64,12 @@ class Target:
 
     CATEGORIES = DIRECT_CATEGORIES + INDIRECT_CATEGORIES
 
-    DEFAULT_CUSTOM_CATEGORY = "_UNKNOWN_"
+    UNKNOWN_CUSTOM_CATEGORY = "_UNKNOWN_"
 
     def __init__(
         self, target: str | list[str] | dict[str, str | list[str]] | None = None, target_data: dict[str, Any] | None = None
     ) -> None:
         self.target_data: dict[str, Any] | None = target_data
-        # once resolved, indirect selectors removed
-        self.resolved: bool = False
         self.targets: dict[str, list[str]] = {}
 
         matched: list[str]
@@ -79,7 +77,9 @@ class Target:
         if isinstance(target, str):
             target = [target]
 
-        if isinstance(target, list):
+        if target is None:
+            pass  # empty constructor is valid case for target building
+        elif isinstance(target, list):
             # simplified and legacy way of assuming list of entities that can be discriminated by validator
             targets_left = list(target)
             for category in self.AUTO_CATEGORIES:
@@ -97,33 +97,32 @@ class Target:
                 if not targets_left:
                     break
             if targets_left:
-                self.targets[self.DEFAULT_CUSTOM_CATEGORY] = targets_left
+                self.targets[self.UNKNOWN_CUSTOM_CATEGORY] = targets_left
 
         elif isinstance(target, dict):
-            matched = []
             for category in target:
                 targets = ensure_list(target[category])
+                if not targets:
+                    continue
                 if category in self.AUTO_CATEGORIES:
                     validator = getattr(self, f"is_{category}", None)
                     if validator is not None:
                         for t in targets:
-                            if t not in matched and validator(t):
+                            if validator(t):
                                 self.targets.setdefault(category, [])
-                                self.targets[category].append(t)
-                                matched.append(t)
+                                if t not in self.targets[category]:
+                                    self.targets[category].append(t)
                             else:
-                                _LOGGER.warning("SUPERNOTIFY Target skipped invqualid %s target: %s", category, t)
-                    elif category in self.CATEGORIES:
-                        self.targets.setdefault(category, [])
-                        self.targets[category].append(t)
-                        matched.append(t)
+                                _LOGGER.warning("SUPERNOTIFY Target skipped invalid %s target: %s", category, t)
                     else:
                         _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
 
-                else:
+                elif category in self.CATEGORIES:
+                    # categories that can't be automatically detected, like label_id
                     self.targets[category] = targets
-        elif target is None:
-            pass  # empty constructor is valid case for target building
+                else:
+                    # custom categories
+                    self.targets[category] = targets
         else:
             _LOGGER.warning("SUPERNOTIFY Target created with no valid targets: %s", target)
 
@@ -227,14 +226,11 @@ class Target:
             self.targets[category] = [t for t in self.targets[category] if t not in targets]
 
     def safe_copy(self) -> "Target":
-        copied = Target(dict(self.targets), target_data=self.target_data)
-        copied.resolved = self.resolved
-        return copied
+        return Target(dict(self.targets), target_data=self.target_data)
 
     def __add__(self, other: "Target") -> "Target":
         """Create a new target by adding another to this one"""
         new = Target()
-        new.resolved = self.resolved and other.resolved
         categories = set(list(self.targets.keys()) + list(other.targets.keys()))
         for category in categories:
             new.targets[category] = []
@@ -250,9 +246,8 @@ class Target:
         return new
 
     def __sub__(self, other: "Target") -> "Target":
-        """Create a new target by removing another from this one, ignoring target_data and resolved"""
+        """Create a new target by removing another from this one, ignoring target_data"""
         new = Target()
-        new.resolved = self.resolved
         new.target_data = self.target_data
         categories = set(list(self.targets.keys()) + list(other.targets.keys()))
         for category in categories:
@@ -302,7 +297,7 @@ class DeliveryConfig:
             # use transport defaults where no delivery level override
             self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
             self.target_required: bool = conf.get(CONF_TARGET_REQUIRED, delivery_defaults.target_required)
-            self.target_definition: str = conf.get(CONF_TARGET_DEFINITION, TARGET_DEFINITION_DEFAULT)
+            self.target_definition: str = conf.get(CONF_TARGET_DEFINITION, delivery_defaults.target_definition)
             self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
 
             self.data: ConfigType = dict(delivery_defaults.data) or {}
@@ -319,6 +314,7 @@ class DeliveryConfig:
             # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
             self.target_required = conf.get(CONF_TARGET_REQUIRED, True)
+            self.target_definition = conf.get(CONF_TARGET_DEFINITION, TARGET_DEFINITION_DEFAULT)
             self.action = conf.get(CONF_ACTION)
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})

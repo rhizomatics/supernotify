@@ -229,7 +229,8 @@ CONF_TTL = "ttl"
 CONF_SIZE = "size"
 ATTR_DUPE_POLICY_MTSLP = "dupe_policy_message_title_same_or_lower_priority"
 ATTR_DUPE_POLICY_NONE = "dupe_policy_none"
-TARGET_SCHEMA = vol.Any(dict[str, list[str]], dict[str, str], [cv.entity_id], cv.entity_id, cv.TARGET_FIELDS)
+# TARGET_FIELDS includes entity, device, area, floor, label ids
+TARGET_SCHEMA = vol.Any(dict[str, list[str]], dict[str, str], str, list[str], cv.TARGET_FIELDS)
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
 MOBILE_DEVICE_SCHEMA = vol.Schema({
@@ -256,10 +257,10 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
-    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
     vol.Optional(CONF_OPTIONS): dict,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
+    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
     vol.Optional(CONF_TARGET_DEFINITION, default=TARGET_DEFINITION_DEFAULT): vol.In([
         TARGET_DEFINITION_DEFAULT,

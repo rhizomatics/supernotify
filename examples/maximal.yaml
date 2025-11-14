@@ -30,11 +30,15 @@ notify:
           - high
           - medium
           - low
+        target_definition: merge
+        target:
+          - mailarchive@mymail.com
 
       backup_mail:
         transport: email
         selection:
           - fallback
+        target: mailarchive@mymail.com
       text_message:
         transport: sms
         action: notify.mikrotik_sms
@@ -53,9 +57,17 @@ notify:
         selection:
           - scenario
           - fallback_on_error
+      my_hw_notifiers:
+         transport: generic
+         action: script.hw_alerts
+         target:
+            floor_id: ground
+            label_id: 433sounder
+            area_id: backyard
       alexa_show:
         transport: media
         action: media_player.play_media
+        target_definition: fixed
         target:
           - media_player.kitchen_2
       play_chimes:

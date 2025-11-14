@@ -7,13 +7,14 @@ from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.const import CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF_PLATFORM, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
+from custom_components.supernotify.model import Target
 
 if TYPE_CHECKING:
     from homeassistant.util.json import JsonObjectType
@@ -102,10 +103,15 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "doorbell_chime_alexa" in uut.context.delivery_registry.deliveries
     assert "sleigh_bells" in uut.context.delivery_registry.deliveries
     assert "upstairs_siren" in uut.context.delivery_registry.deliveries
+    assert "my_hw_notifiers" in uut.context.delivery_registry.deliveries
+    assert uut.context.delivery_registry.deliveries["my_hw_notifiers"].target == Target(
+                {ATTR_FLOOR_ID: ["ground"],
+                ATTR_LABEL_ID: ["433sounder"],
+                ATTR_AREA_ID: ["backyard"]})
     assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    assert len(uut.context.delivery_registry.deliveries) == 13
+    assert len(uut.context.delivery_registry.deliveries) == 14
 
 
 async def test_call_action(hass: HomeAssistant) -> None:

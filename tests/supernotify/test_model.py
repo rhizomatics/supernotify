@@ -10,6 +10,9 @@ def test_target_in_dict_mode() -> None:
         "device_id": ["000044449999aaaa00003333ffff7777"],
         "telegram": "@myhome",
         "slack": ["big_kid"],
+        "area_id": "backyard",
+        "label_id": [],
+        "floor_id": ["01", "02"],
         "klaxon": ["dive_dive_dive"],
     })
 
@@ -22,8 +25,8 @@ def test_target_in_dict_mode() -> None:
     assert uut.custom_ids("telegram") == ["@myhome"]
     assert uut.custom_ids("slack") == ["big_kid"]
     assert uut.label_ids == []
-    assert uut.floor_ids == []
-    assert uut.area_ids == []
+    assert uut.floor_ids == ["01", "02"]
+    assert uut.area_ids == ["backyard"]
 
 
 def test_target_in_list_mode() -> None:
