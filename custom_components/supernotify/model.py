@@ -35,11 +35,13 @@ from . import (
     CONF_PRIORITY,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
+    CONF_TARGET_DEFINITION,
     CONF_TARGET_REQUIRED,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     RE_DEVICE_ID,
     SELECTION_DEFAULT,
+    TARGET_DEFINITION_DEFAULT,
     SelectionRank,
 )
 from .common import ensure_list
@@ -300,6 +302,7 @@ class DeliveryConfig:
             # use transport defaults where no delivery level override
             self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
             self.target_required: bool = conf.get(CONF_TARGET_REQUIRED, delivery_defaults.target_required)
+            self.target_definition: str = conf.get(CONF_TARGET_DEFINITION, TARGET_DEFINITION_DEFAULT)
             self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
 
             self.data: ConfigType = dict(delivery_defaults.data) or {}

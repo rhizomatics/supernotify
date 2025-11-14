@@ -202,6 +202,10 @@ TRANSPORT_VALUES = [
     TRANSPORT_NOTIFY_ENTITY,
 ]
 
+CONF_TARGET_DEFINITION = "target_definition"
+TARGET_DEFINITION_DEFAULT = "default"
+TARGET_DEFINITION_MERGE = "merge"
+TARGET_DEFINITION_FIXED = "fixed"
 OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
@@ -257,6 +261,11 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_OPTIONS): dict,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
     vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
+    vol.Optional(CONF_TARGET_DEFINITION, default=TARGET_DEFINITION_DEFAULT): vol.In([
+        TARGET_DEFINITION_DEFAULT,
+        TARGET_DEFINITION_MERGE,
+        TARGET_DEFINITION_FIXED
+    ]),
     vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
     vol.Optional(CONF_PRIORITY, default=PRIORITY_VALUES): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
     vol.Optional(CONF_SELECTION_RANK, default=SelectionRank.ANY): vol.In([

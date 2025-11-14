@@ -51,6 +51,9 @@ from custom_components.supernotify import (
     SCENARIO_NULL,
     SELECTION_BY_SCENARIO,
     STRICT_ACTION_DATA_SCHEMA,
+    TARGET_DEFINITION_DEFAULT,
+    TARGET_DEFINITION_FIXED,
+    TARGET_DEFINITION_MERGE,
     SelectionRank,
 )
 from custom_components.supernotify.archive import ArchivableObject
@@ -510,13 +513,17 @@ class Notification(ArchivableObject):
         targets: list[Target] = []
         custom_person_ids = []
 
-        if self.target:
+        if self.target and delivery.target_definition == TARGET_DEFINITION_DEFAULT:
             # first priority is target recipients on explicit list from action call
             recipients: Target = self.target.safe_copy()
+        elif self.target and delivery.target_definition == TARGET_DEFINITION_MERGE:
+            recipients: Target = self.target.safe_copy()
+            if delivery.target:
+                recipients = Target() + delivery.target
         elif delivery.target:
             # second priority is explicit target on delivery config
             recipients = Target() + delivery.target  # add to create by value not ref
-        else:
+        elif delivery.target_definition != TARGET_DEFINITION_FIXED:
             # If target not specified on service call or delivery, then default to std list of recipients
             people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
             self.record_resolve(
@@ -532,6 +539,8 @@ class Notification(ArchivableObject):
             )
             recipients = Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
             _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery.name, recipients)
+        else:
+            _LOGGER.info("SUPERNOTIFY No usage target meeting criteria for %s", delivery.name)
 
         # TODO: reinstate snoozing
         recipients = self.context.snoozer.filter_recipients(

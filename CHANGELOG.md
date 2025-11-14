@@ -1,11 +1,17 @@
 # Public releases
 
 ## 1.3.0
+### Features
 - *Notify Entity* transport now only selects unique targets, so if a Notify Entity has been delivered
 in the same notification call, for example by *Alexa Devices*, it won't be called again for a duplicate
 announcement. Closes issue[#8](https://github.com/rhizomatics/supernotify/issues/8)
 - *Deliver* can now have a list of target inclusion regexes, useful for excluding Alexa `_speak` devices
 or for custom notifications using *Generic* transport
+- *Deliver* has a new `target_definition` key, taking values of `fixed`,`default` or `merge`.
+  - `default` only uses the Delivery target if there's no target on the notification action call
+  - `merge` combines the targets in the Delivery with any on the action call
+  - `fixed` only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
+### Internal
 - *Transport* implementations simplified, `select_targets` now replaced by options to select
 target categories, for example `entity_id` and a list of inclusions regexs
 - *Target* now has dunder method to support subtraction, for the targets only, and a `safe_copy` method
