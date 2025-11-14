@@ -16,6 +16,7 @@ or for custom notifications using *Generic* transport
   - `merge_default` combines the targets in the Delivery with any on the action call, or if there's
   no target on the notification, it defaults to the Delivery target
   - `fixed` only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
+- Entity states for Delivery and Transport now directly reflect configuration
 ### Internal
 - *Transport* implementations simplified, `select_targets` now replaced by options to select
 target categories, for example `entity_id` and a list of inclusions regexs
