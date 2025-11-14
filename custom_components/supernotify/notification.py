@@ -54,6 +54,7 @@ from custom_components.supernotify import (
     TARGET_DEFINITION_DEFAULT,
     TARGET_DEFINITION_FIXED,
     TARGET_DEFINITION_MERGE,
+    TARGET_DEFINITION_MERGE_DEFAULT,
     SelectionRank,
 )
 from custom_components.supernotify.archive import ArchivableObject
@@ -511,20 +512,34 @@ class Notification(ArchivableObject):
 
     def generate_recipients(self, delivery: Delivery) -> list[Target]:
         targets: list[Target] = []
-        recipients: Target
+        recipients: Target = Target()
         custom_person_ids = []
 
-        if self.target and delivery.target_definition == TARGET_DEFINITION_DEFAULT:
+        if delivery.target_definition == TARGET_DEFINITION_DEFAULT:
             # first priority is target recipients on explicit list from action call
-            recipients = self.target.safe_copy()
-        elif self.target and delivery.target_definition == TARGET_DEFINITION_MERGE:
-            recipients = self.target.safe_copy()
+            if self.target:
+                recipients += self.target
+            elif delivery.target:
+                recipients += delivery.target
+        elif delivery.target_definition == TARGET_DEFINITION_MERGE:
+            # merge in the delivery defaults if there's a target defined in action call
+            if self.target and delivery.target:
+                recipients += self.target
+                recipients += delivery.target
+        elif delivery.target_definition == TARGET_DEFINITION_MERGE_DEFAULT:
+            # merge in the delivery defaults even if there's not a target defined in action call
+            if self.target:
+                recipients += self.target
             if delivery.target:
-                recipients = Target() + delivery.target
-        elif delivery.target:
+                recipients += delivery.target
+        elif delivery.target_definition == TARGET_DEFINITION_FIXED:
+            if delivery.target:
+                recipients += delivery.target
+        else:
+            _LOGGER.debug("SUPERNOTIFY Unexpected code branch for delivery %s", delivery.name)
             # second priority is explicit target on delivery config
-            recipients = Target() + delivery.target  # add to create by value not ref
-        elif delivery.target_definition != TARGET_DEFINITION_FIXED:
+
+        if not recipients.has_targets() and delivery.target_definition != TARGET_DEFINITION_FIXED:
             # If target not specified on service call or delivery, then default to std list of recipients
             people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
             self.record_resolve(

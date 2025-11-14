@@ -1,6 +1,7 @@
 [![Rhizomatics Open Source](https://avatars.githubusercontent.com/u/162821163?s=96&v=4)](https://github.com/rhizomatics)
 
-# Supernotify
+# Supernotify [![hacs][hacsbadge]][hacs]
+
 
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/rhizomatics/supernotify)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/rhizomatics/supernotify/main.svg)](https://results.pre-commit.ci/latest/github/rhizomatics/supernotify/main)
@@ -73,7 +74,9 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 
 ## Installation
 
-* Add the [Supernotify Git Repo](https://github.com/rhizomatics/supernotify) to HACS as custom repo
+* Make sure you have HACS available
+  - If not, check the [HACS Instructions](https://hacs.xyz/docs/use/)
+  - Supernotify is one of the default repositories in HACS so no other configuration required
 * Select *SuperNotify* in the list of available integrations in HACS and install
 * Add a `notify` config for the `supernotify` integration,
     * See `examples` directory for working minimal and maximal configuration examples.
@@ -81,19 +84,30 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
     * To use attachments, e.g. from camera snapshot or a `snapshot_url`, you must set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the supernotify configuration
 
 
-## Usage
+## Getting Started
+
+The best place to start are the [Recipes](recipes/index.md), which show how some popular,
+and advanced, configuration can be achieved.
+
+Otherwise, start with the simplest possible config, like the [minimal](examples/config_notify/minimal.md) example.
+
+Calls to supernotify look like any other notify action, which will work but not use any of the features:
 
 ### Minimal
 ```yaml
-  - action: notify.supernotifier
+  - action: notify.supernotify
     data:
         title: Security Notification
-        message: '{{state_attr(sensor,"friendly_name")}} triggered'
+        message: Something went off in the basement
 ```
+
+That simple call can be enriched in a few ways, here with a message template (as in
+regular notify), using `person_id` targets to derive email,  applying some pre-built
+scenarios, and adding a click action to the mobile push notifications.
 
 ### More features
 ```yaml
-  - action: notify.supernotifier
+  - action: notify.supernotify
     data:
         title: Security Notification
         message: '{{state_attr(sensor,"friendly_name")}} triggered'
@@ -104,7 +118,6 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
         apply_scenarios:
           - home_security
           - garden
-        constrain_scenarios:
         delivery:
             mobile_push:
                 data:
@@ -130,16 +143,58 @@ fine tuning delivery configurations, or using existing notification blueprints, 
             priority: {% if {{ state_attr('sensor.tank', 'depth') }}<10 }critical{% else %}medium {% endif %}
 ```
 
- See the [Recipes](recipes/index.md) for more ideas.
+ Lots more ideas in the [Recipes](recipes/index.md) for more ideas.
 
-## Transports
+## Core Concepts
 
-*Transports* are the basic difference between regular Notify Groups and Supernotify. While a Notify Group
-seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`.
+### Transport
 
-Transports adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
+- *Transport* is the underlying platform that performs notifications.
+- They make the difference between regular Notify Groups and Supernotify. While a Notify Group
+seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`!
+- Supernotify comes out the box with adapters for common transports, like e-mail, mobile push, SMS, and Alexa, and a *Generic* transport that can be used to wrap any other Home Assistant action
+- The transport adapter is what allows a single notification to be sent to many platforms, even
+when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
+- Transports can optionally be defined in the Supernotify config with defaults
+- See [Transports](transports.md) for more detail
 
-See [Transports](transports.md) page for the full list and more detail on each.
+### Delivery
+
+- A **Delivery** defines each notification channel you want to use
+- While Supernotify comes with many transports, only the ones you define with a Delivery will
+get used to send notifications, with the exception of *Notify Entity* transport which is
+always on unless switched off.
+- Deliveries allow lots of fine tuning and defaults to be made, and you can also have multiple
+deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
+- See[Recipes](recipes/index.md) for more ideas on how to use them
+
+### Scenario
+- An easy way to package up common chunks of config, optionally combined with conditional logic
+- Scenarios can be manually selected, in an `apply_scenarios` value of notification `data` block,
+or automatically selected using a standard Home Assistant `condition` block.
+- They make it easy to apply overrides in one place to many different deliveries or notifications,
+and are the key to making notification calls in your automations radically simpler
+- See [Scenarios](scenarios.md) and [Recipes](recipes/index.md) for more detail
+
+### Target
+- The target of a notification.
+- This could be a *direct* target, like an `entity_id`, `device_id`,
+e-mail address, phone number, or some custom ID for a specialist transport like Telegram or API calls.
+- It also has some support, more to come, for *indirect* targets. The primary one is `person_id`,
+although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id`
+and `area_id`.
+- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify
+    will exploded these for the *Chime* integration, but otherwise ignore them.
+
+### Recipient
+- Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
+- This lets you target notifications to people in notifications, and each transport will pick the type
+of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
+- See [People](people.md) and [Recipes](recipes/index.md) for more detail
+
+!!! info
+    For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core ones.
+
 
 ## Flexible Configuration
 
@@ -192,3 +247,7 @@ automatically available:
 |required_scenarios             |Scenarios a notification mandates to be enabled or else suppressed|
 |constrain_scenarios            |Restricted list of scenarios                                      |
 |occupancy                      |One or more occupancy states, e.g. ALL_HOME, LONE_HOME            |
+
+
+[hacs]: https://hacs.xyz
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-blue.svg

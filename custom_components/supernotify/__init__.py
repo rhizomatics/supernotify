@@ -205,6 +205,7 @@ TRANSPORT_VALUES = [
 CONF_TARGET_DEFINITION = "target_definition"
 TARGET_DEFINITION_DEFAULT = "default"
 TARGET_DEFINITION_MERGE = "merge"
+TARGET_DEFINITION_MERGE_DEFAULT = "merge_default"
 TARGET_DEFINITION_FIXED = "fixed"
 OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
@@ -265,6 +266,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_TARGET_DEFINITION, default=TARGET_DEFINITION_DEFAULT): vol.In([
         TARGET_DEFINITION_DEFAULT,
         TARGET_DEFINITION_MERGE,
+        TARGET_DEFINITION_MERGE_DEFAULT,
         TARGET_DEFINITION_FIXED,
     ]),
     vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
