@@ -511,13 +511,14 @@ class Notification(ArchivableObject):
 
     def generate_recipients(self, delivery: Delivery) -> list[Target]:
         targets: list[Target] = []
+        recipients: Target
         custom_person_ids = []
 
         if self.target and delivery.target_definition == TARGET_DEFINITION_DEFAULT:
             # first priority is target recipients on explicit list from action call
-            recipients: Target = self.target.safe_copy()
+            recipients = self.target.safe_copy()
         elif self.target and delivery.target_definition == TARGET_DEFINITION_MERGE:
-            recipients: Target = self.target.safe_copy()
+            recipients = self.target.safe_copy()
             if delivery.target:
                 recipients = Target() + delivery.target
         elif delivery.target:

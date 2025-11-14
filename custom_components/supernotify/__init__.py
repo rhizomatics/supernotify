@@ -265,7 +265,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_TARGET_DEFINITION, default=TARGET_DEFINITION_DEFAULT): vol.In([
         TARGET_DEFINITION_DEFAULT,
         TARGET_DEFINITION_MERGE,
-        TARGET_DEFINITION_FIXED
+        TARGET_DEFINITION_FIXED,
     ]),
     vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
     vol.Optional(CONF_PRIORITY, default=PRIORITY_VALUES): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),

@@ -104,10 +104,11 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "sleigh_bells" in uut.context.delivery_registry.deliveries
     assert "upstairs_siren" in uut.context.delivery_registry.deliveries
     assert "my_hw_notifiers" in uut.context.delivery_registry.deliveries
-    assert uut.context.delivery_registry.deliveries["my_hw_notifiers"].target == Target(
-                {ATTR_FLOOR_ID: ["ground"],
-                ATTR_LABEL_ID: ["433sounder"],
-                ATTR_AREA_ID: ["backyard"]})
+    assert uut.context.delivery_registry.deliveries["my_hw_notifiers"].target == Target({
+        ATTR_FLOOR_ID: ["ground"],
+        ATTR_LABEL_ID: ["433sounder"],
+        ATTR_AREA_ID: ["backyard"],
+    })
     assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 

@@ -44,7 +44,7 @@ class Context:
         template_path: str | None = None,
         media_path: str | None = None,
         cameras: list[ConfigType] | None = None,
-        **kwargs:Any
+        **kwargs: Any,
     ) -> None:
         self.delivery_registry: DeliveryRegistry = delivery_registry
         self.snoozer: Snoozer = snoozer
@@ -62,7 +62,7 @@ class Context:
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
         self.snoozer = snoozer
         if kwargs:
-            _LOGGER.warning("SUPERNOTIFY Context threw away kwargs:",kwargs)
+            _LOGGER.warning("SUPERNOTIFY Context threw away kwargs:", kwargs)
 
     async def initialize(self) -> None:
         if self.template_path and not self.template_path.exists():
