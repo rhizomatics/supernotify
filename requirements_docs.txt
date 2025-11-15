@@ -7,7 +7,6 @@ mkdocs-autorefs
 mkdocs-coverage
 mkdocs-pagetree-plugin
 mkdocs
-snakemd
 json-schema-for-humans
 mkdocs-gen-files
 voluptuous-openapi>=0.2.0
