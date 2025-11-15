@@ -143,7 +143,7 @@ class Transport:
         try:
             qualified_action = qualified_action or delivery.action
             if qualified_action and (
-                action_data.gXet(ATTR_TARGET) or action_data.get(
+                action_data.get(ATTR_TARGET) or action_data.get(
                     ATTR_ENTITY_ID) or implied_target or delivery.target_required != TargetRequired.ALWAYS or target_data
             ):
                 domain, service = qualified_action.split(".", 1)
