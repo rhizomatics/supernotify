@@ -23,9 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from custom_components.supernotify.common import ensure_list as ensure_list
-from custom_components.supernotify.common import format_timestamp as format_timestamp
-
 _LOGGER = logging.getLogger(__name__)
 
 

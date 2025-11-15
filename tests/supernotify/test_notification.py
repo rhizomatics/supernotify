@@ -36,7 +36,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import MessageOnlyPolicy, Target
-from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.notification import DebugTrace, Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario
 from custom_components.supernotify.transports.email import EmailTransport
@@ -65,7 +65,8 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
     assert uut.recipients_override is None
-    assert uut.selected_delivery_names == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
+    assert uut.selected_delivery_names == unordered(
+        ["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
 async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, deliveries: dict[str, Delivery]) -> None:
@@ -99,7 +100,8 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
+    assert uut.selected_delivery_names == unordered(
+        ["mobile", "plain_email", "chime"])
 
 
 async def test_scenario_delivery(
@@ -107,15 +109,19 @@ async def test_scenario_delivery(
 ) -> None:
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
     mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
-    uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    uut = Notification(mock_context, "testing 123", action_data={
+                       ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+    assert uut.selected_delivery_names == unordered(
+        "plain_email", "mobile", "chime")
 
 
 async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {
+        "DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
 
-    uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+    uut = Notification(mock_context, "testing 123",
+                       action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
     assert uut.selected_delivery_names == ["mobile"]
 
@@ -165,7 +171,8 @@ async def test_generate_recipients_from_recipients() -> None:
 
     recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].entity_ids == ["custom.light_1"]
-    assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar", "@fee", "@fum"]
+    assert recipients[0].custom_ids("_UNKNOWN_") == [
+        "@foo", "@bar", "@fee", "@fum"]
 
 
 async def test_explicit_recipients_only_restricts_people_targets() -> None:
@@ -194,7 +201,8 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].custom_ids("_UNKNOWN_") == ["chan1", "chan2"]
     bundles = uut.generate_envelopes(delivery, recipients)
-    assert bundles == [Envelope(Delivery("chatty", ctx.deliveries["chatty"], generic), uut, target=Target(["chan1", "chan2"]))]
+    assert bundles == [Envelope(Delivery(
+        "chatty", ctx.deliveries["chatty"], generic), uut, target=Target(["chan1", "chan2"]))]
     email = EmailTransport(ctx)
     await email.initialize()
     delivery = ctx.delivery("mail")
@@ -202,7 +210,8 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
-        Envelope(Delivery("mail", ctx.deliveries["mail"], email), uut, target=Target(["bob@test.com", "jane@test.com"]))
+        Envelope(Delivery("mail", ctx.deliveries["mail"], email), uut, target=Target(
+            ["bob@test.com", "jane@test.com"]))
     ]
 
 
@@ -217,8 +226,10 @@ async def test_filter_recipients(mock_context: Context, mock_people_registry: Pe
     assert len(uut.filter_people_by_occupancy("only_in")) == 1
     assert len(uut.filter_people_by_occupancy("only_out")) == 1
 
-    assert {r["person"] for r in uut.filter_people_by_occupancy("only_out")} == {"person.new_home_owner"}
-    assert {r["person"] for r in uut.filter_people_by_occupancy("only_in")} == {"person.bidey_in"}
+    assert {r["person"] for r in uut.filter_people_by_occupancy("only_out")} == {
+        "person.new_home_owner"}
+    assert {r["person"] for r in uut.filter_people_by_occupancy("only_in")} == {
+        "person.bidey_in"}
 
 
 async def test_build_targets_for_simple_case() -> None:
@@ -240,9 +251,11 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(
     ctx = TestingContext()
     await ctx.test_initialize()
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
-    uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
+    uut = Notification(mock_context, "testing 123", action_data={
+                       CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+    assert uut.selected_delivery_names == unordered(
+        "plain_email", "mobile", "chime")
 
 
 async def test_snapshot_url(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
@@ -268,7 +281,8 @@ async def test_camera_entity(mock_context: Context, mock_people_registry: People
     uut = Notification(
         mock_context,
         "testing 123",
-        action_data={CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"}},
+        action_data={CONF_MEDIA: {
+            ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"}},
     )
     await uut.initialize()
     original_image_path: Path = Path(tempfile.gettempdir()) / "image_b.jpg"
@@ -284,7 +298,8 @@ async def test_camera_entity(mock_context: Context, mock_people_registry: People
 
 
 async def test_message_usage(mock_context: Context) -> None:
-    delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
+    delivery = Mock(spec=Delivery, title=None, message=None,
+                    selection=DELIVERY_SELECTION_IMPLICIT)
     mock_context.delivery_registry.deliveries = {"push": delivery}
     mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["push"]}
 
@@ -322,7 +337,8 @@ async def test_merge(mock_hass_api: HomeAssistantAPI, mock_context: Context) -> 
     mock_context.scenario_registry.scenarios = {
         "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass_api)
     }
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
+    mock_context.scenario_registry.delivery_by_scenario = {
+        "DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
     uut = Notification(
         mock_context,
         "testing 123",
@@ -376,5 +392,30 @@ async def test_delivery_selection_order() -> None:
 
     assert len(uut.selected_delivery_names) == 5
     assert uut.selected_delivery_names[0] == "eager"
-    assert uut.selected_delivery_names[1:3] == unordered("whatever", "or_whatever")
-    assert uut.selected_delivery_names[-2:] == unordered("fallback", "naturally_last")
+    assert uut.selected_delivery_names[1:3] == unordered(
+        "whatever", "or_whatever")
+    assert uut.selected_delivery_names[-2:] == unordered(
+        "fallback", "naturally_last")
+
+
+def test_debug_trace_for_targets():
+    uut = DebugTrace("message", "title", {}, {})
+    uut.record_target("omni", "stage_1", Target(
+        ["switch.hall", "joe@mctoe.com"]))
+    uut.record_target("omni", "stage_2", Target(
+        ["switch.hall", "joe@mctoe.com"]))
+    uut.record_target("omni", "stage_3", Target(["joe@mctoe.com"]))
+    uut.record_target("omni", "stage_4", Target(
+        ["joe@mctoe.com", "home@24acacia.ave"]))
+    uut.record_target("omni", "stage_5", Target())
+
+    assert len(uut.contents()['resolved']['omni']) == 5
+    assert uut.contents()['resolved']['omni']['stage_1'] == {
+        "email": ['joe@mctoe.com'], "entity_id": ["switch.hall"]
+    }
+    assert uut.contents()['resolved']['omni']['stage_2'] == "NO_CHANGE"
+    assert uut.contents()['resolved']['omni']['stage_3'] == {
+        "email": ["joe@mctoe.com"]}
+    assert uut.contents()['resolved']['omni']['stage_4'] == {
+        "email": ["joe@mctoe.com", "home@24acacia.ave"]}
+    assert uut.contents()['resolved']['omni']['stage_5'] == {}

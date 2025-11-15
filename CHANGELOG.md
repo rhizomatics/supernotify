@@ -26,6 +26,8 @@ target categories, for example `entity_id` and a list of inclusions regexs
 - *Target* now has dunder method to support subtraction, for the targets only, and a `safe_copy` method
 - *Notification* object now maintains a list of all the target values selected by deliveries, and this
 is archived for debug purposes ( and supports the new unique target value functionality)
+- *Snoozer* now uses `timedelta` rather than integer seconds to measure snooze length
+- More tests for `common`
 
 ## 1.2.3
 - `Delivery` now responsible to select targets, delegating to `Transport` where overridden

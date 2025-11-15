@@ -1,8 +1,9 @@
 import logging
-import time
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.core import Event
+from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_ACTION,
@@ -13,12 +14,11 @@ from . import (
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
 )
-from .common import format_timestamp
 from .delivery import Delivery
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
 from .people import PeopleRegistry
 
-SNOOZE_TIME = 60 * 60  # TODO: move to configuration
+SNOOZE_TIME = timedelta(hours=1)  # TODO: move to configuration
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -37,10 +37,10 @@ class Snooze:
         recipient_type: RecipientType,
         target: str | list[str] | None = None,
         recipient: str | None = None,
-        snooze_for: int | None = None,
+        snooze_for: timedelta | None = None,
         reason: str | None = None,
     ) -> None:
-        self.snoozed_at = time.time()
+        self.snoozed_at = dt_util.now()
         self.target = target
         self.target_type = target_type
         self.recipient_type = recipient_type
@@ -68,7 +68,7 @@ class Snooze:
         return f"Snooze({self.target_type}, {self.target}, {self.std_recipient()})"
 
     def active(self) -> bool:
-        return self.snooze_until is None or self.snooze_until > time.time()
+        return self.snooze_until is None or self.snooze_until > dt_util.now()
 
     def export(self) -> dict[str, Any]:
         return {
@@ -77,8 +77,8 @@ class Snooze:
             "recipient_type": self.recipient_type,
             "recipient": self.recipient,
             "reason": self.reason,
-            "snoozed_at": format_timestamp(self.snoozed_at),
-            "snooze_until": format_timestamp(self.snooze_until),
+            "snoozed_at": dt_util.as_local(self.snoozed_at).strftime("%H:%M:%S"),
+            "snooze_until": dt_util.as_local(self.snooze_until).strftime("%H:%M:%S"),
         }
 
 
@@ -95,7 +95,7 @@ class Snoozer:
             cmd: CommandType
             target_type: TargetType | None = None
             target: str | None = None
-            snooze_for: int = SNOOZE_TIME
+            snooze_for: timedelta = SNOOZE_TIME
             recipient_type: RecipientType | None = None
             event_name = event.data.get(ATTR_ACTION)
 
@@ -121,10 +121,10 @@ class Snoozer:
             if event_parts[3] in QualifiedTargetType and len(event_parts) > 4:
                 target_type = QualifiedTargetType[event_parts[3]]
                 target = event_parts[4]
-                snooze_for = int(event_parts[-1]) if len(event_parts) == 6 else SNOOZE_TIME
+                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 6 else SNOOZE_TIME
             elif event_parts[3] in GlobalTargetType and len(event_parts) >= 4:
                 target_type = GlobalTargetType[event_parts[3]]
-                snooze_for = int(event_parts[-1]) if len(event_parts) == 5 else SNOOZE_TIME
+                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 5 else SNOOZE_TIME
 
             if cmd is None or target_type is None or recipient_type is None:
                 _LOGGER.warning("SUPERNOTIFY Invalid mobile event name %s", event_name)
@@ -164,7 +164,7 @@ class Snoozer:
         target: str | None,
         recipient_type: RecipientType,
         recipient: str | None,
-        snooze_for: int | None,
+        snooze_for: timedelta | None,
         reason: str = "User command",
     ) -> None:
         if cmd == CommandType.SNOOZE:

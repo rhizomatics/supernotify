@@ -3,13 +3,8 @@
 No dependencies permitted
 """
 
-import time
 from dataclasses import dataclass, field
 from typing import Any
-
-
-def format_timestamp(v: float | None) -> str | None:
-    return time.strftime("%H:%M:%S", time.localtime(v)) if v else None
 
 
 def safe_get(probably_a_dict: dict[Any, Any] | None, key: Any, default: Any = None) -> Any:
@@ -18,6 +13,10 @@ def safe_get(probably_a_dict: dict[Any, Any] | None, key: Any, default: Any = No
 
 
 def safe_extend(target: list[Any], extension: list[Any] | tuple[Any] | Any) -> list[Any]:
+    if target is None:
+        target = []
+    elif not isinstance(target, list):
+        target = [target]
     if isinstance(extension, list | tuple):
         target.extend(extension)
     elif extension:
@@ -45,19 +44,11 @@ def ensure_dict(v: Any, default: Any = None) -> dict[Any, Any]:
     return {v: default}
 
 
-def update_dict_list(
-    target: list[dict[Any, Any]], to_add: list[dict[Any, Any]], to_remove: list[dict[Any, Any]]
-) -> list[dict[Any, Any]]:
-    updated = [d for d in target if d not in to_remove]
-    updated.extend(to_add)
-    return updated
-
-
 @dataclass
 class CallRecord:
     elapsed: float = field()
     domain: str | None = field(default=None)
-    service: str | None = field(default=None)
+    action: str | None = field(default=None)
     action_data: dict[str, Any] | None = field(default=None)
     target_data: dict[str, Any] | None = field(default=None)
     exception: str | None = field(default=None)
@@ -65,7 +56,7 @@ class CallRecord:
     def contents(self) -> dict[str, Any]:
         result = {
             "domain": self.domain,
-            "service": self.service,
+            "action": self.action,
             "action_data": self.action_data,
             "elapsed": self.elapsed,
         }

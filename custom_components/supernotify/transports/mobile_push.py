@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 from typing import Any
 
 import httpx
@@ -168,7 +169,7 @@ class MobilePushTransport(Transport):
                                     target=simple_target,
                                     recipient_type=RecipientType.USER,
                                     recipient=recipient[CONF_PERSON],
-                                    snooze_for=24 * 60 * 60,
+                                    snooze_for=timedelta(days=1),
                                     reason="Action Failure",
                                 )
         return hits > 0

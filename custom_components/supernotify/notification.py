@@ -536,7 +536,7 @@ class Notification(ArchivableObject):
 
         # 1st round of filtering for snooze and resolving people->direct targets
         computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-        self.debug_trace.record_target(delivery.name, "2a_snooze_people", computed_target)
+        self.debug_trace.record_target(delivery.name, "2a_post_snooze", computed_target)
         # turn person_ids into emails and phone numbers
         computed_target += self.resolve_indirect_targets(computed_target, delivery)
         self.debug_trace.record_target(delivery.name, "2b_resolve_indirect", computed_target)
@@ -576,7 +576,7 @@ class Notification(ArchivableObject):
 
             # 2nd round of filtering for snooze and resolving people->direct targets after delivery target applied
             computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-            self.debug_trace.record_target(delivery.name, "4a_snooze_people", computed_target)
+            self.debug_trace.record_target(delivery.name, "4a_post_snooze", computed_target)
             computed_target += self.resolve_indirect_targets(computed_target, delivery)
             self.debug_trace.record_target(delivery.name, "4b_resolved_indirect_targets", computed_target)
             computed_target = delivery.select_targets(computed_target)
@@ -676,7 +676,7 @@ class DebugTrace:
     def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
         self.resolved.setdefault(delivery_name, {})
-        self.resolved[delivery_name].setdefault(stage, [])
+        self.resolved[delivery_name].setdefault(stage, {})
         if isinstance(computed, Target):
             combined = computed
         else:
@@ -686,10 +686,10 @@ class DebugTrace:
         result: str | dict[str, Any] = combined.as_dict()
         if self._last_stage.get(delivery_name):
             last_target = self.resolved[delivery_name][self._last_stage[delivery_name]]
-            if last_target is not None and last_target == combined:
+            if last_target is not None and last_target == result:
                 result = "NO_CHANGE"
 
-        self.resolved[delivery_name][stage].append(result)
+        self.resolved[delivery_name][stage]=result
         self._last_stage[delivery_name] = stage
 
     def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:

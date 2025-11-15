@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from homeassistant.core import Event
 
 from custom_components.supernotify import (
@@ -29,7 +31,7 @@ def test_filter_mobile_device_action(mock_context: Context, mock_people_registry
         target="mobile_app_nophone",
         recipient_type=RecipientType.USER,
         recipient="person.bidey_in",
-        snooze_for=24 * 60 * 60,
+        snooze_for=timedelta(days=1),
         reason="Action Failure",
     )
     delivery = Delivery("email", {}, EmailTransport(mock_context))
