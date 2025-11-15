@@ -1,6 +1,6 @@
 # Public releases
 
-## 1.3.0
+## 1.3.1
 ### Features
 - *Notify Entity* transport now only selects unique targets, so if a Notify Entity has been delivered
 in the same notification call, for example by *Alexa Devices*, it won't be called again for a duplicate
