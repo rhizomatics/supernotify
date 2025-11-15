@@ -2,7 +2,7 @@ from custom_components.supernotify.model import Target
 
 
 def test_target_in_dict_mode() -> None:
-    uut = Target({
+    uut: Target = Target({
         "email": ["joe.mctoe@kmail.com"],
         "entity_id": ["media_player.kitchen", "notify.garden"],
         "phone": "+43985951039393",
@@ -118,7 +118,7 @@ def test_has_resolved() -> None:
 
 
 def test_direct() -> None:
-    uut = Target(
+    uut: Target = Target(
         {"label_id": "tag001", "person_id": ["person.cuth_bert"], "telegram": "@bob", "entity_id": ["switch.alarm_bell"]},
         target_data={"foo": 123, "bar": True},
     )
@@ -149,7 +149,7 @@ def test_addition() -> None:
 
 
 def test_minus() -> None:
-    target1 = Target({
+    target1: Target = Target({
         "label_id": "tag001",
         "person_id": ["person.cuth_bert"],
         "telegram": "@bob",
@@ -157,7 +157,7 @@ def test_minus() -> None:
         "email": ["me@mctest.org"],
         "entity_id": ["switch.alarm_bell", "siren.downstairs"],
     })
-    target2 = target1 - (
+    target2: Target = target1 - (
         Target({
             "label_id": "tag001",
             "person_id": ["person.cuth_bert"],
@@ -169,3 +169,19 @@ def test_minus() -> None:
     )
 
     assert target2 == Target({"email": ["me@mctest.org"], "entity_id": ["switch.alarm_bell"]})
+
+
+def test_split_by_target_data():
+    uut = Target(
+        ["me@mctest.org", "switch.lounge", "person.joe_mctest", "+4350404183736"], target_data={"foo": 123, "bar": True}
+    )
+    uut += Target(
+        ["switch.kitchen", "person.bey_eksin", "switch.lounge"], target_data={"fi": 123, "fum": True}, target_specific_data=True
+    )
+    uut += Target(["notify.foo", "notify.api"], target_data={"fi": 912, "widget": False}, target_specific_data=True)
+    splits = uut.split_by_target_data()
+    assert splits == [
+        Target(["switch.kitchen", "person.bey_eksin", "switch.lounge"], target_data={"fi": 123, "fum": True}),
+        Target(["notify.foo", "notify.api"], target_data={"fi": 912, "widget": False}),
+        Target(["me@mctest.org", "person.joe_mctest", "+4350404183736"], target_data={"foo": 123, "bar": True}),
+    ]

@@ -51,10 +51,11 @@ from custom_components.supernotify import (
     SCENARIO_NULL,
     SELECTION_BY_SCENARIO,
     STRICT_ACTION_DATA_SCHEMA,
-    TARGET_DEFINITION_DEFAULT,
-    TARGET_DEFINITION_FIXED,
-    TARGET_DEFINITION_MERGE,
-    TARGET_DEFINITION_MERGE_DEFAULT,
+    TARGET_USE_FIXED,
+    TARGET_USE_MERGE_ALWAYS,
+    TARGET_USE_MERGE_ON_DELIVERY_TARGETS,
+    TARGET_USE_ON_NO_ACTION_TARGETS,
+    TARGET_USE_ON_NO_DELIVERY_TARGETS,
     SelectionRank,
 )
 from custom_components.supernotify.archive import ArchivableObject
@@ -511,68 +512,97 @@ class Notification(ArchivableObject):
         return []
 
     def generate_recipients(self, delivery: Delivery) -> list[Target]:
-        targets: list[Target] = []
-        recipients: Target = Target()
-        custom_person_ids = []
+        primary_target: Target
 
-        if not self.target and delivery.target_definition != TARGET_DEFINITION_FIXED:
-            # If target not specified on service call or delivery, then default to std list of recipients
-            people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
-            self.record_resolve(
-                delivery.name,
-                "2d_recipients_by_occupancy",
-                Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]}),
-            )
-            people = [p for p in people if self.recipients_override is None or p.get(CONF_PERSON) in self.recipients_override]
-            self.record_resolve(
-                delivery.name,
-                "2d_recipient_names_by_occupancy_filtered",
-                Target({ATTR_PERSON_ID: list(filter(None, [p.get(CONF_PERSON) for p in people]))}),
-            )
-            recipients = Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
-            _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery.name, recipients)
+        if delivery.target_usage == TARGET_USE_FIXED:
+            if delivery.target:
+                primary_target = delivery.target.safe_copy()
+            else:
+                primary_target = Target()
+
+        elif not self.target:
+            # Unless there are explicit targets, include everyone on the people registry
+            primary_target = self.default_person_ids(delivery)
         else:
-            _LOGGER.info("SUPERNOTIFY No usage target meeting criteria for %s", delivery.name)
+            primary_target = self.target.safe_copy()
 
-        if delivery.target_definition == TARGET_DEFINITION_DEFAULT:
-            # first priority is target recipients on explicit list from action call
-            if self.target:
-                recipients += self.target
-            elif delivery.target:
-                recipients += delivery.target
-        elif delivery.target_definition == TARGET_DEFINITION_MERGE:
+        # 1st round of filtering for snooze and resolving people->direct targets
+        primary_target = self.context.snoozer.filter_recipients(primary_target, self.priority, delivery)
+        # turn person_ids into emails and phone numbers
+        primary_target += self.resolve_indirect_targets(primary_target, delivery)
+        # filter out target not required for this delivery
+        primary_target = delivery.select_targets(primary_target)
+        primary_count = len(primary_target)
+
+        if delivery.target_usage == TARGET_USE_ON_NO_DELIVERY_TARGETS:
+            if not primary_target.has_targets() and delivery.target:
+                primary_target += delivery.target
+                self.record_resolve(delivery.name, "2a_delivery_default_no_delivery_targets", delivery.target)
+        elif delivery.target_usage == TARGET_USE_ON_NO_ACTION_TARGETS:
+            if not self.target and delivery.target:
+                primary_target += delivery.target
+                self.record_resolve(delivery.name, "2a_delivery_default_no_action_targets", delivery.target)
+        elif delivery.target_usage == TARGET_USE_MERGE_ON_DELIVERY_TARGETS:
             # merge in the delivery defaults if there's a target defined in action call
-            if self.target and delivery.target:
-                recipients += self.target
-                recipients += delivery.target
-        elif delivery.target_definition == TARGET_DEFINITION_MERGE_DEFAULT:
+            if primary_target.has_targets() and delivery.target:
+                primary_target += delivery.target
+                self.record_resolve(delivery.name, "2a_delivery_merge_on_delivery_targets", delivery.target)
+        elif delivery.target_usage == TARGET_USE_MERGE_ALWAYS:
             # merge in the delivery defaults even if there's not a target defined in action call
-            if self.target:
-                recipients += self.target
             if delivery.target:
-                recipients += delivery.target
-        elif delivery.target_definition == TARGET_DEFINITION_FIXED:
-            if delivery.target:
-                recipients += delivery.target
+                primary_target += delivery.target
+                self.record_resolve(delivery.name, "2a_delivery_merge_always_targets", delivery.target)
+        elif delivery.target_usage == TARGET_USE_FIXED:
+            _LOGGER.debug("SUPERNOTIFY Fixed target on delivery %s", delivery.name)
         else:
-            _LOGGER.debug("SUPERNOTIFY Unexpected code branch for delivery %s", delivery.name)
-            # second priority is explicit target on delivery config
+            _LOGGER.debug("SUPERNOTIFY No useful target definition for delivery %s", delivery.name)
 
-        # TODO: reinstate snoozing
-        recipients = self.context.snoozer.filter_recipients(
-            recipients,
-            self.priority,
+        if len(primary_target) > primary_count:
+            _LOGGER.debug(
+                "SUPERNOTIFY Delivery config added %s targets for %s", len(primary_target) - primary_count, delivery.name
+            )
+
+            # 2nd round of filtering for snooze and resolving people->direct targets after delivery target applied
+            primary_target = self.context.snoozer.filter_recipients(primary_target, self.priority, delivery)
+            primary_target += self.resolve_indirect_targets(primary_target, delivery)
+            primary_target = delivery.select_targets(primary_target)
+
+        split_targets: list[Target] = primary_target.split_by_target_data()
+        self.record_resolve(delivery.name, "4_delivery_split_targets", split_targets)
+        _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, split_targets)
+        direct_targets: list[Target] = [t.direct() for t in split_targets]
+        if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
+            direct_targets = [t - self.selected for t in direct_targets]
+        for direct_target in direct_targets:
+            self.selected += direct_target
+        return direct_targets
+
+    def default_person_ids(self, delivery: Delivery) -> Target:
+        # If target not specified on service call or delivery, then default to std list of recipients
+        people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
+        self.record_resolve(
             delivery.name,
-            delivery.transport,
-            self.selected_delivery_names,
-            self.context.delivery_registry.deliveries,
+            "2d_recipients_by_occupancy",
+            Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]}),
         )
+        people = [p for p in people if self.recipients_override is None or p.get(CONF_PERSON) in self.recipients_override]
+        self.record_resolve(
+            delivery.name,
+            "2d_recipient_names_by_occupancy_filtered",
+            Target({ATTR_PERSON_ID: list(filter(None, [p.get(CONF_PERSON) for p in people]))}),
+        )
+        recipients = Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
+        _LOGGER.debug("SUPERNOTIFY %s Using recipients: %s", delivery.name, recipients)
+        return recipients
 
+    def resolve_indirect_targets(self, target: Target, delivery: Delivery) -> Target:
         # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone
-        for person_id in recipients.person_ids:
+        resolved: Target = Target()
+
+        for person_id in target.person_ids:
             person = self.people_registry.people.get(person_id)
             if person and person.get(CONF_ENABLED, True):
-                recipient_target = Target()
+                recipient_target = Target({ATTR_PERSON_ID: [person_id]})
                 personal_target: Target | None = person.get(CONF_TARGET)
                 if personal_target is not None and personal_target.has_resolved_target():
                     self.record_resolve(delivery.name, "2a_person_configured_delivery_target", personal_target)
@@ -581,32 +611,18 @@ class Notification(ArchivableObject):
                 if personal_delivery:
                     # TODO: replace all this hackery with people/people_registry improvements
                     if personal_delivery.get(CONF_ENABLED, True) and personal_delivery.get(CONF_TARGET):
-                        personal_delivery_target: Target | None = Target(
-                            personal_delivery.get(CONF_TARGET), target_data=personal_delivery.get(CONF_DATA)
+                        personal_delivery_target: Target = Target(
+                            personal_delivery.get(CONF_TARGET),
+                            target_data=personal_delivery.get(CONF_DATA),
+                            target_specific_data=True,
                         )
+                        personal_delivery_target.extend(ATTR_PERSON_ID, [person_id])
                         if personal_delivery_target is not None and personal_delivery_target.has_resolved_target():
                             self.record_resolve(delivery.name, "2b_person_configured_delivery_target", personal_delivery_target)
                             recipient_target += personal_delivery_target
 
-                if recipient_target.target_data:
-                    recipient_target.extend(ATTR_PERSON_ID, person_id)
-                    custom_person_ids.append(person_id)
-                    targets.append(recipient_target)
-                else:
-                    recipients += recipient_target
-        recipients.remove("person_id", custom_person_ids)
-
-        targets.append(recipients)
-        # filter the final list for what the transport can take
-        filtered_targets = [delivery.select_targets(target) for target in targets]
-        self.record_resolve(delivery.name, "3_delivery_filtered_targets", filtered_targets)
-        _LOGGER.debug("SUPERNOTIFY %s Using delivery config targets: %s", __name__, filtered_targets)
-        direct_targets = [t.direct() for t in filtered_targets]
-        if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
-            direct_targets = [t - self.selected for t in direct_targets]
-        for direct_target in direct_targets:
-            self.selected += direct_target
-        return direct_targets
+                resolved += recipient_target
+        return resolved
 
     def generate_envelopes(self, delivery: Delivery, targets: list[Target]) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities

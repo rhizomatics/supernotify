@@ -202,11 +202,13 @@ TRANSPORT_VALUES = [
     TRANSPORT_NOTIFY_ENTITY,
 ]
 
-CONF_TARGET_DEFINITION = "target_definition"
-TARGET_DEFINITION_DEFAULT = "default"
-TARGET_DEFINITION_MERGE = "merge"
-TARGET_DEFINITION_MERGE_DEFAULT = "merge_default"
-TARGET_DEFINITION_FIXED = "fixed"
+CONF_TARGET_USAGE = "target_usage"
+TARGET_USE_ON_NO_DELIVERY_TARGETS = "no_delivery"
+TARGET_USE_ON_NO_ACTION_TARGETS = "no_action"
+TARGET_USE_FIXED = "fixed"
+TARGET_USE_MERGE_ALWAYS = "merge_always"
+TARGET_USE_MERGE_ON_DELIVERY_TARGETS = "merge_delivery"
+
 OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
@@ -258,20 +260,22 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
+    # defaults set in model.DeliveryConfig
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
     vol.Optional(CONF_OPTIONS): dict,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-    vol.Optional(CONF_TARGET_REQUIRED, default=True): cv.boolean,
-    vol.Optional(CONF_TARGET_DEFINITION, default=TARGET_DEFINITION_DEFAULT): vol.In([
-        TARGET_DEFINITION_DEFAULT,
-        TARGET_DEFINITION_MERGE,
-        TARGET_DEFINITION_MERGE_DEFAULT,
-        TARGET_DEFINITION_FIXED,
+    vol.Optional(CONF_TARGET_REQUIRED): cv.boolean,
+    vol.Optional(CONF_TARGET_USAGE): vol.In([
+        TARGET_USE_ON_NO_DELIVERY_TARGETS,
+        TARGET_USE_ON_NO_ACTION_TARGETS,
+        TARGET_USE_MERGE_ON_DELIVERY_TARGETS,
+        TARGET_USE_MERGE_ALWAYS,
+        TARGET_USE_FIXED,
     ]),
-    vol.Optional(CONF_SELECTION, default=[SELECTION_DEFAULT]): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
-    vol.Optional(CONF_PRIORITY, default=PRIORITY_VALUES): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
-    vol.Optional(CONF_SELECTION_RANK, default=SelectionRank.ANY): vol.In([
+    vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
+    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
+    vol.Optional(CONF_SELECTION_RANK): vol.In([
         SelectionRank.ANY,
         SelectionRank.FIRST,
         SelectionRank.LAST,

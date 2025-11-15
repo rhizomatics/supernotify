@@ -10,10 +10,11 @@ or for custom notifications using *Generic* transport
 - *Target* definition for *Delivery* or *Transport* can now be more flexible
   - Allows a structured dict, a single value, or list of strings.
   - Structure only required where category can't be inferred, so entity_ids, device_ids, email and phone numbers are fine
-- *Deliver* has a new `target_definition` key, taking values of `fixed`,`default`, `merge` or `merge_default`
-  - `default` only uses the Delivery target if there's no target on the notification action call
-  - `merge` combines the targets in the Delivery with any on the action call, only where delivery already has a target
-  - `merge_default` combines the targets in the Delivery with any on the action call, or if there's
+- *Deliver* has a new `target_usage` key, taking values of:
+  - `no_action` only uses the Delivery target if there's no target on the notification action call
+  - `no_delivery` only uses the Delivery target if there's no target applicable to this delivery
+  - `merge_delivery` combines the targets in the Delivery with any on the action call, only where delivery already has a target
+  - `merge_always` combines the targets in the Delivery with any on the action call, or if there's
   no target on the notification, it defaults to the Delivery target
   - `fixed` only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
 - Entity states for Delivery and Transport now directly reflect configuration

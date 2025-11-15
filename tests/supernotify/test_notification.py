@@ -19,6 +19,7 @@ from custom_components.supernotify import (
     CONF_OPTIONS,
     CONF_PERSON,
     CONF_SELECTION_RANK,
+    CONF_TARGET_USAGE,
     CONF_TITLE,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
@@ -151,6 +152,7 @@ async def test_generate_recipients_from_recipients() -> None:
             "chatty": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: {"entity_id": ["custom.light_1"], "person_id": ["person.new_home_owner"]},
+                CONF_TARGET_USAGE: "merge_delivery",
                 CONF_TRANSPORT: "generic",
                 CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "_UNKNOWN_"]},
             }
@@ -176,6 +178,7 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
             "chatty": {
                 CONF_ACTION: "notify.slackity",
                 CONF_TARGET: ["chan1", "chan2"],
+                CONF_TARGET_USAGE: "merge_always",
                 CONF_TRANSPORT: "generic",
                 CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["entity_id", "_UNKNOWN_"]},
             },

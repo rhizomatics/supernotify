@@ -87,12 +87,12 @@ class DebugTrace:
 
     def contents(
         self,
-    ) -> tuple[
-        str | None,
-        str | None,
-        dict[str, Any] | None,
-        dict[str, list[str]] | list[str] | str | None,
-        dict[str, dict[str, Any]],
-        dict[str, list[str]],
-    ]:
-        return (self.message, self.title, self.data, self.target, self.resolved, self.delivery_selection)
+    ) -> dict[str, Any]:
+        return {
+            "message": self.message,
+            "title": self.title,
+            "data": self.data,
+            "target": self.target,
+            "resolved": self.resolved,
+            "delivery_selection": self.delivery_selection,
+        }

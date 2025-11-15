@@ -14,7 +14,7 @@ async def test_alexa_whispering():
       action: notify.smtp
     alexa_inform:
       transport: alexa_devices
-      target_definition: merge_default
+      target_usage: merge_always
       target:
         entity_id:
           notify.kitchen_alexa_speak

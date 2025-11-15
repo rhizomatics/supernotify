@@ -97,7 +97,15 @@ class Delivery(DeliveryConfig):
                 return [t for t in targets if any(re.fullmatch(r, t) for r in self.options[OPTION_TARGET_INCLUDE_RE])]
             return targets
 
-        return Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
+        filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
+        # TODO: in model class
+        if target.target_specific_data:
+            filtered_target.target_specific_data = {
+                (c, t): data
+                for (c, t), data in target.target_specific_data.items()
+                if c in target.targets and t in target.targets[c]
+            }
+        return filtered_target
 
     def option(self, option_name: str) -> str | bool:
         """Get an option value from delivery config or transport default options"""

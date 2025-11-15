@@ -200,14 +200,7 @@ class Snoozer:
     def export(self) -> list[dict[str, Any]]:
         return [s.export() for s in self.snoozes.values()]
 
-    def current_snoozes(
-        self,
-        priority: str = PRIORITY_MEDIUM,
-        delivery_names: list[str] | None = None,
-        delivery_definitions: dict[str, Delivery] | None = None,
-    ) -> list[Snooze]:
-        delivery_names = delivery_names or []
-        delivery_definitions = delivery_definitions or {}
+    def current_snoozes(self, priority: str, delivery: Delivery) -> list[Snooze]:
         inscope_snoozes: list[Snooze] = []
 
         for snooze in self.snoozes.values():
@@ -219,7 +212,7 @@ class Snoozer:
                         if priority != PRIORITY_CRITICAL:
                             inscope_snoozes.append(snooze)
                     case QualifiedTargetType.DELIVERY:
-                        if snooze.target in delivery_names:
+                        if snooze.target == delivery.name:
                             inscope_snoozes.append(snooze)
                     case QualifiedTargetType.PRIORITY:
                         if snooze.target == priority:
@@ -227,7 +220,7 @@ class Snoozer:
                     case QualifiedTargetType.MOBILE:
                         inscope_snoozes.append(snooze)
                     case QualifiedTargetType.TRANSPORT:
-                        if snooze.target in [delivery_definitions[d].transport.name for d in delivery_names]:
+                        if snooze.target == delivery.transport.name:
                             inscope_snoozes.append(snooze)
                     case QualifiedTargetType.CAMERA:
                         inscope_snoozes.append(snooze)
@@ -248,22 +241,14 @@ class Snoozer:
 
         return False
 
-    def filter_recipients(
-        self,
-        recipients: Target,
-        priority: str,
-        delivery_name: str,
-        transport: "Transport",  # type: ignore  # noqa: F821
-        all_delivery_names: list[str],
-        delivery_definitions: dict[str, Delivery],
-    ) -> Target:
-        inscope_snoozes = self.current_snoozes(priority, all_delivery_names, delivery_definitions)
+    def filter_recipients(self, recipients: Target, priority: str, delivery: Delivery) -> Target:
+        inscope_snoozes = self.current_snoozes(priority, delivery)
         for snooze in inscope_snoozes:
             if snooze.recipient_type == RecipientType.USER:
                 # assume the everyone checks are made before notification gets this far
                 if (
-                    (snooze.target_type == QualifiedTargetType.DELIVERY and snooze.target == delivery_name)
-                    or (snooze.target_type == QualifiedTargetType.TRANSPORT and snooze.target == transport.name)
+                    (snooze.target_type == QualifiedTargetType.DELIVERY and snooze.target == delivery.name)
+                    or (snooze.target_type == QualifiedTargetType.TRANSPORT and snooze.target == delivery.transport.name)
                     or (
                         snooze.target_type == QualifiedTargetType.PRIORITY
                         and (snooze.target == priority or (isinstance(snooze.target, list) and priority in snooze.target))

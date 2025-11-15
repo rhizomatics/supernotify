@@ -7,7 +7,7 @@ anything else, including explicit targets set in a notification action call.
 
 ## Implementation
 
-Define a target on the `delivey` configuration, and set the `target_definition` to `fixed`,
+Define a target on the `delivey` configuration, and set the `target_usage` to `fixed`,
 so these addresses are fixed and not overridden.
 
 ## Example Configuration
@@ -17,7 +17,7 @@ so these addresses are fixed and not overridden.
         transport: generic
         action: script.alert_call
         delivery_defaults:
-            target_definition: fixed
+            target_usage: fixed
             target:
                 - switch.buzzer_1
                 - switch.buzzer_3
@@ -27,4 +27,5 @@ so these addresses are fixed and not overridden.
 ## Variations
 
 ### Other transports
+
 This will work identically for any transport, there's nothing generic specific in how it works

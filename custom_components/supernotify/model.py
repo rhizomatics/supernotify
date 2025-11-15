@@ -1,6 +1,7 @@
 import copy
 import logging
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, ClassVar
@@ -35,13 +36,13 @@ from . import (
     CONF_PRIORITY,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
-    CONF_TARGET_DEFINITION,
     CONF_TARGET_REQUIRED,
+    CONF_TARGET_USAGE,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     RE_DEVICE_ID,
     SELECTION_DEFAULT,
-    TARGET_DEFINITION_DEFAULT,
+    TARGET_USE_ON_NO_ACTION_TARGETS,
     SelectionRank,
 )
 from .common import ensure_list
@@ -67,9 +68,19 @@ class Target:
     UNKNOWN_CUSTOM_CATEGORY = "_UNKNOWN_"
 
     def __init__(
-        self, target: str | list[str] | dict[str, str | list[str]] | None = None, target_data: dict[str, Any] | None = None
+        self,
+        target: str
+        | list[str]
+        | dict[str, str]
+        | dict[str, Sequence[str]]
+        | dict[str, list[str]]
+        | dict[str, str | list[str]]
+        | None = None,
+        target_data: dict[str, Any] | None = None,
+        target_specific_data: bool = False,
     ) -> None:
-        self.target_data: dict[str, Any] | None = target_data
+        self.target_data: dict[str, Any] | None = None
+        self.target_specific_data: dict[tuple[str, str], dict[str, Any]] | None = None
         self.targets: dict[str, list[str]] = {}
 
         matched: list[str]
@@ -125,6 +136,14 @@ class Target:
                     self.targets[category] = targets
         else:
             _LOGGER.warning("SUPERNOTIFY Target created with no valid targets: %s", target)
+
+        if target_data and target_specific_data:
+            self.target_specific_data = {}
+            for category, targets in self.targets.items():
+                for t in targets:
+                    self.target_specific_data[category, t] = target_data
+        if target_data and not target_specific_data:
+            self.target_data = target_data
 
     # Targets by category
 
@@ -213,10 +232,13 @@ class Target:
         return self.DIRECT_CATEGORIES + [cat for cat in self.targets if cat not in self.CATEGORIES]
 
     def direct(self) -> "Target":
-        return Target(
+        t = Target(
             {cat: targets for cat, targets in self.targets.items() if cat in self.direct_categories},
             target_data=self.target_data,
         )
+        if self.target_specific_data:
+            t.target_specific_data = {k: v for k, v in self.target_specific_data.items() if k[0] in self.direct_categories}
+        return t
 
     def extend(self, category: str, targets: list[str] | str) -> None:
         targets = ensure_list(targets)
@@ -229,7 +251,43 @@ class Target:
             self.targets[category] = [t for t in self.targets[category] if t not in targets]
 
     def safe_copy(self) -> "Target":
-        return Target(dict(self.targets), target_data=self.target_data)
+        t = Target(dict(self.targets), target_data=dict(self.target_data) if self.target_data else None)
+        t.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
+        return t
+
+    def split_by_target_data(self) -> "list[Target]":
+        if not self.target_specific_data:
+            result = self.safe_copy()
+            result.target_specific_data = None
+            return [result]
+        results: list[Target] = []
+        default: Target = self.safe_copy()
+        default.target_specific_data = None
+        last_found: dict[str, Any] | None = None
+        collected: dict[str, list[str]] = {}
+        for (category, target), data in self.target_specific_data.items():
+            if last_found is None:
+                last_found = data
+                collected = {category: [target]}
+            elif data != last_found and last_found is not None:
+                new_target: Target = Target(collected, target_data=last_found)
+                results.append(new_target)
+                default -= new_target
+                last_found = data
+                collected = {category: [target]}
+            else:
+                collected.setdefault(category, [])
+                collected[category].append(target)
+        new_target = Target(collected, target_data=last_found)
+        results.append(new_target)
+        default -= new_target
+        if default.has_targets():
+            results.append(default)
+        return results
+
+    def __len__(self) -> int:
+        """How many targets, whether direct or indirect"""
+        return sum(len(targets) for targets in self.targets.values())
 
     def __add__(self, other: "Target") -> "Target":
         """Create a new target by adding another to this one"""
@@ -245,12 +303,22 @@ class Target:
                 new.target_data = dict(other.target_data)
             else:
                 new.target_data.update(other.target_data)
+        new.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
+        if other.target_specific_data:
+            if new.target_specific_data is None:
+                new.target_specific_data = dict(other.target_specific_data)
+            else:
+                new.target_specific_data.update(other.target_specific_data)
         return new
 
     def __sub__(self, other: "Target") -> "Target":
         """Create a new target by removing another from this one, ignoring target_data"""
         new = Target()
         new.target_data = self.target_data
+        if self.target_specific_data:
+            new.target_specific_data = {
+                k: v for k, v in self.target_specific_data.items() if k[1] not in other.targets.get(k[0], ())
+            }
         categories = set(list(self.targets.keys()) + list(other.targets.keys()))
         for category in categories:
             new.targets[category] = []
@@ -267,6 +335,8 @@ class Target:
         if not isinstance(other, Target):
             return NotImplemented
         if self.target_data != other.target_data:
+            return False
+        if self.target_specific_data != other.target_specific_data:
             return False
         return all(self.targets.get(category, []) == other.targets.get(category, []) for category in self.CATEGORIES)
 
@@ -299,7 +369,7 @@ class DeliveryConfig:
             # use transport defaults where no delivery level override
             self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
             self.target_required: bool = conf.get(CONF_TARGET_REQUIRED, delivery_defaults.target_required)
-            self.target_definition: str = conf.get(CONF_TARGET_DEFINITION, delivery_defaults.target_definition)
+            self.target_usage: str = conf.get(CONF_TARGET_USAGE) or delivery_defaults.target_usage
             self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
 
             self.data: ConfigType = dict(delivery_defaults.data) or {}
@@ -316,7 +386,7 @@ class DeliveryConfig:
             # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
             self.target_required = conf.get(CONF_TARGET_REQUIRED, True)
-            self.target_definition = conf.get(CONF_TARGET_DEFINITION, TARGET_DEFINITION_DEFAULT)
+            self.target_usage = conf.get(CONF_TARGET_USAGE, TARGET_USE_ON_NO_ACTION_TARGETS)
             self.action = conf.get(CONF_ACTION)
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})

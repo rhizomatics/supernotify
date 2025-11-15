@@ -260,9 +260,9 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
     )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
-
+    delivery = Delivery("", {}, uut)
     e = Envelope(
-        Delivery("", {}, uut),
+        delivery,
         Notification(ctx, message="hello there", title="testing"),
         target=Target({"mobile_app_id": ["mobile_app_nophone"]}),
     )
@@ -274,4 +274,4 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
     await uut.deliver(e)
     expected_snooze = Snooze(QualifiedTargetType.MOBILE, RecipientType.USER, "mobile_app_nophone", "person.bidey_in")
     assert ctx.snoozer.snoozes == {"MOBILE_mobile_app_nophone_person.bidey_in": expected_snooze}
-    assert ctx.snoozer.current_snoozes() == [expected_snooze]
+    assert ctx.snoozer.current_snoozes(PRIORITY_MEDIUM, delivery) == [expected_snooze]

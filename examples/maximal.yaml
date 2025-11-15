@@ -30,7 +30,7 @@ notify:
           - high
           - medium
           - low
-        target_definition: merge
+        target_usage: merge_delivery
         target:
           - mailarchive@mymail.com
 
@@ -67,7 +67,7 @@ notify:
       alexa_show:
         transport: media
         action: media_player.play_media
-        target_definition: fixed
+        target_usage: fixed
         target:
           - media_player.kitchen_2
       play_chimes:
