@@ -1,4 +1,3 @@
-import datetime as dt
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
@@ -8,7 +7,7 @@ import mkdocs_gen_files
 from custom_components.supernotify.notify import TRANSPORTS
 
 
-def esc(v: Any):
+def esc(v: Any) -> str:
     v = str(v) if not isinstance(v, str) else v
     return v.replace('|', '&#124;')
 
@@ -32,10 +31,9 @@ def transport_doc() -> None:
             transport = transport_class(Mock(template_path=Path()))
             options = transport.default_config.delivery_defaults.options
             df.write(
-                f"|{transport.name}|{'|'.join(esc(options.get(k, "-")) for k in option_keys)}|\n")
+                f"|{transport.name}|{'|'.join(esc(options.get(k, '-')) for k in option_keys)}|\n")
 
         df.write("\n")
-        df.write(f"Report Generated {dt.datetime.now().ctime()}")
 
 
 transport_doc()

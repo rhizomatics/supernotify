@@ -519,7 +519,7 @@ class Notification(ArchivableObject):
 
         if delivery.target_required == TargetRequired.NEVER:
             # don't waste time computing targets for deliveries that don't need them
-            return [Target(None,target_data=delivery.data)]
+            return [Target(None, target_data=delivery.data)]
 
         computed_target: Target
 
@@ -528,7 +528,7 @@ class Notification(ArchivableObject):
                 computed_target = delivery.target.safe_copy()
                 self.debug_trace.record_target(delivery.name, "1a_delivery_default_fixed", computed_target)
             else:
-                computed_target = Target(None,target_data=delivery.data)
+                computed_target = Target(None, target_data=delivery.data)
                 self.debug_trace.record_target(delivery.name, "1b_delivery_default_fixed_empty", computed_target)
 
         elif not self.target:
