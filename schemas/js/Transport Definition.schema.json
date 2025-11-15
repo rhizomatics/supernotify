@@ -1,0 +1,160 @@
+{
+  "type": "object",
+  "properties": {
+    "device_domain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "device_discovery": {
+      "type": "boolean",
+      "default": false
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "delivery_defaults": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "options": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "entity_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "device_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "area_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "floor_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "label_id": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": []
+            }
+          ]
+        },
+        "target_required": {
+          "anyOf": [
+            {},
+            {
+              "type": "string",
+              "enum": [
+                "always",
+                "never",
+                "optional"
+              ]
+            }
+          ]
+        },
+        "target_usage": {
+          "type": "string",
+          "enum": [
+            "no_delivery",
+            "no_action",
+            "merge_delivery",
+            "merge_always",
+            "fixed"
+          ]
+        },
+        "selection": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "fallback_on_error",
+              "scenario",
+              "default",
+              "fallback"
+            ]
+          }
+        },
+        "priority": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          }
+        },
+        "selection_rank": {
+          "type": "string",
+          "enum": [
+            "ANY",
+            "FIRST",
+            "LAST"
+          ]
+        }
+      },
+      "required": []
+    }
+  },
+  "required": [],
+  "title": "Transport Definition",
+  "$id": "https://supernotify.rhizomatics.github.io/schemas/Transport Definition.json",
+  "description": "Voluptuous validation schema for Transport Definition",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
