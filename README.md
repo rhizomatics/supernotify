@@ -156,7 +156,7 @@ seems to allow easy multi-channel notifications, in practice each notify transpo
 - The transport adapter is what allows a single notification to be sent to many platforms, even
 when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
 - Transports can optionally be defined in the Supernotify config with defaults
-- See [Transports](transports.md) for more detail
+- See [Transports](transports/index.md) for more detail
 
 ### Delivery
 
@@ -166,7 +166,7 @@ get used to send notifications, with the exception of *Notify Entity* transport 
 always on unless switched off.
 - Deliveries allow lots of fine tuning and defaults to be made, and you can also have multiple
 deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
-- See[Recipes](recipes/index.md) for more ideas on how to use them
+- See [Deliveries](deliveries.md) and [Recipes](recipes/index.md) for more detail
 
 ### Scenario
 - An easy way to package up common chunks of config, optionally combined with conditional logic
@@ -175,6 +175,7 @@ or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications,
 and are the key to making notification calls in your automations radically simpler
 - See [Scenarios](scenarios.md) and [Recipes](recipes/index.md) for more detail
+
 
 ### Target
 - The target of a notification.
@@ -195,14 +196,21 @@ of target it wants, for example the SMS one picking phone number and the SMTP on
 !!! info
     For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core ones.
 
+## Core Principles
+
+1. All a notification needs is a message, everything else can be defaulted, including all the targets
+2. If you define something in an action call, it takes precedence over the defaults
+   - This can be tuned by things like `target_usage`
+   - The people registry is only used to generate targets if no targets given
+3. Action > Scenario > Delivery > Transport for configuration and defaults
+
 
 ## Flexible Configuration
 
 Delivery configuration can be done in lots of different ways to suit different configurations
 and to keep those configuration as minimal as possible.
 
-Priority order of application
-
+### Priority order of configuration application
 
 | Where                                | When            | Notes                                            |
 |--------------------------------------|-----------------|--------------------------------------------------|
@@ -221,16 +229,6 @@ Priority order of application
 5. Transport defaults
 6. Target notification action defaults, e.g. mail recipients ( this isn't applied inside Supernotify )
 
-
-## Scenarios
-
-Scenarios are the key to efficient and concise configuration of finely tuned notifications
-to suit your house and family.
-
-Its easy to add a scenario or two to a minimal configuration, or go all in and have everything
-completely scenario controlled, so that notifications which don't match a scenario get dropped.
-
-See the [Scenarios](scenarios.md) page for more detail.
 
 ## Condition Variables
 

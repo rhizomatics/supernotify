@@ -15,6 +15,8 @@ For more on the conditions, see the [ Home Assistant Conditions documentation](h
 notification by the standard Home Assistant module. Supernotify also adds more context variables to
 use in conditions, see the full list on the [Condition Variables](index.md#condition-variables) section.
 
+!!! tip
+  There's a [Scenario Schema](developer/schemas/Scenario%20Definition/) defined.
 
 ### Example Scenarios
 

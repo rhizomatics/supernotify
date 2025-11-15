@@ -1,5 +1,3 @@
-
-
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.generic import GenericTransport
 
@@ -17,7 +15,7 @@ async def target_usage_fixture(usage: str) -> TestingContext:
                 "target_usage": usage,
             }
         },
-        transport_types=[GenericTransport]
+        transport_types=[GenericTransport],
     )
     await context.test_initialize()
     return context
@@ -88,6 +86,7 @@ async def test_target_use_on_no_action_targets():
     await uut.initialize()
     await uut.deliver()
     assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
+
 
 async def test_target_use_undefined():
     context = await target_usage_fixture(None)

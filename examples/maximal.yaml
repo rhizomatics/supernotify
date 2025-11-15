@@ -64,6 +64,16 @@ notify:
             floor_id: ground
             label_id: 433sounder
             area_id: backyard
+         condition:
+              alias: "Time 15~02"
+              condition: time
+              # At least one of the following is required.
+              after: "15:00:00"
+              before: "02:00:00"
+              weekday:
+                - mon
+                - wed
+                - fri
       alexa_show:
         transport: media
         action: media_player.play_media

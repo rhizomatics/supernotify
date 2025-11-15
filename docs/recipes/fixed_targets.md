@@ -12,7 +12,7 @@ so these addresses are fixed and not overridden.
 
 ## Example Configuration
 ```yaml
-    deliveries:
+    delivery:
       my_vanilla_alert:
         transport: generic
         action: script.alert_call

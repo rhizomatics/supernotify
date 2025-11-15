@@ -14,7 +14,7 @@ This means that scenarios, or automations sending notifications, can refer to bo
 ## Example Configuration
 
 ```yaml
-deliveries:
+delivery:
  alexa_backup_announce:
       transport: alexa_media_player
       occupancy: any_in

@@ -34,7 +34,7 @@ The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.co
 only be added if there's already an e-mail being sent with other targets.
 
 ```yaml
-    deliveries:
+    delivery:
       plain_email:
         action: notify.smtp
         delivery_defaults:
@@ -49,7 +49,7 @@ Alternatively, set up a dedicated delivery like this, which will always send off
 and nobody else.
 
 ```yaml
-    deliveries:
+    delivery:
       email_archive:
         action: notify.smtp
         delivery_defaults:

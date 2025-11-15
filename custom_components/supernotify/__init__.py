@@ -262,7 +262,7 @@ LINK_SCHEMA = vol.Schema({
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
     # defaults set in model.DeliveryConfig
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
-    vol.Optional(CONF_OPTIONS): dict,
+    vol.Optional(CONF_OPTIONS): dict,  # transport tuning
     vol.Optional(CONF_DATA): DATA_SCHEMA,
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_TARGET_REQUIRED): cv.boolean,

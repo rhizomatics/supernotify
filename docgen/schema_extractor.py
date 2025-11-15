@@ -20,6 +20,10 @@ TOP_LEVEL_SCHEMAS = {
     "SUPERNOTIFY_SCHEMA": "Platform Configuration",
     "SCENARIO_SCHEMA": "Scenario Definition",
     "ACTION_DATA_SCHEMA": "Notify Action Data",
+    "DELIVERY_SCHEMA": "Delivery Definition",
+    "RECIPIENT_SCHEMA": "Recipient Definition",
+    "CAMERA_SCHEMA": "Camera Definition",
+    "TRANSPORT_SCHEMA": "Transport Definition",
 }
 
 # some hacks to stop voluptuous_openapi generating broken schemas

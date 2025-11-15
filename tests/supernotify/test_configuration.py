@@ -3,7 +3,7 @@ from typing import cast
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
-from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, CONF_PERSON, CONF_RECIPIENTS, CONF_TARGET, CONF_TRANSPORT
+from custom_components.supernotify import ATTR_RECIPIENTS, CONF_DELIVERY_DEFAULTS, CONF_PERSON, CONF_TARGET, CONF_TRANSPORT
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
@@ -35,7 +35,7 @@ async def test_default_recipients_with_override() -> None:
     )
     await context.test_initialize()
 
-    uut = Notification(context, "testing", action_data={CONF_RECIPIENTS: ["person.new_home_owner"]})
+    uut = Notification(context, "testing", action_data={ATTR_RECIPIENTS: ["person.new_home_owner"]})
     await uut.initialize()
     await uut.deliver()
     dummy: DummyTransport = cast("DummyTransport", context.delivery_registry.transports["dummy"])
