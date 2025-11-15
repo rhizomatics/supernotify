@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, Target, TransportConfig
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, Target, TargetRequired, TransportConfig
 
 from . import (
     CONF_DELIVERY_DEFAULTS,
@@ -46,10 +46,12 @@ class Transport:
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         self.context: Context = context
 
-        self.transport_config = TransportConfig(transport_config or {}, class_config=self.default_config)
+        self.transport_config = TransportConfig(
+            transport_config or {}, class_config=self.default_config)
 
         self.delivery_defaults: DeliveryConfig = self.transport_config.delivery_defaults
-        self.device_domain: list[str] = self.transport_config.device_domain or []
+        self.device_domain: list[str] = self.transport_config.device_domain or [
+        ]
         self.device_discovery: bool | None = self.transport_config.device_discovery
         self.enabled = self.transport_config.enabled
 
@@ -67,11 +69,14 @@ class Transport:
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()
                     if d.id not in self.delivery_defaults.target.device_ids:
-                        _LOGGER.info(f"SUPERNOTIFY Discovered device {d.name} for {domain}, id {d.id}")
-                        self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
+                        _LOGGER.info(
+                            f"SUPERNOTIFY Discovered device {d.name} for {domain}, id {d.id}")
+                        self.delivery_defaults.target.extend(
+                            ATTR_DEVICE_ID, d.id)
                         added += 1
 
-                _LOGGER.info(f"SUPERNOTIFY device discovery for {domain} found {discovered} devices, added {added} new ones")
+                _LOGGER.info(
+                    f"SUPERNOTIFY device discovery for {domain} found {discovered} devices, added {added} new ones")
 
     @property
     def targets(self) -> Target:
@@ -129,6 +134,7 @@ class Transport:
         qualified_action: str | None = None,
         action_data: dict[str, Any] | None = None,
         target_data: dict[str, Any] | None = None,
+        implied_target: bool = False # True if the qualified action implies a target
     ) -> bool:
         action_data = action_data or {}
         start_time = time.time()
@@ -137,18 +143,21 @@ class Transport:
         try:
             qualified_action = qualified_action or delivery.action
             if qualified_action and (
-                action_data.get(ATTR_TARGET) or action_data.get(ATTR_ENTITY_ID) or not delivery.target_required or target_data
+                action_data.get(ATTR_TARGET) or action_data.get(
+                    ATTR_ENTITY_ID) or implied_target or delivery.target_required != TargetRequired.ALWAYS or target_data
             ):
                 domain, service = qualified_action.split(".", 1)
                 start_time = time.time()
                 if target_data:
                     envelope.calls.append(
-                        CallRecord(time.time() - start_time, domain, service, dict(action_data), dict(target_data))
+                        CallRecord(time.time() - start_time, domain,
+                                   service, dict(action_data), dict(target_data))
                     )
                     # TODO: add a debug mode with return response and blocking True
                     await self.hass_api.call_service(domain, service, service_data=action_data, target_data=target_data)
                 else:
-                    envelope.calls.append(CallRecord(time.time() - start_time, domain, service, dict(action_data), None))
+                    envelope.calls.append(CallRecord(
+                        time.time() - start_time, domain, service, dict(action_data), None))
                     await self.hass_api.call_service(domain, service, service_data=action_data)
                 envelope.delivered = 1
             else:
@@ -161,9 +170,11 @@ class Transport:
             return True
         except Exception as e:
             envelope.failed_calls.append(
-                CallRecord(time.time() - start_time, domain, service, action_data, target_data, exception=str(e))
+                CallRecord(time.time() - start_time, domain, service,
+                           action_data, target_data, exception=str(e))
             )
-            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.name, qualified_action, action_data)
+            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s",
+                              self.name, qualified_action, action_data)
             envelope.errored += 1
             envelope.delivery_error = format_exception(e)
             return False
@@ -174,7 +185,8 @@ class Transport:
             return None
         if strip_urls:
             words = text.split()
-            text = " ".join(word for word in words if not urlparse(word).scheme)
+            text = " ".join(
+                word for word in words if not urlparse(word).scheme)
         text = text.translate(str.maketrans("_", " ", "()£$<>"))
         _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", text)
         return text

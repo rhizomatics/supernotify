@@ -13,7 +13,7 @@ from custom_components.supernotify import (
     TRANSPORT_ALEXA,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, SelectionRank, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -38,6 +38,8 @@ class AlexaDevicesTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "notify.send_message"
+        config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.selection_rank = SelectionRank.FIRST
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,

@@ -14,7 +14,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -33,7 +33,7 @@ class GenericTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.target_required = False
+        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,

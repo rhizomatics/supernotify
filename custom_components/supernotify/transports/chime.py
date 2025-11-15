@@ -17,7 +17,7 @@ from custom_components.supernotify import (
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TransportConfig
+from custom_components.supernotify.model import Target, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
@@ -81,7 +81,7 @@ class ChimeTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.options = {}
-        config.delivery_defaults.target_required = False
+        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.device_domain = DEVICE_DOMAINS
         config.delivery_defaults.options = {
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],

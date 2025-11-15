@@ -30,6 +30,7 @@ from custom_components.supernotify.model import (
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
+    TargetRequired,
     TransportConfig,
 )
 from custom_components.supernotify.transport import (
@@ -49,7 +50,7 @@ class MobilePushTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.target_required = False
+        config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
@@ -151,7 +152,10 @@ class MobilePushTransport(Transport):
         hits = 0
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if mobile_target.startswith("notify.") else f"notify.{mobile_target}"
-            if await self.call_action(envelope, qualified_action=full_target, action_data=action_data):
+            if await self.call_action(envelope, 
+                                        qualified_action=full_target, 
+                                        action_data=action_data,
+                                        implied_target=True):
                 hits += 1
             else:
                 simple_target = (

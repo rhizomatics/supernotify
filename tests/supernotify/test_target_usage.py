@@ -11,7 +11,7 @@ async def target_usage_fixture(usage: str) -> TestingContext:
                 "transport": "generic",
                 "action": "notify.everything",
                 "target": ["switch.pillow_vibrate"],
-                "target_required": True,
+                "target_required": "always",
                 "target_usage": usage,
             }
         },

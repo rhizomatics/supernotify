@@ -9,7 +9,7 @@ from custom_components.supernotify import CONF_TRANSPORT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import TransportConfig
+from custom_components.supernotify.model import TargetRequired, TransportConfig
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
@@ -43,7 +43,7 @@ class BrokenTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.target_required = False
+        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         return config
 
     def validate_action(self, action: str | None) -> bool:

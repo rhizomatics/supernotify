@@ -6,7 +6,7 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import TransportConfig
+from custom_components.supernotify.model import TargetRequired, TransportConfig
 from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,13 +22,14 @@ class PersistentTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "persistent_notification.create"
-        config.delivery_defaults.target_required = False
+        config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}
 
-        notification_id = data.get(ATTR_NOTIFICATION_ID) or envelope.delivery.data.get(ATTR_NOTIFICATION_ID)
+        notification_id = data.get(
+            ATTR_NOTIFICATION_ID) or envelope.delivery.data.get(ATTR_NOTIFICATION_ID)
         action_data = envelope.core_action_data()
         action_data["notification_id"] = notification_id
 

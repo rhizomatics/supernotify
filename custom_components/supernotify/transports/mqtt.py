@@ -6,7 +6,7 @@ from homeassistant.components.mqtt.const import ATTR_TOPIC
 
 from custom_components.supernotify import TRANSPORT_MQTT
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TransportConfig
+from custom_components.supernotify.model import Target, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -26,7 +26,7 @@ class MQTTTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "mqtt.publish"
-        config.delivery_defaults.target_required = False
+        config.delivery_defaults.target_required = TargetRequired.NEVER
         config.delivery_defaults.options = {}
         return config
 

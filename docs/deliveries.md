@@ -101,7 +101,7 @@ delivery:
         # use these targets always, whether or not the notification has explicit targets
         target_usage: merge_on_delivery
         # if there's no targets don't notify ( which always happen anyway because of the merge targets above )
-        target_required: true
+        target_required: optional
         # Use this delivery only when explicitly selected by a scenario, or if all other deliveries fail with at least one error
         selection:
           - scenario

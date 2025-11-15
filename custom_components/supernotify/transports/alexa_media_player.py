@@ -13,7 +13,7 @@ from custom_components.supernotify import (
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -40,6 +40,7 @@ class AlexaMediaPlayerTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "notify.alexa_media"
+        config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,

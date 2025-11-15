@@ -146,7 +146,8 @@ DELIVERY_SELECTION_IMPLICIT = "implicit"
 DELIVERY_SELECTION_EXPLICIT = "explicit"
 DELIVERY_SELECTION_FIXED = "fixed"
 
-DELIVERY_SELECTION_VALUES = [DELIVERY_SELECTION_EXPLICIT, DELIVERY_SELECTION_FIXED, DELIVERY_SELECTION_IMPLICIT]
+DELIVERY_SELECTION_VALUES = [DELIVERY_SELECTION_EXPLICIT,
+                             DELIVERY_SELECTION_FIXED, DELIVERY_SELECTION_IMPLICIT]
 PTZ_METHOD_ONVIF = "onvif"
 PTZ_METHOD_FRIGATE = "frigate"
 PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
@@ -155,7 +156,8 @@ SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
 SELECTION_FALLBACK = "fallback"
 SELECTION_BY_SCENARIO = "scenario"
 SELECTION_DEFAULT = "default"
-SELECTION_VALUES = [SELECTION_FALLBACK_ON_ERROR, SELECTION_BY_SCENARIO, SELECTION_DEFAULT, SELECTION_FALLBACK]
+SELECTION_VALUES = [SELECTION_FALLBACK_ON_ERROR,
+                    SELECTION_BY_SCENARIO, SELECTION_DEFAULT, SELECTION_FALLBACK]
 
 OCCUPANCY_VALUES = [
     OCCUPANCY_ALL_IN,
@@ -173,7 +175,8 @@ PRIORITY_HIGH = "high"
 PRIORITY_MEDIUM = "medium"
 PRIORITY_LOW = "low"
 
-PRIORITY_VALUES = [PRIORITY_LOW, PRIORITY_MEDIUM, PRIORITY_HIGH, PRIORITY_CRITICAL]
+PRIORITY_VALUES = [PRIORITY_LOW, PRIORITY_MEDIUM,
+                   PRIORITY_HIGH, PRIORITY_CRITICAL]
 TRANSPORT_SMS = "sms"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_EMAIL = "email"
@@ -215,6 +218,10 @@ OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_INCLUDE_RE = "target_include_re"
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
+OPTION_TARGET_REQUIRE_ALWAYS = "always"
+OPTION_TARGET_REQUIRE_NEVER = "never"
+OPTION_TARGET_REQUIRE_OPTIONAL = "optional"
+
 SCENARIO_NULL = "NULL"
 SCENARIO_TEMPLATE_ATTRS = ("message_template", "title_template")
 
@@ -230,9 +237,11 @@ CONF_SIZE = "size"
 ATTR_DUPE_POLICY_MTSLP = "dupe_policy_message_title_same_or_lower_priority"
 ATTR_DUPE_POLICY_NONE = "dupe_policy_none"
 # TARGET_FIELDS includes entity, device, area, floor, label ids
-TARGET_SCHEMA = vol.Any(dict[str, list[str]], dict[str, str], str, list[str], cv.TARGET_FIELDS)
+TARGET_SCHEMA = vol.Any(dict[str, list[str]],
+                        dict[str, str], str, list[str], cv.TARGET_FIELDS)
 
-DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
+DATA_SCHEMA = vol.Schema(
+    {vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
 MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MANUFACTURER): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
@@ -262,7 +271,9 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_OPTIONS): dict,  # transport tuning
     vol.Optional(CONF_DATA): DATA_SCHEMA,
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-    vol.Optional(CONF_TARGET_REQUIRED): cv.boolean,
+    vol.Optional(CONF_TARGET_REQUIRED): vol.Any(cv.boolean, vol.In([OPTION_TARGET_REQUIRE_ALWAYS,
+                                                                    OPTION_TARGET_REQUIRE_NEVER,
+                                                                    OPTION_TARGET_REQUIRE_OPTIONAL])),
     vol.Optional(CONF_TARGET_USAGE): vol.In([
         TARGET_USE_ON_NO_DELIVERY_TARGETS,
         TARGET_USE_ON_NO_ACTION_TARGETS,
@@ -407,4 +418,5 @@ ACTION_DATA_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,  # allow other data, e.g. the android/ios mobile push
 )
 
-STRICT_ACTION_DATA_SCHEMA = ACTION_DATA_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+STRICT_ACTION_DATA_SCHEMA = ACTION_DATA_SCHEMA.extend(
+    {}, extra=vol.REMOVE_EXTRA)

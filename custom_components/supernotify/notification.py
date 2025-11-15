@@ -61,7 +61,7 @@ from custom_components.supernotify import (
 from custom_components.supernotify.archive import ArchivableObject
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target
+from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target, TargetRequired
 from custom_components.supernotify.scenario import Scenario
 
 from .common import ensure_dict, ensure_list
@@ -516,6 +516,11 @@ class Notification(ArchivableObject):
         return []
 
     def generate_recipients(self, delivery: Delivery) -> list[Target]:
+
+        if delivery.target_required == TargetRequired.NEVER:
+            # don't waste time computing targets for deliveries that don't need them
+            return [Target(None,target_data=delivery.data)]
+
         computed_target: Target
 
         if delivery.target_usage == TARGET_USE_FIXED:
@@ -523,7 +528,7 @@ class Notification(ArchivableObject):
                 computed_target = delivery.target.safe_copy()
                 self.debug_trace.record_target(delivery.name, "1a_delivery_default_fixed", computed_target)
             else:
-                computed_target = Target()
+                computed_target = Target(None,target_data=delivery.data)
                 self.debug_trace.record_target(delivery.name, "1b_delivery_default_fixed_empty", computed_target)
 
         elif not self.target:
@@ -634,7 +639,7 @@ class Notification(ArchivableObject):
 
         envelopes = []
         for target in targets:
-            if target.has_resolved_target() or not delivery.target_required:
+            if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(default_data)
                 envelope_data.update(self.data)
@@ -689,7 +694,7 @@ class DebugTrace:
             if last_target is not None and last_target == result:
                 result = "NO_CHANGE"
 
-        self.resolved[delivery_name][stage]=result
+        self.resolved[delivery_name][stage] = result
         self._last_stage[delivery_name] = stage
 
     def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:

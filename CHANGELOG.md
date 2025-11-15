@@ -18,6 +18,8 @@ or for custom notifications using *Generic* transport
   no target on the notification, it defaults to the Delivery target
   - `fixed` only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
 - Entity states for Delivery and Transport now directly reflect configuration
+- `target_required` is no longer boolean (although backward compatible), and now has values `always`,`never` and `optional`. 
+   - If set to `never` it speeds up delivery and debug traces by not computing targets when they're not needed
 - Improved DebugTrace - more stages, shows `NO_CHANGE` when no effect
 - Documentation improved - core concepts and principles, transports, more schema definitions
 ### Internal
