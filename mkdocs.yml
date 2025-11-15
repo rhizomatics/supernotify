@@ -35,6 +35,7 @@ plugins:
   - gen-files:
       scripts:
       - docgen/schema_extractor.py
+      - docgen/transport_table.py
 
 watch:
   - custom_components/supernotify
