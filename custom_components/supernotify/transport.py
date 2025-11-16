@@ -97,14 +97,16 @@ class Transport:
         return action == self.delivery_defaults.action
 
     def attributes(self) -> dict[str, Any]:
-        return {
+        attrs: dict[str, Any] = {
             ATTR_NAME: self.name,
-            ATTR_FRIENDLY_NAME: self.alias,
             ATTR_ENABLED: self.override_enabled,
             CONF_DEVICE_DOMAIN: self.device_domain,
             CONF_DEVICE_DISCOVERY: self.device_discovery,
             CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
         }
+        if self.alias:
+            attrs[ATTR_FRIENDLY_NAME] = self.alias
+        return attrs
 
     @abstractmethod
     async def deliver(self, envelope: "Envelope") -> bool:  # noqa: F821 # type: ignore

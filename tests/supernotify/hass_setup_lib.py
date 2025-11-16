@@ -236,16 +236,20 @@ class DummyService:
         action: str = "custom_test",
         supports_response=SupportsResponse.OPTIONAL,
         response: ServiceResponse | None = None,
+        exception: Exception | None = None,
+    
     ) -> None:
         self.hass = hass
         self.calls: list[ServiceCall] = []
         self.response = response
+        self.exception = exception
         hass.services.async_register(domain, action, self.service_call, supports_response=supports_response)
 
     def service_call(self, call: ServiceCall) -> ServiceResponse | None:
         self.calls.append(call)
+        if self.exception:
+            raise self.exception
         return self.response
-
 
 def register_device(
     hass_api: HomeAssistantAPI | None = None,

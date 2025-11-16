@@ -165,13 +165,14 @@ class Scenario:
         attrs = {
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
-            ATTR_FRIENDLY_NAME: self.alias,
             "media": self.media,
             "delivery_selection": self.delivery_selection,
             "action_groups": self.action_groups,
             "delivery": self.delivery,
             "default": self.default,
         }
+        if self.alias:
+            attrs[ATTR_FRIENDLY_NAME] = self.alias
         if include_condition:
             attrs["condition"] = self.condition
         if include_trace and self.last_trace:

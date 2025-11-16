@@ -148,15 +148,17 @@ class Delivery(DeliveryConfig):
 
     def attributes(self) -> dict[str, Any]:
         """For exposure as entity state"""
-        return {
+        attrs: dict[str, Any] = {
             ATTR_NAME: self.name,
-            ATTR_FRIENDLY_NAME: self.alias,
             ATTR_ENABLED: self.enabled,
             CONF_TRANSPORT: self.transport.name,
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_SELECTION: self.selection,
         }
+        if self.alias:
+            attrs[ATTR_FRIENDLY_NAME] = self.alias
+        return attrs
 
 
 class DeliveryRegistry:

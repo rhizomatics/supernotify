@@ -15,6 +15,7 @@ from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
@@ -112,9 +113,15 @@ class HomeAssistantAPI:
         if not self._hass:
             raise ValueError("HomeAssistant not available")
 
-        return await self._hass.services.async_call(
-            domain, service, service_data=service_data, blocking=debug, context=None, target=target_data, return_response=debug
-        )
+        try:
+            return await self._hass.services.async_call(
+                domain, service, service_data=service_data, blocking=debug, context=None, target=target_data, return_response=debug
+            )
+        except ServiceValidationError as e:
+            _LOGGER.warning(f"SUPERNOTIFY {domain}.{service} validation failed, retrying without response: {e}")
+            return await self._hass.services.async_call(
+                domain, service, service_data=service_data, blocking=debug, context=None, target=target_data
+            )
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         if self._hass is None:
