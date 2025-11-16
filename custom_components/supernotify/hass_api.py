@@ -14,8 +14,7 @@ from homeassistant.components.trace import async_setup, async_store_trace  # typ
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.core import Context as HomeAssistantContext
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
@@ -54,6 +53,7 @@ class HomeAssistantAPI:
         self.hass_name: str = "!UNDEFINED!"
         self._entity_registry: entity_registry.EntityRegistry | None = None
         self._device_registry: device_registry.DeviceRegistry | None = None
+        self._service_info: dict[str, Any] = {}
 
     def initialize(self) -> None:
         if self._hass:
@@ -112,22 +112,35 @@ class HomeAssistantAPI:
     ) -> ServiceResponse | None:
         if not self._hass:
             raise ValueError("HomeAssistant not available")
-
+        return_response: bool = debug
+        blocking: bool = debug
         try:
-            return await self._hass.services.async_call(
-                domain,
-                service,
-                service_data=service_data,
-                blocking=debug,
-                context=None,
-                target=target_data,
-                return_response=debug,
-            )
-        except ServiceValidationError as e:
-            _LOGGER.warning(f"SUPERNOTIFY {domain}.{service} validation failed, retrying without response: {e}")
-            return await self._hass.services.async_call(
-                domain, service, service_data=service_data, blocking=debug, context=None, target=target_data
-            )
+            if (domain, service) not in self._service_info:
+                service_objs = self._hass.services.async_services()
+                service_obj = service_objs.get(domain, {}).get(service, {})
+                self._service_info[domain, service] = {"supports_response": service_obj.supports_response,
+                                                            "schema": service_obj.schema}
+            service_info = self._service_info.get((domain, service), {})
+            supports_response = service_info.get("supports_response")
+            if supports_response is not None:
+                if supports_response == SupportsResponse.NONE:
+                    return_response = False
+                elif supports_response == SupportsResponse.ONLY:
+                    return_response = True
+            else:
+                _LOGGER.debug("SUPERNOTIFY Unable to find service info for %s.%s", domain, service)
+
+        except Exception:
+            _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s")
+
+        return await self._hass.services.async_call(
+            domain,
+            service,
+            service_data=service_data,
+            blocking=blocking,
+            context=None,
+            target=target_data,
+            return_response=return_response)
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         if self._hass is None:
