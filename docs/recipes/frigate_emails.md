@@ -15,6 +15,7 @@ Note that `notify_device` currently needs specified to suppress Frigate template
 ## Example Configuration
 
 ```yaml
+automations:
 - id: frigate-driveway-apple-critical-event
   alias: Generate critical apple event for frigate driveway
   description: Driveway CCTV Mobile Notification

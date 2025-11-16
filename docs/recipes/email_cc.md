@@ -49,11 +49,11 @@ Alternatively, set up a dedicated delivery like this, which will always send off
 and nobody else.
 
 ```yaml
-    delivery:
-      email_archive:
-        action: notify.smtp
-        delivery_defaults:
-            target_usage: fixed
-            target:
-                - mailarchive@mymail.com
+  delivery:
+    email_archive:
+      action: notify.smtp
+      delivery_defaults:
+          target_usage: fixed
+          target:
+              - mailarchive@mymail.com
 ```

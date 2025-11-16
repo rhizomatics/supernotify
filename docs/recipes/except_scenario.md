@@ -11,12 +11,13 @@ Uses a **Scenario** condition. The list of scenarios applied to the notification
 ## Example Configuration
 
 ```yaml
-red_alert:
-      alias: make a fuss for critical priority, unless its an unknown vehicle
-      condition:
-        condition: and
-        conditions:
-          - "{{notification_priority in ['critical']}}"
-          - "{{'unknown_vehicle' not in applied_scenarios}}"
+scenarios:
+  red_alert:
+        alias: make a fuss for critical priority, unless its an unknown vehicle
+        condition:
+          condition: and
+          conditions:
+            - "{{notification_priority in ['critical']}}"
+            - "{{'unknown_vehicle' not in applied_scenarios}}"
 
 ```

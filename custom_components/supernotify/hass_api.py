@@ -53,7 +53,7 @@ class HomeAssistantAPI:
         self.hass_name: str = "!UNDEFINED!"
         self._entity_registry: entity_registry.EntityRegistry | None = None
         self._device_registry: device_registry.DeviceRegistry | None = None
-        self._service_info: dict[str, Any] = {}
+        self._service_info: dict[tuple[str, str], Any] = {}
 
     def initialize(self) -> None:
         if self._hass:
@@ -118,8 +118,10 @@ class HomeAssistantAPI:
             if (domain, service) not in self._service_info:
                 service_objs = self._hass.services.async_services()
                 service_obj = service_objs.get(domain, {}).get(service, {})
-                self._service_info[domain, service] = {"supports_response": service_obj.supports_response,
-                                                            "schema": service_obj.schema}
+                self._service_info[domain, service] = {
+                    "supports_response": service_obj.supports_response,
+                    "schema": service_obj.schema,
+                }
             service_info = self._service_info.get((domain, service), {})
             supports_response = service_info.get("supports_response")
             if supports_response is not None:
@@ -140,7 +142,8 @@ class HomeAssistantAPI:
             blocking=blocking,
             context=None,
             target=target_data,
-            return_response=return_response)
+            return_response=return_response,
+        )
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         if self._hass is None:
