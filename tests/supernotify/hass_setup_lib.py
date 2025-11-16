@@ -237,7 +237,6 @@ class DummyService:
         supports_response=SupportsResponse.OPTIONAL,
         response: ServiceResponse | None = None,
         exception: Exception | None = None,
-    
     ) -> None:
         self.hass = hass
         self.calls: list[ServiceCall] = []
@@ -250,6 +249,7 @@ class DummyService:
         if self.exception:
             raise self.exception
         return self.response
+
 
 def register_device(
     hass_api: HomeAssistantAPI | None = None,

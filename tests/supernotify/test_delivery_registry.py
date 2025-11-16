@@ -1,14 +1,10 @@
 from typing import Any
-from unittest.mock import Mock
 
 from homeassistant.const import CONF_ACTION, CONF_ENABLED, CONF_TARGET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from custom_components.supernotify import (
     CONF_DELIVERY_DEFAULTS,
-    CONF_DEVICE_DISCOVERY,
-    CONF_DEVICE_DOMAIN,
     CONF_SELECTION,
     CONF_TRANSPORT,
     SELECTION_BY_SCENARIO,

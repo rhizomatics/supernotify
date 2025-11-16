@@ -115,7 +115,13 @@ class HomeAssistantAPI:
 
         try:
             return await self._hass.services.async_call(
-                domain, service, service_data=service_data, blocking=debug, context=None, target=target_data, return_response=debug
+                domain,
+                service,
+                service_data=service_data,
+                blocking=debug,
+                context=None,
+                target=target_data,
+                return_response=debug,
             )
         except ServiceValidationError as e:
             _LOGGER.warning(f"SUPERNOTIFY {domain}.{service} validation failed, retrying without response: {e}")
