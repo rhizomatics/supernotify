@@ -111,33 +111,3 @@ async def test_transport_defaults_used_for_missing_service(hass: HomeAssistant, 
     await uut.initialize()
     assert list(uut.delivery_registry.deliveries.keys()) == ["chatty"]
     assert uut.delivery_registry.deliveries["chatty"].action == "notify.slackity"
-
-
-def test_simplify_text(mock_context: Context) -> None:
-    from custom_components.supernotify.transports.generic import GenericTransport
-
-    uut = GenericTransport(mock_context)
-    assert (
-        uut.simplify("Hello_world! Visit https://example.com (it's great) £100 <test>", strip_urls=True)
-        == "Hello world! Visit it's great 100 test"
-    )
-    assert (
-        uut.simplify("Hello_world! Visit https://example.com (it's great) £100 <test>")
-        == "Hello world! Visit https://example.com it's great 100 test"
-    )
-    assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
-
-
-async def test_device_discovery(unmocked_config: Context) -> None:
-    uut = GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True})
-    await uut.initialize()
-    assert uut.delivery_defaults.target is None
-    dev: DeviceEntry = Mock(spec=DeviceEntry, id="11112222ffffeeee00009999ddddcccc")
-    unmocked_config.hass_api.discover_devices = Mock(  # type: ignore
-        return_value=[dev]
-    )
-
-    uut = GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True})
-    await uut.initialize()
-    assert uut.delivery_defaults.target is not None
-    assert uut.delivery_defaults.target.device_ids == [dev.id]

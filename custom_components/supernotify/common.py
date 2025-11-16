@@ -52,6 +52,7 @@ class CallRecord:
     action_data: dict[str, Any] | None = field(default=None)
     target_data: dict[str, Any] | None = field(default=None)
     exception: str | None = field(default=None)
+    service_response: dict[str, Any] | None = field(default=None)
 
     def contents(self) -> dict[str, Any]:
         result = {
@@ -64,4 +65,6 @@ class CallRecord:
             result["target_data"] = self.target_data
         if self.exception is not None:
             result["exception"] = self.exception
+        if self.service_response is not None:
+            result["service_response"] = self.service_response
         return result

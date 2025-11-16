@@ -28,8 +28,7 @@ class PersistentTransport(Transport):
     async def deliver(self, envelope: Envelope) -> bool:
         data = envelope.data or {}
 
-        notification_id = data.get(
-            ATTR_NOTIFICATION_ID) or envelope.delivery.data.get(ATTR_NOTIFICATION_ID)
+        notification_id = data.get(ATTR_NOTIFICATION_ID) or envelope.delivery.data.get(ATTR_NOTIFICATION_ID)
         action_data = envelope.core_action_data()
         action_data["notification_id"] = notification_id
 

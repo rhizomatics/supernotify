@@ -9,7 +9,7 @@ from custom_components.supernotify.notify import TRANSPORTS
 
 def esc(v: Any) -> str:
     v = str(v) if not isinstance(v, str) else v
-    return v.replace('|', '&#124;')
+    return v.replace("|", "&#124;")
 
 
 def transport_doc() -> None:
@@ -17,21 +17,18 @@ def transport_doc() -> None:
     option_keys = []
     for transport_class in TRANSPORTS:
         transport = transport_class(Mock(template_path=Path()))
-        option_keys.extend(
-            transport.default_config.delivery_defaults.options.keys())
+        option_keys.extend(transport.default_config.delivery_defaults.options.keys())
     option_keys = sorted(set(option_keys))
 
     with mkdocs_gen_files.open(doc_filename, "w") as df:
-
         df.write("# Transport Configuration\n\n")
-        df.write('## Configuration Options\n')
+        df.write("## Configuration Options\n")
         df.write(f"|Transport|{'|'.join(option_keys)}\n")
         df.write(f"|---------|{'-------|' * len(option_keys)}\n")
         for transport_class in TRANSPORTS:
             transport = transport_class(Mock(template_path=Path()))
             options = transport.default_config.delivery_defaults.options
-            df.write(
-                f"|{transport.name}|{'|'.join(esc(options.get(k, '-')) for k in option_keys)}|\n")
+            df.write(f"|{transport.name}|{'|'.join(esc(options.get(k, '-')) for k in option_keys)}|\n")
 
         df.write("\n")
 

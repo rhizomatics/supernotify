@@ -42,4 +42,5 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
             "topic": "zigbee2mqtt/Downstairs Siren/set",
             "payload": '{"warning": {"duration": 30, "mode": "emergency", "level": "low", "strobe": "true", "strobe_duty_cycle": 10}}',  # noqa: E501
         },
+        debug=False,
     )

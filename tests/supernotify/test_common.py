@@ -1,4 +1,3 @@
-
 from custom_components.supernotify.common import CallRecord, ensure_dict, ensure_list, safe_extend, safe_get
 
 
@@ -38,5 +37,5 @@ def test_call_record():
         "domain": "switch",
         "action": "toggle",
         "action_data": {},
-        "elapsed": 13.4
+        "elapsed": 13.4,
     }

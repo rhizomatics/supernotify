@@ -385,13 +385,17 @@ class Notification(ArchivableObject):
     async def call_transport(self, delivery: Delivery) -> None:
         try:
             transport: Transport = delivery.transport
+            if not transport.override_enabled:
+                self.skipped += 1
+                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on transport disabled", delivery)
+                return
 
             delivery_priorities = delivery.priority
             if self.priority and delivery_priorities and self.priority not in delivery_priorities:
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
                 self.skipped += 1
                 return
-            if not await transport.evaluate_delivery_conditions(delivery, self.condition_variables):
+            if not await delivery.evaluate_conditions(self.condition_variables):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
                 self.skipped += 1
                 return

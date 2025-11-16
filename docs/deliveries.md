@@ -1,6 +1,6 @@
 # Deliveries
 
-*Delivery* is how the different available notifications are defined. 
+*Delivery* is how the different available notifications are defined.
 
 You should create a Delivery only for the [transports](transports/index.md)
 you want to use, though sometimes you may want to create multiple Deliveries for the same channel, for example a `plain_email`
@@ -128,4 +128,3 @@ delivery:
         message: ALERT!
         title: Overridden title
 ```
-

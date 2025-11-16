@@ -31,4 +31,3 @@ its also possible to directly set them, as in this example:
                   name: "US-EN-Alexa-Motion-Detected-Generic.wav"
                   volume: 1.0
 ```
-

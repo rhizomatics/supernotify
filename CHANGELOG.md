@@ -1,6 +1,18 @@
 # Public releases
 
+## 1.3.2
+### Features
+- Exposed entities now use the alias as the 'friendly name', so shows up better in Developer Tools and entity view
+- Add debug mode for deliveries, configurable at `transport` or `delivery` level
+  - Response from service stored in `CallRecord` in the envelope and available in the archived notifications
+  - In debug mode, service calls are synchronous rather than fire'n'forget so will fail immediately rather than in the background
+### Internal
+- Transport tests re-organized and more added
+- Transport now has an `override_enabled` for run time control of all deliveries using the transport via HA entities UI
+- Bug fixes for null values in snoozer, and fix backward boolean compatibility for target_required
+
 ## 1.3.1
+### Internal
 - Update of 1.3.0 from beta 6 to beta 8
 
 ## 1.3.0
@@ -21,7 +33,7 @@ or for custom notifications using *Generic* transport
   no target on the notification, it defaults to the Delivery target
   - `fixed` only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
 - Entity states for Delivery and Transport now directly reflect configuration
-- `target_required` is no longer boolean (although backward compatible), and now has values `always`,`never` and `optional`. 
+- `target_required` is no longer boolean (although backward compatible), and now has values `always`,`never` and `optional`.
    - If set to `never` it speeds up delivery and debug traces by not computing targets when they're not needed
 - Improved DebugTrace - more stages, shows `NO_CHANGE` when no effect
 - Documentation improved - core concepts and principles, transports, more schema definitions

@@ -496,12 +496,12 @@ class SupernotifyAction(BaseNotificationService):
                 if transport is None:
                     _LOGGER.warning(f"SUPERNOTIFY Event for unknown methtransportod {event.data['entity_id']}")
                 else:
-                    if new_state.state == "off" and transport.enabled:
-                        transport.enabled = False
+                    if new_state.state == "off" and transport.override_enabled:
+                        transport.override_enabled = False
                         _LOGGER.info(f"SUPERNOTIFY Disabling delivery {transport.name}")
                         changes += 1
-                    elif new_state.state == "on" and not transport.enabled:
-                        transport.enabled = True
+                    elif new_state.state == "on" and not transport.override_enabled:
+                        transport.override_enabled = True
                         _LOGGER.info(f"SUPERNOTIFY Enabling delivery {transport.name}")
                         changes += 1
                     else:
@@ -526,15 +526,13 @@ class SupernotifyAction(BaseNotificationService):
         for transport in self.context.delivery_registry.transports.values():
             self.hass.states.async_set(
                 f"{DOMAIN}.transport_{transport.name}",
-                STATE_ON if transport.enabled else STATE_OFF,
+                STATE_ON if transport.override_enabled else STATE_OFF,
                 transport.attributes(),
             )
             self.exposed_entities.append(f"{DOMAIN}.transport_{transport.name}")
         for delivery_name, delivery in self.context.delivery_registry.deliveries.items():
             self.hass.states.async_set(
-                f"{DOMAIN}.delivery_{delivery.name}",
-                STATE_ON if delivery.enabled else STATE_OFF,
-                delivery.as_dict(),
+                f"{DOMAIN}.delivery_{delivery.name}", STATE_ON if delivery.enabled else STATE_OFF, delivery.attributes()
             )
             self.exposed_entities.append(f"{DOMAIN}.delivery_{delivery_name}")
 

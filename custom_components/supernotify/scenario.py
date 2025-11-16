@@ -25,11 +25,11 @@ import voluptuous as vol
 # type: ignore[attr-defined,unused-ignore]
 from homeassistant.components.trace import async_store_trace
 from homeassistant.components.trace.models import ActionTrace
-from homeassistant.const import CONF_ALIAS, CONF_CONDITION
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITION
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_DEFAULT, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_DELIVERY_SELECTION, CONF_MEDIA
+from . import ATTR_DEFAULT, ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_DELIVERY_SELECTION, CONF_MEDIA
 from .delivery import Delivery
 from .model import ConditionVariables
 
@@ -163,9 +163,9 @@ class Scenario:
     def attributes(self, include_condition: bool = True, include_trace: bool = False) -> dict[str, Any]:
         """Return scenario attributes"""
         attrs = {
-            "name": self.name,
-            "enabled": self.enabled,
-            "alias": self.alias,
+            ATTR_NAME: self.name,
+            ATTR_ENABLED: self.enabled,
+            ATTR_FRIENDLY_NAME: self.alias,
             "media": self.media,
             "delivery_selection": self.delivery_selection,
             "action_groups": self.action_groups,

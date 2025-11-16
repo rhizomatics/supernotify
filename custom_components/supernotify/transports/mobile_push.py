@@ -152,10 +152,7 @@ class MobilePushTransport(Transport):
         hits = 0
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if mobile_target.startswith("notify.") else f"notify.{mobile_target}"
-            if await self.call_action(envelope,
-                                        qualified_action=full_target,
-                                        action_data=action_data,
-                                        implied_target=True):
+            if await self.call_action(envelope, qualified_action=full_target, action_data=action_data, implied_target=True):
                 hits += 1
             else:
                 simple_target = (

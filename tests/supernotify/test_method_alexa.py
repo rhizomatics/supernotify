@@ -36,6 +36,7 @@ async def test_notify_alexa(mock_hass, unmocked_config) -> None:  # type: ignore
         target_data={
             "entity_id": ["notify.bedroom_echo_announce"],
         },
+        debug=False,
     )
 
 

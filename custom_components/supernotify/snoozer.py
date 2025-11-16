@@ -1,3 +1,4 @@
+import datetime as dt
 import logging
 from datetime import timedelta
 from typing import Any
@@ -25,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 class Snooze:
     target: str | list[str] | None
     target_type: TargetType
-    snoozed_at: float
-    snooze_until: float | None = None
+    snoozed_at: dt.datetime
+    snooze_until: dt.datetime | None = None
     recipient_type: RecipientType
     recipient: str | None
     reason: str | None = None
@@ -43,9 +44,10 @@ class Snooze:
         self.snoozed_at = dt_util.now()
         self.target = target
         self.target_type = target_type
-        self.recipient_type = recipient_type
+        self.recipient_type: RecipientType = recipient_type
         self.recipient = recipient
         self.reason = reason
+        self.snooze_until = None
         if snooze_for:
             self.snooze_until = self.snoozed_at + snooze_for
 
@@ -77,8 +79,8 @@ class Snooze:
             "recipient_type": self.recipient_type,
             "recipient": self.recipient,
             "reason": self.reason,
-            "snoozed_at": dt_util.as_local(self.snoozed_at).strftime("%H:%M:%S"),
-            "snooze_until": dt_util.as_local(self.snooze_until).strftime("%H:%M:%S"),
+            "snoozed_at": dt_util.as_local(self.snoozed_at).strftime("%H:%M:%S") if self.snoozed_at else None,
+            "snooze_until": dt_util.as_local(self.snooze_until).strftime("%H:%M:%S") if self.snooze_until else None,
         }
 
 

@@ -102,13 +102,18 @@ class HomeAssistantAPI:
         return self._hass.services.has_service(domain, service)
 
     async def call_service(
-        self, domain: str, service: str, service_data: dict[str, Any] | None = None, target_data: dict[str, Any] | None = None
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None = None,
+        target_data: dict[str, Any] | None = None,
+        debug: bool = False,
     ) -> ServiceResponse | None:
         if not self._hass:
             raise ValueError("HomeAssistant not available")
 
         return await self._hass.services.async_call(
-            domain, service, service_data=service_data, blocking=False, context=None, target=target_data, return_response=False
+            domain, service, service_data=service_data, blocking=debug, context=None, target=target_data, return_response=debug
         )
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
@@ -236,7 +241,8 @@ class HomeAssistantAPI:
             if device:
                 matching_domains = [d for d, _id in device.identifiers if d in domains]
                 if matching_domains:
-                    return matching_domains[0]  # TODO: limited to first domain found, unlikely to be more
+                    # TODO: limited to first domain found, unlikely to be more
+                    return matching_domains[0]
             _LOGGER.warning(
                 "SUPERNOTIFY A target that looks like a device_id can't be matched to supported integration: %s",
                 device_id,

@@ -3,23 +3,24 @@ import re
 from typing import Any
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_NAME,
     CONF_ACTION,
     CONF_ALIAS,
     CONF_CONDITION,
     CONF_ENABLED,
     CONF_NAME,
     CONF_OPTIONS,
-    CONF_TARGET,
 )
 from homeassistant.helpers.typing import ConfigType
 
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, Target
 from custom_components.supernotify.transport import Transport
 
 from . import (
-    CONF_DATA,
+    ATTR_ENABLED,
     CONF_MESSAGE,
     CONF_OCCUPANCY,
-    CONF_PRIORITY,
     CONF_SELECTION,
     CONF_TEMPLATE,
     CONF_TITLE,
@@ -33,7 +34,6 @@ from . import (
     SELECTION_FALLBACK_ON_ERROR,
 )
 from .context import Context
-from .model import DeliveryConfig, Target
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +107,14 @@ class Delivery(DeliveryConfig):
             }
         return filtered_target
 
+    async def evaluate_conditions(self, condition_variables: ConditionVariables | None) -> bool | None:
+        if not self.enabled:
+            return False
+        if self.condition is None:
+            return True
+        # TODO: reconsider hass_api injection
+        return await self.transport.hass_api.evaluate_condition(self.condition, condition_variables)
+
     def option(self, option_name: str) -> str | bool:
         """Get an option value from delivery config or transport default options"""
         opt: str | bool | None = None
@@ -124,7 +132,8 @@ class Delivery(DeliveryConfig):
         return str(self.option(option_name))
 
     def as_dict(self) -> dict[str, Any]:
-        return {
+        base = super().as_dict()
+        base.update({
             CONF_NAME: self.name,
             CONF_ALIAS: self.alias,
             CONF_TRANSPORT: self.transport.name,
@@ -134,12 +143,19 @@ class Delivery(DeliveryConfig):
             CONF_ENABLED: self.enabled,
             CONF_OCCUPANCY: self.occupancy,
             CONF_CONDITION: self.condition,
-            CONF_TARGET: self.target.as_dict() if self.target else None,
+        })
+        return base
+
+    def attributes(self) -> dict[str, Any]:
+        """For exposure as entity state"""
+        return {
+            ATTR_NAME: self.name,
+            ATTR_FRIENDLY_NAME: self.alias,
+            ATTR_ENABLED: self.enabled,
+            CONF_TRANSPORT: self.transport.name,
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
-            CONF_DATA: self.data,
             CONF_SELECTION: self.selection,
-            CONF_PRIORITY: self.priority,
         }
 
 

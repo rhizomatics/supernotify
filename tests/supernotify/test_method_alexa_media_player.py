@@ -47,6 +47,7 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
             "data": {"type": "announce"},
             "target": ["media_player.hall", "media_player.toilet"],
         },
+        debug=False,
     )
 
 

@@ -76,8 +76,8 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 ## Installation
 
 * Make sure you have HACS available
-  - If not, check the [HACS Instructions](https://hacs.xyz/docs/use/)
-  - Supernotify is one of the default repositories in HACS so no other configuration required
+    - If not, check the [HACS Instructions](https://hacs.xyz/docs/use/)
+    - Supernotify is one of the default repositories in HACS so no other configuration required
 * Select *SuperNotify* in the list of available integrations in HACS and install
 * Add a `notify` config for the `supernotify` integration,
     * See `examples` directory for working minimal and maximal configuration examples.
