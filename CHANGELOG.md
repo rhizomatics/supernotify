@@ -6,6 +6,7 @@
 - Add debug mode for deliveries, configurable at `transport` or `delivery` level
   - Response from service stored in `CallRecord` in the envelope and available in the archived notifications
   - In debug mode, service calls are synchronous rather than fire'n'forget so will fail immediately rather than in the background
+- Home Assistant Actions (aka "services") that require a response be accepted are now supported
 ### Internal
 - Transport tests re-organized and more added
 - Transport now has an `override_enabled` for run time control of all deliveries using the transport via HA entities UI
