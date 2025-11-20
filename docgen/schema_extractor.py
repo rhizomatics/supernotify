@@ -79,7 +79,7 @@ def schema_doc() -> None:
         logging.info(f"Exporting {schema_name}")
         try:
             schema.setdefault("title", schema_name)
-            schema.setdefault("$id", "https://supernotify.rhizomatics.github.io/schemas/" + schema_name + ".json")
+            schema.setdefault("$id", "https://supernotify.rhizomatics.org.uk/developer/schemas/" + schema_name + ".json")
             schema.setdefault("description", f"Voluptuous validation schema for {schema_name}")
             schema.setdefault("$schema", "https://json-schema.org/draft/2020-12/schema")
             schema_filename = f"schemas/js/{schema_name}.schema.json"

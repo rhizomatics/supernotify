@@ -1,5 +1,10 @@
 # Public releases
 
+## 1.3.3
+### Features
+- Added more direct documentation links for repairs
+### Bug Fixes
+- Corrected obsolete github pages docs link
 ## 1.3.2
 ### Features
 - Exposed entities now use the alias as the 'friendly name', so shows up better in Developer Tools and entity view

@@ -47,6 +47,7 @@ async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_
         "delivery_ALL_reserved_name",
         issue_key="delivery_reserved_name",
         issue_map={"delivery": "ALL"},
+        learn_more_url='https://supernotify.rhizomatics.org.uk/deliveries'
     )
 
 
@@ -57,6 +58,7 @@ async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_
         "delivery_generic_invalid_action",
         issue_key="delivery_invalid_action",
         issue_map={"action": "", "delivery": "generic"},
+        learn_more_url='https://supernotify.rhizomatics.org.uk/deliveries'
     )
 
 
@@ -72,4 +74,5 @@ async def test_broken_create_with_bad_condition(mock_context: Context) -> None:
         "delivery_generic_invalid_condition",
         issue_key="delivery_invalid_condition",
         issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "integrations"},
+        learn_more_url='https://supernotify.rhizomatics.org.uk/deliveries'
     )

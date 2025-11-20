@@ -75,7 +75,9 @@ class Context:
                 self.media_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
-                self.hass_api.raise_issue("media_path", "media_path", {"path": str(self.media_path), "error": str(e)})
+                self.hass_api.raise_issue("media_path", "media_path",
+                                {"path": str(self.media_path), "error": str(e)},
+                                learn_more_url="https://supernotify.rhizomatics.org.uk/#getting-started",)
                 self.media_path = None
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())

@@ -60,6 +60,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_reserved_name",
                 issue_key="delivery_reserved_name",
                 issue_map={"delivery": self.name},
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
             errors += 1
         if not self.transport.validate_action(self.action):
@@ -68,6 +69,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_invalid_action",
                 issue_key="delivery_invalid_action",
                 issue_map={"delivery": self.name, "action": self.action or ""},
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries"
             )
             errors += 1
 
@@ -85,6 +87,7 @@ class Delivery(DeliveryConfig):
                     f"delivery_{self.name}_invalid_condition",
                     issue_key="delivery_invalid_condition",
                     issue_map={"delivery": self.name, "condition": str(self.condition), "exception": exception},
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
                 )
                 errors += 1
         return errors == 0
@@ -234,6 +237,7 @@ class DeliveryRegistry:
                 f"delivery_{bad_del.get(CONF_NAME)}_for_transport_{bad_del.get(CONF_TRANSPORT)}_failed_to_configure",
                 issue_key="delivery_unknown_transport",
                 issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries"
             )
         _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self.deliveries.keys()))
 

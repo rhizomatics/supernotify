@@ -61,7 +61,7 @@ async def test_validate(mock_hass_api: HomeAssistantAPI) -> None:
         is_fixable=False,
         issue_key="scenario_delivery",
         issue_map={"scenario": "testing", "action_group": "lights"},
-        learn_more_url="https://supernotify.rhizomatics.github.io/#scenarios",
+        learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
         severity=IssueSeverity.WARNING,
     )
 

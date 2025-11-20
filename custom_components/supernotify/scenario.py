@@ -121,7 +121,7 @@ class Scenario:
                     issue_key="scenario_condition",
                     issue_map={"scenario": self.name, "error": error},
                     severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://supernotify.rhizomatics.github.io/#scenarios",
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                 )
                 return False
 
@@ -137,7 +137,7 @@ class Scenario:
                         issue_key="scenario_delivery",
                         issue_map={"scenario": self.name, "delivery": delivery_name},
                         severity=ir.IssueSeverity.WARNING,
-                        learn_more_url="https:/supernotify.rhizomatics.github.io/#scenarios",
+                        learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                     )
             for delivery_name in invalid_deliveries:
                 del self.delivery[delivery_name]
@@ -146,7 +146,7 @@ class Scenario:
             invalid_action_groups: list[str] = []
             for action_group_name in self.action_groups:
                 if action_group_name not in valid_action_groups:
-                    _LOGGER.error(f"SUPERNOTIFY Unknown delivery {action_group_name} removed from scenario {self.name}")
+                    _LOGGER.error(f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
                     invalid_action_groups.append(action_group_name)
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_action_group_{action_group_name}",
@@ -154,7 +154,7 @@ class Scenario:
                         issue_key="scenario_delivery",
                         issue_map={"scenario": self.name, "action_group": action_group_name},
                         severity=ir.IssueSeverity.WARNING,
-                        learn_more_url="https://supernotify.rhizomatics.github.io/#scenarios",
+                        learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                     )
             for action_group_name in invalid_action_groups:
                 self.action_groups.remove(action_group_name)

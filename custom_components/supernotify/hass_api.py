@@ -216,7 +216,7 @@ class HomeAssistantAPI:
         issue_key: str,
         issue_map: dict[str, str],
         severity: ir.IssueSeverity = ir.IssueSeverity.WARNING,
-        learn_more_url: str = "https://supernotify.rhizomatics.github.io",
+        learn_more_url: str = "https://supernotify.rhizomatics.org.uk",
         is_fixable: bool = False,
     ) -> None:
         if not self._hass:
