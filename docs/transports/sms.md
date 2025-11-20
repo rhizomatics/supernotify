@@ -1,3 +1,8 @@
+---
+tags:
+  - transport
+  - sms
+---
 # SMS Transport
 
 This can work with any SMS integration that follows Home Assistant Notification model.

@@ -1,3 +1,7 @@
+---
+tags:
+  - developer
+---
 # Simplified Class Diagram
 
 ```mermaid

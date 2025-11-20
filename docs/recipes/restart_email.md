@@ -1,3 +1,11 @@
+---
+tags:
+  - automation
+  - email
+  - html_email
+  - templating
+  - recipe
+---
 # Recipe - Home Assistant Restart
 
 ## Purpose

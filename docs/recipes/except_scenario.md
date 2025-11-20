@@ -1,3 +1,10 @@
+---
+tags:
+  - scenario
+  - templating
+  - recipe
+  - condition
+---
 # Recipe - Except Scenario
 
 ## Purpose

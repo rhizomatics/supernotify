@@ -1,3 +1,13 @@
+---
+tags:
+  - frigate
+  - recipe
+  - cctv
+  - genai
+  - gemini
+  - templating
+  - condition
+---
 # Recipe - Voice Described CCTV
 
 ## Purpose
@@ -7,7 +17,7 @@ A voice assistant will announce a description of events discovered on CCTV camer
 ## Implementation
 
 This is an advanced recipe, requiring several moving parts in addition to Supernotify. It uses both AI image
-detection to work 
+detection to work
 
 * Frigate CCTV
     * For *Mobile Push* and/or *Email* transports, use  *Frigate Proxy* for Home assistant if Frigate is not running as a Home Assistant app (aka 'add-on') to support a click-thru link to the camera page
@@ -17,7 +27,7 @@ detection to work
 * MQTT Broker configured in Home Assistant
 * Home Asssistant template logic
 * Voice Assistant
-    * In this example, Amazon Echo devices using the *Alexa Devices* integration, althought *Alexa Media Player* can be easily switched for it
+    * In this example, Amazon Echo devices using the *Alexa Devices* integration, although *Alexa Media Player* can be easily switched for it
     * If you don't have one of these, then use Mobile Push, e-mail or similar
 
 
@@ -38,8 +48,8 @@ genai:
     than just describing its appearance. The cameras are located on an detached
     house in a quarter acre plot, facing south west in a suburban street in
     London, England. There is a neighbourhood watch scheme, and a couple of
-    burglaries at night in the past 5 years. 
-    A family lives here, a 6 foot tall man in 30s with short brown hair who works 
+    burglaries at night in the past 5 years.
+    A family lives here, a 6 foot tall man in 30s with short brown hair who works
     from home, a 5 foot 5 inch woman who commutes to work and a teenaged son who
     walks to a nearby school. They drive a blue Subaru Forester, registration
     PK19KHG which is parked in a driveway in the back garden.
@@ -56,7 +66,7 @@ genai:
     parking, approaching, circling. If it is a delivery vehicle, mention the
     company. For people, summarize what they are doing and what their actions
     suggest about their intent, for example approaching a door, standing still,
-    appearing to not know their surroundings. 
+    appearing to not know their surroundings.
 ```
 
 ### Home Assistant
@@ -104,7 +114,7 @@ automations:
           - alexa_announce
           - mobile_push
 ```
-     
+
 ## Variations
 
 * Use a *scenario* in Supernotify to handle messages differently by risk, for example dropping the "NO RISK" ones

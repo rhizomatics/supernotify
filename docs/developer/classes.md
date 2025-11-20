@@ -1,3 +1,7 @@
+---
+tags:
+  - developer
+---
 # Core Classes
 
 !!! info

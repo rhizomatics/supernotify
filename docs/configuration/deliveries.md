@@ -1,3 +1,8 @@
+---
+tags:
+  - delivery
+  - condition
+---
 # Deliveries
 
 *Delivery* is how the different available notifications are defined.

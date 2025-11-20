@@ -1,3 +1,8 @@
+---
+tags:
+  - email
+  - recipe
+---
 # Recipe - Email CC
 
 ## Purpose

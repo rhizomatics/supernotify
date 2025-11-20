@@ -1,8 +1,15 @@
+---
+tags:
+  - scenario
+  - recipe
+  - occupancy
+  - condition
+---
 # Recipe - Content Escalation
 
 ## Purpose
 
-Make a notification more impactful if the message or titl has certain words in it.
+Make a notification more impactful if the message or title has certain words in it.
 
 ## Implementation
 

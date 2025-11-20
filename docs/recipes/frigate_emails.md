@@ -1,3 +1,10 @@
+---
+tags:
+  - frigate
+  - recipe
+  - email
+  - cctv
+---
 # Recipe - Frigate Emails
 
 ## Purpose

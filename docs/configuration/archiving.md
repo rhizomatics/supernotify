@@ -1,3 +1,8 @@
+---
+tags:
+  - mqtt
+  - archiving
+---
 # Notification Archiving
 
 Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete

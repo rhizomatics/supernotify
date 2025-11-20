@@ -1,3 +1,9 @@
+---
+tags:
+  - mqtt
+  - sms
+  - zigbee2mqtt
+---
 # General Notification Tips
 
 Hints and suggestions for configuring non-SuperNotify notification in HomeAssistant.

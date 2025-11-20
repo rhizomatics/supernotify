@@ -1,3 +1,9 @@
+---
+tags:
+  - scenario
+  - recipe
+  - condition
+---
 # Recipe - Bedtime
 
 ## Purpose

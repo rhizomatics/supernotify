@@ -1,3 +1,10 @@
+---
+tags:
+  - alexa
+  - scenario
+  - condition
+  - recipe
+---
 # Recipe - Alexa Whispering
 
 ## Purpose

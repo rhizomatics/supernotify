@@ -1,3 +1,11 @@
+---
+tags:
+  - xmas
+  - holiday
+  - scenario
+  - recipe
+  - condition
+---
 # Recipe - Seasonal Greetings
 
 ## Purpose

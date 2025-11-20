@@ -1,3 +1,9 @@
+---
+tags:
+  - transport
+  - email
+  - html_email
+---
 # Email
 
 Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.

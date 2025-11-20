@@ -1,3 +1,11 @@
+---
+tags:
+  - transport
+  - alexa
+  - 433mhz
+  - doorbell
+  - chime
+---
 # Chime Transport
 
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.

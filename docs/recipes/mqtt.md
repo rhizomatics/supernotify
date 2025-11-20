@@ -1,3 +1,8 @@
+---
+tags:
+  - mqtt
+  - recipe
+---
 # Recipe - MQTT
 
 ## Purpose
@@ -6,7 +11,7 @@ Notify by publishing to an MQTT topic, for example a siren that doesn't support 
 
 ## Implementation
 
-Uses the **Generic** transport.
+Uses the [Generic Transport Adaptor](../transports/generic.md).
 
 ## Example Configuration
 

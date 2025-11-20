@@ -1,4 +1,8 @@
-
+---
+tags:
+  - transport
+  - persistent
+---
 # Persistent Transport
 
 Place a notification on Home Assistant application screen.

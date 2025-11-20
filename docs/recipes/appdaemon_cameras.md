@@ -1,3 +1,10 @@
+---
+tags:
+  - scenario
+  - recipe
+  - cctv
+  - appdaemon
+---
 # Recipe - AppDaemon Cameras
 
 ## Purpose

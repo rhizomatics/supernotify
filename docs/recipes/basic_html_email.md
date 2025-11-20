@@ -1,3 +1,10 @@
+---
+tags:
+  - email
+  - scenario
+  - html_email
+  - recipe
+---
 # Recipe - Simple HTML Email
 
 ## Purpose

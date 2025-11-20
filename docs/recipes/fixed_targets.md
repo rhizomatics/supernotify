@@ -1,3 +1,8 @@
+---
+tags:
+  - delivery
+  - recipe
+---
 # Recipe - Fixed Targets
 
 ## Purpose

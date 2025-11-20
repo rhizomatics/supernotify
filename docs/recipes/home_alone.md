@@ -1,3 +1,10 @@
+---
+tags:
+  - people
+  - recipe
+  - scenario
+  - condition
+---
 # Recipe - Home Alone
 
 ## Purpose

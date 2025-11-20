@@ -1,3 +1,8 @@
+---
+tags:
+  - transport
+  - notify_entity
+---
 # Notify Entity Transport
 
 This transport uses the new style Home Assistant notify entities, so accepts only a `message`,

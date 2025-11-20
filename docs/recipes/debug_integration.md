@@ -1,3 +1,10 @@
+---
+tags:
+  - archiving
+  - debug
+  - logging
+  - recipe
+---
 # Recipe - Debug an Integration
 
 ## Purpose

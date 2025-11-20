@@ -1,3 +1,10 @@
+---
+tags:
+  - frigate
+  - recipe
+  - cctv
+  - onvif
+---
 # Recipe - Move a Camera for Snapshot
 
 ## Purpose
@@ -9,7 +16,7 @@ or mobile push message.
 This requires what's known as a "PTZ" camera, for pan-tilt-zoom, though some fisheye cameras can
 do something similar without motors, and some cameras have only zoom, or only pan/tilt. You will
 also need to set up labelled PTZ pre-sets, which can be done through the camera's own setup
-screens, DVR or CCTV app. 
+screens, DVR or CCTV app.
 
 ## Implementation
 
