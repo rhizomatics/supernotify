@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Make a notification more impactful if it has certain words in it.
+Make a notification more impactful if the message or titl has certain words in it.
 
 ## Implementation
 

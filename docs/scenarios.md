@@ -16,7 +16,7 @@ notification by the standard Home Assistant module. Supernotify also adds more c
 use in conditions, see the full list on the [Condition Variables](index.md#condition-variables) section.
 
 !!! tip
-  There's a [Scenario Schema](developer/schemas/Scenario%20Definition/) defined.
+  There's a [Scenario Schema](developer/schemas/Scenario_Definition.md) defined.
 
 ### Example Scenarios
 

@@ -13,10 +13,21 @@ theme:
     - content.code.copy
     - content.code.select
     - content.code.annotate
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
+    - toc.integrate
 plugins:
   - search
   - autorefs
   - pagetree
+  - tags
   - minify:
       minify_html: true
   - coverage:

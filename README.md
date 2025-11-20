@@ -86,7 +86,7 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 * Add a `notify` config for the `supernotify` integration
     * Give it a `name`, *"supernotify"* is a good choice but it can be anything
         * You will refer to this on every automation call, for example the action `notify.supernotify`
-    * See `examples` directory for working [minimal](https://supernotify.rhizomatics.org.uk/examples/config_notify/minimal/) and [maximal configuration](https://supernotify.rhizomatics.org.uk/examples/config_notify/maximal/) examples.
+    * See `examples` directory for working [minimal](https://supernotify.rhizomatics.org.uk/configuration/examples/minimal/) and [maximal configuration](https://supernotify.rhizomatics.org.uk/configuration/examples/maximal/) examples.
 * If using email attachments,  e.g. from camera snapshot or a `snapshot_url`, some extra config needed:
     * Configure a valid `media_path` in the Supernotify config, usually somewhere under `/config`
     * Set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the Supernotify configuration
@@ -95,7 +95,7 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 
 The best place to start are the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/), which show how some popular, and advanced, configuration can be achieved.
 
-Otherwise, start with the simplest possible config, like the [minimal](https://supernotify.rhizomatics.org.uk/examples/config_notify/minimal/) example.
+Otherwise, start with the simplest possible config, like the [minimal](https://supernotify.rhizomatics.org.uk//configurationexamples/minimal/) example.
 
 ### Calling the Supernotify Action
 

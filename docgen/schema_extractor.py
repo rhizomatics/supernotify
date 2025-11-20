@@ -1,11 +1,8 @@
-import sys
-from pathlib import Path
-
-sys.path.append(str((Path(__file__).parent / "..").resolve()))
-
 import json
 import logging
+import sys
 import typing
+from pathlib import Path
 from types import FunctionType
 
 import mkdocs_gen_files
@@ -14,7 +11,12 @@ from json_schema_for_humans.generation_configuration import GenerationConfigurat
 from voluptuous import Any
 from voluptuous_openapi import convert  # type: ignore
 
-import custom_components.supernotify
+sys.path.append(str((Path(__file__).parent / "..").resolve()))
+# import must come after sys.path append
+import custom_components.supernotify  # noqa: I001
+
+
+ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
 
 TOP_LEVEL_SCHEMAS = {
     "SUPERNOTIFY_SCHEMA": "Platform Configuration",
@@ -71,29 +73,47 @@ def schema_doc() -> None:
         walk_schema(vol_schema.schema)
     j_schemas = {TOP_LEVEL_SCHEMAS[s[0]]: convert(s[1]) for s in v_schemas.items()}
     config = GenerationConfiguration(
-        examples_as_yaml=True, template_name="md", show_toc=False, markdown_options={"show_heading_numbers": False}
+        examples_as_yaml=True,
+        template_name="md",
+        show_toc=False,
+        template_md_options={
+            "show_heading_numbers": False,
+            "properties_table_columns": ["Property", "Pattern", "Type", "Deprecated"],
+        },
     )
 
     # parser = jsonschema2md.Parser(collapse_children=True)
     for schema_name, schema in j_schemas.items():
+        schema_link_name = schema_name.replace(" ", "_")
         logging.info(f"Exporting {schema_name}")
         try:
             schema.setdefault("title", schema_name)
-            schema.setdefault("$id", "https://supernotify.rhizomatics.org.uk/developer/schemas/" + schema_name + ".json")
-            schema.setdefault("description", f"Voluptuous validation schema for {schema_name}")
+            schema.setdefault("$id", ROOT_URL + schema_link_name + ".json")
+            schema.setdefault("description", f"Voluptuous validation schema for {schema_link_name}")
             schema.setdefault("$schema", "https://json-schema.org/draft/2020-12/schema")
-            schema_filename = f"schemas/js/{schema_name}.schema.json"
+            schema_filename = f"developer/schemas/json/{schema_link_name}.schema.json"
             with mkdocs_gen_files.open(schema_filename, "w") as f:
                 json.dump(schema, f, indent=2, ensure_ascii=False)
                 schema_path = f.name
 
             lines = generate_from_schema(schema_path, config=config)
-            doc_filename = f"developer/schemas/{schema_name}.md"
+            doc_filename = f"developer/schemas/{schema_link_name}.md"
             with mkdocs_gen_files.open(doc_filename, "w") as df:
                 df.write(lines)
         except Exception:
             logging.exception(f"Error processing schema {schema_name}")
             continue
+
+    with mkdocs_gen_files.open("developer/schemas/index.md", "w") as df:
+        df.write("## JSON Schema Files\n")
+        df.write("|Schema|JSON Definition|Documentation|\n")
+        df.write("|------|---------------|-------|\n")
+        for schema_name in j_schemas:
+            schema_link_name = schema_name.replace(" ", "_")
+            df.write(f"|{schema_name}|[{schema_link_name}.json](json/{schema_link_name}.schema.json)|")
+            df.write(f"[Schema Doc]({schema_link_name}.md)|\n")
+
+        df.write("\n")
 
 
 schema_doc()

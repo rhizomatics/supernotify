@@ -2,7 +2,7 @@
 
 *Delivery* is how the different available notifications are defined.
 
-You should create a Delivery only for the [transports](transports/index.md)
+You should create a Delivery only for the [transports](../transports/index.md)
 you want to use, though sometimes you may want to create multiple Deliveries for the same channel, for example a `plain_email`
 and `html_email` delivery, or different custom notification platforms using the `generic` transport.
 
@@ -39,7 +39,7 @@ delivery:
 - Adapt messaging style to occupancy
 - Reduce notification noise by using sounds, like dings or bells, on chime devices or voice assistants
 
-There are more examples in the [Recipes](recipes.md) section.
+There are more examples in the [Recipes](../recipes/index.md) section.
 
 ## Simplifying Deliveries
 
@@ -47,7 +47,7 @@ There are two main ways:
 
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using
 `delivery_defaults`
-- Use [Scenarios](scenarios.md) to apply common chunks of config
+- Use [Scenarios](../scenarios.md) to apply common chunks of config
 - Move to a scenario-only configuration (recommended) by setting `selection` to `scenario` for every delivery
   - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
@@ -63,7 +63,7 @@ In this snippet, all Delivery configurations for `alexa_devices` will use the de
 ## Extreme Example
 
 Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full
-choice can also be found in the [Delivery Schema](developer/schemas/Delivery%20Definition/) definition.
+choice can also be found in the [Delivery Schema](../developer/schemas/Delivery_Definition.md) definition.
 
 ```yaml title="Complex Example"
 delivery:

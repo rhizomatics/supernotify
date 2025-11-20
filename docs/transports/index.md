@@ -1,6 +1,4 @@
-# Index
-
-## Built-in Transport Adaptors
+# Built-in Transport Adaptors
 
 {{ pagetree(siblings) }}
 
