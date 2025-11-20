@@ -30,7 +30,7 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 * One Action -> Multiple Notifications
     * Remove repetitive config and code from automations
     * Adaptors automatically tune notification data for each integration
-    * For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](recipes/frigate_emails.md) for more info.
+    * For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](https://supernotify.rhizomatics.org.uk/recipes/frigate_emails/) for more info.
 * Go beyond `notify` integrations
     * Chimes, sirens, SMS, Alexa Announcements and Sounds, API calls, MQTT devices
     * All the standard `notify` and  `notify.group` implementations available, including the modern `NotifyEntity` based ones
@@ -43,11 +43,11 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 * **Scenarios** for simple concise configuration
     * Package up common chunks of config and conditional logic
     * Have them applied on-demand in actions (`red_alert`,`nerdy`) or automatically based on conditions (`everyone_home_day`,`frigate_person`).
-    * See the [Alexa Whispering](recipes/alexa_whisper.md), [Home Alone](recipes/home_alone.md) and [Bedtime](recipes/bedtime.md) for simple to use examples.
+    * See the [Alexa Whispering](rhttps://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/), [Home Alone](https://supernotify.rhizomatics.org.uk/recipes/home_alone/) and [Bedtime](https://supernotify.rhizomatics.org.uk/recipes/bedtime/) for simple to use examples.
 * Unified Person model
     * Currently missing from Home Assistant.
     * Define an email, SMS number or mobile device, and then use the `person` entity in notification actions, Supernotify works out which attribute to use where
-    * See [People](people.md) for more info
+    * See [People](https://supernotify.rhizomatics.org.uk/people/) for more info
 * Easy **HTML email templates**
     * Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
     * Default general template supplied
@@ -57,7 +57,7 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 * Flexible **Image Snapshots**
     * Supports cameras, MQTT Images and image URLs.
     * Reposition cameras to PTZ presets before and after a snapshot is taken, including special support for Frigate PTZ presets
-    * See the [Multimedia](multimedia.md) documentation for more information.
+    * See the [Multimedia](https://supernotify.rhizomatics.org.uk/multimedia/) documentation for more information.
 * Choose Your Level Configuration
     * Set defaults, including lists of targets at
       - Transport Adaptor level, for example `alexa_devices`
@@ -86,17 +86,16 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 * Add a `notify` config for the `supernotify` integration
     * Give it a `name`, *"supernotify"* is a good choice but it can be anything
         * You will refer to this on every automation call, for example the action `notify.supernotify`
-    * See `examples` directory for working minimal and maximal configuration examples.
+    * See `examples` directory for working [minimal](https://supernotify.rhizomatics.org.uk/examples/config_notify/minimal/) and [maximal configuration](https://supernotify.rhizomatics.org.uk/examples/config_notify/maximal/) examples.
 * If using email attachments,  e.g. from camera snapshot or a `snapshot_url`, some extra config needed:
     * Configure a valid `media_path` in the Supernotify config, usually somewhere under `/config`
     * Set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the Supernotify configuration
 
 ### Configuration
 
-The best place to start are the [Recipes](recipes/index.md), which show how some popular,
-and advanced, configuration can be achieved.
+The best place to start are the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/), which show how some popular, and advanced, configuration can be achieved.
 
-Otherwise, start with the simplest possible config, like the [minimal](examples/config_notify/minimal.md) example.
+Otherwise, start with the simplest possible config, like the [minimal](https://supernotify.rhizomatics.org.uk/examples/config_notify/minimal/) example.
 
 ### Calling the Supernotify Action
 
@@ -149,7 +148,7 @@ fine tuning delivery configurations, or using existing notification blueprints, 
             priority: {% if {{ state_attr('sensor.tank', 'depth') }}<10 }critical{% else %}medium {% endif %}
 ```
 
- Lots more ideas in the [Recipes](recipes/index.md) for more ideas.
+ Lots more ideas in the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more ideas.
 
 ## Core Concepts
 
@@ -161,7 +160,7 @@ fine tuning delivery configurations, or using existing notification blueprints, 
 - The transport adaptor allows a single notification to be sent to many platforms, even
 when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
 - Transport Adaptors can optionally be defined in the Supernotify config with defaults
-- See [Transports](transports/index.md) for more detail
+- See [Transports](https://supernotify.rhizomatics.org.uk/transports/) for more detail
 
 ### Delivery
 
@@ -171,7 +170,7 @@ get used to send notifications, with the exception of *Notify Entity* transport 
 always on unless switched off.
 - Deliveries allow lots of fine tuning and defaults to be made, and you can also have multiple
 deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
-- See [Deliveries](deliveries.md) and [Recipes](recipes/index.md) for more detail
+- See [Deliveries](https://supernotify.rhizomatics.org.uk/deliveries/) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more detail
 
 ### Scenario
 - An easy way to package up common chunks of config, optionally combined with conditional logic
@@ -179,7 +178,7 @@ deliveries for a single transport, for example a `plain_email` and `html_email` 
 or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications,
 and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](scenarios.md) and [Recipes](recipes/index.md) for more detail
+- See [Scenarios](https://supernotify.rhizomatics.org.uk/scenarios/) and [Recipes](rhttps://supernotify.rhizomatics.org.uk/recipes/) for more detail
 
 
 ### Target
@@ -196,10 +195,10 @@ and `area_id`.
 - Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
 - This lets you target notifications to people in notifications, and each transport will pick the type
 of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
-- See [People](people.md) and [Recipes](recipes/index.md) for more detail
+- See [People](https://supernotify.rhizomatics.org.uk/people/) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more detail
 
 !!! info
-    For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core ones.
+    For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/developer/class_diagram/) of the core ones.
 
 ## Core Principles
 
