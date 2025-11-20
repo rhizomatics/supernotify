@@ -25,6 +25,8 @@ deliveries, or have this switched off by overriding `delivery_selection` to `exp
     * Notifications that don't match a scenario get dropped
         * Alternatively, a fallback delivery can be selected if every message goes somewhere
     * This is a good option when you're comfortable with the integration and its configuration, and you have noisy notifications, which should be either dropped, or result only in a chime ringing or an Alexa sound playing.
+    * Even if no notification occurs, there can still be an archive notification, to file system or MQTT as a record,
+    for example if you are experimenting with tuning out noise, see [Archive](configuration/archiving.md).
 
 ## Conditions
 
