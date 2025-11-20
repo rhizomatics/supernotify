@@ -4,7 +4,7 @@ tags:
   - email
   - html_email
 ---
-# Email
+# Email Transport Adaptor
 
 Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
 

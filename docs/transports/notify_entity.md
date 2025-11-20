@@ -3,7 +3,7 @@ tags:
   - transport
   - notify_entity
 ---
-# Notify Entity Transport
+# Notify Entity Transport Adaptor
 
 This transport uses the new style Home Assistant notify entities, so accepts only a `message`,
 `title` and `target`, plus an optional `data` specific to some entity types.

@@ -6,7 +6,7 @@ tags:
   - doorbell
   - chime
 ---
-# Chime Transport
+# Chime Transport Adaptor
 
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
 This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.

@@ -4,7 +4,7 @@ tags:
   - alexa
   - voice_assistant
 ---
-# Alexa Devices Transport
+# Alexa Devices Transport Adaptor
 
 Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 

@@ -3,7 +3,7 @@ tags:
   - transport
   - generic
 ---
-# Generic Transport
+# Generic Transport Adaptor
 
 Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.
 

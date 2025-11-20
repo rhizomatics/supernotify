@@ -3,7 +3,7 @@ tags:
   - transport
   - persistent
 ---
-# Persistent Transport
+# Persistent Transport Adaptor
 
 Place a notification on Home Assistant application screen.
 

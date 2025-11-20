@@ -4,7 +4,7 @@ tags:
   - mobile_push
   - iOS
 ---
-# Mobile Push Transport
+# Mobile Push Transport Adaptor
 
 Send a push message out, with option for camera integration, mobile actions, and
 translate general priority to Apple specific push priority.

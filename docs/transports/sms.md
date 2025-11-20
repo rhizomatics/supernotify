@@ -3,7 +3,7 @@ tags:
   - transport
   - sms
 ---
-# SMS Transport
+# SMS Transport Adaptor
 
 This can work with any SMS integration that follows Home Assistant Notification model.
 

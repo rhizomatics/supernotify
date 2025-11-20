@@ -4,7 +4,7 @@ tags:
   - alexa
   - voice_assistant
 ---
-# Alexa Media Player Transport
+# Alexa Media Player Transport Adaptor
 
 Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
 
