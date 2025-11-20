@@ -69,7 +69,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_invalid_action",
                 issue_key="delivery_invalid_action",
                 issue_map={"delivery": self.name, "action": self.action or ""},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries"
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
             errors += 1
 
@@ -237,7 +237,7 @@ class DeliveryRegistry:
                 f"delivery_{bad_del.get(CONF_NAME)}_for_transport_{bad_del.get(CONF_TRANSPORT)}_failed_to_configure",
                 issue_key="delivery_unknown_transport",
                 issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries"
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
         _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self.deliveries.keys()))
 

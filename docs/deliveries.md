@@ -6,7 +6,7 @@ You should create a Delivery only for the [transports](transports/index.md)
 you want to use, though sometimes you may want to create multiple Deliveries for the same channel, for example a `plain_email`
 and `html_email` delivery, or different custom notification platforms using the `generic` transport.
 
-With the exception of *Notify Entity*, none of the transports will do anything unless there is a Delivery
+With the exception of *Notify Entity*, none of the transport adaptors will do anything unless there is a Delivery
 configured in the `delivery:` section of the Supernotify config. (And if you really don't want a default
 Notify Entity delivery, set its transport `enabled` to `false`).
 

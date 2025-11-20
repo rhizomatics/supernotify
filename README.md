@@ -60,7 +60,7 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
     * See the [Multimedia](multimedia.md) documentation for more information.
 * Choose Your Level Configuration
     * Set defaults, including lists of targets at
-      - Transport level, for example `alexa_devices`
+      - Transport Adaptor level, for example `alexa_devices`
       - Delivery level, for example `Alexa Announce`,`Alexa Speak`
       - On the Action call for each notification
       - On a Scenario to apply to arbitrary deliveries
@@ -73,29 +73,36 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
     * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details.
     * Deliveries, Transports and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
-## Installation
+## Getting Started
+
+### Installation
 
 * Make sure you have HACS available
     - If not, check the [HACS Instructions](https://hacs.xyz/docs/use/)
-    - Supernotify is one of the default repositories in HACS so no other configuration required
-* Select *SuperNotify* in the list of available integrations in HACS and install
-* Add a `notify` config for the `supernotify` integration,
+    - Supernotify is one of the default repositories in HACS so no custom repo configuration required
+* Select *SuperNotify* in the list of available integrations in HACS and *Download*
+* Add Supernotify to the Home Assistant YAML configuration
+    * By default this is `config.yaml`, unless you have an `include` statement to move notify platform to another file
+* Add a `notify` config for the `supernotify` integration
+    * Give it a `name`, *"supernotify"* is a good choice but it can be anything
+        * You will refer to this on every automation call, for example the action `notify.supernotify`
     * See `examples` directory for working minimal and maximal configuration examples.
-* Extra config for email attachments
-    * To use attachments, e.g. from camera snapshot or a `snapshot_url`, you must set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the supernotify configuration
+* If using email attachments,  e.g. from camera snapshot or a `snapshot_url`, some extra config needed:
+    * Configure a valid `media_path` in the Supernotify config, usually somewhere under `/config`
+    * Set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the Supernotify configuration
 
-
-## Getting Started
+### Configuration
 
 The best place to start are the [Recipes](recipes/index.md), which show how some popular,
 and advanced, configuration can be achieved.
 
 Otherwise, start with the simplest possible config, like the [minimal](examples/config_notify/minimal.md) example.
 
-Calls to supernotify look like any other notify action, which will work but not use any of the features:
+### Calling the Supernotify Action
 
-### Minimal
-```yaml
+In your automations, scripts etc, make calls to Supernotify as any other notify action, with a `message` and an optional `title`. You can also include any of the newer style *Notify Entities* in the target. For many cases, you can convert an existing notification call to Supernotify by only changing the `action` name.
+
+```yaml title="Example Action Call"
   - action: notify.supernotify
     data:
         title: Security Notification
@@ -106,8 +113,7 @@ That simple call can be enriched in a few ways, here with a message template (as
 regular notify), using `person_id` targets to derive email,  applying some pre-built
 scenarios, and adding a click action to the mobile push notifications.
 
-### More features
-```yaml
+```yaml title="More Advanced Action Call"
   - action: notify.supernotify
     data:
         title: Security Notification
@@ -126,14 +132,13 @@ scenarios, and adding a click action to the mobile push notifications.
 
 ```
 Note here that the `clickAction` is defined only on the `mobile_push` delivery. However
-its also possible to define everything at the top level `data` section and let the individual
-deliveries pick out the attributes they need. This is helpful either if you don't care about
+it is also possible to simply define everything at the top level `data` section and let the individual
+transport adaptors pick out the attributes they need. This is helpful either if you don't care about
 fine tuning delivery configurations, or using existing notification blueprints, such as the popular
 [Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate%20Camera%20Notifications).
 
 
-### Templated
-```yaml
+```yaml title="Example Action Call Using Templates"
   - action: notify.supernotifier
     data:
         message:
@@ -150,13 +155,12 @@ fine tuning delivery configurations, or using existing notification blueprints, 
 
 ### Transport
 
-- *Transport* is the underlying platform that performs notifications.
-- They make the difference between regular Notify Groups and Supernotify. While a Notify Group
-seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`!
-- Supernotify comes out the box with adapters for common transports, like e-mail, mobile push, SMS, and Alexa, and a *Generic* transport that can be used to wrap any other Home Assistant action
-- The transport adapter is what allows a single notification to be sent to many platforms, even
+- *Transport* is the underlying platform that performs notifications, either out of the box from Home Assistant, or another custom component
+- *Transport Adaptors* are what make the difference between regular Notify Groups and Supernotify. While a Notify Group seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`!
+- Supernotify comes out the box with adaptors for common transports, like e-mail, mobile push, SMS, and Alexa, and a *Generic* transport adaptor that can be used to wrap any other Home Assistant action
+- The transport adaptor allows a single notification to be sent to many platforms, even
 when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
-- Transports can optionally be defined in the Supernotify config with defaults
+- Transport Adaptors can optionally be defined in the Supernotify config with defaults
 - See [Transports](transports/index.md) for more detail
 
 ### Delivery
@@ -219,7 +223,7 @@ and to keep those configuration as minimal as possible.
 | Recipient delivery override          | Runtime call    |                                                  |
 | Scenario delivery override           | Runtime call    | Multiple scenarios applied in no special order   |
 | Delivery definition                  | Startup         | `message` and `title` override Action Data      |
-| Transport defaults                      | Startup         |                                                  |
+| Transport defaults                   | Startup         |                                                  |
 | Target notification action defaults  | Downstream call |                                                  |
 
 

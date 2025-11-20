@@ -1,6 +1,6 @@
 # Index
 
-## Built-in Transports
+## Built-in Transport Adaptors
 
 {{ pagetree(siblings) }}
 
@@ -8,7 +8,7 @@
 
 ### Options
 
-Most transports support an additional set of options, some common ones for handling titles
+Most transport adaptors support an additional set of options, some common ones for handling titles
 or suppressing URLs, and some specific to a transport.
 
 In this example, image attachments for emails get tuned ( since these are commonly needed, the email
