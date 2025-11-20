@@ -1,5 +1,7 @@
 # Scenarios
 
+## What and Why
+
 Scenarios can be defined both as a set of conditions which switch on the scenario and/or as
 a set of overrides to apply if the scenario is active.
 
@@ -11,14 +13,31 @@ Scenarios can override specific delivery configurations, general media configura
 default `delivery_selection` basis of `implicit`, where the scenario inherits all the default
 deliveries, or have this switched off by overriding `delivery_selection` to `explicit` in which case only the deliveries mentioned in the scenario are included.
 
+## Usage Modes
+
+### Minor
+* Couple of scenarios added to a minimal Supernotify configuration to redirect notifications based on occupancy, priority etc
+### Medium
+* Scenarios used to factor out common code from multiple `delivery` configs in Supernotify, or complicated automations, sequences, scripts, appdaemon apps etc.
+### Major
+* Fully scenario driven configuration
+    * All `delivery` configurations have `selection: scenario` set so they are not enabled by default
+    * Notifications that don't match a scenario get dropped
+        * Alternatively, a fallback delivery can be selected if every message goes somewhere
+    * This is a good option when you're comfortable with the integration and its configuration, and you have noisy notifications, which should be either dropped, or result only in a chime ringing or an Alexa sound playing.
+
+## Conditions
+
 For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of
-notification by the standard Home Assistant module. Supernotify also adds more context variables to
-use in conditions, see the full list on the [Condition Variables](index.md#condition-variables) section.
+notification by the standard Home Assistant module. 
+
+Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](index.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or
+even patterns of words in the message or title - see [Content Escalation Recipe](recipes/content_escalation.md) for an example.
 
 !!! tip
-  There's a [Scenario Schema](developer/schemas/Scenario_Definition.md) defined.
+    There's a [Scenario Schema](developer/schemas/Scenario_Definition.md) defined for the configuration.
 
-### Example Scenarios
+## Examples
 
 This scenario could be used to select more obtrusive notifications, like email or Alexa announcements,
 from a combination of conditions, hence simplifying separate notification calls, and providing
@@ -54,10 +73,17 @@ red_alert:
         camera_entity_id: camera.porch
 ```
 
-Delivery selection can also be passed in the `data` of an action call, as one of `explicit`,
-`implicit` or `fixed`, the latter disables scenarios from enabling or disabling deliveries and leaves it solely
-to defaults or what's listed in the action call. `implicit` is the default, and `explicit` can also
-be switched on automatically if a list or single delivery is provided.
+## Controlling Delivery Selection
+
+Delivery selection can also be passed in the `data` of an action call, including overriding
+what scenarios would otherwise switch on. `delivery_selection` can be set to one of three values:
+
+* `implicit` - The default, all deliveries are enabled plus scenario selected
+* `explicit` - Only deliveries listed on the action call are enabled, plus ones switched on by a scenario
+    * This is switched on automatically if a list or single delivery is given.
+* `fixed` - Stops scenarios from enabling or disabling deliveries and leaves it solely
+
+## Scenario Selection at Notification
 
 Conditions aren't essential for scenarios, since they can also be switched on by a notification.
 
@@ -79,6 +105,8 @@ other scenarios, use `NULL`).
           - unoccupied
 ```
 
+## Overriding Content
+
 Individual deliveries can be overridden, including the content of the messages using `message_template` and `title_template`.
 The templates are regular HomeAssistant `jinja2`, and have the same context variables available as the scenario conditions (see below ). In the example below, Alexa can be made to whisper easily without having to mess with the text of every notification, and this scenario could also have conditions applied, for example to all low priority messages at night.
 
@@ -90,6 +118,8 @@ The templates are regular HomeAssistant `jinja2`, and have the same context vari
           data:
             title_template: '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
 ```
+
+## Multiple Scenarios
 
 Multiple scenarios can be applied, in the order provided, and each template will be applied in turn to the results of the previous template. So in the example below, you could apply both the *whisper* and *emotion* Amazon Alexa markup to the same message, or add in some sound effects based on any of the conditions.
 
