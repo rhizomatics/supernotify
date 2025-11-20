@@ -43,7 +43,7 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
 * **Scenarios** for simple concise configuration
     * Package up common chunks of config and conditional logic
     * Have them applied on-demand in actions (`red_alert`,`nerdy`) or automatically based on conditions (`everyone_home_day`,`frigate_person`).
-    * See the [Alexa Whispering](rhttps://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/), [Home Alone](https://supernotify.rhizomatics.org.uk/recipes/home_alone/) and [Bedtime](https://supernotify.rhizomatics.org.uk/recipes/bedtime/) for simple to use examples.
+    * See the [Alexa Whispering](https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/), [Home Alone](https://supernotify.rhizomatics.org.uk/recipes/home_alone/) and [Bedtime](https://supernotify.rhizomatics.org.uk/recipes/bedtime/) for simple to use examples.
 * Unified Person model
     * Currently missing from Home Assistant.
     * Define an email, SMS number or mobile device, and then use the `person` entity in notification actions, Supernotify works out which attribute to use where
