@@ -16,8 +16,8 @@ A voice assistant will announce a description of events discovered on CCTV camer
 
 ## Implementation
 
-This is an advanced recipe, requiring several moving parts in addition to Supernotify. It uses both AI image
-detection to work
+This is an advanced recipe, requiring several moving parts in addition to Supernotify, although it will
+also work with any notify implementation. It uses both AI image detection to work out when something interesting happened on camera, and GenAI ( an 'llm' ) to interpret what is happening in the scene, and what the potential risk level is, for example if a suspicious intruder is present.
 
 * Frigate CCTV
     * For *Mobile Push* and/or *Email* transports, use  *Frigate Proxy* for Home assistant if Frigate is not running as a Home Assistant app (aka 'add-on') to support a click-thru link to the camera page
@@ -37,6 +37,9 @@ detection to work
 
 This assumes you already have your cameras set up in Frigate, and an `mqtt` section pointing to the
 same broker as used by Home Assistant.
+
+Tune the context to describe your house, location, car and occupants.
+
 ```yaml
 genai:
   enabled: true
@@ -76,6 +79,8 @@ that you have Home Assistant available at `http://homeassistant.local:8123`.
 
 The automation subscribes to the Frigate MQTT topic, ignores certain messages, strips the "MEDIUM RISK" etc
 preface off the message and derives the notification priority from the risk level assessed by GenAI.
+
+The [mobile push transport adaptor](../transports/mobile_push.md) will automatically, for iOS, set the `interruption-level` set to `time-sensitive` for `high` priority notifications, and a `critical` for critical ones. The latter will also have the `critical` sound played at full volume.
 
 ```yaml
 automations:
