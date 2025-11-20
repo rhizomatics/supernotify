@@ -17,7 +17,7 @@ A voice assistant will announce a description of events discovered on CCTV camer
 ## Implementation
 
 This is an advanced recipe, requiring several moving parts in addition to Supernotify, although it will
-also work with any notify implementation. It uses both AI image detection to work out when something interesting happened on camera, and GenAI ( an 'llm' ) to interpret what is happening in the scene, and what the potential risk level is, for example if a suspicious intruder is present.
+also work with any notify implementation. It uses both AI image detection to work out when something interesting happened on camera, and GenAI ( an 'LLM' ) to interpret what is happening in the scene, and what the potential risk level is, for example if a suspicious intruder is present.
 
 * Frigate CCTV
     * For *Mobile Push* and/or *Email* transports, use  *Frigate Proxy* for Home assistant if Frigate is not running as a Home Assistant app (aka 'add-on') to support a click-thru link to the camera page
