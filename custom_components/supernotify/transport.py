@@ -169,6 +169,7 @@ class Transport:
                             time.time() - start_time,
                             domain,
                             service,
+                            debug=delivery.debug,
                             action_data=service_data_as_sent,
                             target_data=dict(target_data),
                             service_response=service_response,
@@ -184,6 +185,7 @@ class Transport:
                             time.time() - start_time,
                             domain,
                             service,
+                            debug=delivery.debug,
                             action_data=service_data_as_sent,
                             service_response=service_response,
                         )

@@ -38,4 +38,5 @@ def test_call_record():
         "action": "toggle",
         "action_data": {},
         "elapsed": 13.4,
+        "debug": False,
     }

@@ -383,6 +383,7 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
         "action": "play_media",
         "action_data": {"media_content_type": "sound", "media_content_id": "bell_02"},
         "target_data": {"entity_id": "media_player.lobby"},
+        "debug": False,
     }
 
 

@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_ACTION,
     CONF_ALIAS,
     CONF_CONDITION,
+    CONF_DEBUG,
     CONF_ENABLED,
     CONF_NAME,
     CONF_OPTIONS,
@@ -158,6 +159,7 @@ class Delivery(DeliveryConfig):
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_SELECTION: self.selection,
+            CONF_DEBUG: self.debug,
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
