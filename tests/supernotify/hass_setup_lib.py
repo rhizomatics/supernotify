@@ -16,7 +16,6 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceRegistry,
-    ServiceResponse,
     StateMachine,
     SupportsResponse,
 )
@@ -224,31 +223,6 @@ def register_mobile_app(
     if entity_registry and device_entry:
         entity_registry.async_get_or_create("device_tracker", "mobile_app", device_name, device_id=device_entry.id)
     return device_entry
-
-
-class DummyService:
-    """Dummy service for testing purposes."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        domain: str = "notify",
-        action: str = "custom_test",
-        supports_response=SupportsResponse.OPTIONAL,
-        response: ServiceResponse | None = None,
-        exception: Exception | None = None,
-    ) -> None:
-        self.hass = hass
-        self.calls: list[ServiceCall] = []
-        self.response = response
-        self.exception = exception
-        hass.services.async_register(domain, action, self.service_call, supports_response=supports_response)
-
-    def service_call(self, call: ServiceCall) -> ServiceResponse | None:
-        self.calls.append(call)
-        if self.exception:
-            raise self.exception
-        return self.response
 
 
 def register_device(

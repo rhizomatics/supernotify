@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.context import Context
@@ -28,6 +29,8 @@ from . import (
 )
 
 if TYPE_CHECKING:
+    import datetime as dt
+
     from .delivery import Delivery, DeliveryRegistry
     from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry
@@ -59,6 +62,9 @@ class Transport:
         self.enabled = self.transport_config.enabled
         self.override_enabled = self.enabled
         self.alias = self.transport_config.alias
+        self.last_error_at: dt.datetime | None = None
+        self.last_error_message: str | None = None
+        self.error_count: int = 0
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
@@ -106,6 +112,10 @@ class Transport:
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
+        if self.last_error_at:
+            attrs["last_error_at"] = self.last_error_at.isoformat()
+            attrs["last_error_message"] = self.last_error_message
+        attrs["error_count"] = self.error_count
         return attrs
 
     @abstractmethod
@@ -186,6 +196,9 @@ class Transport:
                 envelope.skipped = 1
             return True
         except Exception as e:
+            self.last_error_at = dt_util.utcnow()
+            self.last_error_message = str(e)
+            self.error_count += 1
             envelope.failed_calls.append(
                 CallRecord(time.time() - start_time, domain, service, action_data, target_data, exception=str(e))
             )

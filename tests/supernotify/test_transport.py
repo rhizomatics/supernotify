@@ -15,7 +15,8 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.generic import GenericTransport
 
-from .hass_setup_lib import DummyService, TestingContext
+from .doubles_lib import DummyService
+from .hass_setup_lib import TestingContext
 
 
 def test_simplify_text(mock_context: Context) -> None:
