@@ -14,9 +14,11 @@ Images can be included by:
 
 - camera entity, as created by any [Camera Integration](https://www.home-assistant.io/integrations/camera/)
 - image entity, for example an [MQTT Image](https://www.home-assistant.io/integrations/image.mqtt/), ideal for Frigate or cameras that stream to MQTT
-- `snapshot_url`
+- `snapshot_url` to grab from any HTTP(S) address
 
 Additionally a video clip can be referenced by `clip_url` where supported by a transport (currently mobile push only).
+
+The media content type will be automatically determined from the grabbed image.
 
 ### PTZ ( Pan, Tilt, Zoom ) Camera Support
 
@@ -34,7 +36,7 @@ detection in the SMTP integration, and leads to spurious log entries.
 
 Supernotify will automatically rewrite JPEGs into simpler standard forms to avoid this, and optionally `jpeg_opts` can be set, for example to reduce image quality for smaller email attachments.
 
-See the *Saving* section under **JPEG** on the [PIL Image Writer documentation[(https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#)] for the full set of options available.
+See the *Saving* section under **JPEG** on the [PIL Image Writer documentation](https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#)] for the full set of options available.
 
 ### Example Action
 
@@ -67,3 +69,4 @@ Use this for additional camera info:
   * Delay between PTZ command and snapshot can be defined using `ptz_delay`
   * Choose between ONVIF or Frigate PTZ control using `ptz_transport`
     * Note that ONVIF may have numeric reference for presets while Frigate uses labels
+* Configuration documentation for [Camera Schema](../developer/schemas/Camera_Definition.md).

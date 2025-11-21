@@ -6,6 +6,11 @@ tags:
 ---
 # Mobile Push Transport Adaptor
 
+| Transport ID         | Source      | Requirements | Optional |
+| -------------------- | ----------- | ------------ | -------- |
+| `mobile_push` | :material-github:[`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | :material-home-assistant: [iOS Companion App Integration](https://www.home-assistant.io/integrations/ios/) | - |
+
+
 Send a push message out, with option for camera integration, mobile actions, and
 translate general priority to Apple specific push priority.
 
@@ -37,3 +42,7 @@ its also possible to directly set them, as in this example:
                   name: "US-EN-Alexa-Motion-Detected-Generic.wav"
                   volume: 1.0
 ```
+
+!!! info
+    This has not been tested with Android, although both Apple and Android devices share same
+    common core mobile push notifications. Pull Requests for adding Android functionality are welcome.

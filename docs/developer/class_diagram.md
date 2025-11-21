@@ -60,7 +60,7 @@ direction LR
         class ChimeTransport{}
         class PersistentTransport{}
         class GenericTransport{}
-        class MediaPlayerImageTransport{}
+        class MediaPlayerTransport{}
         class NotifyEntityTransport{}
     }
 
@@ -82,6 +82,6 @@ direction LR
     Transport <|--  ChimeTransport
     Transport <|--  PersistentTransport
     Transport <|--  GenericTransport
-    Transport <|--  MediaPlayerImageTransport
+    Transport <|--  MediaPlayerTransport
     Transport <|--  NotifyEntityTransport
 ```

@@ -81,7 +81,7 @@ from .transports.alexa_media_player import AlexaMediaPlayerTransport
 from .transports.chime import ChimeTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
-from .transports.media_player_image import MediaPlayerImageTransport
+from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
 from .transports.mqtt import MQTTTransport
 from .transports.notify_entity import NotifyEntityTransport
@@ -105,7 +105,7 @@ TRANSPORTS: list[type[Transport]] = [
     AlexaDevicesTransport,
     AlexaMediaPlayerTransport,
     MobilePushTransport,
-    MediaPlayerImageTransport,
+    MediaPlayerTransport,
     ChimeTransport,
     PersistentTransport,
     GenericTransport,

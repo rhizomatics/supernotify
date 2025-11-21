@@ -5,6 +5,11 @@ tags:
 ---
 # SMS Transport Adaptor
 
+| Transport ID         | Source      | Requirements | Optional |
+| -------------------- | ----------- | ------------ | -------- |
+| `sms` | :material-github:[`sms.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/sms.py) | - | :material-home-assistant: [SMS Notification Integrations](https://www.home-assistant.io/integrations/?search=sms&cat=notifications), :simple-homeassistantcommunitystore: [Mikrotik SMS Integration](https://github.com/jeyrb/hass_mikrotik_sms) |
+
+
 This can work with any SMS integration that follows Home Assistant Notification model.
 
 Configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`

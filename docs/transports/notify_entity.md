@@ -5,6 +5,11 @@ tags:
 ---
 # Notify Entity Transport Adaptor
 
+| Transport ID         | Source      | Requirements | Optional |
+| -------------------- | ----------- | ------------ | -------- |
+| `notify_entity` | :material-github:[`notify_entity.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/notify_entity.py) | :material-home-assistant: [Notify Entity Integration](https://www.home-assistant.io/integrations/notify/) | - |
+
+
 This transport uses the new style Home Assistant notify entities, so accepts only a `message`,
 `title` and `target`, plus an optional `data` specific to some entity types.
 

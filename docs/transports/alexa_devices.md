@@ -6,6 +6,10 @@ tags:
 ---
 # Alexa Devices Transport Adaptor
 
+| Transport ID         | Source      | Requirements | Optional |
+| -------------------- | ----------- | ------------ | -------- |
+| `alexa_devices` | :material-github:[`alexa_devices.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_devices.py) | :material-home-assistant: [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/) | - |
+
 Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 
 The `title_handling` option can be set to `combine_message` or `replace_message` to override the default behaviour of speaking the `message`.

@@ -1,5 +1,12 @@
 # Public releases
 
+## 1.3.4
+### Features
+- Improved documentation content and navigation
+- Media Player transport allows `media_content_type` to be overridden in `data` for non-image use
+### Internal
+- Renaming of transport tests for consistency with package names
+- Renaming of `media_player` references for consistency
 ## 1.3.3
 ### Features
 - Added more direct documentation links for repairs

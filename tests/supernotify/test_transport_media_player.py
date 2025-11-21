@@ -5,7 +5,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transports.media_player_image import MediaPlayerImageTransport
+from custom_components.supernotify.transports.media_player import MediaPlayerTransport
 
 from .hass_setup_lib import TestingContext
 
@@ -17,11 +17,11 @@ async def test_notify_media_image() -> None:
         hass_external_url="https://myserver",
     )
 
-    uut = MediaPlayerImageTransport(context)
+    uut = MediaPlayerTransport(context)
     await context.test_initialize(transport_instances=[uut])
     await uut.initialize()
 
-    uut = MediaPlayerImageTransport(context)
+    uut = MediaPlayerTransport(context)
 
     await uut.deliver(
         Envelope(
@@ -39,12 +39,11 @@ async def test_notify_media_image() -> None:
         "media_player",
         "play_media",
         service_data={
-            "entity_id": ["media_player.echo_show_8", "media_player.echo_show_10"],
             "media_content_id": "https://myserver/ftp/pic.jpeg",
             "media_content_type": "image",
         },
+        target={"entity_id": ["media_player.echo_show_8", "media_player.echo_show_10"]},
         blocking=False,
         context=None,
-        target=None,
         return_response=False,
     )

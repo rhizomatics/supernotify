@@ -5,6 +5,11 @@ tags:
 ---
 # Generic Transport Adaptor
 
+| Transport ID         | Source      | Requirements | Optional |
+| -------------------- | ----------- | ------------ | -------- |
+| `generic` | :material-github:[`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | - | *Any Home Assistant action from core or custom integration* |
+
+
 Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.
 
 If action is in `notify` domain, then `message`,`title`,`target` and `data` will be

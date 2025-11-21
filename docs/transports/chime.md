@@ -8,6 +8,12 @@ tags:
 ---
 # Chime Transport Adaptor
 
+| Transport ID         | Source      | Requirements | Optional |
+| -------------------- | ----------- | ------------ | -------- |
+| `chime` | :material-github:[`chime.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/chime.py) | - | :material-home-assistant: [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/),:simple-homeassistantcommunitystore: [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player),:material-home-assistant: [RFLink](https://www.home-assistant.io/integrations/rflink/),:material-home-assistant: [MQTT Siren](https://www.home-assistant.io/integrations/siren.mqtt/) etc. |
+
+
+
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
 This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.
 
