@@ -8,7 +8,7 @@
 - The transport adaptor allows a single notification to be sent to many platforms, even
 when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
 - Transport Adaptors can optionally be defined in the Supernotify config with defaults
-- See [Transports](https://supernotify.rhizomatics.org.uk/transports/) for more detail
+- See [Transports](transports/index.md) for more detail
 
 ## Delivery
 
@@ -18,7 +18,7 @@ get used to send notifications, with the exception of *Notify Entity* transport 
 always on unless switched off.
 - Deliveries allow lots of fine tuning and defaults to be made, and you can also have multiple
 deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
-- See [Deliveries](https://supernotify.rhizomatics.org.uk/deliveries/) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more detail
+- See [Deliveries](configuration/deliveries.md) and [Recipes](recipes/index.md) for more detail
 
 ## Scenario
 - An easy way to package up common chunks of config, optionally combined with conditional logic
@@ -26,7 +26,7 @@ deliveries for a single transport, for example a `plain_email` and `html_email` 
 or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications,
 and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](https://supernotify.rhizomatics.org.uk/scenarios/) and [Recipes](rhttps://supernotify.rhizomatics.org.uk/recipes/) for more detail
+- See [Scenarios](scenarios.md) and [Recipes](recipes/index.md) for more detail
 
 
 ## Target
@@ -43,10 +43,10 @@ and `area_id`.
 - Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
 - This lets you target notifications to people in notifications, and each transport will pick the type
 of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
-- See [People](https://supernotify.rhizomatics.org.uk/people/) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more detail
+- See [People](configuration/people.md) and [Recipes](recipes/index.md) for more detail
 
 !!! info
-    For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/developer/class_diagram/) of the core ones.
+    For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core ones.
 
 # Core Principles
 

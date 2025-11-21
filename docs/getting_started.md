@@ -11,14 +11,14 @@
 * Add a `notify` config for the `supernotify` integration
     * Give it a `name`, *"supernotify"* is a good choice but it can be anything
         * You will refer to this on every automation call, for example the action `notify.supernotify`
-    * See `examples` directory for working [minimal](https://supernotify.rhizomatics.org.uk/configuration/examples/minimal/) and [maximal configuration](https://supernotify.rhizomatics.org.uk/configuration/examples/maximal/) examples.
+    * See `examples` directory for working [minimal](configuration/examples/minimal.md) and [maximal configuration](configuration/examples/maximal.md) examples.
 * If using email attachments,  e.g. from camera snapshot or a `snapshot_url`, some extra config needed:
     * Configure a valid `media_path` in the Supernotify config, usually somewhere under `/config`
     * Set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the Supernotify configuration
 
 ## Configuration
 
-Otherwise, start with the simplest possible config, like the [minimal](https://supernotify.rhizomatics.org.uk//configurationexamples/minimal/) example.
+Otherwise, start with the simplest possible config, like the [minimal](configuration/examples/minimal.md) example.
 
 By default, configuration lives in `config.yaml`, under a `notify` section. Many people move chunks of config out of here to make it more manageable, like this, so all the notify configuration lives in one file, in this case `notify.yaml`.
 
@@ -26,7 +26,7 @@ By default, configuration lives in `config.yaml`, under a `notify` section. Many
 notify: !include notify.yaml
 ```
 
-[Deliveries](configuration/deliveries.md) explains how to set up the basic notification channels you want, and [Configuration Levels](configuration//levels.md) how to choose the best place to put configuration for simplicity, clarity and concision. The [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) show how some popular, and advanced, configuration can be achieved.
+[Deliveries](configuration/deliveries.md) explains how to set up the basic notification channels you want, and [Configuration Levels](configuration//levels.md) how to choose the best place to put configuration for simplicity, clarity and concision. The [Recipes](recipes/index.md) show how some popular, and advanced, configuration can be achieved.
 
 
 ## Calling the Supernotify Action
@@ -80,4 +80,4 @@ fine tuning delivery configurations, or using existing notification blueprints, 
             priority: {% if {{ state_attr('sensor.tank', 'depth') }}<10 }critical{% else %}medium {% endif %}
 ```
 
- Lots more ideas in the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more ideas.
+ Lots more ideas in the [Recipes](recipes/index.md) for more ideas.

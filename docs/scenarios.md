@@ -38,7 +38,7 @@ deliveries, or have this switched off by overriding `delivery_selection` to `exp
 For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of
 notification by the standard Home Assistant module.
 
-Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](index.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or
+Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](configuration/conditions.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or
 even patterns of words in the message or title - see [Content Escalation Recipe](recipes/content_escalation.md) for an example.
 
 !!! tip
