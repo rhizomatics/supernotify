@@ -4,6 +4,7 @@
     "after_dependencies": [
         "mobile_app",
         "mqtt",
+        "alexa_devices",
         "trace"
     ],
     "codeowners": [
