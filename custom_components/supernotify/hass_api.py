@@ -135,7 +135,7 @@ class HomeAssistantAPI:
         except Exception:
             _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s")
 
-        return await self._hass.services.async_call(
+        response: ServiceResponse | None = await self._hass.services.async_call(
             domain,
             service,
             service_data=service_data,
@@ -144,6 +144,9 @@ class HomeAssistantAPI:
             target=target_data,
             return_response=return_response,
         )
+        if response is not None and debug:
+            _LOGGER.info("SUPERNOTIFY Service %s.%s response: %s", domain, service, response)
+        return response
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         if self._hass is None:
