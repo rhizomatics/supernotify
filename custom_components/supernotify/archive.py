@@ -77,7 +77,7 @@ class ArchiveTopic:
 
 
 class ArchiveDirectory:
-    def __init__(self, path: str, purge_minute_interval: int, debug: bool = False) -> None:
+    def __init__(self, path: str, purge_minute_interval: int, debug: bool) -> None:
         self.configured_path: str = path
         self.archive_path: anyio.Path | None = None
         self.enabled: bool = False
@@ -129,7 +129,7 @@ class ArchiveDirectory:
                 if self.debug:
                     try:
                         save_json(archive_path,
-                                  archive_object.contents(minimal=True))
+                                  archive_object.contents(minimal=self.debug))
                         _LOGGER.warning(
                             "SUPERNOTIFY Archived minimal notification %s", archive_path)
                         archived = True
