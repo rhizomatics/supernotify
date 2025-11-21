@@ -26,7 +26,7 @@ class DummyService:
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        hass: HomeAssistant | None,
         domain: str = "notify",
         action: str = "custom_test",
         supports_response=SupportsResponse.OPTIONAL,
@@ -39,23 +39,19 @@ class DummyService:
         self.exception = exception
         self.action = action
         self.domain = domain
-        if isinstance(hass, Mock):
-            hass.services.async_call.side_effect = self.mocked_service_call
-        else:
-            hass.services.async_register(domain, action, self.service_call, supports_response=supports_response)
+        if hass is not None:
+            if isinstance(hass, Mock):
+                hass.services.async_call.side_effect = self.mocked_service_call
+            else:
+                hass.services.async_register(domain, action, self.service_call, supports_response=supports_response)
 
-    def mocked_service_call(self, domain,
-            service,
-            service_data,
-            blocking=False,
-            context=None,
-            target=None,
-            return_response=None) -> ServiceResponse | None:
+    def mocked_service_call(
+        self, domain, service, service_data, blocking=False, context=None, target=None, return_response=None
+    ) -> ServiceResponse | None:
         service_data = service_data or {}
         service_data.update(target or {})
-
-        self.calls.append(ServiceCall(self.hass,
-            domain, service, service_data, context, return_response))
+        if self.hass is not None:
+            self.calls.append(ServiceCall(self.hass, domain, service, service_data, context, return_response))
         if self.exception:
             raise self.exception
         return self.response
@@ -96,9 +92,12 @@ class DummyTransport(Transport):
     async def deliver(self, envelope: Envelope) -> bool:
         if self.transport_exception:
             raise self.transport_exception
-        return await self.call_action(envelope, self.action,
-                    action_data=envelope.data,
-                    target_data={"entity_id": envelope.target.entity_ids} if envelope.target else None)
+        return await self.call_action(
+            envelope,
+            self.action,
+            action_data=envelope.data,
+            target_data={"entity_id": envelope.target.entity_ids} if envelope.target else None,
+        )
 
 
 class MockImageEntity(image.ImageEntity):

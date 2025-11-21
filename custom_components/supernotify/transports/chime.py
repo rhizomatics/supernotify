@@ -57,11 +57,9 @@ class ChimeTargetConfig:
         elif self.device_id:
             self.domain = domain
         else:
-            raise ValueError(
-                "ChimeTargetConfig target must be entity_id or device_id")
+            raise ValueError("ChimeTargetConfig target must be entity_id or device_id")
         if kwargs:
-            _LOGGER.warning(
-                "SUPERNOTIFY ChimeTargetConfig ignoring unexpected args: %s", kwargs)
+            _LOGGER.warning("SUPERNOTIFY ChimeTargetConfig ignoring unexpected args: %s", kwargs)
         self.volume: float | None = volume
         self.tune: str | None = tune
         self.duration: int | None = duration
@@ -120,30 +118,25 @@ class ChimeTransport(Transport):
         )
         # expand groups
         expanded_targets = {
-            e: ChimeTargetConfig(
-                tune=chime_tune, volume=chime_volume, duration=chime_duration, entity_id=e)
+            e: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, entity_id=e)
             for e in self.hass_api.expand_group(target.entity_ids)
         }
         expanded_targets.update({
-            d: ChimeTargetConfig(
-                tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
+            d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
             for d in target.device_ids
         })
         # resolve and include chime aliases
-        expanded_targets.update(self.resolve_tune(
-            chime_tune))  # overwrite and extend
+        expanded_targets.update(self.resolve_tune(chime_tune))  # overwrite and extend
 
         chimes = 0
         if not expanded_targets:
             _LOGGER.info("SUPERNOTIFY skipping chime, no targets")
             return False
         for chime_entity_config in expanded_targets.values():
-            _LOGGER.debug("SUPERNOTIFY chime %s: %s",
-                          chime_entity_config.entity_id, chime_entity_config.tune)
+            _LOGGER.debug("SUPERNOTIFY chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
             action_data = None
             try:
-                domain, service, action_data, target_data = self.analyze_target(
-                    chime_entity_config, data, envelope)
+                domain, service, action_data, target_data = self.analyze_target(chime_entity_config, data, envelope)
                 if domain is not None and service is not None:
                     action_data = self.prune_data(domain, action_data)
 
@@ -152,11 +145,9 @@ class ChimeTransport(Transport):
                     ):
                         chimes += 1
                 else:
-                    _LOGGER.debug(
-                        "SUPERNOTIFY Chime skipping incomplete service for %s", chime_entity_config.entity_id)
+                    _LOGGER.debug("SUPERNOTIFY Chime skipping incomplete service for %s", chime_entity_config.entity_id)
             except Exception:
-                _LOGGER.exception(
-                    "SUPERNOTIFY Failed to chime %s: %s [%s]", chime_entity_config.entity_id, action_data)
+                _LOGGER.exception("SUPERNOTIFY Failed to chime %s: %s [%s]", chime_entity_config.entity_id, action_data)
         return chimes > 0
 
     def prune_data(self, domain: str, data: dict[str, Any]) -> dict[str, Any]:
@@ -184,8 +175,7 @@ class ChimeTransport(Transport):
             if target_config.domain is not None and target_config.domain in DEVICE_DOMAINS:
                 domain = target_config.domain
             else:
-                domain = self.hass_api.domain_for_device(
-                    target_config.device_id, DEVICE_DOMAINS)
+                domain = self.hass_api.domain_for_device(target_config.device_id, DEVICE_DOMAINS)
 
         elif target_config.entity_id and "." in target_config.entity_id:
             domain, name = target_config.entity_id.split(".", 1)
@@ -212,12 +202,10 @@ class ChimeTransport(Transport):
         elif domain == "script":
             action_data.setdefault(CONF_VARIABLES, {})
             if target_config.data:
-                action_data[CONF_VARIABLES] = target_config.data.get(
-                    CONF_VARIABLES, {})
+                action_data[CONF_VARIABLES] = target_config.data.get(CONF_VARIABLES, {})
             if data:
                 # override data sourced from chime alias with explicit variables in envelope/data
-                action_data[CONF_VARIABLES].update(
-                    data.get(CONF_VARIABLES, {}))
+                action_data[CONF_VARIABLES].update(data.get(CONF_VARIABLES, {}))
             action = name
             action_data[CONF_VARIABLES][ATTR_MESSAGE] = envelope.message
             action_data[CONF_VARIABLES][ATTR_TITLE] = envelope.title
@@ -269,10 +257,8 @@ class ChimeTransport(Transport):
                 # pass through variables or data if present
                 if raw_target is not None:
                     target = Target(raw_target)
-                    target_configs.update({t: ChimeTargetConfig(
-                        entity_id=t, **alias_config) for t in target.entity_ids})
-                    target_configs.update({t: ChimeTargetConfig(
-                        device_id=t, **alias_config) for t in target.device_ids})
+                    target_configs.update({t: ChimeTargetConfig(entity_id=t, **alias_config) for t in target.entity_ids})
+                    target_configs.update({t: ChimeTargetConfig(device_id=t, **alias_config) for t in target.device_ids})
                 elif alias_config["domain"] in DEVICE_DOMAINS:
                     # bulk apply to all known target devices of this domain
                     bulk_apply = {
@@ -293,6 +279,5 @@ class ChimeTransport(Transport):
                         and ATTR_ENTITY_ID not in alias_config
                     }
                     target_configs.update(bulk_apply)
-        _LOGGER.debug("SUPERNOTIFY transport_chime: Resolved tune %s to %s",
-                      tune_or_alias, target_configs)
+        _LOGGER.debug("SUPERNOTIFY transport_chime: Resolved tune %s to %s", tune_or_alias, target_configs)
         return target_configs

@@ -378,7 +378,7 @@ ARCHIVE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
     vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
     vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
-    vol.Optional(CONF_DEBUG, default=False): cv.boolean
+    vol.Optional(CONF_DEBUG, default=False): cv.boolean,
 })
 
 HOUSEKEEPING_SCHEMA = vol.Schema({
