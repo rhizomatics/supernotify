@@ -73,40 +73,29 @@ class DummyTransport(Transport):
     def __init__(
         self,
         *args: Any,
+        service_exception: Exception | None = None,
+        transport_exception: Exception | None = None,
+        target_required: TargetRequired = TargetRequired.ALWAYS,
         **kwargs: Any,
     ) -> None:
+        self.target_required = target_required
         super().__init__(*args, **kwargs)
-        self.service = DummyService(self.hass_api._hass)
+        self.service = DummyService(self.hass_api._hass, exception=service_exception)
         self.action = f"{self.service.domain}.{self.service.action}"
+        self.transport_exception = transport_exception
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
-    async def deliver(self, envelope: Envelope) -> bool:
-        return await self.call_action(envelope, self.action,
-                    action_data=envelope.data,
-                    target_data={"entity_id": envelope.target.entity_ids} if envelope.target else None)
-
-
-class BrokenTransport(Transport):
-    name = "broken"
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.service = DummyService(self.hass_api._hass,
-                    exception=OSError("a self-inflicted error has occurred"))
-        self.action = f"{self.service.domain}.{self.service.action}"
-
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        config.delivery_defaults.target_required = self.target_required
         return config
 
-    def validate_action(self, action: str | None) -> bool:
-        return True
-
     async def deliver(self, envelope: Envelope) -> bool:
+        if self.transport_exception:
+            raise self.transport_exception
         return await self.call_action(envelope, self.action,
                     action_data=envelope.data,
                     target_data={"entity_id": envelope.target.entity_ids} if envelope.target else None)

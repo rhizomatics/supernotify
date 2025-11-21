@@ -63,6 +63,7 @@ class Transport:
         self.override_enabled = self.enabled
         self.alias = self.transport_config.alias
         self.last_error_at: dt.datetime | None = None
+        self.last_error_in: str | None = None
         self.last_error_message: str | None = None
         self.error_count: int = 0
 
@@ -114,6 +115,7 @@ class Transport:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
         if self.last_error_at:
             attrs["last_error_at"] = self.last_error_at.isoformat()
+            attrs["last_error_in"] = self.last_error_in
             attrs["last_error_message"] = self.last_error_message
         attrs["error_count"] = self.error_count
         return attrs
@@ -196,9 +198,7 @@ class Transport:
                 envelope.skipped = 1
             return True
         except Exception as e:
-            self.last_error_at = dt_util.utcnow()
-            self.last_error_message = str(e)
-            self.error_count += 1
+            self.record_error(str(e), method="call_action")
             envelope.failed_calls.append(
                 CallRecord(time.time() - start_time, domain, service, action_data, target_data, exception=str(e))
             )
@@ -206,6 +206,12 @@ class Transport:
             envelope.errored += 1
             envelope.delivery_error = format_exception(e)
             return False
+
+    def record_error(self, message: str, method: str) -> None:
+        self.last_error_at = dt_util.utcnow()
+        self.last_error_message = message
+        self.last_error_in = method
+        self.error_count += 1
 
     def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
         """Simplify text for delivery transports with speaking or plain text interfaces"""

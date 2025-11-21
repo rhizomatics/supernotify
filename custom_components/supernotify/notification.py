@@ -466,6 +466,7 @@ class Notification(ArchivableObject):
                     _LOGGER.exception(
                         "SUPERNOTIFY Failed to deliver %s: %s", envelope.delivery_name, e2)
                     self.errored += 1
+                    transport.record_error(str(e2), method="deliver")
                     envelope.delivery_error = format_exception(e2)
                     self.undelivered_envelopes.append(envelope)
 
@@ -541,19 +542,6 @@ class Notification(ArchivableObject):
         if hasattr(self, attribute):
             base.update(getattr(self, attribute))
         return base
-
-    def record_resolve(self, delivery_name: str, stage: str, resolved: Target | list[Target]) -> None:
-        """Debug support for recording detailed target resolution in archived notification"""
-        self.debug_trace.resolved.setdefault(delivery_name, {})
-        self.debug_trace.resolved[delivery_name].setdefault(stage, [])
-        if isinstance(resolved, Target):
-            self.debug_trace.resolved[delivery_name][stage][resolved.as_dict()]
-        else:
-            roll_up = Target()
-            for target in ensure_list(resolved):
-                roll_up += target
-            self.debug_trace.resolved[delivery_name][stage].append(
-                roll_up.as_dict())
 
     def filter_people_by_occupancy(self, occupancy: str) -> list[dict[str, Any]]:
         people = list(self.people_registry.people.values())

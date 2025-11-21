@@ -33,9 +33,10 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import TargetRequired
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
-from tests.supernotify.doubles_lib import BrokenTransport, DummyTransport
+from tests.supernotify.doubles_lib import DummyTransport
 
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
@@ -174,11 +175,44 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
     assert dummy.service.calls[0].data["emoji_id"] == 912393
 
 
-async def test_broken_delivery(mock_hass: HomeAssistant) -> None:
-    delivery_config = {"broken": {CONF_TRANSPORT: "broken"}}
+async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:
+    delivery_config = {"broken": {CONF_TRANSPORT: "dummy"}}
     uut = SupernotifyAction(mock_hass, deliveries=delivery_config,
                             transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
-    broken = BrokenTransport(uut.context)
+    broken = DummyTransport(uut.context, target_required=TargetRequired.OPTIONAL,
+                            service_exception=OSError("a self-inflicted error has occurred"))
+    uut.context.configure_for_tests(transport_instances=[broken])
+    await uut.initialize()
+
+    before = dt_util.utcnow()
+    await uut.async_send_message(
+        title="test_title",
+        message="testing 123",
+        data={"delivery_selection": DELIVERY_SELECTION_EXPLICIT,
+              "delivery": "broken"},
+    )
+    notification = uut.last_notification
+    assert notification is not None
+    assert len(notification.undelivered_envelopes) == 1
+    assert isinstance(notification.undelivered_envelopes[0], Envelope)
+    assert isinstance(
+        notification.undelivered_envelopes[0].delivery_error, list)
+    assert any(
+        "OSError" in stack for stack in notification.undelivered_envelopes[0].delivery_error)
+    assert broken.error_count == 1
+    assert broken.last_error_message == "a self-inflicted error has occurred"
+    assert broken.last_error_in == "call_action"
+    assert broken.last_error_at is not None
+    assert broken.last_error_at >= before
+    assert broken.last_error_at <= dt_util.utcnow()
+
+
+async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
+    delivery_config = {"broken": {CONF_TRANSPORT: "dummy"}}
+    uut = SupernotifyAction(mock_hass, deliveries=delivery_config,
+                            transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    broken = DummyTransport(uut.context, target_required=TargetRequired.OPTIONAL,
+                            transport_exception=ValueError("a self-inflicted error has occurred"))
     uut.context.configure_for_tests(transport_instances=[broken])
     await uut.initialize()
 
@@ -196,9 +230,11 @@ async def test_broken_delivery(mock_hass: HomeAssistant) -> None:
     assert isinstance(
         notification.undelivered_envelopes[0].delivery_error, list)
     assert any(
-        "OSError" in stack for stack in notification.undelivered_envelopes[0].delivery_error)
+        "ValueError" in stack for stack in notification.undelivered_envelopes[0].delivery_error)
     assert broken.error_count == 1
     assert broken.last_error_at is not None
+    assert broken.last_error_message == "a self-inflicted error has occurred"
+    assert broken.last_error_in == "deliver"
     assert broken.last_error_at >= before
     assert broken.last_error_at <= dt_util.utcnow()
 
