@@ -3,6 +3,7 @@ tags:
   - email
   - mobile_push
   - cctv
+  - mqtt
 ---
 # Images, Streaming and Cameras
 
