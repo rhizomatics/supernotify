@@ -21,8 +21,9 @@ ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
 TOP_LEVEL_SCHEMAS = {
     "SUPERNOTIFY_SCHEMA": "Platform Configuration",
     "SCENARIO_SCHEMA": "Scenario Definition",
-    "ACTION_DATA_SCHEMA": "Notify Action Data",
+    "STRICT_ACTION_DATA_SCHEMA": "Notify Action Data",
     "DELIVERY_SCHEMA": "Delivery Definition",
+    "DELIVERY_CUSTOMIZE_SCHEMA": "Delivery Customization",
     "RECIPIENT_SCHEMA": "Recipient Definition",
     "CAMERA_SCHEMA": "Camera Definition",
     "TRANSPORT_SCHEMA": "Transport Definition",

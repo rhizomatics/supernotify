@@ -18,9 +18,16 @@
 
 ## Configuration
 
-The best place to start are the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/), which show how some popular, and advanced, configuration can be achieved.
-
 Otherwise, start with the simplest possible config, like the [minimal](https://supernotify.rhizomatics.org.uk//configurationexamples/minimal/) example.
+
+By default, configuration lives in `config.yaml`, under a `notify` section. Many people move chunks of config out of here to make it more manageable, like this, so all the notify configuration lives in one file, in this case `notify.yaml`.
+
+```yaml
+notify: !include notify.yaml
+```
+
+[Deliveries](configuration/deliveries.md) explains how to set up the basic notification channels you want, and [Configuration Levels](configuration//levels.md) how to choose the best place to put configuration for simplicity, clarity and concision. The [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) show how some popular, and advanced, configuration can be achieved.
+
 
 ## Calling the Supernotify Action
 

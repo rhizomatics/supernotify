@@ -120,6 +120,18 @@ async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
     assert uut.selected_delivery_names == ["mobile"]
 
 
+async def test_action_data_disable_delivery(
+    mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]
+) -> None:
+    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
+    mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
+    uut = Notification(
+        mock_context, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
+    )
+    await uut.initialize()
+    assert uut.selected_delivery_names == unordered("plain_email", "chime")
+
+
 async def test_generate_recipients_from_entities() -> None:
     ctx = TestingContext(
         deliveries={
