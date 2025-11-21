@@ -74,11 +74,17 @@ For full documentation, go to [https://supernotify.rhizomatics.org.uk](https://s
     * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details.
     * Deliveries, Transports and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
-!!! warning
+## YAML Still Required
 
-    Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
+Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
 
-    You can however do a lot with very little config, using the example configurations and recipes in the documentation.
+You can however do a lot with very little config, using the example configurations and recipes in the documentation.
+
+## Also From Rhizomatics
+
+- [updates2mqtt](https://updates2mqtt.rhizomatics.org.uk) - Automatically update self-hosted Docker containers via Home Assistant's Updates UI, or any other MQTT consumer
+- [awesome-mqtt](https://github.com/rhizomatics/awesome-mqtt) -  Curated list of MQTT resources
+
 
 [hacs]: https://hacs.xyz
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-blue.svg
