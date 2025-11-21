@@ -1,5 +1,7 @@
 # Public releases
 
+## 1.3.5
+
 ## 1.3.4
 ### Features
 - Improved documentation content and navigation
