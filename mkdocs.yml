@@ -9,6 +9,7 @@ theme:
   name: material
   highlightjs: true
   language: en
+  logo: assets/images/logo-blank-256x256.png
   features:
     - content.code.copy
     - content.code.select

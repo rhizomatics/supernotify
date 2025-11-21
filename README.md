@@ -207,6 +207,9 @@ of target it wants, for example the SMS one picking phone number and the SMTP on
    - This can be tuned by things like `target_usage`
    - The people registry is only used to generate targets if no targets given
 3. Action > Scenario > Delivery > Transport for configuration and defaults
+4. As unfussy as possible about how it is configured and called
+   - Targets can be structured into sub-categories, or a bit list of entity ids, device ids, emails and phone numbers
+   - Action `data` options like `delivery` can be a single value, list or dictionary mapping
 
 
 ## Flexible Configuration
