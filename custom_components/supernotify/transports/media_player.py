@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MediaPlayerTransport(Transport):
-
     name = TRANSPORT_MEDIA
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:

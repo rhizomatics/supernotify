@@ -13,17 +13,18 @@
 
 **Easy multi-channel rich notifications.**
 
-An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, chimes and template based HTML emails.
+An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
-Supernotify lets you make a simple, single notification action from
+Supernotify lets you make a **simple, single notification action** from
 all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage.
 
-!!! warning
+## Distribution
 
-    Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
+Supernotify is a custom component available via the [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) integration. It's free and open sourced under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0).
 
-    You can however do a lot with very little config, using the example configurations and recipes in the documentation.
+## Documentation
 
+For full documentation, go to [https://supernotify.rhizomatics.org.uk](https://supernotify.rhizomatics.org.uk)
 
 ## Features
 
@@ -73,186 +74,11 @@ all your automations, scripts, AppDaemon apps etc and have all the detail and ru
     * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details.
     * Deliveries, Transports and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
-## Getting Started
+!!! warning
 
-### Installation
+    Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
 
-* Make sure you have HACS available
-    - If not, check the [HACS Instructions](https://hacs.xyz/docs/use/)
-    - Supernotify is one of the default repositories in HACS so no custom repo configuration required
-* Select *SuperNotify* in the list of available integrations in HACS and *Download*
-* Add Supernotify to the Home Assistant YAML configuration
-    * By default this is `config.yaml`, unless you have an `include` statement to move notify platform to another file
-* Add a `notify` config for the `supernotify` integration
-    * Give it a `name`, *"supernotify"* is a good choice but it can be anything
-        * You will refer to this on every automation call, for example the action `notify.supernotify`
-    * See `examples` directory for working [minimal](https://supernotify.rhizomatics.org.uk/configuration/examples/minimal/) and [maximal configuration](https://supernotify.rhizomatics.org.uk/configuration/examples/maximal/) examples.
-* If using email attachments,  e.g. from camera snapshot or a `snapshot_url`, some extra config needed:
-    * Configure a valid `media_path` in the Supernotify config, usually somewhere under `/config`
-    * Set the `allowlist_external_dirs` in main HomeAssistant config to the same as `media_path` in the Supernotify configuration
-
-### Configuration
-
-The best place to start are the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/), which show how some popular, and advanced, configuration can be achieved.
-
-Otherwise, start with the simplest possible config, like the [minimal](https://supernotify.rhizomatics.org.uk//configurationexamples/minimal/) example.
-
-### Calling the Supernotify Action
-
-In your automations, scripts etc, make calls to Supernotify as any other notify action, with a `message` and an optional `title`. You can also include any of the newer style *Notify Entities* in the target. For many cases, you can convert an existing notification call to Supernotify by only changing the `action` name.
-
-```yaml title="Example Action Call"
-  - action: notify.supernotify
-    data:
-        title: Security Notification
-        message: Something went off in the basement
-```
-
-That simple call can be enriched in a few ways, here with a message template (as in
-regular notify), using `person_id` targets to derive email,  applying some pre-built
-scenarios, and adding a click action to the mobile push notifications.
-
-```yaml title="More Advanced Action Call"
-  - action: notify.supernotify
-    data:
-        title: Security Notification
-        message: '{{state_attr(sensor,"friendly_name")}} triggered'
-        target:
-          - person.jim_bob
-          - person.neighbour
-        priority: high
-        apply_scenarios:
-          - home_security
-          - garden
-        delivery:
-            mobile_push:
-                data:
-                    clickAction: https://my.home.net/dashboard
-
-```
-Note here that the `clickAction` is defined only on the `mobile_push` delivery. However
-it is also possible to simply define everything at the top level `data` section and let the individual
-transport adaptors pick out the attributes they need. This is helpful either if you don't care about
-fine tuning delivery configurations, or using existing notification blueprints, such as the popular
-[Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate%20Camera%20Notifications).
-
-
-```yaml title="Example Action Call Using Templates"
-  - action: notify.supernotifier
-    data:
-        message:
-    data_template:
-        title: Tank Notification
-        message:  "Fuel tank depth is {{ state_attr('sensor.tank', 'depth') }}"
-        data:
-            priority: {% if {{ state_attr('sensor.tank', 'depth') }}<10 }critical{% else %}medium {% endif %}
-```
-
- Lots more ideas in the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more ideas.
-
-## Core Concepts
-
-### Transport
-
-- *Transport* is the underlying platform that performs notifications, either out of the box from Home Assistant, or another custom component
-- *Transport Adaptors* are what make the difference between regular Notify Groups and Supernotify. While a Notify Group seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`!
-- Supernotify comes out the box with adaptors for common transports, like e-mail, mobile push, SMS, and Alexa, and a *Generic* transport adaptor that can be used to wrap any other Home Assistant action
-- The transport adaptor allows a single notification to be sent to many platforms, even
-when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
-- Transport Adaptors can optionally be defined in the Supernotify config with defaults
-- See [Transports](https://supernotify.rhizomatics.org.uk/transports/) for more detail
-
-### Delivery
-
-- A **Delivery** defines each notification channel you want to use
-- While Supernotify comes with many transports, only the ones you define with a Delivery will
-get used to send notifications, with the exception of *Notify Entity* transport which is
-always on unless switched off.
-- Deliveries allow lots of fine tuning and defaults to be made, and you can also have multiple
-deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
-- See [Deliveries](https://supernotify.rhizomatics.org.uk/deliveries/) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more detail
-
-### Scenario
-- An easy way to package up common chunks of config, optionally combined with conditional logic
-- Scenarios can be manually selected, in an `apply_scenarios` value of notification `data` block,
-or automatically selected using a standard Home Assistant `condition` block.
-- They make it easy to apply overrides in one place to many different deliveries or notifications,
-and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](https://supernotify.rhizomatics.org.uk/scenarios/) and [Recipes](rhttps://supernotify.rhizomatics.org.uk/recipes/) for more detail
-
-
-### Target
-- The target of a notification.
-- This could be a *direct* target, like an `entity_id`, `device_id`,
-e-mail address, phone number, or some custom ID for a specialist transport like Telegram or API calls.
-- It also has some support, more to come, for *indirect* targets. The primary one is `person_id`,
-although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id`
-and `area_id`.
-- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify
-    will exploded these for the *Chime* integration, but otherwise ignore them.
-
-### Recipient
-- Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
-- This lets you target notifications to people in notifications, and each transport will pick the type
-of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
-- See [People](https://supernotify.rhizomatics.org.uk/people/) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/) for more detail
-
-!!! info
-    For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/developer/class_diagram/) of the core ones.
-
-## Core Principles
-
-1. All a notification needs is a message, everything else can be defaulted, including all the targets
-2. If you define something in an action call, it takes precedence over the defaults
-   - This can be tuned by things like `target_usage`
-   - The people registry is only used to generate targets if no targets given
-3. Action > Scenario > Delivery > Transport for configuration and defaults
-4. As unfussy as possible about how it is configured and called
-   - Targets can be structured into sub-categories, or a bit list of entity ids, device ids, emails and phone numbers
-   - Action `data` options like `delivery` can be a single value, list or dictionary mapping
-
-
-## Flexible Configuration
-
-Delivery configuration can be done in lots of different ways to suit different configurations
-and to keep those configuration as minimal as possible.
-
-### Priority order of configuration application
-
-| Where                                | When            | Notes                                            |
-|--------------------------------------|-----------------|--------------------------------------------------|
-| Action Data                          | Runtime call    |                                                  |
-| Recipient delivery override          | Runtime call    |                                                  |
-| Scenario delivery override           | Runtime call    | Multiple scenarios applied in no special order   |
-| Delivery definition                  | Startup         | `message` and `title` override Action Data      |
-| Transport defaults                   | Startup         |                                                  |
-| Target notification action defaults  | Downstream call |                                                  |
-
-
-1. Action Data passed at runtime call
-2. Recipient delivery override
-3. Scenario delivery override
-4. Delivery definition
-5. Transport defaults
-6. Target notification action defaults, e.g. mail recipients ( this isn't applied inside Supernotify )
-
-
-## Condition Variables
-
-`Scenario` and `Transport` conditions have access to everything that any other Home Assistant conditions can
-access, such as entities, templating etc. In addition, Supernotify makes additional variables
-automatically available:
-
-|Template Variable              |Description                                                       |
-|-------------------------------|------------------------------------------------------------------|
-|notification_priority          |Priority of current notification, explicitly selected or default  |
-|notification_message           |Message of current notification                                   |
-|notification_title             |Title of current notification                                     |
-|applied_scenarios              |Scenarios explicitly selected in current notification call        |
-|required_scenarios             |Scenarios a notification mandates to be enabled or else suppressed|
-|constrain_scenarios            |Restricted list of scenarios                                      |
-|occupancy                      |One or more occupancy states, e.g. ALL_HOME, LONE_HOME            |
-
+    You can however do a lot with very little config, using the example configurations and recipes in the documentation.
 
 [hacs]: https://hacs.xyz
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-blue.svg
