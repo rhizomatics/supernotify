@@ -1,4 +1,4 @@
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import Target, TargetRequired
 
 
 def test_target_in_dict_mode() -> None:
@@ -51,8 +51,10 @@ def test_target_in_list_mode() -> None:
 
 
 def test_target_in_scalar_mode() -> None:
-    assert Target("media_player.kitchen").entity_ids == ["media_player.kitchen"]
-    assert Target("000044449999aaaa00003333ffff7777").device_ids == ["000044449999aaaa00003333ffff7777"]
+    assert Target("media_player.kitchen").entity_ids == [
+        "media_player.kitchen"]
+    assert Target("000044449999aaaa00003333ffff7777").device_ids == [
+        "000044449999aaaa00003333ffff7777"]
     assert Target("person.joe_mctoe").person_ids == ["person.joe_mctoe"]
     assert Target([]).entity_ids == []
 
@@ -67,7 +69,8 @@ def test_category_access() -> None:
         "000044449999aaaa00003333ffff7777",
         "@mctoe",
     ])
-    assert uut.for_category("entity_id") == ["media_player.kitchen", "notify.garden"]
+    assert uut.for_category("entity_id") == [
+        "media_player.kitchen", "notify.garden"]
     uut.extend("label_id", "tag1")
     uut.extend("label_id", ["tag1", "tag2"])
     assert uut.for_category("label_id") == ["tag1", "tag2"]
@@ -85,7 +88,8 @@ def test_target_correctly_selects_valid_emails() -> None:
         "test@sub.topsub.example.com",
         "test+fancy_rules@example.com",
     ]
-    bad = ["test@example@com", "sub.topsub.example.com", "test+fancy_rules@com", "", "@", "a@b"]
+    bad = ["test@example@com", "sub.topsub.example.com",
+           "test+fancy_rules@com", "", "@", "a@b"]
     assert Target(good + bad).email == good
     assert Target({"email": good + bad}).email == good
     assert Target({"email": good + bad}).for_category("email") == good
@@ -107,7 +111,8 @@ def test_target_sorts_out_big_flat_list() -> None:
     assert uut.for_category("entity_id") == ["switch.lounge"]
     assert uut.device_ids == ["00001111222233334444555566667777"]
     assert uut.phone == ["+4350404183736"]
-    assert uut.custom_ids("_UNKNOWN_") == ["@joey", "00001111122223333444455556666"]
+    assert uut.custom_ids("_UNKNOWN_") == [
+        "@joey", "00001111122223333444455556666"]
 
 
 def test_has_resolved() -> None:
@@ -119,7 +124,8 @@ def test_has_resolved() -> None:
 
 def test_direct() -> None:
     uut: Target = Target(
-        {"label_id": "tag001", "person_id": ["person.cuth_bert"], "telegram": "@bob", "entity_id": ["switch.alarm_bell"]},
+        {"label_id": "tag001", "person_id": [
+            "person.cuth_bert"], "telegram": "@bob", "entity_id": ["switch.alarm_bell"]},
         target_data={"foo": 123, "bar": True},
     )
     assert uut.direct() == Target(
@@ -133,7 +139,8 @@ def test_equality() -> None:
     )
     assert uut == uut
     assert uut != Target()
-    assert uut != Target(["me@mctest.org", "switch.lounge", "person.joe_mctest", "+4350404183736"])
+    assert uut != Target(["me@mctest.org", "switch.lounge",
+                         "person.joe_mctest", "+4350404183736"])
     assert uut != Target(
         ["me@mctest.org", "switch.lounge", "person.joe_mctest", "+4350404183736"], target_data={"foo": 123, "bar": False}
     )
@@ -168,7 +175,8 @@ def test_minus() -> None:
         })
     )
 
-    assert target2 == Target({"email": ["me@mctest.org"], "entity_id": ["switch.alarm_bell"]})
+    assert target2 == Target(
+        {"email": ["me@mctest.org"], "entity_id": ["switch.alarm_bell"]})
 
 
 def test_split_by_target_data():
@@ -178,10 +186,22 @@ def test_split_by_target_data():
     uut += Target(
         ["switch.kitchen", "person.bey_eksin", "switch.lounge"], target_data={"fi": 123, "fum": True}, target_specific_data=True
     )
-    uut += Target(["notify.foo", "notify.api"], target_data={"fi": 912, "widget": False}, target_specific_data=True)
+    uut += Target(["notify.foo", "notify.api"],
+                  target_data={"fi": 912, "widget": False}, target_specific_data=True)
     splits = uut.split_by_target_data()
     assert splits == [
-        Target(["switch.kitchen", "person.bey_eksin", "switch.lounge"], target_data={"fi": 123, "fum": True}),
-        Target(["notify.foo", "notify.api"], target_data={"fi": 912, "widget": False}),
-        Target(["me@mctest.org", "person.joe_mctest", "+4350404183736"], target_data={"foo": 123, "bar": True}),
+        Target(["switch.kitchen", "person.bey_eksin", "switch.lounge"],
+               target_data={"fi": 123, "fum": True}),
+        Target(["notify.foo", "notify.api"],
+               target_data={"fi": 912, "widget": False}),
+        Target(["me@mctest.org", "person.joe_mctest", "+4350404183736"],
+               target_data={"foo": 123, "bar": True}),
     ]
+
+
+def test_target_required() -> None:
+    assert TargetRequired("always") == TargetRequired.ALWAYS
+    assert TargetRequired("never") == TargetRequired.NEVER
+    assert TargetRequired("optional") == TargetRequired.OPTIONAL
+    assert TargetRequired("true") == TargetRequired.ALWAYS
+    assert TargetRequired("false") == TargetRequired.OPTIONAL

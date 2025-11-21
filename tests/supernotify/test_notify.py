@@ -255,7 +255,7 @@ async def test_send_message_with_condition(hass: HomeAssistant) -> None:
     delivery = {
         CONF_TRANSPORT: TRANSPORT_GENERIC,
         CONF_ACTION: "testing.mock_notification",
-        CONF_TARGET_REQUIRED: False,
+        CONF_TARGET_REQUIRED: "never",
         CONF_CONDITION: {
             CONF_CONDITION: "or",
             CONF_CONDITIONS: [

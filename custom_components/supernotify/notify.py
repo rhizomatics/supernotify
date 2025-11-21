@@ -353,7 +353,7 @@ class SupernotifyAction(BaseNotificationService):
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
         self.dupe_check_config: dict[str, Any] = dupe_check or {}
-        self.last_purge: dt.datetime | None = None
+        # dupe check cache, key is (priority, message hash)
         self.notification_cache: TTLCache[tuple[int, str], str] = TTLCache(
             maxsize=self.dupe_check_config.get(CONF_SIZE, 100), ttl=self.dupe_check_config.get(CONF_TTL, 120)
         )

@@ -27,8 +27,8 @@ class Envelope:
         self,
         delivery: "Delivery",
         notification: "Notification | None" = None,
-        target: Target | None = None,
-        data: dict[str, Any] | None = None,
+        target: Target | None = None,  # targets only for this delivery
+        data: dict[str, Any] | None = None,  # notification data customized for this delivery
     ) -> None:
         self.target: Target = target or Target()
         self.delivery_name: str = delivery.name

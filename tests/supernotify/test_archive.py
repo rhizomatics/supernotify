@@ -46,7 +46,7 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
         async with aiofiles.open(obj_path) as stream:
             blob: str = "".join(await stream.readlines())
             reobj = json.loads(blob)
-        assert reobj["_message"] == "just a test"
+        assert reobj["priority"] == "medium"
         assert reobj["target"] == {"person_id": ["person.bob"]}
         assert reobj["delivered_envelopes"] == uut.last_notification.delivered_envelopes
 
@@ -82,9 +82,9 @@ async def test_cleanup_archive(mock_hass_api: HomeAssistantAPI) -> None:
             await uut.cleanup()
             rmfr.assert_called_once_with(Path("xyz"))
     # skip cleanup for a few hours
-    first_purge = uut.last_purge
+    first_purge = uut.archive_directory.last_purge
     await uut.cleanup()
-    assert first_purge == uut.last_purge
+    assert first_purge == uut.archive_directory.last_purge
 
 
 async def test_archive_size(mock_hass_api: HomeAssistantAPI) -> None:

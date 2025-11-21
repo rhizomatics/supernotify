@@ -215,11 +215,13 @@ OPTION_JPEG = "jpeg_opts"
 OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_INCLUDE_RE = "target_include_re"
+OPTION_CHIME_ALIASES = "chime_aliases"
+
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
-OPTION_TARGET_REQUIRE_ALWAYS = "always"
-OPTION_TARGET_REQUIRE_NEVER = "never"
-OPTION_TARGET_REQUIRE_OPTIONAL = "optional"
+TARGET_REQUIRE_ALWAYS = "always"
+TARGET_REQUIRE_NEVER = "never"
+TARGET_REQUIRE_OPTIONAL = "optional"
 
 SCENARIO_NULL = "NULL"
 SCENARIO_TEMPLATE_ATTRS = ("message_template", "title_template")
@@ -270,7 +272,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_DATA): DATA_SCHEMA,
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_TARGET_REQUIRED): vol.Any(
-        cv.boolean, vol.In([OPTION_TARGET_REQUIRE_ALWAYS, OPTION_TARGET_REQUIRE_NEVER, OPTION_TARGET_REQUIRE_OPTIONAL])
+        cv.boolean, vol.In([TARGET_REQUIRE_ALWAYS, TARGET_REQUIRE_NEVER, TARGET_REQUIRE_OPTIONAL])
     ),
     vol.Optional(CONF_TARGET_USAGE): vol.In([
         TARGET_USE_ON_NO_DELIVERY_TARGETS,
@@ -376,6 +378,7 @@ ARCHIVE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
     vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
     vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
+    vol.Optional(CONF_DEBUG, default=False): cv.boolean
 })
 
 HOUSEKEEPING_SCHEMA = vol.Schema({
@@ -413,6 +416,7 @@ ACTION_DATA_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ACTIONS, default=[]): vol.All(cv.ensure_list, [ACTION_CALL_SCHEMA]),
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DATA): vol.Any(None, DATA_SCHEMA),
+        vol.Optional(ATTR_TIMESTAMP): cv.string,
     },
     extra=vol.ALLOW_EXTRA,  # allow other data, e.g. the android/ios mobile push
 )

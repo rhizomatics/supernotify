@@ -173,14 +173,14 @@ notify:
             - media_player.old_kitchen_flex
             - media_player.studio
           options:
-            title_handling: combine_message
+            message_usage: combine_title
       alexa_devices:
         delivery_defaults:
           target:
             - notify.kitchen_echo_announce
             - notify.bedroom_dot_speak
           options:
-            title_handling: replace_message
+            message_usage: use_title
       sms:
         delivery_defaults:
           action: notify.mikrotik_sms

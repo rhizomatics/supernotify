@@ -10,6 +10,7 @@ from custom_components.supernotify import (
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
+    OPTION_UNIQUE_TARGETS,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -45,6 +46,7 @@ class AlexaMediaPlayerTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
+            OPTION_UNIQUE_TARGETS: True,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_ALEXA],
         }

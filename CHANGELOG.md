@@ -4,9 +4,14 @@
 ### Features
 - Improved documentation content and navigation
 - Media Player transport allows `media_content_type` to be overridden in `data` for non-image use
+- Archiving now has a `debug` option, which controls if `debug_trace` included in notifications
+- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and
+an Alexa 'announce' delivery is selected, only one of them will speak for each device)
 ### Internal
 - Renaming of transport tests for consistency with package names
-- Renaming of `media_player` references for consistency
+- Updating `media_player`,`title_handling` and `chime_aliases` references for consistency
+- `archive` module refactored into an `ArchiveDirectory` with all file system logic
+- New envelope specific tests
 ## 1.3.3
 ### Features
 - Added more direct documentation links for repairs

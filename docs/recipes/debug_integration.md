@@ -26,6 +26,22 @@ logger:
   custom_components.supernotify.transports.alexa_devices: debug
 ```
 
+## Implementation - Archiving
+
+Switch on debug mode for archiving, so a `debug_trace` is preserved with each notification.
+
+## Example Configuration - Archiving
+
+```yaml
+ notify:
+  - name: minimal
+    platform: supernotify
+    archive:
+      file_path: /config/archive/supernotify
+      file_retention_days: 3
+      debug: true
+```
+
 ## Implementation - Debug Service Calls
 
 Switch on debug for the delivery, or at transport level for all deliveries.

@@ -16,4 +16,4 @@ Configure which one by setting the `action` value to match, for example `action:
 
 Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
 
-Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `title_handling` in an `options` section to change the behaviour, either message only or using the title in place of the message.
+Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
