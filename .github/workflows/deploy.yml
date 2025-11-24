@@ -40,7 +40,7 @@ jobs:
       run: |
         pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.autoarm --cov-report=xml --cov-report=html
     - name: HACS Action
-      uses: "hacs/action@885037da508419fd08c13515967aec868dfdee2d"
+      uses: "hacs/action@06827d281b9c558c46d8ed6f4aae6c517fdc19ed"
       with:
         category: "integration"
     - name: HACS Hassfest
