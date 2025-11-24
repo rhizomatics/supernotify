@@ -13,3 +13,4 @@ pre-commit
 pytest-httpserver>=1.0.10
 ruff
 mypy
+genbadge[all]
