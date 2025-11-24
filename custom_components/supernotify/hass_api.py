@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from homeassistant.core import ServiceResponse, State
     from homeassistant.helpers.condition import ConditionCheckerType
 
-    from .model import ConditionVariables
 from homeassistant.helpers import condition as condition
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers import issue_registry as ir

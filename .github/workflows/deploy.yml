@@ -72,6 +72,7 @@ jobs:
         else
           echo "No changes to badges"
         fi
+      if: ${{ always() }}
     - name: Deploy docs
       # run in the build workflow since schemagen has homeassistant dependency
       run: |
