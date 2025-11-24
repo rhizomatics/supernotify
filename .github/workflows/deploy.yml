@@ -38,7 +38,7 @@ jobs:
         ruff check --output-format=github .
     - name: Test with pytest
       run: |
-        pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.supernotify --cov-report=xml --cov-report=html
+        pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.autoarm --cov-report=xml --cov-report=html
     - name: HACS Action
       uses: "hacs/action@885037da508419fd08c13515967aec868dfdee2d"
       with:
@@ -52,6 +52,26 @@ jobs:
         path: junit/test-results-${{ matrix.python-version }}.xml
         # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
+    - name: Generate badges
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        genbadge coverage -i coverage.xml -o badges/coverage.svg
+        genbadge tests -i junit/test-results-${{ matrix.python-version }}.xml -o badges/tests.svg
+
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        TEMP_DIR=$(mktemp -d)
+        cd $TEMP_DIR
+        git clone --single-branch --branch badges https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git . 2>/dev/null
+        cp -r ${{ github.workspace }}/badges .
+        git add badges
+        if git commit -m "Update badges [skip ci]"; then
+          git push origin badges --force
+          echo "Badges updated successfully"
+        else
+          echo "No changes to badges"
+        fi
     - name: Deploy docs
       # run in the build workflow since schemagen has homeassistant dependency
       run: |
