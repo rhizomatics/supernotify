@@ -1,7 +1,10 @@
 # Public releases
 
 ## 1.3.5
-
+### Fixes
+- Condition variables could be rejected in validation of Delivery conditions
+### Internal
+- More extensive condition testing, condition variables now always applied
 ## 1.3.4
 ### Features
 - Improved documentation content and navigation

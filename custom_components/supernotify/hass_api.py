@@ -20,6 +20,8 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 
+from .model import ConditionVariables
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -188,6 +190,8 @@ class HomeAssistantAPI:
     ) -> bool | None:
         if self._hass is None:
             raise ValueError("HomeAssistant not available")
+        if strict and not condition_variables:
+            condition_variables = ConditionVariables()
 
         try:
             if validate:

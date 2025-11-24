@@ -56,18 +56,32 @@ async def test_evaluates_good_false_condition(hass: HomeAssistant) -> None:
     assert await hass_api.evaluate_condition(condition) is False
 
 
-async def test_evaluates_ignores_missing_vars(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
+async def test_unstrict_evaluates_ignores_missing_vars(hass: HomeAssistant, validate: bool) -> None:
     hass_api = HomeAssistantAPI(hass)
     condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ notification_priority == 'critical' }}"})
-    assert await hass_api.evaluate_condition(condition) is False
+    assert await hass_api.evaluate_condition(condition, validate=validate) is False
 
 
-async def test_evaluates_detects_missing_vars(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
+async def test_strict_evaluates_detects_missing_vars(hass: HomeAssistant, validate: bool) -> None:
     hass_api = HomeAssistantAPI(hass)
 
-    condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ notification_priority == 'critical' }}"})
+    condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ xotification_priority == 'critical' }}"})
     with pytest.raises(HomeAssistantError):
-        assert await hass_api.evaluate_condition(condition, strict=True) is False
+        assert await hass_api.evaluate_condition(condition, validate=validate, strict=True) is False
+
+
+@pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
+@pytest.mark.parametrize(argnames="strict", argvalues=[True, False], ids=["strict", "lax"])
+async def test_evaluates_respects_conditionvars(hass: HomeAssistant, validate: bool, strict: bool) -> None:
+    hass_api = HomeAssistantAPI(hass)
+
+    condition = cv.CONDITION_SCHEMA({
+        "condition": "template",
+        "value_template": "{{ notification_priority != 'no_such_value' }}",
+    })
+    assert await hass_api.evaluate_condition(condition, validate=validate, strict=strict)
 
 
 def test_roundtrips_entity_state(hass: HomeAssistant) -> None:
