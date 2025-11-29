@@ -1,4 +1,6 @@
+import io
 from collections.abc import Generator
+from dataclasses import dataclass
 from pathlib import Path
 from ssl import SSLContext
 from typing import Any
@@ -35,6 +37,8 @@ from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.supernotify.hass_setup_lib import MockableHomeAssistant
+
+IMAGE_PATH: Path = Path("tests") / "supernotify" / "fixtures" / "media"
 
 
 class MockAction(BaseNotificationService):
@@ -144,6 +148,7 @@ def mock_context(
     mock_scenario_registry: ScenarioRegistry,
     mock_hass_api: HomeAssistantAPI,
     mock_delivery_registry: DeliveryRegistry,
+    tmp_path: Path,
 ) -> Context:
     context = Mock(spec=Context)
     context.scenario_registry = mock_scenario_registry
@@ -156,8 +161,8 @@ def mock_context(
     context.mobile_actions = {}
     context.hass_api.internal_url = "http://hass-dev"
     context.hass_api.external_url = "http://hass-dev.nabu.casa"
-    context.media_path = Path("/nosuchpath")
-    context.template_path = Path("/templates_here")
+    context.media_path = tmp_path / "media"
+    context.template_path = tmp_path / "templates"
 
     mock_delivery_registry.deliveries = {
         "plain_email": Delivery("plain_email", {}, EmailTransport(context)),
@@ -165,6 +170,20 @@ def mock_context(
         "chime": Delivery("chime", {}, ChimeTransport(context)),
     }
     return context
+
+
+@dataclass
+class TestImage:
+    contents: bytes
+    path: Path
+    ext: str
+    mime_type: str
+
+
+@pytest.fixture(scope="module", params=["jpeg", "png", "gif"])
+def sample_image(request) -> TestImage:
+    path = IMAGE_PATH / f"example_image.{request.param}"
+    return TestImage(io.FileIO(path, "rb").readall(), path, request.param, f"image/{request.param}")
 
 
 @pytest.fixture

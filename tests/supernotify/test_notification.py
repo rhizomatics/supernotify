@@ -44,7 +44,7 @@ from custom_components.supernotify.transports.email import EmailTransport
 from .hass_setup_lib import TestingContext
 
 
-async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
+async def test_simple_create() -> None:
     ctx = TestingContext(
         deliveries={
             "mobile": {CONF_TITLE: "mobile notification", CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
@@ -102,9 +102,7 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
 
 
-async def test_scenario_delivery(
-    mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]
-) -> None:
+async def test_scenario_delivery(mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]) -> None:
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
     mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
     uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
@@ -121,7 +119,7 @@ async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
 
 
 async def test_action_data_disable_delivery(
-    mock_hass: HomeAssistant, mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]
+    mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]
 ) -> None:
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
     mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}

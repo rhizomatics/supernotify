@@ -1,5 +1,3 @@
-import io
-import tempfile
 from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import Mock
@@ -11,50 +9,51 @@ from homeassistant.helpers.entity_component import EntityComponent
 from PIL import Image, ImageChops
 from pytest_httpserver import BlockingHTTPServer
 
+from conftest import TestImage
 from custom_components.supernotify import PTZ_METHOD_FRIGATE
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.media_grab import (
+    grab_image,
     move_camera_to_ptz_preset,
     select_avail_camera,
     snap_camera,
     snap_image,
     snapshot_from_url,
 )
+from custom_components.supernotify.notification import Notification
 from tests.supernotify.doubles_lib import MockImageEntity
 
-IMAGE_PATH: Path = Path("tests") / "supernotify" / "fixtures" / "media"
 LOSSY_FORMATS = ["jpeg"]
 UNLOSSY_FORMATS = ["png", "gif"]
 
 
 @pytest.mark.enable_socket
-@pytest.mark.parametrize("image_type", LOSSY_FORMATS + UNLOSSY_FORMATS)
-async def test_snapshot_url_with_abs_path(hass: HomeAssistant, local_server: BlockingHTTPServer, image_type: str) -> None:
-    media_path: Path = Path(tempfile.mkdtemp())
+async def test_snapshot_url_with_abs_path(
+    hass: HomeAssistant, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
+) -> None:
+    media_path: Path = tmp_path / "media"
 
-    original_image_path = IMAGE_PATH / f"example_image.{image_type}"
-    original_binary = io.FileIO(original_image_path, "rb").readall()
     snapshot_url = local_server.url_for("/snapshot_image")
-    local_server.expect_request("/snapshot_image").respond_with_data(original_binary, content_type=f"image/{image_type}")  # type: ignore
+    local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
     retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", media_path, None)
 
     assert retrieved_image_path is not None
     retrieved_image = Image.open(retrieved_image_path)
-    original_image = Image.open(original_image_path)
+    original_image = Image.open(sample_image.path)
     assert retrieved_image.size == original_image.size
-    if image_type in UNLOSSY_FORMATS:
+    if sample_image.ext in UNLOSSY_FORMATS:
         diff = ImageChops.difference(retrieved_image, original_image)
         assert diff.getbbox() is None
 
 
 @pytest.mark.enable_socket
-async def test_snapshot_url_with_jpeg_opts(hass: HomeAssistant, local_server: BlockingHTTPServer) -> None:
-    media_path: Path = Path(tempfile.mkdtemp())
+async def test_snapshot_url_with_jpeg_opts(
+    hass: HomeAssistant, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
+) -> None:
+    media_path: Path = tmp_path / "media"
 
-    original_image_path = IMAGE_PATH / "example_image.jpeg"
-    original_binary = io.FileIO(original_image_path, "rb").readall()
     snapshot_url = local_server.url_for("/snapshot_image")
-    local_server.expect_request("/snapshot_image").respond_with_data(original_binary, content_type="image/jpeg")  # type: ignore
+    local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
     retrieved_image_path: Path | None = await snapshot_from_url(
         hass,
         snapshot_url,
@@ -66,49 +65,61 @@ async def test_snapshot_url_with_jpeg_opts(hass: HomeAssistant, local_server: Bl
     assert retrieved_image_path is not None
 
     retrieved_image: Image.Image = Image.open(str(retrieved_image_path))
-    original_image: Image.Image = Image.open(str(original_image_path))
+    original_image: Image.Image = Image.open(str(sample_image.path))
     assert retrieved_image.size == original_image.size
-    assert retrieved_image.info.get("comment") == b"changed by test"
-    assert retrieved_image.info.get("progressive") == 1
+    if sample_image.ext == "jpeg":
+        assert retrieved_image.info.get("comment") == b"changed by test"
+        assert retrieved_image.info.get("progressive") == 1
 
 
-async def test_snapshot_url_with_broken_url(hass: HomeAssistant) -> None:
-    media_path: Path = Path(tempfile.mkdtemp())
+async def test_snapshot_url_with_broken_url(hass: HomeAssistant, tmp_path: Path) -> None:
+    media_path: Path = tmp_path / "media"
     snapshot_url = "http://no-such-domain.local:9494/snapshot_image_hass"
     retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", media_path, None)
     assert retrieved_image_path is None
 
 
-async def test_snap_camera(mock_hass) -> None:
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path: Path = Path(tmp_dir)
-        image_path = await snap_camera(mock_hass, "camera.xunit", media_path=tmp_path, max_camera_wait=1)
+async def test_snap_camera(mock_hass, tmp_path: Path) -> None:
+
+    image_path = await snap_camera(mock_hass, "camera.xunit", media_path=tmp_path, max_camera_wait=1)
     assert image_path is not None
     mock_hass.services.async_call.assert_awaited_once_with(
         "camera", "snapshot", service_data={"entity_id": "camera.xunit", "filename": image_path}
     )
 
 
-@pytest.mark.parametrize("image_type", LOSSY_FORMATS + UNLOSSY_FORMATS)
-async def test_snap_image(mock_context: Context, image_type: str) -> None:
-    image_path = IMAGE_PATH / f"example_image.{image_type}"
-    image_entity = MockImageEntity(image_path)
+async def test_snap_image(mock_context: Context, sample_image: TestImage, tmp_path: Path) -> None:
+
+    image_entity = MockImageEntity(sample_image.path)
     if mock_context.hass_api._hass:
         mock_context.hass_api._hass.data["image"] = Mock(spec=EntityComponent)
         mock_context.hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path: Path = Path(tmp_dir)
-        snap_image_path = await snap_image(mock_context, "image.testing", media_path=tmp_path, notification_id="notify_001")
-        assert snap_image_path is not None
-        retrieved_image = Image.open(snap_image_path)
+    snap_image_path = await snap_image(mock_context, "image.testing", media_path=tmp_path, notification_id="notify_001")
+    assert snap_image_path is not None
+    retrieved_image = Image.open(snap_image_path)
 
-    original_image = Image.open(image_path)
+    original_image = Image.open(sample_image.path)
     assert "exif" not in retrieved_image.info
     assert retrieved_image.size == original_image.size
-    if image_type in UNLOSSY_FORMATS:
+    if sample_image.ext in UNLOSSY_FORMATS:
         diff = ImageChops.difference(retrieved_image, original_image)
         assert diff.getbbox() is None
+
+
+async def test_grab_image(mock_context: Context, sample_image: TestImage, local_server: BlockingHTTPServer) -> None:
+    notification = Notification(mock_context, "Test Me 123")
+    result: Path | None = await grab_image(notification, "mail", mock_context)
+    assert result is None
+
+    snapshot_url = local_server.url_for("/snapshot_image")
+    local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
+
+    notification = Notification(mock_context, "Test Me 123", action_data={"media": {"snapshot_url": snapshot_url}})
+    result = await grab_image(notification, "mail", mock_context)
+    assert result is not None
+    retrieved_image = Image.open(result)
+    assert retrieved_image is not None  # images tested by lower funcs
 
 
 async def test_move_camera_onvif(mock_hass) -> None:

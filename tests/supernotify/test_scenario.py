@@ -100,11 +100,11 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
     assert uut.evaluate(ConditionVariables([], [], [], PRIORITY_CRITICAL, {}))
 
 
-async def test_select_scenarios(hass: HomeAssistant, mock_context: Context) -> None:
-    hass_api = HomeAssistantAPI(hass)
-    config = PLATFORM_SCHEMA({
-        "platform": "supernotify",
-        "scenarios": {
+async def test_select_scenarios(hass: HomeAssistant) -> None:
+
+    ctx = TestingContext(
+        homeassistant=hass,
+        scenarios={
             "select_only": {},
             "cold_day": {
                 "alias": "Its a cold day",
@@ -125,13 +125,11 @@ async def test_select_scenarios(hass: HomeAssistant, mock_context: Context) -> N
                 },
             },
         },
-    })
-    reg = ScenarioRegistry(config["scenarios"])
-    hass.states.async_set("sensor.outside_temperature", "15")
-    await reg.initialize({}, [], {}, hass_api)
-    assert len(reg.scenarios) == 3
-    mock_context.scenario_registry = reg
-    uut = Notification(mock_context)
+    )
+    # register entity first so template validates
+    hass.states.async_set("sensor.outside_temperature", "20")
+    await ctx.test_initialize()
+    uut = Notification(ctx)
     await uut.initialize()
     hass.states.async_set("sensor.outside_temperature", "42")
     enabled = await uut.select_scenarios()

@@ -15,6 +15,17 @@ if TYPE_CHECKING:
     from custom_components.supernotify import ConditionsFunc
 
 
+def test_abs_url(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    hass_api.initialize()
+    hass_api.internal_url = "http://localhost:8123"
+    hass_api.external_url = "https://testy001.nabucase.org"
+    assert hass_api.abs_url("home", prefer_external=False) == "http://localhost:8123/home"
+    assert hass_api.abs_url("/foo/home", prefer_external=False) == "http://localhost:8123/foo/home"
+    assert hass_api.abs_url("home") == "https://testy001.nabucase.org/home"
+    assert hass_api.abs_url("http:/11.5.6.3/me") == "http:/11.5.6.3/me"
+
+
 def test_basic_setup(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     hass_api.initialize()
@@ -186,3 +197,10 @@ async def test_hass_calls_service_fire_and_forget(hass: HomeAssistant) -> None:
         assert await hass_api.call_service("nosuchdomain", "nosuchservice") is None
     with pytest.raises(ValueError):  # noqa: PT011
         assert await HomeAssistantAPI(None).call_service("notify", "nosuchservice") is None
+
+
+async def test_mqtt_publish(mock_hass) -> None:
+    hass_api = HomeAssistantAPI(mock_hass)
+    hass_api.initialize()
+    await hass_api.mqtt_publish("test.topic", {"foo": 123})
+    mock_hass.data["mqtt"].client.async_publish.assert_called_once_with("test.topic", '{"foo":123}', 0, False)

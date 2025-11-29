@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock
 
 from homeassistant.const import CONF_ACTION, CONF_CONDITION
-from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, OCCUPANCY_ALL, PRIORITY_VALUES, SELECTION_DEFAULT
 from custom_components.supernotify.context import Context
@@ -20,7 +19,7 @@ async def test_target_selection() -> None:
     assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])) == Target(["notify.pong"])
 
 
-async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) -> None:
+async def test_simple_create(mock_context: Context) -> None:
     uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_context, {}))
     assert await uut.validate(mock_context)
     assert uut.name == "unit_testing"
@@ -40,7 +39,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.target is None
 
 
-async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_context: Context) -> None:
+async def test_broken_create_using_reserved_word(mock_context: Context) -> None:
     uut = Delivery("ALL", {}, NotifyEntityTransport(mock_context))
     assert await uut.validate(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
@@ -51,7 +50,7 @@ async def test_broken_create_using_reserved_word(mock_hass: HomeAssistant, mock_
     )
 
 
-async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_context: Context) -> None:
+async def test_broken_create_with_missing_action(mock_context: Context) -> None:
     uut = Delivery("generic", {}, GenericTransport(mock_context))
     assert await uut.validate(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
