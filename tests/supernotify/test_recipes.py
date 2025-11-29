@@ -28,9 +28,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
   scenarios:
     routine:
         alias: regular low level announcements
-        conditions:
-            - "{{notification_priority in ['low']}}"
-
+        conditions: "{{notification_priority in ['low']}}"
         delivery:
           plain_email:
           apple_push:
