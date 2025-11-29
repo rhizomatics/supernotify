@@ -22,11 +22,7 @@ from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.template import Template
 from pytest_httpserver import HTTPServer
 
-from custom_components.supernotify import (
-    CONF_MOBILE_APP_ID,
-    CONF_MOBILE_DEVICES,
-    CONF_PERSON,
-)
+from custom_components.supernotify import CONF_MOBILE_APP_ID, CONF_MOBILE_DEVICES, CONF_MOBILE_DISCOVERY, CONF_PERSON
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
@@ -103,6 +99,7 @@ def mock_people_registry(mock_hass_api: HomeAssistantAPI) -> PeopleRegistry:
         "person.bidey_in": {
             CONF_PERSON: "person.bidey_in",
             ATTR_STATE: "home",
+            CONF_MOBILE_DISCOVERY: False,
             CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
         },
     }
@@ -224,7 +221,7 @@ def uninitialized_unmocked_config(
 
 
 @pytest.fixture
-def local_server(httpserver_ssl_context: SSLContext | None, socket_enabled: Any) -> Generator[HTTPServer, None, None]:
+def local_server(httpserver_ssl_context: SSLContext | None, socket_enabled: Any) -> Generator[HTTPServer]:
     """pytest-socket will fail at fixture creation time, before test that uses it"""
     server = HTTPServer(host="127.0.0.1", port=0, ssl_context=httpserver_ssl_context)
     server.start()
@@ -246,7 +243,7 @@ def auto_enable_custom_integrations(enable_custom_integrations: Any) -> None:
 
 
 @pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture() -> Generator[None, None, None]:
+def skip_notifications_fixture() -> Generator[None]:
     """Skip notification calls."""
     with (
         patch("homeassistant.components.persistent_notification.async_create"),

@@ -30,7 +30,7 @@ async def test_simple_create(mock_hass: HomeAssistant, mock_context: Context) ->
     assert uut.title is None
     assert uut.template is None
     assert uut.alias is None
-    assert uut.condition is None
+    assert uut.conditions is None
     assert uut.priority == PRIORITY_VALUES
     assert uut.selection == [SELECTION_DEFAULT]
     assert uut.transport.name == "notify_entity"
@@ -62,8 +62,8 @@ async def test_broken_create_with_missing_action(mock_hass: HomeAssistant, mock_
     )
 
 
-async def test_broken_create_with_bad_condition(mock_context: Context) -> None:
-    mock_context.hass_api.evaluate_condition = AsyncMock(side_effect=Exception("integrations"))  # type: ignore
+async def test_repair_for_bad_conditions(mock_context: Context) -> None:
+    mock_context.hass_api.build_conditions = AsyncMock(side_effect=Exception("integrations"))  # type: ignore
     uut = Delivery(
         "generic",
         {CONF_CONDITION: {"condition": "xor"}},

@@ -3,7 +3,14 @@ from typing import cast
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
-from custom_components.supernotify import ATTR_RECIPIENTS, CONF_DELIVERY_DEFAULTS, CONF_PERSON, CONF_TARGET, CONF_TRANSPORT
+from custom_components.supernotify import (
+    ATTR_RECIPIENTS,
+    CONF_DELIVERY_DEFAULTS,
+    CONF_MOBILE_DISCOVERY,
+    CONF_PERSON,
+    CONF_TARGET,
+    CONF_TRANSPORT,
+)
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry
@@ -34,9 +41,9 @@ async def test_default_recipients() -> None:
 async def test_default_recipients_with_override() -> None:
     context = TestingContext(
         recipients=[
-            {CONF_PERSON: "person.new_home_owner", CONF_TARGET: "dummy.1"},
-            {CONF_PERSON: "person.old_home_owner", CONF_TARGET: "dummy.2"},
-            {CONF_PERSON: "person.bidey_in"},
+            {CONF_PERSON: "person.new_home_owner", CONF_TARGET: "dummy.1", CONF_MOBILE_DISCOVERY: False},
+            {CONF_PERSON: "person.old_home_owner", CONF_TARGET: "dummy.2", CONF_MOBILE_DISCOVERY: False},
+            {CONF_PERSON: "person.bidey_in", CONF_MOBILE_DISCOVERY: False},
         ],
         deliveries={"testing": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],

@@ -4,18 +4,13 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import issue_registry as ir
 
-from . import (
-    CONF_DATA,
-    DELIVERY_SELECTION_IMPLICIT,
-    SCENARIO_TEMPLATE_ATTRS,
-)
+from . import CONF_DATA, DELIVERY_SELECTION_IMPLICIT, SCENARIO_TEMPLATE_ATTRS, ConditionsFunc
 from .common import safe_get
 from .hass_api import HomeAssistantAPI
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
-
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -25,7 +20,7 @@ import voluptuous as vol
 # type: ignore[attr-defined,unused-ignore]
 from homeassistant.components.trace import async_store_trace
 from homeassistant.components.trace.models import ActionTrace
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITION
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITION, CONF_CONDITIONS
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
@@ -90,29 +85,33 @@ class Scenario:
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
-        self.condition: ConfigType | None = scenario_definition.get(CONF_CONDITION)
+        self.conditions: ConditionsFunc | None = None
+        self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
+        if not scenario_definition.get(CONF_CONDITIONS) and scenario_definition.get(CONF_CONDITION):
+            self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.delivery_selection: str | None = scenario_definition.get(CONF_DELIVERY_SELECTION)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
         self.delivery: dict[str, Any] = scenario_definition.get(CONF_DELIVERY) or {}
         self.default: bool = self.name == ATTR_DEFAULT
         self.last_trace: ActionTrace | None = None
-        self.condition_func = None
 
     async def validate(self, valid_deliveries: list[str] | None = None, valid_action_groups: list[str] | None = None) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
-        if self.condition:
+        if self.conditions_config:
             error: str | None = None
             try:
                 # note: basic template syntax within conditions already validated by voluptuous checks
-                await self.hass_api.evaluate_condition(self.condition, strict=True, validate=True)
+                self.conditions = await self.hass_api.build_conditions(self.conditions_config, strict=True, validate=True)
             except vol.Invalid as vi:
                 _LOGGER.error(
                     f"SUPERNOTIFY Condition definition for scenario {self.name} fails Home Assistant schema check {vi}"
                 )
                 error = f"Schema error {vi}"
             except Exception as e:
-                _LOGGER.error("SUPERNOTIFY Disabling scenario %s with error validating %s: %s", self.name, self.condition, e)
+                _LOGGER.error(
+                    "SUPERNOTIFY Disabling scenario %s with error validating %s: %s", self.name, self.conditions_config, e
+                )
                 error = f"Unknown error {e}"
             if error is not None:
                 self.hass_api.raise_issue(
@@ -174,7 +173,7 @@ class Scenario:
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
         if include_condition:
-            attrs["condition"] = self.condition
+            attrs["conditions"] = self.conditions
         if include_trace and self.last_trace:
             attrs["trace"] = self.last_trace.as_extended_dict()
         return attrs
@@ -183,12 +182,12 @@ class Scenario:
         """Archive friendly view of scenario"""
         return self.attributes(include_condition=False, include_trace=not minimal)
 
-    async def evaluate(self, condition_variables: ConditionVariables | None = None) -> bool:
+    def evaluate(self, condition_variables: ConditionVariables) -> bool:
         """Evaluate scenario conditions"""
         result: bool | None = False
-        if self.enabled and self.condition:
+        if self.enabled and self.conditions:
             try:
-                result = await self.hass_api.evaluate_condition(self.condition, condition_variables)
+                result = self.hass_api.evaluate_conditions(self.conditions, condition_variables)
                 if result is None:
                     _LOGGER.warning("SUPERNOTIFY Scenario condition empty result")
             except Exception as e:
@@ -199,15 +198,13 @@ class Scenario:
                 )
         return result if result is not None else False
 
-    async def trace(
-        self, condition_variables: ConditionVariables | None = None, strict: bool = False, validate: bool = False
-    ) -> bool:
+    async def trace(self, condition_variables: ConditionVariables) -> bool:
         """Trace scenario condition execution"""
         result: bool | None = False
         trace: ActionTrace | None = None
-        if self.enabled and self.condition:
-            result, trace = await self.hass_api.trace_condition(
-                self.condition, condition_variables, strict=strict, validate=validate, trace_name=f"scenario_{self.name}"
+        if self.enabled and self.conditions:
+            result, trace = await self.hass_api.trace_conditions(
+                self.conditions, condition_variables, trace_name=f"scenario_{self.name}"
             )
             if trace:
                 self.last_trace = trace

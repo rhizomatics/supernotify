@@ -1,4 +1,5 @@
 import socket
+from typing import TYPE_CHECKING
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -6,8 +7,12 @@ from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.model import ConditionVariables
 
 from .hass_setup_lib import register_device
+
+if TYPE_CHECKING:
+    from custom_components.supernotify import ConditionsFunc
 
 
 def test_basic_setup(hass: HomeAssistant) -> None:
@@ -26,50 +31,56 @@ def test_basic_setup_doesnt_blow_up_without_hass(hass: HomeAssistant) -> None:
     assert hass_api.external_url == ""
 
 
-async def test_evaluate_with_bad_condition(hass: HomeAssistant) -> None:
+async def test_evaluate_with_bad_conditions(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
 
-    condition = cv.CONDITION_SCHEMA({"condition": "xor"})
+    condition = cv.CONDITIONS_SCHEMA({"condition": "xor"})
     with pytest.raises(HomeAssistantError):
-        assert await hass_api.evaluate_condition(condition) is None
+        await hass_api.build_conditions(condition)
 
 
-async def test_evaluates_good_true_condition(hass: HomeAssistant) -> None:
+async def test_evaluates_good_true_conditions(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
-    condition = cv.CONDITION_SCHEMA({
+    condition = cv.CONDITIONS_SCHEMA({
         "condition": "template",
         "value_template": """
                         {% set n = "19.12" | float %}
                         {{ 15 <= n <= 20 }}""",
     })
-    assert await hass_api.evaluate_condition(condition) is True
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition)
+    assert checker
+    assert hass_api.evaluate_conditions(checker, ConditionVariables()) is True
 
 
-async def test_evaluates_good_false_condition(hass: HomeAssistant) -> None:
+async def test_evaluates_good_false_conditions(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
-    condition = cv.CONDITION_SCHEMA({
+    condition = cv.CONDITIONS_SCHEMA({
         "condition": "template",
         "value_template": """
                         {% set n = "23.12" | float %}
                         {{ 15 <= n <= 20 }}""",
     })
-    assert await hass_api.evaluate_condition(condition) is False
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition)
+    assert checker
+    assert hass_api.evaluate_conditions(checker, ConditionVariables()) is False
 
 
 @pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
 async def test_unstrict_evaluates_ignores_missing_vars(hass: HomeAssistant, validate: bool) -> None:
     hass_api = HomeAssistantAPI(hass)
-    condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ notification_priority == 'critical' }}"})
-    assert await hass_api.evaluate_condition(condition, validate=validate) is False
+    condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ notification_priority == 'critical' }}"})
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition, validate=validate)
+    assert checker
+    assert hass_api.evaluate_conditions(checker, ConditionVariables()) is False
 
 
 @pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
 async def test_strict_evaluates_detects_missing_vars(hass: HomeAssistant, validate: bool) -> None:
     hass_api = HomeAssistantAPI(hass)
 
-    condition = cv.CONDITION_SCHEMA({"condition": "template", "value_template": "{{ xotification_priority == 'critical' }}"})
+    condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ xotification_priority == 'critical' }}"})
     with pytest.raises(HomeAssistantError):
-        assert await hass_api.evaluate_condition(condition, validate=validate, strict=True) is False
+        await hass_api.build_conditions(condition, validate=validate, strict=True)
 
 
 @pytest.mark.parametrize(argnames="validate", argvalues=[True, False], ids=["validated", "unvalidated"])
@@ -77,11 +88,13 @@ async def test_strict_evaluates_detects_missing_vars(hass: HomeAssistant, valida
 async def test_evaluates_respects_conditionvars(hass: HomeAssistant, validate: bool, strict: bool) -> None:
     hass_api = HomeAssistantAPI(hass)
 
-    condition = cv.CONDITION_SCHEMA({
+    condition = cv.CONDITIONS_SCHEMA({
         "condition": "template",
         "value_template": "{{ notification_priority != 'no_such_value' }}",
     })
-    assert await hass_api.evaluate_condition(condition, validate=validate, strict=strict)
+    checker: ConditionsFunc | None = await hass_api.build_conditions(condition, validate=validate, strict=strict)
+    assert checker
+    assert hass_api.evaluate_conditions(checker, ConditionVariables())
 
 
 def test_roundtrips_entity_state(hass: HomeAssistant) -> None:

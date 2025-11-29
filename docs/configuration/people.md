@@ -17,7 +17,7 @@ With the person definition you can:
 
 - Define an email address just once, and then refer to the target as `person.joe_soap` in notification calls
 - Likewise for phone numbers, for SMS, and for mobile devices
-  - For mobile apps, its much easier to switch on the automatic discovery, and let the People Registry find them
+  - For mobile apps, its much easier to switch on the **automatic discovery**, and let the People Registry find them
 - Also register custom targets, like Discord, Telegram etc IDs, that could be used in a *Generic* delivery
 - Set default targets for specific deliveries, so for example, an email address is always copied in on them
 

@@ -88,24 +88,6 @@ async def test_target_use_on_no_action_targets():
     assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
 
 
-async def test_target_use_undefined():
-    context = await target_usage_fixture(None)
-
-    uut = Notification(
-        context,
-        "testing",
-        target=["joey@mctoe.com"],
-    )
-    await uut.initialize()
-    await uut.deliver()
-    assert len(uut.delivered_envelopes) == 0
-
-    uut = Notification(context, "testing")
-    await uut.initialize()
-    await uut.deliver()
-    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
-
-
 async def test_target_use_merge_always():
     context = await target_usage_fixture("merge_always")
 

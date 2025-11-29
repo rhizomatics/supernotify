@@ -1,9 +1,8 @@
 """Test fixture support"""
 
 import logging
-from copy import deepcopy
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
 
 from homeassistant import config_entries
@@ -26,7 +25,16 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.yaml import parse_yaml
 
-from custom_components.supernotify import CONF_TRANSPORT, SUPERNOTIFY_SCHEMA
+from custom_components.supernotify import (
+    CONF_ACTIONS,
+    CONF_ARCHIVE,
+    CONF_DELIVERY,
+    CONF_RECIPIENTS,
+    CONF_SCENARIOS,
+    CONF_TRANSPORT,
+    SUPERNOTIFY_SCHEMA,
+    TRANSPORT_VALUES,
+)
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
@@ -54,19 +62,9 @@ class TestingContext(Context):
 
     __test__ = False
 
-    @classmethod
-    def from_config(cls, yaml_string: str) -> "TestingContext":
-        parsed_yaml = parse_yaml(yaml_string)
-        conf: ConfigType = SUPERNOTIFY_SCHEMA(parsed_yaml)
-        return TestingContext(
-            deliveries=conf.pop("delivery", None),
-            transport_configs=conf.pop("transports", None),
-            archive_config=conf.pop("archive", None),
-            **conf,
-        )
-
     def __init__(
         self,
+        yaml: str | None = None,
         deliveries: dict[str, Any] | None = None,
         scenarios: ConfigType | None = None,
         recipients: list[dict[str, Any]] | None = None,
@@ -87,6 +85,30 @@ class TestingContext(Context):
             for ddomain, did, discover in devices or []
         }
         self.entities = entities
+        raw_config: ConfigType
+        if yaml:
+            raw_config = cast("dict[str, Any]", parse_yaml(yaml))
+        else:
+            raw_config = {"name": "SuperNotifier", "platform": "supernotify"}
+        if deliveries:
+            raw_config[CONF_DELIVERY] = deliveries
+        if recipients:
+            raw_config[CONF_RECIPIENTS] = recipients
+        if scenarios:
+            raw_config[CONF_SCENARIOS] = scenarios
+        if mobile_actions:
+            raw_config[CONF_ACTIONS] = mobile_actions
+        if transport_configs:
+            raw_config[CONF_TRANSPORT] = transport_configs
+        if archive_config:
+            raw_config[CONF_ARCHIVE] = archive_config
+        if transport_instances:
+            TRANSPORT_VALUES.extend([t.name for t in transport_instances])
+
+        if transport_types:
+            TRANSPORT_VALUES.extend([t.name for t in transport_types])
+        self.config = SUPERNOTIFY_SCHEMA(raw_config)
+
         if homeassistant:  # real class or own mock
             self.hass = homeassistant
         else:
@@ -111,27 +133,22 @@ class TestingContext(Context):
             self.hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
             self.hass.data[DATA_MQTT].client.connected = True
             self.hass.config_entries._entries = ConfigEntryItems(self.hass)
-        self.deliveries: dict[str, Any] = deepcopy(deliveries) if deliveries else {}
-        # deepcopy of scenario breaks on Condition
-        self.scenarios: ConfigType = scenarios if scenarios else {}
-        self.recipients: list[dict[str, Any]] = deepcopy(recipients) if recipients else []
-        self.transport_configs: ConfigType = deepcopy(transport_configs) if transport_configs else {}
-        self.mobile_actions: ConfigType = deepcopy(mobile_actions) if mobile_actions else {}
+
         self.hass_external_url = hass_external_url
 
         hass_api = HomeAssistantAPI(self.hass)
-        people_registry = PeopleRegistry(self.recipients or [], hass_api)
-        scenario_registry = ScenarioRegistry(self.scenarios or {})
-        archive = NotificationArchive(archive_config or {}, hass_api)
+        people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
+        scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {})
+        archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)
 
         if not transport_instances:
             transport_types = transport_types or TRANSPORTS
 
         delivery_registry = DeliveryRegistry(
-            deliveries=self.deliveries or {},
+            deliveries=self.config.get(CONF_DELIVERY) or {},
             transport_instances=transport_instances or None,
             transport_types=transport_types,
-            transport_configs=self.transport_configs or {},
+            transport_configs=self.config.get(CONF_TRANSPORT) or {},
         )
         self.initialized: bool = False
         super().__init__(hass_api, people_registry, scenario_registry, delivery_registry, archive, Snoozer(), **kwargs)
@@ -157,6 +174,9 @@ class TestingContext(Context):
 
     def delivery(self, delivery_name: str) -> Delivery:
         return self.delivery_registry.deliveries[delivery_name]
+
+    def delivery_config(self, delivery_name: str) -> dict[str, Any]:
+        return self.config.get(CONF_DELIVERY, {}).get(delivery_name)
 
     def add_delivery(self, delivery_name: str, transport: str, **kwargs: Any) -> None:
         self.delivery_registry._deliveries[delivery_name] = {CONF_NAME: delivery_name, CONF_TRANSPORT: transport, **kwargs}

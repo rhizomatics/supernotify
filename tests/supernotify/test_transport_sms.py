@@ -17,7 +17,7 @@ async def test_deliver() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("smsify", ctx.deliveries["smsify"], uut),
+            Delivery("smsify", ctx.delivery_config("smsify"), uut),
             Notification(ctx, message="hello there", title="testing"),
             target=Target(["+447979123456"]),
         )
@@ -34,7 +34,7 @@ async def test_deliver() -> None:
     ctx.hass.services.async_call.reset_mock()  # type: ignore
     await uut.deliver(
         Envelope(
-            Delivery("smsify", ctx.deliveries["smsify"], uut),
+            Delivery("smsify", ctx.delivery_config("smsify"), uut),
             Notification(ctx, message="explicit target", title="testing"),
             target=Target(["+19876123456"]),
         )

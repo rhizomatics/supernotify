@@ -1,6 +1,7 @@
 """The Supernotify integration"""
 
 import logging
+from collections.abc import Callable
 from enum import StrEnum
 
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONF_ACTION,
     CONF_ALIAS,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_DESCRIPTION,
     CONF_EMAIL,
@@ -23,6 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +35,8 @@ class SelectionRank(StrEnum):
     ANY = "ANY"
     LAST = "LAST"
 
+
+type ConditionsFunc = Callable[[TemplateVarsType], bool]
 
 DOMAIN = "supernotify"
 
@@ -157,7 +162,14 @@ SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
 SELECTION_FALLBACK = "fallback"
 SELECTION_BY_SCENARIO = "scenario"
 SELECTION_DEFAULT = "default"
-SELECTION_VALUES = [SELECTION_FALLBACK_ON_ERROR, SELECTION_BY_SCENARIO, SELECTION_DEFAULT, SELECTION_FALLBACK]
+SELECTION_EXPLICIT = "explicit"
+SELECTION_VALUES = [
+    SELECTION_FALLBACK_ON_ERROR,
+    SELECTION_EXPLICIT,
+    SELECTION_BY_SCENARIO,
+    SELECTION_DEFAULT,
+    SELECTION_FALLBACK,
+]
 
 OCCUPANCY_VALUES = [
     OCCUPANCY_ALL_IN,
@@ -258,10 +270,10 @@ DELIVERY_CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_DATA): DATA_SCHEMA,
 })
 LINK_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ID): cv.string,
     vol.Required(CONF_URL): cv.url,
-    vol.Optional(CONF_ICON): cv.icon,
     vol.Required(CONF_DESCRIPTION): cv.string,
+    vol.Optional(CONF_ID): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_NAME): cv.string,
 })
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
@@ -289,16 +301,20 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         SelectionRank.LAST,
     ]),
 })
-DELIVERY_SCHEMA = DELIVERY_CONFIG_SCHEMA.extend({
-    vol.Optional(CONF_ALIAS): cv.string,
-    vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
-    vol.Optional(CONF_TEMPLATE): cv.string,
-    vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
-    vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
-    vol.Optional(CONF_ENABLED): cv.boolean,
-    vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
-    vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
-})
+DELIVERY_SCHEMA = vol.All(
+    cv.deprecated(key=CONF_CONDITION),
+    DELIVERY_CONFIG_SCHEMA.extend({
+        vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_TEMPLATE): cv.string,
+        vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
+        vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
+        vol.Optional(CONF_ENABLED): cv.boolean,
+        vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
+        vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
+        vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+    }),
+)
 TRANSPORT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
@@ -312,7 +328,7 @@ RECIPIENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_EMAIL): cv.string,
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_PHONE_NUMBER): cv.string,
-    vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
+    vol.Optional(CONF_MOBILE_DISCOVERY, default=False): cv.boolean,
     vol.Optional(CONF_MOBILE_DEVICES, default=list): vol.All(cv.ensure_list, [MOBILE_DEVICE_SCHEMA]),
     vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_CUSTOMIZE_SCHEMA},
 })
@@ -337,18 +353,22 @@ MEDIA_SCHEMA = vol.Schema({
 })
 
 
-SCENARIO_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ALIAS): cv.string,
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-    vol.Optional(CONF_CONDITION): cv.CONDITION_SCHEMA,
-    vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
-    vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DELIVERY_SELECTION, default=DELIVERY_SELECTION_IMPLICIT): vol.In([
-        DELIVERY_SELECTION_IMPLICIT,
-        DELIVERY_SELECTION_EXPLICIT,
-    ]),
-    vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
-})
+SCENARIO_SCHEMA = vol.All(
+    cv.deprecated(key=CONF_CONDITION),
+    vol.Schema({
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+        vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
+        vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
+        vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
+        vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DELIVERY_SELECTION, default=DELIVERY_SELECTION_IMPLICIT): vol.In([
+            DELIVERY_SELECTION_IMPLICIT,
+            DELIVERY_SELECTION_EXPLICIT,
+        ]),
+        vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
+    }),
+)
 ACTION_CALL_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ACTION): cv.string,

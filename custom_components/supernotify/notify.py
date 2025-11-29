@@ -570,7 +570,7 @@ class SupernotifyAction(BaseNotificationService):
     async def enquire_active_scenarios(self) -> list[str]:
         occupiers: dict[str, list[dict[str, Any]]] = self.context.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
-        return [s.name for s in self.context.scenario_registry.scenarios.values() if await s.evaluate(cvars)]
+        return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(cvars)]
 
     async def trace_active_scenarios(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
         occupiers: dict[str, list[dict[str, Any]]] = self.context.people_registry.determine_occupancy()

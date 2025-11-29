@@ -8,7 +8,7 @@ dependencies = ["homeassistant>=2025.11.1"]
 
 [tool.poetry]
 package-mode = false
-version = "1.3.5"
+version = "1.4.0"
 packages = [{ include = "custom_components.supernotify" }]
 
 [tool.setuptools.packages.find]
@@ -29,7 +29,7 @@ homeassistant-stubs = "2025.10.4"
 [tool.ruff]
 line-length = 128
 indent-width = 4
-target-version = "py311"
+target-version = "py313"
 exclude = [
     ".bzr",
     ".direnv",

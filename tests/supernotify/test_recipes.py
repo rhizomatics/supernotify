@@ -5,7 +5,8 @@ from .hass_setup_lib import TestingContext
 
 async def test_alexa_whispering():
     """https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/"""
-    ctx = TestingContext.from_config("""
+    ctx = TestingContext(
+        yaml="""
   name: SuperNotifier
   platform: supernotify
   delivery:
@@ -23,9 +24,7 @@ async def test_alexa_whispering():
   scenarios:
     routine:
         alias: regular low level announcements
-        condition:
-          condition: and
-          conditions:
+        conditions:
             - "{{notification_priority in ['low']}}"
 
         delivery:
@@ -34,7 +33,8 @@ async def test_alexa_whispering():
           alexa_inform:
             data:
               message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'
-""")
+"""
+    )
 
     await ctx.test_initialize()
     uut = Notification(ctx, "testing 123", action_data={"priority": "low"}, target="joe@soapy.com")
@@ -50,13 +50,15 @@ async def test_alexa_whispering():
 
 
 async def test_minimal_config_parses():
-    ctx = TestingContext.from_config("""
+    ctx = TestingContext(
+        yaml="""
     name: minimal
     platform: supernotify
     delivery:
       email:
         transport: email
         action: notify.smtp
-""")
+"""
+    )
     await ctx.test_initialize()
     assert ctx.delivery("email") is not None

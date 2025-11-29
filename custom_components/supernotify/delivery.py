@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_ACTION,
     CONF_ALIAS,
     CONF_CONDITION,
+    CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_ENABLED,
     CONF_NAME,
@@ -33,6 +34,7 @@ from . import (
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
+    ConditionsFunc,
 )
 from .context import Context
 
@@ -51,7 +53,10 @@ class Delivery(DeliveryConfig):
         self.title: str | None = conf.get(CONF_TITLE)
         self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
         self.occupancy: str = conf.get(CONF_OCCUPANCY, OCCUPANCY_ALL)
-        self.condition: ConfigType | None = conf.get(CONF_CONDITION)
+        self.conditions_config: list[ConfigType] | None = conf.get(CONF_CONDITIONS)
+        if not conf.get(CONF_CONDITIONS) and conf.get(CONF_CONDITION):
+            self.conditions_config = conf.get(CONF_CONDITION)
+        self.conditions: ConditionsFunc | None = None
 
     async def validate(self, context: "Context") -> bool:
         errors = 0
@@ -74,20 +79,22 @@ class Delivery(DeliveryConfig):
             )
             errors += 1
 
-        if self.condition:
+        if self.conditions_config:
             try:
-                await context.hass_api.evaluate_condition(self.condition, validate=True, strict=True)
+                self.conditions = await context.hass_api.build_conditions(
+                    self.conditions_config, validate=True, strict=True, name=self.name
+                )
                 passed = True
                 exception = ""
             except Exception as e:
                 passed = False
                 exception = str(e)
             if not passed:
-                _LOGGER.warning("SUPERNOTIFY Invalid delivery condition for %s: %s", self.name, self.condition)
+                _LOGGER.warning("SUPERNOTIFY Invalid delivery conditions for %s: %s", self.name, self.conditions_config)
                 context.hass_api.raise_issue(
                     f"delivery_{self.name}_invalid_condition",
                     issue_key="delivery_invalid_condition",
-                    issue_map={"delivery": self.name, "condition": str(self.condition), "exception": exception},
+                    issue_map={"delivery": self.name, "condition": str(self.conditions_config), "exception": exception},
                     learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
                 )
                 errors += 1
@@ -111,13 +118,13 @@ class Delivery(DeliveryConfig):
             }
         return filtered_target
 
-    async def evaluate_conditions(self, condition_variables: ConditionVariables | None) -> bool | None:
+    def evaluate_conditions(self, condition_variables: ConditionVariables) -> bool | None:
         if not self.enabled:
             return False
-        if self.condition is None:
+        if self.conditions is None:
             return True
         # TODO: reconsider hass_api injection
-        return await self.transport.hass_api.evaluate_condition(self.condition, condition_variables)
+        return self.transport.hass_api.evaluate_conditions(self.conditions, condition_variables)
 
     def option(self, option_name: str) -> str | bool:
         """Get an option value from delivery config or transport default options"""
@@ -125,7 +132,9 @@ class Delivery(DeliveryConfig):
         if option_name in self.options:
             opt = self.options[option_name]
         if opt is None:
-            _LOGGER.debug("SUPERNOTIFY No default in %s for option %s, setting to empty string", self.name, option_name)
+            _LOGGER.debug(
+                "SUPERNOTIFY No default in delivery %s for option %s, setting to empty string", self.name, option_name
+            )
             opt = ""
         return opt
 
@@ -146,7 +155,7 @@ class Delivery(DeliveryConfig):
             CONF_TITLE: self.title,
             CONF_ENABLED: self.enabled,
             CONF_OCCUPANCY: self.occupancy,
-            CONF_CONDITION: self.condition,
+            CONF_CONDITIONS: self.conditions,
         })
         return base
 

@@ -26,7 +26,7 @@ from .hass_setup_lib import TestingContext
 DELIVERY: dict[str, Any] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
     "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
-    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
+    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "target": ["switch.bell_1", "script.siren_2"]},
     "alexa_devices": {CONF_TRANSPORT: TRANSPORT_ALEXA, CONF_ACTION: "notify.send_message"},
     "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
     "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
@@ -35,8 +35,9 @@ DELIVERY: dict[str, Any] = {
 
 
 async def test_simple_create_with_defined_default_delivery() -> None:
-    ctx = TestingContext(deliveries=DELIVERY, transport_types=[GenericTransport])
-    ctx.deliveries["chat"]["default"] = True
+    delivery_config = DELIVERY.copy()
+    delivery_config["chat"]["selection"] = "default"
+    ctx = TestingContext(deliveries=delivery_config, transport_types=[GenericTransport])
     await ctx.test_initialize()
 
     assert list(ctx.delivery_registry.deliveries.keys()) == ["chat"]

@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING, Any, LiteralString, cast
 
 import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.const import ATTR_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from pytest_httpserver import HTTPServer
@@ -43,7 +42,7 @@ async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: C
     uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
     await uut.deliver(
         Envelope(
-            Delivery("media_test", ctx.deliveries["media_test"], uut),
+            Delivery("media_test", ctx.delivery_config("media_test"), uut),
             Notification(
                 ctx,
                 message="hello there",
@@ -96,7 +95,7 @@ async def test_on_notify_mobile_push_with_explicit_target() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("media_test", ctx.deliveries["media_test"], uut),
+            Delivery("media_test", ctx.delivery_config("media_test"), uut),
             Notification(ctx, message="hello there", title="testing"),
             target=Target({"mobile_app_id": ["mobile_app_new_iphone"]}),
         )
@@ -145,7 +144,7 @@ async def test_on_notify_mobile_push_with_critical_priority() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("default", ctx.deliveries["default"], uut),
+            Delivery("default", ctx.delivery_config("default"), uut),
             Notification(
                 ctx,
                 message="hello there",
@@ -253,7 +252,6 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
         recipients=[
             {
                 CONF_PERSON: "person.bidey_in",
-                ATTR_STATE: "home",
                 CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
             },
         ]

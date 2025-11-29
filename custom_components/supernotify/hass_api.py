@@ -1,22 +1,40 @@
 from __future__ import annotations
 
 import logging
-import socket
-import threading
-from contextlib import contextmanager
-from dataclasses import asdict
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components import mqtt
-from homeassistant.components.group import expand_entity_ids
-from homeassistant.components.trace import async_setup, async_store_trace  # type: ignore[attr-defined,unused-ignore]
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
+from typing import cast
+
+import homeassistant.components.trace
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
+from homeassistant.components.trace.util import async_store_trace
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer
+from homeassistant.helpers import condition as condition
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
+import socket
+import threading
+from contextlib import contextmanager
+from typing import TYPE_CHECKING
+
+from homeassistant.components import mqtt
+from homeassistant.components.group import expand_entity_ids
+
+# type: ignore[attr-defined,unused-ignore]
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 
@@ -26,16 +44,11 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     from homeassistant.core import ServiceResponse, State
-    from homeassistant.helpers.condition import ConditionCheckerType
 
-from homeassistant.helpers import condition as condition
 from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.network import get_url
 
-from . import (
-    DOMAIN,
-)
+from . import DOMAIN, ConditionsFunc
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -157,54 +170,79 @@ class HomeAssistantAPI:
     def template(self, template_format: str) -> Template:
         return Template(template_format, self._hass)
 
-    async def trace_condition(
+    async def trace_conditions(
         self,
-        condition_config: ConfigType,
-        condition_variables: ConditionVariables | None = None,
-        strict: bool = False,
-        validate: bool = False,
+        conditions: ConditionsFunc,
+        condition_variables: ConditionVariables,
         trace_name: str | None = None,
     ) -> tuple[bool | None, ActionTrace | None]:
+
         result: bool | None = None
         this_trace: ActionTrace | None = None
         if self._hass:
             if DATA_TRACE not in self._hass.data:
-                await async_setup(self._hass, {})
+                _LOGGER.warning("SUPERNOTIFY tracing not configured, attempting to set up")
+                await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
             with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
                 cond_trace.set_trace(trace_get())
                 this_trace = cond_trace
                 with trace_path(["condition", "conditions"]) as _tp:
-                    result = await self.evaluate_condition(
-                        condition_config, condition_variables, strict=strict, validate=validate
-                    )
+                    result = self.evaluate_conditions(conditions, condition_variables)
                 _LOGGER.debug(cond_trace.as_dict())
         return result, this_trace
 
-    async def evaluate_condition(
-        self,
-        condition_config: ConfigType,
-        condition_variables: ConditionVariables | None = None,
-        strict: bool = False,
-        validate: bool = False,
-    ) -> bool | None:
+    async def build_conditions(
+        self, condition_config: list[ConfigType], strict: bool = False, validate: bool = False, name: str = DOMAIN
+    ) -> ConditionsFunc | None:
         if self._hass is None:
             raise ValueError("HomeAssistant not available")
-        if strict and not condition_variables:
-            condition_variables = ConditionVariables()
-
+        capturing_logger: ConditionErrorLoggingAdaptor = ConditionErrorLoggingAdaptor(_LOGGER)
+        condition_variables: ConditionVariables = ConditionVariables()
+        cond_list: list[ConfigType]
         try:
             if validate:
-                condition_config = await condition.async_validate_condition_config(self._hass, condition_config)
-            if strict:
-                force_strict_template_mode(condition_config, undo=False)
-            test: ConditionCheckerType = await condition.async_from_config(self._hass, condition_config)
-            return test(self._hass, asdict(condition_variables) if condition_variables else None)
+                cond_list = cast(
+                    "list[ConfigType]", await condition.async_validate_conditions_config(self._hass, condition_config)
+                )
+            else:
+                cond_list = condition_config
         except Exception as e:
-            _LOGGER.error("SUPERNOTIFY Condition eval failed: %s", e)
+            _LOGGER.exception("SUPERNOTIFY Conditions validation failed: %s", e)
+            raise
+        try:
+            if strict:
+                force_strict_template_mode(cond_list, undo=False)
+
+            test: ConditionsFunc = await condition.async_conditions_from_config(
+                self._hass, cond_list, cast("logging.Logger", capturing_logger), name
+            )
+            if test is None:
+                raise ValueError(f"Invalid condition {condition_config}")
+            test(condition_variables.as_dict())
+            if strict and capturing_logger.condition_errors:
+                for exception in capturing_logger.condition_errors:
+                    _LOGGER.warning("SUPERNOTIFY Invalid condition %s:%s", condition_config, exception)
+                raise capturing_logger.condition_errors[0]
+            return test
+        except Exception as e:
+            _LOGGER.exception("SUPERNOTIFY Conditions eval failed: %s", e)
             raise
         finally:
             if strict:
-                force_strict_template_mode(condition_config, undo=False)
+                force_strict_template_mode(condition_config, undo=True)
+
+    def evaluate_conditions(
+        self,
+        condition: ConditionsFunc,
+        condition_variables: ConditionVariables,
+    ) -> bool | None:
+        if self._hass is None:
+            raise ValueError("HomeAssistant not available")
+        try:
+            return condition(condition_variables.as_dict() if condition_variables else None)
+        except Exception as e:
+            _LOGGER.error("SUPERNOTIFY Condition eval failed: %s", e)
+            raise
 
     def abs_url(self, fragment: str | None, prefer_external: bool = True) -> str | None:
         base_url = self.external_url if prefer_external else self.internal_url
@@ -338,7 +376,29 @@ class HomeAssistantAPI:
                     raise
 
 
-def force_strict_template_mode(condition: ConfigType, undo: bool = False) -> None:
+class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.condition_errors: list[ConditionError] = []
+
+    def capture(self, args: Any) -> None:
+        if args and isinstance(args, (list, tuple)):
+            for arg in args:
+                if isinstance(arg, ConditionErrorContainer):
+                    self.condition_errors.extend(arg.errors)
+                elif isinstance(arg, ConditionError):
+                    self.condition_errors.append(arg)
+
+    def error(self, msg: Any, *args: object, **kwargs: Any) -> None:
+        self.capture(args)
+        self.logger.error(msg, args, kwargs)
+
+    def warning(self, msg: Any, *args: Any, **kwargs: Any) -> None:
+        self.capture(args)
+        self.logger.warning(msg, args, kwargs)
+
+
+def force_strict_template_mode(conditions: list[ConfigType], undo: bool = False) -> None:
     class TemplateWrapper:
         def __init__(self, obj: Template) -> None:
             self._obj = obj
@@ -351,7 +411,7 @@ def force_strict_template_mode(condition: ConfigType, undo: bool = False) -> Non
         def __setattr__(self, name: str, value: Any) -> None:
             super().__setattr__(name, value)
 
-    def wrap_template(cond: ConfigType, undo: bool) -> None:
+    def wrap_template(cond: ConfigType, undo: bool) -> ConfigType:
         for key, val in cond.items():
             if not undo and isinstance(val, Template) and hasattr(val, "_env"):
                 cond[key] = TemplateWrapper(val)
@@ -359,9 +419,10 @@ def force_strict_template_mode(condition: ConfigType, undo: bool = False) -> Non
                 cond[key] = val._obj
             elif isinstance(val, dict):
                 wrap_template(val, undo)
+        return cond
 
-    if condition is not None:
-        wrap_template(condition, undo)
+    if conditions is not None:
+        conditions = [wrap_template(condition, undo) for condition in conditions]
 
 
 @contextmanager

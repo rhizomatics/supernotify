@@ -14,7 +14,9 @@ async def test_deliver() -> None:  # type: ignore
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_PERSISTENT)
 
-    await uut.deliver(Envelope(Delivery("pn", ctx.deliveries["pn"], uut), Notification(ctx, "hello there", title="testing")))
+    await uut.deliver(
+        Envelope(Delivery("pn", ctx.delivery_config("pn"), uut), Notification(ctx, "hello there", title="testing"))
+    )
     ctx.hass.services.async_call.assert_called_with(  # type:ignore
         "persistent_notification",
         "create",

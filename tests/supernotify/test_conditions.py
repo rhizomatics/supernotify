@@ -10,7 +10,7 @@ from custom_components.supernotify.model import ConditionVariables
 """ test bed for checking conditions rather than supernotify functionality """
 
 
-async def test_and_condition(hass: HomeAssistant) -> None:
+async def test_and_conditions(hass: HomeAssistant) -> None:
     """Test the 'and' condition."""
     config = {
         "condition": "and",
@@ -38,7 +38,7 @@ async def test_and_condition(hass: HomeAssistant) -> None:
     assert not test(hass, asdict(cvars))
 
 
-async def test_template_condition(hass: HomeAssistant) -> None:
+async def test_template_conditions(hass: HomeAssistant) -> None:
     """Test templated conditions."""
     config = {
         "condition": "template",

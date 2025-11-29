@@ -476,6 +476,7 @@ class ConditionVariables:
             "constrain_scenarios": self.constrain_scenarios,
             "notification_message": self.notification_message,
             "notification_title": self.notification_title,
+            "notification_priority": self.notification_priority,
             "occupancy": self.occupancy,
         }
 

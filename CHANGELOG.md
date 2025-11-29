@@ -1,5 +1,11 @@
 # Public releases
 
+## 1.4.0
+### Features
+- Now supports the full `conditions` Home Assistant schema, `condition` is now deprecated though still supported
+  - This allows simple lists of shortcut templates, for common `AND` type usage
+### Internal
+- Test config now consistently applies schema validation/enhancement
 ## 1.3.5
 ### Fixes
 - Condition variables could be rejected in validation of Delivery conditions

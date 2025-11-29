@@ -24,7 +24,7 @@ async def test_deliver() -> None:
     await uut.initialize()
 
     envelope = Envelope(
-        Delivery("chimes", context.deliveries["chimes"], uut),
+        Delivery("chimes", context.delivery_config("chimes"), uut),
         Notification(context, message="for script only"),
         target=Target([
             "switch.bell_1",
@@ -138,7 +138,7 @@ async def test_deliver_alias() -> None:
     uut = context.transport(TRANSPORT_CHIME)
 
     envelope: Envelope = Envelope(
-        Delivery("chimes", context.deliveries["chimes"], uut), Notification(context, message="for script only")
+        Delivery("chimes", context.delivery_config("chimes"), uut), Notification(context, message="for script only")
     )
     await uut.deliver(envelope)
     assert envelope.skipped == 0
@@ -240,7 +240,7 @@ async def test_deliver_to_group() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("chimes", context.deliveries["chimes"], uut),
+            Delivery("chimes", context.delivery_config("chimes"), uut),
             Notification(context),
             target=Target(["group.alexa", "group.chime", "script.siren_2"]),
         )

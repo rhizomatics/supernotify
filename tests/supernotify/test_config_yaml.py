@@ -411,6 +411,6 @@ async def test_people_configured(hass: HomeAssistant) -> None:
             "email": ["test@testing.com"],
             "phone": ["+4497177848484"],
         },
-        "mobile_discovery": True,
+        "mobile_discovery": False,
         "mobile_devices": [],
     }

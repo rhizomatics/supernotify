@@ -41,7 +41,7 @@ from tests.supernotify.doubles_lib import DummyTransport
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
     "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
-    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "entities": ["switch.bell_1", "script.siren_2"]},
+    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "target": ["switch.bell_1", "script.siren_2"]},
     "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
     "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
     "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
@@ -149,7 +149,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     # contra-test
     mock_hass.services.async_call.reset_mock()
     await uut.async_send_message(message="testing 123")
-    assert mock_hass.services.async_call.call_count == 3
+    assert mock_hass.services.async_call.call_count == 5  # SMS + 2 notify + 2 chime
 
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:
@@ -291,7 +291,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
     )
 
 
-async def test_send_message_with_condition(hass: HomeAssistant) -> None:
+async def test_send_message_with_conditions(hass: HomeAssistant) -> None:
     delivery = {
         CONF_TRANSPORT: TRANSPORT_GENERIC,
         CONF_ACTION: "testing.mock_notification",

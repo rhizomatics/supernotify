@@ -22,7 +22,7 @@ async def test_deliver() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("plain_email", context.deliveries["plain_email"], uut),
+            Delivery("plain_email", context.delivery_config("plain_email"), uut),
             Notification(
                 context,
                 message="hello there",
@@ -57,7 +57,7 @@ async def test_deliver_with_template() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("test_email", context.deliveries["test_email"], uut),
+            Delivery("test_email", context.delivery_config("test_email"), uut),
             Notification(context, message="hello there", title="testing"),
             target=Target(["tester9@assert.com"]),
         )
@@ -96,7 +96,9 @@ async def test_deliver_with_preformatted_html() -> None:
     )
     await notification.initialize()
     await uut.deliver(
-        Envelope(Delivery("default", context.deliveries["default"], uut), notification, target=Target(["tester9@assert.com"]))
+        Envelope(
+            Delivery("default", context.delivery_config("default"), uut), notification, target=Target(["tester9@assert.com"])
+        )
     )
     context.hass.services.async_call.assert_called_with(  # type: ignore
         "notify",
@@ -140,7 +142,7 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
     await notification.initialize()
     notification.snapshot_image_path = Path("/local/picture.jpg")
     await uut.deliver(
-        Envelope(Delivery("default", context.deliveries["default"], uut), notification, target=notification.target)
+        Envelope(Delivery("default", context.delivery_config("default"), uut), notification, target=notification.target)
     )
     context.hass.services.async_call.assert_called_with(  # type:ignore
         "notify",

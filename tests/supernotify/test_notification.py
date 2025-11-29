@@ -206,7 +206,9 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     recipients: list[Target] = uut.generate_recipients(delivery)
     assert recipients[0].custom_ids("_UNKNOWN_") == ["chan1", "chan2"]
     bundles = uut.generate_envelopes(delivery, recipients)
-    assert bundles == [Envelope(Delivery("chatty", ctx.deliveries["chatty"], generic), uut, target=Target(["chan1", "chan2"]))]
+    assert bundles == [
+        Envelope(Delivery("chatty", ctx.delivery_config("chatty"), generic), uut, target=Target(["chan1", "chan2"]))
+    ]
     email = EmailTransport(ctx)
     await email.initialize()
     delivery = ctx.delivery("mail")
@@ -214,7 +216,7 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
-        Envelope(Delivery("mail", ctx.deliveries["mail"], email), uut, target=Target(["bob@test.com", "jane@test.com"]))
+        Envelope(Delivery("mail", ctx.delivery_config("mail"), email), uut, target=Target(["bob@test.com", "jane@test.com"]))
     ]
 
 

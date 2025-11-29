@@ -1,7 +1,7 @@
 from unittest.mock import call
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.const import CONF_ACTION, CONF_NAME
+from homeassistant.const import CONF_ACTION
 
 from custom_components.supernotify import (
     CONF_DATA,
@@ -25,7 +25,6 @@ async def test_deliver() -> None:
         deliveries={
             "teleport": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
-                CONF_NAME: "teleport",
                 CONF_ACTION: "notify.teleportation",
                 CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: ["_UNKNOWN_"]},
             }
@@ -38,7 +37,7 @@ async def test_deliver() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("teleport", context.deliveries["teleport"], uut),
+            Delivery("teleport", context.delivery_config("teleport"), uut),
             Notification(
                 context,
                 message="hello there",
@@ -67,9 +66,7 @@ async def test_deliver() -> None:
 
 
 async def test_not_notify_deliver() -> None:
-    context = TestingContext(
-        deliveries={"broker": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_NAME: "broker", CONF_ACTION: "mqtt.publish"}}
-    )
+    context = TestingContext(deliveries={"broker": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "mqtt.publish"}})
 
     uut = GenericTransport(context)
     await context.test_initialize(transport_instances=[uut])
@@ -77,7 +74,7 @@ async def test_not_notify_deliver() -> None:
 
     await uut.deliver(
         Envelope(
-            Delivery("broker", context.deliveries["broker"], uut),
+            Delivery("broker", context.delivery_config("broker"), uut),
             Notification(
                 context,
                 message="hello there",

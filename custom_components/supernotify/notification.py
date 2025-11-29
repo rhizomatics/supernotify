@@ -138,7 +138,7 @@ class Notification(ArchivableObject):
         self.people_by_occupancy: list[dict[str, Any]] = []
         self.suppressed: SuppressionReason | None = None
         self.occupancy: dict[str, list[dict[str, Any]]] = {}
-        self.condition_variables: ConditionVariables | None = None
+        self.condition_variables: ConditionVariables
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
@@ -395,7 +395,7 @@ class Notification(ArchivableObject):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
                 self.skipped += 1
                 return
-            if not await delivery.evaluate_conditions(self.condition_variables):
+            if not delivery.evaluate_conditions(self.condition_variables):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
                 self.skipped += 1
                 return
@@ -472,7 +472,7 @@ class Notification(ArchivableObject):
         }
 
     async def select_scenarios(self) -> list[str]:
-        return [s.name for s in self.context.scenario_registry.scenarios.values() if await s.evaluate(self.condition_variables)]
+        return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(self.condition_variables)]
 
     def merge(self, attribute: str, delivery_name: str) -> dict[str, Any]:
         delivery: dict[str, Any] = self.delivery_overrides.get(delivery_name, {})
