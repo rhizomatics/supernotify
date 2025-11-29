@@ -23,7 +23,7 @@ In this case a Frigate notification is usually a medium priority, however if the
   scenarios:
     high_alert:
         alias: make a fuss if alarm armed or high priority
-        condition:
+        conditions:
           condition: and
           conditions:
             - "{{notification_priority not in ['critical','low']}}"

@@ -26,7 +26,7 @@ The speech markup requires use of the `speak` rather than `announce` entities pr
 scenarios:
     xmas:
       alias: Christmas season
-      condition:
+      conditions:
         condition: or
         conditions:
           - "{{ (12,24) <= (now().month, now().day) <= (12,31) }}"
@@ -41,7 +41,7 @@ scenarios:
 
     halloween:
       alias: Spooky season
-      condition:
+      conditions:
         condition: and
         conditions:
           - "{{ (10,31) == (now().month, now().day) }}"
@@ -52,7 +52,7 @@ scenarios:
 
     birthdays:
       alias: Family birthdays
-      condition:
+      conditions:
         condition: or
         conditions:
           - "{{ (5,23) == (now().month, now().day) }}"

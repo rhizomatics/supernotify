@@ -53,7 +53,7 @@ one place to tune multiple notifications.
 ```yaml
 more_attention:
         alias: time to make more of a fuss
-        condition:
+        conditions:
           condition: and
           conditions:
             - not:

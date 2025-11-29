@@ -29,15 +29,15 @@ recipients:
 scenarios:
     lone_night:
         alias: only one person home at night
-        condition:
+        conditions:
             condition: and
             conditions:
             - "{{notification_priority not in ['critical','high','low']}}"
             - "{{'LONE_HOME' in occupancy}}"
             - condition: state
-                entity_id: alarm_control_panel.home_alarm_control
-                state:
-                - armed_night
+              entity_id: alarm_control_panel.home_alarm_control
+              state:
+              - armed_night
         action_groups:
             - alarm_panel
             - lights

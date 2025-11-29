@@ -45,6 +45,8 @@ from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.snoozer import Snoozer
 from custom_components.supernotify.transport import Transport
 
+from .doubles_lib import DummyService
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -77,19 +79,21 @@ class TestingContext(Context):
         hass_external_url: str | None = None,
         archive_config: ConfigType | None = None,
         homeassistant: HomeAssistant | None = None,
+        services: dict[str, list[str]] | None = None,
         **kwargs: Any,
     ) -> None:
         self.hass: HomeAssistant
+
         self.devices = {
             did: Mock(spec=DeviceEntry, id=did, disabled=False, discover=discover, identifiers=[(ddomain, did)])
             for ddomain, did, discover in devices or []
         }
         self.entities = entities
         raw_config: ConfigType
-        if yaml:
-            raw_config = cast("dict[str, Any]", parse_yaml(yaml))
-        else:
-            raw_config = {"name": "SuperNotifier", "platform": "supernotify"}
+
+        raw_config = cast("dict[str, Any]", parse_yaml(yaml)) if yaml else {}
+        raw_config.setdefault("name", "SuperNotifier")
+        raw_config.setdefault("platform", "supernotify")
         if deliveries:
             raw_config[CONF_DELIVERY] = deliveries
         if recipients:
@@ -135,6 +139,12 @@ class TestingContext(Context):
             self.hass.config_entries._entries = ConfigEntryItems(self.hass)
 
         self.hass_external_url = hass_external_url
+        if services:
+            self.services = {
+                f"{domain}.{action}": DummyService(self.hass, domain, action)
+                for domain, actions in services.items()
+                for action in actions
+            }
 
         hass_api = HomeAssistantAPI(self.hass)
         people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)

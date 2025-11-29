@@ -21,11 +21,11 @@ section of the notify action `data`, or in template logic.
 ```yaml
 scenarios:
   bedtime:
-        condition:
-          condition: time
-          alias: Usual bedtime
-          after: "21:30:00"
-          before: "06:30:00"
+        conditions:
+          - condition: time
+            alias: Usual bedtime
+            after: "21:30:00"
+            before: "06:30:00"
 ```
 
 ## Variations

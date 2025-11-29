@@ -22,10 +22,7 @@ in this case one called `alexa_inform`.
 scenarios:
   routine:
       alias: regular low level announcements
-      condition:
-        condition: and
-        conditions:
-          - "{{notification_priority in ['low']}}"
+      conditions: "{{notification_priority in ['low']}}"
 
       delivery:
         plain_email:

@@ -14,7 +14,7 @@ notify:
       html_email:
         transport: email
         template: default.html.j2
-        conditions:
+        condition:
             condition: or
             conditions:
               - condition: state
@@ -23,7 +23,8 @@ notify:
                   - armed_away
                   - armed_home
                   - armed_night
-              - "{{ notification_priority in ['critical','high'] }}"
+              - condition: template
+                value_template: "{{ notification_priority in ['critical','high'] }}"
         priority:
           - critical
           - high
@@ -63,7 +64,7 @@ notify:
             floor_id: ground
             label_id: 433sounder
             area_id: backyard
-         conditions:
+         condition:
               alias: "Time 15~02"
               condition: time
               # At least one of the following is required.
@@ -117,7 +118,7 @@ notify:
           - media_player.echo_lobby
         data:
           chime_tune: christmas_05
-        conditions:
+        condition:
           condition: template
           alias: Xmas
           value_template: >
@@ -250,7 +251,7 @@ notify:
               title_template: '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
       ordinary_day:
         alias: nothing special
-        conditions:
+        condition:
             condition: and
             conditions:
               - not:
@@ -262,7 +263,7 @@ notify:
                 before: "06:30:00"
       mostly:
         alias: nothing special
-        conditions:
+        condition:
             condition: and
             conditions:
               - not:
@@ -273,7 +274,7 @@ notify:
                 after: "06:30:00"
                 before: "21:30:00"
       bedtime:
-        conditions:
+        condition:
             condition: time
             alias: Usual bedtime
             after: "21:30:00"

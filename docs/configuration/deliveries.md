@@ -116,7 +116,7 @@ delivery:
         # only deliver if there's someone determined ( by mobile app tracker ) to be home
         occupancy: any_in
         # apply a further time and day of week condition
-        condition:
+        conditions:
               alias: "Time 15~02"
               condition: time
               after: "15:00:00"
