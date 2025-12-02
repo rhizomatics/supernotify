@@ -4,13 +4,18 @@ site_description: Advanced, concise, flexible notification upgrade for Home Assi
 
 repo_name: rhizomatics/supernotify
 repo_url: https://github.com/rhizomatics/supernotify
+edit_uri: edit/main/docs/
 
 theme:
   name: material
   highlightjs: true
   language: en
   logo: assets/images/logo-blank-256x256.png
+  icon:
+    repo: fontawesome/brands/github
   features:
+    - content.action.edit
+    - content.action.view
     - content.code.copy
     - content.code.select
     - content.code.annotate
@@ -22,6 +27,9 @@ theme:
     - navigation.path
     - navigation.indexes
     - navigation.top
+    - search.suggest
+    - search
+    - search.share
     - toc.follow
     - toc.integrate
 plugins:
@@ -31,6 +39,8 @@ plugins:
   - tags
   - minify:
       minify_html: true
+  - git-revision-date-localized:
+      enable_creation_date: true
   - coverage:
       page_path: developer/coverage
       html_report_dir: htmlcov

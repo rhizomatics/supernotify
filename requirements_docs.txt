@@ -10,3 +10,4 @@ mkdocs
 json-schema-for-humans
 mkdocs-gen-files
 voluptuous-openapi>=0.2.0
+mkdocs-git-revision-date-localized-plugin
