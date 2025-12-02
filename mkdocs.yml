@@ -38,6 +38,7 @@ plugins:
   - pagetree
   - optimize
   - tags
+  - meta-descriptions
   - minify:
       minify_html: true
   - git-revision-date-localized:
@@ -69,7 +70,6 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
-  - meta-descriptions
   - pymdownx.blocks.caption
   - pymdownx.details
   - pymdownx.emoji:
