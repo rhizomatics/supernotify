@@ -146,8 +146,8 @@ class HomeAssistantAPI:
             else:
                 _LOGGER.debug("SUPERNOTIFY Unable to find service info for %s.%s", domain, service)
 
-        except Exception:
-            _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s")
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
 
         response: ServiceResponse | None = await self._hass.services.async_call(
             domain,

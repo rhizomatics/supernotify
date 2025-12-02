@@ -47,7 +47,7 @@ class ScenarioRegistry:
     ) -> None:
         for scenario_name, scenario_definition in self._config.items():
             scenario = Scenario(scenario_name, scenario_definition, hass_api)
-            if await scenario.validate(valid_deliveries=list(deliveries), valid_action_groups=list(mobile_actions)):
+            if await scenario.validate(valid_delivery_names=list(deliveries), valid_action_group_names=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
         self.refresh(deliveries, implicit_deliveries)
 
@@ -96,7 +96,9 @@ class Scenario:
         self.default: bool = self.name == ATTR_DEFAULT
         self.last_trace: ActionTrace | None = None
 
-    async def validate(self, valid_deliveries: list[str] | None = None, valid_action_groups: list[str] | None = None) -> bool:
+    async def validate(
+        self, valid_delivery_names: list[str] | None = None, valid_action_group_names: list[str] | None = None
+    ) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
         if self.conditions_config:
             error: str | None = None
@@ -124,10 +126,10 @@ class Scenario:
                 )
                 return False
 
-        if valid_deliveries is not None:
+        if valid_delivery_names is not None:
             invalid_deliveries: list[str] = []
             for delivery_name in self.delivery:
-                if delivery_name not in valid_deliveries:
+                if delivery_name not in valid_delivery_names:
                     _LOGGER.error(f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
                     invalid_deliveries.append(delivery_name)
                     self.hass_api.raise_issue(
@@ -141,10 +143,10 @@ class Scenario:
             for delivery_name in invalid_deliveries:
                 del self.delivery[delivery_name]
 
-        if valid_action_groups is not None:
+        if valid_action_group_names is not None:
             invalid_action_groups: list[str] = []
             for action_group_name in self.action_groups:
-                if action_group_name not in valid_action_groups:
+                if action_group_name not in valid_action_group_names:
                     _LOGGER.error(f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
                     invalid_action_groups.append(action_group_name)
                     self.hass_api.raise_issue(

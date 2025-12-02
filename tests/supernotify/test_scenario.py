@@ -50,7 +50,7 @@ async def test_validate(mock_hass_api: HomeAssistantAPI) -> None:
     uut = Scenario(
         "testing", {"delivery": {"good": {}, "bad": {}, "ok": {}}, "action_groups": ["lights", "snoozes"]}, mock_hass_api
     )
-    await uut.validate(valid_deliveries=["good", "ok"], valid_action_groups=["snoozes"])
+    await uut.validate(valid_delivery_names=["good", "ok"], valid_action_group_names=["snoozes"])
     assert "bad" not in uut.delivery
     assert "good" in uut.delivery
     assert "ok" in uut.delivery

@@ -1,6 +1,7 @@
 """Test fixture support"""
 
 import logging
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
@@ -26,11 +27,16 @@ from homeassistant.util import slugify
 from homeassistant.util.yaml import parse_yaml
 
 from custom_components.supernotify import (
+    CONF_ACTION_GROUPS,
     CONF_ACTIONS,
     CONF_ARCHIVE,
+    CONF_CAMERAS,
     CONF_DELIVERY,
+    CONF_LINKS,
+    CONF_MEDIA_PATH,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
+    CONF_TEMPLATE_PATH,
     CONF_TRANSPORT,
     SUPERNOTIFY_SCHEMA,
     TRANSPORT_VALUES,
@@ -80,6 +86,7 @@ class TestingContext(Context):
         archive_config: ConfigType | None = None,
         homeassistant: HomeAssistant | None = None,
         services: dict[str, list[str]] | None = None,
+        template_path: Path | None = None,
         **kwargs: Any,
     ) -> None:
         self.hass: HomeAssistant
@@ -106,6 +113,8 @@ class TestingContext(Context):
             raw_config[CONF_TRANSPORT] = transport_configs
         if archive_config:
             raw_config[CONF_ARCHIVE] = archive_config
+        if template_path:
+            raw_config[CONF_TEMPLATE_PATH] = str(template_path)
         if transport_instances:
             TRANSPORT_VALUES.extend([t.name for t in transport_instances])
 
@@ -161,7 +170,21 @@ class TestingContext(Context):
             transport_configs=self.config.get(CONF_TRANSPORT) or {},
         )
         self.initialized: bool = False
-        super().__init__(hass_api, people_registry, scenario_registry, delivery_registry, archive, Snoozer(), **kwargs)
+        super().__init__(
+            hass_api,
+            people_registry,
+            scenario_registry,
+            delivery_registry,
+            archive,
+            Snoozer(),
+            links=self.config.get(CONF_LINKS),
+            recipients=self.config.get(CONF_RECIPIENTS),
+            mobile_actions=self.config.get(CONF_ACTION_GROUPS),
+            cameras=self.config.get(CONF_CAMERAS),
+            template_path=self.config.get(CONF_TEMPLATE_PATH),
+            media_path=self.config.get(CONF_MEDIA_PATH),
+            **kwargs,
+        )
 
     async def test_initialize(self, transport_instances: list[Transport] | None = None) -> None:
         if transport_instances:
