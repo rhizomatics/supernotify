@@ -91,6 +91,7 @@ You can however do a lot with very little config, using the example configuratio
 ## Also From Rhizomatics
 
 - [updates2mqtt](https://updates2mqtt.rhizomatics.org.uk) - Automatically update self-hosted Docker containers via Home Assistant's Updates UI, or any other MQTT consumer
+- [AutoArm](https://autoarm.rhizomatics.org.uk) - Automate state transitions for Home Assistant alarm control panels
 - [awesome-mqtt](https://github.com/rhizomatics/awesome-mqtt) -  Curated list of MQTT resources
 
 
