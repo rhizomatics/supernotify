@@ -69,6 +69,7 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
+  - meta-descriptions
   - pymdownx.blocks.caption
   - pymdownx.details
   - pymdownx.emoji:
