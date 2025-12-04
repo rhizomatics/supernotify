@@ -4,6 +4,7 @@ tags:
   - recipe
   - scenario
   - condition
+  - occupancy
 ---
 # Recipe - Home Alone
 

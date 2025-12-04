@@ -5,8 +5,10 @@ tags:
   - cctv
   - genai
   - gemini
-  - templating
+  - template
   - condition
+description: An example configuration to use a combination of Home Assistant, Supernotify, Frigate, Alexa Devices integration and Google Gemini free-tier GenAI
+to have audio announcements describing events around the property, and assessment of risk.
 ---
 # Recipe - Voice Described CCTV
 
@@ -122,8 +124,11 @@ automations:
 
 ## Variations
 
-* Use a *scenario* in Supernotify to handle messages differently by risk, for example dropping the "NO RISK" ones
-and sending the "CRITICAL RISK" ones out by email and time-sensitive mobile push ( the [Mobile Push Transport Adaptor](../transports/mobile_push.md) will automatically set the iOS critical or high priority configuration based on message priority)
+* Use a *scenario* in Supernotify to handle messages differently by risk
+   * For example dropping the "NO RISK" ones and sending the "CRITICAL RISK" ones out by email and time-sensitive mobile push ( 
+   * The [Mobile Push Transport Adaptor](../transports/mobile_push.md) will automatically set the iOS critical or high priority configuration based on message priority)
+   * See the [Content Escalation Recipe](content_escalation.md) for an example of
+   doing this with basic Frigate occupancy events
 * Move a PTZ camera to point at the location mentioned in the GenAI generated notification, see [Move a Camera for Snapshot](./move_a_camera_for_snapshot.md) recipe
 * Tune the context in Frigate to make it more relevant for the notifications, Gemini will pick up on things like
 typical behaviours of the occupants, or local crime history

@@ -1,6 +1,7 @@
 ---
 tags:
   - developer
+  - classes
 ---
 # Core Classes
 

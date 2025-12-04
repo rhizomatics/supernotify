@@ -2,8 +2,9 @@
 tags:
   - transport
   - sms
+description: Text Messaging with SMS using Supernotify for Home Assistant
 ---
-# SMS Transport Adaptor
+# SMS (Text Messaging) Transport Adaptor
 
 | Transport ID         | Source      | Requirements | Optional |
 | -------------------- | ----------- | ------------ | -------- |

@@ -4,6 +4,8 @@ tags:
   - email
   - sms
   - people
+  - recipients
+  - occupancy
 ---
 # People
 

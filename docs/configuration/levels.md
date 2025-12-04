@@ -1,14 +1,16 @@
+---
+tags:
+  - configuration
+  - yaml
+---
 # Configuration Levels
 
 ## Flexible Configuration
 
-Delivery configuration can be done in lots of different ways to suit different configurations
-and to keep those configuration as minimal as possible.
+Delivery configuration can be done in lots of different ways to suit different configurations and to keep those configuration as minimal as possible.
 
 Each delivery can be individually configured, or have defaults provided by a `transport` configuration. A limited
-set of overrides - `target`,`data`,`enabled` - can then be applied by scenarios, people definitions in `recipients` or
-in the notification call. (The limited set is to keep both the code and configuration from being so flexible its
-too complicated to work with.)
+set of overrides - `target`,`data`,`enabled` - can then be applied by scenarios, people definitions in `recipients` or in the notification call. (The limited set is to keep both the code and configuration from being so flexible its too complicated to work with.)
 
 | Where                       | Where         | Schema                                                                   | Notes                                                                                                 |
 |-----------------------------|---------------|--------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|

@@ -1,12 +1,11 @@
 ---
 tags:
   - condition
+  - template
 ---
 # Conditions
 
-The [Bedtime](../recipes/bedtime.md) recipe illustrates a simple use of conditions, based on time of day,
-and [Seasonal Greetings](../recipes/seasonal_greetings.md) shows a slightly more complex version with `or`
-logic for date ranges. These conditions are identical to what can be used in any Home Assistant automation.
+The [Bedtime](../recipes/bedtime.md) recipe illustrates a simple use of conditions, based on time of day, and [Seasonal Greetings](../recipes/seasonal_greetings.md) shows a slightly more complex version with `or` logic for date ranges. These conditions are identical to what can be used in any Home Assistant automation.
 
 
 ## Condition Variables

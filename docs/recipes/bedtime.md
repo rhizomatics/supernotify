@@ -13,8 +13,7 @@ use this in working out how to make notifications, and don't disturb me!
 
 ## Implementation
 
-Uses a **Scenario** condition based on time of day. This can then be referred to in the `require_scenarios`
-section of the notify action `data`, or in template logic.
+Uses a **Scenario** condition based on time of day. This can then be referred to in the `require_scenarios` section of the notify action `data`, or in template logic.
 
 ## Example Configuration
 

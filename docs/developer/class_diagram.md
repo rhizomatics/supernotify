@@ -1,6 +1,7 @@
 ---
 tags:
   - developer
+  - classes
 ---
 # Simplified Class Diagram
 

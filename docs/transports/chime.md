@@ -5,6 +5,8 @@ tags:
   - 433mhz
   - doorbell
   - chime
+  - rflink
+  - mqtt
 ---
 # Chime Transport Adaptor
 

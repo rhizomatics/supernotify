@@ -4,6 +4,9 @@ tags:
   - mobile_push
   - cctv
   - mqtt
+  - ptz
+  - camera
+  - frigate
 ---
 # Images, Streaming and Cameras
 
@@ -32,8 +35,7 @@ and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an add
 
 ### Automatically Fixing Camera Issues
 
-Some cameras, like Hikvision, add JPEG comment blocks which confuse the very simplistic media
-detection in the SMTP integration, and leads to spurious log entries.
+Some cameras, like Hikvision, add JPEG comment blocks which confuse the very simplistic media detection in the SMTP integration, and leads to spurious log entries.
 
 Supernotify will automatically rewrite JPEGs into simpler standard forms to avoid this, and optionally `jpeg_opts` can be set, for example to reduce image quality for smaller email attachments.
 

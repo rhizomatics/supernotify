@@ -2,17 +2,15 @@
 tags:
   - scenario
   - condition
+description: Introduction to Scenarios in Supernotify for Home Assistant
 ---
 # Scenarios
 
 ## What and Why
 
-Scenarios can be defined both as a set of conditions which switch on the scenario and/or as
-a set of overrides to apply if the scenario is active.
+Scenarios can be defined both as a set of conditions which switch on the scenario and/or as a set of overrides to apply if the scenario is active.
 
-For example, a scenario could be defined by conditions such as alarm panel arm state, occupancy
-and time to indicate when notifications should be minimized, and then different chime sounds
-could be selected or deliveries switched off.
+For example, a scenario could be defined by conditions such as alarm panel arm state, occupancy and time to indicate when notifications should be minimized, and then different chime sounds could be selected or deliveries switched off.
 
 Scenarios can override specific delivery configurations, general media configuration (such as setting a camera, or specifying which alert sound to use for a mobile push ). A scenario has a
 default `delivery_selection` basis of `implicit`, where the scenario inherits all the default

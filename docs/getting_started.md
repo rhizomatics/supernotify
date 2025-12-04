@@ -1,3 +1,10 @@
+---
+tags:
+  - installation
+  - hacs
+  - configuration
+description: Getting Started with Supernotify for Home Assistant
+---
 # Getting Started
 
 ## Installation

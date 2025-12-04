@@ -1,3 +1,14 @@
+---
+tags:
+  - transport
+  - delivery
+  - scenario
+  - target
+  - recipient
+  - envelope
+  - principles
+description: Core Concepts of Supernotify for Home Assistant, including Transport, Delivery, Scenario and Recipient
+---
 # Core Concepts
 
 ## Transport
@@ -45,8 +56,16 @@ and `area_id`.
 of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
 - See [People](configuration/people.md) and [Recipes](recipes/index.md) for more detail
 
+## Envelope
+- A notification customized for a specific delivery
+    - List of targets filtered, for example, only e-mail addresses for SMTP integration
+    - Indirect targets, like `person.xxx` are materialized into e-mail addresses, phone numbers etc
+    - The `data` section of the notification may also have been customized, by the delivery definition, or application of a scenario.
+- *Envelope* isn't present in the configuration - aside from the code, its only
+visible when viewing an [archived notification](configuration/archiving.md), where a list of *delivered* and *undelivered* envelopes is kept.
+
 !!! info
-    For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core ones.
+    For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core classes matching these concepts.
 
 # Core Principles
 

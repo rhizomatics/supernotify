@@ -1,7 +1,7 @@
 ---
 tags:
   - scenario
-  - templating
+  - template
   - recipe
   - condition
 ---

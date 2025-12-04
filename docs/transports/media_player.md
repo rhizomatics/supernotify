@@ -2,6 +2,7 @@
 tags:
   - transport
   - alexa
+  - media_player
 ---
 # Media Player Transport Adaptor
 

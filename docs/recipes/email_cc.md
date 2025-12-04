@@ -11,8 +11,7 @@ Copy in an e-mail address on all notifications, for example as a message archive
 
 ## Implementation
 
-Define a target on the `email` transport, and set the `target_usage` to `merge_delivery`,
-so these addresses are combined with the addresses on the notification.
+Define a target on the `email` transport, and set the `target_usage` to `merge_delivery`, so these addresses are combined with the addresses on the notification.
 
 ## Example Configuration
 ```yaml

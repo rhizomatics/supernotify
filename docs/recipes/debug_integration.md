@@ -1,7 +1,7 @@
 ---
 tags:
   - archiving
-  - debug
+  - debugging
   - logging
   - recipe
 ---

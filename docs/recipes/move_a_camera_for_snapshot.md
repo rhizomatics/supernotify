@@ -4,6 +4,7 @@ tags:
   - recipe
   - cctv
   - onvif
+  - ptz
 ---
 # Recipe - Move a Camera for Snapshot
 

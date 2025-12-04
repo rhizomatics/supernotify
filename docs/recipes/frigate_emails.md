@@ -4,6 +4,7 @@ tags:
   - recipe
   - email
   - cctv
+  - frigate
 ---
 # Recipe - Frigate Emails
 

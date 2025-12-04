@@ -1,3 +1,8 @@
+---
+tags:
+  - actionable_notifications
+  - snoozing
+---
 # Snoozing
 
 Snoozing can be selected from a mobile action, and made for a set time, or notifications can be silenced until further notice ( or currently until reboot, there is no persistence yet ).

@@ -3,6 +3,7 @@ tags:
   - transport
   - mobile_push
   - iOS
+  - actionable_notifications
 ---
 # Mobile Push Transport Adaptor
 

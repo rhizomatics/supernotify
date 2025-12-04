@@ -3,7 +3,7 @@ tags:
   - automation
   - email
   - html_email
-  - templating
+  - template
   - recipe
 ---
 # Recipe - Home Assistant Restart
