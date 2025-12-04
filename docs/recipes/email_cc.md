@@ -2,6 +2,7 @@
 tags:
   - email
   - recipe
+description: Automatically carbon copy all email notifications to an email account
 ---
 # Recipe - Email CC
 

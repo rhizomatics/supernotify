@@ -6,6 +6,8 @@ tags:
   - alarm_control_panel
   - mobile_actions
   - actionable_notifications
+  - autoarm
+description: Select the mobile actions to appear on notifications based on alarm arm state
 ---
 # Recipe - Contextual Mobile Actions
 

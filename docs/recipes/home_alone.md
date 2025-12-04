@@ -5,6 +5,7 @@ tags:
   - scenario
   - condition
   - occupancy
+description: Change which notifications are sent, and how they're sent, based on how many people in the house
 ---
 # Recipe - Home Alone
 

@@ -4,6 +4,7 @@ tags:
   - scenario
   - condition
   - recipe
+description: Use a Supernotify Scenario to automatically make Alexa whisper all low priority notifications
 ---
 # Recipe - Alexa Whispering
 

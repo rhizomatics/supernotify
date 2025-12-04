@@ -5,12 +5,15 @@ tags:
   - cctv
   - genai
   - gemini
+  - alexa
+  - echo
+  - accessibility
   - template
   - condition
-description: An example configuration to use a combination of Home Assistant, Supernotify, Frigate, Alexa Devices integration and Google Gemini free-tier GenAI
-to have audio announcements describing events around the property, and assessment of risk.
+title: Recipe for Voice Described CCTV with GenAI
+description: Use a combination of Home Assistant, Supernotify, Frigate, Alexa Devices integration and Google Gemini to announcement events around the property.
 ---
-# Recipe - Voice Described CCTV
+# Recipe - Voice Described CCTV with GenAI
 
 ## Purpose
 

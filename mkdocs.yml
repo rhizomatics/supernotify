@@ -22,6 +22,7 @@ theme:
     - navigation.instant
     - navigation.tracking
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
     - navigation.path
@@ -39,6 +40,11 @@ plugins:
   - optimize
   - tags
   - meta-descriptions
+  - social:
+      cards_layout_options:
+        logo: docs/assets/images/icon.png
+        background_image: docs/assets/images/logo-dim-social-640x320.png
+        background_color: transparent
   - minify:
       minify_html: true
   - git-revision-date-localized:

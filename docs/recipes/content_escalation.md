@@ -4,6 +4,7 @@ tags:
   - recipe
   - occupancy
   - condition
+description: Use a Supernotify Scenario to set the priority of all notifications based on the message content
 ---
 # Recipe - Content Escalation
 

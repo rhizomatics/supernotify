@@ -5,6 +5,7 @@ tags:
   - scenario
   - recipe
   - condition
+description: Use a Supernotify scenario to add a seasonal note to notifications
 ---
 # Recipe - Seasonal Greetings
 

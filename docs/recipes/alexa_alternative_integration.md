@@ -2,7 +2,9 @@
 tags:
   - alexa
   - recipe
+  - echo
   - condition
+description: Use an alternative Amazon Alexa integration in case the main one is having issues
 ---
 # Recipe - Alexa Alternative Integration
 
