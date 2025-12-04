@@ -32,7 +32,11 @@ Supernotify is a custom component available via the [Home Assistant Community Sh
 
 ## Documentation
 
-For full documentation, go to [https://supernotify.rhizomatics.org.uk](https://supernotify.rhizomatics.org.uk)
+Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do,
+
+There are lots of [recipes](https://supernotify.rhizomatics.org.uk/recipes/) with sample
+config snippers to give you some more ideas, or browse by [tags](https://supernotify.rhizomatics.org.uk/tags/).
+
 
 ## Features
 

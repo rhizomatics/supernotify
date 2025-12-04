@@ -1,13 +1,17 @@
-# Built-in Transport Adaptors
+# Transport Adaptors
 
+These are the notification transport adaptors built into Supernotify:
+
+<style>
+.pagetree-functions { display: none; }
+</style>
 {{ pagetree(siblings) }}
 
 ## Customizing Transports
 
 ### Options
 
-Most transport adaptors support an additional set of options, some common ones for handling titles
-or suppressing URLs, and some specific to a transport.
+Most transport adaptors support an additional set of options, some common ones for handling titles or suppressing URLs, and some specific to a transport.
 
 In this example, image attachments for emails get tuned ( since these are commonly needed, the email
 delivery transport defaults to always having `progressive` and `optimize` being true, unless explicitly overridden)
