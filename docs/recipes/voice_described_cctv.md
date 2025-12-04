@@ -125,7 +125,7 @@ automations:
 ## Variations
 
 * Use a *scenario* in Supernotify to handle messages differently by risk
-   * For example dropping the "NO RISK" ones and sending the "CRITICAL RISK" ones out by email and time-sensitive mobile push ( 
+   * For example dropping the "NO RISK" ones and sending the "CRITICAL RISK" ones out by email and time-sensitive mobile push (
    * The [Mobile Push Transport Adaptor](../transports/mobile_push.md) will automatically set the iOS critical or high priority configuration based on message priority)
    * See the [Content Escalation Recipe](content_escalation.md) for an example of
    doing this with basic Frigate occupancy events
