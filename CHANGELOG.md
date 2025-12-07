@@ -4,7 +4,7 @@
 ### Features
 - Mobile discovery now on by default
 - New Person discovery, on by default
-  - Use 
+  - Use
 - Mobile Push delivery now configured by default
 ### Internal
 - Dicts for person and delivery customization now replaced by typed classes for type safety and easier refactoring / testing

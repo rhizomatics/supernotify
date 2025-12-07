@@ -1,7 +1,5 @@
  notify:
   - name: minimal
     platform: supernotify
-    delivery:
-      email:
-        transport: email
-        action: notify.smtp
+    # notify entity and mobile push automatically configured
+    # recipients and mobile devices automatically pulled in from Home Assistant
