@@ -25,7 +25,7 @@ description: Getting Started with Supernotify for Home Assistant
 
 ## Configuration
 
-Otherwise, start with the simplest possible config, like the [minimal](configuration/examples/minimal.md) example.
+Otherwise, start with the simplest possible config, like the [minimal](configuration/examples/minimal.md) example. This will allow you to notify using *Notify Entities* and push mobile notifications to all the devices registered in Home Assistant, without specifying any targets, or any other config.
 
 By default, configuration lives in `config.yaml`, under a `notify` section. Many people move chunks of config out of here to make it more manageable, like this, so all the notify configuration lives in one file, in this case `notify.yaml`.
 

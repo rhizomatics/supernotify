@@ -1,7 +1,13 @@
 # Public releases
 
 ## 1.4.1
+### Features
 - Mobile discovery now on by default
+- New Person discovery, on by default
+  - Use 
+- Mobile Push delivery now configured by default
+### Internal
+- Dicts for person and delivery customization now replaced by typed classes for type safety and easier refactoring / testing
 ## 1.4.0
 ### Features
 - Now supports the full `conditions` Home Assistant schema, `condition` is now deprecated though still supported

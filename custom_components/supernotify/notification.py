@@ -577,6 +577,8 @@ class Notification(ArchivableObject):
                     if personal_delivery.enabled and personal_delivery.target:
                         if personal_delivery.target.has_resolved_target():
                             recipient_target += personal_delivery.target
+            else:
+                _LOGGER.debug("SUPERNOTIFY Skipping recipient %s with enabled switched off", person_id)
 
                 resolved += recipient_target
         return resolved

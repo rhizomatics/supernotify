@@ -57,6 +57,10 @@ class MobilePushTransport(Transport):
         }
         return config
 
+    @property
+    def auto_configure(self) -> bool:
+        return True
+
     def validate_action(self, action: str | None) -> bool:
         return action is None
 

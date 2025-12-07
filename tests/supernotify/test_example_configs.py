@@ -15,6 +15,7 @@ from custom_components.supernotify import (
     CONF_SELECTION,
     CONF_TRANSPORT,
     SELECTION_DEFAULT,
+    TRANSPORT_MOBILE_PUSH,
     TRANSPORT_NOTIFY_ENTITY,
 )
 
@@ -37,14 +38,20 @@ async def test_examples(hass: HomeAssistant, config_name: str) -> None:
 
     assert hass.services.has_service(DOMAIN, service_name)
     deliveries = await hass.services.async_call(platform, "enquire_implicit_deliveries", blocking=True, return_response=True)
-    expected_defaults: dict[str, list[str]] = {TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"]}
+    expected_defaults: dict[str, list[str]] = {
+        TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"],
+        TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
+    }
+    expected: dict[str, list[str]] = {}
     for d, dc in uut_config.get(CONF_DELIVERY, {}).items():
         if dc.get(CONF_ENABLED, True) and SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
-            expected_defaults.setdefault(dc[CONF_TRANSPORT], [])
-            expected_defaults[dc[CONF_TRANSPORT]].append(d)
+            expected.setdefault(dc[CONF_TRANSPORT], [])
+            expected[dc[CONF_TRANSPORT]].append(d)
+    for tname, tdef in expected_defaults.items():
+        expected.setdefault(tname, tdef)
 
     assert deliveries is not None
-    assert deliveries == expected_defaults
+    assert deliveries == expected
 
     await hass.services.async_call(
         DOMAIN,

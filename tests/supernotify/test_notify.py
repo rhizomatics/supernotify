@@ -149,7 +149,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     # contra-test
     mock_hass.services.async_call.reset_mock()
     await uut.async_send_message(message="testing 123")
-    assert mock_hass.services.async_call.call_count == 5  # SMS + 2 notify + 2 chime
+    assert mock_hass.services.async_call.call_count == 6  # SMS + 2 notify + 2 chime + 1 mobile_push
 
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:

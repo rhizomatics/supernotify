@@ -1,5 +1,6 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from pytest_unordered import unordered
 
 from custom_components.supernotify import (
     CONF_ACTION,
@@ -79,7 +80,7 @@ async def test_doesnt_double_deliver() -> None:
     )
     await notification.initialize()
     await notification.deliver()
-    assert notification.selected_delivery_names == ["custom", "DEFAULT_notify_entity"]
+    assert notification.selected_delivery_names == unordered("custom", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
 
     assert len(notification.delivered_envelopes) == 2
 

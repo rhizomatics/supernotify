@@ -213,7 +213,7 @@ async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["testing", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["testing", "DEFAULT_mobile_push", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
 
 async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
@@ -225,14 +225,14 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["DEFAULT_notify_entity"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["DEFAULT_mobile_push", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
     hass.states.async_set("supernotify.delivery_testing", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["testing", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["testing", "DEFAULT_mobile_push", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
 
 async def test_exposed_transport_events(hass: HomeAssistant) -> None:
@@ -290,7 +290,7 @@ async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"simple": ["testing", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
+    assert response == {"simple": ["testing", "DEFAULT_mobile_push", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
     response = await hass.services.async_call(
         "supernotify", "enquire_active_scenarios", None, blocking=True, return_response=True

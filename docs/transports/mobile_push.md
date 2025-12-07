@@ -47,3 +47,13 @@ its also possible to directly set them, as in this example:
 !!! info
     This has not been tested with Android, although both Apple and Android devices share same
     common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
+
+A default Delivery will be automatically generated for Mobile Push transport if no explicit ones
+created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then
+use configuration as below:
+
+```yaml
+transports:
+  mobile_push:
+    disabled: false
+```

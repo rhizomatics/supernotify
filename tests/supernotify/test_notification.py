@@ -371,10 +371,10 @@ async def test_delivery_selection_order() -> None:
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
 
-    assert len(uut.selected_delivery_names) == 5
+    assert len(uut.selected_delivery_names) == 6
     assert uut.selected_delivery_names[0] == "eager"
-    assert uut.selected_delivery_names[1:3] == unordered("whatever", "or_whatever")
     assert uut.selected_delivery_names[-2:] == unordered("fallback", "naturally_last")
+    assert uut.selected_delivery_names[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
 
 
 def test_debug_trace_for_targets():

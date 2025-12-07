@@ -3,6 +3,7 @@ notify:
     platform: supernotify
     template_path: config/templates/supernotify
     media_path: config/media/supernotify
+    recipients_discovery: true
     archive:
       enabled: true
       file_retention_days: 4
