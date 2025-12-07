@@ -78,7 +78,7 @@ def mock_hass(
 ) -> HomeAssistant:
     hass = Mock(spec=MockableHomeAssistant)
     hass.states = Mock(StateMachine)
-    hass.states.async_entity_ids.return_value = ["supernotify.test_1", "supernotify.test_1"]
+    hass.states.async_entity_ids.return_value = ["supernotify.test_1", "supernotify.test_2"]
     hass.services = Mock(ServiceRegistry)
     hass.services.async_call = AsyncMock()
     hass.config.internal_url = "http://127.0.0.1:28123"

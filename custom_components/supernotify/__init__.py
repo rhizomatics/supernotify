@@ -49,6 +49,7 @@ CONF_ACTIONS = "actions"
 CONF_TITLE = "title"
 CONF_URI = "uri"
 CONF_RECIPIENTS = "recipients"
+CONF_RECIPIENTS_DISCOVER = "recipients_discover"
 CONF_TEMPLATE_PATH = "template_path"
 CONF_MEDIA_PATH = "media_path"
 CONF_HOUSEKEEPING = "housekeeping"
@@ -326,9 +327,10 @@ RECIPIENT_SCHEMA = vol.Schema({
     vol.Required(CONF_PERSON): cv.entity_id,
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_EMAIL): cv.string,
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_PHONE_NUMBER): cv.string,
-    vol.Optional(CONF_MOBILE_DISCOVERY, default=False): cv.boolean,
+    vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_MOBILE_DEVICES, default=list): vol.All(cv.ensure_list, [MOBILE_DEVICE_SCHEMA]),
     vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_CUSTOMIZE_SCHEMA},
 })
@@ -413,6 +415,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
     vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
     vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [ACTION_SCHEMA]},
+    vol.Optional(CONF_RECIPIENTS_DISCOVER, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
     vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),
     vol.Optional(CONF_SCENARIOS, default=dict): {cv.string: SCENARIO_SCHEMA},

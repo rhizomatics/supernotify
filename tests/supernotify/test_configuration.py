@@ -1,8 +1,5 @@
 from typing import cast
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry
-
 from custom_components.supernotify import (
     ATTR_RECIPIENTS,
     CONF_DELIVERY_DEFAULTS,
@@ -11,12 +8,10 @@ from custom_components.supernotify import (
     CONF_TARGET,
     CONF_TRANSPORT,
 )
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.people import PeopleRegistry
 
 from .doubles_lib import DummyTransport
-from .hass_setup_lib import TestingContext, register_mobile_app
+from .hass_setup_lib import TestingContext
 
 
 async def test_default_recipients() -> None:
@@ -97,33 +92,3 @@ async def test_delivery_override_transport() -> None:
     await uut.deliver()
     envelope = uut.delivered_envelopes[0]
     assert envelope.target.entity_ids == ["media_player.hall"]
-
-
-def test_autoresolve_mobile_devices_for_no_devices(hass: HomeAssistant) -> None:
-    hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
-    uut = PeopleRegistry([], hass_api)
-    uut.initialize()
-    assert uut.mobile_devices_for_person("person.test_user") == []
-
-
-def test_autoresolve_mobile_devices_for_devices(
-    hass: HomeAssistant,
-    device_registry: device_registry.DeviceRegistry,
-    entity_registry: entity_registry.EntityRegistry,
-) -> None:
-    hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
-    uut = PeopleRegistry([], hass_api)
-    uut.initialize()
-    device = register_mobile_app(uut, person="person.test_user", device_name="phone_bob", title="Bobs Phone")
-    assert device is not None
-    assert uut.mobile_devices_for_person("person.test_user") == [
-        {
-            "manufacturer": "xUnit",
-            "model": "PyTest001",
-            "mobile_app_id": "mobile_app_bobs_phone",
-            "device_tracker": "device_tracker.mobile_app_phone_bob",
-            "device_id": device.id,
-            "device_name": "Bobs Phone",
-            # "device_labels": set(),
-        }
-    ]

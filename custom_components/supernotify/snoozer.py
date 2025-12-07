@@ -10,8 +10,6 @@ from . import (
     ATTR_ACTION,
     ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
-    ATTR_USER_ID,
-    CONF_PERSON,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
 )
@@ -143,9 +141,9 @@ class Snoozer:
             recipient: str | None = None
             if recipient_type == RecipientType.USER:
                 target_people = [
-                    p.get(CONF_PERSON)
+                    p.entity_id
                     for p in people.values()
-                    if p.get(ATTR_USER_ID) == event.context.user_id and event.context.user_id is not None and p.get(CONF_PERSON)
+                    if p.user_id == event.context.user_id and event.context.user_id is not None and p.entity_id
                 ]
                 if target_people:
                     recipient = target_people[0]

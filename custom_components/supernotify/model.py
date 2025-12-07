@@ -57,11 +57,13 @@ MOBILE_APP_DOMAIN = "mobile_app"
 
 class Target:
     # actual targets, that can positively identified with a validator
-    DIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_ENTITY_ID, ATTR_DEVICE_ID, ATTR_EMAIL, ATTR_PHONE, ATTR_MOBILE_APP_ID]
+    DIRECT_CATEGORIES: ClassVar[list[str]] = [
+        ATTR_ENTITY_ID, ATTR_DEVICE_ID, ATTR_EMAIL, ATTR_PHONE, ATTR_MOBILE_APP_ID]
     # references that lead to targets, that can positively identified with a validator
     AUTO_INDIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_PERSON_ID]
     # references that lead to targets, that can't be positively identified with a validator
-    EXPLICIT_INDIRECT_CATEGORIES: ClassVar[list[str]] = [ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID]
+    EXPLICIT_INDIRECT_CATEGORIES: ClassVar[list[str]] = [
+        ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID]
     INDIRECT_CATEGORIES = EXPLICIT_INDIRECT_CATEGORIES + AUTO_INDIRECT_CATEGORIES
     AUTO_CATEGORIES = DIRECT_CATEGORIES + AUTO_INDIRECT_CATEGORIES
 
@@ -82,7 +84,8 @@ class Target:
         target_specific_data: bool = False,
     ) -> None:
         self.target_data: dict[str, Any] | None = None
-        self.target_specific_data: dict[tuple[str, str], dict[str, Any]] | None = None
+        self.target_specific_data: dict[tuple[str,
+                                              str], dict[str, Any]] | None = None
         self.targets: dict[str, list[str]] = {}
 
         matched: list[str]
@@ -104,9 +107,11 @@ class Target:
                             self.targets.setdefault(category, [])
                             self.targets[category].append(t)
                             matched.append(t)
-                    targets_left = [t for t in targets_left if t not in matched]
+                    targets_left = [
+                        t for t in targets_left if t not in matched]
                 else:
-                    _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+                    _LOGGER.debug(
+                        "SUPERNOTIFY Missing validator for selective target category %s", category)
                 if not targets_left:
                     break
             if targets_left:
@@ -126,9 +131,11 @@ class Target:
                                 if t not in self.targets[category]:
                                     self.targets[category].append(t)
                             else:
-                                _LOGGER.warning("SUPERNOTIFY Target skipped invalid %s target: %s", category, t)
+                                _LOGGER.warning(
+                                    "SUPERNOTIFY Target skipped invalid %s target: %s", category, t)
                     else:
-                        _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+                        _LOGGER.debug(
+                            "SUPERNOTIFY Missing validator for selective target category %s", category)
 
                 elif category in self.CATEGORIES:
                     # categories that can't be automatically detected, like label_id
@@ -137,7 +144,8 @@ class Target:
                     # custom categories
                     self.targets[category] = targets
         else:
-            _LOGGER.warning("SUPERNOTIFY Target created with no valid targets: %s", target)
+            _LOGGER.warning(
+                "SUPERNOTIFY Target created with no valid targets: %s", target)
 
         if target_data and target_specific_data:
             self.target_specific_data = {}
@@ -235,26 +243,32 @@ class Target:
 
     def direct(self) -> "Target":
         t = Target(
-            {cat: targets for cat, targets in self.targets.items() if cat in self.direct_categories},
+            {cat: targets for cat, targets in self.targets.items()
+             if cat in self.direct_categories},
             target_data=self.target_data,
         )
         if self.target_specific_data:
-            t.target_specific_data = {k: v for k, v in self.target_specific_data.items() if k[0] in self.direct_categories}
+            t.target_specific_data = {k: v for k, v in self.target_specific_data.items(
+            ) if k[0] in self.direct_categories}
         return t
 
     def extend(self, category: str, targets: list[str] | str) -> None:
         targets = ensure_list(targets)
         self.targets.setdefault(category, [])
-        self.targets[category].extend(t for t in targets if t not in self.targets[category])
+        self.targets[category].extend(
+            t for t in targets if t not in self.targets[category])
 
     def remove(self, category: str, targets: list[str] | str) -> None:
         targets = ensure_list(targets)
         if category in self.targets:
-            self.targets[category] = [t for t in self.targets[category] if t not in targets]
+            self.targets[category] = [
+                t for t in self.targets[category] if t not in targets]
 
     def safe_copy(self) -> "Target":
-        t = Target(dict(self.targets), target_data=dict(self.target_data) if self.target_data else None)
-        t.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
+        t = Target(dict(self.targets), target_data=dict(
+            self.target_data) if self.target_data else None)
+        t.target_specific_data = dict(
+            self.target_specific_data) if self.target_specific_data else None
         return t
 
     def split_by_target_data(self) -> "list[Target]":
@@ -294,10 +308,12 @@ class Target:
     def __add__(self, other: "Target") -> "Target":
         """Create a new target by adding another to this one"""
         new = Target()
-        categories = set(list(self.targets.keys()) + list(other.targets.keys()))
+        categories = set(list(self.targets.keys()) +
+                         list(other.targets.keys()))
         for category in categories:
             new.targets[category] = list(self.targets.get(category, []))
-            new.targets[category].extend(t for t in other.targets.get(category, []) if t not in new.targets[category])
+            new.targets[category].extend(t for t in other.targets.get(
+                category, []) if t not in new.targets[category])
 
         new.target_data = dict(self.target_data) if self.target_data else None
         if other.target_data:
@@ -305,7 +321,8 @@ class Target:
                 new.target_data = dict(other.target_data)
             else:
                 new.target_data.update(other.target_data)
-        new.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
+        new.target_specific_data = dict(
+            self.target_specific_data) if self.target_specific_data else None
         if other.target_specific_data:
             if new.target_specific_data is None:
                 new.target_specific_data = dict(other.target_specific_data)
@@ -321,10 +338,12 @@ class Target:
             new.target_specific_data = {
                 k: v for k, v in self.target_specific_data.items() if k[1] not in other.targets.get(k[0], ())
             }
-        categories = set(list(self.targets.keys()) + list(other.targets.keys()))
+        categories = set(list(self.targets.keys()) +
+                         list(other.targets.keys()))
         for category in categories:
             new.targets[category] = []
-            new.targets[category].extend(t for t in self.targets.get(category, []) if t not in other.targets.get(category, []))
+            new.targets[category].extend(t for t in self.targets.get(
+                category, []) if t not in other.targets.get(category, []))
 
         return new
 
@@ -350,19 +369,44 @@ class TransportConfig:
     def __init__(self, conf: ConfigType | None = None, class_config: "TransportConfig|None" = None) -> None:
         conf = conf or {}
         if class_config is not None:
-            self.device_domain: list[str] = conf.get(CONF_DEVICE_DOMAIN, class_config.device_domain)
-            self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
+            self.device_domain: list[str] = conf.get(
+                CONF_DEVICE_DOMAIN, class_config.device_domain)
+            self.device_discovery: bool = conf.get(
+                CONF_DEVICE_DISCOVERY, class_config.device_discovery)
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
             self.alias = conf.get(CONF_ALIAS)
             self.delivery_defaults: DeliveryConfig = DeliveryConfig(
-                conf.get(CONF_DELIVERY_DEFAULTS, {}), class_config.delivery_defaults or None
+                conf.get(CONF_DELIVERY_DEFAULTS, {}
+                         ), class_config.delivery_defaults or None
             )
         else:
             self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
             self.device_discovery = conf.get(CONF_DEVICE_DISCOVERY, False)
             self.enabled = conf.get(CONF_ENABLED, True)
             self.alias = conf.get(CONF_ALIAS)
-            self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})
+            self.delivery_defaults = DeliveryConfig(
+                conf.get(CONF_DELIVERY_DEFAULTS) or {})
+
+
+class DeliveryCustomization:
+    def __init__(self, config: ConfigType | None) -> None:
+        config = config or {}
+        self.enabled = config.get(CONF_ENABLED, True)
+        self.data = config.get(CONF_DATA)
+        if config.get(CONF_TARGET):
+            if self.data:
+                self.target = Target(config.get(CONF_TARGET), target_data=self.data, target_specific_data=True)
+            else:
+                self.target = Target(config.get(CONF_TARGET))
+        else:
+            self.target = None
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            CONF_TARGET: self.target.as_dict() if self.target else None,
+            CONF_ENABLED: self.enabled,
+            CONF_DATA: self.data
+        }
 
 
 class DeliveryConfig:
@@ -371,17 +415,24 @@ class DeliveryConfig:
     def __init__(self, conf: ConfigType, delivery_defaults: "DeliveryConfig|None" = None) -> None:
         if delivery_defaults is not None:
             # use transport defaults where no delivery level override
-            self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
-            self.target_required: TargetRequired = conf.get(CONF_TARGET_REQUIRED, delivery_defaults.target_required)
-            self.target_usage: str = conf.get(CONF_TARGET_USAGE) or delivery_defaults.target_usage
-            self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
+            self.target: Target | None = Target(
+                conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
+            self.target_required: TargetRequired = conf.get(
+                CONF_TARGET_REQUIRED, delivery_defaults.target_required)
+            self.target_usage: str = conf.get(
+                CONF_TARGET_USAGE) or delivery_defaults.target_usage
+            self.action: str | None = conf.get(
+                CONF_ACTION) or delivery_defaults.action
             self.debug: bool = conf.get(CONF_DEBUG, delivery_defaults.debug)
 
             self.data: ConfigType = dict(delivery_defaults.data) or {}
             self.data.update(conf.get(CONF_DATA, {}))
-            self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
-            self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
-            self.selection_rank: SelectionRank = conf.get(CONF_SELECTION_RANK, delivery_defaults.selection_rank)
+            self.selection: list[str] = conf.get(
+                CONF_SELECTION, delivery_defaults.selection)
+            self.priority: list[str] = conf.get(
+                CONF_PRIORITY, delivery_defaults.priority)
+            self.selection_rank: SelectionRank = conf.get(
+                CONF_SELECTION_RANK, delivery_defaults.selection_rank)
             self.options: ConfigType = conf.get(CONF_OPTIONS, {})
             # only override options not set in config
             for opt in delivery_defaults.options:
@@ -389,16 +440,20 @@ class DeliveryConfig:
 
         else:
             # construct the transport defaults
-            self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
-            self.target_required = conf.get(CONF_TARGET_REQUIRED, TargetRequired.ALWAYS)
-            self.target_usage = conf.get(CONF_TARGET_USAGE, TARGET_USE_ON_NO_ACTION_TARGETS)
+            self.target = Target(conf.get(CONF_TARGET)) if conf.get(
+                CONF_TARGET) else None
+            self.target_required = conf.get(
+                CONF_TARGET_REQUIRED, TargetRequired.ALWAYS)
+            self.target_usage = conf.get(
+                CONF_TARGET_USAGE, TARGET_USE_ON_NO_ACTION_TARGETS)
             self.action = conf.get(CONF_ACTION)
             self.debug = conf.get(CONF_DEBUG, False)
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})
             self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
-            self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
+            self.selection_rank = conf.get(
+                CONF_SELECTION_RANK, SelectionRank.ANY)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -408,8 +463,8 @@ class DeliveryConfig:
             CONF_DATA: self.data,
             CONF_SELECTION: self.selection,
             CONF_PRIORITY: self.priority,
-            CONF_SELECTION_RANK: self.selection_rank,
-            CONF_TARGET_REQUIRED: self.target_required,
+            CONF_SELECTION_RANK: str(self.selection_rank),
+            CONF_TARGET_REQUIRED: str(self.target_required),
             CONF_TARGET_USAGE: self.target_usage,
         }
 

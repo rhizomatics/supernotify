@@ -6,7 +6,7 @@ from types import MappingProxyType
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
@@ -86,13 +86,15 @@ class TestingContext(Context):
         archive_config: ConfigType | None = None,
         homeassistant: HomeAssistant | None = None,
         services: dict[str, list[str]] | None = None,
+        components: dict[str, dict[str, Any]] | None = None,
         template_path: Path | None = None,
         **kwargs: Any,
     ) -> None:
         self.hass: HomeAssistant
 
         self.devices = {
-            did: Mock(spec=DeviceEntry, id=did, disabled=False, discover=discover, identifiers=[(ddomain, did)])
+            did: Mock(spec=DeviceEntry, id=did, disabled=False,
+                      discover=discover, identifiers=[(ddomain, did)])
             for ddomain, did, discover in devices or []
         }
         self.entities = entities
@@ -121,6 +123,7 @@ class TestingContext(Context):
         if transport_types:
             TRANSPORT_VALUES.extend([t.name for t in transport_types])
         self.config = SUPERNOTIFY_SCHEMA(raw_config)
+        self.components = components
 
         if homeassistant:  # real class or own mock
             self.hass = homeassistant
@@ -133,12 +136,14 @@ class TestingContext(Context):
             self.hass.config.external_url = hass_external_url or "https://my.home"
             self.hass.data = {}
             self.device_registry = AsyncMock(spec=DeviceRegistry)
-            self.device_registry.devices = {did: dev for did, dev in self.devices.items() if dev.discover}
+            self.device_registry.devices = {
+                did: dev for did, dev in self.devices.items() if dev.discover}
             self.device_registry.async_get = lambda did: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
             if self.entities:
-                self.hass.states.get.side_effect = lambda v: self.entities.get(v)
+                self.hass.states.get.side_effect = lambda v: self.entities.get(
+                    v)
             self.hass.data["entity_registry"] = self.entity_registry
             self.issue_registry = AsyncMock(spec=IssueRegistry)
             self.hass.data["issue_registry"] = self.issue_registry
@@ -156,9 +161,12 @@ class TestingContext(Context):
             }
 
         hass_api = HomeAssistantAPI(self.hass)
-        people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
-        scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {})
-        archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)
+        people_registry = PeopleRegistry(
+            self.config.get(CONF_RECIPIENTS) or [], hass_api)
+        scenario_registry = ScenarioRegistry(
+            self.config.get(CONF_SCENARIOS) or {})
+        archive = NotificationArchive(
+            self.config.get(CONF_ARCHIVE) or {}, hass_api)
 
         if not transport_instances:
             transport_types = transport_types or TRANSPORTS
@@ -198,6 +206,12 @@ class TestingContext(Context):
         await self.scenario_registry.initialize(
             self.delivery_registry.deliveries, self.delivery_registry.implicit_deliveries, self.mobile_actions, self.hass_api
         )
+        if self.components and not isinstance(self.hass, Mock):
+            for component_name, component_def in self.components.items():
+                if component_name not in self.hass.config.components:
+                    await setup.async_setup_component(self.hass, component_name, component_def)
+            await self.hass.async_block_till_done()
+
         self.initialized = True
 
     def transport(self, transport_name: str) -> Transport:
@@ -212,14 +226,16 @@ class TestingContext(Context):
         return self.config.get(CONF_DELIVERY, {}).get(delivery_name)
 
     def add_delivery(self, delivery_name: str, transport: str, **kwargs: Any) -> None:
-        self.delivery_registry._deliveries[delivery_name] = {CONF_NAME: delivery_name, CONF_TRANSPORT: transport, **kwargs}
+        self.delivery_registry._deliveries[delivery_name] = {
+            CONF_NAME: delivery_name, CONF_TRANSPORT: transport, **kwargs}
         if self.initialized:
-            delivery = Delivery(delivery_name, {CONF_TRANSPORT: transport, **kwargs}, self.transport(transport))
+            delivery = Delivery(
+                delivery_name, {CONF_TRANSPORT: transport, **kwargs}, self.transport(transport))
             self.delivery_registry.deliveries[delivery_name] = delivery
 
 
 def register_mobile_app(
-    people_registry: PeopleRegistry | None,
+    hass_api: HomeAssistantAPI | None,
     person: str = "person.test_user",
     manufacturer: str = "xUnit",
     model: str = "PyTest001",
@@ -240,21 +256,24 @@ def register_mobile_app(
         discovery_keys=MappingProxyType({}),
         subentries_data=None,
     )
-    if people_registry is None or people_registry.hass_api is None or people_registry.hass_api._hass is None:
-        _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
+    if hass_api is None or hass_api._hass is None:
+        _LOGGER.warning(
+            "Unable to mess with HASS config entries for mobile app faking")
         return None
+    hass_api.set_state(person, "home")
     try:
-        people_registry.hass_api._hass.config_entries._entries[config_entry.entry_id] = config_entry
-        people_registry.hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(
+        hass_api._hass.config_entries._entries[config_entry.entry_id] = config_entry
+        hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(
             config_entry
         )
     except Exception as e:
-        _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking: %s", e)
-    people_registry.hass_api._hass.states.async_set(
+        _LOGGER.warning(
+            "Unable to mess with HASS config entries for mobile app faking: %s", e)
+    hass_api._hass.states.async_set(
         person, "home", attributes={"device_trackers": [f"device_tracker.mobile_app_{device_name}", "dev002"]}
     )
 
-    device_registry = people_registry.hass_api.device_registry()
+    device_registry = hass_api.device_registry()
     device_entry = None
     if device_registry:
         device_entry = device_registry.async_get_or_create(
@@ -263,18 +282,19 @@ def register_mobile_app(
             model=model,
             identifiers={(domain, f"device-id_{device_name}")},
         )
-    if people_registry.hass_api._hass and people_registry.hass_api._hass.services and device_entry:
 
+    if hass_api._hass and hass_api._hass.services and device_entry:
         def fake_service(service: ServiceCall) -> None:
             _LOGGER.debug("Fake service called with service call: %s", service)
 
         # device.name seems to be derived from title, not the name supplied here
-        people_registry.hass_api._hass.services.async_register(
+        hass_api._hass.services.async_register(
             "notify", slugify(f"mobile_app_{title}"), service_func=fake_service, supports_response=SupportsResponse.NONE
         )
-    entity_registry: EntityRegistry | None = people_registry.hass_api.entity_registry()
+    entity_registry: EntityRegistry | None = hass_api.entity_registry()
     if entity_registry and device_entry:
-        entity_registry.async_get_or_create("device_tracker", "mobile_app", device_name, device_id=device_entry.id)
+        entity_registry.async_get_or_create(
+            "device_tracker", "mobile_app", device_name, device_id=device_entry.id)
     return device_entry
 
 
@@ -299,13 +319,16 @@ def register_device(
         subentries_data=None,
     )
     if hass_api is None or hass_api._hass is None:
-        _LOGGER.warning("Unable to mess with HASS config entries for device registry")
+        _LOGGER.warning(
+            "Unable to mess with HASS config entries for device registry")
         return None
     try:
         hass_api._hass.config_entries._entries[config_entry.entry_id] = config_entry
-        hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(config_entry)
+        hass_api._hass.config_entries._entries._domain_index.setdefault(
+            config_entry.domain, []).append(config_entry)
     except Exception as e:
-        _LOGGER.warning("Unable to mess with HASS config entries for device registry: %s", e)
+        _LOGGER.warning(
+            "Unable to mess with HASS config entries for device registry: %s", e)
     device_registry = hass_api.device_registry()
     device_entry = None
     if device_registry:

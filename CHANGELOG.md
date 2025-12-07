@@ -1,5 +1,7 @@
 # Public releases
 
+## 1.4.1
+- Mobile discovery now on by default
 ## 1.4.0
 ### Features
 - Now supports the full `conditions` Home Assistant schema, `condition` is now deprecated though still supported

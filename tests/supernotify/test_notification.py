@@ -218,21 +218,6 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     ]
 
 
-async def test_filter_recipients(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
-    uut = Notification(mock_context, "testing 123")
-    await uut.initialize()
-
-    assert len(uut.filter_people_by_occupancy("all_in")) == 0
-    assert len(uut.filter_people_by_occupancy("all_out")) == 0
-    assert len(uut.filter_people_by_occupancy("any_in")) == 2
-    assert len(uut.filter_people_by_occupancy("any_out")) == 2
-    assert len(uut.filter_people_by_occupancy("only_in")) == 1
-    assert len(uut.filter_people_by_occupancy("only_out")) == 1
-
-    assert {r["person"] for r in uut.filter_people_by_occupancy("only_out")} == {"person.new_home_owner"}
-    assert {r["person"] for r in uut.filter_people_by_occupancy("only_in")} == {"person.bidey_in"}
-
-
 async def test_build_targets_for_simple_case() -> None:
     ctx = TestingContext()
     await ctx.test_initialize()

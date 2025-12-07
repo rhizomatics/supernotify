@@ -116,6 +116,9 @@ class HomeAssistantAPI:
             return False
         return self._hass.services.has_service(domain, service)
 
+    def entity_ids_for_domain(self, domain: str) -> list[str]:
+        return self._hass.states.async_entity_ids(domain)
+
     async def call_service(
         self,
         domain: str,

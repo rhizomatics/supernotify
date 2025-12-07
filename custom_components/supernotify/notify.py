@@ -1,6 +1,5 @@
 """Supernotify service, extending BaseNotificationService"""
 
-import copy
 import datetime as dt
 import json
 import logging
@@ -55,9 +54,9 @@ from . import (
     CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_RECIPIENTS,
+    CONF_RECIPIENTS_DISCOVER,
     CONF_SCENARIOS,
     CONF_SIZE,
-    CONF_TARGET,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
     CONF_TTL,
@@ -138,6 +137,7 @@ async def async_get_service(
             CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
             CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
             CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),
+            CONF_RECIPIENTS_DISCOVER: config.get(CONF_RECIPIENTS_DISCOVER, ()),
             CONF_RECIPIENTS: config.get(CONF_RECIPIENTS, ()),
             CONF_ACTIONS: config.get(CONF_ACTIONS, {}),
             CONF_HOUSEKEEPING: config.get(CONF_HOUSEKEEPING, {}),
@@ -159,6 +159,7 @@ async def async_get_service(
         media_path=config[CONF_MEDIA_PATH],
         archive=config[CONF_ARCHIVE],
         housekeeping=config[CONF_HOUSEKEEPING],
+        recipients_discover=config[CONF_RECIPIENTS_DISCOVER],
         recipients=config[CONF_RECIPIENTS],
         mobile_actions=config[CONF_ACTION_GROUPS],
         scenarios=config[CONF_SCENARIOS],
@@ -320,6 +321,7 @@ class SupernotifyAction(BaseNotificationService):
         media_path: str | None = None,
         archive: dict[str, Any] | None = None,
         housekeeping: dict[str, Any] | None = None,
+        recipients_discover: bool = True,
         recipients: list[dict[str, Any]] | None = None,
         mobile_actions: dict[str, Any] | None = None,
         scenarios: dict[str, dict[str, Any]] | None = None,
@@ -337,7 +339,7 @@ class SupernotifyAction(BaseNotificationService):
         hass_api = HomeAssistantAPI(hass)
         self.context = Context(
             hass_api,
-            PeopleRegistry(recipients or [], hass_api),
+            PeopleRegistry(recipients or [], hass_api, discover=recipients_discover),
             ScenarioRegistry(scenarios or {}),
             DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
             NotificationArchive(archive or {}, hass_api),
@@ -599,11 +601,7 @@ class SupernotifyAction(BaseNotificationService):
         return self.context.snoozer.clear()
 
     def enquire_people(self) -> list[dict[str, Any]]:
-        response = copy.deepcopy(self.context.people_registry.people)
-        for p in response.values():
-            if CONF_TARGET in p:
-                p[CONF_TARGET] = p[CONF_TARGET].as_dict()
-        return list(response.values())
+        return [p.as_dict() for p in self.context.people_registry.people.values()]
 
     @callback
     def on_mobile_action(self, event: Event) -> None:

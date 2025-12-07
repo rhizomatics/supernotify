@@ -16,8 +16,6 @@ from custom_components.supernotify import (
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MOBILE_APP_ID,
     CONF_MOBILE_APP_ID,
-    CONF_MOBILE_DEVICES,
-    CONF_PERSON,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -162,14 +160,14 @@ class MobilePushTransport(Transport):
                 if self.people_registry:
                     # somewhat hacky way to tie the mobile device back to a recipient to please the snoozing api
                     for recipient in self.people_registry.people.values():
-                        for md in recipient.get(CONF_MOBILE_DEVICES, []):
+                        for md in recipient.mobile_devices:
                             if md.get(CONF_MOBILE_APP_ID) in (simple_target, mobile_target):
                                 self.context.snoozer.register_snooze(
                                     CommandType.SNOOZE,
                                     target_type=QualifiedTargetType.MOBILE,
                                     target=simple_target,
                                     recipient_type=RecipientType.USER,
-                                    recipient=recipient[CONF_PERSON],
+                                    recipient=recipient.entity_id,
                                     snooze_for=timedelta(days=1),
                                     reason="Action Failure",
                                 )

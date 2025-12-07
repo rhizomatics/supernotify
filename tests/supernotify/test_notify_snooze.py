@@ -19,6 +19,7 @@ from custom_components.supernotify import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
@@ -89,6 +90,9 @@ def test_snooze_everything(mock_hass: HomeAssistant) -> None:
 
 
 async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
+    hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
+    register_mobile_app(hass_api, person="person.bob_mctest")
+
     uut = SupernotifyAction(
         hass,
         recipients=[
@@ -98,7 +102,7 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         deliveries=DELIVERY,
     )
     await uut.initialize()
-    register_mobile_app(uut.context.people_registry, person="person.bob_mctest")
+
     plain_notify = Notification(uut.context, "hello")
     delivery = Delivery("email", DELIVERY["email"], uut.context.delivery_registry.transports["email"])
     await plain_notify.initialize()

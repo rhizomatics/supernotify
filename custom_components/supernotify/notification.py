@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import CONF_ENABLED, CONF_TARGET, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import CONF_ENABLED
 from jinja2 import TemplateError
 from voluptuous import humanize
 
@@ -29,19 +29,9 @@ from custom_components.supernotify import (
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
     CONF_DATA,
-    CONF_DELIVERY,
-    CONF_PERSON,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
-    OCCUPANCY_ALL,
-    OCCUPANCY_ALL_IN,
-    OCCUPANCY_ALL_OUT,
-    OCCUPANCY_ANY_IN,
-    OCCUPANCY_ANY_OUT,
-    OCCUPANCY_NONE,
-    OCCUPANCY_ONLY_IN,
-    OCCUPANCY_ONLY_OUT,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -58,14 +48,14 @@ from custom_components.supernotify import (
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
     SelectionRank,
 )
-from custom_components.supernotify.archive import ArchivableObject
-from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target, TargetRequired
-from custom_components.supernotify.scenario import Scenario
 
+from .archive import ArchivableObject
 from .common import ensure_dict, ensure_list
 from .context import Context
+from .delivery import Delivery, DeliveryRegistry
+from .envelope import Envelope
+from .model import ConditionVariables, MessageOnlyPolicy, SuppressionReason, Target, TargetRequired
+from .scenario import Scenario
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -74,6 +64,8 @@ if TYPE_CHECKING:
     from custom_components.supernotify.transport import (
         Transport,
     )
+
+    from .people import Recipient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -135,9 +127,7 @@ class Notification(ArchivableObject):
         self.selected_delivery_names: list[str] = []
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
-        self.people_by_occupancy: list[dict[str, Any]] = []
         self.suppressed: SuppressionReason | None = None
-        self.occupancy: dict[str, list[dict[str, Any]]] = {}
         self.condition_variables: ConditionVariables
 
     async def initialize(self) -> None:
@@ -152,13 +142,12 @@ class Notification(ArchivableObject):
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
                 _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as implicit for type %s", self.delivery_overrides_type)
 
-        self.occupancy = self.people_registry.determine_occupancy()
         self.condition_variables = ConditionVariables(
             self.applied_scenario_names,
             self.required_scenario_names,
             self.constrain_scenario_names,
             self.priority,
-            self.occupancy,
+            self.people_registry.determine_occupancy(),
             self._message,
             self._title,
         )  # requires occupancy first
@@ -443,12 +432,8 @@ class Notification(ArchivableObject):
             sanitized["target"] = sanitized["target"].as_dict()
         if sanitized["selected"]:
             sanitized["selected"] = sanitized["selected"].as_dict()
-
-        for state, person_objs in sanitized["occupancy"].items():
-            sanitized["occupancy"][state] = [
-                {"person": person_obj["person"], "state": person_obj.get("state"), "user_id": person_obj.get("user_id")}
-                for person_obj in person_objs
-            ]
+        if sanitized["condition_variables"]:
+            sanitized["condition_variables"] = sanitized["condition_variables"].as_dict()
 
         if self.debug_trace:
             sanitized["debug_trace"] = self.debug_trace.contents()
@@ -483,31 +468,6 @@ class Notification(ArchivableObject):
         if hasattr(self, attribute):
             base.update(getattr(self, attribute))
         return base
-
-    def filter_people_by_occupancy(self, occupancy: str) -> list[dict[str, Any]]:
-        people = list(self.people_registry.people.values())
-        if occupancy == OCCUPANCY_ALL:
-            return people
-        if occupancy == OCCUPANCY_NONE:
-            return []
-
-        away = self.occupancy[STATE_NOT_HOME]
-        at_home = self.occupancy[STATE_HOME]
-        if occupancy == OCCUPANCY_ALL_IN:
-            return people if len(away) == 0 else []
-        if occupancy == OCCUPANCY_ALL_OUT:
-            return people if len(at_home) == 0 else []
-        if occupancy == OCCUPANCY_ANY_IN:
-            return people if len(at_home) > 0 else []
-        if occupancy == OCCUPANCY_ANY_OUT:
-            return people if len(away) > 0 else []
-        if occupancy == OCCUPANCY_ONLY_IN:
-            return at_home
-        if occupancy == OCCUPANCY_ONLY_OUT:
-            return away
-
-        _LOGGER.warning("SUPERNOTIFY Unknown occupancy tested: %s", occupancy)
-        return []
 
     def generate_recipients(self, delivery: Delivery) -> list[Target]:
 
@@ -595,9 +555,9 @@ class Notification(ArchivableObject):
 
     def default_person_ids(self, delivery: Delivery) -> Target:
         # If target not specified on service call or delivery, then default to std list of recipients
-        people: list[dict[str, Any]] = self.filter_people_by_occupancy(delivery.occupancy)
-        people = [p for p in people if self.recipients_override is None or p.get(CONF_PERSON) in self.recipients_override]
-        return Target({ATTR_PERSON_ID: [p[CONF_PERSON] for p in people if CONF_PERSON in p]})
+        people: list[Recipient] = self.people_registry.filter_people_by_occupancy(delivery.occupancy)
+        people = [p for p in people if self.recipients_override is None or p.entity_id in self.recipients_override]
+        return Target({ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id]})
 
     def resolve_indirect_targets(self, target: Target, delivery: Delivery) -> Target:
         # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone
@@ -605,23 +565,15 @@ class Notification(ArchivableObject):
 
         for person_id in target.person_ids:
             person = self.people_registry.people.get(person_id)
-            if person and person.get(CONF_ENABLED, True):
+            if person and person.enabled:
                 recipient_target = Target({ATTR_PERSON_ID: [person_id]})
-                personal_target: Target | None = person.get(CONF_TARGET)
-                if personal_target is not None and personal_target.has_resolved_target():
-                    recipient_target += personal_target
-                personal_delivery: dict[str, Any] | None = person.get(CONF_DELIVERY, {}).get(delivery.name)
+                if person.target is not None and person.target.has_resolved_target():
+                    recipient_target += person.target
+                personal_delivery = person.delivery.get(delivery.name) if person.delivery else None
                 if personal_delivery:
-                    # TODO: replace all this hackery with people/people_registry improvements
-                    if personal_delivery.get(CONF_ENABLED, True) and personal_delivery.get(CONF_TARGET):
-                        personal_delivery_target: Target = Target(
-                            personal_delivery.get(CONF_TARGET),
-                            target_data=personal_delivery.get(CONF_DATA),
-                            target_specific_data=True,
-                        )
-                        personal_delivery_target.extend(ATTR_PERSON_ID, [person_id])
-                        if personal_delivery_target is not None and personal_delivery_target.has_resolved_target():
-                            recipient_target += personal_delivery_target
+                    if personal_delivery.enabled and personal_delivery.target:
+                        if personal_delivery.target.has_resolved_target():
+                            recipient_target += personal_delivery.target
 
                 resolved += recipient_target
         return resolved
