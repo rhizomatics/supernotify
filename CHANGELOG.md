@@ -1,10 +1,12 @@
 # Public releases
 
-## 1.4.1
+## 1.5.0
 ### Features
 - Mobile discovery now on by default
+  - Use `mobile_discovery: false` for each recipient to switch off
 - New Person discovery, on by default
-  - Use
+  - Use `recipient_discovery: false` in configuration to switch off
+  - Use `enabled: false` to switch off specific people from automatic notifications
 - Mobile Push delivery now configured by default
 ### Internal
 - Dicts for person and delivery customization now replaced by typed classes for type safety and easier refactoring / testing
