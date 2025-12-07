@@ -53,6 +53,7 @@ from . import (
     CONF_HOUSEKEEPING_TIME,
     CONF_LINKS,
     CONF_MEDIA_PATH,
+    CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SCENARIOS,
@@ -137,6 +138,7 @@ async def async_get_service(
             CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
             CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
             CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),
+            CONF_MOBILE_DISCOVERY: config.get(CONF_MOBILE_DISCOVERY, ()),
             CONF_RECIPIENTS_DISCOVERY: config.get(CONF_RECIPIENTS_DISCOVERY, ()),
             CONF_RECIPIENTS: config.get(CONF_RECIPIENTS, ()),
             CONF_ACTIONS: config.get(CONF_ACTIONS, {}),
@@ -159,6 +161,7 @@ async def async_get_service(
         media_path=config[CONF_MEDIA_PATH],
         archive=config[CONF_ARCHIVE],
         housekeeping=config[CONF_HOUSEKEEPING],
+        mobile_discovery=config[CONF_MOBILE_DISCOVERY],
         recipients_discovery=config[CONF_RECIPIENTS_DISCOVERY],
         recipients=config[CONF_RECIPIENTS],
         mobile_actions=config[CONF_ACTION_GROUPS],
@@ -201,8 +204,8 @@ async def async_get_service(
     def supplemental_action_clear_snoozes(_call: ServiceCall) -> dict[str, Any]:
         return {"cleared": service.clear_snoozes()}
 
-    def supplemental_action_enquire_people(_call: ServiceCall) -> dict[str, Any]:
-        return {"people": service.enquire_people()}
+    def supplemental_action_enquire_recipients(_call: ServiceCall) -> dict[str, Any]:
+        return {"recipients": service.enquire_recipients()}
 
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
@@ -255,8 +258,8 @@ async def async_get_service(
     )
     hass.services.async_register(
         DOMAIN,
-        "enquire_people",
-        supplemental_action_enquire_people,
+        "enquire_recipients",
+        supplemental_action_enquire_recipients,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
@@ -322,6 +325,7 @@ class SupernotifyAction(BaseNotificationService):
         archive: dict[str, Any] | None = None,
         housekeeping: dict[str, Any] | None = None,
         recipients_discovery: bool = True,
+        mobile_discovery: bool = True,
         recipients: list[dict[str, Any]] | None = None,
         mobile_actions: dict[str, Any] | None = None,
         scenarios: dict[str, dict[str, Any]] | None = None,
@@ -339,7 +343,7 @@ class SupernotifyAction(BaseNotificationService):
         hass_api = HomeAssistantAPI(hass)
         self.context = Context(
             hass_api,
-            PeopleRegistry(recipients or [], hass_api, discover=recipients_discovery),
+            PeopleRegistry(recipients or [], hass_api, discover=recipients_discovery, mobile_discovery=mobile_discovery),
             ScenarioRegistry(scenarios or {}),
             DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
             NotificationArchive(archive or {}, hass_api),
@@ -496,18 +500,35 @@ class SupernotifyAction(BaseNotificationService):
                     event.data["entity_id"].replace(f"{DOMAIN}.transport_", "")
                 )
                 if transport is None:
-                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown methtransportod {event.data['entity_id']}")
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown transport {event.data['entity_id']}")
                 else:
                     if new_state.state == "off" and transport.override_enabled:
                         transport.override_enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {transport.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Disabling transport {transport.name}")
                         changes += 1
                     elif new_state.state == "on" and not transport.override_enabled:
                         transport.override_enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {transport.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Enabling transport {transport.name}")
                         changes += 1
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.name}, already {new_state}")
+            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.recipient_"):
+                recipient: Recipient | None = self.context.people_registry.people.get(
+                    event.data["entity_id"].replace(f"{DOMAIN}.recipient_", "person.")
+                )
+                if recipient is None:
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown recipient {event.data['entity_id']}")
+                else:
+                    if new_state.state == "off" and recipient.enabled:
+                        recipient.enabled = False
+                        _LOGGER.info(f"SUPERNOTIFY Disabling recipient {recipient.entity_id}")
+                        changes += 1
+                    elif new_state.state == "on" and not recipient.enabled:
+                        recipient.enabled = True
+                        _LOGGER.info(f"SUPERNOTIFY Enabling recipient {recipient.entity_id}")
+                        changes += 1
+                    else:
+                        _LOGGER.info(f"SUPERNOTIFY No change to recipient {recipient.entity_id}, already {new_state}")
 
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
@@ -537,6 +558,11 @@ class SupernotifyAction(BaseNotificationService):
                 f"{DOMAIN}.delivery_{delivery.name}", STATE_ON if delivery.enabled else STATE_OFF, delivery.attributes()
             )
             self.exposed_entities.append(f"{DOMAIN}.delivery_{delivery_name}")
+        for recipient in self.context.people_registry.people.values():
+            self.hass.states.async_set(
+                f"{DOMAIN}.{recipient.name}", STATE_ON if recipient.enabled else STATE_OFF, recipient.attributes()
+            )
+            self.exposed_entities.append(f"{DOMAIN}.{recipient.name}")
 
     def dupe_check(self, notification: Notification) -> bool:
         policy = self.dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
@@ -601,7 +627,7 @@ class SupernotifyAction(BaseNotificationService):
     def clear_snoozes(self) -> int:
         return self.context.snoozer.clear()
 
-    def enquire_people(self) -> list[dict[str, Any]]:
+    def enquire_recipients(self) -> list[dict[str, Any]]:
         return [p.as_dict() for p in self.context.people_registry.people.values()]
 
     @callback

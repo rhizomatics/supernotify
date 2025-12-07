@@ -25,7 +25,7 @@ With the `recipient` definition you can:
 - Switch off a recipient, even if they were automatically discovered
 - Set default targets for specific deliveries, so for example, an email address is always copied in on them
 
-## Automatic Configuration
+## Automatic Recipient Discovery
 
 The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch this off using `recipient_discovery: false` in the configuration. And sice each *Recipient* is automatically populated with all their
 mobile devices, an empty YAML config can do a lot.
@@ -35,6 +35,32 @@ mobile devices, an empty YAML config can do a lot.
     - person: person.new_home_owner
       enabled: false
 ```
+
+## Automatic Mobile App Discovery
+
+By default, all the mobile devices registered in Home Assistant are discovered and associated with the recipient.
+
+This can be switched off by default for everyone:
+
+```yaml
+ notify:
+  - name: minimal
+    platform: supernotify
+    mobile_discovery: false
+```
+
+or per recipient:
+
+``` yaml
+ recipients:
+    - person: person.new_home_owner
+      mobile_discovery: false
+```
+
+It is also possible to have discovery off by default at platform level, then selectively re-enabled for
+the folk you want, using the `recipients` configuration.
+
+If you want to do the device registration manually, see [Manual Device Registration](#manual-device-registration)
 
 ## Sending Notifications
 
@@ -66,6 +92,16 @@ target list with email addresses, notify entities, or direct mobile actions ).
          - person.jolly_mctest
 
 ```
+## Entities
+
+Recipients are exposed to Home Assistant as `supernotify.recipient_XXXXX` entities. The entity state is
+the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools,
+automations, API or whatever ) will disable or enable the recipient.
+
+This can be handy if someone should be temporarily switched off for notifications, or you want your own
+automation to determine which people get notified when.
+
+The entity also exposes the recipient attributes, such as email, mobile devices, target, custom data etc.
 
 ## Manual Configuration
 
@@ -79,6 +115,8 @@ target list with email addresses, notify entities, or direct mobile actions ).
         target:
             - media_player.echo_study
 ```
+
+## Manual Device Registration
 
 ``` yaml title="Complicated Example"
  recipients:

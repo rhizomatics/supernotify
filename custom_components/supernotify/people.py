@@ -2,17 +2,27 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.person.const import DOMAIN as PERSON_DOMAIN
-from homeassistant.const import ATTR_STATE, CONF_DEVICE_ID, CONF_ENABLED, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_STATE,
+    CONF_ALIAS,
+    CONF_DEVICE_ID,
+    CONF_ENABLED,
+    STATE_HOME,
+    STATE_NOT_HOME,
+)
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util import slugify
 
 from . import (
+    ATTR_ALIAS,
     ATTR_EMAIL,
+    ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_PHONE,
     ATTR_USER_ID,
-    CONF_ALIAS,
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DEVICE_NAME,
@@ -50,9 +60,10 @@ _LOGGER = logging.getLogger(__name__)
 class Recipient:
     """Recipient to distinguish from the native HA Person"""
 
-    def __init__(self, config: dict[str, Any] | None) -> None:
+    def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
         self.entity_id = config[CONF_PERSON]
+        self.name = f"recipient_{self.entity_id.replace('person.', '')}"
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)
         self.phone_number: str | None = config.get(CONF_PHONE_NUMBER)
@@ -64,7 +75,7 @@ class Recipient:
             k: DeliveryCustomization(v) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
-        self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, True)
+        self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
         self.mobile_devices: list[dict[str, Any]] = config.get(CONF_MOBILE_DEVICES) or []
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
@@ -83,10 +94,15 @@ class Recipient:
                 _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:
             self.target.extend(ATTR_MOBILE_APP_ID, [d[CONF_MOBILE_APP_ID] for d in self.mobile_devices])
-        if not self.user_id:
+        if not self.user_id or not self.alias:
             attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
-            if attrs and attrs.get(ATTR_USER_ID) and isinstance(attrs.get(ATTR_USER_ID), str):
-                self.user_id = attrs.get(ATTR_USER_ID)
+            if attrs:
+                if attrs.get(ATTR_USER_ID) and isinstance(attrs.get(ATTR_USER_ID), str):
+                    self.user_id = attrs.get(ATTR_USER_ID)
+                if attrs.get(ATTR_ALIAS) and isinstance(attrs.get(ATTR_ALIAS), str):
+                    self.alias = attrs.get(ATTR_ALIAS)
+                if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
+                    self.alias = attrs.get(ATTR_FRIENDLY_NAME)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -103,14 +119,38 @@ class Recipient:
             CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
         }
 
+    def attributes(self) -> dict[str, Any]:
+        """For exposure as entity state"""
+        attrs: dict[str, Any] = {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_ENABLED: self.enabled,
+            CONF_EMAIL: self.email,
+            CONF_PHONE_NUMBER: self.phone_number,
+            ATTR_USER_ID: self.user_id,
+            CONF_MOBILE_DEVICES: self.mobile_devices,
+            CONF_MOBILE_DISCOVERY: self.mobile_discovery,
+            CONF_TARGET: self.target.as_dict() if self.target else None,
+            CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
+        }
+        if self.alias:
+            attrs[ATTR_FRIENDLY_NAME] = self.alias
+        return attrs
+
 
 class PeopleRegistry:
-    def __init__(self, recipients: list[dict[str, Any]], hass_api: HomeAssistantAPI, discover: bool = False) -> None:
+    def __init__(
+        self,
+        recipients: list[dict[str, Any]],
+        hass_api: HomeAssistantAPI,
+        discover: bool = False,
+        mobile_discovery: bool = True,
+    ) -> None:
         self.hass_api = hass_api
         self.people: dict[str, Recipient] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.entity_registry = entity_registry
         self.device_registry = device_registry
+        self.mobile_discovery = mobile_discovery
         self.discover = discover
 
     def initialize(self) -> None:
@@ -133,7 +173,7 @@ class PeopleRegistry:
                 recipients[person_id] = r
 
         for r in recipients.values():
-            recipient: Recipient = Recipient(r)
+            recipient: Recipient = Recipient(r, default_mobile_discovery=self.mobile_discovery)
             recipient.initialize(self)
 
             self.people[recipient.entity_id] = recipient
@@ -150,7 +190,7 @@ class PeopleRegistry:
     def enabled_recipients(self) -> list[Recipient]:
         return [p for p in self.people.values() if p.enabled]
 
-    def filter_people_by_occupancy(self, delivery_occupancy: str) -> list[Recipient]:
+    def filter_recipients_by_occupancy(self, delivery_occupancy: str) -> list[Recipient]:
         if delivery_occupancy == OCCUPANCY_NONE:
             return []
 

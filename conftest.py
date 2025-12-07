@@ -111,7 +111,7 @@ def mock_people_registry(mock_hass_api: HomeAssistantAPI) -> PeopleRegistry:
         STATE_HOME: [{CONF_PERSON: "person.bidey_in"}],
         STATE_NOT_HOME: [{CONF_PERSON: "person.new_home_owner"}],
     }
-    registry.enabled_recipients.return_value=registry.people.values()
+    registry.enabled_recipients.return_value = registry.people.values()
     return registry
 
 

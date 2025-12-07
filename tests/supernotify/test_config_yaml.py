@@ -235,6 +235,48 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
     assert response == {"simple": ["testing", "DEFAULT_mobile_push", "DEFAULT_notify_entity"], "somebody": ["chime_person"]}
 
 
+async def test_exposed_recipients(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await hass.async_block_till_done()
+    hass.states.async_set("supernotify.recipient_house_owner", "off")
+    await hass.async_block_till_done()
+    response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
+    await hass.async_block_till_done()
+    expected_response: dict[str, Any] = {
+        "recipients": [
+            {
+                "person": "person.house_owner",
+                "alias": None,
+                "enabled": False,
+                "state": None,
+                "email": "test@testing.com",
+                "phone_number": "+4497177848484",
+                "user_id": None,
+                "mobile_discovery": True,
+                "mobile_devices": [],
+                "delivery": {
+                    "chime": {"target": {"entity_id": ["switch.office_bell"]}, "enabled": True, "data": {"volume": "whisper"}}
+                },
+                "target": {
+                    "discord": ["@mickey"],
+                    "telegram": ["mickey.mouse"],
+                    "812Mhz": ["039392", "84834"],
+                    "person_id": ["person.house_owner"],
+                    "email": ["test@testing.com"],
+                    "phone": ["+4497177848484"],
+                },
+            }
+        ]
+    }
+    assert response == expected_response
+    hass.states.async_set("supernotify.recipient_house_owner", "on")
+    await hass.async_block_till_done()
+    response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
+    await hass.async_block_till_done()
+    expected_response["recipients"][0]["enabled"] = True
+    assert response == expected_response
+
+
 async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     assert await async_setup_component(hass, "media_player", {"media_player": {CONF_PLATFORM: "test"}})
@@ -387,20 +429,20 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
     }
 
 
-async def test_people_configured(hass: HomeAssistant) -> None:
+async def test_recipients_configured(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
     response: ServiceResponse = await hass.services.async_call(
-        "supernotify", "enquire_people", None, blocking=True, return_response=True
+        "supernotify", "enquire_recipients", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
     assert response is not None
-    assert "people" in response
+    assert "recipients" in response
     assert isinstance(response, dict)
-    assert len(response["people"]) == 1  # type: ignore
-    assert isinstance(response["people"], list)
+    assert len(response["recipients"]) == 1  # type: ignore
+    assert isinstance(response["recipients"], list)
 
-    assert response["people"][0] == {
+    assert response["recipients"][0] == {
         "person": "person.house_owner",
         "alias": None,
         "enabled": True,

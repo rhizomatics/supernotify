@@ -4,12 +4,18 @@
 ### Features
 - Mobile discovery now on by default
   - Use `mobile_discovery: false` for each recipient to switch off
-- New Person discovery, on by default
+- New Recipient discovery, on by default, based on Home Assistant's `person` entities
   - Use `recipient_discovery: false` in configuration to switch off
   - Use `enabled: false` to switch off specific people from automatic notifications
+- Mobile Discovery can be switched off at platform or recipient level
+- Recipient now exposed as an entity
+  - Recipient can be enabled or disabled in Home Assistant UI, Automations, API etc by changing entity state
 - Mobile Push delivery now configured by default
+### Changes
+- `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
 - Dicts for person and delivery customization now replaced by typed classes for type safety and easier refactoring / testing
+
 ## 1.4.0
 ### Features
 - Now supports the full `conditions` Home Assistant schema, `condition` is now deprecated though still supported

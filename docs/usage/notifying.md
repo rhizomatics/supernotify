@@ -1,0 +1,141 @@
+# Notifying
+
+From an automation, call Supernotify as you would any other `notify` platform. It can also be switched out directly
+from an email notification, mobile push action or `notify.send_message`.
+
+These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though
+you are free to name it however you like.
+
+There are lots more examples in the [Recipes](../recipes/index.md), including how to make it work well
+with Frigate, AppDaemon and Alexa.
+
+## Simplest Example
+
+In this example, there's no configuration, target or anything more than the standard `message`.
+
+This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then
+the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry
+in Home Assistant.
+
+```yaml title="Example Message to All Devices"
+  - action: notify.supernotify
+    data:
+        message: Something went off in the basement
+```
+
+## Adding Targets
+
+Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person.
+
+```yaml title="Example Message to All Devices"
+  - action: notify.supernotify
+    data:
+        message: Something went off in the basement
+        target: person.john_mcdoe
+```
+
+In this case, the notification will go only to John, to any mobile devices he's running Home Assistant on, and to
+any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
+
+Its also possible to put the e-mail, mobile action, notify entity or similar directly into the target:
+
+```yaml title="Example Message to All Devices"
+  - action: notify.supernotify
+    data:
+        message: Something went off in the basement
+        target: john@mcdoe.co.bn
+```
+
+Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined
+dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out
+what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram
+or similar.
+
+## Complex Targets
+
+This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever
+is most convenient
+
+```yaml
+  - action: notify.supernotify
+    data:
+        message: Something went off in the basement
+        target: 
+            email: john@mcdoe.co.bn
+            phone_number: +4398708123987
+            telegram: @bill
+            mobile_app_id:
+              - mobile_app.john_phone
+              - mobile_app.john_ipad
+```
+
+## Using from an Automation
+
+In this example, when an Actionable Notification is sent with action `Red Alert`, a notification
+is trigged in Supernotify using the `red_alert` scenario. In this case, the scenario uses
+sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`
+
+```yaml
+- id: action_red_alert
+  alias: Action Red Alert
+  initial_state: true
+  triggers:
+  - trigger: event
+    event_type: ios.action_fired
+    event_data:
+      actionName: Red Alert
+  action:
+  - action: notify.supernotify
+    data:
+      data:
+        scenario: red_alert
+```
+
+In this example, a mobile notification goes out to notify of the dishwasher finishing, and email is switched off.
+
+```yaml
+- id: '1762520266950'
+  alias: Dishwasher Finished
+  description: 'Push alert when dishwasher done'
+  triggers:
+  - trigger: state
+    entity_id:
+    - sensor.dishwasher_operation_state
+    to:
+    - finished
+  actions:
+  - action: notify.supernotify
+    data:
+      message: Dishwasher is finished
+      data:
+        delivery:
+          plain_email:
+            enabled: false
+```
+
+Templates can be used freely, as in other `notify` integrations
+
+```yaml
+- id: ups-overloaded
+  alias: Send notification when UPS is overloaded
+  triggers:
+  - entity_id:
+    - sensor.cyberpower_status
+    to: Overloaded
+    trigger: state
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 30
+  actions:
+  - data:
+      title: 'ALERT: UPS Overloaded'
+      message: UPS is overloaded, output voltage {{states('sensor.cyberpower_output_voltage')}}
+      data:
+        priority: high
+```
+
+## References
+
+The full range of things that go into the second level `data:` section is documented at
+[Notify Action Data Schema](../developer/schemas/Notify_Action_Data)

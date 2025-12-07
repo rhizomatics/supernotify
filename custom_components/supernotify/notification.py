@@ -558,7 +558,7 @@ class Notification(ArchivableObject):
 
     def default_person_ids(self, delivery: Delivery) -> Target:
         # If target not specified on service call or delivery, then default to std list of recipients
-        people: list[Recipient] = self.people_registry.filter_people_by_occupancy(delivery.occupancy)
+        people: list[Recipient] = self.people_registry.filter_recipients_by_occupancy(delivery.occupancy)
         people = [p for p in people if self.recipients_override is None or p.entity_id in self.recipients_override]
         return Target({ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id]})
 

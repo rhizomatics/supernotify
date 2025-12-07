@@ -149,6 +149,7 @@ ATTR_PERSON_ID = "person_id"
 ATTR_MOBILE_APP_ID = "mobile_app_id"
 ATTR_EMAIL = "email"
 ATTR_PHONE = "phone"
+ATTR_ALIAS = "alias"
 
 DELIVERY_SELECTION_IMPLICIT = "implicit"
 DELIVERY_SELECTION_EXPLICIT = "explicit"
@@ -323,11 +324,18 @@ TRANSPORT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
 })
+# Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
+# May need condition, and also enabled if delivery disabled
+# CONF_OCCUPANCY="occupancy"
+# OPTION_OCCUPANCY_DEFAULT="default"
+# OPTIONS_OCCUPANCY=[OPTION_OCCUPANCY_DEFAULT,OPTION_OCCUPANCY_EXCLUDE]
+# OPTION_OCCUPANCY_EXCLUDE="exclude"
 RECIPIENT_SCHEMA = vol.Schema({
     vol.Required(CONF_PERSON): cv.entity_id,
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_EMAIL): cv.string,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    # vol.Optional(CONF_OCCUPANCY,default=OPTION_OCCUPANCY_DEFAULT):vol.In(OPTIONS_OCCUPANCY),
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_PHONE_NUMBER): cv.string,
     vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
@@ -415,6 +423,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
     vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
     vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [ACTION_SCHEMA]},
+    vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
     vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),

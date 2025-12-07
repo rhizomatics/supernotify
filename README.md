@@ -32,7 +32,8 @@ Supernotify is a custom component available via the [Home Assistant Community Sh
 
 ## Documentation
 
-Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do,
+Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do. [Notifying](usage/notifying.md) shows how to call Supernotify from
+automations or the Developer Tools action page.
 
 There are lots of [recipes](https://supernotify.rhizomatics.org.uk/recipes/) with sample
 config snippers to give you some more ideas, or browse by [tags](https://supernotify.rhizomatics.org.uk/tags/).
@@ -83,8 +84,8 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
 * Notification **Archival** and **Debug Support**
     * Optionally archive notifications to file system and/or MQTT topic
     * Includes full debug information, including occupancy assumptions, delivery and target selections
-    * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details.
-    * Deliveries, Transports and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
+    * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](usage/actions.md)
+    * Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
 ## YAML Still Required
 

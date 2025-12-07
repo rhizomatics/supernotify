@@ -60,12 +60,12 @@ async def test_filter_recipients(hass: HomeAssistant) -> None:
     uut = PeopleRegistry([], ctx.hass_api, discover=True)
     uut.initialize()
 
-    assert len(uut.filter_people_by_occupancy("all_in")) == 0
-    assert len(uut.filter_people_by_occupancy("all_out")) == 0
-    assert len(uut.filter_people_by_occupancy("any_in")) == 2
-    assert len(uut.filter_people_by_occupancy("any_out")) == 2
-    assert len(uut.filter_people_by_occupancy("only_in")) == 1
-    assert len(uut.filter_people_by_occupancy("only_out")) == 1
+    assert len(uut.filter_recipients_by_occupancy("all_in")) == 0
+    assert len(uut.filter_recipients_by_occupancy("all_out")) == 0
+    assert len(uut.filter_recipients_by_occupancy("any_in")) == 2
+    assert len(uut.filter_recipients_by_occupancy("any_out")) == 2
+    assert len(uut.filter_recipients_by_occupancy("only_in")) == 1
+    assert len(uut.filter_recipients_by_occupancy("only_out")) == 1
 
-    assert {r.entity_id for r in uut.filter_people_by_occupancy("only_out")} == {"person.mae_mctest"}
-    assert {r.entity_id for r in uut.filter_people_by_occupancy("only_in")} == {"person.joe_mctest"}
+    assert {r.entity_id for r in uut.filter_recipients_by_occupancy("only_out")} == {"person.mae_mctest"}
+    assert {r.entity_id for r in uut.filter_recipients_by_occupancy("only_in")} == {"person.joe_mctest"}

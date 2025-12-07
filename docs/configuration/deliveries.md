@@ -49,7 +49,7 @@ There are more examples in the [Recipes](../recipes/index.md) section.
 There are two main ways:
 
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
-- Use [Scenarios](../scenarios.md) to apply common chunks of config
+- Use [Scenarios](../usage/scenarios.md) to apply common chunks of config
 - Move to a scenario-only configuration (recommended) by setting `selection` to `scenario` for every delivery
   - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
