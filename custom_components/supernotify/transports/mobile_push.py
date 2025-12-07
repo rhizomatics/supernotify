@@ -163,7 +163,7 @@ class MobilePushTransport(Transport):
                 _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
                 if self.people_registry:
                     # somewhat hacky way to tie the mobile device back to a recipient to please the snoozing api
-                    for recipient in self.people_registry.people.values():
+                    for recipient in self.people_registry.enabled_recipients():
                         for md in recipient.mobile_devices:
                             if md.get(CONF_MOBILE_APP_ID) in (simple_target, mobile_target):
                                 self.context.snoozer.register_snooze(

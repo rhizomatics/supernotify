@@ -71,16 +71,16 @@ def test_check_notification_for_snooze_qualified(mock_context: Context, mock_peo
     delivery = Delivery("email", {}, EmailTransport(mock_context))
     uut: Snoozer = Snoozer()
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_DELIVERY_chime"}), mock_people_registry.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_DELIVERY_chime"}), mock_people_registry.enabled_recipients()
     )
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SILENCE_EVERYONE_CAMERA_Yard"}), mock_people_registry.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SILENCE_EVERYONE_CAMERA_Yard"}), mock_people_registry.enabled_recipients()
     )
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_TRANSPORT_email"}), mock_people_registry.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_TRANSPORT_email"}), mock_people_registry.enabled_recipients()
     )
     uut.handle_command_event(
-        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_TRANSPORT_LASER"}), mock_people_registry.people
+        Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_TRANSPORT_LASER"}), mock_people_registry.enabled_recipients()
     )
     assert uut.current_snoozes(PRIORITY_MEDIUM, delivery) == [
         Snooze(QualifiedTargetType.CAMERA, RecipientType.EVERYONE, "Yard"),

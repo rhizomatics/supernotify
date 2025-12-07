@@ -580,7 +580,7 @@ class Notification(ArchivableObject):
             else:
                 _LOGGER.debug("SUPERNOTIFY Skipping recipient %s with enabled switched off", person_id)
 
-                resolved += recipient_target
+            resolved += recipient_target
         return resolved
 
     def generate_envelopes(self, delivery: Delivery, targets: list[Target]) -> list[Envelope]:

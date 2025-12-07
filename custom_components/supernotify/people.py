@@ -147,11 +147,14 @@ class PeopleRegistry:
     def find_people(self) -> list[str]:
         return self.hass_api.entity_ids_for_domain(PERSON_DOMAIN)
 
+    def enabled_recipients(self) -> list[Recipient]:
+        return [p for p in self.people.values() if p.enabled]
+
     def filter_people_by_occupancy(self, delivery_occupancy: str) -> list[Recipient]:
         if delivery_occupancy == OCCUPANCY_NONE:
             return []
 
-        people = list(self.people.values())
+        people = [p for p in self.people.values() if p.enabled]
         if delivery_occupancy == OCCUPANCY_ALL:
             return people
 
@@ -178,26 +181,28 @@ class PeopleRegistry:
     def refresh_tracker_state(self) -> None:
         for person_id, person_config in self.people.items():
             # TODO: possibly rate limit this
-            try:
-                tracker: State | None = self.hass_api.get_state(person_id)
-                if tracker is None:
-                    person_config.state = None
-                elif isinstance(tracker.state, str):
-                    person_config.state = tracker.state
-                else:
-                    _LOGGER.warning("SUPERNOTIFY Unexpected state %s for %s", tracker.state, person_id)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person_id, e)
+            if person_config.enabled:
+                try:
+                    tracker: State | None = self.hass_api.get_state(person_id)
+                    if tracker is None:
+                        person_config.state = None
+                    elif isinstance(tracker.state, str):
+                        person_config.state = tracker.state
+                    else:
+                        _LOGGER.warning("SUPERNOTIFY Unexpected state %s for %s", tracker.state, person_id)
+                except Exception as e:
+                    _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person_id, e)
 
     def determine_occupancy(self) -> dict[str, list[Recipient]]:
         results: dict[str, list[Recipient]] = {STATE_HOME: [], STATE_NOT_HOME: []}
         self.refresh_tracker_state()
         for person_config in self.people.values():
-            if person_config.state in (None, STATE_HOME):
-                # default to at home if unknown tracker
-                results[STATE_HOME].append(person_config)
-            else:
-                results[STATE_NOT_HOME].append(person_config)
+            if person_config.enabled:
+                if person_config.state in (None, STATE_HOME):
+                    # default to at home if unknown tracker
+                    results[STATE_HOME].append(person_config)
+                else:
+                    results[STATE_NOT_HOME].append(person_config)
         return results
 
     def mobile_devices_for_person(self, person_entity_id: str, validate_targets: bool = False) -> list[dict[str, Any]]:

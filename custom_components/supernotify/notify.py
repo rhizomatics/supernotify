@@ -622,7 +622,7 @@ class SupernotifyAction(BaseNotificationService):
         event_name = event.data.get(ATTR_ACTION)
         if event_name is None or not event_name.startswith("SUPERNOTIFY_"):
             return  # event not intended for here
-        self.context.snoozer.handle_command_event(event, self.context.people_registry.people)
+        self.context.snoozer.handle_command_event(event, self.context.people_registry.enabled_recipients())
 
     @callback
     async def async_nightly_tasks(self, now: dt.datetime) -> None:

@@ -15,7 +15,7 @@ from . import (
 )
 from .delivery import Delivery
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
-from .people import PeopleRegistry
+from .people import PeopleRegistry, Recipient
 
 SNOOZE_TIME = timedelta(hours=1)  # TODO: move to configuration
 _LOGGER = logging.getLogger(__name__)
@@ -89,8 +89,8 @@ class Snoozer:
         self.snoozes: dict[str, Snooze] = {}
         self.people_registry: PeopleRegistry | None = people_registry
 
-    def handle_command_event(self, event: Event, people: dict[str, Any] | None = None) -> None:
-        people = people or {}
+    def handle_command_event(self, event: Event, people: list[Recipient] | None = None) -> None:
+        people = people or []
         try:
             cmd: CommandType
             target_type: TargetType | None = None
@@ -142,7 +142,7 @@ class Snoozer:
             if recipient_type == RecipientType.USER:
                 target_people = [
                     p.entity_id
-                    for p in people.values()
+                    for p in people
                     if p.user_id == event.context.user_id and event.context.user_id is not None and p.entity_id
                 ]
                 if target_people:
