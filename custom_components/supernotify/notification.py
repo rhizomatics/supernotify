@@ -142,12 +142,13 @@ class Notification(ArchivableObject):
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
                 _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as implicit for type %s", self.delivery_overrides_type)
 
+        self.occupancy: dict[str, list[Recipient]] = self.people_registry.determine_occupancy()
         self.condition_variables = ConditionVariables(
             self.applied_scenario_names,
             self.required_scenario_names,
             self.constrain_scenario_names,
             self.priority,
-            self.people_registry.determine_occupancy(),
+            self.occupancy,
             self._message,
             self._title,
         )  # requires occupancy first
@@ -434,6 +435,8 @@ class Notification(ArchivableObject):
             sanitized["selected"] = sanitized["selected"].as_dict()
         if sanitized["condition_variables"]:
             sanitized["condition_variables"] = sanitized["condition_variables"].as_dict()
+        if sanitized["occupancy"]:
+            sanitized["occupancy"] = {k: [v.as_dict() for v in vs] for k, vs in sanitized["occupancy"].items()}
 
         if self.debug_trace:
             sanitized["debug_trace"] = self.debug_trace.contents()

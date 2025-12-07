@@ -1,5 +1,3 @@
-
-
 from homeassistant.components import person
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
@@ -11,13 +9,10 @@ from .hass_setup_lib import TestingContext, register_mobile_app
 
 
 async def test_people_registry_finds_people(hass: HomeAssistant) -> None:
-    ctx = TestingContext(
-        homeassistant=hass,
-        components={"person": {}}
-     )
+    ctx = TestingContext(homeassistant=hass, components={"person": {}})
     await ctx.test_initialize()
-    await person.async_create_person(hass, 'Joe McTest')
-    await person.async_create_person(hass, 'Mae McTest')
+    await person.async_create_person(hass, "Joe McTest")
+    await person.async_create_person(hass, "Mae McTest")
 
     uut = PeopleRegistry([], ctx.hass_api)
     # only hass_api required, not initialized people registry
@@ -55,13 +50,10 @@ def test_autoresolve_mobile_devices_for_devices(
 
 
 async def test_filter_recipients(hass: HomeAssistant) -> None:
-    ctx = TestingContext(
-        homeassistant=hass,
-        components={"person": {}}
-     )
+    ctx = TestingContext(homeassistant=hass, components={"person": {}})
     await ctx.test_initialize()
-    await person.async_create_person(hass, 'Joe McTest')
-    await person.async_create_person(hass, 'Mae McTest')
+    await person.async_create_person(hass, "Joe McTest")
+    await person.async_create_person(hass, "Mae McTest")
     await hass.async_block_till_done()
     hass.states.async_set("person.joe_mctest", "home")
     hass.states.async_set("person.mae_mctest", "not_home")

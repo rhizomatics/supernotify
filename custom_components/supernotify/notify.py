@@ -72,7 +72,7 @@ from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
 from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
-from .people import PeopleRegistry
+from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
 from .snoozer import Snoozer
 from .transports.alexa_devices import AlexaDevicesTransport
@@ -567,15 +567,16 @@ class SupernotifyAction(BaseNotificationService):
         return self.context.scenario_registry.delivery_by_scenario
 
     async def enquire_occupancy(self) -> dict[str, list[dict[str, Any]]]:
-        return self.context.people_registry.determine_occupancy()
+        occupancy = self.context.people_registry.determine_occupancy()
+        return {k: [v.as_dict() for v in vs] for k, vs in occupancy.items()}
 
     async def enquire_active_scenarios(self) -> list[str]:
-        occupiers: dict[str, list[dict[str, Any]]] = self.context.people_registry.determine_occupancy()
+        occupiers: dict[str, list[Recipient]] = self.context.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
         return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(cvars)]
 
     async def trace_active_scenarios(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
-        occupiers: dict[str, list[dict[str, Any]]] = self.context.people_registry.determine_occupancy()
+        occupiers: dict[str, list[Recipient]] = self.context.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
 
         def safe_json(v: Any) -> Any:

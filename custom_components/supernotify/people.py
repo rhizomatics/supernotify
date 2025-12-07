@@ -48,7 +48,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Recipient:
-    '''Recipient to distinguish from the native HA Person'''
+    """Recipient to distinguish from the native HA Person"""
 
     def __init__(self, config: dict[str, Any] | None) -> None:
         config = config or {}
@@ -59,16 +59,13 @@ class Recipient:
         self.user_id: str | None = config.get(ATTR_USER_ID)
         self.state: str | None = config.get(ATTR_STATE)
 
-        self.target: Target = Target(config.get(
-            CONF_TARGET, {}), target_data=config.get(CONF_DATA))
+        self.target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
         self.delivery: dict[str, DeliveryCustomization] = {
-            k: DeliveryCustomization(v) for k, v in config.get(CONF_DELIVERY, {}).items()}
-        self.mobile_devices: list[dict[str, Any]] = {}
+            k: DeliveryCustomization(v) for k, v in config.get(CONF_DELIVERY, {}).items()
+        }
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, True)
-        self.target: Target
-        self.mobile_devices: list[dict[str, Any]
-                                  ] = config.get(CONF_MOBILE_DEVICES) or []
+        self.mobile_devices: list[dict[str, Any]] = config.get(CONF_MOBILE_DEVICES) or []
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
 
@@ -78,22 +75,18 @@ class Recipient:
         if self.phone_number:
             self.target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
-            discovered_devices: list[dict[str, Any]] = people_registry.mobile_devices_for_person(
-                self.entity_id)
+            discovered_devices: list[dict[str, Any]] = people_registry.mobile_devices_for_person(self.entity_id)
             self.mobile_devices.extend(discovered_devices)
             if discovered_devices:
-                _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s",
-                             self.entity_id, discovered_devices)
+                _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", self.entity_id, discovered_devices)
             else:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
+                _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:
-            self.target.extend(ATTR_MOBILE_APP_ID, [
-                               d[CONF_MOBILE_APP_ID] for d in self.mobile_devices])
+            self.target.extend(ATTR_MOBILE_APP_ID, [d[CONF_MOBILE_APP_ID] for d in self.mobile_devices])
         if not self.user_id:
-            state: State | None = people_registry.person_state(self.entity_id)
-            if state is not None and state.attributes.get(ATTR_USER_ID):
-                self.user_id = state.attributes.get(ATTR_USER_ID)
+            attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
+            if attrs and attrs.get(ATTR_USER_ID) and isinstance(attrs.get(ATTR_USER_ID), str):
+                self.user_id = attrs.get(ATTR_USER_ID)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -107,15 +100,12 @@ class Recipient:
             CONF_MOBILE_DISCOVERY: self.mobile_discovery,
             CONF_MOBILE_DEVICES: self.mobile_devices,
             CONF_TARGET: self.target.as_dict() if self.target else None,
-            CONF_DELIVERY: {
-                d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None
+            CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
         }
 
 
 class PeopleRegistry:
-    def __init__(self, recipients: list[dict[str, Any]],
-                 hass_api: HomeAssistantAPI,
-                 discover: bool = False) -> None:
+    def __init__(self, recipients: list[dict[str, Any]], hass_api: HomeAssistantAPI, discover: bool = False) -> None:
         self.hass_api = hass_api
         self.people: dict[str, Recipient] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
@@ -128,20 +118,16 @@ class PeopleRegistry:
         if self.discover:
             entity_ids = self.find_people()
             if entity_ids:
-                recipients = {entity_id: {CONF_PERSON: entity_id}
-                              for entity_id in entity_ids}
-                _LOGGER.info(
-                    "SUPERNOTIFY Auto-discovered people: %s", entity_ids)
+                recipients = {entity_id: {CONF_PERSON: entity_id} for entity_id in entity_ids}
+                _LOGGER.info("SUPERNOTIFY Auto-discovered people: %s", entity_ids)
 
         for r in self._recipients:
             if CONF_PERSON not in r or not r[CONF_PERSON]:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Skipping invalid recipient with no 'person' key:%s", r)
+                _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with no 'person' key:%s", r)
                 continue
             person_id = r[CONF_PERSON]
             if person_id in recipients:
-                _LOGGER.debug(
-                    "SUPERNOTIFY Overriding %s entity defaults from recipient config", person_id)
+                _LOGGER.debug("SUPERNOTIFY Overriding %s entity defaults from recipient config", person_id)
                 recipients[person_id].update(r)
             else:
                 recipients[person_id] = r
@@ -152,10 +138,13 @@ class PeopleRegistry:
 
             self.people[recipient.entity_id] = recipient
 
-    def person_state(self, entity_id: str) -> str | None:
-        return self.hass_api.get_state(entity_id)
+    def person_attributes(self, entity_id: str) -> dict[str, Any] | None:
+        state: State | None = self.hass_api.get_state(entity_id)
+        if state is not None and state.attributes:
+            return state.attributes
+        return None
 
-    def find_people(self) -> list[dict[str, Any]]:
+    def find_people(self) -> list[str]:
         return self.hass_api.entity_ids_for_domain(PERSON_DOMAIN)
 
     def filter_people_by_occupancy(self, delivery_occupancy: str) -> list[Recipient]:
@@ -183,26 +172,25 @@ class PeopleRegistry:
         if delivery_occupancy == OCCUPANCY_ONLY_OUT:
             return away
 
-        _LOGGER.warning(
-            "SUPERNOTIFY Unknown occupancy tested: %s", delivery_occupancy)
+        _LOGGER.warning("SUPERNOTIFY Unknown occupancy tested: %s", delivery_occupancy)
         return []
 
     def refresh_tracker_state(self) -> None:
-        for person, person_config in self.people.items():
+        for person_id, person_config in self.people.items():
             # TODO: possibly rate limit this
             try:
-                tracker: State | None = self.hass_api.get_state(person)
+                tracker: State | None = self.hass_api.get_state(person_id)
                 if tracker is None:
                     person_config.state = None
-                else:
+                elif isinstance(tracker.state, str):
                     person_config.state = tracker.state
+                else:
+                    _LOGGER.warning("SUPERNOTIFY Unexpected state %s for %s", tracker.state, person_id)
             except Exception as e:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to determine occupied status for %s: %s", person, e)
+                _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person_id, e)
 
     def determine_occupancy(self) -> dict[str, list[Recipient]]:
-        results: dict[str, list[dict[str, Any]]] = {
-            STATE_HOME: [], STATE_NOT_HOME: []}
+        results: dict[str, list[Recipient]] = {STATE_HOME: [], STATE_NOT_HOME: []}
         self.refresh_tracker_state()
         for person_config in self.people.values():
             if person_config.state in (None, STATE_HOME):
@@ -232,36 +220,29 @@ class PeopleRegistry:
         try:
             person_state = self.hass_api.get_state(person_entity_id)
             if not person_state:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to resolve %s", person_entity_id)
+                _LOGGER.warning("SUPERNOTIFY Unable to resolve %s", person_entity_id)
             else:
-                device_trackers = person_state.attributes.get(
-                    "device_trackers", [])
-                _LOGGER.debug("SUPERNOTIFY Found device trackers for %s:%s",
-                              person_entity_id, ",".join(device_trackers))
+                device_trackers = person_state.attributes.get("device_trackers", [])
+                _LOGGER.debug("SUPERNOTIFY Found device trackers for %s:%s", person_entity_id, ",".join(device_trackers))
         except Exception as e:
             device_trackers = None
-            _LOGGER.warning(
-                "SUPERNOTIFY Device_trackers data can't be retrieved for %s: %s", person_entity_id, e)
+            _LOGGER.warning("SUPERNOTIFY Device_trackers data can't be retrieved for %s: %s", person_entity_id, e)
         if device_trackers:
             ent_reg: EntityRegistry | None = self.hass_api.entity_registry()
             dev_reg: DeviceRegistry | None = self.hass_api.device_registry()
             if not ent_reg or not dev_reg:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to access entity or device registries for %s", person_entity_id)
+                _LOGGER.warning("SUPERNOTIFY Unable to access entity or device registries for %s", person_entity_id)
             else:
                 for d_t in device_trackers:
                     entity = ent_reg.async_get(d_t)
                     if entity and entity.platform == "mobile_app" and entity.device_id:
                         device = dev_reg.async_get(entity.device_id)
                         if not device:
-                            _LOGGER.warning(
-                                "SUPERNOTIFY Unable to find device %s", entity.device_id)
+                            _LOGGER.warning("SUPERNOTIFY Unable to find device %s", entity.device_id)
                         else:
                             mobile_app_id = f"mobile_app_{slugify(device.name)}"
                             if validate_targets and not self.hass_api.has_service("notify", mobile_app_id):
-                                _LOGGER.warning(
-                                    "SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
+                                _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
                             else:
                                 mobile_devices.append({
                                     CONF_MANUFACTURER: device.manufacturer,
@@ -273,7 +254,6 @@ class PeopleRegistry:
                                     # CONF_DEVICE_LABELS: device.labels,
                                 })
                     else:
-                        _LOGGER.debug(
-                            "SUPERNOTIFY Ignoring device tracker %s", d_t)
+                        _LOGGER.debug("SUPERNOTIFY Ignoring device tracker %s", d_t)
 
         return mobile_devices
