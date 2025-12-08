@@ -117,6 +117,22 @@ notify:
     housekeeping:
       media_storage_days: 3
 ```
+There's also an action, `purge_media`, to run this on demand, with a configurable number of expiry days.
+
+## Browse Snapshots via Home Assistant
+
+The [Media Source](https://www.home-assistant.io/integrations/media_source/) integration can be configured
+to include the Supernotify media directory, so snapshots used for e-mail, mobile push etc can be viewed via
+the Home Assistant UI. This integration is switched on as part of the Home Assistant default configuration
+so all you need is to declare the `media_dirs`, like this:
+
+```yaml
+homeassistant:
+  name: My Lovely House
+  media_dirs:
+    supernotify: /config/media/supernotify
+```
+
 ## Controlling Image Reprocessing
 
 If you don't want to have images reprocessed, perhaps for performance or other reasons, then use this configuration
