@@ -5,7 +5,7 @@ tags:
 ---
 # YAML
 
-By default, configuration lives in `config.yaml`, under a `notify` section. 
+By default, configuration lives in `config.yaml`, under a `notify` section.
 
 ## Naming the Integration
 
