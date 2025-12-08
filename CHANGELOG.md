@@ -18,6 +18,7 @@
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
 - Dicts for person and delivery customization now replaced by typed classes for type safety and easier refactoring / testing
+- Refactored out common image handling code for all 3 grab methods
 
 ## 1.4.0
 ### Features
