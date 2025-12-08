@@ -11,6 +11,7 @@ tags:
   - camera
   - frigate
   - onvif
+  - jpeg
 ---
 # Images, Streaming and Cameras
 

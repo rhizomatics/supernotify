@@ -1,3 +1,12 @@
+---
+tags:
+  - housekeeping
+  - action
+  - debugging
+  - service
+  - administration
+description: Actions ( aka services ) exposed by Supernotify for administration, debugging or plain curiosity 
+---
 # Actions
 
 !!! note

@@ -1,3 +1,11 @@
+---
+tags:
+  - smtp
+  - email
+  - google mail
+  - aws ses
+  - action
+---
 # e-Mail Notifications
 
 ## Configuration

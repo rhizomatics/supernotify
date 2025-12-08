@@ -1,3 +1,12 @@
+---
+tags:
+  - example
+  - action
+  - automation
+  - target
+  - notifcation
+description: How to send notifications using Supernotify from automations or the Home Assistant app
+---
 # Sending Notifications
 
 From an automation, call Supernotify as you would any other `notify` platform. For many cases, you can convert an existing notification call to Supernotify by only changing the `action` name, for example if its an email notification, mobile push action or `notify.send_message`.
