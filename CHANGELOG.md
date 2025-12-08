@@ -14,7 +14,7 @@
 - `png_opts` now available for images, pre-set for email to `optimize: true`
 - Camera snapshot now fixes/optimizes images like URL snapshot and Image Entity already do
 - Media now has a `reprocess` option to switch off image rewriting, or preserve original metadata, incl comments
-- Automatic housekeeping to purge images from `media_dir`
+- Automatic housekeeping to purge images from `media_dir`, configurable by `media_storage_days` in `housekeeping`
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
