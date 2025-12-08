@@ -425,7 +425,7 @@ class MediaStorage:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
 
     async def size(self) -> int:
-        path: anyio.Path = self.media_path
+        path: anyio.Path | None = self.media_path
         if path and await path.exists():
             return sum(1 for p in await aiofiles.os.listdir(path))
         return 0
