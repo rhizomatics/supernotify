@@ -424,6 +424,12 @@ class MediaStorage:
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
 
+    async def size(self) -> int:
+        path: anyio.Path = self.media_path
+        if path and await path.exists():
+            return sum(1 for p in await aiofiles.os.listdir(path))
+        return 0
+
     async def cleanup(self, days: int | None = None, force: bool = False) -> int:
         if (
             not force

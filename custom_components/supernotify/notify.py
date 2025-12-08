@@ -222,6 +222,19 @@ async def async_get_service(
             "days": service.context.archive.archive_days if days is None else days,
         }
 
+    async def supplemental_action_purge_media(call: ServiceCall) -> dict[str, Any]:
+        days = call.data.get("days")
+        if not service.context.media_storage.media_path:
+            return {"error": "No media storage configured"}
+        purged = await service.context.media_storage.cleanup(days=days, force=True)
+        size = await service.context.media_storage.size()
+        return {
+            "purged": purged,
+            "remaining": size,
+            "interval": service.context.media_storage.purge_minute_interval,
+            "days": service.context.media_storage.days if days is None else days,
+        }
+
     hass.services.async_register(
         DOMAIN,
         "enquire_implicit_deliveries",
@@ -280,6 +293,12 @@ async def async_get_service(
         DOMAIN,
         "purge_archive",
         supplemental_action_purge_archive,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "purge_media",
+        supplemental_action_purge_media,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

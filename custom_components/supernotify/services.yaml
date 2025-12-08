@@ -13,6 +13,15 @@ enquire_occupancy:
 enquire_snoozes:
 refresh_entities:
 clear_snoozes:
+purge_media:
+  fields:
+    days:
+      required: false
+      example: 5
+      selector:
+        number:
+          min: 0
+          unit_of_measurement: days
 purge_archive:
   fields:
     days:
