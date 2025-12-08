@@ -136,7 +136,6 @@ ignore = [
     "C901",
     "FURB113",
     "PGH003",
-    "ANN101",
     "S602",
     "S607",
 ] # subprocess usage

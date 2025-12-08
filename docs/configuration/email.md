@@ -49,10 +49,10 @@ The `recipient` field is a mandatory field. Not recommended, other than as a bac
           - billy@weeschool.edu
 ```
 
-### Supernotify Recipient 
+### Supernotify Recipient
 
-This has the advantage that e-mail addresses can be defined in one place, and you can send targetted
-email notifications in automations by using the `person` entity instead. 
+This has the advantage that e-mail addresses can be defined in one place, and you can send targeted
+email notifications in automations by using the `person` entity instead.
 
 ```yaml title="Supernotify Config"
 - name: Supernotify
@@ -100,4 +100,3 @@ In this example, the username and password live separately in the `secrets.yaml`
 ### Google Mail
 
 See the [Home Assistant Example](https://www.home-assistant.io/integrations/smtp/#google-mail)
-

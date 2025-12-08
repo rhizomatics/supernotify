@@ -29,6 +29,7 @@ from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.media_grab import MediaStorage
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.snoozer import Snoozer
@@ -155,6 +156,8 @@ def mock_context(
     context.scenario_registry = mock_scenario_registry
     context.people_registry = mock_people_registry
     context.delivery_registry = mock_delivery_registry
+    context.media_storage = Mock()
+    context.media_storage.media_path = tmp_path / "media"
     context.hass_api = mock_hass_api
     context.cameras = {}
     context.snoozer = Snoozer()
@@ -162,7 +165,6 @@ def mock_context(
     context.mobile_actions = {}
     context.hass_api.internal_url = "http://hass-dev"
     context.hass_api.external_url = "http://hass-dev.nabu.casa"
-    context.media_path = tmp_path / "media"
     context.template_path = tmp_path / "templates"
 
     mock_delivery_registry.deliveries = {
@@ -230,14 +232,13 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
 
 
 @pytest.fixture
-def uninitialized_unmocked_config(
-    mock_hass_api: HomeAssistantAPI,
-) -> Context:
+def uninitialized_unmocked_config(mock_hass_api: HomeAssistantAPI, tmp_path) -> Context:
     people_registry = PeopleRegistry([], mock_hass_api)
     scenario_registry = ScenarioRegistry({})
     delivery_registry = DeliveryRegistry({})
+    media_storage = MediaStorage(tmp_path / "media", 1)
     archive = NotificationArchive({}, mock_hass_api)
-    return Context(mock_hass_api, people_registry, scenario_registry, delivery_registry, archive, Snoozer())
+    return Context(mock_hass_api, people_registry, scenario_registry, delivery_registry, archive, media_storage, Snoozer())
 
 
 @pytest.fixture

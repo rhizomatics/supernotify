@@ -34,6 +34,7 @@ from custom_components.supernotify import (
     CONF_DELIVERY,
     CONF_LINKS,
     CONF_MEDIA_PATH,
+    CONF_MEDIA_STORAGE_DAYS,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
     CONF_TEMPLATE_PATH,
@@ -45,6 +46,7 @@ from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.media_grab import MediaStorage
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
@@ -87,6 +89,7 @@ class TestingContext(Context):
         homeassistant: HomeAssistant | None = None,
         services: dict[str, list[str]] | None = None,
         components: dict[str, dict[str, Any]] | None = None,
+        media_path: Path | None = None,
         template_path: Path | None = None,
         **kwargs: Any,
     ) -> None:
@@ -116,6 +119,8 @@ class TestingContext(Context):
             raw_config[CONF_ARCHIVE] = archive_config
         if template_path:
             raw_config[CONF_TEMPLATE_PATH] = str(template_path)
+        if media_path:
+            raw_config[CONF_MEDIA_PATH] = str(media_path)
         if transport_instances:
             TRANSPORT_VALUES.extend([t.name for t in transport_instances])
 
@@ -161,6 +166,7 @@ class TestingContext(Context):
         people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
         scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {})
         archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)
+        media_storage = MediaStorage(self.config.get(CONF_MEDIA_PATH), self.config.get(CONF_MEDIA_STORAGE_DAYS, 7))
 
         if not transport_instances:
             transport_types = transport_types or TRANSPORTS
@@ -178,13 +184,13 @@ class TestingContext(Context):
             scenario_registry,
             delivery_registry,
             archive,
+            media_storage,
             Snoozer(),
             links=self.config.get(CONF_LINKS),
             recipients=self.config.get(CONF_RECIPIENTS),
             mobile_actions=self.config.get(CONF_ACTION_GROUPS),
             cameras=self.config.get(CONF_CAMERAS),
             template_path=self.config.get(CONF_TEMPLATE_PATH),
-            media_path=self.config.get(CONF_MEDIA_PATH),
             **kwargs,
         )
 
@@ -196,6 +202,8 @@ class TestingContext(Context):
         if self.hass_external_url:
             self.hass_api.external_url = self.hass_external_url
         self.people_registry.initialize()
+        await self.archive.initialize()
+        await self.media_storage.initialize(self.hass_api)
         await self.delivery_registry.initialize(self)
         await self.scenario_registry.initialize(
             self.delivery_registry.deliveries, self.delivery_registry.implicit_deliveries, self.mobile_actions, self.hass_api

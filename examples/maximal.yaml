@@ -12,6 +12,9 @@ notify:
       mqtt_topic: notifications/supernotify
       mqtt_qos: 1
       mqtt_retain: False
+    housekeeping:
+      media_storage_days: 7
+      housekeeping_time: 00:00:00
     delivery:
       html_email:
         transport: email

@@ -44,7 +44,7 @@ async def test_snapshot_url_with_abs_path(
 
     snapshot_url = local_server.url_for("/snapshot_image")
     local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
-    retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", media_path, None)
+    retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", anyio.Path(media_path), None)
 
     assert retrieved_image_path is not None
     retrieved_image = Image.open(retrieved_image_path)
@@ -67,7 +67,7 @@ async def test_snapshot_url_with_opts(
         hass,
         snapshot_url,
         "notify-uuid-1",
-        media_path,
+        anyio.Path(media_path),
         None,
         jpeg_opts={"quality": 30, "progressive": True, "optimize": True, "comment": "changed by test"},
         png_opts={"quality": 30, "dpi": (60, 90), "optimize": True, "comment": "changed by test"},
@@ -89,7 +89,7 @@ async def test_snapshot_url_with_opts(
 async def test_snapshot_url_with_broken_url(hass: HomeAssistant, tmp_path: Path) -> None:
     media_path: Path = tmp_path / "media"
     snapshot_url = "http://no-such-domain.local:9494/snapshot_image_hass"
-    retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", media_path, None)
+    retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", anyio.Path(media_path), None)
     assert retrieved_image_path is None
 
 
@@ -117,7 +117,13 @@ async def test_snap_camera(hass, reprocess: ReprocessOption, tmp_path: Path) -> 
         del jpeg_opts["comment"]
 
     image_path: Path | None = await snap_camera(
-        hass, "camera.xunit", "notify-uuid-1", media_path=tmp_path, max_camera_wait=1, reprocess=reprocess, jpeg_opts=jpeg_opts
+        hass,
+        "camera.xunit",
+        "notify-uuid-1",
+        media_path=anyio.Path(tmp_path),
+        max_camera_wait=1,
+        reprocess=reprocess,
+        jpeg_opts=jpeg_opts,
     )
     assert called_entity == "camera.xunit"
     assert image_path is not None
@@ -140,7 +146,9 @@ async def test_snap_image_entity(mock_context: Context, sample_image: TestImage,
         mock_context.hass_api._hass.data["image"] = Mock(spec=EntityComponent)
         mock_context.hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)
 
-    snap_image_path = await snap_image_entity(mock_context, "image.testing", media_path=tmp_path, notification_id="notify_001")
+    snap_image_path = await snap_image_entity(
+        mock_context, "image.testing", media_path=anyio.Path(tmp_path), notification_id="notify_001"
+    )
     assert snap_image_path is not None
     retrieved_image = Image.open(snap_image_path)
 

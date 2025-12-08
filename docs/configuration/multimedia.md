@@ -90,7 +90,7 @@ These options can be set in the `delivery` or `transport` configuration, or in t
                       quality: 50
 ```
 
-### Cameras
+## Cameras
 
 Use this for additional camera info:
 
@@ -104,6 +104,19 @@ Use this for additional camera info:
     * Note that ONVIF may have numeric reference for presets while Frigate uses labels
 * Configuration documentation for [Camera Schema](../developer/schemas/Camera_Definition.md).
 
+## Purging
+
+The media storage directory can grow, so a regular job will purge images older than so many days.
+
+If you want to change the defaults, do this, or set to `0` to switch off
+
+```yaml
+notify:
+  - name: Supernotify
+    platform: supernotify
+    housekeeping:
+      media_storage_days: 3
+```
 ## Controlling Image Reprocessing
 
 If you don't want to have images reprocessed, perhaps for performance or other reasons, then use this configuration

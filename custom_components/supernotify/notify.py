@@ -53,6 +53,7 @@ from . import (
     CONF_HOUSEKEEPING_TIME,
     CONF_LINKS,
     CONF_MEDIA_PATH,
+    CONF_MEDIA_STORAGE_DAYS,
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
@@ -71,6 +72,7 @@ from .archive import NotificationArchive
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
+from .media_grab import MediaStorage
 from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
@@ -347,12 +349,12 @@ class SupernotifyAction(BaseNotificationService):
             ScenarioRegistry(scenarios or {}),
             DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
             NotificationArchive(archive or {}, hass_api),
+            MediaStorage(media_path, self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7)),
             Snoozer(),
             links or [],
             recipients or [],
             mobile_actions,
             template_path,
-            media_path,
             cameras=cameras,
         )
 
@@ -376,6 +378,7 @@ class SupernotifyAction(BaseNotificationService):
             self.context.hass_api,
         )
         await self.context.archive.initialize()
+        await self.context.media_storage.initialize(self.context.hass_api)
 
         self.expose_entities()
         self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
@@ -655,4 +658,5 @@ class SupernotifyAction(BaseNotificationService):
         _LOGGER.info("SUPERNOTIFY Housekeeping starting as scheduled at %s", now)
         await self.context.archive.cleanup()
         self.context.snoozer.purge_snoozes()
+        await self.context.media_storage.cleanup()
         _LOGGER.info("SUPERNOTIFY Housekeeping completed")

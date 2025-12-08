@@ -4,7 +4,7 @@ tags:
   - action
   - automation
   - target
-  - notifcation
+  - notification
 description: How to send notifications using Supernotify from automations or the Home Assistant app
 ---
 # Sending Notifications

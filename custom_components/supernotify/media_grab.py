@@ -1,4 +1,5 @@
 import asyncio
+import datetime as dt
 import io
 import logging
 import time
@@ -9,7 +10,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import aiofiles
+import aiofiles.os
 import anyio
+import homeassistant.util.dt as dt_util
 from aiohttp import ClientTimeout
 from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
@@ -38,6 +41,7 @@ from custom_components.supernotify import (
 )
 
 from .context import Context
+from .hass_api import HomeAssistantAPI
 
 if TYPE_CHECKING:
     from homeassistant.components.image import ImageEntity
@@ -55,7 +59,7 @@ async def snapshot_from_url(
     hass: HomeAssistant | None,
     snapshot_url: str,
     notification_id: str,
-    media_path: Path,
+    media_path: anyio.Path,
     hass_base_url: str | None,
     remote_timeout: int = 15,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
@@ -125,7 +129,7 @@ async def move_camera_to_ptz_preset(
 async def snap_image_entity(
     context: Context,
     entity_id: str,
-    media_path: Path,
+    media_path: anyio.Path,
     notification_id: str,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
     jpeg_opts: dict[str, Any] | None = None,
@@ -154,7 +158,7 @@ async def snap_camera(
     hass: HomeAssistant,
     camera_entity_id: str,
     notification_id: str,
-    media_path: Path,
+    media_path: anyio.Path,
     max_camera_wait: int = 20,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
     jpeg_opts: dict[str, Any] | None = None,
@@ -259,6 +263,9 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         notification.media.get(MEDIA_OPTION_REPROCESS, delivery_config.get(CONF_OPTIONS, {}).get(MEDIA_OPTION_REPROCESS))
         or "always"
     )
+    media_path: anyio.Path | None = context.media_storage.media_path
+    if not media_path:
+        return None
 
     reprocess: ReprocessOption = ReprocessOption.ALWAYS
     try:
@@ -272,29 +279,29 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
     image_path: Path | None = None
     if notification.snapshot_image_path is not None:
         return notification.snapshot_image_path  # type: ignore
-    if snapshot_url and context.media_path and context.hass_api:
+    if snapshot_url and media_path and context.hass_api:
         image_path = await snapshot_from_url(
             context.hass_api._hass,
             snapshot_url,
             notification.id,
-            context.media_path,
+            media_path,
             context.hass_api.internal_url,
             reprocess=reprocess,
             jpeg_opts=jpeg_opts,
             png_opts=png_opts,
         )
-    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass_api._hass and context.media_path:
+    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass_api._hass and media_path:
         image_path = await snap_image_entity(
             context,
             camera_entity_id,
-            context.media_path,
+            media_path,
             notification.id,
             reprocess=reprocess,
             jpeg_opts=jpeg_opts,
             png_opts=png_opts,
         )
     elif camera_entity_id:
-        if not context.hass_api._hass or not context.media_path:
+        if not context.hass_api._hass or not media_path:
             _LOGGER.warning("SUPERNOTIFY No HA ref or media path for camera %s", camera_entity_id)
             return None
         active_camera_entity_id = select_avail_camera(context.hass_api._hass, context.cameras, camera_entity_id)
@@ -323,7 +330,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
                 active_camera_entity_id,
                 notification.id,
                 reprocess=reprocess,
-                media_path=context.media_path,
+                media_path=media_path,
                 max_camera_wait=15,
                 jpeg_opts=jpeg_opts,
                 png_opts=png_opts,
@@ -343,7 +350,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
 
 async def write_image_from_bitmap(
     bitmap: bytes | None,
-    media_path: Path,
+    media_path: anyio.Path,
     notification_id: str,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
     output_format: str | None = None,
@@ -391,3 +398,58 @@ async def write_image_from_bitmap(
         _LOGGER.exception("SUPERNOTIFY Failure saving %s bitmap", input_format)
         image_path = None
     return image_path
+
+
+class MediaStorage:
+    def __init__(self, media_path: str | None, days: int = 7) -> None:
+        self.media_path: anyio.Path | None = anyio.Path(media_path) if media_path else None
+        self.last_purge: dt.datetime | None = None
+        self.purge_minute_interval = 60 * 6
+        self.days = days
+
+    async def initialize(self, hass_api: HomeAssistantAPI) -> None:
+        if self.media_path and not await self.media_path.exists():
+            _LOGGER.info("SUPERNOTIFY media path not found at %s", self.media_path)
+            try:
+                await self.media_path.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                _LOGGER.warning("SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
+                hass_api.raise_issue(
+                    "media_path",
+                    "media_path",
+                    {"path": str(self.media_path), "error": str(e)},
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/#getting-started",
+                )
+                self.media_path = None
+        if self.media_path is not None:
+            _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
+
+    async def cleanup(self, days: int | None = None, force: bool = False) -> int:
+        if (
+            not force
+            and self.last_purge is not None
+            and self.last_purge > dt.datetime.now(dt.UTC) - dt.timedelta(minutes=self.purge_minute_interval)
+        ):
+            return 0
+        days = days or self.days
+        if days == 0 or self.media_path is None:
+            return 0
+
+        cutoff = dt.datetime.now(dt.UTC) - dt.timedelta(days=days)
+        cutoff = cutoff.astimezone(dt.UTC)
+        purged = 0
+        if self.media_path and await self.media_path.exists():
+            try:
+                archive = await aiofiles.os.scandir(self.media_path)
+                for entry in archive:
+                    if dt_util.utc_from_timestamp(entry.stat().st_ctime) <= cutoff:
+                        _LOGGER.debug("SUPERNOTIFY Purging %s", entry.path)
+                        await aiofiles.os.unlink(Path(entry.path))
+                        purged += 1
+            except Exception as e:
+                _LOGGER.warning("SUPERNOTIFY Unable to clean up media storage at %s: %s", self.media_path, e, exc_info=True)
+            _LOGGER.info("SUPERNOTIFY Purged %s media storage for cutoff %s", purged, cutoff)
+            self.last_purge = dt.datetime.now(dt.UTC)
+        else:
+            _LOGGER.debug("SUPERNOTIFY Skipping media storage for unknown path %s", self.media_path)
+        return purged

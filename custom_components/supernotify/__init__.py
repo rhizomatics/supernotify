@@ -105,6 +105,7 @@ CONF_PTZ_PRESET_DEFAULT: str = "ptz_default_preset"
 CONF_ALT_CAMERA: str = "alt_camera"
 CONF_CAMERAS: str = "cameras"
 CONF_ARCHIVE_PURGE_INTERVAL: str = "purge_interval"
+CONF_MEDIA_STORAGE_DAYS = "media_storage_days"
 
 OCCUPANCY_ANY_IN = "any_in"
 OCCUPANCY_ANY_OUT = "any_out"
@@ -417,6 +418,7 @@ ARCHIVE_SCHEMA = vol.Schema({
 
 HOUSEKEEPING_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOUSEKEEPING_TIME, default="00:00:01"): cv.time,
+    vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=7): cv.positive_int,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
