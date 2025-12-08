@@ -1,4 +1,4 @@
-homeassistant==2025.11.1
+homeassistant==2025.11.3
 pillow
 cachetools
 bs4
