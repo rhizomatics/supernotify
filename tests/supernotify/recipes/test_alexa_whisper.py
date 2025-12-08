@@ -9,7 +9,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
     ctx = TestingContext(
         homeassistant=hass,
         yaml="""
-  name: SuperNotifier
+  name: Supernotify
   platform: supernotify
   delivery:
     plain_email:

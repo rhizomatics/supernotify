@@ -26,6 +26,8 @@ transports:
           progressive: true
           optimize: true
           quality: 50
+        png_opts:
+          optimize: true
 ```
 
 ### Table of Options
@@ -36,6 +38,7 @@ All of these set by passing an `options` block in Delivery config or Transport d
 |-------------------|------------|--------------------------------------------------------------|
 | chime_aliases     | chime      | Map tunes to device name or config                           |
 | jpeg_opts         | mail       | Tune image grabs                                             |
+| png_opts          | mail       | Tune image grabs                                             |
 | message_usage     | all        | Combine message and title, default title                     |
 | simplify_text     | all        | Remove some common symbols that can trip up voice assistants |
 | strip_urls        | all        | Remove URLs from message and title                           |

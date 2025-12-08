@@ -23,4 +23,3 @@ To use any of these, prefix with `supernotify.`. Try them out via [Developer Too
 | clear_snoozes                  | Clear all active snoozes                                                               |
 | purge_archive                  | Force the archive housekeeping to run immediately and remove old notification records  |
 | snooze                         | Snooze notifications for a delivery or target                                          |
-

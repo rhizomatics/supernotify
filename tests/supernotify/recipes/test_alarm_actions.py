@@ -11,7 +11,7 @@ async def fixture(hass: HomeAssistant):
     ctx = TestingContext(
         homeassistant=hass,
         yaml="""
-name: SuperNotifier
+name: Supernotify
 platform: supernotify
 recipients:
   - person: person.joe_mcphee

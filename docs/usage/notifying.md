@@ -1,10 +1,10 @@
-# Notifying
+# Sending Notifications
 
-From an automation, call Supernotify as you would any other `notify` platform. It can also be switched out directly
-from an email notification, mobile push action or `notify.send_message`.
+From an automation, call Supernotify as you would any other `notify` platform. For many cases, you can convert an existing notification call to Supernotify by only changing the `action` name, for example if its an email notification, mobile push action or `notify.send_message`.
 
-These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though
-you are free to name it however you like.
+!!! info
+    These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though
+    you are free to name it however you like.
 
 There are lots more examples in the [Recipes](../recipes/index.md), including how to make it work well
 with Frigate, AppDaemon and Alexa.
@@ -25,7 +25,7 @@ in Home Assistant.
 
 ## Adding Targets
 
-Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person.
+Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications.
 
 ```yaml title="Example Message to All Devices"
   - action: notify.supernotify
@@ -39,7 +39,7 @@ any e-mail addresses that have been configured for him in Supernotify's `recipie
 
 Its also possible to put the e-mail, mobile action, notify entity or similar directly into the target:
 
-```yaml title="Example Message to All Devices"
+```yaml title="Example Email Message"
   - action: notify.supernotify
     data:
         message: Something went off in the basement
@@ -60,7 +60,7 @@ is most convenient
   - action: notify.supernotify
     data:
         message: Something went off in the basement
-        target: 
+        target:
             email: john@mcdoe.co.bn
             phone_number: +4398708123987
             telegram: @bill
@@ -72,7 +72,7 @@ is most convenient
 ## Using from an Automation
 
 In this example, when an Actionable Notification is sent with action `Red Alert`, a notification
-is trigged in Supernotify using the `red_alert` scenario. In this case, the scenario uses
+is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses
 sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`
 
 ```yaml
@@ -112,6 +112,7 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
           plain_email:
             enabled: false
 ```
+### Automation and Templates
 
 Templates can be used freely, as in other `notify` integrations
 
@@ -135,7 +136,28 @@ Templates can be used freely, as in other `notify` integrations
         priority: high
 ```
 
+## Adding a Link to Mobile Push Notification
+
+```yaml title="More Advanced Action Call"
+  - action: notify.supernotify
+    data:
+        title: Security Notification
+        message: Garden sensor triggered
+        delivery:
+            mobile_push:
+                data:
+                    clickAction: https://my.home.net/dashboard
+
+```
+
+Note here that the `clickAction` is defined only on the `mobile_push` delivery. However
+it is also possible to simply define everything at the top level `data` section and let the individual
+transport adaptors pick out the attributes they need. This is helpful either if you don't care about
+fine tuning delivery configurations, or using existing notification blueprints, such as the popular
+[Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate%20Camera%20Notifications).
+
+
 ## References
 
 The full range of things that go into the second level `data:` section is documented at
-[Notify Action Data Schema](../developer/schemas/Notify_Action_Data)
+[Notify Action Data Schema](../developer/schemas/Notify_Action_Data.md)

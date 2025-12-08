@@ -10,6 +10,7 @@ from custom_components.supernotify import (
     CONF_TEMPLATE,
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
+    OPTION_PNG,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
@@ -63,6 +64,7 @@ class EmailTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_EMAIL],
             # use sensible defaults for image attachments
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
+            OPTION_PNG: {"optimize": "true"},
         }
         return config
 

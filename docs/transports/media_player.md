@@ -38,6 +38,7 @@ There are a few limitations and considerations with this use:
 - The image must be on an `https` URL with valid certificate.
 - The `image` value required by Alexa Media Player is not one of the recommended values in the Home Assistant documentation.
 
+
 ## References
 
 * [Set Echo Show Background](https://github.com/alandtse/alexa_media_player/wiki#set-echo-show-background) on Alexa Media Player Documentation

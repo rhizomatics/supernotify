@@ -100,7 +100,7 @@ class TestingContext(Context):
         raw_config: ConfigType
 
         raw_config = cast("dict[str, Any]", parse_yaml(yaml)) if yaml else {}
-        raw_config.setdefault("name", "SuperNotifier")
+        raw_config.setdefault("name", "Supernotify")
         raw_config.setdefault("platform", "supernotify")
         if deliveries:
             raw_config[CONF_DELIVERY] = deliveries

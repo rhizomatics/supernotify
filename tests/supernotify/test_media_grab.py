@@ -1,23 +1,32 @@
+import io
 from collections.abc import Callable
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock
 
+import aiofiles
+import anyio
 import pytest
 from homeassistant.const import STATE_HOME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from PIL import Image, ImageChops
 from pytest_httpserver import BlockingHTTPServer
 
-from conftest import TestImage
+from conftest import IMAGE_PATH, TestImage
 from custom_components.supernotify import PTZ_METHOD_FRIGATE
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.media_grab import (
+    ReprocessOption,
     grab_image,
     move_camera_to_ptz_preset,
     select_avail_camera,
     snap_camera,
-    snap_image,
+    snap_image_entity,
     snapshot_from_url,
 )
 from custom_components.supernotify.notification import Notification
@@ -47,7 +56,7 @@ async def test_snapshot_url_with_abs_path(
 
 
 @pytest.mark.enable_socket
-async def test_snapshot_url_with_jpeg_opts(
+async def test_snapshot_url_with_opts(
     hass: HomeAssistant, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
 ) -> None:
     media_path: Path = tmp_path / "media"
@@ -61,6 +70,7 @@ async def test_snapshot_url_with_jpeg_opts(
         media_path,
         None,
         jpeg_opts={"quality": 30, "progressive": True, "optimize": True, "comment": "changed by test"},
+        png_opts={"quality": 30, "dpi": (60, 90), "optimize": True, "comment": "changed by test"},
     )
     assert retrieved_image_path is not None
 
@@ -70,6 +80,10 @@ async def test_snapshot_url_with_jpeg_opts(
     if sample_image.ext == "jpeg":
         assert retrieved_image.info.get("comment") == b"changed by test"
         assert retrieved_image.info.get("progressive") == 1
+    elif sample_image.ext == "png":
+        assert retrieved_image.info.get("dpi") == pytest.approx((60, 90), rel=1e-4)
+    else:
+        assert retrieved_image.info.get("comment") is None
 
 
 async def test_snapshot_url_with_broken_url(hass: HomeAssistant, tmp_path: Path) -> None:
@@ -79,23 +93,54 @@ async def test_snapshot_url_with_broken_url(hass: HomeAssistant, tmp_path: Path)
     assert retrieved_image_path is None
 
 
-async def test_snap_camera(mock_hass, tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    argnames="reprocess", argvalues=[ReprocessOption.ALWAYS, ReprocessOption.NEVER, ReprocessOption.PRESERVE]
+)
+async def test_snap_camera(hass, reprocess: ReprocessOption, tmp_path: Path) -> None:
+    called_entity: str | None = None
+    fixture_image_path: Path = IMAGE_PATH / "example_image.jpeg"
 
-    image_path = await snap_camera(mock_hass, "camera.xunit", media_path=tmp_path, max_camera_wait=1)
-    assert image_path is not None
-    mock_hass.services.async_call.assert_awaited_once_with(
-        "camera", "snapshot", service_data={"entity_id": "camera.xunit", "filename": image_path}
+    async def dummy_snapshot(call: ServiceCall, **kwargs) -> ServiceResponse | None:
+        nonlocal called_entity
+        called_entity = call.data["entity_id"]
+        async with await anyio.Path(fixture_image_path).open("rb") as f:
+            image = Image.open(io.BytesIO(await f.read()))
+            buffer = BytesIO()
+            image.save(buffer, "jpeg", comment="Original Comment")
+        async with aiofiles.open(call.data["filename"], "wb") as file:
+            await file.write(buffer.getbuffer())
+        return None
+
+    hass.services.async_register("camera", "snapshot", dummy_snapshot)
+    jpeg_opts = {"progressive": True, "optimize": True, "comment": "xunit cam woz here"}
+    if reprocess == ReprocessOption.PRESERVE:
+        del jpeg_opts["comment"]
+
+    image_path: Path | None = await snap_camera(
+        hass, "camera.xunit", "notify-uuid-1", media_path=tmp_path, max_camera_wait=1, reprocess=reprocess, jpeg_opts=jpeg_opts
     )
+    assert called_entity == "camera.xunit"
+    assert image_path is not None
+    reprocessed_image: Image.Image = Image.open(str(image_path))
+    if reprocess == ReprocessOption.NEVER:
+        assert reprocessed_image.info.get("comment") == b"Original Comment"
+        assert reprocessed_image.info.get("progressive") is None
+    elif reprocess == ReprocessOption.ALWAYS:
+        assert reprocessed_image.info.get("comment") == b"xunit cam woz here"
+        assert reprocessed_image.info.get("progressive") == 1
+    elif reprocess == ReprocessOption.PRESERVE:
+        assert reprocessed_image.info.get("comment") == b"Original Comment"
+        assert reprocessed_image.info.get("progressive") == 1
 
 
-async def test_snap_image(mock_context: Context, sample_image: TestImage, tmp_path: Path) -> None:
+async def test_snap_image_entity(mock_context: Context, sample_image: TestImage, tmp_path: Path) -> None:
 
     image_entity = MockImageEntity(sample_image.path)
     if mock_context.hass_api._hass:
         mock_context.hass_api._hass.data["image"] = Mock(spec=EntityComponent)
         mock_context.hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)
 
-    snap_image_path = await snap_image(mock_context, "image.testing", media_path=tmp_path, notification_id="notify_001")
+    snap_image_path = await snap_image_entity(mock_context, "image.testing", media_path=tmp_path, notification_id="notify_001")
     assert snap_image_path is not None
     retrieved_image = Image.open(snap_image_path)
 

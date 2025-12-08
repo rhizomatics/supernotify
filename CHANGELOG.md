@@ -11,6 +11,9 @@
 - Recipient now exposed as an entity
   - Recipient can be enabled or disabled in Home Assistant UI, Automations, API etc by changing entity state
 - Mobile Push delivery now configured by default
+- `png_opts` now available for images, pre-set for email to `optimize: true`
+- Camera snapshot now fixes/optimizes images like URL snapshot and Image Entity already do
+- Media now has a `reprocess` option to switch off image rewriting, or preserve original metadata, incl comments
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal

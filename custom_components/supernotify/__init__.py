@@ -141,6 +141,7 @@ ATTR_ACTION_URL = "action_url"
 ATTR_ACTION_URL_TITLE = "action_url_title"
 ATTR_MESSAGE_HTML = "message_html"
 ATTR_JPEG_OPTS = "jpeg_opts"
+ATTR_PNG_OPTS = "png_opts"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_DEBUG = "debug"
 ATTR_ACTIONS = "actions"
@@ -226,6 +227,8 @@ OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
 OPTION_JPEG = "jpeg_opts"
+OPTION_PNG = "png_opts"
+MEDIA_OPTION_REPROCESS = "reprocess"
 OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_INCLUDE_RE = "target_include_re"
@@ -360,6 +363,7 @@ MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
     vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
     vol.Optional(ATTR_JPEG_OPTS): dict,
+    vol.Optional(ATTR_PNG_OPTS): dict,
 })
 
 

@@ -89,9 +89,9 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
 
 ## YAML Still Required
 
-Presently Supernotify supports only YAML based configuration. UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
+Presently Supernotify supports only [YAML based configuration](configuration/yaml.md). UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
 
-You can however do a lot with very little config, using the example configurations and recipes in the documentation.
+You can however do a lot with very little config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation.
 
 ## Also From Rhizomatics
 
