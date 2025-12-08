@@ -15,6 +15,7 @@
 - Camera snapshot now fixes/optimizes images like URL snapshot and Image Entity already do
 - Media now has a `reprocess` option to switch off image rewriting, or preserve original metadata, incl comments
 - Automatic housekeeping to purge images from `media_dir`, configurable by `media_storage_days` in `housekeeping`
+- `purge_media` service to run the media storage housekeeping on demand
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
