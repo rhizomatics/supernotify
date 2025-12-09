@@ -104,20 +104,24 @@ class Recipient:
                 if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
                     self.alias = attrs.get(ATTR_FRIENDLY_NAME)
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
+    def as_dict(self, occupancy_only: bool = False) -> dict[str, Any]:
+        result = {
             CONF_PERSON: self.entity_id,
-            CONF_ALIAS: self.alias,
             CONF_ENABLED: self.enabled,
-            ATTR_STATE: self.state,
-            CONF_EMAIL: self.email,
-            CONF_PHONE_NUMBER: self.phone_number,
-            ATTR_USER_ID: self.user_id,
-            CONF_MOBILE_DISCOVERY: self.mobile_discovery,
-            CONF_MOBILE_DEVICES: self.mobile_devices,
-            CONF_TARGET: self.target.as_dict() if self.target else None,
-            CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
+            ATTR_STATE: self.state
         }
+        if not occupancy_only:
+            result.update({
+                CONF_ALIAS: self.alias,
+                CONF_EMAIL: self.email,
+                CONF_PHONE_NUMBER: self.phone_number,
+                ATTR_USER_ID: self.user_id,
+                CONF_MOBILE_DISCOVERY: self.mobile_discovery,
+                CONF_MOBILE_DEVICES: self.mobile_devices,
+                CONF_TARGET: self.target.as_dict() if self.target else None,
+                CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
+            })
+        return result
 
     def attributes(self) -> dict[str, Any]:
         """For exposure as entity state"""
