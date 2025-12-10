@@ -13,8 +13,7 @@ Scenarios can be defined both as a set of conditions which switch on the scenari
 For example, a scenario could be defined by conditions such as alarm panel arm state, occupancy and time to indicate when notifications should be minimized, and then different chime sounds could be selected or deliveries switched off.
 
 Scenarios can override specific delivery configurations, general media configuration (such as setting a camera, or specifying which alert sound to use for a mobile push ). A scenario has a
-default `delivery_selection` basis of `implicit`, where the scenario inherits all the default
-deliveries, or have this switched off by overriding `delivery_selection` to `explicit` in which case only the deliveries mentioned in the scenario are included.
+default `delivery_selection` basis of `implicit`, where the scenario inherits all the default deliveries, or have this switched off by overriding `delivery_selection` to `explicit` in which case only the deliveries mentioned in the scenario are included.
 
 ## Usage Modes
 
@@ -86,7 +85,7 @@ what scenarios would otherwise switch on. `delivery_selection` can be set to one
 * `implicit` - The default, all deliveries are enabled plus scenario selected
 * `explicit` - Only deliveries listed on the action call are enabled, plus ones switched on by a scenario
     * This is switched on automatically if a list or single delivery is given.
-* `fixed` - Stops scenarios from enabling or disabling deliveries and leaves it solely
+* `fixed` - Stops scenarios from enabling or disabling deliveries and leaves it solely defined by the action call
 
 ## Scenario Selection at Notification
 

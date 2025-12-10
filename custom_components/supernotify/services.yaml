@@ -1,7 +1,7 @@
 reload:
 enquire_deliveries_by_scenario:
-enquire_last_notification:
 enquire_implicit_deliveries:
+enquire_last_notification:
 enquire_scenarios:
 enquire_active_scenarios:
   fields:

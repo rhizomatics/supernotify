@@ -1,10 +1,24 @@
 """Miscellaneous helper functions.
 
-No dependencies permitted
+No same pkg dependencies permitted
 """
-
+import logging
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Any
+
+from cachetools import TTLCache
+from homeassistant.helpers.typing import ConfigType
+
+from . import (
+    ATTR_DUPE_POLICY_MTSLP,
+    ATTR_DUPE_POLICY_NONE,
+    CONF_DUPE_POLICY,
+    CONF_SIZE,
+    CONF_TTL,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def safe_get(probably_a_dict: dict[Any, Any] | None, key: Any, default: Any = None) -> Any:
@@ -55,7 +69,7 @@ class CallRecord:
     debug: bool = field(default=False)
     service_response: dict[str, Any] | None = field(default=None)
 
-    def contents(self) -> dict[str, Any]:
+    def contents(self, **_kwargs: Any) -> dict[str, Any]:
         result = {
             "domain": self.domain,
             "action": self.action,
@@ -70,3 +84,36 @@ class CallRecord:
         if self.service_response is not None:
             result["service_response"] = self.service_response
         return result
+
+
+class DupeCheckable:
+    id: str = None
+    priority: Any = None
+    skip_priorities: list[Any]
+
+    @abstractmethod
+    def hash(self) -> str:
+        raise NotImplementedError
+
+
+class DupeChecker:
+    def __init__(self, dupe_check_config: ConfigType) -> None:
+        self.policy = dupe_check_config.get(
+            CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
+        # dupe check cache, key is (priority, message hash)
+        self.cache: TTLCache[tuple[int, str], str] = TTLCache(
+            maxsize=dupe_check_config.get(CONF_SIZE, 100),
+            ttl=dupe_check_config.get(CONF_TTL, 120)
+        )
+
+    def check(self, dupe_candidate: DupeCheckable) -> bool:
+        if self.policy == ATTR_DUPE_POLICY_NONE:
+            return False
+        hashed: str = dupe_candidate.hash()
+        same_or_higher_priority: list[Any] = dupe_candidate.skip_priorities
+        dupe = False
+        if any((hashed, p) in self.cache for p in same_or_higher_priority):
+            _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
+            dupe = True
+        self.cache[hashed, dupe_candidate.priority] = dupe_candidate.id
+        return dupe

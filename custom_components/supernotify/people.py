@@ -70,9 +70,9 @@ class Recipient:
         self.user_id: str | None = config.get(ATTR_USER_ID)
         self.state: str | None = config.get(ATTR_STATE)
 
-        self.target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
+        self._target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
         self.delivery: dict[str, DeliveryCustomization] = {
-            k: DeliveryCustomization(v) for k, v in config.get(CONF_DELIVERY, {}).items()
+            k: DeliveryCustomization(v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
@@ -80,11 +80,11 @@ class Recipient:
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
 
-        self.target.extend(ATTR_PERSON_ID, [self.entity_id])
+        self._target.extend(ATTR_PERSON_ID, [self.entity_id])
         if self.email:
-            self.target.extend(ATTR_EMAIL, self.email)
+            self._target.extend(ATTR_EMAIL, self.email)
         if self.phone_number:
-            self.target.extend(ATTR_PHONE, self.phone_number)
+            self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
             discovered_devices: list[dict[str, Any]] = people_registry.mobile_devices_for_person(self.entity_id)
             self.mobile_devices.extend(discovered_devices)
@@ -93,7 +93,7 @@ class Recipient:
             else:
                 _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:
-            self.target.extend(ATTR_MOBILE_APP_ID, [d[CONF_MOBILE_APP_ID] for d in self.mobile_devices])
+            self._target.extend(ATTR_MOBILE_APP_ID, [d[CONF_MOBILE_APP_ID] for d in self.mobile_devices])
         if not self.user_id or not self.alias:
             attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
             if attrs:
@@ -104,7 +104,17 @@ class Recipient:
                 if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
                     self.alias = attrs.get(ATTR_FRIENDLY_NAME)
 
-    def as_dict(self, occupancy_only: bool = False) -> dict[str, Any]:
+    def target(self, delivery_name: str) -> Target:
+        recipient_target = self._target
+        personal_delivery = self.delivery.get(delivery_name)
+        if personal_delivery and personal_delivery.enabled:
+            if personal_delivery.target and personal_delivery.target.has_targets():
+                recipient_target += personal_delivery.target
+            if personal_delivery.data:
+                recipient_target += Target([], target_data=personal_delivery.data, target_specific_data=True)
+        return recipient_target
+
+    def as_dict(self, occupancy_only: bool = False, **_kwargs: Any) -> dict[str, Any]:
         result = {CONF_PERSON: self.entity_id, CONF_ENABLED: self.enabled, ATTR_STATE: self.state}
         if not occupancy_only:
             result.update({
@@ -114,7 +124,7 @@ class Recipient:
                 ATTR_USER_ID: self.user_id,
                 CONF_MOBILE_DISCOVERY: self.mobile_discovery,
                 CONF_MOBILE_DEVICES: self.mobile_devices,
-                CONF_TARGET: self.target.as_dict() if self.target else None,
+                CONF_TARGET: self._target.as_dict() if self._target else None,
                 CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
             })
         return result
@@ -129,7 +139,7 @@ class Recipient:
             ATTR_USER_ID: self.user_id,
             CONF_MOBILE_DEVICES: self.mobile_devices,
             CONF_MOBILE_DISCOVERY: self.mobile_discovery,
-            CONF_TARGET: self.target.as_dict() if self.target else None,
+            CONF_TARGET: self._target.as_dict() if self._target else None,
             CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
         }
         if self.alias:

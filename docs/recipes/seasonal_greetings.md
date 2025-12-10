@@ -15,8 +15,11 @@ Add a Xmas, Halloween or whatever else flavour to messages;
 
 ## Implementation
 
-A scenario using Home Assistant date conditions that applies a message template with Amazon SSML only to specific delivery config,
-in this case one called `alexa_general`, and to the email text.
+A scenario using Home Assistant date conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_general`, and to the email text.
+
+The `select: false` is used so that the delivery will be overridden only if its has already
+been selected before this scenario was applied, otherwise the scenario would add on these 
+deliveries to every notification during the date condition period.
 
 ## Example Configuration
 Use a scenario with a condition to identify when in a date range.
@@ -37,6 +40,7 @@ scenarios:
             data:
               message_template: '{{notification_message}} Ho Ho Ho!'
        alexa_general:
+            select: false
             data:
               message_template: '{{notification_message}}<break time="1s"><say-as interpret-as="interjection">bah humbug</say-as>'
 
@@ -48,6 +52,7 @@ scenarios:
           - "{{ (10,31) == (now().month, now().day) }}"
       delivery:
           alexa_general:
+            select: false
             data:
               message_template: '{{notification_message}}<break time="1s"><audio src="soundbank://soundlibrary/horror/horror_04"/>'
 
@@ -60,6 +65,7 @@ scenarios:
           - "{{ (11,9) == (now().month, now().day) }}"
       delivery:
        alexa_general:
+            select: false
             data:
               message_template: '{{notification_message}}<break time="1s"><say-as interpret-as="interjection">hip hip hooray</say-as>'
 
@@ -101,6 +107,7 @@ scenarios:
           - "{{ (1,1) <= (now().month, now().day) <= (1,1) }}"
       delivery:
         doorbell_rang:
+          select: false
           data:
             chime_alias: xmas_doorbell
 ```

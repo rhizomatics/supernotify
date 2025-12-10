@@ -37,6 +37,7 @@ class Context:
         people_registry: PeopleRegistry,
         scenario_registry: ScenarioRegistry,
         delivery_registry: DeliveryRegistry,
+        dupe_checker: DupeChecker,
         archive: NotificationArchive,
         media_storage: MediaStorage,
         snoozer: Snoozer,
@@ -49,6 +50,7 @@ class Context:
     ) -> None:
         self.delivery_registry: DeliveryRegistry = delivery_registry
         self.snoozer: Snoozer = snoozer
+        self.dupe_checker = dupe_checker
         self.people_registry: PeopleRegistry = people_registry
         self.scenario_registry: ScenarioRegistry = scenario_registry
         self.archive: NotificationArchive = archive

@@ -96,7 +96,7 @@ class DummyTransport(Transport):
             envelope,
             self.action,
             action_data=envelope.data,
-            target_data={"entity_id": envelope.target.entity_ids} if envelope.target else None,
+            target_data=envelope.target.direct().as_dict() if envelope.target else None,
         )
 
 

@@ -422,7 +422,7 @@ class MediaStorage:
                 )
                 self.media_path = None
         if self.media_path is not None:
-            _LOGGER.info("SUPERNOTIFY abs media path: %s", self.media_path.absolute())
+            _LOGGER.info("SUPERNOTIFY abs media path: %s", await self.media_path.absolute())
 
     async def size(self) -> int:
         path: anyio.Path | None = self.media_path

@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import issue_registry as ir
 
-from . import CONF_DATA, DELIVERY_SELECTION_IMPLICIT, SCENARIO_TEMPLATE_ATTRS, ConditionsFunc
-from .common import safe_get
+from . import ConditionsFunc
 from .hass_api import HomeAssistantAPI
+from .model import DeliveryCustomization
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -24,7 +24,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_DEFAULT, ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_DELIVERY_SELECTION, CONF_MEDIA
+from . import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_DELIVERY_SELECTION, CONF_MEDIA
 from .delivery import Delivery
 from .model import ConditionVariables
 
@@ -35,13 +35,10 @@ class ScenarioRegistry:
     def __init__(self, scenario_configs: ConfigType | None = None) -> None:
         self._config: ConfigType = scenario_configs or {}
         self.scenarios: dict[str, Scenario] = {}
-        self.content_scenario_templates: ConfigType = {}
-        self.delivery_by_scenario: dict[str, list[str]] = {}
 
     async def initialize(
         self,
         deliveries: dict[str, Delivery],
-        implicit_deliveries: list[Delivery],
         mobile_actions: ConfigType,
         hass_api: HomeAssistantAPI,
     ) -> None:
@@ -49,34 +46,6 @@ class ScenarioRegistry:
             scenario = Scenario(scenario_name, scenario_definition, hass_api)
             if await scenario.validate(valid_delivery_names=list(deliveries), valid_action_group_names=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
-        self.refresh(deliveries, implicit_deliveries)
-
-    def refresh(self, deliveries: dict[str, Delivery], implicit_deliveries: list[Delivery]) -> None:
-        self.delivery_by_scenario = {}
-        for scenario_name, scenario in self.scenarios.items():
-            if scenario.enabled:
-                self.delivery_by_scenario.setdefault(scenario_name, [])
-                if scenario.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                    scenario_deliveries: list[str] = [d.name for d in implicit_deliveries]
-                else:
-                    scenario_deliveries = []
-                scenario_definition_delivery = scenario.delivery
-                scenario_deliveries.extend(s for s in scenario_definition_delivery if s not in scenario_deliveries)
-
-                for scenario_delivery in scenario_deliveries:
-                    if safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_ENABLED, True):
-                        if deliveries[scenario_delivery].enabled:
-                            self.delivery_by_scenario[scenario_name].append(scenario_delivery)
-
-                    scenario_delivery_config = safe_get(scenario_definition_delivery.get(scenario_delivery), CONF_DATA, {})
-
-                    # extract message and title templates per scenario per delivery
-                    for template_field in SCENARIO_TEMPLATE_ATTRS:
-                        template_format = scenario_delivery_config.get(template_field)
-                        if template_format is not None:
-                            self.content_scenario_templates.setdefault(template_field, {})
-                            self.content_scenario_templates[template_field].setdefault(scenario_delivery, [])
-                            self.content_scenario_templates[template_field][scenario_delivery].append(scenario_name)
 
 
 class Scenario:
@@ -86,14 +55,17 @@ class Scenario:
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.conditions: ConditionsFunc | None = None
-        self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
+        self.conditions_config: list[ConfigType] | None = scenario_definition.get(
+            CONF_CONDITIONS)
         if not scenario_definition.get(CONF_CONDITIONS) and scenario_definition.get(CONF_CONDITION):
             self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
-        self.delivery_selection: str | None = scenario_definition.get(CONF_DELIVERY_SELECTION)
-        self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
-        self.delivery: dict[str, Any] = scenario_definition.get(CONF_DELIVERY) or {}
-        self.default: bool = self.name == ATTR_DEFAULT
+        self.delivery_selection: str | None = scenario_definition.get(
+            CONF_DELIVERY_SELECTION)
+        self.action_groups: list[str] = scenario_definition.get(
+            CONF_ACTION_GROUP_NAMES, [])
+        self.delivery: dict[str, DeliveryCustomization] = {k: DeliveryCustomization(
+            v) for k, v in scenario_definition.get(CONF_DELIVERY, {}).items()}
         self.last_trace: ActionTrace | None = None
 
     async def validate(
@@ -130,13 +102,15 @@ class Scenario:
             invalid_deliveries: list[str] = []
             for delivery_name in self.delivery:
                 if delivery_name not in valid_delivery_names:
-                    _LOGGER.error(f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
+                    _LOGGER.error(
+                        f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
                     invalid_deliveries.append(delivery_name)
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_delivery_{delivery_name}",
                         is_fixable=False,
                         issue_key="scenario_delivery",
-                        issue_map={"scenario": self.name, "delivery": delivery_name},
+                        issue_map={"scenario": self.name,
+                                   "delivery": delivery_name},
                         severity=ir.IssueSeverity.WARNING,
                         learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                     )
@@ -147,13 +121,15 @@ class Scenario:
             invalid_action_groups: list[str] = []
             for action_group_name in self.action_groups:
                 if action_group_name not in valid_action_group_names:
-                    _LOGGER.error(f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
+                    _LOGGER.error(
+                        f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
                     invalid_action_groups.append(action_group_name)
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_action_group_{action_group_name}",
                         is_fixable=False,
                         issue_key="scenario_delivery",
-                        issue_map={"scenario": self.name, "action_group": action_group_name},
+                        issue_map={"scenario": self.name,
+                                   "action_group": action_group_name},
                         severity=ir.IssueSeverity.WARNING,
                         learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                     )
@@ -169,8 +145,7 @@ class Scenario:
             "media": self.media,
             "delivery_selection": self.delivery_selection,
             "action_groups": self.action_groups,
-            "delivery": self.delivery,
-            "default": self.default,
+            "delivery": {k: v.as_dict() for k, v in self.delivery.items()}
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
@@ -180,7 +155,10 @@ class Scenario:
             attrs["trace"] = self.last_trace.as_extended_dict()
         return attrs
 
-    def contents(self, minimal: bool = False) -> dict[str, Any]:
+    def delivery_config(self, delivery_name: str) -> DeliveryCustomization | None:
+        return self.delivery.get(delivery_name)
+
+    def contents(self, minimal: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """Archive friendly view of scenario"""
         return self.attributes(include_condition=False, include_trace=not minimal)
 
@@ -189,9 +167,11 @@ class Scenario:
         result: bool | None = False
         if self.enabled and self.conditions:
             try:
-                result = self.hass_api.evaluate_conditions(self.conditions, condition_variables)
+                result = self.hass_api.evaluate_conditions(
+                    self.conditions, condition_variables)
                 if result is None:
-                    _LOGGER.warning("SUPERNOTIFY Scenario condition empty result")
+                    _LOGGER.warning(
+                        "SUPERNOTIFY Scenario condition empty result")
             except Exception as e:
                 _LOGGER.error(
                     "SUPERNOTIFY Scenario condition eval failed: %s, vars: %s",

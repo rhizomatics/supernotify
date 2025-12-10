@@ -7,15 +7,29 @@ import typing
 from pathlib import Path
 from typing import Any
 
-from . import ATTR_TIMESTAMP, CONF_MESSAGE, CONF_TITLE, PRIORITY_MEDIUM
+from jinja2 import TemplateError
+
+from . import (
+    ATTR_MESSAGE_HTML,
+    ATTR_PRIORITY,
+    ATTR_TIMESTAMP,
+    CONF_MESSAGE,
+    CONF_TITLE,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    PRIORITY_MEDIUM,
+)
+from .context import Context
 from .media_grab import grab_image
-from .model import Target
+from .model import ConditionVariables, DeliveryCustomization, MessageOnlyPolicy, Target
 
 if typing.TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
 
     from .delivery import Delivery
     from .notification import Notification
+    from .scenario import Scenario
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +42,11 @@ class Envelope:
         delivery: "Delivery",
         notification: "Notification | None" = None,
         target: Target | None = None,  # targets only for this delivery
-        data: dict[str, Any] | None = None,  # notification data customized for this delivery
+        data: dict[str, Any] | None = None,
+        context: Context | None = None  # notification data customized for this delivery
     ) -> None:
         self.target: Target = target or Target()
+        self.context: Context | None = context
         self.delivery_name: str = delivery.name
         self.delivery: Delivery = delivery
         self._notification = notification
@@ -38,28 +54,39 @@ class Envelope:
         self.media = None
         self.action_groups = None
         self.priority = PRIORITY_MEDIUM
-        self.message: str | None = None
-        self.title: str | None = None
+        self._message: str | None = None
+        self._title: str | None = None
         self.message_html: str | None = None
         self.data: dict[str, Any] = {}
         self.actions: list[dict[str, Any]] = []
-        delivery_config_data: dict[str, Any] = {}
         if notification:
-            self.notification_id = notification.id
-            self.media = notification.media
-            self.action_groups = notification.action_groups
-            self.actions = notification.actions
-            self.priority = notification.priority
-            self.message = notification.message(delivery.name)
-            self.message_html = notification.message_html
-            self.title = notification.title(delivery.name)
             delivery_config_data = notification.delivery_data(delivery.name)
-
+            self.enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
+            self._message = notification._message
+            self._title = notification._title
+        else:
+            delivery_config_data: dict[str, Any] = {}
+            self.enabled_scenarios = {}
         if data:
             self.data = copy.deepcopy(delivery_config_data) if delivery_config_data else {}
             self.data |= data
         else:
             self.data = delivery_config_data if delivery_config_data else {}
+
+        if notification:
+            self.notification_id = notification.id
+            self.media = notification.media
+            self.action_groups = notification.action_groups
+            self.actions = notification.actions
+            self.priority = self.data.get(ATTR_PRIORITY, notification.priority)
+            self.message_html = self.data.get(ATTR_MESSAGE_HTML, notification.message_html)
+        if notification and hasattr(notification,'condition_variables'): # yeuchh
+            self.condition_variables = notification.condition_variables
+        else:
+            self.condition_variables = ConditionVariables()
+
+        self.message = self._compute_message()
+        self.title = self._compute_title()
 
         self.delivered: int = 0
         self.errored: int = 0
@@ -87,7 +114,7 @@ class Envelope:
             data[CONF_TITLE] = self.title
         return data
 
-    def contents(self, minimal: bool = True) -> dict[str, typing.Any]:
+    def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
         exclude_attrs = ["_notification"]
         if minimal:
             exclude_attrs.extend("resolved")
@@ -117,3 +144,78 @@ class Envelope:
         inserted directly and may not be quoted or escaped.
         """
         return f"Envelope(message={self.message},title={self.title},delivery={self.delivery_name})"
+
+    def _compute_title(self, ignore_usage: bool = False) -> str | None:
+        # message and title reverse the usual defaulting, delivery config overrides runtime call
+
+        title: str | None = None
+        if self.delivery is None:
+            title = self._title
+        else:
+            message_usage = self.delivery.option_str(OPTION_MESSAGE_USAGE)
+            if not ignore_usage and message_usage.upper() in (MessageOnlyPolicy.USE_TITLE, MessageOnlyPolicy.COMBINE_TITLE):
+                title = None
+            else:
+                title = self.delivery.title if self.delivery.title is not None else self._title
+                if (
+                    self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True
+                    or self.delivery.option_bool(OPTION_STRIP_URLS) is True
+                ):
+                    title = self.delivery.transport.simplify(
+                        title, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
+        title = self._render_scenario_templates(
+            title, "title_template", "notification_title")
+        if title is None:
+            return None
+        return str(title)
+
+    def _compute_message(self) -> str | None:
+        # message and title reverse the usual defaulting, delivery config overrides runtime call
+
+        msg: str | None = None
+        if self.delivery is None:
+            msg = self._message
+        else:
+            msg = self.delivery.message if self.delivery.message is not None else self._message
+            message_usage: str = str(
+                self.delivery.option_str(OPTION_MESSAGE_USAGE))
+            if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
+                title = self._compute_title(ignore_usage=True)
+                if title:
+                    msg = title
+            elif message_usage.upper() == MessageOnlyPolicy.COMBINE_TITLE:
+                title = self._compute_title(ignore_usage=True)
+                if title:
+                    msg = f"{title} {msg}"
+            if (
+                self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True
+                or self.delivery.option_bool(OPTION_STRIP_URLS) is True
+            ):
+                msg = self.delivery.transport.simplify(
+                    msg, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
+
+        msg = self._render_scenario_templates(
+            msg, "message_template", "notification_message")
+        if msg is None:  # keep mypy happy
+            return None
+        return str(msg)
+
+    def _render_scenario_templates(
+        self, original: str | None, template_field: str, matching_ctx: str) -> str | None:
+        rendered = original if original is not None else ""
+        delivery_configs: list[DeliveryCustomization] = [scenario.delivery_config(
+            self.delivery.name) for scenario in self.enabled_scenarios.values()]
+        template_formats: list[str] = [dc.data_value(
+            template_field) for dc in delivery_configs if dc is not None and dc.data_value(template_field) is not None]
+        if template_formats:
+            context_vars = self.condition_variables.as_dict() if self.condition_variables else {}
+            for template_format in template_formats:
+                context_vars[matching_ctx] = rendered
+                try:
+                    template = self.context.hass_api.template(template_format)
+                    rendered = template.async_render(variables=context_vars)
+                except TemplateError as e:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, self.delivery.name, e)
+            return rendered
+        return original

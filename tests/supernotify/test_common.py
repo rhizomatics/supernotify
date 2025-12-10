@@ -1,4 +1,5 @@
-from custom_components.supernotify.common import CallRecord, ensure_dict, ensure_list, safe_extend, safe_get
+from custom_components.supernotify.common import CallRecord, DupeChecker, ensure_dict, ensure_list, safe_extend, safe_get
+from custom_components.supernotify.notification import Notification
 
 
 def test_safe_get():
@@ -40,3 +41,19 @@ def test_call_record():
         "elapsed": 13.4,
         "debug": False,
     }
+
+
+def test_dupe_check_suppresses_same_priority_and_message(mock_context) -> None:
+    uut = DupeChecker({})
+    n1 = Notification(mock_context, "message here", "title here")
+    assert uut.check(n1) is False
+    n2 = Notification(mock_context, "message here", "title here")
+    assert uut.check(n2) is True
+
+
+def test_dupe_check_allows_higher_priority_and_same_message(mock_context) -> None:
+    uut = DupeChecker({})
+    n1 = Notification(mock_context, "message here", "title here")
+    assert uut.check(n1) is False
+    n2 = Notification(mock_context, "message here", "title here", action_data={"priority": "high"})
+    assert uut.check(n2) is False

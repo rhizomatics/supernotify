@@ -137,11 +137,12 @@ class HomeAssistantAPI:
         try:
             if (domain, service) not in self._service_info:
                 service_objs = self._hass.services.async_services()
-                service_obj = service_objs.get(domain, {}).get(service, {})
-                self._service_info[domain, service] = {
-                    "supports_response": service_obj.supports_response,
-                    "schema": service_obj.schema,
-                }
+                service_obj = service_objs.get(domain, {}).get(service)
+                if service_obj:
+                    self._service_info[domain, service] = {
+                        "supports_response": service_obj.supports_response,
+                        "schema": service_obj.schema,
+                    }
             service_info = self._service_info.get((domain, service), {})
             supports_response = service_info.get("supports_response")
             if supports_response is not None:

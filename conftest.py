@@ -26,12 +26,13 @@ from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import CONF_MOBILE_APP_ID, CONF_MOBILE_DEVICES, CONF_MOBILE_DISCOVERY, CONF_PERSON
 from custom_components.supernotify.archive import NotificationArchive
+from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import MediaStorage
 from custom_components.supernotify.people import PeopleRegistry
-from custom_components.supernotify.scenario import ScenarioRegistry
+from custom_components.supernotify.scenario import Scenario, ScenarioRegistry
 from custom_components.supernotify.snoozer import Snoozer
 from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.chime import ChimeTransport
@@ -120,9 +121,6 @@ def mock_people_registry(mock_hass_api: HomeAssistantAPI) -> PeopleRegistry:
 def mock_scenario_registry() -> ScenarioRegistry:
     registry = AsyncMock(spec=ScenarioRegistry)
     registry.scenarios = {}
-    registry.delivery_by_scenario = {}
-    registry.content_scenario_templates = {}
-    registry.content_scenario_templates = {}
     return registry
 
 
@@ -211,11 +209,8 @@ def mock_transport() -> AsyncMock:
 
 
 @pytest.fixture
-def mock_scenario() -> AsyncMock:
-    mock_scenario = AsyncMock()
-    mock_scenario.name = "mockery"
-    mock_scenario.media = []
-    return mock_scenario
+def dummy_scenario(mock_hass_api) -> AsyncMock:
+    return Scenario("mockery", {}, mock_hass_api)
 
 
 @pytest.fixture
@@ -226,7 +221,7 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
     hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
     await config.scenario_registry.initialize(
-        config.delivery_registry.deliveries, config.delivery_registry.implicit_deliveries, {}, hass_api
+        config.delivery_registry.deliveries, {}, hass_api
     )
     return config
 
@@ -236,9 +231,11 @@ def uninitialized_unmocked_config(mock_hass_api: HomeAssistantAPI, tmp_path) -> 
     people_registry = PeopleRegistry([], mock_hass_api)
     scenario_registry = ScenarioRegistry({})
     delivery_registry = DeliveryRegistry({})
+    dupe_checker = DupeChecker({})
     media_storage = MediaStorage(tmp_path / "media", 1)
     archive = NotificationArchive({}, mock_hass_api)
-    return Context(mock_hass_api, people_registry, scenario_registry, delivery_registry, archive, media_storage, Snoozer())
+    return Context(mock_hass_api, people_registry, scenario_registry,
+            delivery_registry, dupe_checker, archive, media_storage, Snoozer())
 
 
 @pytest.fixture

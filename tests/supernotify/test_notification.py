@@ -7,9 +7,6 @@ from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify import (
-    ATTR_DATA,
-    ATTR_MEDIA,
-    ATTR_MEDIA_CAMERA_DELAY,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_SCENARIOS_APPLY,
@@ -33,7 +30,6 @@ from custom_components.supernotify import (
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import MessageOnlyPolicy, Target
 from custom_components.supernotify.notification import DebugTrace, Notification
@@ -59,8 +55,6 @@ async def test_simple_create() -> None:
     assert uut.enabled_scenarios == {}
     assert uut.applied_scenario_names == []
     assert uut.target is None
-    assert uut.message("plain_email") == "testing 123"
-    assert uut.title("mobile") == "mobile notification"
     assert uut.priority == "medium"
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
@@ -102,9 +96,9 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
 
 
-async def test_scenario_delivery(mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]) -> None:
+async def test_scenario_delivery(mock_context: Context, dummy_scenario: Scenario, deliveries: dict[str, Delivery]) -> None:
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
-    mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
+    mock_context.scenario_registry.scenarios = {"mockery": dummy_scenario}
     uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
@@ -119,10 +113,10 @@ async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
 
 
 async def test_action_data_disable_delivery(
-    mock_context: Context, mock_scenario: Scenario, deliveries: dict[str, Delivery]
+    mock_context: Context, dummy_scenario: Scenario, deliveries: dict[str, Delivery]
 ) -> None:
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
-    mock_context.scenario_registry.scenarios = {"mockery": mock_scenario}
+    mock_context.scenario_registry.scenarios = {"mockery": dummy_scenario}
     uut = Notification(
         mock_context, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
     )
@@ -278,64 +272,6 @@ async def test_camera_entity(mock_context: Context, mock_people_registry: People
         assert retrieved_image_path == original_image_path
         # notification caches image for multiple deliveries
         mock_snap_cam.assert_not_called()
-
-
-async def test_message_usage(mock_context: Context) -> None:
-    delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
-    mock_context.delivery_registry.deliveries = {"push": delivery}
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["push"]}
-
-    uut = Notification(mock_context, "testing 123", title="the big title")
-    await uut.initialize()
-    assert uut.message("push") == "testing 123"
-    assert uut.title("push") == "the big title"
-
-    delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
-    uut = Notification(mock_context, "testing 123", title="the big title")
-    await uut.initialize()
-    assert uut.message("push") == "the big title"
-    assert uut.title("push") is None
-
-    delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
-    uut = Notification(mock_context, "testing 123")
-    await uut.initialize()
-    assert uut.message("push") == "testing 123"
-    assert uut.title("push") is None
-
-    delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
-    uut = Notification(mock_context, "testing 123", title="the big title")
-    await uut.initialize()
-    assert uut.message("push") == "the big title testing 123"
-    assert uut.title("push") is None
-
-    delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
-    uut = Notification(mock_context, "testing 123")
-    await uut.initialize()
-    assert uut.message("push") == "testing 123"
-    assert uut.title("push") is None
-
-
-async def test_merge(mock_hass_api: HomeAssistantAPI, mock_context: Context) -> None:
-    mock_context.scenario_registry.scenarios = {
-        "Alarm": Scenario("Alarm", {"media": {"jpeg_opts": {"quality": 30}, "snapshot_url": "/bar/789"}}, mock_hass_api)
-    }
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
-    uut = Notification(
-        mock_context,
-        "testing 123",
-        action_data={
-            ATTR_SCENARIOS_APPLY: "Alarm",
-            ATTR_MEDIA: {ATTR_MEDIA_CAMERA_DELAY: 11, ATTR_MEDIA_SNAPSHOT_URL: "/foo/123"},
-        },
-    )
-    await uut.initialize()
-    assert uut.merge(ATTR_MEDIA, "plain_email") == {
-        "jpeg_opts": {"quality": 30},
-        "camera_delay": 11,
-        "snapshot_url": "/foo/123",
-    }
-    assert uut.merge(ATTR_DATA, "plain_email") == {}
-
 
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(

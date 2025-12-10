@@ -69,6 +69,7 @@ CONF_TRANSPORTS = "transports"
 CONF_DELIVERY = "delivery"
 CONF_SELECTION = "selection"
 CONF_SELECTION_RANK = "selection_rank"
+CONF_SELECT = "select"
 
 CONF_DATA: str = "data"
 CONF_OPTIONS: str = "options"
@@ -276,6 +277,7 @@ DELIVERY_CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
+    vol.Optional(CONF_SELECT, default=True): cv.boolean
 })
 LINK_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.url,
@@ -388,7 +390,7 @@ SCENARIO_SCHEMA = vol.All(
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
     }),
 )
-ACTION_CALL_SCHEMA = vol.Schema(
+MOBILE_ACTION_CALL_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ACTION): cv.string,
         vol.Optional(ATTR_TITLE): cv.string,
@@ -398,7 +400,7 @@ ACTION_CALL_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-ACTION_SCHEMA = vol.Schema(
+MOBILE_ACTION_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_ACTION, CONF_ACTION_TEMPLATE): cv.string,
         vol.Exclusive(CONF_TITLE, CONF_TITLE_TEMPLATE): cv.string,
@@ -432,7 +434,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOUSEKEEPING, default={}): HOUSEKEEPING_SCHEMA,
     vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
     vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
-    vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [ACTION_SCHEMA]},
+    vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [MOBILE_ACTION_SCHEMA]},
     vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
@@ -455,7 +457,7 @@ ACTION_DATA_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MEDIA): MEDIA_SCHEMA,
         vol.Optional(ATTR_MESSAGE_HTML): cv.string,
         vol.Optional(ATTR_ACTION_GROUPS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ACTIONS, default=[]): vol.All(cv.ensure_list, [ACTION_CALL_SCHEMA]),
+        vol.Optional(ATTR_ACTIONS, default=[]): vol.All(cv.ensure_list, [MOBILE_ACTION_CALL_SCHEMA]),
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
         vol.Optional(ATTR_DATA): vol.Any(None, DATA_SCHEMA),
         vol.Optional(ATTR_TIMESTAMP): cv.string,

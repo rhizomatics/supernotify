@@ -11,6 +11,7 @@ from custom_components.supernotify import (
     ATTR_ACTION_CATEGORY,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
+    ATTR_DEFAULT,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
@@ -113,7 +114,7 @@ class MobilePushTransport(Transport):
         data["push"]["interruption-level"] = push_priority
         if push_priority == "critical":
             data["push"].setdefault("sound", {})
-            data["push"]["sound"].setdefault("name", "default")
+            data["push"]["sound"].setdefault("name", ATTR_DEFAULT)
             data["push"]["sound"]["critical"] = 1
             data["push"]["sound"].setdefault("volume", 1.0)
         else:

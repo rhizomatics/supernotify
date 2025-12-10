@@ -32,6 +32,7 @@ from custom_components.supernotify import (
     CONF_ARCHIVE,
     CONF_CAMERAS,
     CONF_DELIVERY,
+    CONF_DUPE_CHECK,
     CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
@@ -43,6 +44,7 @@ from custom_components.supernotify import (
     TRANSPORT_VALUES,
 )
 from custom_components.supernotify.archive import NotificationArchive
+from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -167,7 +169,7 @@ class TestingContext(Context):
         scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {})
         archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)
         media_storage = MediaStorage(self.config.get(CONF_MEDIA_PATH), self.config.get(CONF_MEDIA_STORAGE_DAYS, 7))
-
+        dupe_checker = DupeChecker(self.config.get(CONF_DUPE_CHECK, {}))
         if not transport_instances:
             transport_types = transport_types or TRANSPORTS
 
@@ -183,6 +185,7 @@ class TestingContext(Context):
             people_registry,
             scenario_registry,
             delivery_registry,
+            dupe_checker,
             archive,
             media_storage,
             Snoozer(),
@@ -206,7 +209,7 @@ class TestingContext(Context):
         await self.media_storage.initialize(self.hass_api)
         await self.delivery_registry.initialize(self)
         await self.scenario_registry.initialize(
-            self.delivery_registry.deliveries, self.delivery_registry.implicit_deliveries, self.mobile_actions, self.hass_api
+            self.delivery_registry.deliveries, self.mobile_actions, self.hass_api
         )
         if self.components and not isinstance(self.hass, Mock):
             for component_name, component_def in self.components.items():
