@@ -35,6 +35,8 @@ from . import (
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
+    CONF_DEVICE_MODEL_EXCLUDE,
+    CONF_DEVICE_MODEL_INCLUDE,
     CONF_PRIORITY,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
@@ -351,6 +353,8 @@ class TransportConfig:
         conf = conf or {}
         if class_config is not None:
             self.device_domain: list[str] = conf.get(CONF_DEVICE_DOMAIN, class_config.device_domain)
+            self.device_model_include: list[str] | None = conf.get(CONF_DEVICE_MODEL_INCLUDE, class_config.device_model_include)
+            self.device_model_exclude: list[str] | None = conf.get(CONF_DEVICE_MODEL_EXCLUDE, class_config.device_model_exclude)
             self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
             self.alias = conf.get(CONF_ALIAS)
@@ -359,6 +363,8 @@ class TransportConfig:
             )
         else:
             self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
+            self.device_model_include = conf.get(CONF_DEVICE_MODEL_INCLUDE)
+            self.device_model_exclude = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
             self.device_discovery = conf.get(CONF_DEVICE_DISCOVERY, False)
             self.enabled = conf.get(CONF_ENABLED, True)
             self.alias = conf.get(CONF_ALIAS)

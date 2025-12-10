@@ -185,6 +185,38 @@ def test_discover_devices_finds_only_devices_for_domain(hass: HomeAssistant) -> 
     assert devices[2].identifiers == {("unit_testing", "weird", "triple_identifier")}  # type: ignore
 
 
+def test_discover_devices_filters_models(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    register_device(
+        hass_api, device_id="00001111222233334444555566667777", domain="testing", domain_id="test_01", title="test fixture"
+    )
+    register_device(
+        hass_api,
+        device_id="10001111222233334444555566667777",
+        domain="testing",
+        domain_id="test_02",
+        model="Unit",
+        title="2nd test fixture",
+    )
+    register_device(
+        hass_api,
+        device_id="20001111222233334444555566667777",
+        domain="testing",
+        domain_id="test_03",
+        model="Integration",
+        title="2nd test fixture",
+    )
+
+    devices = hass_api.discover_devices("testing", device_model_include=["Uni.*"])
+    assert len(devices) == 1
+    assert devices[0].identifiers == {("testing", "test_02")}
+
+    devices = hass_api.discover_devices("testing", device_model_exclude=["Uni.*"])
+    assert len(devices) == 2
+    assert devices[0].identifiers == {("testing", "test_01")}
+    assert devices[1].identifiers == {("testing", "test_03")}
+
+
 def test_hass_doesnt_have_weird_service(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     assert not hass_api.has_service("nosuchdomain", "nosuchservice")

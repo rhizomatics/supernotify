@@ -85,6 +85,8 @@ CONF_DEVICE_TRACKER: str = "device_tracker"
 CONF_DEVICE_NAME: str = "device_name"
 CONF_DEVICE_LABELS: str = "device_labels"
 CONF_DEVICE_DOMAIN: str = "device_domain"
+CONF_DEVICE_MODEL_INCLUDE: str = "device_model_include"
+CONF_DEVICE_MODEL_EXCLUDE: str = "device_model_exclude"
 
 CONF_MODEL: str = "model"
 CONF_MESSAGE: str = "message"
@@ -324,6 +326,8 @@ DELIVERY_SCHEMA = vol.All(
 TRANSPORT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,

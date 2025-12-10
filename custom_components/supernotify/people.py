@@ -105,11 +105,7 @@ class Recipient:
                     self.alias = attrs.get(ATTR_FRIENDLY_NAME)
 
     def as_dict(self, occupancy_only: bool = False) -> dict[str, Any]:
-        result = {
-            CONF_PERSON: self.entity_id,
-            CONF_ENABLED: self.enabled,
-            ATTR_STATE: self.state
-        }
+        result = {CONF_PERSON: self.entity_id, CONF_ENABLED: self.enabled, ATTR_STATE: self.state}
         if not occupancy_only:
             result.update({
                 CONF_ALIAS: self.alias,

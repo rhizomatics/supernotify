@@ -16,6 +16,8 @@
 - Media now has a `reprocess` option to switch off image rewriting, or preserve original metadata, incl comments
 - Automatic housekeeping to purge images from `media_dir`, configurable by `media_storage_days` in `housekeeping`
 - `purge_media` service to run the media storage housekeeping on demand
+- Device Discovery can now include or exclude by device model
+  - Chime integration uses this so doesn't select Alexa actual devices and Alexa Group devices
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal

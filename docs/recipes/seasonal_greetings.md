@@ -35,7 +35,7 @@ scenarios:
       delivery:
        email_general:
             data:
-              message_templage '{{notification_message}} Ho Ho Ho!'
+              message_template: '{{notification_message}} Ho Ho Ho!'
        alexa_general:
             data:
               message_template: '{{notification_message}}<break time="1s"><say-as interpret-as="interjection">bah humbug</say-as>'
@@ -63,4 +63,44 @@ scenarios:
             data:
               message_template: '{{notification_message}}<break time="1s"><say-as interpret-as="interjection">hip hip hooray</say-as>'
 
+```
+
+## Variations
+
+The [Chime Transport Adaptor](../transports/chime.md) has lots more ways of doing this.
+
+Set up aliases for common chimes, and a secondary seasonal version, in the Chime transport defaults:
+
+```yaml
+transports:
+  chime:
+    device_discovery: true
+    device_domain: alexa_devices
+    delivery_defaults:
+      options:
+        chime_aliases:
+          doorbell:
+            alexa_devices:
+              tune: amzn_sfx_doorbell_chime_02
+            switch:
+              target: switch.chime_ding_dong
+          xmas_doorbell:
+            alexa_devices: christmas_05
+```
+
+Then create a date condition scenario, that overrides the chime alias for your `doorbell_rang` delivery:
+
+```yaml
+scenarios:
+    xmas:
+      alias: Christmas season
+      conditions:
+        condition: or
+        conditions:
+          - "{{ (12,24) <= (now().month, now().day) <= (12,31) }}"
+          - "{{ (1,1) <= (now().month, now().day) <= (1,1) }}"
+      delivery:
+        doorbell_rang:
+          data:
+            chime_alias: xmas_doorbell
 ```

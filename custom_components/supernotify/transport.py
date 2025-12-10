@@ -58,6 +58,8 @@ class Transport:
 
         self.delivery_defaults: DeliveryConfig = self.transport_config.delivery_defaults
         self.device_domain: list[str] = self.transport_config.device_domain or []
+        self.device_model_include: list[str] | None = self.transport_config.device_model_include
+        self.device_model_exclude: list[str] | None = self.transport_config.device_model_exclude
         self.device_discovery: bool | None = self.transport_config.device_discovery
         self.enabled = self.transport_config.enabled
         self.override_enabled = self.enabled
@@ -76,7 +78,9 @@ class Transport:
             for domain in self.device_domain:
                 discovered: int = 0
                 added: int = 0
-                for d in self.hass_api.discover_devices(domain):
+                for d in self.hass_api.discover_devices(
+                    domain, device_model_include=self.device_model_include, device_model_exclude=self.device_model_exclude
+                ):
                     discovered += 1
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()

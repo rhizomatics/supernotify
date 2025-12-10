@@ -300,6 +300,7 @@ def register_device(
     domain: str = "unit_testing",
     domain_id: str = "test_01",
     title: str = "test fixture",
+    model: str | None = None,
     identifiers: Any = None,
 ) -> DeviceEntry | None:
     config_entry = config_entries.ConfigEntry(
@@ -327,6 +328,7 @@ def register_device(
     if device_registry:
         device_entry = device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
+            model=model,
             identifiers=identifiers or {(domain, f"{domain_id}")},
         )
     return device_entry

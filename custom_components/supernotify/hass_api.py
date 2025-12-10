@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
+import re
 from typing import cast
 
 import homeassistant.components.trace
@@ -281,16 +282,31 @@ class HomeAssistantAPI:
             is_fixable=is_fixable,
         )
 
-    def discover_devices(self, discover_domain: str) -> list[DeviceEntry]:
+    def discover_devices(
+        self, discover_domain: str, device_model_include: list[str] | None = None, device_model_exclude: list[str] | None = None
+    ) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
         if dev_reg is None:
             _LOGGER.warning(f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
             return []
 
-        all_devs = enabled_devs = found_devs = 0
+        all_devs = enabled_devs = found_devs = skipped_devs = 0
         for dev in dev_reg.devices.values():
             all_devs += 1
+            if device_model_include is not None and (
+                dev.model is None or not any(re.match(pat, dev.model) for pat in device_model_include)
+            ):
+                skipped_devs += 1
+                continue
+            if (
+                device_model_exclude is not None
+                and dev.model is not None
+                and any(re.match(pat, dev.model) for pat in device_model_exclude)
+            ):
+                skipped_devs += 1
+                continue
+
             if not dev.disabled:
                 enabled_devs += 1
                 for identifier in dev.identifiers:
@@ -306,7 +322,8 @@ class HomeAssistantAPI:
                             "SUPERNOTIFY Unexpected device %s without id", dev.name
                         )
         _LOGGER.info(
-            f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, enabled={enabled_devs}, found={found_devs}"
+            f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, skipped={skipped_devs}, "
+            "enabled={enabled_devs}, found={found_devs}"
         )
         return devices
 
