@@ -6,7 +6,6 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import (
     ATTR_DUPE_POLICY_NONE,
-    ATTR_PRIORITY,
     CONF_ACTION,
     CONF_DATA,
     CONF_DELIVERY,
@@ -31,10 +30,8 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TargetRequired
-from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
 from tests.supernotify.doubles_lib import DummyTransport
 
@@ -175,8 +172,11 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
     await uut.async_send_message(
         title="test_title",
         message="testing 123",
-        data={"target": "person.new_home_owner",
-            "delivery_selection": DELIVERY_SELECTION_EXPLICIT, "delivery": {"pigeon": {}, "dummy": {}}},
+        data={
+            "target": "person.new_home_owner",
+            "delivery_selection": DELIVERY_SELECTION_EXPLICIT,
+            "delivery": {"pigeon": {}, "dummy": {}},
+        },
     )
 
     assert len(dummy.service.calls) == 2
@@ -197,10 +197,10 @@ async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> N
     )
 
     assert len(dummy.service.calls) == 2
-    assert dummy.service.calls[0].data["_UNKNOWN_"] == ['xyz123']
-    assert dummy.service.calls[1].data["_UNKNOWN_"] == ['abc789']
-    assert dummy.service.calls[1].data["email"] == ['me@tester.net']
-    assert dummy.service.calls[1].data["mobile_app_id"] == ['mobile_app_new_iphone']
+    assert dummy.service.calls[0].data["_UNKNOWN_"] == ["xyz123"]
+    assert dummy.service.calls[1].data["_UNKNOWN_"] == ["abc789"]
+    assert dummy.service.calls[1].data["email"] == ["me@tester.net"]
+    assert dummy.service.calls[1].data["mobile_app_id"] == ["mobile_app_new_iphone"]
 
 
 async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:

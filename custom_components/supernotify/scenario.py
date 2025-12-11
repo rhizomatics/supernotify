@@ -55,17 +55,15 @@ class Scenario:
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.conditions: ConditionsFunc | None = None
-        self.conditions_config: list[ConfigType] | None = scenario_definition.get(
-            CONF_CONDITIONS)
+        self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
         if not scenario_definition.get(CONF_CONDITIONS) and scenario_definition.get(CONF_CONDITION):
             self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
-        self.delivery_selection: str | None = scenario_definition.get(
-            CONF_DELIVERY_SELECTION)
-        self.action_groups: list[str] = scenario_definition.get(
-            CONF_ACTION_GROUP_NAMES, [])
-        self.delivery: dict[str, DeliveryCustomization] = {k: DeliveryCustomization(
-            v) for k, v in scenario_definition.get(CONF_DELIVERY, {}).items()}
+        self.delivery_selection: str | None = scenario_definition.get(CONF_DELIVERY_SELECTION)
+        self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
+        self.delivery: dict[str, DeliveryCustomization] = {
+            k: DeliveryCustomization(v) for k, v in scenario_definition.get(CONF_DELIVERY, {}).items()
+        }
         self.last_trace: ActionTrace | None = None
 
     async def validate(
@@ -102,15 +100,13 @@ class Scenario:
             invalid_deliveries: list[str] = []
             for delivery_name in self.delivery:
                 if delivery_name not in valid_delivery_names:
-                    _LOGGER.error(
-                        f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
+                    _LOGGER.error(f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
                     invalid_deliveries.append(delivery_name)
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_delivery_{delivery_name}",
                         is_fixable=False,
                         issue_key="scenario_delivery",
-                        issue_map={"scenario": self.name,
-                                   "delivery": delivery_name},
+                        issue_map={"scenario": self.name, "delivery": delivery_name},
                         severity=ir.IssueSeverity.WARNING,
                         learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                     )
@@ -121,15 +117,13 @@ class Scenario:
             invalid_action_groups: list[str] = []
             for action_group_name in self.action_groups:
                 if action_group_name not in valid_action_group_names:
-                    _LOGGER.error(
-                        f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
+                    _LOGGER.error(f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
                     invalid_action_groups.append(action_group_name)
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_action_group_{action_group_name}",
                         is_fixable=False,
                         issue_key="scenario_delivery",
-                        issue_map={"scenario": self.name,
-                                   "action_group": action_group_name},
+                        issue_map={"scenario": self.name, "action_group": action_group_name},
                         severity=ir.IssueSeverity.WARNING,
                         learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                     )
@@ -145,7 +139,7 @@ class Scenario:
             "media": self.media,
             "delivery_selection": self.delivery_selection,
             "action_groups": self.action_groups,
-            "delivery": {k: v.as_dict() for k, v in self.delivery.items()}
+            "delivery": {k: v.as_dict() for k, v in self.delivery.items()},
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
@@ -167,11 +161,9 @@ class Scenario:
         result: bool | None = False
         if self.enabled and self.conditions:
             try:
-                result = self.hass_api.evaluate_conditions(
-                    self.conditions, condition_variables)
+                result = self.hass_api.evaluate_conditions(self.conditions, condition_variables)
                 if result is None:
-                    _LOGGER.warning(
-                        "SUPERNOTIFY Scenario condition empty result")
+                    _LOGGER.warning("SUPERNOTIFY Scenario condition empty result")
             except Exception as e:
                 _LOGGER.error(
                     "SUPERNOTIFY Scenario condition eval failed: %s, vars: %s",

@@ -2,6 +2,7 @@
 
 No same pkg dependencies permitted
 """
+
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
@@ -87,30 +88,31 @@ class CallRecord:
 
 
 class DupeCheckable:
-    id: str = None
-    priority: Any = None
-    skip_priorities: list[Any]
+    id: str
+    priority: str
 
     @abstractmethod
-    def hash(self) -> str:
+    def skip_priorities(self) -> list[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def hash(self) -> int:
         raise NotImplementedError
 
 
 class DupeChecker:
     def __init__(self, dupe_check_config: ConfigType) -> None:
-        self.policy = dupe_check_config.get(
-            CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
+        self.policy = dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
         # dupe check cache, key is (priority, message hash)
         self.cache: TTLCache[tuple[int, str], str] = TTLCache(
-            maxsize=dupe_check_config.get(CONF_SIZE, 100),
-            ttl=dupe_check_config.get(CONF_TTL, 120)
+            maxsize=dupe_check_config.get(CONF_SIZE, 100), ttl=dupe_check_config.get(CONF_TTL, 120)
         )
 
     def check(self, dupe_candidate: DupeCheckable) -> bool:
         if self.policy == ATTR_DUPE_POLICY_NONE:
             return False
-        hashed: str = dupe_candidate.hash()
-        same_or_higher_priority: list[Any] = dupe_candidate.skip_priorities
+        hashed: int = dupe_candidate.hash()
+        same_or_higher_priority: list[str] = dupe_candidate.skip_priorities()
         dupe = False
         if any((hashed, p) in self.cache for p in same_or_higher_priority):
             _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)

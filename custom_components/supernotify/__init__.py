@@ -277,7 +277,7 @@ DELIVERY_CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_TARGET): TARGET_SCHEMA,
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
     vol.Optional(CONF_DATA): DATA_SCHEMA,
-    vol.Optional(CONF_SELECT, default=True): cv.boolean
+    vol.Optional(CONF_SELECT, default=True): cv.boolean,
 })
 LINK_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.url,

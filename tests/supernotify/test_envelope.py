@@ -65,30 +65,29 @@ async def test_repr() -> None:
 
 def test_message_usage(mock_context: Context) -> None:
     delivery = Mock(spec=Delivery, title=None, message=None, selection=DELIVERY_SELECTION_IMPLICIT)
-    delivery.name="push"
+    delivery.name = "push"
     mock_context.delivery_registry.deliveries = {"push": delivery}
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["push"]}
 
-    uut = Envelope(delivery,Notification(mock_context, "testing 123", title="the big title"))
+    uut = Envelope(delivery, Notification(mock_context, "testing 123", title="the big title"))
     assert uut._compute_message() == "testing 123"
     assert uut._compute_title() == "the big title"
 
     delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
-    uut = Envelope(delivery,Notification(mock_context, "testing 123", title="the big title"))
+    uut = Envelope(delivery, Notification(mock_context, "testing 123", title="the big title"))
     assert uut._compute_message() == "the big title"
     assert uut._compute_title() is None
 
     delivery.option_str.return_value = MessageOnlyPolicy.USE_TITLE
-    uut = Envelope(delivery,Notification(mock_context, "testing 123"))
+    uut = Envelope(delivery, Notification(mock_context, "testing 123"))
     assert uut._compute_message() == "testing 123"
     assert uut._compute_title() is None
 
     delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
-    uut = Envelope(delivery,Notification(mock_context, "testing 123", title="the big title"))
+    uut = Envelope(delivery, Notification(mock_context, "testing 123", title="the big title"))
     assert uut._compute_message() == "the big title testing 123"
     assert uut._compute_title() is None
 
     delivery.option_str.return_value = MessageOnlyPolicy.COMBINE_TITLE
-    uut = Envelope(delivery,Notification(mock_context, "testing 123"))
+    uut = Envelope(delivery, Notification(mock_context, "testing 123"))
     assert uut._compute_message() == "testing 123"
     assert uut._compute_title() is None

@@ -209,7 +209,7 @@ def mock_transport() -> AsyncMock:
 
 
 @pytest.fixture
-def dummy_scenario(mock_hass_api) -> AsyncMock:
+def dummy_scenario(mock_hass_api) -> Scenario:
     return Scenario("mockery", {}, mock_hass_api)
 
 
@@ -220,9 +220,7 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
     config.people_registry.initialize()
     hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
-    await config.scenario_registry.initialize(
-        config.delivery_registry.deliveries, {}, hass_api
-    )
+    await config.scenario_registry.initialize(config.delivery_registry.deliveries, {}, hass_api)
     return config
 
 
@@ -234,8 +232,9 @@ def uninitialized_unmocked_config(mock_hass_api: HomeAssistantAPI, tmp_path) -> 
     dupe_checker = DupeChecker({})
     media_storage = MediaStorage(tmp_path / "media", 1)
     archive = NotificationArchive({}, mock_hass_api)
-    return Context(mock_hass_api, people_registry, scenario_registry,
-            delivery_registry, dupe_checker, archive, media_storage, Snoozer())
+    return Context(
+        mock_hass_api, people_registry, scenario_registry, delivery_registry, dupe_checker, archive, media_storage, Snoozer()
+    )
 
 
 @pytest.fixture

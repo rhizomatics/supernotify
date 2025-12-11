@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
 from homeassistant.core import HomeAssistant
@@ -31,7 +31,7 @@ from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import grab_image
-from custom_components.supernotify.model import MessageOnlyPolicy, Target
+from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import DebugTrace, Notification
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import Scenario
@@ -105,8 +105,6 @@ async def test_scenario_delivery(mock_context: Context, dummy_scenario: Scenario
 
 
 async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
-    mock_context.scenario_registry.delivery_by_scenario = {"DEFAULT": ["plain_email", "mobile"], "Alarm": ["chime"]}
-
     uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
     assert uut.selected_delivery_names == ["mobile"]
@@ -272,6 +270,7 @@ async def test_camera_entity(mock_context: Context, mock_people_registry: People
         assert retrieved_image_path == original_image_path
         # notification caches image for multiple deliveries
         mock_snap_cam.assert_not_called()
+
 
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(

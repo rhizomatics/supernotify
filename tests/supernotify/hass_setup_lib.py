@@ -208,9 +208,7 @@ class TestingContext(Context):
         await self.archive.initialize()
         await self.media_storage.initialize(self.hass_api)
         await self.delivery_registry.initialize(self)
-        await self.scenario_registry.initialize(
-            self.delivery_registry.deliveries, self.mobile_actions, self.hass_api
-        )
+        await self.scenario_registry.initialize(self.delivery_registry.deliveries, self.mobile_actions, self.hass_api)
         if self.components and not isinstance(self.hass, Mock):
             for component_name, component_def in self.components.items():
                 if component_name not in self.hass.config.components:

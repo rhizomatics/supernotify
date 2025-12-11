@@ -8,6 +8,7 @@ from homeassistant.helpers.typing import ConfigType
 
 if TYPE_CHECKING:
     from .archive import NotificationArchive
+    from .common import DupeChecker
     from .media_grab import MediaStorage
     from .scenario import ScenarioRegistry
     from .snoozer import Snoozer

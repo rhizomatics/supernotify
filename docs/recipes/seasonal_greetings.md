@@ -18,7 +18,7 @@ Add a Xmas, Halloween or whatever else flavour to messages;
 A scenario using Home Assistant date conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_general`, and to the email text.
 
 The `select: false` is used so that the delivery will be overridden only if its has already
-been selected before this scenario was applied, otherwise the scenario would add on these 
+been selected before this scenario was applied, otherwise the scenario would add on these
 deliveries to every notification during the date condition period.
 
 ## Example Configuration

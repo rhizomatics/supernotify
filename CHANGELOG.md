@@ -18,11 +18,18 @@
 - `purge_media` service to run the media storage housekeeping on demand
 - Device Discovery can now include or exclude by device model
   - Chime integration uses this so doesn't select Alexa actual devices and Alexa Group devices
+- Scenario overriding improved for `data` and `target`
+- Scenarios can now disable deliveries
+- New `select` option for Scenario delivery config, to apply only where delivery already selected
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
 - Dicts for person and delivery customization now replaced by typed classes for type safety and easier refactoring / testing
 - Refactored out common image handling code for all 3 grab methods
+- Notification slimmed down and focussed, message and title handling moved to Envelope, Notification will
+only prepare data and targets
+- Dupe checking code moved out of Notify to its own class
+- delivery_by_scenario pre-compute and refresh removed
 
 ## 1.4.0
 ### Features

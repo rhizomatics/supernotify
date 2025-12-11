@@ -144,7 +144,7 @@ class Delivery(DeliveryConfig):
     def option_str(self, option_name: str) -> str:
         return str(self.option(option_name))
 
-    def as_dict(self,**_kwargs:Any) -> dict[str, Any]:
+    def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
         base = super().as_dict()
         base.update({
             CONF_NAME: self.name,

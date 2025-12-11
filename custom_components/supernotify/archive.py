@@ -36,7 +36,7 @@ class ArchivableObject:
     def base_filename(self) -> str:
         pass
 
-    def contents(self, minimal: bool = False,**_kwargs:Any) -> Any:
+    def contents(self, minimal: bool = False, **_kwargs: Any) -> Any:
         pass
 
 

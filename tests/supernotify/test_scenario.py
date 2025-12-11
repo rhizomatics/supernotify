@@ -45,8 +45,7 @@ async def test_simple_trace(mock_hass_api: HomeAssistantAPI) -> None:
 
 async def test_validate(mock_hass_api: HomeAssistantAPI) -> None:
     uut = Scenario(
-        "testing", {"delivery": {"good": {}, "bad": {}, "ok": {}},
-                    "action_groups": ["lights", "snoozes"]}, mock_hass_api
+        "testing", {"delivery": {"good": {}, "bad": {}, "ok": {}}, "action_groups": ["lights", "snoozes"]}, mock_hass_api
     )
     await uut.validate(valid_delivery_names=["good", "ok"], valid_action_group_names=["snoozes"])
     assert "bad" not in uut.delivery
@@ -90,11 +89,9 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
     )
     assert await uut.validate()
     assert await uut.validate()
-    assert not uut.evaluate(ConditionVariables(
-        [], [], [], PRIORITY_MEDIUM, {}))
+    assert not uut.evaluate(ConditionVariables([], [], [], PRIORITY_MEDIUM, {}))
 
-    hass.states.async_set(
-        "alarm_control_panel.home_alarm_control", "armed_home")
+    hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
 
     assert uut.evaluate(ConditionVariables([], [], [], PRIORITY_CRITICAL, {}))
 
@@ -169,9 +166,8 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
                 },
             },
         },
-        deliveries={
-        "smtp": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}},
-        transport_types=TRANSPORTS
+        deliveries={"smtp": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}},
+        transport_types=TRANSPORTS,
     )
     await ctx.test_initialize()
 
@@ -190,8 +186,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     assert alexa_envelope._compute_message() == '<amazon:effect name="whispered">Hello from Home</amazon:effect>'
     assert alexa_envelope._compute_title() == ""
 
-    notification = Notification(ctx, message="Please Sir", action_data={
-                       "apply_scenarios": ["softly_softly", "emotional"]})
+    notification = Notification(ctx, message="Please Sir", action_data={"apply_scenarios": ["softly_softly", "emotional"]})
     await notification.initialize()
     smtp_envelope = Envelope(ctx.delivery("smtp"), notification, context=ctx)
     assert smtp_envelope._compute_message() == "Please Sir"
@@ -201,8 +196,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
         == '<amazon:emotion name="excited" intensity="medium"><amazon:effect name="whispered">Please Sir</amazon:effect></amazon:emotion>'  # noqa: E501
     )
 
-    notification = Notification(ctx, message="Please Sir", action_data={
-                       "apply_scenarios": ["emotional", "softly_softly"]})
+    notification = Notification(ctx, message="Please Sir", action_data={"apply_scenarios": ["emotional", "softly_softly"]})
     await notification.initialize()
     alexa_envelope = Envelope(ctx.delivery("alexa"), notification, context=ctx)
     assert (
@@ -241,20 +235,16 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
 
     await ctx.test_initialize()
 
-    uut = Notification(ctx, "testing 123", action_data={
-                       ATTR_SCENARIOS_APPLY: ["Alarm"]})
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered(
-        "plain_email", "mobile", "chime", "siren")
+    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime", "siren")
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={ATTR_SCENARIOS_CONSTRAIN: [
-            "NULL"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
+        action_data={ATTR_SCENARIOS_CONSTRAIN: ["NULL"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
     )
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered(
-        "plain_email", "mobile", "chime")  # siren constrained
+    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")  # siren constrained
 
 
 async def test_scenario_suppress(hass: HomeAssistant) -> None:
@@ -290,16 +280,14 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
     await ctx.test_initialize()
 
     # Only deliveries for enabled scenarios
-    uut = Notification(ctx, "testing 123", action_data={
-                       ATTR_SCENARIOS_APPLY: ["Alarm"]})
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
     await uut.initialize()
     assert uut.applied_scenario_names == ["Alarm"]
     assert uut.selected_scenario_names == ["Mostly"]
     assert uut.selected_delivery_names == unordered("chime", "siren")
 
     # No selected scenarios
-    uut = Notification(ctx, "testing 123", action_data={
-                       ATTR_PRIORITY: PRIORITY_CRITICAL})
+    uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL})
     await uut.initialize()
     assert uut.applied_scenario_names == []
     assert uut.selected_scenario_names == []
@@ -309,8 +297,7 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={ATTR_SCENARIOS_APPLY: [
-            "DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]},
+        action_data={ATTR_SCENARIOS_APPLY: ["DevNull"], ATTR_SCENARIOS_CONSTRAIN: ["DevNull"]},
     )
     await uut.initialize()
     assert uut.applied_scenario_names == ["DevNull"]
@@ -321,8 +308,7 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={ATTR_SCENARIOS_APPLY: [
-            "No_Mobile"], ATTR_SCENARIOS_CONSTRAIN: ["No_Mobile"]},
+        action_data={ATTR_SCENARIOS_APPLY: ["No_Mobile"], ATTR_SCENARIOS_CONSTRAIN: ["No_Mobile"]},
     )
 
 
@@ -337,10 +323,7 @@ async def test_scenario_selectively_disable_delivery(hass: HomeAssistant) -> Non
             "chime": {CONF_TRANSPORT: "dummy"},
         },
         transport_types=[DummyTransport],
-        scenarios={
-
-            "No_Mobile": {CONF_DELIVERY: {"mobile": {"enabled": False}}}
-        }
+        scenarios={"No_Mobile": {CONF_DELIVERY: {"mobile": {"enabled": False}}}},
     )
     await ctx.test_initialize()
 
@@ -348,8 +331,7 @@ async def test_scenario_selectively_disable_delivery(hass: HomeAssistant) -> Non
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={ATTR_SCENARIOS_APPLY: [
-            "No_Mobile"], ATTR_SCENARIOS_CONSTRAIN: ["No_Mobile"]},
+        action_data={ATTR_SCENARIOS_APPLY: ["No_Mobile"], ATTR_SCENARIOS_CONSTRAIN: ["No_Mobile"]},
     )
     await uut.initialize()
     assert uut.applied_scenario_names == ["No_Mobile"]
@@ -361,14 +343,9 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
-            "sms": {CONF_TRANSPORT: "dummy"}
-        },
+        deliveries={"plain_email": {CONF_TRANSPORT: "dummy"}, "sms": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
-        scenarios={
-            "Spammy": {CONF_DELIVERY: {"plain_email": {"data": {"priority": "low"}}}}
-        }
+        scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"data": {"priority": "low"}}}}},
     )
     await ctx.test_initialize()
 
@@ -376,8 +353,7 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
         ctx,
         "testing 123",
         target="abc123",
-        action_data={ATTR_SCENARIOS_APPLY: [
-            "Spammy"], ATTR_SCENARIOS_CONSTRAIN: ["Spammy"]},
+        action_data={ATTR_SCENARIOS_APPLY: ["Spammy"], ATTR_SCENARIOS_CONSTRAIN: ["Spammy"]},
     )
     await uut.initialize()
     await uut.deliver()
@@ -393,14 +369,9 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"plain_email": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "explicit"},
-                                                    "text": {CONF_TRANSPORT: "dummy"}},
+        deliveries={"plain_email": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "explicit"}, "text": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
-        scenarios={
-            "Spammy": {CONF_DELIVERY: {"plain_email":
-                                            {"select": False,
-                                             "data": {"priority": "low"}}}}
-        }
+        scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"select": False, "data": {"priority": "low"}}}}},
     )
     await ctx.test_initialize()
 
@@ -408,8 +379,7 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
         ctx,
         "testing 123",
         target="abc123",
-        action_data={ATTR_SCENARIOS_APPLY: [
-            "Spammy"], ATTR_SCENARIOS_CONSTRAIN: ["Spammy"]},
+        action_data={ATTR_SCENARIOS_APPLY: ["Spammy"], ATTR_SCENARIOS_CONSTRAIN: ["Spammy"]},
     )
     await uut.initialize()
     await uut.deliver()
@@ -422,14 +392,9 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
-            "sms": {CONF_TRANSPORT: "dummy"}
-        },
+        deliveries={"plain_email": {CONF_TRANSPORT: "dummy"}, "sms": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
-        scenarios={
-            "Spammy": {CONF_DELIVERY: {"plain_email": {"target": ["spambox@myhome.org"]}}}
-        }
+        scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"target": ["spambox@myhome.org"]}}}},
     )
     await ctx.test_initialize()
 
@@ -437,8 +402,7 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
         ctx,
         "testing 123",
         target="abc123",
-        action_data={ATTR_SCENARIOS_APPLY: [
-            "Spammy"], ATTR_SCENARIOS_CONSTRAIN: ["Spammy"]},
+        action_data={ATTR_SCENARIOS_APPLY: ["Spammy"], ATTR_SCENARIOS_CONSTRAIN: ["Spammy"]},
     )
     await uut.initialize()
     await uut.deliver()
@@ -478,8 +442,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
         }),
         hass_api,
     )
-    hass.states.async_set(
-        "alarm_control_panel.home_alarm_control", "armed_home")
+    hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
     assert await uut.validate()
     attrs = uut.attributes()
     assert attrs["delivery_selection"] == "implicit"
@@ -492,14 +455,12 @@ async def test_secondary_scenario(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            CONF_CONDITION: {"condition": "template",
-                             "value_template": '{{"scenario-possible-danger" in applied_scenarios}}'}
+            CONF_CONDITION: {"condition": "template", "value_template": '{{"scenario-possible-danger" in applied_scenarios}}'}
         }),
         hass_api,
     )
     assert await uut.validate()
-    cvars = ConditionVariables(
-        ["scenario-no-danger", "sunny"], [], [], PRIORITY_MEDIUM, {})
+    cvars = ConditionVariables(["scenario-no-danger", "sunny"], [], [], PRIORITY_MEDIUM, {})
     assert await uut.validate()
     assert not uut.evaluate(cvars)
     cvars.applied_scenarios.append("scenario-possible-danger")
@@ -535,10 +496,8 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
                         "condition": "and",
                         "conditions": [
                             # impossible AND, for test stability
-                            {"condition": "sun", "after": "sunset",
-                                "before": "sunrise"},
-                            {"condition": "sun", "before": "sunset",
-                                "after": "sunrise"},
+                            {"condition": "sun", "after": "sunset", "before": "sunrise"},
+                            {"condition": "sun", "before": "sunset", "after": "sunrise"},
                         ],
                     },
                     {
@@ -560,16 +519,13 @@ async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
-        SCENARIO_SCHEMA(
-            {CONF_CONDITION: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
+        SCENARIO_SCHEMA({CONF_CONDITION: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
         hass_api,
     )
-    hass.states.async_set("device_tracker.iphone", "on",
-                          attributes={"battery_level": 12})
+    hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 12})
     assert await uut.validate()
     assert not uut.evaluate(ConditionVariables())
-    hass.states.async_set("device_tracker.iphone", "on",
-                          attributes={"battery_level": 60})
+    hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 60})
     assert uut.evaluate(ConditionVariables())
 
 
@@ -578,8 +534,7 @@ async def test_trace(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            CONF_CONDITION: {"condition": "template",
-                             "value_template": "{{'scenario-alert' in applied_scenarios}}"}
+            CONF_CONDITION: {"condition": "template", "value_template": "{{'scenario-alert' in applied_scenarios}}"}
         }),
         hass_api,
     )

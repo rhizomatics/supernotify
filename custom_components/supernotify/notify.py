@@ -39,15 +39,12 @@ from custom_components.supernotify.transport import Transport
 from . import (
     ATTR_ACTION,
     ATTR_DATA,
-    ATTR_DUPE_POLICY_MTSLP,
-    ATTR_DUPE_POLICY_NONE,
     CONF_ACTION_GROUPS,
     CONF_ACTIONS,
     CONF_ARCHIVE,
     CONF_CAMERAS,
     CONF_DELIVERY,
     CONF_DUPE_CHECK,
-    CONF_DUPE_POLICY,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
     CONF_LINKS,
@@ -62,7 +59,6 @@ from . import (
     DOMAIN,
     PLATFORMS,
     PRIORITY_MEDIUM,
-    PRIORITY_VALUES,
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .archive import NotificationArchive
@@ -362,15 +358,12 @@ class SupernotifyAction(BaseNotificationService):
         hass_api = HomeAssistantAPI(hass)
         self.context = Context(
             hass_api,
-            PeopleRegistry(recipients or [
-            ], hass_api, discover=recipients_discovery, mobile_discovery=mobile_discovery),
+            PeopleRegistry(recipients or [], hass_api, discover=recipients_discovery, mobile_discovery=mobile_discovery),
             ScenarioRegistry(scenarios or {}),
-            DeliveryRegistry(deliveries or {},
-                             transport_configs or {}, TRANSPORTS),
+            DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
-            MediaStorage(media_path, self.housekeeping.get(
-                CONF_MEDIA_STORAGE_DAYS, 7)),
+            MediaStorage(media_path, self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7)),
             Snoozer(),
             links or [],
             recipients or [],
@@ -396,17 +389,14 @@ class SupernotifyAction(BaseNotificationService):
         await self.context.media_storage.initialize(self.context.hass_api)
 
         self.expose_entities()
-        self.unsubscribes.append(self.hass.bus.async_listen(
-            "mobile_app_notification_action", self.on_mobile_action))
+        self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
         self.unsubscribes.append(
-            async_track_state_change_event(
-                self.hass, self.exposed_entities, self._entity_state_change_listener)
+            async_track_state_change_event(self.hass, self.exposed_entities, self._entity_state_change_listener)
         )
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
-            _LOGGER.info(
-                "SUPERNOTIFY setting up housekeeping schedule at: %s", housekeeping_schedule)
+            _LOGGER.info("SUPERNOTIFY setting up housekeeping schedule at: %s", housekeeping_schedule)
             self.unsubscribes.append(
                 async_track_time_change(
                     self.hass,
@@ -417,8 +407,7 @@ class SupernotifyAction(BaseNotificationService):
                 )
             )
 
-        self.unsubscribes.append(self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self.async_shutdown))
+        self.unsubscribes.append(self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown))
 
     async def async_shutdown(self, event: Event) -> None:
         _LOGGER.info("SUPERNOTIFY shutting down, %s", event)
@@ -444,26 +433,21 @@ class SupernotifyAction(BaseNotificationService):
         """Send a message via chosen transport."""
         data = kwargs.get(ATTR_DATA, {})
         notification = None
-        _LOGGER.debug("Message: %s, target: %s, data: %s",
-                      message, target, data)
+        _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
 
         try:
-            notification = Notification(
-                self.context, message, title, target, data)
+            notification = Notification(self.context, message, title, target, data)
             await notification.initialize()
             if self.context.dupe_checker.check(notification):
                 notification.suppress(SuppressionReason.DUPE)
             else:
                 if await notification.deliver():
                     self.sent += 1
-                    self.hass.states.async_set(
-                        f"{DOMAIN}.sent", str(self.sent))
+                    self.hass.states.async_set(f"{DOMAIN}.sent", str(self.sent))
                 elif notification.errored:
-                    _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s",
-                                  notification.id, notification.errored)
+                    _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
                 else:
-                    _LOGGER.warning(
-                        "SUPERNOTIFY No deliveries made for  %s", notification.id)
+                    _LOGGER.warning("SUPERNOTIFY No deliveries made for  %s", notification.id)
 
         except Exception as err:
             # fault barrier of last resort, integration failures should be caught within envelope delivery
@@ -471,8 +455,7 @@ class SupernotifyAction(BaseNotificationService):
             self.failures += 1
             if notification is not None:
                 notification.delivery_error = format_exception(err)
-            self.hass.states.async_set(
-                f"{DOMAIN}.failures", str(self.failures))
+            self.hass.states.async_set(f"{DOMAIN}.failures", str(self.failures))
 
         if notification is not None:
             self.last_notification = notification
@@ -487,106 +470,86 @@ class SupernotifyAction(BaseNotificationService):
     async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
         changes = 0
         if event is not None:
-            _LOGGER.info(
-                f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
+            _LOGGER.info(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
             new_state: State | None = event.data["new_state"]
             if new_state and event.data["entity_id"].startswith(f"{DOMAIN}.scenario_"):
                 scenario: Scenario | None = self.context.scenario_registry.scenarios.get(
                     event.data["entity_id"].replace(f"{DOMAIN}.scenario_", "")
                 )
                 if scenario is None:
-                    _LOGGER.warning(
-                        f"SUPERNOTIFY Event for unknown scenario {event.data['entity_id']}")
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown scenario {event.data['entity_id']}")
                 else:
                     if new_state.state == "off" and scenario.enabled:
                         scenario.enabled = False
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Disabling scenario {scenario.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Disabling scenario {scenario.name}")
                         changes += 1
                     elif new_state.state == "on" and not scenario.enabled:
                         scenario.enabled = True
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Enabling scenario {scenario.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Enabling scenario {scenario.name}")
                         changes += 1
                     else:
-                        _LOGGER.info(
-                            f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
+                        _LOGGER.info(f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
             elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.delivery_"):
                 delivery_config: Delivery | None = self.context.delivery_registry.deliveries.get(
                     event.data["entity_id"].replace(f"{DOMAIN}.delivery_", "")
                 )
                 if delivery_config is None:
-                    _LOGGER.warning(
-                        f"SUPERNOTIFY Event for unknown delivery {event.data['entity_id']}")
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown delivery {event.data['entity_id']}")
                 else:
                     if new_state.state == "off" and delivery_config.enabled:
                         delivery_config.enabled = False
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Disabling delivery {delivery_config.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {delivery_config.name}")
                         changes += 1
                     elif new_state.state == "on" and not delivery_config.enabled:
                         delivery_config.enabled = True
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Enabling delivery {delivery_config.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {delivery_config.name}")
                         changes += 1
                     else:
-                        _LOGGER.info(
-                            f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
+                        _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
             elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.transport_"):
                 transport: Transport | None = self.context.delivery_registry.transports.get(
                     event.data["entity_id"].replace(f"{DOMAIN}.transport_", "")
                 )
                 if transport is None:
-                    _LOGGER.warning(
-                        f"SUPERNOTIFY Event for unknown transport {event.data['entity_id']}")
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown transport {event.data['entity_id']}")
                 else:
                     if new_state.state == "off" and transport.override_enabled:
                         transport.override_enabled = False
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Disabling transport {transport.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Disabling transport {transport.name}")
                         changes += 1
                     elif new_state.state == "on" and not transport.override_enabled:
                         transport.override_enabled = True
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Enabling transport {transport.name}")
+                        _LOGGER.info(f"SUPERNOTIFY Enabling transport {transport.name}")
                         changes += 1
                     else:
-                        _LOGGER.info(
-                            f"SUPERNOTIFY No change to transport {transport.name}, already {new_state}")
+                        _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.name}, already {new_state}")
             elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.recipient_"):
                 recipient: Recipient | None = self.context.people_registry.people.get(
-                    event.data["entity_id"].replace(
-                        f"{DOMAIN}.recipient_", "person.")
+                    event.data["entity_id"].replace(f"{DOMAIN}.recipient_", "person.")
                 )
                 if recipient is None:
-                    _LOGGER.warning(
-                        f"SUPERNOTIFY Event for unknown recipient {event.data['entity_id']}")
+                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown recipient {event.data['entity_id']}")
                 else:
                     if new_state.state == "off" and recipient.enabled:
                         recipient.enabled = False
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Disabling recipient {recipient.entity_id}")
+                        _LOGGER.info(f"SUPERNOTIFY Disabling recipient {recipient.entity_id}")
                         changes += 1
                     elif new_state.state == "on" and not recipient.enabled:
                         recipient.enabled = True
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Enabling recipient {recipient.entity_id}")
+                        _LOGGER.info(f"SUPERNOTIFY Enabling recipient {recipient.entity_id}")
                         changes += 1
                     else:
-                        _LOGGER.info(
-                            f"SUPERNOTIFY No change to recipient {recipient.entity_id}, already {new_state}")
+                        _LOGGER.info(f"SUPERNOTIFY No change to recipient {recipient.entity_id}, already {new_state}")
 
             else:
-                _LOGGER.warning(
-                    "SUPERNOTIFY entity event with nothing to do:%s", event)
+                _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
 
     def expose_entities(self) -> None:
         # Create on the fly entities for key internal config and state
 
         for scenario in self.context.scenario_registry.scenarios.values():
             self.hass.states.async_set(
-                f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(
-                    include_condition=False)
+                f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(include_condition=False)
             )
             self.exposed_entities.append(f"{DOMAIN}.scenario_{scenario.name}")
         for transport in self.context.delivery_registry.transports.values():
@@ -595,8 +558,7 @@ class SupernotifyAction(BaseNotificationService):
                 STATE_ON if transport.override_enabled else STATE_OFF,
                 transport.attributes(),
             )
-            self.exposed_entities.append(
-                f"{DOMAIN}.transport_{transport.name}")
+            self.exposed_entities.append(f"{DOMAIN}.transport_{transport.name}")
         for delivery_name, delivery in self.context.delivery_registry.deliveries.items():
             self.hass.states.async_set(
                 f"{DOMAIN}.delivery_{delivery.name}", STATE_ON if delivery.enabled else STATE_OFF, delivery.attributes()
@@ -618,25 +580,24 @@ class SupernotifyAction(BaseNotificationService):
         return v
 
     def enquire_deliveries_by_scenario(self) -> dict[str, list[str]]:
-        return {name: list(scenario.delivery)
-                for name, scenario in self.context.scenario_registry.scenarios.items() if scenario.enabled}
+        return {
+            name: list(scenario.delivery)
+            for name, scenario in self.context.scenario_registry.scenarios.items()
+            if scenario.enabled
+        }
 
     async def enquire_occupancy(self) -> dict[str, list[dict[str, Any]]]:
         occupancy = self.context.people_registry.determine_occupancy()
         return {k: [v.as_dict() for v in vs] for k, vs in occupancy.items()}
 
     async def enquire_active_scenarios(self) -> list[str]:
-        occupiers: dict[str, list[Recipient]
-                        ] = self.context.people_registry.determine_occupancy()
-        cvars = ConditionVariables(
-            [], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        occupiers: dict[str, list[Recipient]] = self.context.people_registry.determine_occupancy()
+        cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
         return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(cvars)]
 
     async def trace_active_scenarios(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
-        occupiers: dict[str, list[Recipient]
-                        ] = self.context.people_registry.determine_occupancy()
-        cvars = ConditionVariables(
-            [], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        occupiers: dict[str, list[Recipient]] = self.context.people_registry.determine_occupancy()
+        cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
 
         def safe_json(v: Any) -> Any:
             return json.loads(json.dumps(v, cls=ExtendedJSONEncoder))
@@ -681,13 +642,11 @@ class SupernotifyAction(BaseNotificationService):
         event_name = event.data.get(ATTR_ACTION)
         if event_name is None or not event_name.startswith("SUPERNOTIFY_"):
             return  # event not intended for here
-        self.context.snoozer.handle_command_event(
-            event, self.context.people_registry.enabled_recipients())
+        self.context.snoozer.handle_command_event(event, self.context.people_registry.enabled_recipients())
 
     @callback
     async def async_nightly_tasks(self, now: dt.datetime) -> None:
-        _LOGGER.info(
-            "SUPERNOTIFY Housekeeping starting as scheduled at %s", now)
+        _LOGGER.info("SUPERNOTIFY Housekeeping starting as scheduled at %s", now)
         await self.context.archive.cleanup()
         self.context.snoozer.purge_snoozes()
         await self.context.media_storage.cleanup()

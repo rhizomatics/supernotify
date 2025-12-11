@@ -43,7 +43,7 @@ class Envelope:
         notification: "Notification | None" = None,
         target: Target | None = None,  # targets only for this delivery
         data: dict[str, Any] | None = None,
-        context: Context | None = None  # notification data customized for this delivery
+        context: Context | None = None,  # notification data customized for this delivery
     ) -> None:
         self.target: Target = target or Target()
         self.context: Context | None = context
@@ -60,12 +60,12 @@ class Envelope:
         self.data: dict[str, Any] = {}
         self.actions: list[dict[str, Any]] = []
         if notification:
-            delivery_config_data = notification.delivery_data(delivery.name)
+            delivery_config_data: dict[str, Any] = notification.delivery_data(delivery.name)
             self.enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
             self._message = notification._message
             self._title = notification._title
         else:
-            delivery_config_data: dict[str, Any] = {}
+            delivery_config_data = {}
             self.enabled_scenarios = {}
         if data:
             self.data = copy.deepcopy(delivery_config_data) if delivery_config_data else {}
@@ -80,7 +80,7 @@ class Envelope:
             self.actions = notification.actions
             self.priority = self.data.get(ATTR_PRIORITY, notification.priority)
             self.message_html = self.data.get(ATTR_MESSAGE_HTML, notification.message_html)
-        if notification and hasattr(notification,'condition_variables'): # yeuchh
+        if notification and hasattr(notification, "condition_variables"):  # yeuchh
             self.condition_variables = notification.condition_variables
         else:
             self.condition_variables = ConditionVariables()
@@ -161,10 +161,8 @@ class Envelope:
                     self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True
                     or self.delivery.option_bool(OPTION_STRIP_URLS) is True
                 ):
-                    title = self.delivery.transport.simplify(
-                        title, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
-        title = self._render_scenario_templates(
-            title, "title_template", "notification_title")
+                    title = self.delivery.transport.simplify(title, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
+        title = self._render_scenario_templates(title, "title_template", "notification_title")
         if title is None:
             return None
         return str(title)
@@ -177,8 +175,7 @@ class Envelope:
             msg = self._message
         else:
             msg = self.delivery.message if self.delivery.message is not None else self._message
-            message_usage: str = str(
-                self.delivery.option_str(OPTION_MESSAGE_USAGE))
+            message_usage: str = str(self.delivery.option_str(OPTION_MESSAGE_USAGE))
             if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
                 title = self._compute_title(ignore_usage=True)
                 if title:
@@ -187,27 +184,25 @@ class Envelope:
                 title = self._compute_title(ignore_usage=True)
                 if title:
                     msg = f"{title} {msg}"
-            if (
-                self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True
-                or self.delivery.option_bool(OPTION_STRIP_URLS) is True
-            ):
-                msg = self.delivery.transport.simplify(
-                    msg, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
+            if self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True or self.delivery.option_bool(OPTION_STRIP_URLS) is True:
+                msg = self.delivery.transport.simplify(msg, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
 
-        msg = self._render_scenario_templates(
-            msg, "message_template", "notification_message")
+        msg = self._render_scenario_templates(msg, "message_template", "notification_message")
         if msg is None:  # keep mypy happy
             return None
         return str(msg)
 
-    def _render_scenario_templates(
-        self, original: str | None, template_field: str, matching_ctx: str) -> str | None:
+    def _render_scenario_templates(self, original: str | None, template_field: str, matching_ctx: str) -> str | None:
         rendered = original if original is not None else ""
-        delivery_configs: list[DeliveryCustomization] = [scenario.delivery_config(
-            self.delivery.name) for scenario in self.enabled_scenarios.values()]
-        template_formats: list[str] = [dc.data_value(
-            template_field) for dc in delivery_configs if dc is not None and dc.data_value(template_field) is not None]
-        if template_formats:
+        delivery_configs: list[DeliveryCustomization] = list(
+            filter(None, (scenario.delivery_config(self.delivery.name) for scenario in self.enabled_scenarios.values()))
+        )
+        template_formats: list[str] = [
+            dc.data_value(template_field)
+            for dc in delivery_configs
+            if dc is not None and dc.data_value(template_field) is not None
+        ]
+        if template_formats and self.context:
             context_vars = self.condition_variables.as_dict() if self.condition_variables else {}
             for template_format in template_formats:
                 context_vars[matching_ctx] = rendered
@@ -216,6 +211,7 @@ class Envelope:
                     rendered = template.async_render(variables=context_vars)
                 except TemplateError as e:
                     _LOGGER.warning(
-                        "SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, self.delivery.name, e)
+                        "SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, self.delivery.name, e
+                    )
             return rendered
         return original
