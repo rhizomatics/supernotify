@@ -47,7 +47,9 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
             archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
         )
         await uut.initialize()
-        await uut.async_send_message("just a test", target="person.bob")
+        await uut.async_send_message("just a test", 
+                                        target="person.bob",
+                                        action_data={"apply_scenarios": ["Alarm"]})
 
         assert uut.last_notification is not None
         obj_path: anyio.Path = anyio.Path(
