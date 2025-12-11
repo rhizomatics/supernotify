@@ -33,9 +33,6 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from custom_components.supernotify.archive import ARCHIVE_PURGE_MIN_INTERVAL
-from custom_components.supernotify.transport import Transport
-
 from . import (
     ATTR_ACTION,
     ATTR_DATA,
@@ -61,7 +58,7 @@ from . import (
     PRIORITY_MEDIUM,
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from .archive import NotificationArchive
+from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
 from .common import DupeChecker
 from .context import Context
 from .delivery import DeliveryRegistry
@@ -72,6 +69,7 @@ from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
 from .snoozer import Snoozer
+from .transport import Transport
 from .transports.alexa_devices import AlexaDevicesTransport
 from .transports.alexa_media_player import AlexaMediaPlayerTransport
 from .transports.chime import ChimeTransport

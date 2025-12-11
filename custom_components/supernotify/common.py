@@ -39,9 +39,15 @@ def safe_extend(target: list[Any], extension: list[Any] | tuple[Any] | Any) -> l
     return target
 
 
-def ensure_list(v: Any, nullable: bool = False) -> list[Any]:
+def nullable_ensure_list(v: Any) -> list[Any] | None:
     if v is None:
-        return None if nullable else []
+        return None
+    return ensure_list(v)
+
+
+def ensure_list(v: Any) -> list[Any]:
+    if v is None:
+        return []
     if isinstance(v, list):
         return v
     if isinstance(v, tuple):

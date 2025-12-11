@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
 from voluptuous import humanize
 
-from custom_components.supernotify import (
+from . import (
     ACTION_DATA_SCHEMA,
     ATTR_ACTION_GROUPS,
     ATTR_ACTIONS,
@@ -39,9 +39,8 @@ from custom_components.supernotify import (
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
     SelectionRank,
 )
-
 from .archive import ArchivableObject
-from .common import ensure_list
+from .common import ensure_list, nullable_ensure_list
 from .context import Context
 from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
@@ -50,13 +49,11 @@ from .model import ConditionVariables, DeliveryCustomization, SuppressionReason,
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from custom_components.supernotify.people import PeopleRegistry
-    from custom_components.supernotify.transport import (
+    from .people import PeopleRegistry, Recipient
+    from .scenario import Scenario
+    from .transport import (
         Transport,
     )
-
-    from .people import Recipient
-    from .scenario import Scenario
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,8 +130,8 @@ class Notification(ArchivableObject):
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
 
-        self.action_groups: list[str] | None = ensure_list(action_data.get(ATTR_ACTION_GROUPS), nullable=True)
-        self.recipients_override: list[str] | None = ensure_list(action_data.get(ATTR_RECIPIENTS), nullable=True)
+        self.action_groups: list[str] | None = nullable_ensure_list(action_data.get(ATTR_ACTION_GROUPS))
+        self.recipients_override: list[str] | None = nullable_ensure_list(action_data.get(ATTR_RECIPIENTS))
         self.data.update(action_data.get(ATTR_DATA, {}))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
