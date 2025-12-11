@@ -110,7 +110,7 @@ class ChimeTransport(Transport):
         chime_volume: float | None = data.pop("chime_volume", None)
         chime_duration: int | None = data.pop("chime_duration", None)
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "SUPERNOTIFY notify_chime: %s -> %s (delivery: %s, env_data:%s, dlv_data:%s)",
             chime_tune,
             target.entity_ids,
