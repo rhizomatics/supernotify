@@ -80,18 +80,19 @@ Set up aliases for common chimes, and a secondary seasonal version, in the Chime
 ```yaml
 transports:
   chime:
-    device_discovery: true
-    device_domain: alexa_devices
     delivery_defaults:
       options:
         chime_aliases:
           doorbell:
-            alexa_devices:
-              tune: amzn_sfx_doorbell_chime_02
+            alexa_devices: amzn_sfx_doorbell_chime_02
             switch:
               target: switch.chime_ding_dong
-          xmas_doorbell:
-            alexa_devices: christmas_05
+          xmas_doorbell: christmas_05
+delivery:
+  doorbell_rang:
+    transport: chime
+    data:
+      chime_tune: doorbell
 ```
 
 Then create a date condition scenario, that overrides the chime alias for your `doorbell_rang` delivery:

@@ -2,26 +2,32 @@
 
 ## 1.5.0
 ### Features
-- Mobile discovery now on by default
-  - Use `mobile_discovery: false` for each recipient to switch off
-- New Recipient discovery, on by default, based on Home Assistant's `person` entities
-  - Use `recipient_discovery: false` in configuration to switch off
-  - Use `enabled: false` to switch off specific people from automatic notifications
-- Mobile Discovery can be switched off at platform or recipient level
-- Recipient now exposed as an entity
-  - Recipient can be enabled or disabled in Home Assistant UI, Automations, API etc by changing entity state
-- Mobile Push delivery now configured by default
-- `png_opts` now available for images, pre-set for email to `optimize: true`
-- Camera snapshot now fixes/optimizes images like URL snapshot and Image Entity already do
-- Media now has a `reprocess` option to switch off image rewriting, or preserve original metadata, incl comments
-- Automatic housekeeping to purge images from `media_dir`, configurable by `media_storage_days` in `housekeeping`
-- `purge_media` service to run the media storage housekeeping on demand
-- Device Discovery can now include or exclude by device model
-  - Chime integration uses this so doesn't select Alexa actual devices and Alexa Group devices
-- Scenario overriding improved for `data` and `target`
-- Scenarios can now disable deliveries
-- New `select` option for Scenario delivery config, to apply only where delivery already selected
-- Dupe checking now happens at Envelope rather than Notification level, so same message can go out to different deliveries and/or recipients
+- Mobile Push
+    - Mobile discovery now on by default
+        - Use `mobile_discovery: false` for each recipient to switch off
+    - New Recipient discovery, on by default, based on Home Assistant's `person` entities
+        - Use `recipient_discovery: false` in configuration to switch off
+        - Use `enabled: false` to switch off specific people from automatic notifications
+    - Mobile Discovery can be switched off at platform or recipient level
+    - Recipient now exposed as an entity
+        - Recipient can be enabled or disabled in Home Assistant UI, Automations, API etc by changing entity state
+    - Mobile Push delivery now configured by default
+- Multimedia
+    - `png_opts` now available for images, pre-set for email to `optimize: true`
+    - Camera snapshot now fixes/optimizes images like URL snapshot and Image Entity already do
+    - Media now has a `reprocess` option to switch off image rewriting, or preserve original metadata, incl comments
+    - Automatic housekeeping to purge images from `media_dir`, configurable by `media_storage_days` in `housekeeping`
+    - `purge_media` service to run the media storage housekeeping on demand
+- Chime
+    - Chime Aliases configuration now validated at start up, and schema published
+    - Device Discovery can now include or exclude by device model
+        - Chime integration uses this so doesn't select Alexa actual devices and Alexa Group devices
+- Scenarios
+    - Scenario overriding improved for `data` and `target`
+    - Scenarios can now disable deliveries
+    - New `select` option for Scenario delivery config, to apply only where delivery already selected
+- Duplicate Suppression
+    - Dupe checking now happens at Envelope rather than Notification level, so same message can go out to different deliveries and/or recipients
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
@@ -32,6 +38,7 @@ only prepare data and targets
 - Dupe checking code moved out of Notify to its own class
 - `delivery_by_scenario` pre-compute and refresh removed
 - Moved code to detect media requirements in mobile actions out of Notification and into the mobile_push transport
+- Test suite for the seasonal scenarios
 
 ## 1.4.0
 ### Features

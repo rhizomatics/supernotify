@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
-from homeassistant.util.yaml import parse_yaml
+from homeassistant.util.yaml.loader import parse_yaml
 
 from custom_components.supernotify import (
     CONF_ACTION_GROUPS,
@@ -102,9 +102,8 @@ class TestingContext(Context):
             for ddomain, did, discover in devices or []
         }
         self.entities = entities
-        raw_config: ConfigType
 
-        raw_config = cast("dict[str, Any]", parse_yaml(yaml)) if yaml else {}
+        raw_config: ConfigType = cast("ConfigType", parse_yaml(yaml)) if yaml else {}
         raw_config.setdefault("name", "Supernotify")
         raw_config.setdefault("platform", "supernotify")
         if deliveries:

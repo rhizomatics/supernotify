@@ -15,8 +15,10 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_DESCRIPTION,
+    CONF_DEVICE_ID,
     CONF_EMAIL,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -444,6 +446,42 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
 })
 SUPERNOTIFY_SCHEMA = PLATFORM_SCHEMA
+
+
+CONF_TUNE = "tune"
+CONF_VOLUME = "volume"
+CONF_DURATION = "duration"
+
+CHIME_ALIAS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(CONF_DEVICE_ID): cv.string,
+    vol.Optional(CONF_ALIAS): cv.string,
+    vol.Optional(CONF_TUNE): cv.string,
+    vol.Optional(CONF_DATA): DATA_SCHEMA,
+    vol.Optional(CONF_VOLUME): float,
+    vol.Optional(CONF_DURATION): cv.positive_int,
+})
+CHIME_ALIAS_DOMAIN_SCHEMA = vol.Schema({vol.Required(cv.string, default=dict): {cv.string: CHIME_ALIAS_SCHEMA}})
+CHIME_ALIASES_SCHEMA = vol.Schema({
+    vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
+        cv.string: vol.Schema({
+            cv.string: vol.Any(
+                cv.string,
+                vol.Schema({
+                    vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+                    vol.Optional(CONF_DEVICE_ID): cv.string,
+                    vol.Optional(CONF_ALIAS): cv.string,
+                    vol.Optional(CONF_TUNE): cv.string,
+                    vol.Optional(CONF_DATA): DATA_SCHEMA,
+                    vol.Optional(CONF_VOLUME): float,
+                    vol.Optional(CONF_TARGET): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(CONF_DURATION): cv.positive_int,
+                }),
+            )
+        })
+    })
+})
+
 
 ACTION_DATA_SCHEMA = vol.Schema(
     {

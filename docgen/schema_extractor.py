@@ -27,6 +27,7 @@ TOP_LEVEL_SCHEMAS = {
     "RECIPIENT_SCHEMA": "Recipient Definition",
     "CAMERA_SCHEMA": "Camera Definition",
     "TRANSPORT_SCHEMA": "Transport Definition",
+    "CHIME_ALIASES_SCHEMA": "Chime Aliases Definition",
 }
 
 # some hacks to stop voluptuous_openapi generating broken schemas

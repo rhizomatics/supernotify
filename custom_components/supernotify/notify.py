@@ -455,7 +455,7 @@ class SupernotifyAction(BaseNotificationService):
             self.hass.states.async_set(f"{DOMAIN}.failures", str(self.failures))
 
         if notification is None:
-            _LOGGER.warning("SUPERNOTIFY NULL Notification, %s",message)
+            _LOGGER.warning("SUPERNOTIFY NULL Notification, %s", message)
         else:
             self.last_notification = notification
             await self.context.archive.archive(notification)

@@ -1,6 +1,7 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_DEVICE_ID,
@@ -11,6 +12,7 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
 from custom_components.supernotify import (
     ATTR_DATA,
     ATTR_PRIORITY,
+    CHIME_ALIASES_SCHEMA,
     OPTION_CHIME_ALIASES,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
@@ -20,6 +22,9 @@ from custom_components.supernotify import (
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
 
@@ -78,11 +83,22 @@ class ChimeTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self.chime_aliases: dict[str, Any] = {}
+        if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
+            try:
+                validated: ConfigType = CHIME_ALIASES_SCHEMA({
+                    OPTION_CHIME_ALIASES: self.delivery_defaults.options.get(OPTION_CHIME_ALIASES)
+                })
+                self.chime_aliases = validated[OPTION_CHIME_ALIASES]
+                _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
+            except vol.Invalid as ve:
+                _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
 
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.options = {}
+        config.device_discovery = True
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.device_domain = DEVICE_DOMAINS
         config.device_model_exclude = DEVICE_MODEL_EXCLUDE
@@ -91,10 +107,6 @@ class ChimeTransport(Transport):
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_CHIME, RE_DEVICE_ID],
         }
         return config
-
-    @property
-    def chime_aliases(self) -> dict[str, Any]:
-        return self.delivery_defaults.options.get(OPTION_CHIME_ALIASES) or {}
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
