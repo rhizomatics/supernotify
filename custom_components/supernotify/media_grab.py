@@ -448,7 +448,7 @@ class MediaStorage:
             try:
                 archive = await aiofiles.os.scandir(self.media_path)
                 for entry in archive:
-                    if dt_util.utc_from_timestamp(entry.stat().st_ctime) <= cutoff:
+                    if entry.is_file() and dt_util.utc_from_timestamp(entry.stat().st_ctime) <= cutoff:
                         _LOGGER.debug("SUPERNOTIFY Purging %s", entry.path)
                         await aiofiles.os.unlink(Path(entry.path))
                         purged += 1
