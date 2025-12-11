@@ -355,6 +355,10 @@ class Notification(ArchivableObject):
         object_refs = ["context", "people_registry", "delivery_registry"]
 
         def sanitize(v: Any, **kwargs) -> Any:
+            if isinstance(v, dt.datetime | dt.time | dt.date):
+                return v.isoformat()
+            if isinstance(v, str | int | float | bool):
+                return v
             if isinstance(v, list):
                 return [sanitize(vv, **kwargs) for vv in v]
             if isinstance(v, tuple):
@@ -363,13 +367,9 @@ class Notification(ArchivableObject):
                 return {k: sanitize(vv, **kwargs) for k, vv in v.items()}
             if isinstance(v, object):
                 if hasattr(v, "contents"):
-                    return v.contents(**kwargs)
+                    return sanitize(v.contents(**kwargs))
                 if hasattr(v, "as_dict"):
-                    return v.as_dict()
-            if isinstance(v, dt.datetime | dt.time | dt.date):
-                return v.isoformat()
-            if isinstance(v, str | int | float | bool):
-                return v
+                    return v.as_dict(**kwargs)
             return None
 
         return {
