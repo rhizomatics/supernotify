@@ -133,12 +133,12 @@ class Notification(ArchivableObject):
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
 
-        self.action_groups: list[str] | None = action_data.get(ATTR_ACTION_GROUPS)
-        self.recipients_override: list[str] | None = action_data.get(ATTR_RECIPIENTS)
+        self.action_groups: list[str] | None = ensure_list(action_data.get(ATTR_ACTION_GROUPS), nullable=True)
+        self.recipients_override: list[str] | None = ensure_list(action_data.get(ATTR_RECIPIENTS), nullable=True)
         self.data.update(action_data.get(ATTR_DATA, {}))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
-        self.actions: list[dict[str, Any]] = action_data.get(ATTR_ACTIONS) or []
+        self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
         self.delivery_results: dict[str, Any] = {}
         self.delivery_errors: dict[str, Any] = {}
 
