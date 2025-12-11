@@ -130,7 +130,7 @@ class Envelope(DupeCheckable):
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
-        exclude_attrs = ["_notification"]
+        exclude_attrs = ["_notification","context"]
         if minimal:
             exclude_attrs.extend("resolved")
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs}
