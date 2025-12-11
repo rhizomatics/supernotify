@@ -420,7 +420,6 @@ async def test_attributes(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            "delivery_selection": "implicit",
             "media": {"camera_entity_id": "camera.doorbell"},
             "delivery": {"doorbell_chime_alexa": {"data": {"amazon_magic_id": "a77464"}}, "email": {}},
             "condition": {
@@ -446,7 +445,6 @@ async def test_attributes(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
     assert await uut.validate()
     attrs = uut.attributes()
-    assert attrs["delivery_selection"] == "implicit"
 
     assert attrs["delivery"]["doorbell_chime_alexa"]["data"]["amazon_magic_id"] == "a77464"
 

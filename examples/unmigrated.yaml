@@ -227,10 +227,7 @@ notify:
                 media_player: christmas_05
 
     scenarios:
-      image_tune:
-        delivery_selection: implicit
       doorbell:
-        delivery_selection: implicit
         media:
           camera_entity_id: camera.doorbell
         delivery:

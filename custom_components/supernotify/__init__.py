@@ -99,7 +99,6 @@ CONF_MOBILE_DISCOVERY: str = "mobile_discovery"
 CONF_ACTION_TEMPLATE: str = "action_template"
 CONF_ACTION_GROUPS: str = "action_groups"
 CONF_TITLE_TEMPLATE: str = "title_template"
-CONF_DELIVERY_SELECTION: str = "delivery_selection"
 CONF_MEDIA: str = "media"
 CONF_CAMERA: str = "camera"
 CONF_CLIP_URL: str = "clip_url"
@@ -378,6 +377,7 @@ MEDIA_SCHEMA = vol.Schema({
 
 SCENARIO_SCHEMA = vol.All(
     cv.deprecated(key=CONF_CONDITION),
+    cv.deprecated(key="delivery_selection"),
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
@@ -385,10 +385,7 @@ SCENARIO_SCHEMA = vol.All(
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
         vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DELIVERY_SELECTION, default=DELIVERY_SELECTION_IMPLICIT): vol.In([
-            DELIVERY_SELECTION_IMPLICIT,
-            DELIVERY_SELECTION_EXPLICIT,
-        ]),
+        vol.Optional("delivery_selection", default=DELIVERY_SELECTION_IMPLICIT): cv.string,
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
     }),
 )

@@ -24,7 +24,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_DELIVERY_SELECTION, CONF_MEDIA
+from . import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
 from .delivery import Delivery
 from .model import ConditionVariables
 
@@ -59,7 +59,6 @@ class Scenario:
         if not scenario_definition.get(CONF_CONDITIONS) and scenario_definition.get(CONF_CONDITION):
             self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
-        self.delivery_selection: str | None = scenario_definition.get(CONF_DELIVERY_SELECTION)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
         self.delivery: dict[str, DeliveryCustomization] = {
             k: DeliveryCustomization(v) for k, v in scenario_definition.get(CONF_DELIVERY, {}).items()
@@ -137,7 +136,6 @@ class Scenario:
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
             "media": self.media,
-            "delivery_selection": self.delivery_selection,
             "action_groups": self.action_groups,
             "delivery": {k: v.as_dict() for k, v in self.delivery.items()},
         }

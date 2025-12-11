@@ -32,8 +32,8 @@ SIMPLE_CONFIG = {
     },
     "archive": {"enabled": True},
     "scenarios": {
-        "simple": {"delivery_selection": "implicit"},
-        "somebody": {"delivery_selection": "explicit", "delivery": {"chime_person": {}}},
+        "simple": {"alias": "Not much happens"},
+        "somebody": {"delivery": {"chime_person": {}}},
     },
     "recipients": [
         {

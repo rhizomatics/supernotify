@@ -232,9 +232,11 @@ notify:
 
     scenarios:
       image_tune:
-        delivery_selection: implicit
+        delivery:
+          media_image:
+            data:
+              media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
       doorbell:
-        delivery_selection: implicit
         media:
           camera_entity_id: camera.doorbell
         delivery:

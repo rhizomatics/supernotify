@@ -12,8 +12,7 @@ Scenarios can be defined both as a set of conditions which switch on the scenari
 
 For example, a scenario could be defined by conditions such as alarm panel arm state, occupancy and time to indicate when notifications should be minimized, and then different chime sounds could be selected or deliveries switched off.
 
-Scenarios can override specific delivery configurations, general media configuration (such as setting a camera, or specifying which alert sound to use for a mobile push ). A scenario has a
-default `delivery_selection` basis of `implicit`, where the scenario inherits all the default deliveries, or have this switched off by overriding `delivery_selection` to `explicit` in which case only the deliveries mentioned in the scenario are included.
+Scenarios can override specific delivery configurations, general media configuration (such as setting a camera, or specifying which alert sound to use for a mobile push ) and disable implicit deliveries. Scenarios can be as small or as large as you want - it could define an entire set of deliveries, or patch a single value.
 
 ## Usage Modes
 
@@ -35,8 +34,7 @@ default `delivery_selection` basis of `implicit`, where the scenario inherits al
 For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of
 notification by the standard Home Assistant module.
 
-Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](../configuration/conditions.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or
-even patterns of words in the message or title - see [Content Escalation Recipe](../recipes/content_escalation.md) for an example.
+Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](../configuration/conditions.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or even patterns of words in the message or title - see [Content Escalation Recipe](../recipes/content_escalation.md) for an example.
 
 !!! tip
     There's a [Scenario Schema](../developer/schemas/Scenario_Definition.md) defined for the configuration.
@@ -68,7 +66,6 @@ Selection is made `implicit` so not switching off any other deliveries that woul
 
 ```yaml
 red_alert:
-      delivery_selection: implicit
       delivery:
         chime_red_alert:
         upstairs_siren:

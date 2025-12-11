@@ -198,14 +198,14 @@ class Notification(ArchivableObject):
     def apply_enabled_scenarios(self) -> None:
         """Set media and action_groups from scenario if defined, first come first applied"""
         action_groups: list[str] = []
-        for scen_obj in self.enabled_scenarios.values():
-            if scen_obj.media:
+        for scenario in self.enabled_scenarios.values():
+            if scenario.media:
                 if self.media:
-                    self.media.update(scen_obj.media)
+                    self.media.update(scenario.media)
                 else:
-                    self.media = scen_obj.media
-            if scen_obj.action_groups:
-                action_groups.extend(ag for ag in scen_obj.action_groups if ag not in action_groups)
+                    self.media = scenario.media
+            if scenario.action_groups:
+                action_groups.extend(ag for ag in scenario.action_groups if ag not in action_groups)
         # self.action_groups only accessed from inside Envelope
         if self.action_groups:
             self.action_groups.extend(action_groups)
