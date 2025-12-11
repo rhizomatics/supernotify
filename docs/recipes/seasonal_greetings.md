@@ -109,5 +109,5 @@ scenarios:
         doorbell_rang:
           select: false
           data:
-            chime_alias: xmas_doorbell
+            chime_tune: xmas_doorbell
 ```
