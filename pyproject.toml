@@ -4,7 +4,7 @@ description = "Home Assistant custom component for advanced notifications"
 readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
-dependencies = ["homeassistant>=2025.11.1"]
+dependencies = ["homeassistant>=2025.12.1"]
 
 [tool.poetry]
 package-mode = false
