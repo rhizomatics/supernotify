@@ -171,7 +171,7 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
     assert dummy is not None
     await uut.async_send_message(
         title="test_title",
-        message="testing 123",
+        message="testing 456",
         data={
             "target": "person.new_home_owner",
             "delivery_selection": DELIVERY_SELECTION_EXPLICIT,

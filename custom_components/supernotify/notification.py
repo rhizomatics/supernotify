@@ -17,8 +17,6 @@ from custom_components.supernotify import (
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
     ATTR_MEDIA,
-    ATTR_MEDIA_CLIP_URL,
-    ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
     ATTR_PERSON_ID,
     ATTR_PRIORITY,
@@ -43,7 +41,7 @@ from custom_components.supernotify import (
 )
 
 from .archive import ArchivableObject
-from .common import DupeCheckable, ensure_list
+from .common import ensure_list
 from .context import Context
 from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
@@ -66,7 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation + string.digits)
 
 
-class Notification(ArchivableObject, DupeCheckable):
+class Notification(ArchivableObject):
     def __init__(
         self,
         context: Context,
@@ -185,7 +183,6 @@ class Notification(ArchivableObject, DupeCheckable):
             self.selected_delivery_names = self.select_deliveries()
             if self.context.snoozer.is_global_snooze(self.priority):
                 self.suppress(SuppressionReason.SNOOZED)
-            self.default_media_from_actions()
             self.apply_enabled_scenarios()
 
     def validate_action_data(self, action_data: dict[str, Any]) -> None:
@@ -202,11 +199,17 @@ class Notification(ArchivableObject, DupeCheckable):
         """Set media and action_groups from scenario if defined, first come first applied"""
         action_groups: list[str] = []
         for scen_obj in self.enabled_scenarios.values():
-            if scen_obj.media and not self.media:
-                self.media.update(scen_obj.media)
+            if scen_obj.media:
+                if self.media:
+                    self.media.update(scen_obj.media)
+                else:
+                    self.media = scen_obj.media
             if scen_obj.action_groups:
                 action_groups.extend(ag for ag in scen_obj.action_groups if ag not in action_groups)
-        if action_groups:
+        # self.action_groups only accessed from inside Envelope
+        if self.action_groups:
+            self.action_groups.extend(action_groups)
+        else:
             self.action_groups = action_groups
 
     def select_deliveries(self) -> list[str]:
@@ -262,25 +265,6 @@ class Notification(ArchivableObject, DupeCheckable):
         selected = first + anywhere + last
         self.debug_trace.record_delivery_selection("ranked", selected)
         return selected
-
-    def default_media_from_actions(self) -> None:
-        """If no media defined, look for iOS / Android actions that have media defined"""
-        if self.media:
-            return
-        if self.data.get("image"):
-            self.media[ATTR_MEDIA_SNAPSHOT_URL] = self.data.get("image")
-        if self.data.get("video"):
-            self.media[ATTR_MEDIA_CLIP_URL] = self.data.get("video")
-        if self.data.get("attachment", {}).get("url"):
-            url = self.data["attachment"]["url"]
-            if url and url.endswith(".mp4") and not self.media.get(ATTR_MEDIA_CLIP_URL):
-                self.media[ATTR_MEDIA_CLIP_URL] = url
-            elif (
-                url
-                and (url.endswith(".jpg") or url.endswith(".jpeg") or url.endswith(".png"))
-                and not self.media.get(ATTR_MEDIA_SNAPSHOT_URL)
-            ):
-                self.media[ATTR_MEDIA_SNAPSHOT_URL] = url
 
     def suppress(self, reason: SuppressionReason) -> None:
         self.suppressed = reason
@@ -338,7 +322,13 @@ class Notification(ArchivableObject, DupeCheckable):
 
             recipients: list[Target] = self.generate_recipients(delivery)
             envelopes = self.generate_envelopes(delivery, recipients)
+
             for envelope in envelopes:
+                if self.context.dupe_checker.check(envelope):
+                    _LOGGER.info("SUPERNOTIFY Suppressing dupe envelope, %s", self._message)
+                    envelope.skip_reason = SuppressionReason.DUPE
+                    self.undelivered_envelopes.append(envelope)
+                    continue
                 try:
                     if not await transport.deliver(envelope):
                         self.missed += 1
@@ -376,9 +366,9 @@ class Notification(ArchivableObject, DupeCheckable):
                     return v.contents(**kwargs)
                 if hasattr(v, "as_dict"):
                     return v.as_dict()
-            if isinstance(v, (dt.datetime, dt.time, dt.date)):
+            if isinstance(v, dt.datetime | dt.time | dt.date):
                 return v.isoformat()
-            if isinstance(v, (str, int, float, bool)):
+            if isinstance(v, str | int | float | bool):
                 return v
             return None
 
@@ -532,6 +522,7 @@ class Notification(ArchivableObject, DupeCheckable):
                 envelope_data.update(self.data)  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
+                # scenario applied at cross-delivery level in apply_enabled_scenarios
                 for scenario in self.enabled_scenarios.values():
                     customization: DeliveryCustomization | None = scenario.delivery.get(delivery.name)
                     if customization and customization.data:
@@ -539,21 +530,6 @@ class Notification(ArchivableObject, DupeCheckable):
                 envelopes.append(Envelope(delivery, self, target, envelope_data, context=self.context))
 
         return envelopes
-
-    # DupeCheckable implementation
-
-    def skip_priorities(self) -> list[str]:
-        if self.priority in PRIORITY_VALUES:
-            return PRIORITY_VALUES[PRIORITY_VALUES.index(self.priority) :]
-        return [self.priority]
-
-    def hash(self) -> int:
-        """Alpha hash to reduce noise from messages with timestamps or incrementing counts"""
-
-        def alphaize(v: str | None) -> str | None:
-            return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
-
-        return hash((alphaize(self._message), alphaize(self._title)))
 
 
 class DebugTrace:

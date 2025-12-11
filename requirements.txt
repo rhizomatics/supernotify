@@ -1,4 +1,3 @@
 homeassistant==2025.12.1
 cachetools
 pycares==4.11.0
-

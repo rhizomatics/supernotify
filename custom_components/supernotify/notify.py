@@ -67,7 +67,7 @@ from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
 from .media_grab import MediaStorage
-from .model import ConditionVariables, SuppressionReason
+from .model import ConditionVariables
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
@@ -438,16 +438,13 @@ class SupernotifyAction(BaseNotificationService):
         try:
             notification = Notification(self.context, message, title, target, data)
             await notification.initialize()
-            if self.context.dupe_checker.check(notification):
-                notification.suppress(SuppressionReason.DUPE)
+            if await notification.deliver():
+                self.sent += 1
+                self.hass.states.async_set(f"{DOMAIN}.sent", str(self.sent))
+            elif notification.errored:
+                _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
             else:
-                if await notification.deliver():
-                    self.sent += 1
-                    self.hass.states.async_set(f"{DOMAIN}.sent", str(self.sent))
-                elif notification.errored:
-                    _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
-                else:
-                    _LOGGER.warning("SUPERNOTIFY No deliveries made for  %s", notification.id)
+                _LOGGER.warning("SUPERNOTIFY No deliveries made for  %s", notification.id)
 
         except Exception as err:
             # fault barrier of last resort, integration failures should be caught within envelope delivery

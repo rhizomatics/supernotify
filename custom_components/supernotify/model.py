@@ -232,6 +232,13 @@ class Target:
     def for_category(self, category: str) -> list[str]:
         return self.targets.get(category, [])
 
+    def hash_resolved(self) -> int:
+        targets = []
+        for category in self.targets:
+            if category not in self.INDIRECT_CATEGORIES:
+                targets.extend(self.targets[category])
+        return hash(tuple(targets))
+
     @property
     def direct_categories(self) -> list[str]:
         return self.DIRECT_CATEGORIES + [cat for cat in self.targets if cat not in self.CATEGORIES]

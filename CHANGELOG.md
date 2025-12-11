@@ -21,6 +21,7 @@
 - Scenario overriding improved for `data` and `target`
 - Scenarios can now disable deliveries
 - New `select` option for Scenario delivery config, to apply only where delivery already selected
+- Dupe checking now happens at Envelope rather than Notification level, so same message can go out to different deliveries and/or recipients
 ### Changes
 - `enqure_people` is now `enquire_recipients` for consistency
 ### Internal
@@ -29,7 +30,8 @@
 - Notification slimmed down and focussed, message and title handling moved to Envelope, Notification will
 only prepare data and targets
 - Dupe checking code moved out of Notify to its own class
-- delivery_by_scenario pre-compute and refresh removed
+- `delivery_by_scenario` pre-compute and refresh removed
+- Moved code to detect media requirements in mobile actions out of Notification and into the mobile_push transport
 
 ## 1.4.0
 ### Features

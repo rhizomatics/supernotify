@@ -2,8 +2,10 @@
 
 import copy
 import logging
+import string
 import time
 import typing
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -19,10 +21,12 @@ from . import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
+    PRIORITY_VALUES,
 )
+from .common import DupeCheckable
 from .context import Context
 from .media_grab import grab_image
-from .model import ConditionVariables, DeliveryCustomization, MessageOnlyPolicy, Target
+from .model import ConditionVariables, DeliveryCustomization, MessageOnlyPolicy, SuppressionReason, Target
 
 if typing.TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
@@ -33,8 +37,10 @@ if typing.TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation + string.digits)
 
-class Envelope:
+
+class Envelope(DupeCheckable):
     """Wrap a notification with a specific set of targets and service data possibly customized for those targets"""
 
     def __init__(
@@ -64,9 +70,11 @@ class Envelope:
             self.enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
             self._message = notification._message
             self._title = notification._title
+            self.id = "f{notification.id}_{self.delivery_name}"
         else:
             delivery_config_data = {}
             self.enabled_scenarios = {}
+            self.id = str(uuid.uuid1())
         if data:
             self.data = copy.deepcopy(delivery_config_data) if delivery_config_data else {}
             self.data |= data
@@ -85,12 +93,19 @@ class Envelope:
         else:
             self.condition_variables = ConditionVariables()
 
+        if not self.media:
+            override = self.delivery.transport.media_requirements(self.data)
+            if override:
+                _LOGGER.info("SUPERNOTIFY Inferring media from transport: %s", override)
+                self.media = override
+
         self.message = self._compute_message()
         self.title = self._compute_title()
 
         self.delivered: int = 0
         self.errored: int = 0
         self.skipped: int = 0
+        self.skip_reason: SuppressionReason | None = None
         self.calls: list[CallRecord] = []
         self.failed_calls: list[CallRecord] = []
         self.delivery_error: list[str] | None = None
@@ -215,3 +230,18 @@ class Envelope:
                     )
             return rendered
         return original
+
+    # DupeCheckable implementation
+
+    def skip_priorities(self) -> list[str]:
+        if self.priority in PRIORITY_VALUES:
+            return PRIORITY_VALUES[PRIORITY_VALUES.index(self.priority) :]
+        return [self.priority]
+
+    def hash(self) -> int:
+        """Alpha hash to reduce noise from messages with timestamps or incrementing counts"""
+
+        def alphaize(v: str | None) -> str | None:
+            return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
+
+        return hash((alphaize(self._message), alphaize(self.delivery.name), self.target.hash_resolved(), alphaize(self._title)))

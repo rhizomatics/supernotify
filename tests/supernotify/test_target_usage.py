@@ -57,14 +57,14 @@ async def test_target_use_on_no_delivery_targets():
 
     uut = Notification(
         context,
-        "testing",
+        "testing abc",
         target=["joey@mctoe.com"],
     )
     await uut.initialize()
     await uut.deliver()
     assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
 
-    uut = Notification(context, "testing")
+    uut = Notification(context, "testing def")
     await uut.initialize()
     await uut.deliver()
     assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]

@@ -103,6 +103,10 @@ class Transport:
     def auto_configure(self) -> bool:
         return False
 
+    def media_requirements(self, data: dict[str, Any]) -> dict[str, Any] | None:  # noqa: ARG002
+        """Create a MEDIA_SCHEMA dict from media requirements implied in the data"""
+        return None
+
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.delivery_defaults.action
