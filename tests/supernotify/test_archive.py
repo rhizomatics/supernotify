@@ -34,26 +34,26 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
     with tempfile.TemporaryDirectory() as archive:
         uut = SupernotifyAction(
             mock_hass,
-            scenarios={"cold_day": {
-                "alias": "Its a cold day",
-                "conditions": {
-                    "condition": "template",
-                    "value_template": """
+            scenarios={
+                "cold_day": {
+                    "alias": "Its a cold day",
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": """
                             {% set n = states('sensor.outside_temperature') | float %}
                             {{ n <= 10 }}""",
+                    },
                 },
-            },"Alarm": {"delivery": {"chime": {"enabled":False}}}},
+                "Alarm": {"delivery": {"chime": {"enabled": False}}},
+            },
             recipients=[],  # recipients will generate mock person_config data and break json
             archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
         )
         await uut.initialize()
-        await uut.async_send_message("just a test", 
-                                        target="person.bob",
-                                        action_data={"apply_scenarios": ["Alarm"]})
+        await uut.async_send_message("just a test", target="person.bob", action_data={"apply_scenarios": ["Alarm"]})
 
         assert uut.last_notification is not None
-        obj_path: anyio.Path = anyio.Path(
-            archive) / f"{uut.last_notification.base_filename()}.json"
+        obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
         assert await obj_path.exists()
         async with aiofiles.open(obj_path) as stream:
             blob: str = "".join(await stream.readlines())
@@ -65,14 +65,12 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
 
 async def test_file_archive(mock_hass_api: HomeAssistantAPI) -> None:
     with tempfile.TemporaryDirectory() as archive:
-        uut = NotificationArchive(
-            {CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
+        uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
         await uut.initialize()
         msg = ArchiveCrashDummy()
         assert await uut.archive(msg)
 
-        obj_path: anyio.Path = anyio.Path(
-            archive).joinpath(f"{msg.base_filename()}.json")
+        obj_path: anyio.Path = anyio.Path(archive).joinpath(f"{msg.base_filename()}.json")
         assert await obj_path.exists()
         async with aiofiles.open(obj_path) as stream:
             blob: str = "".join(await stream.readlines())
@@ -82,13 +80,10 @@ async def test_file_archive(mock_hass_api: HomeAssistantAPI) -> None:
 
 async def test_cleanup_archive(mock_hass_api: HomeAssistantAPI) -> None:
     archive = "config/archive/test"
-    uut = NotificationArchive(
-        {CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
+    uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
     await uut.initialize()
-    old_time = Mock(return_value=Mock(
-        st_ctime=time.time() - (8 * 24 * 60 * 60)))
-    new_time = Mock(return_value=Mock(
-        st_ctime=time.time() - (5 * 24 * 60 * 60)))
+    old_time = Mock(return_value=Mock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
+    new_time = Mock(return_value=Mock(st_ctime=time.time() - (5 * 24 * 60 * 60)))
     mock_files = [
         Mock(path="abc", stat=new_time),
         Mock(path="def", stat=new_time),
@@ -107,8 +102,7 @@ async def test_cleanup_archive(mock_hass_api: HomeAssistantAPI) -> None:
 
 async def test_archive_size(mock_hass_api: HomeAssistantAPI) -> None:
     with tempfile.TemporaryDirectory() as tmp_path:
-        uut = NotificationArchive(
-            {CONF_ENABLED: True, CONF_ARCHIVE_PATH: tmp_path, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
+        uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: tmp_path, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
         await uut.initialize()
         assert uut.enabled
         assert await uut.size() == 0
@@ -119,8 +113,7 @@ async def test_archive_size(mock_hass_api: HomeAssistantAPI) -> None:
 
 async def test_archive_publish(mock_hass_api: HomeAssistantAPI) -> None:
     uut = NotificationArchive(
-        {CONF_ENABLED: True, CONF_ARCHIVE_MQTT_TOPIC: "test.topic",
-            CONF_ARCHIVE_MQTT_QOS: "3", CONF_ARCHIVE_MQTT_RETAIN: True},
+        {CONF_ENABLED: True, CONF_ARCHIVE_MQTT_TOPIC: "test.topic", CONF_ARCHIVE_MQTT_QOS: "3", CONF_ARCHIVE_MQTT_RETAIN: True},
         mock_hass_api,
     )
 
@@ -134,13 +127,11 @@ async def test_archive_publish(mock_hass_api: HomeAssistantAPI) -> None:
     mock_hass_api.mqtt_publish.async_publish.reset_mock()  # type: ignore
 
     uut = NotificationArchive(
-        {CONF_ENABLED: True, CONF_ARCHIVE_MQTT_TOPIC: "test.topic",
-            CONF_ARCHIVE_MQTT_QOS: "3", CONF_ARCHIVE_MQTT_RETAIN: True},
+        {CONF_ENABLED: True, CONF_ARCHIVE_MQTT_TOPIC: "test.topic", CONF_ARCHIVE_MQTT_QOS: "3", CONF_ARCHIVE_MQTT_RETAIN: True},
         mock_hass_api,
     )
 
-    mock_hass_api.mqtt_available = AsyncMock(
-        return_value=False)  # type: ignore
+    mock_hass_api.mqtt_available = AsyncMock(return_value=False)  # type: ignore
     await uut.initialize()
     msg = ArchiveCrashDummy()
     assert await uut.archive(msg) is False

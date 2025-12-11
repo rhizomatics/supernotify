@@ -367,7 +367,7 @@ class Notification(ArchivableObject):
                 return {k: sanitize(vv, **kwargs) for k, vv in v.items()}
             if isinstance(v, object):
                 if hasattr(v, "contents"):
-                    return sanitize(v.contents(**kwargs),**kwargs)
+                    return sanitize(v.contents(**kwargs), **kwargs)
                 if hasattr(v, "as_dict"):
                     return v.as_dict(**kwargs)
             return None
