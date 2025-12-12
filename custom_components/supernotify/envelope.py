@@ -132,7 +132,7 @@ class Envelope(DupeCheckable):
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
         exclude_attrs = ["_notification", "context"]
         if minimal:
-            exclude_attrs.extend("resolved")
+            exclude_attrs.extend(["delivery"])
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs and not k.startswith("_")}
         json_ready["calls"] = [call.contents() for call in self.calls]
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
