@@ -70,7 +70,7 @@ class Envelope(DupeCheckable):
             self.enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
             self._message = notification._message
             self._title = notification._title
-            self.id = "f{notification.id}_{self.delivery_name}"
+            self.id = f"{notification.id}_{self.delivery_name}"
         else:
             delivery_config_data = {}
             self.enabled_scenarios = {}
