@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.5.1
+
+
 ## 1.5.0
 ### Features
 - Mobile Push
