@@ -246,7 +246,6 @@ NOTIFICATION_DUPE_SCHEMA = vol.Schema({
 
 
 DELIVERY_CUSTOMIZE_SCHEMA = vol.All(
-    cv.deprecated(key=CONF_ENABLED),
     vol.Schema(
         {
             vol.Optional(CONF_TARGET): TARGET_SCHEMA,
