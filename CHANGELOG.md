@@ -41,6 +41,7 @@ only prepare data and targets
 - `delivery_by_scenario` pre-compute and refresh removed
 - Moved code to detect media requirements in mobile actions out of Notification and into the mobile_push transport
 - Test suite for the seasonal scenarios
+- Correct debug handling for archival, and inclusion of debug_trace
 
 ## 1.4.0
 ### Features
