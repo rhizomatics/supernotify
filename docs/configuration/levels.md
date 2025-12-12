@@ -12,11 +12,11 @@ Delivery configuration can be done in lots of different ways to suit different c
 Each delivery can be individually configured, or have defaults provided by a `transport` configuration. A limited
 set of overrides - `target`,`data`,`enabled` - can then be applied by scenarios, people definitions in `recipients` or in the notification call. (The limited set is to keep both the code and configuration from being so flexible its too complicated to work with.)
 
-| Where                       | Where         | Schema                                                                   | Notes                                                                                                 |
-|-----------------------------|---------------|--------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| Action Data                 | Runtime call  | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden                                                  |
-| Recipient delivery override | Runtime call  | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden                                                  |
-| Scenario delivery override  | Runtime call  | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Multiple scenarios applied in no special order. Only `target`,`enabled` and `data` can be overridden. |
+| Where                       | Where        | Schema                                                                   | Notes                                                |
+|-----------------------------|--------------|--------------------------------------------------------------------------|------------------------------------------------------|
+| Action Data                 | Runtime call | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden |
+| Recipient delivery override | Runtime call | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden |
+| Scenario delivery override  | Runtime call  | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Multiple scenarios applied in no special order. Only `target`,`enabled` and `data` can be overridden. `enabled` can also be left empty so scenario only applies to deliveries already selected. `enabled: true` will force the delivery on and `enabled: false` will force it off, whether an implicit delivery or selected by another scenario |
 | Delivery definition         | Configuration | [Delivery](../developer/schemas/Delivery_Definition.md)                  | `message` and `title` are the exceptions which override Action Data                                   |
 | Transport Delivery Defaults        | Configuration         |  [Transport Delivery Defaults](../developer/schemas/Transport_Definition.md#property-transport-definition-enabled)                                              |
 | Transport Adaptor Defaults        | Code         |  - |                                            |

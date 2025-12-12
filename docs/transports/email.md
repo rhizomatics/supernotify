@@ -7,9 +7,9 @@ tags:
 ---
 # Email Transport Adaptor
 
-| Transport ID         | Source      | Requirements | Optional |
-| -------------------- | ----------- | ------------ | -------- |
-| `email` | :material-github:[`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | - | :material-home-assistant: [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), :material-home-assistant: [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |
+| Transport ID | Source                                                                                                                                | Requirements | Optional                                                                                                                                                                                                     |
+|--------------|---------------------------------------------------------------------------------------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `email`      | :material-github:[`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | -            | :material-home-assistant: [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), :material-home-assistant: [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |
 
 
 Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.

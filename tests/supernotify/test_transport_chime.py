@@ -289,3 +289,47 @@ async def test_deliver_to_group() -> None:
         ],
         any_order=True,
     )
+
+
+async def test_deliver_rest_command() -> None:
+    """Test on_notify_chime"""
+    context = TestingContext(
+        transport_configs={
+            TRANSPORT_CHIME: {
+                "delivery_defaults": {
+                    "options": {
+                        "chime_aliases": {
+                            "siren": {
+                                "rest_command": {
+                                    "target": "rest_command.camera_siren",
+                                    "data": {"alarm_code": "11"},
+                                },
+                            }
+                        }
+                    },
+                },
+            }
+        },
+        deliveries={"siren": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "siren"}}},
+        services={"rest_command": ["camera_siren"]},
+    )
+
+    await context.test_initialize()
+    uut = context.transport("chime")
+    await uut.initialize()
+
+    await uut.deliver(
+        Envelope(
+            context.delivery("siren"),
+            Notification(context),
+        )
+    )
+    context.hass.services.async_call.assert_called_once_with(  # type: ignore
+        "rest_command",
+        "camera_siren",
+        service_data={"alarm_code": "11"},
+        blocking=False,
+        context=None,
+        return_response=False,
+        target=None,
+    )

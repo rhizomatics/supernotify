@@ -210,6 +210,39 @@ transports:
                 siren: emergency
 ```
 
+## Rest Commands
+
+Assuming this command is set up in the Home Assistant configuration:
+
+```yaml title="CCTV Camera Siren"
+rest_commands:
+  camera_siren:
+      url: "http://10.111.10.202/ISAPI/Event/triggers/notifications/AudioAlarm/{{hik_alarm_code|default('11')}}/test?format=json"
+      method: put
+      username: !secret hik_user
+      password: !secret hik_password
+      authentication: digest
+```
+
+This chime alias in the transport definition will make it available as `chime_tune: siren` in notifications.
+
+```yaml title="Supernotify Config Snippet"
+```yaml
+transports:
+  chime:
+    options:
+        chime_aliases:
+          siren:
+            rest_command:
+                target: rest_command.camera_siren
+                data:
+                  alarm_code: 11
+
+```
+
+The same tune could also define MQTT sirens, or Amazon Echo devices making siren noises, so one call with
+`chime_tune: siren` and the whole house erupts.
+
 ## Scenarios
 
 Chimes work well with scenarios, you can easily add a chime for all critical notifications without

@@ -22,6 +22,7 @@
     - Chime Aliases configuration now validated at start up, and schema published
     - Device Discovery can now include or exclude by device model
         - Chime integration uses this so doesn't select Alexa actual devices and Alexa Group devices
+    - Added `rest_command` to supported transport methods
 - Scenarios
     - Scenario overriding improved for `data` and `target`
     - Scenarios can now disable deliveries

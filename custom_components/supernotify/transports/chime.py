@@ -26,14 +26,15 @@ from custom_components.supernotify.transport import Transport
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
-RE_VALID_CHIME = r"(switch|script|group|siren|media_player)\.[A-Za-z0-9_]+"
+RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA_RESTRICT: dict[str, list[str]] = {
+DATA_SCHEMA_RESTRICT: dict[str, list[str] | None] = {
     "media_player": ["data", "entity_id", "media_content_id", "media_content_type", "enqueue", "announce"],
     "switch": ["entity_id"],
     "script": ["data", "variables", "context", "wait"],
+    "rest_command": None,
     "siren": ["data", "entity_id"],
     "alexa_devices": ["sound", "device_id"],
 }  # TODO: source directly from component schema
@@ -167,10 +168,14 @@ class ChimeTransport(Transport):
     def prune_data(self, domain: str, data: dict[str, Any]) -> dict[str, Any]:
         pruned: dict[str, Any] = {}
         if data and domain in DATA_SCHEMA_RESTRICT:
-            restrict: list[str] = DATA_SCHEMA_RESTRICT.get(domain) or []
-            for key in list(data.keys()):
-                if key in restrict:
-                    pruned[key] = data[key]
+            restrict: list[str] | None = DATA_SCHEMA_RESTRICT.get(domain)
+            if restrict is None:
+                # allow all keys
+                pruned = data
+            else:
+                for key in list(data.keys()):
+                    if key in restrict:
+                        pruned[key] = data[key]
         return pruned
 
     def analyze_target(
@@ -215,6 +220,11 @@ class ChimeTransport(Transport):
                 action_data[ATTR_DATA]["duration"] = target_config.duration
             if target_config.volume is not None:
                 action_data[ATTR_DATA]["volume_level"] = target_config.volume
+
+        elif domain == "rest_command":
+            action = name
+            if target_config.data:
+                action_data.update(target_config.data)
 
         elif domain == "script":
             action_data.setdefault(CONF_VARIABLES, {})
