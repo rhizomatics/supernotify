@@ -6,7 +6,10 @@ tags:
   - doorbell
   - chime
   - rflink
+  - rest_api
   - mqtt
+  - siren
+  - hikvision
 ---
 # Chime Transport Adaptor
 
