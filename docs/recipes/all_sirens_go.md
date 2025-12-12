@@ -21,7 +21,7 @@ Notify on a critical issue by having all the sirens in the house make as much no
 ## Implementation
 
 Use a `chime` delivery with a set of aliases that cope with the variety of implementations, and call it in
-a notification action, either on its own, or as part of a broader notifcation with email, mobile push etc
+a notification action, either on its own, or as part of a broader notification with email, mobile push etc
 
 ```yaml
     - action: notify.supernotify

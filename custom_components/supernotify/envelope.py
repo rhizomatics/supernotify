@@ -67,13 +67,13 @@ class Envelope(DupeCheckable):
         self.actions: list[dict[str, Any]] = []
         if notification:
             delivery_config_data: dict[str, Any] = notification.delivery_data(delivery.name)
-            self.enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
+            self._enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
             self._message = notification._message
             self._title = notification._title
             self.id = f"{notification.id}_{self.delivery_name}"
         else:
             delivery_config_data = {}
-            self.enabled_scenarios = {}
+            self._enabled_scenarios = {}
             self.id = str(uuid.uuid1())
         if data:
             self.data = copy.deepcopy(delivery_config_data) if delivery_config_data else {}
@@ -210,7 +210,7 @@ class Envelope(DupeCheckable):
     def _render_scenario_templates(self, original: str | None, template_field: str, matching_ctx: str) -> str | None:
         rendered = original if original is not None else ""
         delivery_configs: list[DeliveryCustomization] = list(
-            filter(None, (scenario.delivery_config(self.delivery.name) for scenario in self.enabled_scenarios.values()))
+            filter(None, (scenario.delivery_config(self.delivery.name) for scenario in self._enabled_scenarios.values()))
         )
         template_formats: list[str] = [
             dc.data_value(template_field)

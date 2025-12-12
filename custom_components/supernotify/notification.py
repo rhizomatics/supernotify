@@ -2,6 +2,7 @@ import datetime as dt
 import logging
 import string
 import uuid
+from collections.abc import KeysView
 from enum import Enum
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any
@@ -348,32 +349,38 @@ class Notification(ArchivableObject):
     def contents(self, minimal: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
         object_refs = ["context", "people_registry", "delivery_registry"]
+        keys_only = ["enabled_scenarios"]
 
-        def sanitize(v: Any, **kwargs) -> Any:
+        def sanitize(v: Any, minimal: bool = True, **kwargs) -> Any:
             if isinstance(v, dt.datetime | dt.time | dt.date):
                 return v.isoformat()
             if isinstance(v, str | int | float | bool):
                 return v
-            if isinstance(v, list):
-                return [sanitize(vv, **kwargs) for vv in v]
+            if isinstance(v, (list, KeysView)):
+                return [sanitize(vv, minimal=minimal, **kwargs) for vv in v]
             if isinstance(v, tuple):
-                return (sanitize(vv, **kwargs) for vv in v)
+                return (sanitize(vv, minimal=minimal, **kwargs) for vv in v)
             if isinstance(v, dict):
-                return {k: sanitize(vv, **kwargs) for k, vv in v.items()}
+                return {k: sanitize(vv, minimal=minimal, **kwargs) for k, vv in v.items()}
             if isinstance(v, Enum):
                 return str(v)
             if isinstance(v, object):
                 if hasattr(v, "contents"):
-                    return sanitize(v.contents(**kwargs), **kwargs)
+                    return sanitize(v.contents(**kwargs), minimal=minimal, **kwargs)
                 if hasattr(v, "as_dict"):
                     return v.as_dict(**kwargs)
             return None
 
-        return {
+        result = {
             k: sanitize(v, minimal=minimal, occupancy_only=True)
             for k, v in self.__dict__.items()
-            if k not in object_refs and not k.startswith("_")
+            if k not in object_refs and not k.startswith("_") and (not minimal or k not in keys_only)
         }
+        if minimal:
+            result.update({
+                k: sanitize(v.keys(), minimal=minimal, occupancy_only=True) for k, v in self.__dict__.items() if k in keys_only
+            })
+        return result
 
     def base_filename(self) -> str:
         """ArchiveableObject implementation"""

@@ -1,6 +1,6 @@
 import logging
 
-from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITION
+from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity
 from pytest_unordered import unordered
@@ -70,7 +70,7 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
         "testing",
         SCENARIO_SCHEMA({
             CONF_ALIAS: "test001",
-            CONF_CONDITION: {
+            CONF_CONDITIONS: {
                 "condition": "and",
                 "conditions": [
                     {
@@ -104,7 +104,7 @@ async def test_select_scenarios(hass: HomeAssistant) -> None:
             "select_only": {},
             "cold_day": {
                 "alias": "Its a cold day",
-                "condition": {
+                "conditions": {
                     "condition": "template",
                     "value_template": """
                             {% set n = states('sensor.outside_temperature') | float %}
@@ -113,7 +113,7 @@ async def test_select_scenarios(hass: HomeAssistant) -> None:
             },
             "hot_day": {
                 "alias": "Its a very hot day",
-                "condition": {
+                "conditions": {
                     "condition": "template",
                     "value_template": """
                                     {% set n = states('sensor.outside_temperature') | float %}
@@ -213,7 +213,7 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
             "Mostly": {
                 CONF_ALIAS: "test001",
                 CONF_DELIVERY: {"siren": {}},
-                CONF_CONDITION: {
+                CONF_CONDITIONS: {
                     "condition": "and",
                     "conditions": [
                         {
@@ -265,7 +265,7 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
             "Mostly": {
                 CONF_ALIAS: "test001",
                 CONF_DELIVERY: {"siren": {}},
-                CONF_CONDITION: {
+                CONF_CONDITIONS: {
                     "condition": "and",
                     "conditions": [
                         {
@@ -421,7 +421,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
         SCENARIO_SCHEMA({
             "media": {"camera_entity_id": "camera.doorbell"},
             "delivery": {"doorbell_chime_alexa": {"data": {"amazon_magic_id": "a77464"}}, "email": {}},
-            "condition": {
+            "conditions": {
                 "condition": "and",
                 "conditions": [
                     {
@@ -453,7 +453,7 @@ async def test_secondary_scenario(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            CONF_CONDITION: {"condition": "template", "value_template": '{{"scenario-possible-danger" in applied_scenarios}}'}
+            CONF_CONDITIONS: {"condition": "template", "value_template": '{{"scenario-possible-danger" in applied_scenarios}}'}
         }),
         hass_api,
     )
@@ -470,7 +470,7 @@ async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            CONF_CONDITION: {
+            CONF_CONDITIONS: {
                 "condition": "template",
                 "value_template": '{{weather == "sunny" and "danger" in applied_scenarios}}',
             }
@@ -486,7 +486,7 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            CONF_CONDITION: {
+            CONF_CONDITIONS: {
                 "condition": "or",
                 "alias": "test complicated logic",
                 "conditions": [
@@ -517,7 +517,7 @@ async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
-        SCENARIO_SCHEMA({CONF_CONDITION: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
+        SCENARIO_SCHEMA({CONF_CONDITIONS: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
         hass_api,
     )
     hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 12})
@@ -532,7 +532,7 @@ async def test_trace(hass: HomeAssistant) -> None:
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
-            CONF_CONDITION: {"condition": "template", "value_template": "{{'scenario-alert' in applied_scenarios}}"}
+            CONF_CONDITIONS: {"condition": "template", "value_template": "{{'scenario-alert' in applied_scenarios}}"}
         }),
         hass_api,
     )

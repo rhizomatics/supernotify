@@ -109,7 +109,7 @@ class ArchiveDirectory:
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_path = str(self.archive_path.joinpath(filename))
-                save_json(archive_path, archive_object.contents(minimal=self.debug))
+                save_json(archive_path, archive_object.contents(minimal=not self.debug))
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
                 archived = True
             except Exception as e:

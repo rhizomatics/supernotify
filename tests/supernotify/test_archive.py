@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
 import anyio
+import pytest
 from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant
 
@@ -16,6 +17,8 @@ from custom_components.supernotify import (
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
+    CONF_DEBUG,
+    SCENARIO_SCHEMA,
 )
 from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -30,27 +33,25 @@ class ArchiveCrashDummy(ArchivableObject):
         return "testing"
 
 
-async def test_integration_archive(mock_hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(argnames="debug", argvalues=[True, False], ids=["debug", "non_debug"])
+async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> None:
     with tempfile.TemporaryDirectory() as archive:
         uut = SupernotifyAction(
             mock_hass,
             scenarios={
-                "cold_day": {
-                    "alias": "Its a cold day",
-                    "conditions": {
-                        "condition": "template",
-                        "value_template": """
-                            {% set n = states('sensor.outside_temperature') | float %}
-                            {{ n <= 10 }}""",
-                    },
-                },
-                "Alarm": {"delivery": {"chime": {"enabled": False}}},
+                "critical": SCENARIO_SCHEMA({
+                    "conditions": "{{notification_priority in ['critical']}}",
+                }),
+                "alarming": SCENARIO_SCHEMA({"delivery": {"chime": {"enabled": True}}}),
             },
+            deliveries={"chime": {"transport": "chime"}},
             recipients=[],  # recipients will generate mock person_config data and break json
-            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
+            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_DEBUG: debug},
         )
         await uut.initialize()
-        await uut.async_send_message("just a test", target="person.bob", action_data={"apply_scenarios": ["Alarm"]})
+        await uut.async_send_message(
+            "just a test", target="person.bob", data={"priority": "critical", "apply_scenarios": ["alarming"]}
+        )
 
         assert uut.last_notification is not None
         obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
@@ -58,9 +59,13 @@ async def test_integration_archive(mock_hass: HomeAssistant) -> None:
         async with aiofiles.open(obj_path) as stream:
             blob: str = "".join(await stream.readlines())
             reobj = json.loads(blob)
-        assert reobj["priority"] == "medium"
+        assert reobj["priority"] == "critical"
         assert reobj["target"] == {"person_id": ["person.bob"]}
         assert reobj["delivered_envelopes"] == uut.last_notification.delivered_envelopes
+        if debug:
+            assert reobj["enabled_scenarios"]["alarming"]["enabled"]
+        else:
+            assert reobj["enabled_scenarios"] == ["alarming", "critical"]
 
 
 async def test_file_archive(mock_hass_api: HomeAssistantAPI) -> None:
