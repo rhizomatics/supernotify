@@ -370,7 +370,7 @@ class Notification(ArchivableObject):
             return None
 
         return {
-            k: sanitize(v, minimal=minimal, occupancy_view=True)
+            k: sanitize(v, minimal=minimal, occupancy_only=True)
             for k, v in self.__dict__.items()
             if k not in object_refs and not k.startswith("_")
         }
