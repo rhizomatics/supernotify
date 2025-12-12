@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
-from custom_components.supernotify import DOMAIN
+from custom_components.supernotify import DOMAIN, CustomizationApplication
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.model import Target
 
@@ -259,7 +259,7 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
                 "mobile_discovery": True,
                 "mobile_devices": [],
                 "delivery": {
-                    "chime": {"target": {"entity_id": ["switch.office_bell"]}, "enabled": True, "data": {"volume": "whisper"}}
+                    "chime": {"target": {"entity_id": ["switch.office_bell"]}, "apply": "enable", "data": {"volume": "whisper"}}
                 },
                 "target": {
                     "discord": ["@mickey"],
@@ -457,7 +457,11 @@ async def test_recipients_configured(hass: HomeAssistant) -> None:
         "mobile_discovery": True,
         "mobile_devices": [],
         "delivery": {
-            "chime": {"target": {"entity_id": ["switch.office_bell"]}, "data": {"volume": "whisper"}, "enabled": True}
+            "chime": {
+                "target": {"entity_id": ["switch.office_bell"]},
+                "data": {"volume": "whisper"},
+                "apply": CustomizationApplication.ENABLE,
+            }
         },
         "target": {
             "discord": ["@mickey"],

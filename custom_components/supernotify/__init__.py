@@ -71,7 +71,7 @@ CONF_TRANSPORTS = "transports"
 CONF_DELIVERY = "delivery"
 CONF_SELECTION = "selection"
 CONF_SELECTION_RANK = "selection_rank"
-CONF_SELECT = "select"
+
 
 CONF_DATA: str = "data"
 CONF_OPTIONS: str = "options"
@@ -196,30 +196,6 @@ PRIORITY_MEDIUM = "medium"
 PRIORITY_LOW = "low"
 
 PRIORITY_VALUES = [PRIORITY_LOW, PRIORITY_MEDIUM, PRIORITY_HIGH, PRIORITY_CRITICAL]
-TRANSPORT_SMS = "sms"
-TRANSPORT_MQTT = "mqtt"
-TRANSPORT_EMAIL = "email"
-TRANSPORT_ALEXA = "alexa_devices"
-TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
-TRANSPORT_MOBILE_PUSH = "mobile_push"
-TRANSPORT_MEDIA = "media"
-TRANSPORT_CHIME = "chime"
-TRANSPORT_GENERIC = "generic"
-TRANSPORT_NOTIFY_ENTITY = "notify_entity"
-TRANSPORT_PERSISTENT = "persistent"
-TRANSPORT_VALUES = [
-    TRANSPORT_SMS,
-    TRANSPORT_MQTT,
-    TRANSPORT_ALEXA,
-    TRANSPORT_ALEXA_MEDIA_PLAYER,
-    TRANSPORT_MOBILE_PUSH,
-    TRANSPORT_CHIME,
-    TRANSPORT_EMAIL,
-    TRANSPORT_MEDIA,
-    TRANSPORT_PERSISTENT,
-    TRANSPORT_GENERIC,
-    TRANSPORT_NOTIFY_ENTITY,
-]
 
 CONF_TARGET_USAGE = "target_usage"
 TARGET_USE_ON_NO_DELIVERY_TARGETS = "no_delivery"
@@ -241,15 +217,8 @@ OPTION_CHIME_ALIASES = "chime_aliases"
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
-TARGET_REQUIRE_ALWAYS = "always"
-TARGET_REQUIRE_NEVER = "never"
-TARGET_REQUIRE_OPTIONAL = "optional"
-
-SCENARIO_NULL = "NULL"
-SCENARIO_TEMPLATE_ATTRS = ("message_template", "title_template")
-
 RESERVED_DELIVERY_NAMES = ["ALL"]
-RESERVED_SCENARIO_NAMES = [SCENARIO_NULL]
+RESERVED_SCENARIO_NAMES = ["NULL"]
 RESERVED_DATA_KEYS = [ATTR_DOMAIN, ATTR_SERVICE, "action"]
 
 
@@ -274,12 +243,34 @@ NOTIFICATION_DUPE_SCHEMA = vol.Schema({
     vol.Optional(CONF_SIZE, default=100): cv.positive_int,
     vol.Optional(CONF_DUPE_POLICY, default=ATTR_DUPE_POLICY_MTSLP): vol.In([ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_NONE]),
 })
-DELIVERY_CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-    vol.Optional(CONF_DATA): DATA_SCHEMA,
-    vol.Optional(CONF_SELECT, default=True): cv.boolean,
-})
+
+CONF_APPLY = "apply"
+APPLY_DISABLE: str = "disable"
+APPLY_ENABLE: str = "enable"
+APPLY_OVERRIDE: str = "override"
+
+
+class CustomizationApplication(StrEnum):
+    DISABLE = APPLY_DISABLE
+    ENABLE = APPLY_ENABLE
+    OVERRIDE = APPLY_OVERRIDE
+
+
+DELIVERY_CUSTOMIZE_SCHEMA = vol.All(
+    cv.deprecated(key=CONF_ENABLED),
+    vol.Schema(
+        {
+            vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+            vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_DATA): DATA_SCHEMA,
+            vol.Optional(CONF_APPLY): vol.In((
+                CustomizationApplication.DISABLE,
+                CustomizationApplication.ENABLE,
+                CustomizationApplication.OVERRIDE,
+            )),
+        },
+    ),
+)
 LINK_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.url,
     vol.Required(CONF_DESCRIPTION): cv.string,
@@ -287,6 +278,11 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_NAME): cv.string,
 })
+
+TARGET_REQUIRE_ALWAYS = "always"
+TARGET_REQUIRE_NEVER = "never"
+TARGET_REQUIRE_OPTIONAL = "optional"
+
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
     # defaults set in model.DeliveryConfig
     vol.Optional(CONF_ACTION): cv.service,  # previously 'service:'
@@ -312,6 +308,32 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         SelectionRank.LAST,
     ]),
 })
+
+TRANSPORT_SMS = "sms"
+TRANSPORT_MQTT = "mqtt"
+TRANSPORT_EMAIL = "email"
+TRANSPORT_ALEXA = "alexa_devices"
+TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
+TRANSPORT_MOBILE_PUSH = "mobile_push"
+TRANSPORT_MEDIA = "media"
+TRANSPORT_CHIME = "chime"
+TRANSPORT_GENERIC = "generic"
+TRANSPORT_NOTIFY_ENTITY = "notify_entity"
+TRANSPORT_PERSISTENT = "persistent"
+TRANSPORT_VALUES = [
+    TRANSPORT_SMS,
+    TRANSPORT_MQTT,
+    TRANSPORT_ALEXA,
+    TRANSPORT_ALEXA_MEDIA_PLAYER,
+    TRANSPORT_MOBILE_PUSH,
+    TRANSPORT_CHIME,
+    TRANSPORT_EMAIL,
+    TRANSPORT_MEDIA,
+    TRANSPORT_PERSISTENT,
+    TRANSPORT_GENERIC,
+    TRANSPORT_NOTIFY_ENTITY,
+]
+
 DELIVERY_SCHEMA = vol.All(
     cv.deprecated(key=CONF_CONDITION),
     DELIVERY_CONFIG_SCHEMA.extend({
@@ -385,7 +407,7 @@ SCENARIO_SCHEMA = vol.All(
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
         vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional("delivery_selection", default=DELIVERY_SELECTION_IMPLICIT): cv.string,
+        vol.Optional("delivery_selection"): cv.string,
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
     }),
 )

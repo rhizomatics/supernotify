@@ -4,7 +4,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 # This import brings in a bunch of other dependency noises, make it manual until py3.14/lazy import/HA updated
 # from homeassistant.components.mobile_app import DOMAIN as MOBILE_APP_DOMAIN
@@ -31,6 +31,7 @@ from . import (
     ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_PHONE,
+    CONF_APPLY,
     CONF_DATA,
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
@@ -38,7 +39,6 @@ from . import (
     CONF_DEVICE_MODEL_EXCLUDE,
     CONF_DEVICE_MODEL_INCLUDE,
     CONF_PRIORITY,
-    CONF_SELECT,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
@@ -48,6 +48,7 @@ from . import (
     RE_DEVICE_ID,
     SELECTION_DEFAULT,
     TARGET_USE_ON_NO_ACTION_TARGETS,
+    CustomizationApplication,
     SelectionRank,
 )
 from .common import ensure_list
@@ -382,8 +383,16 @@ class TransportConfig:
 class DeliveryCustomization:
     def __init__(self, config: ConfigType | None, target_specific: bool = False) -> None:
         config = config or {}
-        self.enabled: bool = config.get(CONF_ENABLED, True)
-        self.select: bool = config.get(CONF_SELECT, True)
+        self.apply: CustomizationApplication
+        if config.get(CONF_ENABLED) is not None and CONF_APPLY not in config:
+            enabled: bool = cast("bool", config.get(CONF_ENABLED))
+            if enabled:
+                self.apply = CustomizationApplication.ENABLE
+            else:
+                self.apply = CustomizationApplication.DISABLE
+        else:
+            self.apply = config.get(CONF_APPLY, CustomizationApplication.ENABLE)
+
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
         self.target: Target | None
         if config.get(CONF_TARGET):
@@ -398,7 +407,7 @@ class DeliveryCustomization:
         return self.data.get(key) if self.data else None
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
-        return {CONF_TARGET: self.target.as_dict() if self.target else None, CONF_ENABLED: self.enabled, CONF_DATA: self.data}
+        return {CONF_TARGET: self.target.as_dict() if self.target else None, CONF_APPLY: self.apply, CONF_DATA: self.data}
 
 
 class DeliveryConfig:

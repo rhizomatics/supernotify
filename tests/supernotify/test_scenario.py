@@ -9,8 +9,8 @@ from custom_components.supernotify import (
     ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
+    CONF_APPLY,
     CONF_DELIVERY,
-    CONF_SELECT,
     CONF_SELECTION,
     CONF_TRANSPORT,
     PRIORITY_CRITICAL,
@@ -372,7 +372,7 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
         homeassistant=hass,
         deliveries={"plain_email": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "explicit"}, "text": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
-        scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {CONF_SELECT: False, "data": {"priority": "low"}}}}},
+        scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {CONF_APPLY: "override", "data": {"priority": "low"}}}}},
     )
     await ctx.test_initialize()
 

@@ -2,6 +2,7 @@ import datetime as dt
 import logging
 import string
 import uuid
+from enum import Enum
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any
 
@@ -30,13 +31,13 @@ from . import (
     OPTION_UNIQUE_TARGETS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
-    SCENARIO_NULL,
     STRICT_ACTION_DATA_SCHEMA,
     TARGET_USE_FIXED,
     TARGET_USE_MERGE_ALWAYS,
     TARGET_USE_MERGE_ON_DELIVERY_TARGETS,
     TARGET_USE_ON_NO_ACTION_TARGETS,
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
+    CustomizationApplication,
     SelectionRank,
 )
 from .archive import ArchivableObject
@@ -163,9 +164,7 @@ class Notification(ArchivableObject):
         enabled_scenario_names.extend(self.selected_scenario_names)
         if self.constrain_scenario_names:
             enabled_scenario_names = [
-                s
-                for s in enabled_scenario_names
-                if (s in self.constrain_scenario_names or s in self.applied_scenario_names) and s != SCENARIO_NULL
+                s for s in enabled_scenario_names if (s in self.constrain_scenario_names or s in self.applied_scenario_names)
             ]
         if self.required_scenario_names and not any(s in enabled_scenario_names for s in self.required_scenario_names):
             _LOGGER.info("SUPERNOTIFY suppressing notification, no required scenarios enabled")
@@ -216,9 +215,13 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(k for k, v in scenario.delivery.items() if v.enabled and v.select)
+                scenario_enable_deliveries.extend(
+                    k for k, v in scenario.delivery.items() if v.apply == CustomizationApplication.ENABLE
+                )
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(k for k, v in scenario.delivery.items() if not v.enabled)
+                scenario_disable_deliveries.extend(
+                    k for k, v in scenario.delivery.items() if v.apply == CustomizationApplication.DISABLE
+                )
 
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
@@ -236,10 +239,10 @@ class Notification(ArchivableObject):
         # apply the deliveries defined in the notification action call
         for delivery, delivery_override in self.delivery_overrides.items():
             if (
-                delivery_override is None or delivery_override.enabled
+                delivery_override is None or delivery_override.apply == CustomizationApplication.ENABLE
             ) and delivery in self.context.delivery_registry.deliveries:
                 override_enable_deliveries.append(delivery)
-            elif delivery_override is not None and not delivery_override.enabled:
+            elif delivery_override is not None and delivery_override.apply == CustomizationApplication.DISABLE:
                 override_disable_deliveries.append(delivery)
 
         # if self.delivery_selection != DELIVERY_SELECTION_FIXED:
@@ -362,6 +365,8 @@ class Notification(ArchivableObject):
                 return (sanitize(vv, **kwargs) for vv in v)
             if isinstance(v, dict):
                 return {k: sanitize(vv, **kwargs) for k, vv in v.items()}
+            if isinstance(v, Enum):
+                return str(v)
             if isinstance(v, object):
                 if hasattr(v, "contents"):
                     return sanitize(v.contents(**kwargs), **kwargs)

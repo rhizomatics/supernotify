@@ -74,15 +74,13 @@ red_alert:
         camera_entity_id: camera.porch
 ```
 
-## Controlling Delivery Selection
+## Overriding Delivery Selection and Configuration
 
-Delivery selection can also be passed in the `data` of an action call, including overriding
-what scenarios would otherwise switch on. `delivery_selection` can be set to one of three values:
+Each delivery section within scenario has an `apply` value, which defaults to `enabled`:
 
-* `implicit` - The default, all deliveries are enabled plus scenario selected
-* `explicit` - Only deliveries listed on the action call are enabled, plus ones switched on by a scenario
-    * This is switched on automatically if a list or single delivery is given.
-* `fixed` - Stops scenarios from enabling or disabling deliveries and leaves it solely defined by the action call
+* `enabled` - This delivery will be enabled even if it is not an implicit delivery
+* `disabled` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
+* `override` - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied
 
 ## Scenario Selection at Notification
 
