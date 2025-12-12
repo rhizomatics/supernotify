@@ -37,7 +37,6 @@ from . import (
     TARGET_USE_MERGE_ON_DELIVERY_TARGETS,
     TARGET_USE_ON_NO_ACTION_TARGETS,
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
-    CustomizationApplication,
     SelectionRank,
 )
 from .archive import ArchivableObject
@@ -215,13 +214,9 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(
-                    k for k, v in scenario.delivery.items() if v.apply == CustomizationApplication.ENABLE
-                )
+                scenario_enable_deliveries.extend(k for k, v in scenario.delivery.items() if v.enabled is True)
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(
-                    k for k, v in scenario.delivery.items() if v.apply == CustomizationApplication.DISABLE
-                )
+                scenario_disable_deliveries.extend(k for k, v in scenario.delivery.items() if v.enabled is False)
 
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
@@ -239,10 +234,10 @@ class Notification(ArchivableObject):
         # apply the deliveries defined in the notification action call
         for delivery, delivery_override in self.delivery_overrides.items():
             if (
-                delivery_override is None or delivery_override.apply == CustomizationApplication.ENABLE
+                delivery_override is None or delivery_override.enabled is True
             ) and delivery in self.context.delivery_registry.deliveries:
                 override_enable_deliveries.append(delivery)
-            elif delivery_override is not None and delivery_override.apply == CustomizationApplication.DISABLE:
+            elif delivery_override is not None and delivery_override.enabled is False:
                 override_disable_deliveries.append(delivery)
 
         # if self.delivery_selection != DELIVERY_SELECTION_FIXED:

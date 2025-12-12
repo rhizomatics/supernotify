@@ -134,7 +134,7 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
       data:
         delivery:
           plain_email:
-            enabled: false
+            enabled:
 ```
 ### Automation and Templates
 

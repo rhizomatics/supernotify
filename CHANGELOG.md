@@ -25,7 +25,8 @@
 - Scenarios
     - Scenario overriding improved for `data` and `target`
     - Scenarios can now disable deliveries
-    - New `select` option for Scenario delivery config, to apply only where delivery already selected
+    - `enabled` can now be left null for Scenario delivery config, to apply only where delivery already selected
+        - The seasonal scenario recipe demonstrates this
 - Duplicate Suppression
     - Dupe checking now happens at Envelope rather than Notification level, so same message can go out to different deliveries and/or recipients
 ### Changes

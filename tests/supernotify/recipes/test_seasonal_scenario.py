@@ -47,7 +47,7 @@ scenarios:
           - "{{ (1,1) <= (now().month, now().day) <= (1,1) }}"
       delivery:
         doorbell_rang:
-          apply: override
+          enabled:
           data:
             chime_tune: xmas_doorbell
 """,

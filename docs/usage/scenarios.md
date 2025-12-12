@@ -76,11 +76,14 @@ red_alert:
 
 ## Overriding Delivery Selection and Configuration
 
-Each delivery section within scenario has an `apply` value, which defaults to `enabled`:
+Each delivery section within scenario has an `enabled` value, which defaults to `true`:
 
-* `enabled` - This delivery will be enabled even if it is not an implicit delivery
-* `disabled` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
-* `override` - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied
+* `true` - This delivery will be enabled even if it is not an implicit delivery
+* `false` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
+* *Empty* - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied
+
+See the [Seasonal Greetings Recipe](../recipes/seasonal_greetings.md) for an example where the null value of `enabled`
+is useful.
 
 ## Scenario Selection at Notification
 

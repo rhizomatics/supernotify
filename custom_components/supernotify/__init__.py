@@ -244,30 +244,14 @@ NOTIFICATION_DUPE_SCHEMA = vol.Schema({
     vol.Optional(CONF_DUPE_POLICY, default=ATTR_DUPE_POLICY_MTSLP): vol.In([ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_NONE]),
 })
 
-CONF_APPLY = "apply"
-APPLY_DISABLE: str = "disable"
-APPLY_ENABLE: str = "enable"
-APPLY_OVERRIDE: str = "override"
-
-
-class CustomizationApplication(StrEnum):
-    DISABLE = APPLY_DISABLE
-    ENABLE = APPLY_ENABLE
-    OVERRIDE = APPLY_OVERRIDE
-
 
 DELIVERY_CUSTOMIZE_SCHEMA = vol.All(
     cv.deprecated(key=CONF_ENABLED),
     vol.Schema(
         {
             vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-            vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+            vol.Optional(CONF_ENABLED, default=True): vol.Any(None, cv.boolean),
             vol.Optional(CONF_DATA): DATA_SCHEMA,
-            vol.Optional(CONF_APPLY): vol.In((
-                CustomizationApplication.DISABLE,
-                CustomizationApplication.ENABLE,
-                CustomizationApplication.OVERRIDE,
-            )),
         },
     ),
 )

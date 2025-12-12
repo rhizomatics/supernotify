@@ -44,7 +44,6 @@ from . import (
     OCCUPANCY_NONE,
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
-    CustomizationApplication,
 )
 from .common import ensure_list
 from .hass_api import HomeAssistantAPI
@@ -108,7 +107,7 @@ class Recipient:
     def target(self, delivery_name: str) -> Target:
         recipient_target = self._target
         personal_delivery = self.delivery.get(delivery_name)
-        if personal_delivery and personal_delivery.apply != CustomizationApplication.DISABLE:
+        if personal_delivery and personal_delivery.enabled is not False:
             if personal_delivery.target and personal_delivery.target.has_targets():
                 recipient_target += personal_delivery.target
             if personal_delivery.data:

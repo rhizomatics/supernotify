@@ -27,8 +27,7 @@ With the `recipient` definition you can:
 
 ## Automatic Recipient Discovery
 
-The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch this off using `recipient_discovery: false` in the configuration. And sice each *Recipient* is automatically populated with all their
-mobile devices, an empty YAML config can do a lot.
+The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch this off using `recipient_discovery: false` in the configuration. And sice each *Recipient* is automatically populated with all their mobile devices, an empty YAML config can do a lot.
 
 ``` yaml title="Disabling One of the Automatic Discoveries"
  recipients:

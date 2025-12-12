@@ -116,7 +116,7 @@ async def test_action_data_disable_delivery(
     mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
     mock_context.scenario_registry.scenarios = {"mockery": dummy_scenario}
     uut = Notification(
-        mock_context, "testing 123", action_data={"delivery": {"mobile": {"apply": "disable"}}, ATTR_SCENARIOS_APPLY: "mockery"}
+        mock_context, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
     )
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "chime")
