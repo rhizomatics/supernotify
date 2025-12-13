@@ -15,6 +15,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.notify import SupernotifyAction
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .hass_setup_lib import TestingContext
@@ -51,12 +52,10 @@ async def test_deliver() -> None:
         call(
             "notify",
             "teleportation",
-            service_data={
-                ATTR_MESSAGE: "hello there",
-                ATTR_TITLE: "testing",
-                ATTR_DATA: {"cuteness": "very"},
-                ATTR_TARGET: ["weird_generic_1", "weird_generic_2"],
-            },
+            service_data={ATTR_MESSAGE: "hello there",
+                        ATTR_TITLE: "testing",
+                        ATTR_DATA: {"cuteness": "very"},
+                        ATTR_TARGET: ["weird_generic_1", "weird_generic_2"]},
             blocking=False,
             context=None,
             target=None,
@@ -91,5 +90,29 @@ async def test_not_notify_deliver() -> None:
         blocking=False,
         context=None,
         target=None,
+        return_response=False,
+    )
+
+
+async def test_update_input_text(mock_hass) -> None:
+    uut = SupernotifyAction(
+        mock_hass,
+        deliveries={
+            "noticeboard": {
+                CONF_TRANSPORT: TRANSPORT_GENERIC,
+                CONF_ACTION: "input_text.set_value",
+            }
+        },
+    )
+    await uut.initialize()
+    await uut.async_send_message(message="Display on Screen", target="input_text.esp_display")
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "input_text",
+        "set_value",
+        service_data={"value": "Display on Screen"},
+        target={"entity_id": ["input_text.esp_display"]},
+        blocking=False,
+        context=None,
         return_response=False,
     )

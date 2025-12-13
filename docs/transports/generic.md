@@ -12,11 +12,21 @@ tags:
 
 Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.
 
-If action is in `notify` domain, then `message`,`title`,`target` and `data` will be
-passed in the Action (Service) Data, otherwise the `data` supplied will be passed directly
-as the Action Data.
+### Notify Actions
 
-```yaml
+If an action is in then `notify` domain, then `message`,`title`,`target` and `data` will be
+passed in the Action (Service) Data.
+
+```yaml title="Example Configuration"
+delivery:
+  chat_notify:
+    transport: generic
+    action: notify.custom_chat
+```
+
+Use this deliveries with action calls like this:
+
+```yaml title="Example Action Call"
     - action: notify.supernotify
       data:
         title: "My Home Notification"
@@ -25,11 +35,30 @@ as the Action Data.
             chat_notify:
                 data:
                     channel: 3456
-    - action: notify.supernotify
-      data:
-        delivery:
-            mqtt_notify:
-                data:
-                  topic: alert/family_all
-                  payload: something happened
 ```
+
+This includes support for [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/). (Supernotify also offers an [MQTT Transport Adaptor](mqtt.md) for direct flexible access to `mqtt.publish`.)
+
+### Input Text Integration
+
+`input_text` can be used with ESP32, APIs and similar to pass text.
+
+Configure a delivery:
+
+```yaml
+delivery:
+  esp_screen:
+    transport: generic
+    action: input_text.set_value
+    target: input_text.my_esp32
+```
+
+The `message` value on the notification will be passed as the `value` on the `data` section. See [Input Text Integration](https://www.home-assistant.io/integrations/input_text/) for more on that.
+
+### Other Actions
+
+The `data` supplied will be passed directly as the Action Data, message and title will be dropped as likely
+to be a problem for `switch`,`script` etc integrations.
+
+!!! tip
+    If using Generic to trigger bells, sirens or other noises, consider the [Chime Transport Adaptor](chime.md), which makes that easier, especially if working with a mix of audio devices.

@@ -519,6 +519,8 @@ class SuppressionReason(StrEnum):
     SNOOZED = "SNOOZED"
     DUPE = "DUPE"
     NO_SCENARIO = "NO_SCENARIO"
+    NO_ACTION = "NO_ACTION"
+    NO_TARGET = "NO_TARGET"
 
 
 class TargetRequired(StrEnum):

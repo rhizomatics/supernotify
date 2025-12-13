@@ -9,14 +9,13 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from jinja2 import TemplateError
 
 from . import (
     ATTR_MESSAGE_HTML,
     ATTR_PRIORITY,
     ATTR_TIMESTAMP,
-    CONF_MESSAGE,
-    CONF_TITLE,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -121,12 +120,12 @@ class Envelope(DupeCheckable):
         """Build the core set of `service_data` dict to pass to underlying notify service"""
         data: dict[str, Any] = {}
         # message is mandatory for notify platform
-        data[CONF_MESSAGE] = self.message or ""
+        data[ATTR_MESSAGE] = self.message or ""
         timestamp = self.data.get(ATTR_TIMESTAMP)
         if timestamp:
-            data[CONF_MESSAGE] = f"{data[CONF_MESSAGE]} [{time.strftime(timestamp, time.localtime())}]"
+            data[ATTR_MESSAGE] = f"{data[ATTR_MESSAGE]} [{time.strftime(timestamp, time.localtime())}]"
         if self.title:
-            data[CONF_TITLE] = self.title
+            data[ATTR_TITLE] = self.title
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:

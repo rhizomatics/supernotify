@@ -19,14 +19,9 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.context import Context
-from custom_components.supernotify.model import DeliveryConfig, Target, TargetRequired, TransportConfig
+from custom_components.supernotify.model import DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig
 
-from . import (
-    ATTR_ENABLED,
-    CONF_DELIVERY_DEFAULTS,
-    CONF_DEVICE_DISCOVERY,
-    CONF_DEVICE_DOMAIN,
-)
+from . import ATTR_ENABLED, CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN
 
 if TYPE_CHECKING:
     import datetime as dt
@@ -157,55 +152,67 @@ class Transport:
         delivery: Delivery = envelope.delivery
         try:
             qualified_action = qualified_action or delivery.action
-            if qualified_action and (
-                action_data.get(ATTR_TARGET)
-                or action_data.get(ATTR_ENTITY_ID)
-                or implied_target
-                or delivery.target_required != TargetRequired.ALWAYS
-                or target_data
-            ):
-                domain, service = qualified_action.split(".", 1)
-                start_time = time.time()
-                if target_data:
-                    # home-assistant messes with the service_data passed by ref
-                    service_data_as_sent = dict(action_data)
-                    service_response = await self.hass_api.call_service(
-                        domain, service, service_data=action_data, target_data=target_data, debug=delivery.debug
-                    )
-                    envelope.calls.append(
-                        CallRecord(
-                            time.time() - start_time,
-                            domain,
-                            service,
-                            debug=delivery.debug,
-                            action_data=service_data_as_sent,
-                            target_data=dict(target_data),
-                            service_response=service_response,
-                        )
-                    )
-                else:
-                    service_data_as_sent = dict(action_data)
-                    service_response = await self.hass_api.call_service(
-                        domain, service, service_data=action_data, debug=delivery.debug
-                    )
-                    envelope.calls.append(
-                        CallRecord(
-                            time.time() - start_time,
-                            domain,
-                            service,
-                            debug=delivery.debug,
-                            action_data=service_data_as_sent,
-                            service_response=service_response,
-                        )
-                    )
-                envelope.delivered = 1
-            else:
+            if not qualified_action:
                 _LOGGER.debug(
-                    "SUPERNOTIFY skipping action call for service %s, targets %s",
-                    qualified_action,
+                    "SUPERNOTIFY skipping %s action call with no service, targets %s",
+                    envelope.delivery.name,
                     action_data.get(ATTR_TARGET),
                 )
                 envelope.skipped = 1
+                envelope.skip_reason = SuppressionReason.NO_ACTION
+                return False
+            if (
+                delivery.target_required == TargetRequired.ALWAYS
+                and not action_data.get(ATTR_TARGET)
+                and not action_data.get(ATTR_ENTITY_ID)
+                and not implied_target
+                and not target_data
+            ):
+                _LOGGER.debug(
+                    "SUPERNOTIFY skipping %s action call for service %s, missing targets",
+                    envelope.delivery.name,
+                    qualified_action,
+                )
+                envelope.skipped = 1
+                envelope.skip_reason = SuppressionReason.NO_TARGET
+                return False
+
+            domain, service = qualified_action.split(".", 1)
+            start_time = time.time()
+            if target_data:
+                # home-assistant messes with the service_data passed by ref
+                service_data_as_sent = dict(action_data)
+                service_response = await self.hass_api.call_service(
+                    domain, service, service_data=action_data, target_data=target_data, debug=delivery.debug
+                )
+                envelope.calls.append(
+                    CallRecord(
+                        time.time() - start_time,
+                        domain,
+                        service,
+                        debug=delivery.debug,
+                        action_data=service_data_as_sent,
+                        target_data=target_data,
+                        service_response=service_response,
+                    )
+                )
+            else:
+                service_data_as_sent = dict(action_data)
+                service_response = await self.hass_api.call_service(
+                    domain, service, service_data=action_data, debug=delivery.debug
+                )
+                envelope.calls.append(
+                    CallRecord(
+                        time.time() - start_time,
+                        domain,
+                        service,
+                        debug=delivery.debug,
+                        action_data=service_data_as_sent,
+                        service_response=service_response,
+                    )
+                )
+
+            envelope.delivered = 1
             return True
         except Exception as e:
             self.record_error(str(e), method="call_action")

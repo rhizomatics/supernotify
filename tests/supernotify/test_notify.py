@@ -376,7 +376,7 @@ async def test_send_message_with_conditions(hass: HomeAssistant) -> None:
         data={"priority": "high", "delivery": {"testablity": {CONF_DATA: {"test": "unit"}}}},
     )
     await hass.async_block_till_done()
-    assert calls_service_data == [{"test": "unit"}]
+    assert calls_service_data == [{"test": "unit", "message": "testing 123", "title": "test_title"}]
 
     calls_service_data.clear()
     hass.states.async_set("alarm_control_panel.home_alarm_control", "disarmed")
@@ -395,4 +395,4 @@ async def test_send_message_with_conditions(hass: HomeAssistant) -> None:
         data={"priority": "high", "delivery": {"testablity": {CONF_DATA: {"test": "unit"}}}},
     )
     await hass.async_block_till_done()
-    assert calls_service_data == [{"test": "unit"}]
+    assert calls_service_data == [{"test": "unit", "message": "for real", "title": "test_title"}]
