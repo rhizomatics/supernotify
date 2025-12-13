@@ -378,13 +378,13 @@ async def test_template_delivery(hass: HomeAssistant) -> None:
         hass,
         {
             "service": "notify.supernotify",
-            "data_template": """{
-                                "title": "my title",
-                                "message": "unit test {{ 100+5 }}",
-                                "data": {
-                                    "priority": "{% if 3>5 %}low{% else %}high{%endif%}",
-                                    "delivery": {"email": {"data": {"footer": ""}}}}
-                            }""",
+            "data": """{
+                        "title": "my title",
+                        "message": "unit test {{ 100+5 }}",
+                        "data": {
+                            "priority": "{% if 3>5 %}low{% else %}high{%endif%}",
+                            "delivery": {"email": {"data": {"footer": ""}}}}
+                        }""",
         },
         blocking=True,
     )

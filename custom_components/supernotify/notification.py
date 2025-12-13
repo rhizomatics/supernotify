@@ -321,7 +321,7 @@ class Notification(ArchivableObject):
 
             for envelope in envelopes:
                 if self.context.dupe_checker.check(envelope):
-                    _LOGGER.info("SUPERNOTIFY Suppressing dupe envelope, %s", self._message)
+                    _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self._message)
                     envelope.skip_reason = SuppressionReason.DUPE
                     self.undelivered_envelopes.append(envelope)
                     continue

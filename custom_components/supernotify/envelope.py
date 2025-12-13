@@ -116,12 +116,12 @@ class Envelope(DupeCheckable):
             image_path = await grab_image(self._notification, self.delivery_name, self._notification.context)
         return image_path
 
-    def core_action_data(self,force_message:bool=True) -> dict[str, Any]:
+    def core_action_data(self, force_message: bool = True) -> dict[str, Any]:
         """Build the core set of `service_data` dict to pass to underlying notify service"""
         data: dict[str, Any] = {}
         # message is mandatory for notify platform
         if self.message is None:
-            if force_message: 
+            if force_message:
                 data[ATTR_MESSAGE] = ""
         else:
             data[ATTR_MESSAGE] = self.message

@@ -472,8 +472,8 @@ class ConditionVariables:
     required_scenarios: list[str] = field(default_factory=list)
     constrain_scenarios: list[str] = field(default_factory=list)
     notification_priority: str = PRIORITY_MEDIUM
-    notification_message: str = ""
-    notification_title: str = ""
+    notification_message: str | None = ""
+    notification_title: str | None = ""
     occupancy: list[str] = field(default_factory=list)
 
     def __init__(
@@ -521,6 +521,7 @@ class SuppressionReason(StrEnum):
     NO_SCENARIO = "NO_SCENARIO"
     NO_ACTION = "NO_ACTION"
     NO_TARGET = "NO_TARGET"
+    UNKNOWN = "UNKNOWN"
 
 
 class TargetRequired(StrEnum):

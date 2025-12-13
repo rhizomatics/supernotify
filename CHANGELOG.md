@@ -2,9 +2,12 @@
 
 ## 1.5.1
 ### Features
-- Generic transport now has direct support for `input_text.set_value`,`script`,`rest_command`,`light`,`siren`,`mqtt` and `switch`
-    -  Will build a `data` and `target` to meet the rules of the automations, pruning out fields that would break the call
-- Undelivered envelopes now have a `skip_reason` of `NO_ACTION` or `NO_TARGET` if action call
+- Generic Transport
+   - Now has direct support for `input_text.set_value`,`script`,`rest_command`,`light`,`siren`,`mqtt` and `switch`
+      -  Will build a `data` and `target` to meet the rules of the automations, pruning out fields that would break the call
+   - New delivery options `data_keys_include_re` and `data_keys_exclude_re` to control valid keys in `data` section
+- Debugging
+  - Undelivered envelopes now have a `skip_reason` of `NO_ACTION` or `NO_TARGET` if action call
 to Home Assistant skipped because of mandatory missing items
 
 ## 1.5.0

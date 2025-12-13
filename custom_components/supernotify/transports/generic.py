@@ -1,10 +1,13 @@
 import logging
+import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 
 from custom_components.supernotify import (
+    OPTION_DATA_KEYS_EXCLUDE_RE,
+    OPTION_DATA_KEYS_INCLUDE_RE,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -12,6 +15,7 @@ from custom_components.supernotify import (
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.common import ensure_list
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import (
@@ -61,6 +65,8 @@ class GenericTransport(Transport):
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            OPTION_DATA_KEYS_INCLUDE_RE: None,
+            OPTION_DATA_KEYS_EXCLUDE_RE: None,
         }
         return config
 
@@ -130,6 +136,7 @@ class GenericTransport(Transport):
             elif len(all_targets) >= 1:
                 action_data[ATTR_TARGET] = all_targets
 
+        self.prune_data(action_data, domain, envelope.delivery)
         if domain in DATA_FIELDS_ALLOWED and action_data:
             action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
 
@@ -138,3 +145,21 @@ class GenericTransport(Transport):
             del action_data[ATTR_DATA]
 
         return await self.call_action(envelope, qualified_action, action_data=action_data, target_data=target_data)
+
+    def prune_data(self, data: dict[str, Any] | None, domain: str | None, delivery: Delivery) -> dict[str, Any] | None:
+        if not data:
+            return data
+        includes = delivery.options.get(OPTION_DATA_KEYS_INCLUDE_RE)
+        excludes = delivery.options.get(OPTION_DATA_KEYS_EXCLUDE_RE)
+        if includes is None and domain and domain in DATA_FIELDS_ALLOWED:
+            includes = DATA_FIELDS_ALLOWED[domain]
+        pruned: dict[str, Any] = {}
+        for key in data:
+            if not includes and not excludes:
+                pruned[key] = data[key]
+            else:
+                if (not excludes or not any(re.match(pat, key) for pat in excludes)) and (
+                    not includes or any(re.match(pat, key) for pat in includes)
+                ):
+                    pruned[key] = data[key]
+        return pruned

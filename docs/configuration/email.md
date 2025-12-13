@@ -97,6 +97,19 @@ In this example, the username and password live separately in the `secrets.yaml`
   password: !secret aws_smtp_secret
 ```
 
+!!! warning
+    Amazon AWS can be a *very* cheap way of getting services like e-mail and storage with its
+    pay-as-you-go serverless model, 10c a month buys a decent amount of emails.
+
+    However, it can also be *exceedingly* expensive if abused or mis-configured.
+
+    Follow the [Security Best Practices](https://repost.aws/knowledge-center/security-best-practices), including MFA for the main account, and giving Home Assistant
+    a dedicated IAM user that can only access the services it really needs, with the account ID
+    and secret key kept secure.
+
+    Add a [budget](https://blog.thecloudengineers.com/p/aws-budgets-for-beginners-how-to) and
+    [cost alerts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/monitor_estimated_charges_with_cloudwatch.html) if you're still worried!
+
 ### Google Mail
 
 See the [Home Assistant Example](https://www.home-assistant.io/integrations/smtp/#google-mail)
