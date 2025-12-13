@@ -3,6 +3,7 @@ import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
+
 # ATTR_VARIABLES from script.const has import issues
 from homeassistant.const import ATTR_ENTITY_ID
 
@@ -77,24 +78,19 @@ class GenericTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         if action is not None and "." in action:
             return True
-        _LOGGER.warning(
-            "SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
+        _LOGGER.warning("SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
     async def deliver(self, envelope: Envelope) -> bool:
         # inputs
         data: dict[str, Any] = envelope.data or {}
-        core_action_data: dict[str, Any] = envelope.core_action_data(
-            force_message=False)
+        core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
         qualified_action: str | None = envelope.delivery.action
-        domain: str | None = qualified_action.split(
-            ".", 1)[0] if qualified_action and "." in qualified_action else None
+        domain: str | None = qualified_action.split(".", 1)[0] if qualified_action and "." in qualified_action else None
         equiv_domain: str | None = domain
         if envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE):
-            equiv_domain = envelope.delivery.options.get(
-                OPTION_GENERIC_DOMAIN_STYLE)
-            _LOGGER.debug(
-                "SUPERNOTIFY Handling %s generic message as if it was %s", domain, equiv_domain)
+            equiv_domain = envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE)
+            _LOGGER.debug("SUPERNOTIFY Handling %s generic message as if it was %s", domain, equiv_domain)
 
         # outputs
         action_data: dict[str, Any] = {}
@@ -115,7 +111,7 @@ class GenericTransport(Transport):
                 build_targets = True
         elif equiv_domain == "input_text":
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
-            if 'value' in data:
+            if "value" in data:
                 action_data = {"value": data["value"]}
             else:
                 action_data = {"value": core_action_data[ATTR_MESSAGE]}
@@ -159,8 +155,7 @@ class GenericTransport(Transport):
         if prune_data:
             self.prune_data(action_data, domain, envelope.delivery)
         if domain in DATA_FIELDS_ALLOWED and action_data:
-            action_data = {k: v for k, v in action_data.items(
-            ) if k in DATA_FIELDS_ALLOWED[domain]}
+            action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
 
         target_data = target_data or None
         if ATTR_DATA in action_data and not action_data[ATTR_DATA]:
