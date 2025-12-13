@@ -9,8 +9,8 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `generic` | :material-github:[`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | - | *Any Home Assistant action from core or custom integration* |
 
-
-Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model.
+Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model. It can be used for simple calls,
+or as a "toolbox" for more complex needs.
 
 ### Notify Actions
 
@@ -57,8 +57,45 @@ The `message` value on the notification will be passed as the `value` on the `da
 
 ### Other Actions
 
-The `data` supplied will be passed directly as the Action Data, message and title will be dropped as likely
-to be a problem for `switch`,`script` etc integrations.
+The `data` supplied will be passed directly as the Action Data, message and title will be dropped as likely to be a problem for `switch`,`script` etc integrations.
+
+If you have an action that is not supported, but it requires a similar Home Assistant Action call as one it does support, then the `handle_as_domain` option can be used.
+
+```yaml
+delivery:
+  light_flasher:
+  action: flashywashy.flash_me_now
+  options:
+    handle_as_domain: light
+```
+
+Alternatively, if the custom action call is failing because of `data` elements from the notification
+it can't handle, you can control which keys are included, in this example, all keys that don't match the pattern will be dropped:
+
+```yaml
+delivery:
+  light_flasher:
+  action: zigzag.zig
+  options:
+    data_keys_include_re:
+      - enabled
+      - value
+      - zig.*
+```
+
+It also works the other way round, or indeed both together, with excluding, so all `data` keys
+are passed, except selected ones
+
+```yaml
+delivery:
+  light_flasher:
+  action: zigzag.zig
+  options:
+    data_keys_exclude_re:
+      - duration
+      - volume
+```
+
 
 !!! tip
     If using Generic to trigger bells, sirens or other noises, consider the [Chime Transport Adaptor](chime.md), which makes that easier, especially if working with a mix of audio devices.

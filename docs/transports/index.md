@@ -47,5 +47,6 @@ All of these set by passing an `options` block in Delivery config or Transport d
 | unique_targets       | all        | Don't pass targets already used in this notification         |
 | data_keys_include_re | generic    | List of values or regex patterns allowed in `data` block     |
 | data_keys_exclude_re | generic    | List of values or regex patterns not allowed in `data` block |
+| handle_as_domain     | generic    | Treat the action call in same way as a known domain          |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.
