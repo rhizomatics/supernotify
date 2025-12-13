@@ -98,20 +98,20 @@ async def test_update_input_text(mock_hass) -> None:
     uut = SupernotifyAction(
         mock_hass,
         deliveries={
-            "noticeboard": {
+            "motd": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "input_text.set_value",
             }
         },
     )
     await uut.initialize()
-    await uut.async_send_message(message="Display on Screen", target="input_text.esp_display")
+    await uut.async_send_message(message="Display on Screen", target="input_text.motd")
 
     uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
         "input_text",
         "set_value",
         service_data={"value": "Display on Screen"},
-        target={"entity_id": ["input_text.esp_display"]},
+        target={"entity_id": ["input_text.motd"]},
         blocking=False,
         context=None,
         return_response=False,
