@@ -2,6 +2,7 @@
 tags:
   - developer
   - classes
+  description: Core class descriptions for the core classes of Supernotify for Home Assistant
 ---
 # Core Classes
 

@@ -3,6 +3,8 @@ tags:
   - scenario
   - recipe
   - condition
+  description: Define a bed-time condition suitable for the inhabitants of a house and use this to
+  customize notifications from Home Assistant using Supernotify
 ---
 # Recipe - Bedtime
 

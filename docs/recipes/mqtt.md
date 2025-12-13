@@ -2,6 +2,7 @@
 tags:
   - mqtt
   - recipe
+description: Send out notification from Home Assistant to MQTT topics using Supernotify
 ---
 # Recipe - MQTT
 

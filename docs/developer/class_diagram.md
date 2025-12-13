@@ -2,6 +2,7 @@
 tags:
   - developer
   - classes
+description: Class Diagram for the core classes of Supernotify for Home Assistant
 ---
 # Simplified Class Diagram
 

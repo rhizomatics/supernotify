@@ -4,6 +4,7 @@ tags:
   - debugging
   - logging
   - recipe
+description: Use a variety of tools within Supernotify and Home Assistant to diagnose why a notification is not acting as intended
 ---
 # Recipe - Debug an Integration
 

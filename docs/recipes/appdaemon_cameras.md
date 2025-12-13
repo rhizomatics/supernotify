@@ -4,6 +4,7 @@ tags:
   - recipe
   - cctv
   - appdaemon
+description: Send advanced notifications from the popular AppDaemon add-on for Home Assistant
 ---
 # Recipe - AppDaemon Cameras
 

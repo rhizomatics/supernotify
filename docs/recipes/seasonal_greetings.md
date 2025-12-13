@@ -3,9 +3,12 @@ tags:
   - xmas
   - holiday
   - scenario
+  - alexa
+  - chime
   - recipe
   - condition
-description: Use a Supernotify scenario to add a seasonal note to notifications
+description: Use a Supernotify scenario to add a seasonal note to notifications, and override standard
+chimes with Christmas cheer
 ---
 # Recipe - Seasonal Greetings
 
