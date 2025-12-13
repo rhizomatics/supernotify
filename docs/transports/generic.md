@@ -5,9 +5,9 @@ tags:
 ---
 # Generic Transport Adaptor
 
-| Transport ID         | Source      | Requirements | Optional |
-| -------------------- | ----------- | ------------ | -------- |
-| `generic` | :material-github:[`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | - | *Any Home Assistant action from core or custom integration* |
+| Transport ID | Source                                                                                                                                    | Requirements | Optional                                                    |
+|--------------|-------------------------------------------------------------------------------------------------------------------------------------------|--------------|-------------------------------------------------------------|
+| `generic`    | :material-github:[`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | -            | *Any Home Assistant action from core or custom integration* |
 
 Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model. It can be used for simple calls,
 or as a "toolbox" for more complex needs.
@@ -38,6 +38,27 @@ Use this deliveries with action calls like this:
 ```
 
 This includes support for [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/). (Supernotify also offers an [MQTT Transport Adaptor](mqtt.md) for direct flexible access to `mqtt.publish`.)
+
+### Known Integrations
+
+Generic isn't completely a blank slate - it knows about the most common integration domains and will
+build a compatible Action call for them. These have a lot of variation because Home Assistant actions
+have a lot of variation! Generic Transports handling of these means you can create multi-channel
+notifications without worrying too much about the variety of `data` mappings etc.
+
+| Domain                        | Action Data                                                                                                                                                 | Target Data             |
+|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
+| notify ( `send_message` only) | `message` and `title` only                                                                                                                                  | `entity_id` map         |
+| notify ( other actions )      | `message` and `title` plus all `data` elements                                                                                                              | big list of all targets |
+| input_text                    | `value` with message                                                                                                                                        | `entity_id` map         |
+| switch                        | Empty                                                                                                                                                       | `entity_id` map         |
+| mqtt                          | All [permitted](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish) `data` elements. `payload` set to message value if not already defined | Empty                   |
+| siren                         | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                      | `entity_id` map         |
+| light                         | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                      | `entity_id` map         |
+| rest_command | All of `data | Empty |
+| script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right  | `entity_id` map |
+| script (script name as action) | `message` and `title` plus all `data` elements | `entity_id` map |
+| *default* |  `message` and `title` plus all `data` elements | big list of all targets |
 
 ### Input Text Integration
 

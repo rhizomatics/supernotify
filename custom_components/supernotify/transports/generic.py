@@ -3,7 +3,8 @@ import re
 from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
-from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
+# ATTR_VARIABLES from script.const has import issues
+from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
@@ -46,6 +47,7 @@ DATA_FIELDS_ALLOWED = {
     ],
     "siren": ["tone", "duration", "volume_level"],
     "mqtt": ["topic", "payload", "evaluate_payload", "qos", "retain"],
+    "script": ["variables", "wait", "wait_template"],
 }
 
 
@@ -75,24 +77,30 @@ class GenericTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         if action is not None and "." in action:
             return True
-        _LOGGER.warning("SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
+        _LOGGER.warning(
+            "SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
     async def deliver(self, envelope: Envelope) -> bool:
         # inputs
         data: dict[str, Any] = envelope.data or {}
-        core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
+        core_action_data: dict[str, Any] = envelope.core_action_data(
+            force_message=False)
         qualified_action: str | None = envelope.delivery.action
-        domain: str | None = qualified_action.split(".", 1)[0] if qualified_action and "." in qualified_action else None
+        domain: str | None = qualified_action.split(
+            ".", 1)[0] if qualified_action and "." in qualified_action else None
         equiv_domain: str | None = domain
         if envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE):
-            equiv_domain = envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE)
-            _LOGGER.debug("SUPERNOTIFY Handling %s generic message as if it was %s", domain, equiv_domain)
+            equiv_domain = envelope.delivery.options.get(
+                OPTION_GENERIC_DOMAIN_STYLE)
+            _LOGGER.debug(
+                "SUPERNOTIFY Handling %s generic message as if it was %s", domain, equiv_domain)
 
         # outputs
         action_data: dict[str, Any] = {}
         target_data: dict[str, Any] | None = {}
         build_targets: bool = False
+        prune_data: bool = True
 
         if equiv_domain == "notify":
             action_data = core_action_data
@@ -100,6 +108,7 @@ class GenericTransport(Transport):
                 # amongst the wild west of notifty handling, at least care for the modern core one
                 action_data = core_action_data
                 target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
+                prune_data = False
             else:
                 action_data = core_action_data
                 action_data[ATTR_DATA] = data
@@ -129,6 +138,7 @@ class GenericTransport(Transport):
             else:
                 action_data = core_action_data
                 action_data.update(data)
+                prune_data = False
         else:
             action_data = core_action_data
             action_data.update(data)
@@ -143,9 +153,11 @@ class GenericTransport(Transport):
             elif len(all_targets) >= 1:
                 action_data[ATTR_TARGET] = all_targets
 
-        self.prune_data(action_data, domain, envelope.delivery)
+        if prune_data:
+            self.prune_data(action_data, domain, envelope.delivery)
         if domain in DATA_FIELDS_ALLOWED and action_data:
-            action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
+            action_data = {k: v for k, v in action_data.items(
+            ) if k in DATA_FIELDS_ALLOWED[domain]}
 
         target_data = target_data or None
         if ATTR_DATA in action_data and not action_data[ATTR_DATA]:

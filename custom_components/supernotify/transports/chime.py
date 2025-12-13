@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA_RESTRICT: dict[str, list[str] | None] = {
     "media_player": ["data", "entity_id", "media_content_id", "media_content_type", "enqueue", "announce"],
     "switch": ["entity_id"],
-    "script": ["data", "variables", "context", "wait"],
+    "script": ["data", "variables", "context", "wait","wait_template"],
     "rest_command": None,
     "siren": ["data", "entity_id"],
     "alexa_devices": ["sound", "device_id"],
