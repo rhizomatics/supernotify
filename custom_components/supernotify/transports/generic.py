@@ -115,7 +115,10 @@ class GenericTransport(Transport):
                 build_targets = True
         elif equiv_domain == "input_text":
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
-            action_data = {"value": core_action_data[ATTR_MESSAGE]}
+            if 'value' in data:
+                action_data = {"value": data["value"]}
+            else:
+                action_data = {"value": core_action_data[ATTR_MESSAGE]}
         elif equiv_domain == "switch":
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
         elif equiv_domain == "mqtt":

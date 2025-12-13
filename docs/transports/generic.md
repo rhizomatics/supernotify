@@ -2,6 +2,15 @@
 tags:
   - transport
   - generic
+  - script
+  - rest_command
+  - light
+  - siren
+  - mqtt
+  - input_text
+  - switch
+  - notify
+  - custom
 ---
 # Generic Transport Adaptor
 
