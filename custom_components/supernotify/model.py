@@ -500,8 +500,8 @@ class ConditionVariables:
         self.required_scenarios = required_scenarios or []
         self.constrain_scenarios = constrain_scenarios or []
         self.notification_priority = delivery_priority or PRIORITY_MEDIUM
-        self.notification_message = message or ""
-        self.notification_title = title or ""
+        self.notification_message = message
+        self.notification_title = title
 
     def as_dict(self, **_kwargs: Any) -> ConfigType:
         return {

@@ -116,3 +116,28 @@ async def test_update_input_text(mock_hass) -> None:
         context=None,
         return_response=False,
     )
+
+
+async def test_update_fixed_message(mock_hass) -> None:
+    uut = SupernotifyAction(
+        mock_hass,
+        deliveries={
+            "noticeboard": {
+                CONF_TRANSPORT: TRANSPORT_GENERIC,
+                CONF_ACTION: "text.set_value",
+                CONF_DATA: {"value": "Alert Level 3"}
+            }
+        },
+    )
+    await uut.initialize()
+    await uut.async_send_message(message=None, target="text.esp_display")
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "text",
+        "set_value",
+        service_data={"value": "Alert Level 3", "target": "text.esp_display"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )

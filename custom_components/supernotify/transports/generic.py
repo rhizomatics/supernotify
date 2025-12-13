@@ -73,7 +73,7 @@ class GenericTransport(Transport):
     async def deliver(self, envelope: Envelope) -> bool:
         # inputs
         data = envelope.data or {}
-        core_action_data = envelope.core_action_data()
+        core_action_data = envelope.core_action_data(force_message=False)
         qualified_action = envelope.delivery.action
         domain = qualified_action.split(".", 1)[0] if qualified_action and "." in qualified_action else None
         # outputs
