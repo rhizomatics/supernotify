@@ -6,6 +6,8 @@
    - Now has direct support for `input_text.set_value`,`script`,`rest_command`,`light`,`siren`,`mqtt` and `switch`
       -  Will build a `data` and `target` to meet the rules of the automations, pruning out fields that would break the call
    - New delivery options `data_keys_include_re` and `data_keys_exclude_re` to control valid keys in `data` section
+   - New delivery option `handle_as_domain` to structure an action that Generic transport adaptor
+   doesn't know about in the same way as one that it does, like `input_text` or `light`.
 - Debugging
   - Undelivered envelopes now have a `skip_reason` of `NO_ACTION` or `NO_TARGET` if action call
 to Home Assistant skipped because of mandatory missing items

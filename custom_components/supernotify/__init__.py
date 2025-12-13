@@ -216,6 +216,7 @@ OPTION_TARGET_INCLUDE_RE = "target_include_re"
 OPTION_CHIME_ALIASES = "chime_aliases"
 OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"
 OPTION_DATA_KEYS_EXCLUDE_RE = "data_keys_exclude_re"
+OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 

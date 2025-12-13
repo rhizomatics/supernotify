@@ -8,6 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.con
 from custom_components.supernotify import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_GENERIC_DOMAIN_STYLE,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -67,6 +68,7 @@ class GenericTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_DATA_KEYS_INCLUDE_RE: None,
             OPTION_DATA_KEYS_EXCLUDE_RE: None,
+            OPTION_GENERIC_DOMAIN_STYLE: None,
         }
         return config
 
@@ -78,16 +80,21 @@ class GenericTransport(Transport):
 
     async def deliver(self, envelope: Envelope) -> bool:
         # inputs
-        data = envelope.data or {}
-        core_action_data = envelope.core_action_data(force_message=False)
-        qualified_action = envelope.delivery.action
-        domain = qualified_action.split(".", 1)[0] if qualified_action and "." in qualified_action else None
+        data: dict[str, Any] = envelope.data or {}
+        core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
+        qualified_action: str | None = envelope.delivery.action
+        domain: str | None = qualified_action.split(".", 1)[0] if qualified_action and "." in qualified_action else None
+        equiv_domain: str | None = domain
+        if envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE):
+            equiv_domain = envelope.delivery.options.get(OPTION_GENERIC_DOMAIN_STYLE)
+            _LOGGER.debug("SUPERNOTIFY Handling %s generic message as if it was %s", domain, equiv_domain)
+
         # outputs
         action_data: dict[str, Any] = {}
         target_data: dict[str, Any] | None = {}
         build_targets: bool = False
 
-        if domain == "notify":
+        if equiv_domain == "notify":
             action_data = core_action_data
             if qualified_action == "notify.send_message":
                 # amongst the wild west of notifty handling, at least care for the modern core one
@@ -97,22 +104,22 @@ class GenericTransport(Transport):
                 action_data = core_action_data
                 action_data[ATTR_DATA] = data
                 build_targets = True
-        elif domain == "input_text":
+        elif equiv_domain == "input_text":
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
             action_data = {"value": core_action_data[ATTR_MESSAGE]}
-        elif domain == "switch":
+        elif equiv_domain == "switch":
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
-        elif domain == "mqtt":
+        elif equiv_domain == "mqtt":
             action_data = data
             if "payload" not in action_data:
                 action_data["payload"] = envelope.message
                 # add `payload:` with empty value for empty topic
-        elif domain in ("siren", "light"):
+        elif equiv_domain in ("siren", "light"):
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
             action_data = data
-        elif domain == "rest_command":
+        elif equiv_domain == "rest_command":
             action_data = data
-        elif domain == "script":
+        elif equiv_domain == "script":
             if qualified_action in ("script.turn_on", "script.turn_off"):
                 target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
                 action_data["variables"] = core_action_data

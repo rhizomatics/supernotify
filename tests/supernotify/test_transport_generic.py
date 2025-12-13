@@ -13,6 +13,7 @@ from custom_components.supernotify import (
     CONF_TRANSPORT,
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_GENERIC_DOMAIN_STYLE,
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_GENERIC,
 )
@@ -109,6 +110,7 @@ async def test_e2e_update_input_text(hass) -> None:
     }
     assert await async_setup_component(hass, "input_text", {"input_text": {"motd": {}}})
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [config]})
+    hass.states.async_set("sensor.inside_temperature", "15")
     hass.states.async_set("sensor.outside_temperature", "20")
     await hass.async_block_till_done()
 
@@ -128,7 +130,11 @@ async def test_e2e_update_input_text(hass) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    assert notification["delivered_envelopes"][0]["message"] == "Outside is 20C"
+    assert len(notification["delivered_envelopes"][0]["calls"]) == 1
+    assert notification["delivered_envelopes"][0]["calls"][0]["domain"] == "input_text"
+    assert notification["delivered_envelopes"][0]["calls"][0]["action"] == "set_value"
+    assert notification["delivered_envelopes"][0]["calls"][0]["action_data"] == {"value": "Outside is 20C"}
+    assert notification["delivered_envelopes"][0]["calls"][0]["target_data"] == {"entity_id": ["input_text.motd"]}
 
 
 async def test_update_fixed_message(mock_hass) -> None:
@@ -148,9 +154,34 @@ async def test_update_fixed_message(mock_hass) -> None:
     uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
         "text",
         "set_value",
-        service_data={"message":"","value": "Alert Level 3", "target": "text.esp_display"},
+        service_data={"message": "", "value": "Alert Level 3", "target": "text.esp_display"},
         blocking=False,
         target=None,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_update_equiv_domain(mock_hass) -> None:
+    uut = SupernotifyAction(
+        mock_hass,
+        deliveries={
+            "noticeboard": {
+                CONF_TRANSPORT: TRANSPORT_GENERIC,
+                CONF_ACTION: "text.set_value",
+                CONF_OPTIONS: {OPTION_GENERIC_DOMAIN_STYLE: "input_text"},
+            }
+        },
+    )
+    await uut.initialize()
+    await uut.async_send_message(message="Alert Level 2", target="text.esp_display")
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "text",
+        "set_value",
+        service_data={"value": "Alert Level 2"},
+        blocking=False,
+        target={"entity_id": ["text.esp_display"]},
         context=None,
         return_response=False,
     )
