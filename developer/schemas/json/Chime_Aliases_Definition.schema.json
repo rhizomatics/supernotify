@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "properties": {
+    "chime_aliases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "anyOf": [
+            {},
+            {
+              "type": "object",
+              "properties": {
+                "entity_id": {
+                  "type": "string"
+                },
+                "device_id": {
+                  "type": "string"
+                },
+                "alias": {
+                  "type": "string"
+                },
+                "tune": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "volume": {
+                  "type": "number"
+                },
+                "target": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "duration": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": []
+            }
+          ]
+        }
+      },
+      "default": {}
+    }
+  },
+  "required": [
+    "chime_aliases"
+  ],
+  "title": "Chime Aliases Definition",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Chime_Aliases_Definition.json",
+  "description": "Voluptuous validation schema for Chime_Aliases_Definition",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
