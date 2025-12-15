@@ -24,7 +24,7 @@ exclude = [
 namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 
 [tool.poetry.group.dev.dependencies]
-homeassistant-stubs = "2025.10.4"
+homeassistant-stubs = "2025.12.1"
 
 [tool.ruff]
 line-length = 128
