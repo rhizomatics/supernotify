@@ -8,7 +8,7 @@ dependencies = ["homeassistant>=2025.12.1"]
 
 [tool.poetry]
 package-mode = false
-version = "1.5.2"
+version = "1.5.3"
 packages = [{ include = "custom_components.supernotify" }]
 
 [tool.setuptools.packages.find]

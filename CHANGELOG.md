@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.5.3
+### Fixes
+- Logging for device inclusion/exclusion during discovery
 ## 1.5.2
 ### Fixes
 - Better error handling for broken scenario conditions
