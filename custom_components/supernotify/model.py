@@ -221,7 +221,7 @@ class Target:
     @classmethod
     def is_email(cls, target: str) -> bool:
         try:
-            return vol.Email(target) is not None
+            return vol.Email()(target) is not None
         except vol.Invalid:
             return False
 
