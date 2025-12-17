@@ -84,7 +84,7 @@ class Transport:
                         self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
                         added += 1
 
-                _LOGGER.info(f"SUPERNOTIFY device discovery for {domain} found {discovered} devices, added {added} new ones")
+                _LOGGER.info(f"SUPERNOTIFY Device discovery for {domain} found {discovered} devices, added {added} new ones")
 
     @property
     def targets(self) -> Target:

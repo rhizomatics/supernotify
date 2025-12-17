@@ -1,6 +1,7 @@
 """The Supernotify integration"""
 
 import logging
+import re
 from collections.abc import Callable
 from enum import StrEnum
 
@@ -77,8 +78,7 @@ CONF_DATA: str = "data"
 CONF_OPTIONS: str = "options"
 CONF_MOBILE: str = "mobile"
 CONF_NOTIFY: str = "notify"
-CONF_MOBILE_APP_ID: str = "mobile_app_id"
-CONF_PHONE_NUMBER: str = "phone_number"
+
 CONF_PRIORITY: str = "priority"
 CONF_OCCUPANCY: str = "occupancy"
 CONF_SCENARIOS: str = "scenarios"
@@ -231,8 +231,25 @@ CONF_TTL = "ttl"
 CONF_SIZE = "size"
 ATTR_DUPE_POLICY_MTSLP = "dupe_policy_message_title_same_or_lower_priority"
 ATTR_DUPE_POLICY_NONE = "dupe_policy_none"
+CONF_MOBILE_APP_ID: str = "mobile_app_id"
+
+
+def phone(value: str) -> str:
+    """Validate a phone number"""
+    regex = re.compile(r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$")
+    if not regex.match(value):
+        raise vol.Invalid("Invalid Phone Number")
+    return str(value)
+
+
 # TARGET_FIELDS includes entity, device, area, floor, label ids
-TARGET_SCHEMA = vol.Any(dict[str, list[str]], dict[str, str], str, list[str], cv.TARGET_FIELDS)
+TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
+        cv.TARGET_FIELDS | {vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email]),
+                            vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
+                            vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
+                            vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
+                            vol.Optional(cv.string): vol.All(cv.ensure_list, [str])},
+        str, list[str])
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
 MOBILE_DEVICE_SCHEMA = vol.Schema({
@@ -349,6 +366,9 @@ TRANSPORT_SCHEMA = vol.Schema({
 # OPTION_OCCUPANCY_DEFAULT="default"
 # OPTIONS_OCCUPANCY=[OPTION_OCCUPANCY_DEFAULT,OPTION_OCCUPANCY_EXCLUDE]
 # OPTION_OCCUPANCY_EXCLUDE="exclude"
+
+CONF_PHONE_NUMBER: str = "phone_number"
+
 RECIPIENT_SCHEMA = vol.Schema({
     vol.Required(CONF_PERSON): cv.entity_id,
     vol.Optional(CONF_ALIAS): cv.string,
@@ -479,7 +499,7 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
                     vol.Optional(CONF_TUNE): cv.string,
                     vol.Optional(CONF_DATA): DATA_SCHEMA,
                     vol.Optional(CONF_VOLUME): float,
-                    vol.Optional(CONF_TARGET): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
                     vol.Optional(CONF_DURATION): cv.positive_int,
                 }),
             )

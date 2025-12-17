@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from typing import Any, ClassVar
 
+import voluptuous as vol
+
 # This import brings in a bunch of other dependency noises, make it manual until py3.14/lazy import/HA updated
 # from homeassistant.components.mobile_app import DOMAIN as MOBILE_APP_DOMAIN
 from homeassistant.const import (
@@ -48,6 +50,7 @@ from . import (
     SELECTION_DEFAULT,
     TARGET_USE_ON_NO_ACTION_TARGETS,
     SelectionRank,
+    phone,
 )
 from .common import ensure_list
 
@@ -206,7 +209,10 @@ class Target:
 
     @classmethod
     def is_phone(cls, target: str) -> bool:
-        return re.fullmatch(r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$", target) is not None
+        try:
+            return phone(target) is not None
+        except vol.Invalid:
+            return False
 
     @classmethod
     def is_mobile_app_id(cls, target: str) -> bool:
@@ -214,13 +220,11 @@ class Target:
 
     @classmethod
     def is_email(cls, target: str) -> bool:
-        return (
-            re.fullmatch(
-                r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$",
-                target,
-            )
-            is not None
-        )
+        try:
+            return vol.Email(target) is not None
+        except vol.Invalid:
+            return False
+
 
     def has_targets(self) -> bool:
         return any(targets for category, targets in self.targets.items())

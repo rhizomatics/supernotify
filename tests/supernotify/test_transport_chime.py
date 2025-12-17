@@ -320,7 +320,7 @@ async def test_deliver_rest_command() -> None:
         },
         deliveries={"siren": {CONF_TRANSPORT: TRANSPORT_CHIME,
                               CONF_DATA: {"chime_tune": "siren"}}},
-        services={"rest_command": ["camera_siren"],"alexa_devices":["send_sound"],"switch":["turn_on"]},
+        services={"rest_command": ["camera_siren"], "alexa_devices": ["send_sound"], "switch": ["turn_on"]},
     )
 
     await context.test_initialize()
@@ -341,5 +341,5 @@ async def test_deliver_rest_command() -> None:
         context=None,
         return_response=False,
         target=None)
-        ],any_order=True
+        ], any_order=True
     )
