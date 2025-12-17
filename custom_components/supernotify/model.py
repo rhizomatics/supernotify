@@ -365,8 +365,8 @@ class TransportConfig:
                 self.device_model_include: list[str] | None = conf.get(CONF_DEVICE_MODEL_INCLUDE)
                 self.device_model_exclude: list[str] | None = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
             else:
-                self.device_model_include: list[str] | None = class_config.device_model_include
-                self.device_model_exclude: list[str] | None = class_config.device_model_exclude
+                self.device_model_include = class_config.device_model_include
+                self.device_model_exclude = class_config.device_model_exclude
             self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
             self.alias = conf.get(CONF_ALIAS)
@@ -526,6 +526,9 @@ class SuppressionReason(StrEnum):
     NO_SCENARIO = "NO_SCENARIO"
     NO_ACTION = "NO_ACTION"
     NO_TARGET = "NO_TARGET"
+    TRANSPORT_DISABLED = "TRANSPORT_DISABLED"
+    PRIORITY = "PRIORITY"
+    DELIVERY_CONDITION = "DELIVERY_CONDITION"
     UNKNOWN = "UNKNOWN"
 
 

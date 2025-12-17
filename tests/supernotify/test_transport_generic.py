@@ -130,11 +130,12 @@ async def test_e2e_update_input_text(hass) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    assert len(notification["delivered_envelopes"][0]["calls"]) == 1
-    assert notification["delivered_envelopes"][0]["calls"][0]["domain"] == "input_text"
-    assert notification["delivered_envelopes"][0]["calls"][0]["action"] == "set_value"
-    assert notification["delivered_envelopes"][0]["calls"][0]["action_data"] == {"value": "Outside is 20C"}
-    assert notification["delivered_envelopes"][0]["calls"][0]["target_data"] == {"entity_id": ["input_text.motd"]}
+    generic_calls = notification["delivered_envelopes"]["generic"][0]["calls"]
+    assert len(generic_calls) == 1
+    assert generic_calls[0]["domain"] == "input_text"
+    assert generic_calls[0]["action"] == "set_value"
+    assert generic_calls[0]["action_data"] == {"value": "Outside is 20C"}
+    assert generic_calls[0]["target_data"] == {"entity_id": ["input_text.motd"]}
 
 
 async def test_update_fixed_message(mock_hass) -> None:

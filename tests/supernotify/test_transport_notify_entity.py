@@ -82,10 +82,10 @@ async def test_doesnt_double_deliver() -> None:
     await notification.deliver()
     assert notification.selected_delivery_names == unordered("custom", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
 
-    assert len(notification.delivered_envelopes) == 2
+    assert notification.delivered_envelopes.keys() == unordered("generic", "notify_entity")
 
-    assert notification.delivered_envelopes[0].delivery_name == "custom"
-    assert notification.delivered_envelopes[0].target.entity_ids == ["notify.entity_2", "notify.entity_3"]
+    assert notification.delivered_envelopes["generic"][0].delivery_name == "custom"
+    assert notification.delivered_envelopes["generic"][0].target.entity_ids == ["notify.entity_2", "notify.entity_3"]
 
-    assert notification.delivered_envelopes[1].delivery_name == "DEFAULT_notify_entity"
-    assert notification.delivered_envelopes[1].target.entity_ids == ["notify.entity_1"]
+    assert notification.delivered_envelopes["notify_entity"][0].delivery_name == "DEFAULT_notify_entity"
+    assert notification.delivered_envelopes["notify_entity"][0].target.entity_ids == ["notify.entity_1"]

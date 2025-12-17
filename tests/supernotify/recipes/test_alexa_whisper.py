@@ -41,10 +41,10 @@ async def test_alexa_whispering(hass: HomeAssistant):
     uut = Notification(ctx, "testing 123", action_data={"priority": "low"}, target="joe@soapy.com")
     await uut.initialize()
     await uut.deliver()
-    assert len(uut.delivered_envelopes) == 2
-    index = {uut.delivered_envelopes[i].delivery_name: i for i in range(0, 2)}
-    assert uut.delivered_envelopes[index["plain_email"]].calls[0].action_data["message"] == "testing 123"  # type: ignore
+    assert len(uut.delivered_envelopes["alexa_devices"]) == 1
+    assert len(uut.delivered_envelopes["email"]) == 1
+    assert uut.delivered_envelopes["email"][0].calls[0].action_data["message"] == "testing 123"  # type: ignore
     assert (
-        uut.delivered_envelopes[index["alexa_inform"]].calls[0].action_data["message"]  # type: ignore
+        uut.delivered_envelopes["alexa_devices"][0].calls[0].action_data["message"]  # type: ignore
         == '<amazon:effect name="whispered">testing 123</amazon:effect>'
     )

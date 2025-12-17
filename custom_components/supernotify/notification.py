@@ -86,10 +86,11 @@ class Notification(ArchivableObject):
         self.delivered: int = 0
         self.errored: int = 0
         self.skipped: int = 0
-        self.missed: int = 0
-        self.delivered_envelopes: list[Envelope] = []
-        self.undelivered_envelopes: list[Envelope] = []
+        self.dupe: bool = False
+        self.delivered_envelopes: dict[str, list[Envelope]] = {}
+        self.undelivered_envelopes: dict[str, list[Envelope]] = {}
         self.delivery_error: list[str] | None = None
+        self.skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
         # for compatibility with other notify calls, pass thru surplus data to underlying delivery transports
@@ -264,12 +265,14 @@ class Notification(ArchivableObject):
 
     def suppress(self, reason: SuppressionReason) -> None:
         self.suppressed = reason
+        if reason not in self.skip_reasons:
+            self.skip_reasons.append(reason)
         _LOGGER.info(f"SUPERNOTIFY Suppressing notification, reason:{reason}, id:{self.id}")
 
     async def deliver(self) -> bool:
         if self.suppressed is not None:
             _LOGGER.info("SUPERNOTIFY Suppressing globally silenced/snoozed notification (%s)", self.id)
-            self.skipped += 1
+            self.record_result(None, suppression_reason=SuppressionReason.SNOOZED)
             return False
 
         _LOGGER.debug(
@@ -286,7 +289,7 @@ class Notification(ArchivableObject):
             else:
                 _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
-        if self.delivered == 0 and self.errored == 0:
+        if self.delivered == 0 and self.errored == 0 and not self.dupe:
             for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
                 if delivery.name not in self.selected_delivery_names:
                     await self.call_transport(delivery)
@@ -302,18 +305,18 @@ class Notification(ArchivableObject):
         try:
             transport: Transport = delivery.transport
             if not transport.override_enabled:
-                self.skipped += 1
+                self.record_result(None, suppression_reason=SuppressionReason.TRANSPORT_DISABLED)
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on transport disabled", delivery)
                 return
 
             delivery_priorities = delivery.priority
             if self.priority and delivery_priorities and self.priority not in delivery_priorities:
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
-                self.skipped += 1
+                self.record_result(None, suppression_reason=SuppressionReason.PRIORITY)
                 return
             if not delivery.evaluate_conditions(self.condition_variables):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
-                self.skipped += 1
+                self.record_result(None, suppression_reason=SuppressionReason.DELIVERY_CONDITION)
                 return
 
             recipients: list[Target] = self.generate_recipients(delivery)
@@ -322,29 +325,48 @@ class Notification(ArchivableObject):
             for envelope in envelopes:
                 if self.context.dupe_checker.check(envelope):
                     _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self._message)
-                    envelope.skip_reason = SuppressionReason.DUPE
-                    self.undelivered_envelopes.append(envelope)
+                    self.record_result(envelope, SuppressionReason.DUPE)
                     continue
                 try:
                     if not await transport.deliver(envelope):
-                        self.missed += 1
-                    self.delivered += envelope.delivered
-                    self.errored += envelope.errored
-                    if envelope.delivered:
-                        self.delivered_envelopes.append(envelope)
-                    else:
-                        self.undelivered_envelopes.append(envelope)
+                        _LOGGER.debug("SUPERNOTIFY No delivery for %s", envelope.delivery.name)
+                    self.record_result(envelope)
                 except Exception as e2:
                     _LOGGER.exception("SUPERNOTIFY Failed to deliver %s: %s", envelope.delivery_name, e2)
-                    self.errored += 1
+                    envelope.errored = min(1, envelope.errored)
                     transport.record_error(str(e2), method="deliver")
                     envelope.delivery_error = format_exception(e2)
-                    self.undelivered_envelopes.append(envelope)
+                    self.record_result(envelope)
 
         except Exception as e:
             _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery.name)
             _LOGGER.debug("SUPERNOTIFY %s delivery failure", delivery, exc_info=True)
             self.delivery_errors[delivery.name] = format_exception(e)
+
+    def record_result(self, envelope: Envelope | None = None, suppression_reason: SuppressionReason | None = None) -> None:
+
+        if suppression_reason:
+            self.skipped += 1
+        if envelope:
+            transport = envelope.delivery.transport if envelope else None
+            if transport:
+                transport_name: str = transport.name
+            else:
+                transport_name = "!UNKNOWN!"
+            self.delivered += envelope.delivered
+            self.errored += envelope.errored
+            if envelope.delivered:
+                self.delivered_envelopes.setdefault(transport_name, [])
+                self.delivered_envelopes[transport_name].append(envelope)
+            else:
+                if suppression_reason:
+                    envelope.skip_reason = suppression_reason
+                    if suppression_reason not in self.skip_reasons:
+                        self.skip_reasons.append(suppression_reason)
+                    if suppression_reason == SuppressionReason.DUPE:
+                        self.dupe = True
+                self.undelivered_envelopes.setdefault(transport_name, [])
+                self.undelivered_envelopes[transport_name].append(envelope)
 
     def contents(self, minimal: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
@@ -356,7 +378,7 @@ class Notification(ArchivableObject):
                 return v.isoformat()
             if isinstance(v, str | int | float | bool):
                 return v
-            if isinstance(v, (list, KeysView)):
+            if isinstance(v, list | KeysView):
                 return [sanitize(vv, minimal=minimal, **kwargs) for vv in v]
             if isinstance(v, tuple):
                 return (sanitize(vv, minimal=minimal, **kwargs) for vv in v)

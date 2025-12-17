@@ -358,9 +358,9 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
     await uut.initialize()
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
-    assert len(uut.delivered_envelopes) == 2
-    emailed = next(e for e in uut.delivered_envelopes if e.delivery_name == "plain_email")
-    texted = next(e for e in uut.delivered_envelopes if e.delivery_name == "sms")
+    assert len(uut.delivered_envelopes["dummy"]) == 2
+    emailed = next(e for e in uut.delivered_envelopes["dummy"] if e.delivery_name == "plain_email")
+    texted = next(e for e in uut.delivered_envelopes["dummy"] if e.delivery_name == "sms")
     assert emailed.priority == "low"
     assert texted.priority == "medium"
 
@@ -384,8 +384,8 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
     await uut.initialize()
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
-    assert len(uut.delivered_envelopes) == 1
-    assert uut.delivered_envelopes[0].delivery_name == "text"
+    assert len(uut.delivered_envelopes["dummy"]) == 1
+    assert uut.delivered_envelopes["dummy"][0].delivery_name == "text"
 
 
 async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
@@ -407,9 +407,9 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
     await uut.initialize()
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
-    assert len(uut.delivered_envelopes) == 2
-    emailed = next(e for e in uut.delivered_envelopes if e.delivery_name == "plain_email")
-    texted = next(e for e in uut.delivered_envelopes if e.delivery_name == "sms")
+    assert len(uut.delivered_envelopes["dummy"]) == 2
+    emailed = next(e for e in uut.delivered_envelopes["dummy"] if e.delivery_name == "plain_email")
+    texted = next(e for e in uut.delivered_envelopes["dummy"] if e.delivery_name == "sms")
     assert "spambox@myhome.org" in emailed.target.email
     assert "spambox@myhome.org" not in texted.target.email
 

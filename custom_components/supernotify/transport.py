@@ -74,9 +74,7 @@ class Transport:
                 discovered: int = 0
                 added: int = 0
                 for d in self.hass_api.discover_devices(
-                    domain,
-                        device_model_include=self.device_model_include,
-                        device_model_exclude=self.device_model_exclude
+                    domain, device_model_include=self.device_model_include, device_model_exclude=self.device_model_exclude
                 ):
                     discovered += 1
                     if self.delivery_defaults.target is None:

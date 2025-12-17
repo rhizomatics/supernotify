@@ -221,9 +221,9 @@ async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:
     notification = uut.last_notification
     assert notification is not None
     assert len(notification.undelivered_envelopes) == 1
-    assert isinstance(notification.undelivered_envelopes[0], Envelope)
-    assert isinstance(notification.undelivered_envelopes[0].delivery_error, list)
-    assert any("OSError" in stack for stack in notification.undelivered_envelopes[0].delivery_error)
+    assert isinstance(notification.undelivered_envelopes["dummy"][0], Envelope)
+    assert isinstance(notification.undelivered_envelopes["dummy"][0].delivery_error, list)
+    assert any("OSError" in stack for stack in notification.undelivered_envelopes["dummy"][0].delivery_error)
     assert broken.error_count == 1
     assert broken.last_error_message == "a self-inflicted error has occurred"
     assert broken.last_error_in == "call_action"
@@ -252,9 +252,9 @@ async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
     notification = uut.last_notification
     assert notification is not None
     assert len(notification.undelivered_envelopes) == 1
-    assert isinstance(notification.undelivered_envelopes[0], Envelope)
-    assert isinstance(notification.undelivered_envelopes[0].delivery_error, list)
-    assert any("ValueError" in stack for stack in notification.undelivered_envelopes[0].delivery_error)
+    assert isinstance(notification.undelivered_envelopes["dummy"][0], Envelope)
+    assert isinstance(notification.undelivered_envelopes["dummy"][0].delivery_error, list)
+    assert any("ValueError" in stack for stack in notification.undelivered_envelopes["dummy"][0].delivery_error)
     assert broken.error_count == 1
     assert broken.last_error_at is not None
     assert broken.last_error_message == "a self-inflicted error has occurred"

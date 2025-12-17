@@ -229,7 +229,7 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
     assert notification is not None
     # no android integration in test env
     assert "undelivered_envelopes" in notification
-    assert notification["undelivered_envelopes"][0]["data"]["clickAction"] == "android_something"
+    assert notification["undelivered_envelopes"]["mobile_push"][0]["data"]["clickAction"] == "android_something"
 
 
 async def test_action_title(mock_hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:

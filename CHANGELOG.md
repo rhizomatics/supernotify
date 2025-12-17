@@ -1,9 +1,11 @@
 # Public releases
 
 ## 1.5.3
-### Fixes
+### Internal
 - Logging for device inclusion/exclusion during discovery
 - Defaulting for device inclusion/exclusion from hard-coded values switched off by either explicit include or exclude ( affects Chime use of `Speaker Group` as default exclusion)
+- Add transport as key to archived notification `delivered_envelopes` and `undelivered_envelopes`
+- Centralize results handling for notificatio
 ## 1.5.2
 ### Fixes
 - Better error handling for broken scenario conditions
