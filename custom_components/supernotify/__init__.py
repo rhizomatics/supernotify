@@ -16,10 +16,8 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_DESCRIPTION,
-    CONF_DEVICE_ID,
     CONF_EMAIL,
     CONF_ENABLED,
-    CONF_ENTITY_ID,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -246,7 +244,7 @@ def phone(value: str) -> str:
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
     cv.TARGET_FIELDS
     | {
-        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),
+        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),  # type: ignore[call-arg]
         vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
         vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
         vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
@@ -488,7 +486,7 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
     vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
         cv.string: vol.Schema({
             cv.string: vol.Any(
-                vol.Any(cv.string,vol.In(OPTIONS_CHIME_DOMAINS)),
+                vol.Any(cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
                 vol.Schema({
                     vol.Optional(CONF_ALIAS): cv.string,
                     vol.Optional(CONF_TUNE): cv.string,
