@@ -36,7 +36,8 @@ notification by the standard Home Assistant module.
 
 Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](../configuration/conditions.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or even patterns of words in the message or title - see [Content Escalation Recipe](../recipes/content_escalation.md) for an example.
 
-Be aware of values that can be empty, and which can trip Jinja2 up. For example `{{ 'CRITICAL' in notification_title}}` will fail if title is not set, which will be the case when the condition is validated at start up. This can be fixed with a none check, like `{{ not none(notification_tile) and 'CRITICAL' in notification_title}}` or an alternative string test, such as `{{ 'CRITICAL' in notification_title | upper}}`
+Be aware of values that can be empty, and which can trip Jinja2 up. For example `{{ 'CRITICAL' in notification_title}}` will fail if title is not set, which will be the case when the condition is validated at start up. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`,
+or the `upper`,`lower` filters if checking for case.
 
 !!! tip
     There's a [Scenario Schema](../developer/schemas/Scenario_Definition.md) defined for the configuration.
