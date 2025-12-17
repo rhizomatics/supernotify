@@ -36,27 +36,12 @@ notification by the standard Home Assistant module.
 
 Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](../configuration/conditions.md#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or even patterns of words in the message or title - see [Content Escalation Recipe](../recipes/content_escalation.md) for an example.
 
-Be aware of values that can be empty, and which can trip Jinja2 up. For example `{{ 'CRITICAL' in notification_title}}` will fail if title is not set, which will be the case when the condition is validated at start up. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`,
-or the `upper`,`lower` filters if checking for case.
 
 !!! tip
-    There's a [Scenario Schema](../developer/schemas/Scenario_Definition.md) defined for the configuration.
+    There's a [Scenario Schema](../developer/schemas/Scenario_Definition.md) defined for the configuration,
+    and [debugging hints](../configuration/conditions.md#debugging-conditions)
 
-### Debugging Conditions
 
-The [Developer Tools Template Tab](https://www.home-assistant.io/docs/tools/dev-tools/#template-editor-tab)
-is the best place to quickly check that a template will do what you want. Use this initial block to
-populate all the Supernotify condition variables, and set up the test values:
-
-```jinja2
-{% set notification_message = None %}
-{% set notification_title = None %}
-{% set notification_priority = 'medium' %}
-{% set applied_scenarios = [] %}
-{% set required_scenarios = [] %}
-{% set constrain_scenarios = [] %}
-{% set occupancy = {} %}
-```
 
 ## Examples
 
