@@ -43,12 +43,17 @@ async def test_examples(hass: HomeAssistant, config_name: str) -> None:
         TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
     }
     expected: dict[str, list[str]] = {}
+    configured: dict[str, list[str]] = {}
     for d, dc in uut_config.get(CONF_DELIVERY, {}).items():
-        if dc.get(CONF_ENABLED, True) and SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
-            expected.setdefault(dc[CONF_TRANSPORT], [])
-            expected[dc[CONF_TRANSPORT]].append(d)
+        if dc.get(CONF_ENABLED, True):
+            configured.setdefault(dc[CONF_TRANSPORT], [])
+            configured[dc[CONF_TRANSPORT]].append(d)
+            if SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
+                expected.setdefault(dc[CONF_TRANSPORT], [])
+                expected[dc[CONF_TRANSPORT]].append(d)
     for tname, tdef in expected_defaults.items():
-        expected.setdefault(tname, tdef)
+        if tname not in configured:
+            expected.setdefault(tname, tdef)
 
     assert deliveries is not None
     assert deliveries == expected

@@ -68,3 +68,19 @@ transport:
     delivery_defaults:
       debug: true
 ```
+
+## Example Configuration - Aliases
+
+Most of the config in Supernotify can have an `alias` defined, which can be about anything you like. It is a handy
+place to put a reminder of why something is configured oddly, or a nice explanation to show in the UI.
+
+When browsing the exposed entities in Developer Tools, the alias value will show up as a subtitle for each
+entity, and may save you puzzling over what you actually meant by that obscure ID months ago.
+
+```yaml
+  text_message:
+    alias: Mikrotik 4G Router based SMS, the one on the front wall that is only switched on when needed
+    transport: sms
+    enabled: false
+    action: notify.mikrotik_sms
+```

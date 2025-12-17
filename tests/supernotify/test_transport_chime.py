@@ -84,8 +84,7 @@ async def test_deliver() -> None:
                 "siren",
                 "turn_on",
                 target={"entity_id": "siren.lobby"},
-                service_data={"data": {"duration": 10,
-                                       "volume_level": 1, "tone": "boing_01"}},
+                service_data={"data": {"duration": 10, "volume_level": 1, "tone": "boing_01"}},
                 blocking=False,
                 context=None,
                 return_response=False,
@@ -93,8 +92,7 @@ async def test_deliver() -> None:
             call(
                 "alexa_devices",
                 "send_sound",
-                service_data={
-                    "device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "boing_01"},
+                service_data={"device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "boing_01"},
                 blocking=False,
                 context=None,
                 target=None,
@@ -133,16 +131,14 @@ async def test_deliver_alias() -> None:
                 },
             }
         },
-        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME,
-                               CONF_DATA: {"chime_tune": "doorbell"}}},
+        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "doorbell"}}},
     )
 
     await context.test_initialize()
     uut = context.transport(TRANSPORT_CHIME)
 
     envelope: Envelope = Envelope(
-        Delivery("chimes", context.delivery_config("chimes"),
-                 uut), Notification(context, message="for script only")
+        Delivery("chimes", context.delivery_config("chimes"), uut), Notification(context, message="for script only")
     )
     await uut.deliver(envelope)
     assert envelope.skipped == 0
@@ -175,8 +171,7 @@ async def test_deliver_alias() -> None:
             call(
                 "alexa_devices",
                 "send_sound",
-                service_data={
-                    "device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "bell01"},
+                service_data={"device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "bell01"},
                 blocking=False,
                 context=None,
                 target=None,
@@ -297,7 +292,6 @@ async def test_deliver_to_group() -> None:
 
 
 async def test_deliver_rest_command() -> None:
-    """Test on_notify_chime"""
     context = TestingContext(
         transport_configs={
             TRANSPORT_CHIME: {
@@ -306,8 +300,7 @@ async def test_deliver_rest_command() -> None:
                         "chime_aliases": {
                             "siren": {
                                 "alexa_devices": "amzn_sfx_trumpet_bugle_04",
-                                "switch": {
-                                    "target": "switch.chime_sax"},
+                                "switch": {"target": "switch.chime_sax"},
                                 "rest_command": {
                                     "target": "rest_command.camera_siren",
                                     "data": {"alarm_code": "11"},
@@ -318,8 +311,7 @@ async def test_deliver_rest_command() -> None:
                 },
             }
         },
-        deliveries={"siren": {CONF_TRANSPORT: TRANSPORT_CHIME,
-                              CONF_DATA: {"chime_tune": "siren"}}},
+        deliveries={"siren": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "siren"}}},
         services={"rest_command": ["camera_siren"], "alexa_devices": ["send_sound"], "switch": ["turn_on"]},
     )
 
@@ -333,13 +325,17 @@ async def test_deliver_rest_command() -> None:
             Notification(context),
         )
     )
-    context.hass.services.async_call.assert_has_calls([  # type: ignore
-        call("rest_command",
-        "camera_siren",
-        service_data={"alarm_code": "11"},
-        blocking=False,
-        context=None,
-        return_response=False,
-        target=None)
-        ], any_order=True
+    context.hass.services.async_call.assert_has_calls(  # ty:ignore[possibly-missing-attribute]
+        [  # type: ignore
+            call(
+                "rest_command",
+                "camera_siren",
+                service_data={"alarm_code": "11"},
+                blocking=False,
+                context=None,
+                return_response=False,
+                target=None,
+            )
+        ],
+        any_order=True,
     )

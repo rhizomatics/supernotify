@@ -244,12 +244,17 @@ def phone(value: str) -> str:
 
 # TARGET_FIELDS includes entity, device, area, floor, label ids
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
-        cv.TARGET_FIELDS | {vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email]),
-                            vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
-                            vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
-                            vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
-                            vol.Optional(cv.string): vol.All(cv.ensure_list, [str])},
-        str, list[str])
+    cv.TARGET_FIELDS
+    | {
+        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email]),
+        vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
+        vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
+        vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
+        vol.Optional(cv.string): vol.All(cv.ensure_list, [str]),
+    },
+    str,
+    list[str],
+)
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
 MOBILE_DEVICE_SCHEMA = vol.Schema({
@@ -478,8 +483,6 @@ CONF_VOLUME = "volume"
 CONF_DURATION = "duration"
 
 CHIME_ALIAS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_DEVICE_ID): cv.string,
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_TUNE): cv.string,
     vol.Optional(CONF_DATA): DATA_SCHEMA,

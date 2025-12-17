@@ -225,7 +225,6 @@ class Target:
         except vol.Invalid:
             return False
 
-
     def has_targets(self) -> bool:
         return any(targets for category, targets in self.targets.items())
 

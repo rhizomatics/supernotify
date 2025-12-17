@@ -70,6 +70,13 @@ device.
       alexa_devices: amzn_sfx_scifi_alarm_04
       siren:
         tune: emergency
+        volume: 1.0
+        duration: 30
+      rest_command:
+        alias: Use the custom sound on the camera, defined in rest_command section
+        target: rest_command.camera_alarm_tune
+        data:
+          alarm_id: 12
 ```
 
 For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select
