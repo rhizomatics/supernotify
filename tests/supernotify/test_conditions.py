@@ -71,15 +71,9 @@ async def test_template_conditions(hass: HomeAssistant) -> None:
 
 
 async def test_shortcut_conditions(hass: HomeAssistant) -> None:
-    test_schema = vol.Schema({
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Required(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA
-    })
+    test_schema = vol.Schema({vol.Optional(CONF_ALIAS): cv.string, vol.Required(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA})
 
-    raw_config: ConfigType = {
-        "alias": "Shortcut testing",
-        "conditions": "{{'foo' in notification_message|lower}}"
-    }
+    raw_config: ConfigType = {"alias": "Shortcut testing", "conditions": "{{'foo' in notification_message|lower}}"}
     config = test_schema(raw_config)
     hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
     func: ConditionsFunc | None = await hass_api.build_conditions(config["conditions"], True, True)
