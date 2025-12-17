@@ -47,7 +47,7 @@ jobs:
     - name: HACS Hassfest
       uses: "home-assistant/actions/hassfest@87c064c607f3c5cc673a24258d0c98d23033bfc3"
     - name: Upload pytest test results
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: pytest-results-${{ matrix.python-version }}
         path: junit/test-results-${{ matrix.python-version }}.xml
