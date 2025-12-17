@@ -546,8 +546,8 @@ class DebugTrace:
     ) -> None:
         self.message: str | None = message
         self.title: str | None = title
-        self.data: dict[str, Any] | None = data
-        self.target: dict[str, list[str]] | list[str] | str | None = target
+        self.data: dict[str, Any] | None = dict(data) if data else data
+        self.target: dict[str, list[str]] | list[str] | str | None = list(target) if target else target
         self.resolved: dict[str, dict[str, Any]] = {}
         self.delivery_selection: dict[str, list[str]] = {}
         self._last_stage: dict[str, str] = {}
