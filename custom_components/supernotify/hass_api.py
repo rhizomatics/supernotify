@@ -284,9 +284,7 @@ class HomeAssistantAPI:
         )
 
     def discover_devices(
-        self, discover_domain: str,
-                device_model_include: list[str] | None = None,
-                device_model_exclude: list[str] | None = None
+        self, discover_domain: str, device_model_include: list[str] | None = None, device_model_exclude: list[str] | None = None
     ) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
