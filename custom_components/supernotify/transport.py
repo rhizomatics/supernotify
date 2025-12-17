@@ -48,8 +48,8 @@ class Transport:
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         self.context: Context = context
-
-        self.transport_config = TransportConfig(transport_config or {}, class_config=self.default_config)
+        transport_config = transport_config or {}
+        self.transport_config = TransportConfig(transport_config, class_config=self.default_config)
 
         self.delivery_defaults: DeliveryConfig = self.transport_config.delivery_defaults
         self.device_domain: list[str] = self.transport_config.device_domain or []
@@ -74,7 +74,9 @@ class Transport:
                 discovered: int = 0
                 added: int = 0
                 for d in self.hass_api.discover_devices(
-                    domain, device_model_include=self.device_model_include, device_model_exclude=self.device_model_exclude
+                    domain, 
+                        device_model_include=self.device_model_include,
+                        device_model_exclude=self.device_model_exclude
                 ):
                     discovered += 1
                     if self.delivery_defaults.target is None:

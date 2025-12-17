@@ -360,8 +360,13 @@ class TransportConfig:
         conf = conf or {}
         if class_config is not None:
             self.device_domain: list[str] = conf.get(CONF_DEVICE_DOMAIN, class_config.device_domain)
-            self.device_model_include: list[str] | None = conf.get(CONF_DEVICE_MODEL_INCLUDE, class_config.device_model_include)
-            self.device_model_exclude: list[str] | None = conf.get(CONF_DEVICE_MODEL_EXCLUDE, class_config.device_model_exclude)
+            if CONF_DEVICE_MODEL_INCLUDE in conf or CONF_DEVICE_MODEL_EXCLUDE in conf:
+                # source include and exclude atomically either explicit config or default
+                self.device_model_include: list[str] | None = conf.get(CONF_DEVICE_MODEL_INCLUDE)
+                self.device_model_exclude: list[str] | None = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
+            else:
+                self.device_model_include: list[str] | None = class_config.device_model_include
+                self.device_model_exclude: list[str] | None = class_config.device_model_exclude
             self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
             self.alias = conf.get(CONF_ALIAS)
