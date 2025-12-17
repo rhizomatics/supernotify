@@ -74,7 +74,7 @@ class Transport:
                 discovered: int = 0
                 added: int = 0
                 for d in self.hass_api.discover_devices(
-                    domain, 
+                    domain,
                         device_model_include=self.device_model_include,
                         device_model_exclude=self.device_model_exclude
                 ):
@@ -82,7 +82,7 @@ class Transport:
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()
                     if d.id not in self.delivery_defaults.target.device_ids:
-                        _LOGGER.info(f"SUPERNOTIFY Discovered device {d.name} for {domain}, id {d.id}")
+                        _LOGGER.info(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
                         self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
                         added += 1
 
