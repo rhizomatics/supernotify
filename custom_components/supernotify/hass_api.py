@@ -326,10 +326,10 @@ class HomeAssistantAPI:
                         _LOGGER.debug(  # type: ignore
                             "SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name
                         )
-        _LOGGER.info(
-            f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, skipped={skipped_devs}, "
-            f"enabled={enabled_devs}, found={found_devs}"
-        )
+
+        _LOGGER.info(f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, skipped={skipped_devs}")
+        _LOGGER.info(f"SUPERNOTIFY {discover_domain} enabled={enabled_devs}, found={found_devs}")
+
         return devices
 
     def domain_for_device(self, device_id: str, domains: list[str]) -> str | None:
