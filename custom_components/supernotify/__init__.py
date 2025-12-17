@@ -482,22 +482,14 @@ CONF_TUNE = "tune"
 CONF_VOLUME = "volume"
 CONF_DURATION = "duration"
 
-CHIME_ALIAS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ALIAS): cv.string,
-    vol.Optional(CONF_TUNE): cv.string,
-    vol.Optional(CONF_DATA): DATA_SCHEMA,
-    vol.Optional(CONF_VOLUME): float,
-    vol.Optional(CONF_DURATION): cv.positive_int,
-})
-CHIME_ALIAS_DOMAIN_SCHEMA = vol.Schema({vol.Required(cv.string, default=dict): {cv.string: CHIME_ALIAS_SCHEMA}})
+OPTIONS_CHIME_DOMAINS = ["media_player", "switch", "script", "rest_command", "siren", "alexa_devices"]
+
 CHIME_ALIASES_SCHEMA = vol.Schema({
     vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
         cv.string: vol.Schema({
             cv.string: vol.Any(
-                cv.string,
+                vol.Any(cv.string,vol.In(OPTIONS_CHIME_DOMAINS)),
                 vol.Schema({
-                    vol.Optional(CONF_ENTITY_ID): cv.entity_id,
-                    vol.Optional(CONF_DEVICE_ID): cv.string,
                     vol.Optional(CONF_ALIAS): cv.string,
                     vol.Optional(CONF_TUNE): cv.string,
                     vol.Optional(CONF_DATA): DATA_SCHEMA,
