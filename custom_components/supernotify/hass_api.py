@@ -284,7 +284,9 @@ class HomeAssistantAPI:
         )
 
     def discover_devices(
-        self, discover_domain: str, device_model_include: list[str] | None = None, device_model_exclude: list[str] | None = None
+        self, discover_domain: str,
+                device_model_include: list[str] | None = None,
+                device_model_exclude: list[str] | None = None
     ) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
@@ -298,6 +300,7 @@ class HomeAssistantAPI:
             if device_model_include is not None and (
                 dev.model is None or not any(re.fullmatch(pat, dev.model) for pat in device_model_include)
             ):
+                _LOGGER.debug("SUPERNOTIFY Skipped dev %s because model %s not match include pattern", dev.name, dev.model)
                 skipped_devs += 1
                 continue
             if (
@@ -305,14 +308,17 @@ class HomeAssistantAPI:
                 and dev.model is not None
                 and any(re.fullmatch(pat, dev.model) for pat in device_model_exclude)
             ):
+                _LOGGER.debug("SUPERNOTIFY Skipped dev %s because model %s match exclude pattern", dev.name, dev.model)
                 skipped_devs += 1
                 continue
 
-            if not dev.disabled:
+            if dev.disabled:
+                _LOGGER.debug("SUPERNOTIFY excluded disabled device %s", dev.name)
+            else:
                 enabled_devs += 1
                 for identifier in dev.identifiers:
                     if identifier and len(identifier) > 1 and identifier[0] == discover_domain:
-                        _LOGGER.debug("SUPERNOTIFY discovered device %s for id %s", dev.name, identifier)
+                        _LOGGER.debug("SUPERNOTIFY discovered %s device %s for id %s", dev.model, dev.name, identifier)
                         devices.append(dev)
                         found_devs += 1
                     elif identifier:
@@ -320,7 +326,7 @@ class HomeAssistantAPI:
                         _LOGGER.debug("SUPERNOTIFY Unexpected device %s id: %s", dev.name, identifier)
                     else:
                         _LOGGER.debug(  # type: ignore
-                            "SUPERNOTIFY Unexpected device %s without id", dev.name
+                            "SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name
                         )
         _LOGGER.info(
             f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, skipped={skipped_devs}, "
