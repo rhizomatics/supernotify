@@ -157,9 +157,8 @@ One oddity of this integration is that although it generates traditional entity 
 sending a sound ( or command ) requires a long and obscure `device_id` (a 32 character random hexadecimal pseudo-UUID)While you can find these from the *Devices* section of the *Alexa Devices* integration config, or using the *Action*
 feature of *Developer Tools* and switching to yaml mode, the easiest way is to **automatically register** all Alexa devices by using `device_discovery: True` on the transport configuration, and using the alias definition feature.
 
-Sometimes you may end up with odd devices like headphones or firesticks that Alexa knows about but don't make sense for HomeAssistant usage, and also may have duplication if a group has been created inside the Alexa app ( which then
-appears to Home Assistant as another Alexa device even though its really a group of them. The weird devices can
-be disabled from the *Alexa Devices* integration config. Within Supernotify, you can use `device_model_include` and `device_model_exclude` to control the list - both of these take a single value, or list of values, plain strings or regular expressions.
+Sometimes you may end up with odd devices like headphones or firesticks that Alexa knows about but don't make sense for HomeAssistant usage, and also may have duplication if a group has been created inside the Alexa app ( which then appears to Home Assistant as another Alexa device even though its really a group of them. The weird devices can be disabled from the *Alexa Devices* integration config. Within Supernotify, you can use `device_model_include` and `device_model_exclude` to control the list - both of these take a single value, or list of values, plain strings or regular expressions. Chime transport has a default exclusion for
+Alexa Groups, specifying either an include or exclude list will switch off defaulting for both values.
 
 ## Example
 
