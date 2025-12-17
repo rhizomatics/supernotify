@@ -175,8 +175,8 @@ class GenericTransport(Transport):
             if not includes and not excludes:
                 pruned[key] = data[key]
             else:
-                if (not excludes or not any(re.match(pat, key) for pat in excludes)) and (
-                    not includes or any(re.match(pat, key) for pat in includes)
+                if (not excludes or not any(re.fullmatch(pat, key) for pat in excludes)) and (
+                    not includes or any(re.fullmatch(pat, key) for pat in includes)
                 ):
                     pruned[key] = data[key]
         return pruned

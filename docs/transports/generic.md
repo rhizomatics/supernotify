@@ -100,7 +100,7 @@ delivery:
 ```
 
 Alternatively, if the custom action call is failing because of `data` elements from the notification
-it can't handle, you can control which keys are included, in this example, all keys that don't match the pattern will be dropped:
+it can't handle, you can control which keys are included, in this example, all keys that don't match the pattern will be dropped (test is made using Python's `re.fullmatch`):
 
 ```yaml
 delivery:

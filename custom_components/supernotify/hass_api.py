@@ -296,14 +296,14 @@ class HomeAssistantAPI:
         for dev in dev_reg.devices.values():
             all_devs += 1
             if device_model_include is not None and (
-                dev.model is None or not any(re.match(pat, dev.model) for pat in device_model_include)
+                dev.model is None or not any(re.fullmatch(pat, dev.model) for pat in device_model_include)
             ):
                 skipped_devs += 1
                 continue
             if (
                 device_model_exclude is not None
                 and dev.model is not None
-                and any(re.match(pat, dev.model) for pat in device_model_exclude)
+                and any(re.fullmatch(pat, dev.model) for pat in device_model_exclude)
             ):
                 skipped_devs += 1
                 continue
@@ -324,7 +324,7 @@ class HomeAssistantAPI:
                         )
         _LOGGER.info(
             f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, skipped={skipped_devs}, "
-            "enabled={enabled_devs}, found={found_devs}"
+            f"enabled={enabled_devs}, found={found_devs}"
         )
         return devices
 

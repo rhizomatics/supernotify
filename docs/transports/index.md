@@ -34,19 +34,19 @@ transports:
 
 All of these set by passing an `options` block in Delivery config or Transport defaults.
 
-| Option               | Transports | Description                                                  |
-|----------------------|------------|--------------------------------------------------------------|
-| chime_aliases        | chime      | Map tunes to device name or config                           |
-| jpeg_opts            | mail       | Tune image grabs                                             |
-| png_opts             | mail       | Tune image grabs                                             |
-| message_usage        | all        | Combine message and title, default title                     |
-| simplify_text        | all        | Remove some common symbols that can trip up voice assistants |
-| strip_urls           | all        | Remove URLs from message and title                           |
-| target_categories    | all        | Which targets to pass, e.g. `entity_id`,`email`,`device_id`  |
-| target_include_re    | all        | Only use targets matching these regular expressions          |
-| unique_targets       | all        | Don't pass targets already used in this notification         |
-| data_keys_include_re | generic    | List of values or regex patterns allowed in `data` block     |
-| data_keys_exclude_re | generic    | List of values or regex patterns not allowed in `data` block |
-| handle_as_domain     | generic    | Treat the action call in same way as a known domain          |
+| Option               | Transports | Description                                                             |
+|----------------------|------------|-------------------------------------------------------------------------|
+| chime_aliases        | chime      | Map tunes to device name or config                                      |
+| jpeg_opts            | mail       | Tune image grabs                                                        |
+| png_opts             | mail       | Tune image grabs                                                        |
+| message_usage        | all        | Combine message and title, default title                                |
+| simplify_text        | all        | Remove some common symbols that can trip up voice assistants            |
+| strip_urls           | all        | Remove URLs from message and title                                      |
+| target_categories    | all        | Which targets to pass, e.g. `entity_id`,`email`,`device_id`             |
+| target_include_re    | all        | Only use targets fully matching these regular expressions               |
+| unique_targets       | all        | Don't pass targets already used in this notification                    |
+| data_keys_include_re | generic    | List of values or regex full match patterns allowed in `data` block     |
+| data_keys_exclude_re | generic    | List of values or regex full match patterns not allowed in `data` block |
+| handle_as_domain     | generic    | Treat the action call in same way as a known domain                     |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.

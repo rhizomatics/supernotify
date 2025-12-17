@@ -194,7 +194,7 @@ class Target:
 
     @classmethod
     def is_device_id(cls, target: str) -> bool:
-        return re.match(RE_DEVICE_ID, target) is not None
+        return re.fullmatch(RE_DEVICE_ID, target) is not None
 
     @classmethod
     def is_entity_id(cls, target: str) -> bool:
