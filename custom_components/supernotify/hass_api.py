@@ -226,10 +226,6 @@ class HomeAssistantAPI:
             if test is None:
                 raise ValueError(f"Invalid condition {condition_config}")
             test(condition_variables.as_dict())
-            if strict and capturing_logger.condition_errors:
-                for exception in capturing_logger.condition_errors:
-                    _LOGGER.warning("SUPERNOTIFY Invalid condition %s:%s", condition_config, exception)
-                raise capturing_logger.condition_errors[0]
             return test
         except Exception as e:
             _LOGGER.exception("SUPERNOTIFY Conditions eval failed: %s", e)
@@ -237,6 +233,10 @@ class HomeAssistantAPI:
         finally:
             if strict:
                 force_strict_template_mode(condition_config, undo=True)
+            if strict and capturing_logger.condition_errors and len(capturing_logger.condition_errors) > 0:
+                for exception in capturing_logger.condition_errors:
+                    _LOGGER.warning("SUPERNOTIFY Invalid condition %s:%s", condition_config, exception)
+                raise capturing_logger.condition_errors[0]
 
     def evaluate_conditions(
         self,
@@ -405,7 +405,7 @@ class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
         self.condition_errors: list[ConditionError] = []
 
     def capture(self, args: Any) -> None:
-        if args and isinstance(args, (list, tuple)):
+        if args and isinstance(args, list | tuple):
             for arg in args:
                 if isinstance(arg, ConditionErrorContainer):
                     self.condition_errors.extend(arg.errors)
@@ -433,6 +433,9 @@ def force_strict_template_mode(conditions: list[ConfigType], undo: bool = False)
 
         def __setattr__(self, name: str, value: Any) -> None:
             super().__setattr__(name, value)
+
+        def __repr__(self) -> str:
+            return self._obj.__repr__() if self._obj else "NULL TEMPLATE"
 
     def wrap_template(cond: ConfigType, undo: bool) -> ConfigType:
         for key, val in cond.items():

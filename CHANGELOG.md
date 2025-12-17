@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.5.2
+### Fixes
+- Better error handling for broken scenario conditions
 ## 1.5.1
 ### Features
 - Generic Transport
