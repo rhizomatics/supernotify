@@ -1,5 +1,10 @@
 # Public releases
 
+## 1.5.4
+### Internal
+- Excess kwargs for `Context` now logged correctly
+- Added turbojpeg dependency to allow `mobile_app` integration to be setup for non-mocked testing
+
 ## 1.5.3
 ### Features
 - Chime alias error handling improved
