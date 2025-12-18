@@ -47,10 +47,14 @@ class MediaPlayerTransport(Transport):
             _LOGGER.debug("SUPERNOTIFY skipping media player, no snapshot url")
             return False
         # absolutize relative URL for external URl, probably preferred by Alexa Show etc
-        snapshot_url = urllib.parse.urljoin(self.hass_api.external_url, snapshot_url)
+        snapshot_url = urllib.parse.urljoin(
+            self.hass_api.external_url, snapshot_url)
 
-        action_data: dict[str, Any] = {"media_content_id": snapshot_url, "media_content_type": media_type}
-        if data and data.get("data"):
-            action_data["extra"] = data.get("data", {})
+        action_data: dict[str, Any] = {
+            "media": {"media_content_id": snapshot_url, "media_content_type": media_type}}
+        if data and data.get("announce"):
+            action_data["announce"] = data.get("announce")
+        if data and data.get("enqueue"):
+            action_data["enqueue"] = data.get("enqueue")
 
         return await self.call_action(envelope, action_data=action_data, target_data={ATTR_ENTITY_ID: media_players})

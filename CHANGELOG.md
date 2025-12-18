@@ -8,6 +8,8 @@
   - Normalize and default the alias config at start-up
   - Chime alias can now have an empty config - where the alias is the tune and domain needs nothing else
   - scripts now run async with `script.turn_on`, with `wait: True` if delivery debug flag on
+- Media Player
+  - Data section now uses the modern HA style with `media:` subsection rather than old Alexa Media Player style, which works with new style
 ### Internal
 - More logging for device inclusion/exclusion during discovery
 - Defaulting for device inclusion/exclusion from hard-coded values switched off by either explicit include or exclude ( affects Chime use of `Speaker Group` as default exclusion)
