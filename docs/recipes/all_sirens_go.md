@@ -43,7 +43,8 @@ in Home Assistant.
 Note that MQTT based sirens can be easily configured using [MQTT Siren Integration](https://www.home-assistant.io/integrations/siren.mqtt/) so they can be turned on and off like any entity.
 
 ```yaml title="Supernotify Config Snippet"
- chime:
+transports:
+  chime:
       alias: Chimes, sirens, buzzers, doorbells and Alexa noises
       delivery_defaults:
         options:

@@ -174,49 +174,56 @@ transports:
   chime:
     device_discovery: True
     device_model_include: Speaker Group
-    target:
-      - media_player.kitchen_echo
-      - media_player.bedroom
-      - ffff0000eeee1111dddd2222cccc3333 # Alexa Devices device_id
-    options:
-        chime_aliases:
-              doorbell: #alias
-                alexa_devices: # integration domain or label ( if label then domain must be a key in the config )
-                    tune: amzn_sfx_cat_meow_1x_01
-                media_player:
-                    # resolves to media_player/play_media with sound configured for this path
-                    tune: home/amzn_sfx_doorbell_chime_02
-                    # entity_id list defaults to `target` of transport default or action call
-                    # this entry can also be shortcut as `media_player: home/amzn_sfx_doorbell_chime_02`
-                media_player_alt:
-                    # Not all the media players are Amazon Alexa based, so override for other flavours
-                    tune: raindrops_and_roses.mp4
-                    target:
-                        - media_player.hall_custom
-                switch:
-                    # resolves to switch/turn_on with entity id switch.ding_dong
-                    target: switch.chime_ding_dong
-                siren_except_bedroom:
-                    # resolves to siren/turn_on with tune bleep and default volume/duration
-                    tune: bleep
-                    domain: siren # domain must be explicit since key is label not domain and no explicit targets
-                siren_bedroom:
-                    # short and quiet burst for just the bedroom siren
-                    domain: siren
-                    tune: bleep
-                    target: siren.bedroom
-                    volume: 0.1
-                    duration: 5
-                script:
-                    target: script.pull_bell_cord
-                    data:
-                      variables:
-                        duration: 25
+    delivery_defaults:
+      target:
+        - media_player.kitchen_echo
+        - media_player.bedroom
+        - ffff0000eeee1111dddd2222cccc3333 # Alexa Devices device_id
+      options:
+          chime_aliases:
+                doorbell: #alias
+                  alexa_devices: # integration domain or label ( if label then domain must be a key in the config )
+                      tune: amzn_sfx_cat_meow_1x_01
+                  media_player:
+                      # resolves to media_player/play_media with sound configured for this path
+                      tune: home/amzn_sfx_doorbell_chime_02
+                      # entity_id list defaults to `target` of transport default or action call
+                      # this entry can also be shortcut as `media_player: home/amzn_sfx_doorbell_chime_02`
+                  media_player_alt:
+                      # Not all the media players are Amazon Alexa based, so override for other flavours
+                      tune: raindrops_and_roses.mp4
+                      target:
+                          - media_player.hall_custom # domain inferred from target
+                  switch:
+                      # resolves to switch/turn_on with entity id switch.ding_dong
+                      target: switch.chime_ding_dong
+                  siren_except_bedroom:
+                      # resolves to siren/turn_on with tune bleep and default volume/duration
+                      tune: bleep
+                      domain: siren # domain must be explicit since key is label not domain and no explicit targets
+                  siren_bedroom:
+                      alias: Short and quiet burst for just the bedroom siren
+                      domain: siren
+                      tune: bleep
+                      target: siren.bedroom
+                      volume: 0.1
+                      duration: 5
+                  script:
+                      alias: Run a Home Assistant script defined elsewhere in config
+                      target: script.pull_bell_cord
+                      data:
+                        variables:
+                          duration: 25
+                  rest_command:
+                      alias: call a rest api passing data to the templated URL
+                      target: rest_command.api_call_to_camera_alarm
+                      data:
+                        alarm_tone: 14
 
-              red_alert:
-                # non-dict defaults to a dict with a single key `tune`
-                alexa_devices: scifi/amzn_sfx_scifi_alarm_04
-                siren: emergency
+                red_alert:
+                  # non-dict defaults to a dict with a single key `tune`
+                  alexa_devices: scifi/amzn_sfx_scifi_alarm_04
+                  siren: emergency
 ```
 
 ## Rest Commands
@@ -239,13 +246,14 @@ This chime alias in the transport definition will make it available as `chime_tu
 ```yaml
 transports:
   chime:
-    options:
-        chime_aliases:
-          siren:
-            rest_command:
-                target: rest_command.camera_siren
-                data:
-                  alarm_code: 11
+    delivery_defaults:
+      options:
+          chime_aliases:
+            siren:
+              rest_command:
+                  target: rest_command.camera_siren
+                  data:
+                    alarm_code: 11
 
 ```
 

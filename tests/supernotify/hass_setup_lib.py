@@ -66,6 +66,14 @@ class MockableHomeAssistant(HomeAssistant):
     bus: EventBus = Mock(spec=EventBus)
 
 
+def load_config(v: str | dict | None) -> ConfigType:
+    if isinstance(v, str):
+        return cast("ConfigType", parse_yaml(v))
+    if not v:
+        return {}
+    return v
+
+
 class TestingContext(Context):
     """Build a test context and associated services for unit testing.
 
@@ -81,7 +89,7 @@ class TestingContext(Context):
         scenarios: ConfigType | None = None,
         recipients: list[dict[str, Any]] | None = None,
         mobile_actions: ConfigType | None = None,
-        transport_configs: ConfigType | None = None,
+        transport_configs: ConfigType | str | None = None,
         transport_instances: list[Transport] | None = None,
         transport_types: list[type[Transport]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
@@ -103,21 +111,21 @@ class TestingContext(Context):
         }
         self.entities = entities
 
-        raw_config: ConfigType = cast("ConfigType", parse_yaml(yaml)) if yaml else {}
+        raw_config: ConfigType = load_config(yaml)
         raw_config.setdefault("name", "Supernotify")
         raw_config.setdefault("platform", "supernotify")
         if deliveries:
-            raw_config[CONF_DELIVERY] = deliveries
+            raw_config[CONF_DELIVERY] = load_config(deliveries)
         if recipients:
-            raw_config[CONF_RECIPIENTS] = recipients
+            raw_config[CONF_RECIPIENTS] = load_config(recipients)
         if scenarios:
-            raw_config[CONF_SCENARIOS] = scenarios
+            raw_config[CONF_SCENARIOS] = load_config(scenarios)
         if mobile_actions:
-            raw_config[CONF_ACTIONS] = mobile_actions
+            raw_config[CONF_ACTIONS] = load_config(mobile_actions)
         if transport_configs:
-            raw_config[CONF_TRANSPORT] = transport_configs
+            raw_config[CONF_TRANSPORT] = load_config(transport_configs)
         if archive_config:
-            raw_config[CONF_ARCHIVE] = archive_config
+            raw_config[CONF_ARCHIVE] = load_config(archive_config)
         if template_path:
             raw_config[CONF_TEMPLATE_PATH] = str(template_path)
         if media_path:

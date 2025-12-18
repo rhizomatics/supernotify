@@ -1,21 +1,29 @@
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    CONF_DOMAIN,
+    CONF_ENTITY_ID,
+    CONF_TARGET,
     CONF_VARIABLES,
 )
+from homeassistant.helpers.typing import ConfigType
+from voluptuous.humanize import humanize_error
 
 from custom_components.supernotify import (
     ATTR_DATA,
     ATTR_PRIORITY,
     CHIME_ALIASES_SCHEMA,
+    CONF_DATA,
+    CONF_TUNE,
     OPTION_CHIME_ALIASES,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
+    OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
     TRANSPORT_CHIME,
 )
@@ -23,21 +31,19 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target, TargetRequired, TransportConfig
 from custom_components.supernotify.transport import Transport
 
-if TYPE_CHECKING:
-    from homeassistant.helpers.typing import ConfigType
-
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA_RESTRICT: dict[str, list[str] | None] = {
-    "media_player": ["data", "entity_id", "media_content_id", "media_content_type", "enqueue", "announce"],
-    "switch": ["entity_id"],
-    "script": ["data", "variables", "context", "wait", "wait_template"],
+    "media_player": [CONF_DATA, CONF_ENTITY_ID, "media_content_id", "media_content_type", "enqueue", "announce"],
+    "switch": [CONF_ENTITY_ID],
+    "script": [CONF_DATA, "variables", "context", "wait", "wait_template"],
     "rest_command": None,
-    "siren": ["data", "entity_id"],
+    "siren": [CONF_DATA, CONF_ENTITY_ID],
     "alexa_devices": ["sound", "device_id"],
 }  # TODO: source directly from component schema
+
 
 DEVICE_DOMAINS = ["alexa_devices"]
 DEVICE_MODEL_EXCLUDE = ["Speaker Group"]
@@ -87,16 +93,40 @@ class ChimeTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.chime_aliases: dict[str, Any] = {}
+
         if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
-            try:
-                validated: ConfigType = CHIME_ALIASES_SCHEMA({
-                    OPTION_CHIME_ALIASES: self.delivery_defaults.options.get(OPTION_CHIME_ALIASES)
-                })
-                self.chime_aliases = validated[OPTION_CHIME_ALIASES]
-                _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
-            except vol.Invalid as ve:
-                _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
+            self.chime_aliases: ConfigType = self.build_aliases(self.delivery_defaults.options[OPTION_CHIME_ALIASES])
+        else:
+            self.chime_aliases = {}
+
+    def build_aliases(self, src_config: ConfigType) -> ConfigType:
+        dest_config: dict[str, Any] = {}
+        try:
+            validated: ConfigType = CHIME_ALIASES_SCHEMA({OPTION_CHIME_ALIASES: src_config})
+            for alias, alias_config in validated[OPTION_CHIME_ALIASES].items():
+                alias_config = alias_config or {}
+                for domain_or_label, domain_config in alias_config.items():
+                    domain_config = domain_config or {}
+                    if isinstance(domain_config, str):
+                        domain_config = {CONF_TUNE: domain_config}
+                    domain_config.setdefault(CONF_TUNE, alias)
+                    if domain_or_label in OPTIONS_CHIME_DOMAINS:
+                        domain_config.setdefault(CONF_DOMAIN, domain_or_label)
+
+                    try:
+                        if domain_config.get(CONF_TARGET):
+                            domain_config[CONF_TARGET] = Target(domain_config[CONF_TARGET])
+                        dest_config.setdefault(alias, {})
+                        dest_config[alias][domain_or_label] = domain_config
+                    except Exception as e:
+                        _LOGGER.error("SUPERNOTIFY chime alias %s has invalid target: %s", alias, e)
+            _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
+        except vol.Invalid as ve:
+            _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
+            _LOGGER.error("SUPERNOTIFY %s", humanize_error(src_config, ve))
+        except Exception as e:
+            _LOGGER.exception("SUPERNOTIFY Chime alias unexpected error: %s", e)
+        return dest_config
 
     @property
     def default_config(self) -> TransportConfig:
@@ -276,24 +306,13 @@ class ChimeTransport(Transport):
     def resolve_tune(self, tune_or_alias: str | None) -> dict[str, ChimeTargetConfig]:
         target_configs: dict[str, ChimeTargetConfig] = {}
         if tune_or_alias is not None:
-            for label, alias_config in self.chime_aliases.get(tune_or_alias, {}).items():
-                if isinstance(alias_config, str):
-                    tune = alias_config
-                    alias_config = {}
-                else:
-                    tune = alias_config.get("tune", tune_or_alias)
-
-                alias_config["tune"] = tune
-                alias_config.setdefault("domain", label)
-                alias_config.setdefault("data", {})
-                raw_target = alias_config.pop("target", None)
-
+            for alias_config in self.chime_aliases.get(tune_or_alias, {}).values():
+                target = alias_config.pop(CONF_TARGET, None)
                 # pass through variables or data if present
-                if raw_target is not None:
-                    target = Target(raw_target)
+                if target is not None:
                     target_configs.update({t: ChimeTargetConfig(entity_id=t, **alias_config) for t in target.entity_ids})
                     target_configs.update({t: ChimeTargetConfig(device_id=t, **alias_config) for t in target.device_ids})
-                elif alias_config["domain"] in DEVICE_DOMAINS:
+                elif alias_config[CONF_DOMAIN] in DEVICE_DOMAINS:
                     # bulk apply to all known target devices of this domain
                     bulk_apply = {
                         dev: ChimeTargetConfig(device_id=dev, **alias_config)
@@ -308,7 +327,7 @@ class ChimeTransport(Transport):
                     bulk_apply = {
                         ent: ChimeTargetConfig(entity_id=ent, **alias_config)
                         for ent in self.targets.entity_ids
-                        if ent.startswith(f"{alias_config['domain']}.")
+                        if ent.startswith(f"{alias_config[CONF_DOMAIN]}.")
                         and ent not in target_configs  # don't overwrite existing specific targets
                         and ATTR_ENTITY_ID not in alias_config
                     }

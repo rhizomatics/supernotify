@@ -1,12 +1,19 @@
 # Public releases
 
 ## 1.5.3
+### Features
+- Chime alias error handling improved
+  - Humanize validation errors
+  - Validate targets and build Target objects at start-up
+  - Normalize and default the alias config at start-up
+  - Chime alias can now have an empty config - where the alias is the tune and domain needs nothing else
 ### Internal
-- Logging for device inclusion/exclusion during discovery
+- More logging for device inclusion/exclusion during discovery
 - Defaulting for device inclusion/exclusion from hard-coded values switched off by either explicit include or exclude ( affects Chime use of `Speaker Group` as default exclusion)
-- Add transport as key to archived notification `delivered_envelopes` and `undelivered_envelopes`
+- Easier to check archived notifications
+  - Both `delivered_envelopes` and `undelivered_envelopes` list envelopes by transport rather than a flat list
 - Centralize results handling for notification
-- Better validation of `target` structures at start-up
+- Test Context can now take yaml rather than just dicts for config snippets
 ## 1.5.2
 ### Fixes
 - Better error handling for broken scenario conditions

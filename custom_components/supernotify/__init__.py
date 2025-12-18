@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_DESCRIPTION,
+    CONF_DOMAIN,
     CONF_EMAIL,
     CONF_ENABLED,
     CONF_ICON,
@@ -477,9 +478,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPERNOTIFY_SCHEMA = PLATFORM_SCHEMA
 
 
-CONF_TUNE = "tune"
-CONF_VOLUME = "volume"
-CONF_DURATION = "duration"
+CONF_TUNE: Final[str] = "tune"
+CONF_VOLUME: Final[str] = "volume"
+CONF_DURATION: Final[str] = "duration"
 
 OPTIONS_CHIME_DOMAINS = ["media_player", "switch", "script", "rest_command", "siren", "alexa_devices"]
 
@@ -487,9 +488,10 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
     vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
         cv.string: vol.Schema({
             cv.string: vol.Any(
-                vol.Any(cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
+                vol.Any(None, cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
                 vol.Schema({
                     vol.Optional(CONF_ALIAS): cv.string,
+                    vol.Optional(CONF_DOMAIN): cv.string,
                     vol.Optional(CONF_TUNE): cv.string,
                     vol.Optional(CONF_DATA): DATA_SCHEMA,
                     vol.Optional(CONF_VOLUME): float,
