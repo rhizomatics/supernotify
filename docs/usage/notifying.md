@@ -22,9 +22,7 @@ with Frigate, AppDaemon and Alexa.
 
 In this example, there's no configuration, target or anything more than the standard `message`.
 
-This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then
-the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry
-in Home Assistant.
+This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry in Home Assistant.
 
 ```yaml title="Example Message to All Devices"
   - action: notify.supernotify
@@ -43,8 +41,7 @@ Targets can be direct addresses, like an email address, telegram account or simi
         target: person.john_mcdoe
 ```
 
-In this case, the notification will go only to John, to any mobile devices he's running Home Assistant on, and to
-any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
+In this case, the notification will go only to John, to any mobile devices he's running Home Assistant on, and to any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
 
 Its also possible to put the e-mail, mobile action, notify entity or similar directly into the target:
 
@@ -55,10 +52,7 @@ Its also possible to put the e-mail, mobile action, notify entity or similar dir
         target: john@mcdoe.co.bn
 ```
 
-Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined
-dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out
-what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram
-or similar.
+Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram or similar.
 
 ## Complex Targets
 

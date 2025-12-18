@@ -61,6 +61,28 @@ In this snippet, all Delivery configurations for `alexa_devices` will use the de
         target:
           - group.alexa_announcements
 ```
+## Overriding Message and Title
+
+If your downstream transport has specific needs for the `message` and/or `title` then
+these can be overridden or amended for only the deliveries that need them.
+
+```yaml title="Override Message"
+delivery:
+  custom_notify:
+    transport: generic
+    action: notify.very_custom
+    message: HOME ASSISTANT NOTIFICATION
+```
+
+For this delivery, whatever the `message` on the notification, it will be replaced by
+"HOME ASSISTANT NOTIFICATION" when delivered to the custom notification.
+
+!!! info
+    `message` and `title` are the two special cases where the values in the configuration
+    override the values in the Action `data`. For everything else the Action wins.
+
+For amending rather than overriding, see the [Alexa Whisper Recipe](../recipes/alexa_whisper.md) for an example of using `message_template` in a [Scenario](../usage/scenarios.md).
+
 
 ## Extreme Example
 
