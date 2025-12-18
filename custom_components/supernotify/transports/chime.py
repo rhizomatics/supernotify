@@ -209,7 +209,7 @@ class ChimeTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-
+        # FIXME: handle chime aliases in delivery so config can be broken up or overridden in delivery data
         if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
             self.chime_aliases: ConfigType = self.build_aliases(self.delivery_defaults.options[OPTION_CHIME_ALIASES])
             _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
