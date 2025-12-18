@@ -145,17 +145,17 @@ async def test_update_fixed_message(mock_hass) -> None:
             "noticeboard": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "text.set_value",
-                CONF_DATA: {"value": "Alert Level 3"},
+                CONF_DATA: {"message": "Alert Level 3"},
             }
         },
     )
     await uut.initialize()
-    await uut.async_send_message(message="", target="text.esp_display")
+    await uut.async_send_message(message="ignore this")
 
     uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
         "text",
         "set_value",
-        service_data={"message": "", "value": "Alert Level 3", "target": "text.esp_display"},
+        service_data={"message": "Alert Level 3"},
         blocking=False,
         target=None,
         context=None,

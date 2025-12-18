@@ -66,7 +66,7 @@ class Context:
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
         self.snoozer = snoozer
         if kwargs:
-            _LOGGER.warning("SUPERNOTIFY Context threw away kwargs:", kwargs)
+            _LOGGER.warning("SUPERNOTIFY Context threw away kwargs: %s", kwargs)
 
     async def initialize(self) -> None:
         if self.template_path and not self.template_path.exists():

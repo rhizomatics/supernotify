@@ -13,5 +13,6 @@ types-cachetools
 pre-commit
 pytest-httpserver>=1.0.10
 ruff
+PyTurboJPEG==1.8.0
 mypy
 genbadge[all]

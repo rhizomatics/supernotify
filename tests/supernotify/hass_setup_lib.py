@@ -85,17 +85,17 @@ class TestingContext(Context):
     def __init__(
         self,
         yaml: str | None = None,
-        deliveries: dict[str, Any] | None = None,
-        scenarios: ConfigType | None = None,
+        deliveries: ConfigType | str | None = None,
+        scenarios: ConfigType | str | None = None,
         recipients: list[dict[str, Any]] | None = None,
-        mobile_actions: ConfigType | None = None,
+        mobile_actions: ConfigType | str | None = None,
         transport_configs: ConfigType | str | None = None,
         transport_instances: list[Transport] | None = None,
         transport_types: list[type[Transport]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
         entities: dict[str, Any] | None = None,
         hass_external_url: str | None = None,
-        archive_config: ConfigType | None = None,
+        archive_config: ConfigType | str | None = None,
         homeassistant: HomeAssistant | None = None,
         services: dict[str, list[str]] | None = None,
         components: dict[str, dict[str, Any]] | None = None,
@@ -153,8 +153,8 @@ class TestingContext(Context):
             self.device_registry.async_get = lambda did: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
-            if self.entities:
-                self.hass.states.get.side_effect = lambda v: self.entities.get(v)
+            if self.entities and isinstance(self.entities, dict):
+                self.hass.states.get.side_effect = lambda v: self.entities.get(v)  # ty:ignore[possibly-missing-attribute]
             self.hass.data["entity_registry"] = self.entity_registry
             self.issue_registry = AsyncMock(spec=IssueRegistry)
             self.hass.data["issue_registry"] = self.issue_registry
