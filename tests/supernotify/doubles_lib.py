@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 from homeassistant.components import image
 from homeassistant.core import (
@@ -19,6 +19,26 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TargetRequired, TransportConfig
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
+
+
+def service_call(
+    domain: str,
+    service: str,
+    service_data: dict[str, Any] | None = None,
+    blocking: bool = False,
+    context: Any = None,
+    target: dict[str, Any] | None = None,
+    return_response: bool = False,
+):
+    return call(
+        domain,
+        service,
+        service_data=service_data or {},
+        target=target,
+        context=context,
+        return_response=return_response,
+        blocking=blocking,
+    )
 
 
 class DummyService:

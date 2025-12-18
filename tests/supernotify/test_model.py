@@ -48,6 +48,7 @@ def test_target_in_list_mode() -> None:
     assert uut.label_ids == []
     assert uut.floor_ids == []
     assert uut.area_ids == []
+    assert uut.has_unknown_targets()
 
 
 def test_target_in_scalar_mode() -> None:
@@ -55,6 +56,13 @@ def test_target_in_scalar_mode() -> None:
     assert Target("000044449999aaaa00003333ffff7777").device_ids == ["000044449999aaaa00003333ffff7777"]
     assert Target("person.joe_mctoe").person_ids == ["person.joe_mctoe"]
     assert Target([]).entity_ids == []
+
+
+def test_simple_entity() -> None:
+    uut = Target("light.hallway")
+    assert uut.entity_ids == ["light.hallway"]
+    assert uut.device_ids == []
+    assert not uut.has_unknown_targets()
 
 
 def test_category_access() -> None:

@@ -7,6 +7,7 @@
   - Validate targets and build Target objects at start-up
   - Normalize and default the alias config at start-up
   - Chime alias can now have an empty config - where the alias is the tune and domain needs nothing else
+  - scripts now run async with `script.turn_on`, with `wait: True` if delivery debug flag on
 ### Internal
 - More logging for device inclusion/exclusion during discovery
 - Defaulting for device inclusion/exclusion from hard-coded values switched off by either explicit include or exclude ( affects Chime use of `Speaker Group` as default exclusion)
@@ -14,6 +15,7 @@
   - Both `delivered_envelopes` and `undelivered_envelopes` list envelopes by transport rather than a flat list
 - Centralize results handling for notification
 - Test Context can now take yaml rather than just dicts for config snippets
+- Chime now has MiniChimeTransport to replace the if logic and dicts for chime transports
 ## 1.5.2
 ### Fixes
 - Better error handling for broken scenario conditions

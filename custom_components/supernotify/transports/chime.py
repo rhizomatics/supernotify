@@ -1,4 +1,6 @@
 import logging
+from abc import abstractmethod
+from dataclasses import dataclass, field
 from typing import Any
 
 import voluptuous as vol
@@ -7,9 +9,7 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     CONF_DOMAIN,
-    CONF_ENTITY_ID,
     CONF_TARGET,
-    CONF_VARIABLES,
 )
 from homeassistant.helpers.typing import ConfigType
 from voluptuous.humanize import humanize_error
@@ -18,7 +18,6 @@ from custom_components.supernotify import (
     ATTR_DATA,
     ATTR_PRIORITY,
     CHIME_ALIASES_SCHEMA,
-    CONF_DATA,
     CONF_TUNE,
     OPTION_CHIME_ALIASES,
     OPTION_TARGET_CATEGORIES,
@@ -35,18 +34,16 @@ RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA_RESTRICT: dict[str, list[str] | None] = {
-    "media_player": [CONF_DATA, CONF_ENTITY_ID, "media_content_id", "media_content_type", "enqueue", "announce"],
-    "switch": [CONF_ENTITY_ID],
-    "script": [CONF_DATA, "variables", "context", "wait", "wait_template"],
-    "rest_command": None,
-    "siren": [CONF_DATA, CONF_ENTITY_ID],
-    "alexa_devices": ["sound", "device_id"],
-}  # TODO: source directly from component schema
-
-
 DEVICE_DOMAINS = ["alexa_devices"]
 DEVICE_MODEL_EXCLUDE = ["Speaker Group"]
+
+
+@dataclass
+class ActionCall:
+    domain: str
+    service: str
+    action_data: dict[str, Any] | None = field(default_factory=dict)
+    target_data: dict[str, Any] | None = field(default_factory=dict)
 
 
 class ChimeTargetConfig:
@@ -59,6 +56,7 @@ class ChimeTargetConfig:
         volume: float | None = None,
         data: dict[str, Any] | None = None,
         domain: str | None = None,
+        target: Target | None = None,  # noqa: ARG002
         **kwargs: Any,
     ) -> None:
         self.entity_id: str | None = entity_id
@@ -88,6 +86,124 @@ class ChimeTargetConfig:
         return f"ChimeTargetConfig(entity_id={self.entity_id})"
 
 
+class MiniChimeTransport:
+    domain: str
+
+    @abstractmethod
+    def build(
+        self,
+        target_config: ChimeTargetConfig,
+        action_data: dict[str, Any],
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
+        **_kwargs: Any,
+    ) -> ActionCall | None:
+        raise NotImplementedError()
+
+
+class RestCommandChimeTransport(MiniChimeTransport):
+    domain = "rest_command"
+
+    def build(  # type: ignore[override]
+        self, target_config: ChimeTargetConfig, entity_name: str | None, **_kwargs: Any
+    ) -> ActionCall | None:
+        if entity_name is None:
+            _LOGGER.warning("SUPERNOTIFY rest_command chime target requires entity")
+            return None
+        output_data = target_config.data or {}
+        if target_config.data:
+            output_data.update(target_config.data)
+        return ActionCall(self.domain, entity_name, action_data=output_data)
+
+
+class SwitchChimeTransport(MiniChimeTransport):
+    domain = "switch"
+
+    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+        return ActionCall(self.domain, "turn_on", target_data={ATTR_ENTITY_ID: target_config.entity_id})
+
+
+class SirenChimeTransport(MiniChimeTransport):
+    domain = "siren"
+
+    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+        output_data: dict[str, Any] = {ATTR_DATA: {}}
+        if target_config.tune:
+            output_data[ATTR_DATA]["tone"] = target_config.tune
+        if target_config.duration is not None:
+            output_data[ATTR_DATA]["duration"] = target_config.duration
+        if target_config.volume is not None:
+            output_data[ATTR_DATA]["volume_level"] = target_config.volume
+        return ActionCall(
+            self.domain, "turn_on", action_data=output_data, target_data={ATTR_ENTITY_ID: target_config.entity_id}
+        )
+
+
+class ScriptChimeTransport(MiniChimeTransport):
+    domain = "script"
+
+    def build(  # type: ignore[override]
+        self,
+        target_config: ChimeTargetConfig,
+        entity_name: str | None,
+        envelope: Envelope,
+        **_kwargs: Any,
+    ) -> ActionCall | None:
+        if entity_name is None:
+            _LOGGER.warning("SUPERNOTIFY script chime target requires entity")
+            return None
+        variables: dict[str, Any] = target_config.data or {}
+        variables[ATTR_MESSAGE] = envelope.message
+        variables[ATTR_TITLE] = envelope.title
+        variables[ATTR_PRIORITY] = envelope.priority
+        variables["chime_tune"] = target_config.tune
+        variables["chime_volume"] = target_config.volume
+        variables["chime_duration"] = target_config.duration
+        output_data: dict[str, Any] = {"variables": variables}
+        if envelope.delivery.debug:
+            output_data["wait"] = envelope.delivery.debug
+        # use `turn_on` rather than direct call to run script in background
+        return ActionCall(
+            self.domain, "turn_on", action_data=output_data, target_data={ATTR_ENTITY_ID: target_config.entity_id}
+        )
+
+
+class AlexaDevicesChimeTransport(MiniChimeTransport):
+    domain = "alexa_devices"
+
+    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+        output_data: dict[str, Any] = {
+            "device_id": target_config.device_id,
+            "sound": target_config.tune,
+        }
+        return ActionCall(self.domain, "send_sound", action_data=output_data)
+
+
+class MediaPlayerChimeTransport(MiniChimeTransport):
+    domain = "media_player"
+
+    def build(self, target_config: ChimeTargetConfig, action_data: dict[str, Any], **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+        input_data = target_config.data or {}
+        if action_data:
+            input_data.update(action_data)
+        output_data: dict[str, Any] = {
+            "media": {
+                "media_content_type": input_data.get("media", {"media_content_type": "sound"}).get(
+                    "media_content_type", "sound"
+                ),
+                "media_content_id": target_config.tune,
+            }
+        }
+        if input_data.get("enqueue") is not None:
+            output_data["enqueue"] = input_data.get("enqueue")
+        if input_data.get("announce") is not None:
+            output_data["announce"] = input_data.get("announce")
+
+        return ActionCall(
+            self.domain, "play_media", action_data=output_data, target_data={ATTR_ENTITY_ID: target_config.entity_id}
+        )
+
+
 class ChimeTransport(Transport):
     name = TRANSPORT_CHIME
 
@@ -96,8 +212,21 @@ class ChimeTransport(Transport):
 
         if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
             self.chime_aliases: ConfigType = self.build_aliases(self.delivery_defaults.options[OPTION_CHIME_ALIASES])
+            _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
         else:
             self.chime_aliases = {}
+            _LOGGER.info("SUPERNOTIFY No chime aliases found")
+        self.mini_transports: dict[str, MiniChimeTransport] = {
+            t.domain: t
+            for t in [
+                RestCommandChimeTransport(),
+                SwitchChimeTransport(),
+                SirenChimeTransport(),
+                ScriptChimeTransport(),
+                AlexaDevicesChimeTransport(),
+                MediaPlayerChimeTransport(),
+            ]
+        }
 
     def build_aliases(self, src_config: ConfigType) -> ConfigType:
         dest_config: dict[str, Any] = {}
@@ -116,11 +245,15 @@ class ChimeTransport(Transport):
                     try:
                         if domain_config.get(CONF_TARGET):
                             domain_config[CONF_TARGET] = Target(domain_config[CONF_TARGET])
+                            if not domain_config[CONF_TARGET].has_targets():
+                                _LOGGER.warning("SUPERNOTIFY chime alias %s has empty target", alias)
+                            elif domain_config[CONF_TARGET].has_unknown_targets():
+                                _LOGGER.warning("SUPERNOTIFY chime alias %s has unknown targets", alias)
                         dest_config.setdefault(alias, {})
                         dest_config[alias][domain_or_label] = domain_config
                     except Exception as e:
-                        _LOGGER.error("SUPERNOTIFY chime alias %s has invalid target: %s", alias, e)
-            _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
+                        _LOGGER.exception("SUPERNOTIFY chime alias %s has invalid target: %s", alias, e)
+
         except vol.Invalid as ve:
             _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
             _LOGGER.error("SUPERNOTIFY %s", humanize_error(src_config, ve))
@@ -182,14 +315,15 @@ class ChimeTransport(Transport):
             return False
         for chime_entity_config in expanded_targets.values():
             _LOGGER.debug("SUPERNOTIFY chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
-            action_data = None
+            action_data: dict[str, Any] | None = None
             try:
-                domain, service, action_data, target_data = self.analyze_target(chime_entity_config, data, envelope)
-                if domain is not None and service is not None:
-                    action_data = self.prune_data(domain, action_data)
-
+                action_call: ActionCall | None = self.analyze_target(chime_entity_config, data, envelope)
+                if action_call is not None:
                     if await self.call_action(
-                        envelope, qualified_action=f"{domain}.{service}", action_data=action_data, target_data=target_data
+                        envelope,
+                        qualified_action=f"{action_call.domain}.{action_call.service}",
+                        action_data=action_call.action_data,
+                        target_data=action_call.target_data,
                     ):
                         chimes += 1
                 else:
@@ -198,26 +332,11 @@ class ChimeTransport(Transport):
                 _LOGGER.exception("SUPERNOTIFY Failed to chime %s: %s [%s]", chime_entity_config.entity_id, action_data)
         return chimes > 0
 
-    def prune_data(self, domain: str, data: dict[str, Any]) -> dict[str, Any]:
-        pruned: dict[str, Any] = {}
-        if data and domain in DATA_SCHEMA_RESTRICT:
-            restrict: list[str] | None = DATA_SCHEMA_RESTRICT.get(domain)
-            if restrict is None:
-                # allow all keys
-                pruned = data
-            else:
-                for key in list(data.keys()):
-                    if key in restrict:
-                        pruned[key] = data[key]
-        return pruned
-
-    def analyze_target(
-        self, target_config: ChimeTargetConfig, data: dict[str, Any], envelope: Envelope
-    ) -> tuple[str | None, str | None, dict[str, Any], dict[str, Any]]:
+    def analyze_target(self, target_config: ChimeTargetConfig, data: dict[str, Any], envelope: Envelope) -> ActionCall | None:
 
         if not target_config.entity_id and not target_config.device_id:
             _LOGGER.warning("SUPERNOTIFY Empty chime target")
-            return "", None, {}, {}
+            return None
 
         domain: str | None = None
         name: str | None = None
@@ -234,80 +353,31 @@ class ChimeTransport(Transport):
 
         elif target_config.entity_id and "." in target_config.entity_id:
             domain, name = target_config.entity_id.split(".", 1)
-
-        action_data: dict[str, Any] = {}
-        target_data: dict[str, Any] = {}
-        action: str | None = None
-
-        if domain == "switch":
-            action = "turn_on"
-            target_data[ATTR_ENTITY_ID] = target_config.entity_id
-
-        elif domain == "siren":
-            action = "turn_on"
-            target_data[ATTR_ENTITY_ID] = target_config.entity_id
-            action_data[ATTR_DATA] = {}
-            if target_config.tune:
-                action_data[ATTR_DATA]["tone"] = target_config.tune
-            if target_config.duration is not None:
-                action_data[ATTR_DATA]["duration"] = target_config.duration
-            if target_config.volume is not None:
-                action_data[ATTR_DATA]["volume_level"] = target_config.volume
-
-        elif domain == "rest_command":
-            action = name
-            if target_config.data:
-                action_data.update(target_config.data)
-
-        elif domain == "script":
-            action_data.setdefault(CONF_VARIABLES, {})
-            if target_config.data:
-                action_data[CONF_VARIABLES] = target_config.data.get(CONF_VARIABLES, {})
-            if data:
-                # override data sourced from chime alias with explicit variables in envelope/data
-                action_data[CONF_VARIABLES].update(data.get(CONF_VARIABLES, {}))
-            action = name
-            action_data[CONF_VARIABLES][ATTR_MESSAGE] = envelope.message
-            action_data[CONF_VARIABLES][ATTR_TITLE] = envelope.title
-            action_data[CONF_VARIABLES][ATTR_PRIORITY] = envelope.priority
-            action_data[CONF_VARIABLES]["chime_tune"] = target_config.tune
-            action_data[CONF_VARIABLES]["chime_volume"] = target_config.volume
-            action_data[CONF_VARIABLES]["chime_duration"] = target_config.duration
-
-        elif domain == "alexa_devices" and target_config.tune:
-            action = "send_sound"
-            action_data["device_id"] = target_config.device_id
-            action_data["sound"] = target_config.tune
-
-        elif domain == "media_player" and target_config.tune:
-            if target_config.data:
-                action_data.update(target_config.data)
-            if data:
-                action_data.update(data)
-            action = "play_media"
-            target_data[ATTR_ENTITY_ID] = target_config.entity_id
-            action_data["media_content_type"] = "sound"
-            action_data["media_content_id"] = target_config.tune
-
-        else:
+        if not domain:
+            _LOGGER.warning("SUPERNOTIFY Unknown domain: %s", target_config)
+            return None
+        mini_transport: MiniChimeTransport | None = self.mini_transports.get(domain)
+        if mini_transport is None:
             _LOGGER.warning(
                 "SUPERNOTIFY No matching chime domain/tune: %s, target: %s, tune: %s",
                 domain,
                 target_config.entity_id,
                 target_config.tune,
             )
+            return None
 
-        _LOGGER.debug(
-            "SUPERNOTIFY analyze_chime->%s.%s,action data: %s, target_data: %s", domain, action, action_data, target_data
+        action_call: ActionCall | None = mini_transport.build(
+            envelope=envelope, entity_name=name, action_data=data, target_config=target_config
         )
+        _LOGGER.debug("SUPERNOTIFY analyze_chime->%s", action_call)
 
-        return domain, action, action_data, target_data
+        return action_call
 
     def resolve_tune(self, tune_or_alias: str | None) -> dict[str, ChimeTargetConfig]:
         target_configs: dict[str, ChimeTargetConfig] = {}
         if tune_or_alias is not None:
             for alias_config in self.chime_aliases.get(tune_or_alias, {}).values():
-                target = alias_config.pop(CONF_TARGET, None)
+                target = alias_config.get(CONF_TARGET, None)
                 # pass through variables or data if present
                 if target is not None:
                     target_configs.update({t: ChimeTargetConfig(entity_id=t, **alias_config) for t in target.entity_ids})

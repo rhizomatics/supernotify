@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
-from homeassistant.util.yaml.loader import parse_yaml
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from custom_components.supernotify import (
     CONF_ACTION_GROUPS,
@@ -66,11 +66,11 @@ class MockableHomeAssistant(HomeAssistant):
     bus: EventBus = Mock(spec=EventBus)
 
 
-def load_config(v: str | dict | None) -> ConfigType:
+def load_config(v: str | dict | list | None, return_type: type = dict) -> JSON_TYPE:
     if isinstance(v, str):
-        return cast("ConfigType", parse_yaml(v))
+        return cast("JSON_TYPE", parse_yaml(v))
     if not v:
-        return {}
+        return return_type()
     return v
 
 
@@ -111,13 +111,13 @@ class TestingContext(Context):
         }
         self.entities = entities
 
-        raw_config: ConfigType = load_config(yaml)
+        raw_config: ConfigType = cast("ConfigType", load_config(yaml))
         raw_config.setdefault("name", "Supernotify")
         raw_config.setdefault("platform", "supernotify")
         if deliveries:
             raw_config[CONF_DELIVERY] = load_config(deliveries)
         if recipients:
-            raw_config[CONF_RECIPIENTS] = load_config(recipients)
+            raw_config[CONF_RECIPIENTS] = load_config(recipients, return_type=list)
         if scenarios:
             raw_config[CONF_SCENARIOS] = load_config(scenarios)
         if mobile_actions:

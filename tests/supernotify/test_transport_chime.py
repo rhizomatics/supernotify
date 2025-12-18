@@ -1,15 +1,15 @@
 from typing import cast
-from unittest.mock import call
 
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import CONF_DATA, CONF_DEVICE_DISCOVERY, CONF_TRANSPORT, TRANSPORT_CHIME
+from custom_components.supernotify import CONF_DATA, CONF_DEBUG, CONF_DEVICE_DISCOVERY, CONF_TRANSPORT, TRANSPORT_CHIME
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.chime import ChimeTransport
 
+from .doubles_lib import service_call
 from .hass_setup_lib import TestingContext
 
 
@@ -42,18 +42,11 @@ async def test_deliver() -> None:
 
     context.hass.services.async_call.assert_has_calls(  # type: ignore
         [
-            call(
-                "switch",
-                "turn_on",
-                service_data={},
-                target={"entity_id": "switch.bell_1"},
-                blocking=False,
-                context=None,
-                return_response=False,
-            ),
-            call(
+            service_call("switch", "turn_on", target={"entity_id": "switch.bell_1"}),
+            service_call(
                 "script",
-                "alarm_2",
+                "turn_on",
+                target={"entity_id": "script.alarm_2"},
                 service_data={
                     "variables": {
                         "message": "for script only",
@@ -64,40 +57,28 @@ async def test_deliver() -> None:
                         "chime_duration": 10,
                     }
                 },
-                blocking=False,
-                context=None,
-                target=None,
-                return_response=False,
             ),
-            call(
+            service_call(
                 "media_player",
                 "play_media",
                 target={"entity_id": "media_player.living_room"},
                 service_data={
-                    "media_content_id": "boing_01",
-                    "media_content_type": "sound",
+                    "media": {
+                        "media_content_id": "boing_01",
+                        "media_content_type": "sound",
+                    }
                 },
-                blocking=False,
-                context=None,
-                return_response=False,
             ),
-            call(
+            service_call(
                 "siren",
                 "turn_on",
                 target={"entity_id": "siren.lobby"},
                 service_data={"data": {"duration": 10, "volume_level": 1, "tone": "boing_01"}},
-                blocking=False,
-                context=None,
-                return_response=False,
             ),
-            call(
+            service_call(
                 "alexa_devices",
                 "send_sound",
                 service_data={"device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "boing_01"},
-                blocking=False,
-                context=None,
-                target=None,
-                return_response=False,
             ),
         ],
         any_order=False,
@@ -124,7 +105,7 @@ async def test_deliver_alias() -> None:
                                 "switch": {"target": "switch.chime_ding_dong"},
                                 "script": {
                                     "target": "script.front_door_bell",
-                                    "data": {"variables": {"visitor_name": "Guest"}},
+                                    "data": {"visitor_name": "Guest"},
                                 },
                             }
                         }
@@ -148,51 +129,33 @@ async def test_deliver_alias() -> None:
 
     context.hass.services.async_call.assert_has_calls(  # type: ignore
         [
-            call(
+            service_call(
                 "media_player",
                 "play_media",
                 target={"entity_id": "media_player.hall_echo"},
                 service_data={
-                    "media_content_type": "sound",
-                    "media_content_id": "home/amzn_sfx_doorbell_chime_01",
+                    "media": {
+                        "media_content_type": "sound",
+                        "media_content_id": "home/amzn_sfx_doorbell_chime_01",
+                    }
                 },
-                blocking=False,
-                context=None,
-                return_response=False,
             ),
-            call(
-                "switch",
-                "turn_on",
-                service_data={},
-                target={"entity_id": "switch.chime_ding_dong"},
-                blocking=False,
-                context=None,
-                return_response=False,
-            ),
-            call(
+            service_call("switch", "turn_on", target={"entity_id": "switch.chime_ding_dong"}),
+            service_call(
                 "alexa_devices",
                 "send_sound",
                 service_data={"device_id": "ffff0000eeee1111dddd2222cccc3333", "sound": "bell01"},
-                blocking=False,
-                context=None,
-                target=None,
-                return_response=False,
             ),
-            call(
+            service_call(
                 "media_player",
                 "play_media",
                 target={"entity_id": "media_player.kitchen_alexa"},
-                service_data={
-                    "media_content_type": "sound",
-                    "media_content_id": "home/amzn_sfx_doorbell_chime_02",
-                },
-                blocking=False,
-                context=None,
-                return_response=False,
+                service_data={"media": {"media_content_type": "sound", "media_content_id": "home/amzn_sfx_doorbell_chime_02"}},
             ),
-            call(
+            service_call(
                 "script",
-                "front_door_bell",
+                "turn_on",
+                target={"entity_id": "script.front_door_bell"},
                 service_data={
                     "variables": {
                         "message": "for script only",
@@ -204,15 +167,66 @@ async def test_deliver_alias() -> None:
                         "chime_duration": None,
                     }
                 },
-                blocking=False,
-                context=None,
-                target=None,
-                return_response=False,
             ),
         ],
         any_order=True,
     )
     assert len(envelope.calls) == 5
+
+
+async def test_script_debug() -> None:
+    context = TestingContext(
+        transport_configs={
+            TRANSPORT_CHIME: {
+                "delivery_defaults": {
+                    "options": {
+                        "chime_aliases": {
+                            "doorbell": {
+                                "script": {
+                                    "target": "script.front_door_bell",
+                                    "data": {"visitor_name": "Guest"},
+                                },
+                            }
+                        }
+                    },
+                },
+            }
+        },
+        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DEBUG: True, CONF_DATA: {"chime_tune": "doorbell"}}},
+    )
+
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_CHIME)
+
+    envelope: Envelope = Envelope(
+        Delivery("chimes", context.delivery_config("chimes"), uut), Notification(context, message="for script only")
+    )
+    await uut.deliver(envelope)
+
+    context.hass.services.async_call.assert_has_calls(
+        [  # type: ignore
+            service_call(
+                "script",
+                "turn_on",
+                service_data={
+                    "variables": {
+                        "visitor_name": "Guest",
+                        "message": "for script only",
+                        "title": None,
+                        "priority": "medium",
+                        "chime_tune": "doorbell",
+                        "chime_volume": None,
+                        "chime_duration": None,
+                    },
+                    "wait": True,
+                },
+                blocking=True,
+                return_response=True,
+                target={"entity_id": "script.front_door_bell"}
+            )
+        ],
+        any_order=True,
+    )
 
 
 class MockGroup:
@@ -248,9 +262,10 @@ async def test_deliver_to_group() -> None:
     )
     context.hass.services.async_call.assert_has_calls(  # type: ignore
         [
-            call(
+            service_call(
                 "script",
-                "siren_2",
+                "turn_on",
+                target={"entity_id": "script.siren_2"},
                 service_data={
                     "variables": {
                         "message": None,
@@ -261,31 +276,18 @@ async def test_deliver_to_group() -> None:
                         "chime_duration": None,
                     }
                 },
-                blocking=False,
-                context=None,
-                target=None,
-                return_response=False,
             ),
-            call(
-                "switch",
-                "turn_on",
-                service_data={},
-                target={"entity_id": "switch.bell_1"},
-                blocking=False,
-                context=None,
-                return_response=False,
-            ),
-            call(
+            service_call("switch", "turn_on", target={"entity_id": "switch.bell_1"}),
+            service_call(
                 "media_player",
                 "play_media",
                 target={"entity_id": "media_player.alexa_1"},
                 service_data={
-                    "media_content_type": "sound",
-                    "media_content_id": "dive_dive_dive",
+                    "media": {
+                        "media_content_type": "sound",
+                        "media_content_id": "dive_dive_dive",
+                    }
                 },
-                blocking=False,
-                context=None,
-                return_response=False,
             ),
         ],
         any_order=True,
@@ -305,6 +307,13 @@ async def test_deliver_rest_command() -> None:
                                 "rest_command": {
                                     "target": "rest_command.camera_siren",
                                     "data": {"alarm_code": "11"},
+                                },
+                                "rest_command_alt_1": {
+                                    "domain": "rest_command",
+                                    "target": "invalid_target_id",
+                                },
+                                "rest_command_alt_2": {
+                                    "target": "rest_command.valid_target_id",
                                 },
                             }
                         }
@@ -326,17 +335,12 @@ async def test_deliver_rest_command() -> None:
             Notification(context),
         )
     )
+    assert context.hass.services.async_call.call_count == 3
     context.hass.services.async_call.assert_has_calls(  # ty:ignore[possibly-missing-attribute]
-        [  # type: ignore
-            call(
-                "rest_command",
-                "camera_siren",
-                service_data={"alarm_code": "11"},
-                blocking=False,
-                context=None,
-                return_response=False,
-                target=None,
-            )
+        [
+            service_call("switch", "turn_on", target={"entity_id": "switch.chime_sax"}),
+            service_call("rest_command", "camera_siren", service_data={"alarm_code": "11"}),
+            service_call("rest_command", "valid_target_id"),
         ],
         any_order=True,
     )
@@ -386,8 +390,7 @@ async def test_documentation_example() -> None:
                         alias: Run a Home Assistant script defined elsewhere in config
                         target: script.pull_bell_cord
                         data:
-                            variables:
-                                duration: 25
+                            duration: 25
                     rest_command:
                         alias: call a rest api passing data to the templated URL
                         target: rest_command.api_call_to_camera_alarm
@@ -423,7 +426,7 @@ async def test_documentation_example() -> None:
     assert doorbell["rest_command"]["target"].entity_ids == ["rest_command.api_call_to_camera_alarm"]
     assert doorbell["rest_command"]["data"] == {"alarm_tone": 14}
     assert doorbell["script"]["target"].entity_ids == ["script.pull_bell_cord"]
-    assert doorbell["script"]["data"] == {"variables": {"duration": 25}}
+    assert doorbell["script"]["data"] == {"duration": 25}
     assert doorbell["siren_bedroom"]["alias"] == "Short and quiet burst for just the bedroom siren"
     assert doorbell["siren_bedroom"]["target"].entity_ids == ["siren.bedroom"]
     assert doorbell["siren_bedroom"]["volume"] == 0.1

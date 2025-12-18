@@ -231,6 +231,9 @@ class Target:
     def has_resolved_target(self) -> bool:
         return any(targets for category, targets in self.targets.items() if category not in self.INDIRECT_CATEGORIES)
 
+    def has_unknown_targets(self) -> bool:
+        return len(self.targets.get(self.UNKNOWN_CUSTOM_CATEGORY, [])) > 0
+
     def for_category(self, category: str) -> list[str]:
         return self.targets.get(category, [])
 

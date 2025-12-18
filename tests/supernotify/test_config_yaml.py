@@ -429,7 +429,7 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
     assert call_record == {
         "domain": "media_player",
         "action": "play_media",
-        "action_data": {"media_content_type": "sound", "media_content_id": "bell_02"},
+        "action_data": {"media": {"media_content_type": "sound", "media_content_id": "bell_02"}},
         "target_data": {"entity_id": "media_player.lobby"},
         "debug": False,
     }

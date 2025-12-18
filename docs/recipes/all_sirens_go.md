@@ -62,9 +62,8 @@ transports:
                 script:
                     target: script.ring_all_the_bells
                     data:
-                      variables:
-                        duration: 25
-                        volume: 1.0
+                      duration: 25
+                      volume: 1.0
 ```
 
 

@@ -212,8 +212,7 @@ transports:
                       alias: Run a Home Assistant script defined elsewhere in config
                       target: script.pull_bell_cord
                       data:
-                        variables:
-                          duration: 25
+                        duration: 25
                   rest_command:
                       alias: call a rest api passing data to the templated URL
                       target: rest_command.api_call_to_camera_alarm
