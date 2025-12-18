@@ -222,7 +222,7 @@ async def test_script_debug() -> None:
                 },
                 blocking=True,
                 return_response=True,
-                target={"entity_id": "script.front_door_bell"}
+                target={"entity_id": "script.front_door_bell"},
             )
         ],
         any_order=True,
