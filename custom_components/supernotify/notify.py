@@ -121,8 +121,8 @@ async def async_get_service(
     #            raise
 
     hass.states.async_set(
-        f"sensor.{DOMAIN}_configuration",
-        "True",
+        f"binary_sensor.{DOMAIN}_configuration",
+        STATE_ON,
         {
             CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
             CONF_LINKS: config.get(CONF_LINKS, ()),
