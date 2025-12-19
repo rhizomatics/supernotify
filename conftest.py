@@ -14,7 +14,6 @@ from homeassistant.components.notify.const import DOMAIN
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.config_entries import ConfigEntryItems
 from homeassistant.const import (
-    ATTR_STATE,
     STATE_HOME,
     STATE_NOT_HOME,
 )
