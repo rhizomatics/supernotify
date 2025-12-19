@@ -114,7 +114,7 @@ rules:
   # ==================
 
   action-exceptions:
-    status: todo
+    status: done
     comment: |
       Need to verify all services raise ServiceValidationError for invalid input
       and HomeAssistantError for failures.

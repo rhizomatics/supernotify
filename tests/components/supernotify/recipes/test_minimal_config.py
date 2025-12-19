@@ -1,4 +1,4 @@
-from tests.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
 async def test_minimal_config_parses():

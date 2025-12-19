@@ -49,7 +49,7 @@ async def test_deliver_with_template() -> None:
         deliveries={
             "test_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_TEMPLATE: "minimal_test.html.j2"}
         },
-        template_path=Path("tests/supernotify/fixtures/templates"),
+        template_path=Path("tests/components/supernotify/fixtures/templates"),
     )
 
     await context.test_initialize()

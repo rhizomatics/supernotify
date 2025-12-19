@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_CONDITION, CONF_CONDITIONS, CONF_ENTITY_ID, CONF_STATE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import (
@@ -33,7 +34,7 @@ from custom_components.supernotify import (
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TargetRequired
 from custom_components.supernotify.notify import SupernotifyAction
-from tests.supernotify.doubles_lib import DummyTransport
+from tests.components.supernotify.doubles_lib import DummyTransport
 
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
@@ -238,7 +239,7 @@ async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
     broken = DummyTransport(
         uut.context,
         target_required=TargetRequired.OPTIONAL,
-        transport_exception=ValueError("a self-inflicted error has occurred"),
+        transport_exception=ServiceValidationError("a self-inflicted error has occurred"),
     )
     uut.context.configure_for_tests(transport_instances=[broken])
     await uut.initialize()
@@ -254,7 +255,7 @@ async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
     assert len(notification.undelivered_envelopes) == 1
     assert isinstance(notification.undelivered_envelopes["dummy"][0], Envelope)
     assert isinstance(notification.undelivered_envelopes["dummy"][0].delivery_error, list)
-    assert any("ValueError" in stack for stack in notification.undelivered_envelopes["dummy"][0].delivery_error)
+    assert any("ServiceValidationError" in stack for stack in notification.undelivered_envelopes["dummy"][0].delivery_error)
     assert broken.error_count == 1
     assert broken.last_error_at is not None
     assert broken.last_error_message == "a self-inflicted error has occurred"
@@ -286,9 +287,9 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
 
     def call_service(domain, service, service_data=None, **kwargs):
         if service == "make_fail":
-            raise ValueError("just because")
+            raise ServiceValidationError("just because")
 
-    mock_hass.services.async_call = AsyncMock(side_effect=call_service)
+    mock_hass.services.async_call = AsyncMock(side_effect=call_service)  # type: ignore
     await uut.initialize()
     await uut.async_send_message("just a test", data={"priority": "low", "delivery": "failing"})
     mock_hass.services.async_call.assert_called_with(  # type: ignore

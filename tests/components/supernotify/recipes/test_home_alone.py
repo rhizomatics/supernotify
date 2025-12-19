@@ -1,8 +1,8 @@
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.notification import Notification
-from tests.supernotify.doubles_lib import DummyTransport
-from tests.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.doubles_lib import DummyTransport
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
 async def test_home_alone(hass: HomeAssistant):

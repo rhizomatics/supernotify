@@ -11,6 +11,7 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
     CONF_DOMAIN,
     CONF_TARGET,
 )
+from homeassistant.exceptions import ConfigValidationError
 from homeassistant.helpers.typing import ConfigType
 from voluptuous.humanize import humanize_error
 
@@ -71,7 +72,7 @@ class ChimeTargetConfig:
             _LOGGER.warning(
                 "SUPERNOTIFY Invalid chime target, entity_id: %s, device_id %s, tune:%s", entity_id, device_id, tune
             )
-            raise ValueError("ChimeTargetConfig target must be entity_id or device_id")
+            raise ConfigValidationError("ChimeTargetConfig target must be entity_id or device_id")
         if kwargs:
             _LOGGER.warning("SUPERNOTIFY ChimeTargetConfig ignoring unexpected args: %s", kwargs)
         self.volume: float | None = volume

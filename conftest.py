@@ -40,10 +40,10 @@ from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
-from tests.supernotify.doubles_lib import MockImageEntity
-from tests.supernotify.hass_setup_lib import MockableHomeAssistant
+from tests.components.supernotify.doubles_lib import MockImageEntity
+from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
 
-IMAGE_PATH: Path = Path("tests") / "supernotify" / "fixtures" / "media"
+IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 
 
 @dataclass

@@ -19,7 +19,7 @@ include = [
     "supernotify*",
 ] # package names should match these glob patterns (["*"] by default)
 exclude = [
-    "supernotify.tests*",
+    "tests.components.supernotify.*",
 ] # exclude packages matching these glob patterns (empty by default)
 namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 

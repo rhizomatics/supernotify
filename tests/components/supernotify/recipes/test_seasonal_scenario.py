@@ -5,7 +5,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.chime import ChimeTransport
-from tests.supernotify.hass_setup_lib import TestingContext, register_device
+from tests.components.supernotify.hass_setup_lib import TestingContext, register_device
 
 
 @pytest.fixture

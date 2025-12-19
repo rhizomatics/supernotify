@@ -23,7 +23,7 @@ from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.components.trace.util import async_store_trace
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConditionError, ConditionErrorContainer
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer, ConfigValidationError
 from homeassistant.helpers import condition as condition
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
@@ -70,8 +70,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HomeAssistantAPI:
-    def __init__(self, hass: HomeAssistant | None = None) -> None:
-        self._hass: HomeAssistant | None = hass
+    def __init__(self, hass: HomeAssistant) -> None:
+        self._hass: HomeAssistant = hass
         self.internal_url: str = ""
         self.external_url: str = ""
         self.hass_name: str = "!UNDEFINED!"
@@ -80,20 +80,17 @@ class HomeAssistantAPI:
         self._service_info: dict[tuple[str, str], Any] = {}
 
     def initialize(self) -> None:
-        if self._hass:
-            self.hass_name = self._hass.config.location_name
-            try:
-                self.internal_url = get_url(self._hass, prefer_external=False)
-            except Exception as e:
-                self.internal_url = f"http://{socket.gethostname()}"
-                _LOGGER.warning("SUPERNOTIFY could not get internal hass url, defaulting to %s: %s", self.internal_url, e)
-            try:
-                self.external_url = get_url(self._hass, prefer_external=True)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY could not get external hass url, defaulting to internal url: %s", e)
-                self.external_url = self.internal_url
-        else:
-            _LOGGER.warning("SUPERNOTIFY Configured without HomeAssistant instance")
+        self.hass_name = self._hass.config.location_name
+        try:
+            self.internal_url = get_url(self._hass, prefer_external=False)
+        except Exception as e:
+            self.internal_url = f"http://{socket.gethostname()}"
+            _LOGGER.warning("SUPERNOTIFY could not get internal hass url, defaulting to %s: %s", self.internal_url, e)
+        try:
+            self.external_url = get_url(self._hass, prefer_external=True)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY could not get external hass url, defaulting to internal url: %s", e)
+            self.external_url = self.internal_url
 
         _LOGGER.debug(
             "SUPERNOTIFY Configured for HomeAssistant instance %s at %s , %s",
@@ -109,43 +106,29 @@ class HomeAssistantAPI:
         return self._hass is not None and self._hass.loop_thread_id == threading.get_ident()
 
     def get_state(self, entity_id: str) -> State | None:
-        if not self._hass:
-            return None
         return self._hass.states.get(entity_id)
 
     def is_state(self, entity_id: str, state: str) -> bool:
-        if not self._hass:
-            return False
         return self._hass.states.is_state(entity_id, state)
 
     def set_state(self, entity_id: str, state: str) -> None:
-        if not self._hass:
-            return
         if self.in_hass_loop():
             self._hass.states.async_set(entity_id, state)
         else:
             self._hass.states.set(entity_id, state)
 
     def has_service(self, domain: str, service: str) -> bool:
-        if not self._hass:
-            return False
         return self._hass.services.has_service(domain, service)
 
     def entity_ids_for_domain(self, domain: str) -> list[str]:
-        if self._hass:
-            return self._hass.states.async_entity_ids(domain)
-        return []
+        return self._hass.states.async_entity_ids(domain)
 
     def domain_entity(self, domain: str, entity_id: str) -> Entity | None:
-        if self._hass is None:
-            return None
         # TODO: must be a better hass method than this
         return self._hass.data.get(domain, {}).get_entity(entity_id)
 
     def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
-        if not self._hass:
-            raise ValueError("HomeAssistant not available")
         return self._hass.async_add_executor_job(func, *args)
 
     async def call_service(
@@ -158,8 +141,6 @@ class HomeAssistantAPI:
         blocking: bool | None = None,
         debug: bool = False,
     ) -> ServiceResponse | None:
-        if not self._hass:
-            raise ValueError("HomeAssistant not available")
 
         if return_response is None or blocking is None:
             # unknown service, for example defined in generic action, check if it supports response
@@ -186,8 +167,6 @@ class HomeAssistantAPI:
         return response
 
     def service_info(self, domain: str, service: str) -> SupportsResponse:
-        if self._hass is None:
-            raise ValueError("HomeAssistant not available")
 
         try:
             if (domain, service) not in self._service_info:
@@ -209,13 +188,9 @@ class HomeAssistantAPI:
 
     def http_session(self) -> aiohttp.ClientSession:
         """Client aiohttp session for async web requests"""
-        if self._hass is None:
-            raise ValueError("HomeAssistant not available")
         return async_get_clientsession(self._hass)
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
-        if self._hass is None:
-            return []
         return expand_entity_ids(self._hass, entity_ids)
 
     def template(self, template_format: str) -> Template:
@@ -230,23 +205,20 @@ class HomeAssistantAPI:
 
         result: bool | None = None
         this_trace: ActionTrace | None = None
-        if self._hass:
-            if DATA_TRACE not in self._hass.data:
-                _LOGGER.warning("SUPERNOTIFY tracing not configured, attempting to set up")
-                await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
-            with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
-                cond_trace.set_trace(trace_get())
-                this_trace = cond_trace
-                with trace_path(["condition", "conditions"]) as _tp:
-                    result = self.evaluate_conditions(conditions, condition_variables)
-                _LOGGER.debug(cond_trace.as_dict())
+        if DATA_TRACE not in self._hass.data:
+            _LOGGER.warning("SUPERNOTIFY tracing not configured, attempting to set up")
+            await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
+        with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
+            cond_trace.set_trace(trace_get())
+            this_trace = cond_trace
+            with trace_path(["condition", "conditions"]) as _tp:
+                result = self.evaluate_conditions(conditions, condition_variables)
+            _LOGGER.debug(cond_trace.as_dict())
         return result, this_trace
 
     async def build_conditions(
         self, condition_config: list[ConfigType], strict: bool = False, validate: bool = False, name: str = DOMAIN
     ) -> ConditionsFunc | None:
-        if self._hass is None:
-            raise ValueError("HomeAssistant not available")
         capturing_logger: ConditionErrorLoggingAdaptor = ConditionErrorLoggingAdaptor(_LOGGER)
         condition_variables: ConditionVariables = ConditionVariables()
         cond_list: list[ConfigType]
@@ -268,7 +240,7 @@ class HomeAssistantAPI:
                 self._hass, cond_list, cast("logging.Logger", capturing_logger), name
             )
             if test is None:
-                raise ValueError(f"Invalid condition {condition_config}")
+                raise ConfigValidationError(f"Invalid condition {condition_config}")
             test(condition_variables.as_dict())
             return test
         except Exception as e:
@@ -287,8 +259,6 @@ class HomeAssistantAPI:
         condition: ConditionsFunc,
         condition_variables: ConditionVariables,
     ) -> bool | None:
-        if self._hass is None:
-            raise ValueError("HomeAssistant not available")
         try:
             return condition(condition_variables.as_dict() if condition_variables else None)
         except Exception as e:
@@ -314,8 +284,6 @@ class HomeAssistantAPI:
         learn_more_url: str = "https://supernotify.rhizomatics.org.uk",
         is_fixable: bool = False,
     ) -> None:
-        if not self._hass:
-            return
         ir.async_create_issue(
             self._hass,
             DOMAIN,
@@ -399,11 +367,10 @@ class HomeAssistantAPI:
         """  # noqa: D205
         if self._entity_registry is not None:
             return self._entity_registry
-        if self._hass:
-            try:
-                self._entity_registry = er.async_get(self._hass)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
+        try:
+            self._entity_registry = er.async_get(self._hass)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
         return self._entity_registry
 
     def device_registry(self) -> dr.DeviceRegistry | None:
@@ -412,39 +379,36 @@ class HomeAssistantAPI:
         """  # noqa: D205
         if self._device_registry is not None:
             return self._device_registry
-        if self._hass:
-            try:
-                self._device_registry = dr.async_get(self._hass)
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
+        try:
+            self._device_registry = dr.async_get(self._hass)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry
 
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
-        if self._hass:
-            try:
-                return await mqtt.async_wait_for_mqtt_client(self._hass) is True
-            except Exception:
-                _LOGGER.exception("SUPERNOTIFY MQTT integration failed on available check")
-                if raise_on_error:
-                    raise
+        try:
+            return await mqtt.async_wait_for_mqtt_client(self._hass) is True
+        except Exception:
+            _LOGGER.exception("SUPERNOTIFY MQTT integration failed on available check")
+            if raise_on_error:
+                raise
         return False
 
     async def mqtt_publish(
         self, topic: str, payload: Any = None, qos: int = 0, retain: bool = False, raise_on_error: bool = True
     ) -> None:
-        if self._hass:
-            try:
-                await mqtt.async_publish(
-                    self._hass,
-                    topic=topic,
-                    payload=json_dumps(payload),
-                    qos=qos,
-                    retain=retain,
-                )
-            except Exception:
-                _LOGGER.exception(f"SUPERNOTIFY MQTT publish failed to {topic}")
-                if raise_on_error:
-                    raise
+        try:
+            await mqtt.async_publish(
+                self._hass,
+                topic=topic,
+                payload=json_dumps(payload),
+                qos=qos,
+                retain=retain,
+            )
+        except Exception:
+            _LOGGER.exception(f"SUPERNOTIFY MQTT publish failed to {topic}")
+            if raise_on_error:
+                raise
 
 
 class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):

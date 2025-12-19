@@ -19,7 +19,7 @@ from custom_components.supernotify.model import Target
 if TYPE_CHECKING:
     from homeassistant.util.json import JsonObjectType
 
-FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "examples", "maximal.yaml")
+FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "..", "examples", "maximal.yaml")
 
 
 SIMPLE_CONFIG = {

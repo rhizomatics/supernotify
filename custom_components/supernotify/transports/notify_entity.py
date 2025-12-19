@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
+from homeassistant.exceptions import ServiceValidationError
 
 from custom_components.supernotify import (
     OPTION_MESSAGE_USAGE,
@@ -56,7 +57,7 @@ class NotifyEntityTransport(Transport):
         action_data = envelope.core_action_data()
         targets = envelope.target.entity_ids or []
         if not targets:
-            raise ValueError("No targets for notify entity transport")
+            raise ServiceValidationError("No targets for notify entity transport")
         target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets}
         # area_id
         # device_id

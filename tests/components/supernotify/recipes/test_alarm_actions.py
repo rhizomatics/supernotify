@@ -2,7 +2,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.notification import Notification
-from tests.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
 @pytest.fixture

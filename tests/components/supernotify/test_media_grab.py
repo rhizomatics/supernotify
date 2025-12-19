@@ -12,6 +12,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
 )
+from homeassistant.exceptions import ServiceValidationError
 from PIL import Image, ImageChops
 from pytest_httpserver import BlockingHTTPServer
 
@@ -213,7 +214,7 @@ def valid_state(home_entities: list, not_home_entities: list) -> Callable:
             return True
         if entity in not_home_entities and state == STATE_HOME:
             return False
-        raise ValueError("Test values not as expected")
+        raise ServiceValidationError("Test values not as expected")
 
     return checker
 

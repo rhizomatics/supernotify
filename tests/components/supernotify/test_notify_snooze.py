@@ -24,7 +24,7 @@ from custom_components.supernotify.model import GlobalTargetType, QualifiedTarge
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
 from custom_components.supernotify.snoozer import Snooze
-from tests.supernotify.hass_setup_lib import register_mobile_app
+from tests.components.supernotify.hass_setup_lib import register_mobile_app
 
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},

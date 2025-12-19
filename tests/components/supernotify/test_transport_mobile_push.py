@@ -30,7 +30,7 @@ from custom_components.supernotify.model import QualifiedTargetType, RecipientTy
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
-from tests.supernotify.hass_setup_lib import register_mobile_app
+from tests.components.supernotify.hass_setup_lib import register_mobile_app
 
 from .doubles_lib import service_call
 

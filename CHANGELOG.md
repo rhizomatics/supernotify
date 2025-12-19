@@ -15,6 +15,10 @@
   - All http get now consistently used a HomeAssistant provided aiohttp session
   - Set PARALLEL_UPDATE to 0 since no operations outside of existing HomeAssistant services
   - Technical states are now actual entities, marked as TECHNICAL category and with icons
+  - `iot_class` now `calculated` for better HA consistency
+  - Moved tests to `tests.components.supernotify`
+  - Removed lots of pointless checks on HA presence in `hass_api`
+  - Replaced `ValueError` with `ServiceValidationError` and `HomeAssistantError` for HA compatibility
 ## 1.5.3
 ### Features
 - Chime alias error handling improved

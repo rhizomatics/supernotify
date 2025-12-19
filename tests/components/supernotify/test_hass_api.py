@@ -34,14 +34,6 @@ def test_basic_setup(hass: HomeAssistant) -> None:
     assert hass_api.external_url == hass_api.internal_url
 
 
-def test_basic_setup_doesnt_blow_up_without_hass(hass: HomeAssistant) -> None:
-    hass_api = HomeAssistantAPI(None)
-    hass_api.initialize()
-    assert hass_api.hass_name == "!UNDEFINED!"
-    assert hass_api.internal_url == ""
-    assert hass_api.external_url == ""
-
-
 async def test_evaluate_with_bad_conditions(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
 
@@ -220,15 +212,12 @@ def test_discover_devices_filters_models(hass: HomeAssistant) -> None:
 def test_hass_doesnt_have_weird_service(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     assert not hass_api.has_service("nosuchdomain", "nosuchservice")
-    assert not HomeAssistantAPI(None).has_service("notify", "nosuchservice")
 
 
 async def test_hass_calls_service_fire_and_forget(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     with pytest.raises(ServiceNotFound):
         assert await hass_api.call_service("nosuchdomain", "nosuchservice") is None
-    with pytest.raises(ValueError):  # noqa: PT011
-        assert await HomeAssistantAPI(None).call_service("notify", "nosuchservice") is None
 
 
 async def test_mqtt_publish(mock_hass) -> None:

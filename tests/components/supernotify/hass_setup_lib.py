@@ -264,7 +264,7 @@ def register_mobile_app(
         discovery_keys=MappingProxyType({}),
         subentries_data=None,
     )
-    if hass_api is None or hass_api._hass is None:
+    if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
         return None
     hass_api.set_state(person, "home")
@@ -287,7 +287,7 @@ def register_mobile_app(
             identifiers={(domain, f"device-id_{device_name}")},
         )
 
-    if hass_api._hass and hass_api._hass.services and device_entry:
+    if hass_api._hass.services and device_entry:
 
         def fake_service(service: ServiceCall) -> None:
             _LOGGER.debug("Fake service called with service call: %s", service)
@@ -323,7 +323,7 @@ def register_device(
         discovery_keys=MappingProxyType({}),
         subentries_data=None,
     )
-    if hass_api is None or hass_api._hass is None:
+    if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for device registry")
         return None
     try:

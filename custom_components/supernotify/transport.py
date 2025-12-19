@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
 )
+from homeassistant.exceptions import ConfigValidationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -65,7 +66,7 @@ class Transport:
     async def initialize(self) -> None:
         """Async post-construction initialization"""
         if self.name is None:
-            raise ValueError("No transport configured")
+            raise ConfigValidationError("No transport configured")
 
         if self.device_discovery:
             for domain in self.device_domain:
