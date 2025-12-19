@@ -120,27 +120,6 @@ async def async_get_service(
     #            _LOGGER.error("SUPERNOTIFY delivery %s fails condition: %s", delivery[CONF_CONDITION], e)
     #            raise
 
-    hass.states.async_set(
-        f"binary_sensor.{DOMAIN}_configuration",
-        STATE_ON,
-        {
-            CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
-            CONF_LINKS: config.get(CONF_LINKS, ()),
-            CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
-            CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
-            CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),
-            CONF_MOBILE_DISCOVERY: config.get(CONF_MOBILE_DISCOVERY, ()),
-            CONF_RECIPIENTS_DISCOVERY: config.get(CONF_RECIPIENTS_DISCOVERY, ()),
-            CONF_RECIPIENTS: config.get(CONF_RECIPIENTS, ()),
-            CONF_ACTIONS: config.get(CONF_ACTIONS, {}),
-            CONF_HOUSEKEEPING: config.get(CONF_HOUSEKEEPING, {}),
-            CONF_ACTION_GROUPS: config.get(CONF_ACTION_GROUPS, {}),
-            CONF_SCENARIOS: list(config.get(CONF_SCENARIOS, {}).keys()),
-            CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
-            CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
-            CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
-        },
-    )
     hass.states.async_set(f"sensor.{DOMAIN}_failures", "0")
     hass.states.async_set(f"sensor.{DOMAIN}_notifications", "0")
 
@@ -163,6 +142,25 @@ async def async_get_service(
         dupe_check=config[CONF_DUPE_CHECK],
     )
     await service.initialize()
+
+    def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
+        return {
+            CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
+            CONF_LINKS: config.get(CONF_LINKS, ()),
+            CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
+            CONF_MEDIA_PATH: config.get(CONF_MEDIA_PATH, None),
+            CONF_ARCHIVE: config.get(CONF_ARCHIVE, {}),
+            CONF_MOBILE_DISCOVERY: config.get(CONF_MOBILE_DISCOVERY, ()),
+            CONF_RECIPIENTS_DISCOVERY: config.get(CONF_RECIPIENTS_DISCOVERY, ()),
+            CONF_RECIPIENTS: config.get(CONF_RECIPIENTS, ()),
+            CONF_ACTIONS: config.get(CONF_ACTIONS, {}),
+            CONF_HOUSEKEEPING: config.get(CONF_HOUSEKEEPING, {}),
+            CONF_ACTION_GROUPS: config.get(CONF_ACTION_GROUPS, {}),
+            CONF_SCENARIOS: list(config.get(CONF_SCENARIOS, {}).keys()),
+            CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
+            CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
+            CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
+        }
 
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
         return service.expose_entities()
@@ -224,6 +222,12 @@ async def async_get_service(
             "days": service.context.media_storage.days if days is None else days,
         }
 
+    hass.services.async_register(
+        DOMAIN,
+        "enquire_configuration",
+        supplemental_action_enquire_configuration,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         "enquire_implicit_deliveries",
@@ -554,20 +558,28 @@ class SupernotifyAction(BaseNotificationService):
         state: str,
         attributes: dict[str, Any],
         platform: str = Platform.BINARY_SENSOR,
+        original_name: str | None = None,
         original_icon: str | None = None,
         entity_registry: er.EntityRegistry | None = None,
     ) -> None:
         """Expose a technical entity in Home Assistant representing internal state and attributes"""
+        entity_id: str
         if entity_registry is not None:
             try:
-                entity_registry.async_get_or_create(
-                    platform, DOMAIN, entity_name, entity_category=EntityCategory.DIAGNOSTIC, original_icon=original_icon
+                entry: er.RegistryEntry = entity_registry.async_get_or_create(
+                    platform,
+                    DOMAIN,
+                    entity_name,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    original_name=original_name,
+                    original_icon=original_icon,
                 )
+                entity_id = entry.entity_id
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_name, e)
                 # continue anyway even if not registered as state is independent of entity
+                entity_id = f"{platform}.{DOMAIN}_{entity_name}"
         try:
-            entity_id: str = f"{platform}.{DOMAIN}_{entity_name}"
             self.hass.states.async_set(entity_id, state, attributes)
             self.exposed_entities.append(entity_id)
         except Exception as e:
@@ -584,6 +596,7 @@ class SupernotifyAction(BaseNotificationService):
                 f"scenario_{scenario.name}",
                 state=STATE_UNKNOWN,
                 attributes=scenario.attributes(include_condition=False),
+                original_name=f"{scenario.name} Scenario",
                 original_icon="mdi:assignment",
                 entity_registry=ent_reg,
             )
@@ -592,6 +605,7 @@ class SupernotifyAction(BaseNotificationService):
                 f"transport_{transport.name}",
                 state=STATE_ON if transport.override_enabled else STATE_OFF,
                 attributes=transport.attributes(),
+                original_name=f"{transport.name} Transport Adaptor",
                 original_icon="mdi:delivery-truck-speed",
                 entity_registry=ent_reg,
             )
@@ -601,6 +615,7 @@ class SupernotifyAction(BaseNotificationService):
                 f"delivery_{delivery.name}",
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=delivery.attributes(),
+                original_name=f"{delivery.name} Delivery Configuration",
                 original_icon="mdi:package_2",
                 entity_registry=ent_reg,
             )
@@ -610,6 +625,7 @@ class SupernotifyAction(BaseNotificationService):
                 f"recipient_{recipient.name}",
                 state=STATE_ON if recipient.enabled else STATE_OFF,
                 attributes=recipient.attributes(),
+                original_name=f"{recipient.name}",
                 original_icon="mdi:inbox_text_person",
                 entity_registry=ent_reg,
             )

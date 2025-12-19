@@ -99,7 +99,7 @@ Additionally, `target_required` defines if this delivery needs targets to work, 
 are resolved as specific to it, for example based on the `target_categories` option to select by category. This has values:
 
 - `always` - Targets are mandatory, skip this delivery if no targets identified for it
-- `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adapter
+- `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
 ## Extreme Example

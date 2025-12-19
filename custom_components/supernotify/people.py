@@ -63,7 +63,7 @@ class Recipient:
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
         self.entity_id = config[CONF_PERSON]
-        self.name:str = self.entity_id.replace('person.', '')
+        self.name: str = self.entity_id.replace("person.", "")
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)
         self.phone_number: str | None = config.get(CONF_PHONE_NUMBER)

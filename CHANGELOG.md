@@ -3,6 +3,7 @@
 ## 1.5.4
 ### Changes
 - Exposed entities are now correctly named in the `binary_sensor` platform rather than inventing a new one
+- Configuration technical entity now replaced with a `enquire_configuration` service
 ### Internal
 - Excess kwargs for `Context` now logged correctly
 - Added turbojpeg dependency to allow `mobile_app` integration to be setup for non-mocked testing
