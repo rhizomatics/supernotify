@@ -221,3 +221,41 @@ def test_prune_fields(mock_context):
     )
 
     assert uut.prune_data({"duration": 1.0, "foo": 123}, "siren", Delivery("", {}, uut)) == {"duration": 1.0}
+
+
+async def test_slack_notify() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            slack:
+                transport: generic
+                action: notify.my_slack_service
+                options:
+                    target_categories: slack
+            """,
+        recipients="""
+            - person: person.my_user
+              delivery:
+                slack:
+                    target:
+                        slack: A20H2AN55DX
+    """,
+        services={"notify": ["my_slack_service"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx, message="test message", action_data={"delivery": {"slack": {"enabled": True}}}, target="person.my_user"
+    )
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "notify",
+        "my_slack_service",
+        service_data={"message": "test message", "target": "A20H2AN55DX"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )

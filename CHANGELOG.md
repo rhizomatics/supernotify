@@ -4,6 +4,9 @@
 ### Internal
 - Excess kwargs for `Context` now logged correctly
 - Added turbojpeg dependency to allow `mobile_app` integration to be setup for non-mocked testing
+- Generic Transport
+  - Removed the default `entity_id` filter for `target_categories` option
+  - Fixed the provision of targets where no `target_categories` defined - all targets supplied in one big list
 
 ## 1.5.3
 ### Features

@@ -87,7 +87,7 @@ class TestingContext(Context):
         yaml: str | None = None,
         deliveries: ConfigType | str | None = None,
         scenarios: ConfigType | str | None = None,
-        recipients: list[dict[str, Any]] | None = None,
+        recipients: list[dict[str, Any]] | str | None = None,
         mobile_actions: ConfigType | str | None = None,
         transport_configs: ConfigType | str | None = None,
         transport_instances: list[Transport] | None = None,

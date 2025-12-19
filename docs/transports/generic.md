@@ -48,6 +48,51 @@ Use this deliveries with action calls like this:
 
 This includes support for [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/). (Supernotify also offers an [MQTT Transport Adaptor](mqtt.md) for direct flexible access to `mqtt.publish`.)
 
+### Selecting Targets
+
+By default, Generic will throw all the targets applied in the configuration or action call at the notification, in one flat list
+of targets, or a single string value if only one target.
+
+Usually you will want to be more specific. If the target is a common built-in type like `entity_id` or `email`, then specify this in the `target_categories` option.
+
+```yaml
+delivery:
+  chat_notify:
+    transport: generic
+    action: notify.custom_chat
+    options:
+      target_categories: entity_id
+```
+
+If it's not a standard target type, then make one up. In this example, for personal Slack channels, which
+in this example is called "slack_channel" but can be anything you like so long as it matches up ( you could
+have separate categories for "slack_group_dm", "slack_user" etc)
+
+```yaml title="Config Snippets"
+recipients:
+  - person: person.my_user
+    delivery:
+      slack:
+        target:
+           slack_channel: A20H2AN55DX
+delivery:
+  slack:
+      transport: generic
+      action: notify.my_slack_service
+      options:
+           target_categories: slack_channel
+```
+
+This can also be used in a notification call:
+
+```yaml title="Example Action Call"
+    - action: notify.supernotify
+      data:
+        message: "Notify via slack"
+        target:
+            slack_channel: #JH838434
+```
+
 ### Known Integrations
 
 Generic isn't completely a blank slate - it knows about the most common integration domains and will

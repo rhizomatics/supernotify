@@ -68,7 +68,7 @@ class GenericTransport(Transport):
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            # OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_DATA_KEYS_INCLUDE_RE: None,
             OPTION_DATA_KEYS_EXCLUDE_RE: None,
             OPTION_GENERIC_DOMAIN_STYLE: None,
@@ -145,8 +145,11 @@ class GenericTransport(Transport):
 
         if build_targets:
             all_targets: list[str] = []
-            for category in ensure_list(envelope.delivery.option(OPTION_TARGET_CATEGORIES)):
-                all_targets.extend(envelope.target.for_category(category))
+            if OPTION_TARGET_CATEGORIES in envelope.delivery.options:
+                for category in ensure_list(envelope.delivery.option(OPTION_TARGET_CATEGORIES)):
+                    all_targets.extend(envelope.target.for_category(category))
+            else:
+                all_targets = envelope.target.resolved_targets()
             if len(all_targets) == 1:
                 action_data[ATTR_TARGET] = all_targets[0]
             elif len(all_targets) >= 1:

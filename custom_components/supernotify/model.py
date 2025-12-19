@@ -237,6 +237,13 @@ class Target:
     def for_category(self, category: str) -> list[str]:
         return self.targets.get(category, [])
 
+    def resolved_targets(self) -> list[str]:
+        result: list[str] = []
+        for category, targets in self.targets.items():
+            if category not in self.INDIRECT_CATEGORIES:
+                result.extend(targets)
+        return result
+
     def hash_resolved(self) -> int:
         targets = []
         for category in self.targets:

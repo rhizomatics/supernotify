@@ -83,6 +83,24 @@ For this delivery, whatever the `message` on the notification, it will be replac
 
 For amending rather than overriding, see the [Alexa Whisper Recipe](../recipes/alexa_whisper.md) for an example of using `message_template` in a [Scenario](../usage/scenarios.md).
 
+## Controlling Targets
+
+For fine-grained control over how any targets pre-defined in a delivery are treated, for example when explicit
+targets provided in a notification action call, Delivery has an optional `target_usage` key, taking values of:
+
+- `no_action` - Only uses the Delivery target if there's no target on the notification action call
+- `no_delivery` - Only uses the Delivery target if there's no target applicable to this delivery
+- `merge_delivery`- Combines the targets in the Delivery with any on the action call, only where delivery already has a target
+- `merge_always` - Combines the targets in the Delivery with any on the action call, or if there's
+  no target on the notification, it defaults to the Delivery target
+- `fixed` - Only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
+
+Additionally, `target_required` defines if this delivery needs targets to work, and should be skipped if no targets
+are resolved as specific to it, for example based on the `target_categories` option to select by category. This has values:
+
+- `always` - Targets are mandatory, skip this delivery if no targets identified for it
+- `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adapter
+- `optional` - Don't require targets but still compute them and make them available for the notification
 
 ## Extreme Example
 
