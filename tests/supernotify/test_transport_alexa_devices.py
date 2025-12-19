@@ -33,7 +33,7 @@ async def test_notify_alexa(mock_hass, unmocked_config) -> None:  # type: ignore
         "notify",
         "send_message",
         service_data={"message": "hello there"},
-        target_data={
+        target={
             "entity_id": ["notify.bedroom_echo_announce"],
         },
         debug=False,

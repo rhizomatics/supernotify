@@ -1,5 +1,3 @@
-# mypy: disable-error-code="name-defined"
-
 import copy
 import logging
 import string

@@ -7,7 +7,9 @@
 - Generic Transport
   - Removed the default `entity_id` filter for `target_categories` option
   - Fixed the provision of targets where no `target_categories` defined - all targets supplied in one big list
-
+- Added Home Assistant quality score report and config file
+  - Replaced blocking PIL image operation and BS4 html parsing with wrapped async executor
+  - Set PARALLEL_UPDATE to 0 since no operations outside of existing HomeAssistant services
 ## 1.5.3
 ### Features
 - Chime alias error handling improved

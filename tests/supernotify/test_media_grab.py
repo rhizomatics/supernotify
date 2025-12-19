@@ -2,7 +2,6 @@ import io
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import Mock
 
 import aiofiles
 import anyio
@@ -13,13 +12,12 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
 )
-from homeassistant.helpers.entity_component import EntityComponent
 from PIL import Image, ImageChops
 from pytest_httpserver import BlockingHTTPServer
 
 from conftest import IMAGE_PATH, TestImage
 from custom_components.supernotify import PTZ_METHOD_FRIGATE
-from custom_components.supernotify.context import Context
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
     ReprocessOption,
     grab_image,
@@ -30,7 +28,8 @@ from custom_components.supernotify.media_grab import (
     snapshot_from_url,
 )
 from custom_components.supernotify.notification import Notification
-from tests.supernotify.doubles_lib import MockImageEntity
+
+from .hass_setup_lib import TestingContext
 
 LOSSY_FORMATS = ["jpeg"]
 UNLOSSY_FORMATS = ["png", "gif"]
@@ -38,13 +37,15 @@ UNLOSSY_FORMATS = ["png", "gif"]
 
 @pytest.mark.enable_socket
 async def test_snapshot_url_with_abs_path(
-    hass: HomeAssistant, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
+    unmocked_hass_api: HomeAssistantAPI, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
 ) -> None:
     media_path: Path = tmp_path / "media"
 
     snapshot_url = local_server.url_for("/snapshot_image")
     local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
-    retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", anyio.Path(media_path), None)
+    retrieved_image_path = await snapshot_from_url(
+        unmocked_hass_api, snapshot_url, "notify-uuid-1", anyio.Path(media_path), None
+    )
 
     assert retrieved_image_path is not None
     retrieved_image = Image.open(retrieved_image_path)
@@ -57,14 +58,14 @@ async def test_snapshot_url_with_abs_path(
 
 @pytest.mark.enable_socket
 async def test_snapshot_url_with_opts(
-    hass: HomeAssistant, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
+    unmocked_hass_api: HomeAssistantAPI, local_server: BlockingHTTPServer, sample_image: TestImage, tmp_path: Path
 ) -> None:
     media_path: Path = tmp_path / "media"
 
     snapshot_url = local_server.url_for("/snapshot_image")
     local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
     retrieved_image_path: Path | None = await snapshot_from_url(
-        hass,
+        unmocked_hass_api,
         snapshot_url,
         "notify-uuid-1",
         anyio.Path(media_path),
@@ -86,17 +87,19 @@ async def test_snapshot_url_with_opts(
         assert retrieved_image.info.get("comment") is None
 
 
-async def test_snapshot_url_with_broken_url(hass: HomeAssistant, tmp_path: Path) -> None:
+async def test_snapshot_url_with_broken_url(unmocked_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
     media_path: Path = tmp_path / "media"
     snapshot_url = "http://no-such-domain.local:9494/snapshot_image_hass"
-    retrieved_image_path = await snapshot_from_url(hass, snapshot_url, "notify-uuid-1", anyio.Path(media_path), None)
+    retrieved_image_path = await snapshot_from_url(
+        unmocked_hass_api, snapshot_url, "notify-uuid-1", anyio.Path(media_path), None
+    )
     assert retrieved_image_path is None
 
 
 @pytest.mark.parametrize(
     argnames="reprocess", argvalues=[ReprocessOption.ALWAYS, ReprocessOption.NEVER, ReprocessOption.PRESERVE]
 )
-async def test_snap_camera(hass, reprocess: ReprocessOption, tmp_path: Path) -> None:
+async def test_snap_camera(unmocked_hass_api, reprocess: ReprocessOption, tmp_path: Path) -> None:
     called_entity: str | None = None
     fixture_image_path: Path = IMAGE_PATH / "example_image.jpeg"
 
@@ -111,13 +114,13 @@ async def test_snap_camera(hass, reprocess: ReprocessOption, tmp_path: Path) -> 
             await file.write(buffer.getbuffer())
         return None
 
-    hass.services.async_register("camera", "snapshot", dummy_snapshot)
+    unmocked_hass_api._hass.services.async_register("camera", "snapshot", dummy_snapshot)
     jpeg_opts = {"progressive": True, "optimize": True, "comment": "xunit cam woz here"}
     if reprocess == ReprocessOption.PRESERVE:
         del jpeg_opts["comment"]
 
     image_path: Path | None = await snap_camera(
-        hass,
+        unmocked_hass_api,
         "camera.xunit",
         "notify-uuid-1",
         media_path=anyio.Path(tmp_path),
@@ -139,15 +142,12 @@ async def test_snap_camera(hass, reprocess: ReprocessOption, tmp_path: Path) -> 
         assert reprocessed_image.info.get("progressive") == 1
 
 
-async def test_snap_image_entity(mock_context: Context, sample_image: TestImage, tmp_path: Path) -> None:
-
-    image_entity = MockImageEntity(sample_image.path)
-    if mock_context.hass_api._hass:
-        mock_context.hass_api._hass.data["image"] = Mock(spec=EntityComponent)
-        mock_context.hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)
+async def test_snap_image_entity(
+    hass_api: HomeAssistantAPI, sample_image_entity_id: str, sample_image: TestImage, tmp_path: Path
+) -> None:
 
     snap_image_path = await snap_image_entity(
-        mock_context, "image.testing", media_path=anyio.Path(tmp_path), notification_id="notify_001"
+        hass_api, sample_image_entity_id, media_path=anyio.Path(tmp_path), notification_id="notify_001"
     )
     assert snap_image_path is not None
     retrieved_image = Image.open(snap_image_path)
@@ -160,32 +160,50 @@ async def test_snap_image_entity(mock_context: Context, sample_image: TestImage,
         assert diff.getbbox() is None
 
 
-async def test_grab_image(mock_context: Context, sample_image: TestImage, local_server: BlockingHTTPServer) -> None:
-    notification = Notification(mock_context, "Test Me 123")
-    result: Path | None = await grab_image(notification, "mail", mock_context)
-    assert result is None
+@pytest.mark.enable_socket
+async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
     local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
 
-    notification = Notification(mock_context, "Test Me 123", action_data={"media": {"snapshot_url": snapshot_url}})
-    result = await grab_image(notification, "mail", mock_context)
+    notification = Notification(ctx, "Test Me 123")
+    result: Path | None = await grab_image(notification, "mail", ctx)
+    assert result is None
+
+    notification = Notification(ctx, "Test Me 123", action_data={"media": {"snapshot_url": snapshot_url}})
+    result = await grab_image(notification, "mail", ctx)
     assert result is not None
     retrieved_image = Image.open(result)
     assert retrieved_image is not None  # images tested by lower funcs
 
 
 async def test_move_camera_onvif(mock_hass) -> None:
-    await move_camera_to_ptz_preset(mock_hass, "camera.xunit", preset="Upstairs")
+    hass_api = HomeAssistantAPI(mock_hass)
+    await move_camera_to_ptz_preset(hass_api, "camera.xunit", preset="Upstairs")
     mock_hass.services.async_call.assert_awaited_once_with(
-        "onvif", "ptz", service_data={"move_mode": "GotoPreset", "preset": "Upstairs"}, target={"entity_id": "camera.xunit"}
+        "onvif",
+        "ptz",
+        service_data={"move_mode": "GotoPreset", "preset": "Upstairs"},
+        target={"entity_id": "camera.xunit"},
+        blocking=True,
+        context=None,
+        return_response=False,
     )
 
 
 async def test_move_camera_frigate(mock_hass) -> None:
-    await move_camera_to_ptz_preset(mock_hass, "camera.xunit", preset="Upstairs", method=PTZ_METHOD_FRIGATE)
+    hass_api = HomeAssistantAPI(mock_hass)
+    await move_camera_to_ptz_preset(hass_api, "camera.xunit", preset="Upstairs", method=PTZ_METHOD_FRIGATE)
     mock_hass.services.async_call.assert_awaited_once_with(
-        "frigate", "ptz", service_data={"action": "preset", "argument": "Upstairs"}, target={"entity_id": "camera.xunit"}
+        "frigate",
+        "ptz",
+        service_data={"action": "preset", "argument": "Upstairs"},
+        target={"entity_id": "camera.xunit"},
+        blocking=True,
+        context=None,
+        return_response=False,
     )
 
 
@@ -211,19 +229,19 @@ def test_select_untracked_primary_camera(mock_hass) -> None:
     )
 
 
-def test_select_tracked_primary_camera(mock_hass) -> None:
-    mock_hass.states.is_state.side_effect = valid_state(["device_tracker.cam1"], [])
+def test_select_tracked_primary_camera(mock_hass_api) -> None:
+    mock_hass_api.is_state.side_effect = valid_state(["device_tracker.cam1"], [])
     assert (
-        select_avail_camera(mock_hass, {"camera.tracked": {"device_tracker": "device_tracker.cam1"}}, "camera.tracked")
+        select_avail_camera(mock_hass_api, {"camera.tracked": {"device_tracker": "device_tracker.cam1"}}, "camera.tracked")
         == "camera.tracked"
     )
 
 
-def test_no_select_unavail_primary_camera(mock_hass) -> None:
-    mock_hass.states.is_state.side_effect = valid_state([], ["device_tracker.cam1"])
+def test_no_select_unavail_primary_camera(mock_hass_api) -> None:
+    mock_hass_api.is_state.side_effect = valid_state([], ["device_tracker.cam1"])
     assert (
         select_avail_camera(
-            mock_hass,
+            mock_hass_api,
             {"camera.tracked": {"camera": "camera.tracked", "device_tracker": "device_tracker.cam1"}},
             "camera.tracked",
         )
@@ -231,14 +249,14 @@ def test_no_select_unavail_primary_camera(mock_hass) -> None:
     )
 
 
-def test_select_avail_alt_camera(mock_hass) -> None:
-    mock_hass.states.is_state.side_effect = valid_state(
+def test_select_avail_alt_camera(mock_hass_api) -> None:
+    mock_hass_api.is_state.side_effect = valid_state(
         ["device_tracker.altcam2"], ["device_tracker.cam1", "device_tracker.altcam1"]
     )
 
     assert (
         select_avail_camera(
-            mock_hass,
+            mock_hass_api,
             {
                 "camera.tracked": {
                     "camera": "camera.tracked",
@@ -254,13 +272,13 @@ def test_select_avail_alt_camera(mock_hass) -> None:
     )
 
 
-def test_select_untracked_alt_camera(mock_hass) -> None:
-    mock_hass.states.is_state.side_effect = valid_state(
+def test_select_untracked_alt_camera(mock_hass_api) -> None:
+    mock_hass_api.is_state.side_effect = valid_state(
         [], ["device_tracker.cam1", "device_tracker.altcam1", "device_tracker.altcam2"]
     )
     assert (
         select_avail_camera(
-            mock_hass,
+            mock_hass_api,
             {
                 "camera.tracked": {
                     "camera": "camera.tracked",

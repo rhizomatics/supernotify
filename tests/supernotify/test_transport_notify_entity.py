@@ -50,7 +50,7 @@ async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
         "notify",
         "send_message",
         service_data={ATTR_MESSAGE: "hello there", ATTR_TITLE: "testing"},
-        target_data={ATTR_ENTITY_ID: ["notify.pong"]},
+        target={ATTR_ENTITY_ID: ["notify.pong"]},
         debug=False,
     )
 

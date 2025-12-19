@@ -67,8 +67,8 @@ async def test_transport_setup(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert hass.states.get("supernotify.transport_chime").state == "on"  # type: ignore
     assert hass.states.get("supernotify.transport_generic").state == "on"  # type: ignore
-    assert hass.states.get("supernotify.transport_email").state == "off"
-    assert hass.states.get("supernotify.delivery_plain_email").state == "off"
+    assert hass.states.get("supernotify.transport_email").state == "off"  # type: ignore
+    assert hass.states.get("supernotify.delivery_plain_email").state == "off"  # type: ignore
     assert hass.states.get("supernotify.delivery_testing").state == "on"  # type: ignore
 
 
@@ -133,7 +133,7 @@ async def test_call_action(hass: HomeAssistant) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    assert notification["delivered_envelopes"]["generic"][0]["message"] == "unit test 9484"
+    assert notification["delivered_envelopes"]["generic"][0]["message"] == "unit test 9484"  # type: ignore
     assert notification["priority"] == "medium"
 
 
@@ -301,10 +301,10 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert notification is not None
-    assert "generic" not in notification["delivered_envelopes"]
+    assert "generic" not in notification["delivered_envelopes"]  # type: ignore[arg-type]
     assert len(notification["delivered_envelopes"].get("chime")) == 1  # type: ignore[arg-type]
     # type: ignore
-    assert notification["delivered_envelopes"]["chime"][0]["delivery_name"] == "chime_person"
+    assert notification["delivered_envelopes"]["chime"][0]["delivery_name"] == "chime_person"  # type: ignore[arg-type]
     assert not notification["undelivered_envelopes"]  # type: ignore[arg-type]
 
     hass.states.async_set("supernotify.transport_generic", "on")
@@ -394,7 +394,7 @@ async def test_template_delivery(hass: HomeAssistant) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    assert notification["delivered_envelopes"]["generic"][0]["message"] == "unit test 105"
+    assert notification["delivered_envelopes"]["generic"][0]["message"] == "unit test 105"  # type: ignore
     assert notification["priority"] == "high"
 
 
@@ -414,11 +414,11 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    assert isinstance(notification["delivered_envelopes"]["generic"], list)
+    assert isinstance(notification["delivered_envelopes"]["generic"], list)  # type: ignore
 
     delivered_chimes = [
         e
-        for e in notification["delivered_envelopes"]["chime"]
+        for e in notification["delivered_envelopes"]["chime"]  # type: ignore
         if e and isinstance(e, dict) and e.get("delivery_name", "") == "chime_person"
     ]
     assert len(delivered_chimes) == 1

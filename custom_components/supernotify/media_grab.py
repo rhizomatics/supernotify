@@ -7,16 +7,14 @@ from enum import StrEnum, auto
 from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiofiles
 import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
-from aiohttp import ClientTimeout
+from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from homeassistant.const import STATE_HOME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from PIL import Image
 
 from custom_components.supernotify import (
@@ -56,7 +54,7 @@ class ReprocessOption(StrEnum):
 
 
 async def snapshot_from_url(
-    hass: HomeAssistant | None,
+    hass_api: HomeAssistantAPI,
     snapshot_url: str,
     notification_id: str,
     media_path: anyio.Path,
@@ -67,8 +65,6 @@ async def snapshot_from_url(
     png_opts: dict[str, Any] | None = None,
 ) -> Path | None:
     hass_base_url = hass_base_url or ""
-    if not hass:
-        raise ValueError("HomeAssistant not available")
     try:
         media_dir: anyio.Path = anyio.Path(media_path) / "snapshot"
         await media_dir.mkdir(parents=True, exist_ok=True)
@@ -77,14 +73,20 @@ async def snapshot_from_url(
             image_url = snapshot_url
         else:
             image_url = f"{hass_base_url}{snapshot_url}"
-        websession = async_get_clientsession(hass)
-        r = await websession.get(image_url, timeout=ClientTimeout(total=remote_timeout))
+        websession: ClientSession = hass_api.http_session()
+        r: ClientResponse = await websession.get(image_url, timeout=ClientTimeout(total=remote_timeout))
         if r.status != HTTPStatus.OK:
             _LOGGER.warning("SUPERNOTIFY Unable to retrieve %s: %s", image_url, r.status)
         else:
             bitmap: bytes | None = await r.content.read()
             image_path: anyio.Path | None = await write_image_from_bitmap(
-                bitmap, media_path, notification_id, reprocess=reprocess, jpeg_opts=jpeg_opts, png_opts=png_opts
+                hass_api,
+                bitmap,
+                media_path,
+                notification_id,
+                reprocess=reprocess,
+                jpeg_opts=jpeg_opts,
+                png_opts=png_opts,
             )
             if image_path:
                 _LOGGER.debug("SUPERNOTIFY Fetched image from %s to %s", image_url, image_path)
@@ -92,33 +94,34 @@ async def snapshot_from_url(
 
         _LOGGER.warning("SUPERNOTIFY Failed to snap image from %s", snapshot_url)
     except Exception as e:
-        _LOGGER.error("SUPERNOTIFY Image snap fail: %s", e)
+        _LOGGER.exception("SUPERNOTIFY Image snap fail: %s", e)
 
     return None
 
 
 async def move_camera_to_ptz_preset(
-    hass: HomeAssistant, camera_entity_id: str, preset: str | int, method: str = PTZ_METHOD_ONVIF
+    hass_api: HomeAssistantAPI, camera_entity_id: str, preset: str | int, method: str = PTZ_METHOD_ONVIF
 ) -> None:
     try:
         _LOGGER.info("SUPERNOTIFY Executing PTZ by %s to %s for %s", method, preset, camera_entity_id)
         if method == PTZ_METHOD_FRIGATE:
-            await hass.services.async_call(
+            await hass_api.call_service(
                 "frigate",
                 "ptz",
                 service_data={"action": "preset", "argument": preset},
-                target={
-                    "entity_id": camera_entity_id,
-                },
+                target={"entity_id": camera_entity_id},
+                return_response=False,
+                blocking=True,
             )
+
         elif method == PTZ_METHOD_ONVIF:
-            await hass.services.async_call(
+            await hass_api.call_service(
                 "onvif",
                 "ptz",
                 service_data={"move_mode": "GotoPreset", "preset": preset},
-                target={
-                    "entity_id": camera_entity_id,
-                },
+                target={"entity_id": camera_entity_id},
+                return_response=False,
+                blocking=True,
             )
         else:
             _LOGGER.warning("SUPERNOTIFY Unknown PTZ method %s", method)
@@ -127,7 +130,7 @@ async def move_camera_to_ptz_preset(
 
 
 async def snap_image_entity(
-    context: Context,
+    hass_api: HomeAssistantAPI,
     entity_id: str,
     media_path: anyio.Path,
     notification_id: str,
@@ -138,14 +141,17 @@ async def snap_image_entity(
     """Use for any image, including MQTT Image"""
     image_path: anyio.Path | None = None
     try:
-        image_entity: ImageEntity | None = None
-        if context.hass_api._hass:
-            # TODO: must be a better hass method than this
-            image_entity = context.hass_api._hass.data["image"].get_entity(entity_id)
+        image_entity: ImageEntity | None = cast("ImageEntity|None", hass_api.domain_entity("image", entity_id))
         if image_entity:
             bitmap: bytes | None = await image_entity.async_image()
             image_path = await write_image_from_bitmap(
-                bitmap, media_path, notification_id, reprocess=reprocess, jpeg_opts=jpeg_opts, png_opts=png_opts
+                hass_api,
+                bitmap,
+                media_path,
+                notification_id,
+                reprocess=reprocess,
+                jpeg_opts=jpeg_opts,
+                png_opts=png_opts,
             )
     except Exception as e:
         _LOGGER.warning("SUPERNOTIFY Unable to snap image %s: %s", entity_id, e)
@@ -155,7 +161,7 @@ async def snap_image_entity(
 
 
 async def snap_camera(
-    hass: HomeAssistant,
+    hass_api: HomeAssistantAPI,
     camera_entity_id: str,
     notification_id: str,
     media_path: anyio.Path,
@@ -174,8 +180,12 @@ async def snap_camera(
         await media_dir.mkdir(parents=True, exist_ok=True)
         timed = str(time.time()).replace(".", "_")
         image_path = Path(media_dir) / f"{camera_entity_id}_{timed}.jpg"
-        await hass.services.async_call(
-            "camera", "snapshot", service_data={"entity_id": camera_entity_id, "filename": image_path}
+        await hass_api.call_service(
+            "camera",
+            "snapshot",
+            service_data={"entity_id": camera_entity_id, "filename": image_path},
+            return_response=False,
+            blocking=True,
         )
 
         # give async service time
@@ -188,7 +198,13 @@ async def snap_camera(
             async with await anyio.Path(image_path).open("rb") as f:
                 bitmap: bytes | None = await f.read()
                 async_path: anyio.Path | None = await write_image_from_bitmap(
-                    bitmap, media_path, notification_id, reprocess=reprocess, jpeg_opts=jpeg_opts, png_opts=png_opts
+                    hass_api,
+                    bitmap,
+                    media_path,
+                    notification_id,
+                    reprocess=reprocess,
+                    jpeg_opts=jpeg_opts,
+                    png_opts=png_opts,
                 )
                 if async_path:
                     image_path = Path(async_path)
@@ -202,7 +218,7 @@ async def snap_camera(
     return image_path
 
 
-def select_avail_camera(hass: HomeAssistant, cameras: dict[str, Any], camera_entity_id: str) -> str | None:
+def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], camera_entity_id: str) -> str | None:
     avail_camera_entity_id: str | None = None
 
     try:
@@ -211,7 +227,7 @@ def select_avail_camera(hass: HomeAssistant, cameras: dict[str, Any], camera_ent
         if not preferred_cam or not preferred_cam.get(CONF_DEVICE_TRACKER):
             # assume unconfigured camera, or configured without tracker, available
             avail_camera_entity_id = camera_entity_id
-        elif hass.states.is_state(preferred_cam[CONF_DEVICE_TRACKER], STATE_HOME):
+        elif hass_api.is_state(preferred_cam[CONF_DEVICE_TRACKER], STATE_HOME):
             avail_camera_entity_id = camera_entity_id
         else:
             alt_cams_with_tracker = [
@@ -221,7 +237,7 @@ def select_avail_camera(hass: HomeAssistant, cameras: dict[str, Any], camera_ent
             ]
             for alt_cam in alt_cams_with_tracker:
                 tracker_entity_id = alt_cam.get(CONF_DEVICE_TRACKER)
-                if tracker_entity_id and hass.states.is_state(tracker_entity_id, STATE_HOME):
+                if tracker_entity_id and hass_api.is_state(tracker_entity_id, STATE_HOME):
                     avail_camera_entity_id = alt_cam[CONF_CAMERA]
                     _LOGGER.info(
                         "SUPERNOTIFY Selecting available camera %s rather than %s", avail_camera_entity_id, camera_entity_id
@@ -244,7 +260,7 @@ def select_avail_camera(hass: HomeAssistant, cameras: dict[str, Any], camera_ent
             for c in cameras.values():
                 if c.get(CONF_DEVICE_TRACKER):
                     _LOGGER.debug(
-                        "SUPERNOTIFY Tracker %s: %s", c.get(CONF_DEVICE_TRACKER), hass.states.get(c[CONF_DEVICE_TRACKER])
+                        "SUPERNOTIFY Tracker %s: %s", c.get(CONF_DEVICE_TRACKER), hass_api.get_state(c[CONF_DEVICE_TRACKER])
                     )
 
     except Exception as e:
@@ -281,7 +297,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         return notification.snapshot_image_path  # type: ignore
     if snapshot_url and media_path and context.hass_api:
         image_path = await snapshot_from_url(
-            context.hass_api._hass,
+            context.hass_api,
             snapshot_url,
             notification.id,
             media_path,
@@ -290,9 +306,9 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             jpeg_opts=jpeg_opts,
             png_opts=png_opts,
         )
-    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass_api._hass and media_path:
+    elif camera_entity_id and camera_entity_id.startswith("image.") and context.hass_api and media_path:
         image_path = await snap_image_entity(
-            context,
+            context.hass_api,
             camera_entity_id,
             media_path,
             notification.id,
@@ -301,10 +317,10 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             png_opts=png_opts,
         )
     elif camera_entity_id:
-        if not context.hass_api._hass or not media_path:
+        if not context.hass_api or not media_path:
             _LOGGER.warning("SUPERNOTIFY No HA ref or media path for camera %s", camera_entity_id)
             return None
-        active_camera_entity_id = select_avail_camera(context.hass_api._hass, context.cameras, camera_entity_id)
+        active_camera_entity_id = select_avail_camera(context.hass_api, context.cameras, camera_entity_id)
         if active_camera_entity_id:
             camera_config = context.cameras.get(active_camera_entity_id, {})
             camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
@@ -320,13 +336,13 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             )
             if camera_ptz_preset:
                 await move_camera_to_ptz_preset(
-                    context.hass_api._hass, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
+                    context.hass_api, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
                 )
             if camera_delay:
                 _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
                 await asyncio.sleep(camera_delay)
             image_path = await snap_camera(
-                context.hass_api._hass,
+                context.hass_api,
                 active_camera_entity_id,
                 notification.id,
                 reprocess=reprocess,
@@ -337,7 +353,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             )
             if camera_ptz_preset and camera_ptz_preset_default:
                 await move_camera_to_ptz_preset(
-                    context.hass_api._hass, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
+                    context.hass_api, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
                 )
 
     if image_path is None:
@@ -349,6 +365,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
 
 
 async def write_image_from_bitmap(
+    hass_api: HomeAssistantAPI,
     bitmap: bytes | None,
     media_path: anyio.Path,
     notification_id: str,
@@ -366,8 +383,9 @@ async def write_image_from_bitmap(
         if not await media_dir.exists():
             await media_dir.mkdir(parents=True, exist_ok=True)
 
-        image: Image.Image = Image.open(io.BytesIO(bitmap))
-        input_format = image.format.lower() if image.format else "img"
+        image = await hass_api.create_job(Image.open, io.BytesIO(bitmap))
+
+        input_format: str = image.format.lower() if image.format else "img"
         if reprocess == ReprocessOption.ALWAYS:
             # rewrite to remove metadata, incl custom CCTV comments that confusie python MIMEImage
             clean_image: Image.Image = Image.new(image.mode, image.size)

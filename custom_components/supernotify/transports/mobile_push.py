@@ -1,8 +1,9 @@
 import logging
+import time
 from datetime import timedelta
 from typing import Any
 
-import httpx
+from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
 from homeassistant.components.notify.const import ATTR_DATA
 
@@ -45,6 +46,7 @@ class MobilePushTransport(Transport):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.action_titles: dict[str, str] = {}
+        self.action_title_failures: dict[str, float] = {}
 
     @property
     def default_config(self) -> TransportConfig:
@@ -86,18 +88,27 @@ class MobilePushTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
-    async def action_title(self, url: str) -> str | None:
+    async def action_title(self, url: str, retry_timeout: int = 900) -> str | None:
+        """Attempt to create a title for mobile action from the TITLE of the web page at the URL"""
         if url in self.action_titles:
             return self.action_titles[url]
+        if url in self.action_title_failures:
+            # don't retry too often
+            if time.time() - self.action_title_failures[url] < retry_timeout:
+                _LOGGER.debug("SUPERNOTIFY skipping retry after previous failure to retrieve url title for ", url)
+                return None
         try:
-            async with httpx.AsyncClient(timeout=httpx.Timeout(timeout=5.0)) as client:
-                resp: httpx.Response = await client.get(url, follow_redirects=True, timeout=5)
-            html = BeautifulSoup(resp.text, features="html.parser")
+            websession: ClientSession = self.context.hass_api.http_session()
+            resp: ClientResponse = await websession.get(url, timeout=ClientTimeout(total=5.0))
+            body = await resp.content.read()
+            # wrap heavy bs4 parsing in a job to avoid blocking the event loop
+            html = await self.context.hass_api.create_job(BeautifulSoup, body, "html.parser")
             if html.title and html.title.string:
                 self.action_titles[url] = html.title.string
                 return html.title.string
         except Exception as e:
-            _LOGGER.debug("SUPERNOTIFY failed to retrieve url title at %s: %s", url, e)
+            _LOGGER.warning("SUPERNOTIFY failed to retrieve url title at %s: %s", url, e)
+            self.action_title_failures[url] = time.time()
         return None
 
     async def deliver(self, envelope: Envelope) -> bool:

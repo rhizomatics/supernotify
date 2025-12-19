@@ -6,6 +6,7 @@ from ssl import SSLContext
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
 import pytest
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
@@ -19,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceRegistry, State, StateMachine, SupportsResponse, callback
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.template import Template
@@ -38,9 +40,18 @@ from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
+from tests.supernotify.doubles_lib import MockImageEntity
 from tests.supernotify.hass_setup_lib import MockableHomeAssistant
 
 IMAGE_PATH: Path = Path("tests") / "supernotify" / "fixtures" / "media"
+
+
+@dataclass
+class TestImage:
+    contents: bytes
+    path: Path
+    ext: str
+    mime_type: str
 
 
 class MockAction(BaseNotificationService):
@@ -133,11 +144,24 @@ def mock_delivery_registry() -> DeliveryRegistry:
 
 
 @pytest.fixture
+def hass_api(hass: HomeAssistant, sample_image: TestImage) -> HomeAssistantAPI:
+    image_entity = MockImageEntity(sample_image.path)
+    hass_api = HomeAssistantAPI(hass)
+    hass_api._hass.data["image"] = Mock(spec=EntityComponent)  # type: ignore[attr-defined,union-attr]
+    hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)  # type: ignore[attr-defined,union-attr]
+    return hass_api
+
+
+@pytest.fixture
 def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked = AsyncMock(spec=HomeAssistantAPI)
     mocked._hass = mock_hass
     mocked._hass.get_state = Mock(return_value=Mock(spec=State))
     mocked.template = Mock(return_value=Mock(spec=Template))
+    mock_http_session: AsyncMock = AsyncMock(spec=aiohttp.ClientSession)
+    mock_http_session.get = AsyncMock()
+    mocked.http_session.return_value = mock_http_session
+    mocked.create_job = AsyncMock()
     return mocked
 
 
@@ -173,18 +197,17 @@ def mock_context(
     return context
 
 
-@dataclass
-class TestImage:
-    contents: bytes
-    path: Path
-    ext: str
-    mime_type: str
-
-
 @pytest.fixture(scope="module", params=["jpeg", "png", "gif"])
 def sample_image(request) -> TestImage:
     path = IMAGE_PATH / f"example_image.{request.param}"
     return TestImage(io.FileIO(path, "rb").readall(), path, request.param, f"image/{request.param}")
+
+
+@pytest.fixture
+def sample_image_entity_id(mock_hass_api: HomeAssistantAPI, sample_image: TestImage) -> str:
+    image_entity = MockImageEntity(sample_image.path)
+    mock_hass_api.domain_entity.return_value = Mock(return_value=image_entity)  # type: ignore[attr-defined]
+    return "image.testing"
 
 
 @pytest.fixture
@@ -211,6 +234,11 @@ def mock_transport() -> AsyncMock:
 @pytest.fixture
 def dummy_scenario(mock_hass_api) -> Scenario:
     return Scenario("mockery", {}, mock_hass_api)
+
+
+@pytest.fixture
+def unmocked_hass_api(hass: HomeAssistant) -> HomeAssistantAPI:
+    return HomeAssistantAPI(hass)
 
 
 @pytest.fixture

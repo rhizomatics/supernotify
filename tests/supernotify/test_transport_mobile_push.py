@@ -266,8 +266,11 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
     assert notification["undelivered_envelopes"]["mobile_push"][0]["data"]["clickAction"] == "android_something"
 
 
-async def test_action_title(mock_hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:
-    uut = MobilePushTransport(unmocked_config)
+async def test_action_title(hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:
+    ctx = TestingContext(homeassistant=hass, transport_types=[MobilePushTransport])
+    await ctx.test_initialize()
+    uut: MobilePushTransport = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
     action_url = local_server.url_for("/action_goes_here")
     local_server.expect_oneshot_request("/action_goes_here").respond_with_data(
         "<html><title>my old action page</title><html>", content_type="text/html"

@@ -12,12 +12,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -28,6 +23,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -552,31 +548,66 @@ class SupernotifyAction(BaseNotificationService):
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
 
+    def expose_entity(
+        self,
+        entity_id: str,
+        state: str,
+        attributes: dict[str, Any],
+        original_icon: str | None,
+        entity_registry: er.EntityRegistry | None,
+    ) -> None:
+        """Expose a technical entity in Home Assistant representing internal state and attributes"""
+        if entity_registry is not None:
+            try:
+                entity_registry.async_get_or_create(
+                    Platform.NOTIFY, DOMAIN, entity_id, entity_category=EntityCategory.DIAGNOSTIC, original_icon=original_icon
+                )
+            except Exception as e:
+                _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_id, e)
+                # continue anyway even if not registered as state is independent of entity
+        self.hass.states.async_set(entity_id, state, attributes)
+        self.exposed_entities.append(entity_id)
+
     def expose_entities(self) -> None:
         # Create on the fly entities for key internal config and state
-
+        ent_reg: er.EntityRegistry | None = self.context.hass_api.entity_registry()
+        if ent_reg is None:
+            _LOGGER.error("SUPERNOTIFY Unable to access entity registry to expose entities")
+            return
         for scenario in self.context.scenario_registry.scenarios.values():
-            self.hass.states.async_set(
-                f"{DOMAIN}.scenario_{scenario.name}", STATE_UNKNOWN, scenario.attributes(include_condition=False)
+            self.expose_entity(
+                f"{DOMAIN}.scenario_{scenario.name}",
+                state=STATE_UNKNOWN,
+                attributes=scenario.attributes(include_condition=False),
+                original_icon="mdi:assignment",
+                entity_registry=ent_reg,
             )
-            self.exposed_entities.append(f"{DOMAIN}.scenario_{scenario.name}")
         for transport in self.context.delivery_registry.transports.values():
-            self.hass.states.async_set(
+            self.expose_entity(
                 f"{DOMAIN}.transport_{transport.name}",
-                STATE_ON if transport.override_enabled else STATE_OFF,
-                transport.attributes(),
+                state=STATE_ON if transport.override_enabled else STATE_OFF,
+                attributes=transport.attributes(),
+                original_icon="mdi:delivery-truck-speed",
+                entity_registry=ent_reg,
             )
-            self.exposed_entities.append(f"{DOMAIN}.transport_{transport.name}")
-        for delivery_name, delivery in self.context.delivery_registry.deliveries.items():
-            self.hass.states.async_set(
-                f"{DOMAIN}.delivery_{delivery.name}", STATE_ON if delivery.enabled else STATE_OFF, delivery.attributes()
+
+        for delivery in self.context.delivery_registry.deliveries.values():
+            self.expose_entity(
+                f"{DOMAIN}.delivery_{delivery.name}",
+                state=STATE_ON if delivery.enabled else STATE_OFF,
+                attributes=delivery.attributes(),
+                original_icon="mdi:package_2",
+                entity_registry=ent_reg,
             )
-            self.exposed_entities.append(f"{DOMAIN}.delivery_{delivery_name}")
+
         for recipient in self.context.people_registry.people.values():
-            self.hass.states.async_set(
-                f"{DOMAIN}.{recipient.name}", STATE_ON if recipient.enabled else STATE_OFF, recipient.attributes()
+            self.expose_entity(
+                f"{DOMAIN}.{recipient.name}",
+                state=STATE_ON if recipient.enabled else STATE_OFF,
+                attributes=recipient.attributes(),
+                original_icon="mdi:inbox_text_person",
+                entity_registry=ent_reg,
             )
-            self.exposed_entities.append(f"{DOMAIN}.{recipient.name}")
 
     def enquire_implicit_deliveries(self) -> dict[str, Any]:
         v: dict[str, list[str]] = {}

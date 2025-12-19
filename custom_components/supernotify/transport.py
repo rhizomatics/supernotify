@@ -1,5 +1,3 @@
-# mypy: disable-error-code="name-defined"
-
 import logging
 import time
 from abc import abstractmethod
@@ -124,7 +122,7 @@ class Transport:
         return attrs
 
     @abstractmethod
-    async def deliver(self, envelope: "Envelope") -> bool:  # noqa: F821 # type: ignore
+    async def deliver(self, envelope: "Envelope") -> bool:  # type: ignore # noqa: F821
         """Delivery implementation
 
         Args:
@@ -140,7 +138,7 @@ class Transport:
 
     async def call_action(
         self,
-        envelope: "Envelope",  # noqa: F821 # type: ignore
+        envelope: "Envelope",  # type: ignore # noqa: F821
         qualified_action: str | None = None,
         action_data: dict[str, Any] | None = None,
         target_data: dict[str, Any] | None = None,
@@ -183,7 +181,7 @@ class Transport:
                 # home-assistant messes with the service_data passed by ref
                 service_data_as_sent = dict(action_data)
                 service_response = await self.hass_api.call_service(
-                    domain, service, service_data=action_data, target_data=target_data, debug=delivery.debug
+                    domain, service, service_data=action_data, target=target_data, debug=delivery.debug
                 )
                 envelope.calls.append(
                     CallRecord(

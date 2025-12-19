@@ -4,9 +4,17 @@ import logging
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    import asyncio
+    from collections.abc import Callable
+
+    import aiohttp
+    from homeassistant.core import HomeAssistant, Service
+    from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.typing import ConfigType
+
 import re
 from typing import cast
 
@@ -46,7 +54,8 @@ if TYPE_CHECKING:
 
     from homeassistant.core import ServiceResponse, State
 
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.network import get_url
 
 from . import DOMAIN, ConditionsFunc
@@ -62,12 +71,12 @@ _LOGGER = logging.getLogger(__name__)
 
 class HomeAssistantAPI:
     def __init__(self, hass: HomeAssistant | None = None) -> None:
-        self._hass = hass
+        self._hass: HomeAssistant | None = hass
         self.internal_url: str = ""
         self.external_url: str = ""
         self.hass_name: str = "!UNDEFINED!"
-        self._entity_registry: entity_registry.EntityRegistry | None = None
-        self._device_registry: device_registry.DeviceRegistry | None = None
+        self._entity_registry: er.EntityRegistry | None = None
+        self._device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
 
     def initialize(self) -> None:
@@ -104,6 +113,11 @@ class HomeAssistantAPI:
             return None
         return self._hass.states.get(entity_id)
 
+    def is_state(self, entity_id: str, state: str) -> bool:
+        if not self._hass:
+            return False
+        return self._hass.states.is_state(entity_id, state)
+
     def set_state(self, entity_id: str, state: str) -> None:
         if not self._hass:
             return
@@ -122,39 +136,41 @@ class HomeAssistantAPI:
             return self._hass.states.async_entity_ids(domain)
         return []
 
+    def domain_entity(self, domain: str, entity_id: str) -> Entity | None:
+        if self._hass is None:
+            return None
+        # TODO: must be a better hass method than this
+        return self._hass.data.get(domain, {}).get_entity(entity_id)
+
+    def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
+        """Wrap a blocking function call in a HomeAssistant awaitable job"""
+        if not self._hass:
+            raise ValueError("HomeAssistant not available")
+        return self._hass.async_add_executor_job(func, *args)
+
     async def call_service(
         self,
         domain: str,
         service: str,
         service_data: dict[str, Any] | None = None,
-        target_data: dict[str, Any] | None = None,
+        target: dict[str, Any] | None = None,
+        return_response: bool | None = None,
+        blocking: bool | None = None,
         debug: bool = False,
     ) -> ServiceResponse | None:
         if not self._hass:
             raise ValueError("HomeAssistant not available")
-        return_response: bool = debug
-        blocking: bool = debug
-        try:
-            if (domain, service) not in self._service_info:
-                service_objs = self._hass.services.async_services()
-                service_obj = service_objs.get(domain, {}).get(service)
-                if service_obj:
-                    self._service_info[domain, service] = {
-                        "supports_response": service_obj.supports_response,
-                        "schema": service_obj.schema,
-                    }
-            service_info = self._service_info.get((domain, service), {})
-            supports_response = service_info.get("supports_response")
-            if supports_response is not None:
-                if supports_response == SupportsResponse.NONE:
-                    return_response = False
-                elif supports_response == SupportsResponse.ONLY:
-                    return_response = True
-            else:
-                _LOGGER.debug("SUPERNOTIFY Unable to find service info for %s.%s", domain, service)
 
-        except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
+        if return_response is None or blocking is None:
+            # unknown service, for example defined in generic action, check if it supports response
+            supports_response: SupportsResponse = self.service_info(domain, service)
+            if supports_response == SupportsResponse.NONE:
+                return_response = False
+            elif supports_response == SupportsResponse.ONLY:
+                return_response = True
+            else:
+                return_response = debug
+            blocking = return_response or debug
 
         response: ServiceResponse | None = await self._hass.services.async_call(
             domain,
@@ -162,12 +178,40 @@ class HomeAssistantAPI:
             service_data=service_data,
             blocking=blocking,
             context=None,
-            target=target_data,
+            target=target,
             return_response=return_response,
         )
         if response is not None and debug:
             _LOGGER.info("SUPERNOTIFY Service %s.%s response: %s", domain, service, response)
         return response
+
+    def service_info(self, domain: str, service: str) -> SupportsResponse:
+        if self._hass is None:
+            raise ValueError("HomeAssistant not available")
+
+        try:
+            if (domain, service) not in self._service_info:
+                service_objs: dict[str, dict[str, Service]] = self._hass.services.async_services()
+                service_obj: Service | None = service_objs.get(domain, {}).get(service)
+                if service_obj:
+                    self._service_info[domain, service] = {
+                        "supports_response": service_obj.supports_response,
+                        "schema": service_obj.schema,
+                    }
+            service_info: dict[str, Any] = self._service_info.get((domain, service), {})
+            supports_response: SupportsResponse | None = service_info.get("supports_response")
+            if supports_response is None:
+                _LOGGER.debug("SUPERNOTIFY Unable to find service info for %s.%s", domain, service)
+
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
+        return supports_response or SupportsResponse.NONE  # default to no response
+
+    def http_session(self) -> aiohttp.ClientSession:
+        """Client aiohttp session for async web requests"""
+        if self._hass is None:
+            raise ValueError("HomeAssistant not available")
+        return async_get_clientsession(self._hass)
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         if self._hass is None:
@@ -349,7 +393,7 @@ class HomeAssistantAPI:
             )
         return verified_domain
 
-    def entity_registry(self) -> entity_registry.EntityRegistry | None:
+    def entity_registry(self) -> er.EntityRegistry | None:
         """Hass entity registry is weird, every component ends up creating its own, with a store, subscribing
         to all entities, so do it once here
         """  # noqa: D205
@@ -357,12 +401,12 @@ class HomeAssistantAPI:
             return self._entity_registry
         if self._hass:
             try:
-                self._entity_registry = entity_registry.async_get(self._hass)
+                self._entity_registry = er.async_get(self._hass)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
         return self._entity_registry
 
-    def device_registry(self) -> device_registry.DeviceRegistry | None:
+    def device_registry(self) -> dr.DeviceRegistry | None:
         """Hass device registry is weird, every component ends up creating its own, with a store, subscribing
         to all devices, so do it once here
         """  # noqa: D205
@@ -370,7 +414,7 @@ class HomeAssistantAPI:
             return self._device_registry
         if self._hass:
             try:
-                self._device_registry = device_registry.async_get(self._hass)
+                self._device_registry = dr.async_get(self._hass)
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry
