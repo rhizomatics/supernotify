@@ -121,7 +121,7 @@ async def async_get_service(
     #            raise
 
     hass.states.async_set(
-        f"{DOMAIN}.configured",
+        f"sensor.{DOMAIN}_configuration",
         "True",
         {
             CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
@@ -141,8 +141,8 @@ async def async_get_service(
             CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
         },
     )
-    hass.states.async_set(f"{DOMAIN}.failures", "0")
-    hass.states.async_set(f"{DOMAIN}.sent", "0")
+    hass.states.async_set(f"sensor.{DOMAIN}_failures", "0")
+    hass.states.async_set(f"sensor.{DOMAIN}_notifications", "0")
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     service = SupernotifyAction(
@@ -435,7 +435,7 @@ class SupernotifyAction(BaseNotificationService):
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1
-                self.hass.states.async_set(f"{DOMAIN}.sent", str(self.sent))
+                self.hass.states.async_set(f"sensor.{DOMAIN}_notifications", str(self.sent))
             elif notification.errored:
                 _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
             else:
@@ -457,7 +457,7 @@ class SupernotifyAction(BaseNotificationService):
             self.failures += 1
             if notification is not None:
                 notification.delivery_error = format_exception(err)
-            self.hass.states.async_set(f"{DOMAIN}.failures", str(self.failures))
+            self.hass.states.async_set(f"sensor.{DOMAIN}_failures", str(self.failures))
 
         if notification is None:
             _LOGGER.warning("SUPERNOTIFY NULL Notification, %s", message)
