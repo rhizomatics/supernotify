@@ -18,13 +18,14 @@ tags:
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------|--------------|-------------------------------------------------------------|
 | `generic`    | :material-github:[`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | -            | *Any Home Assistant action from core or custom integration* |
 
-Use to call any actiom, including 'legacy' Notification action (previously known in Home Assistant as 'service' ), that is one not using the newer `NotifyEntity` model. It can be used for simple calls,
-or as a "toolbox" for more complex needs.
+Use this transport to call *any* action, including 'legacy' Notification action (previously known in Home Assistant as 'service' ) and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is
+plug in an action, or as a "toolbox" for more complex needs. 
+
+To make life easier, its not entirely a blank slate, and knows about the appropriate `data` sections for most of the common options - see [Known Integrations](#known-integrations) for more.
 
 ### Notify Actions
 
-If an action is in then `notify` domain, then `message`,`title`,`target` and `data` will be
-passed in the Action (Service) Data.
+If an action is in then `notify` domain, then `message`,`title`,`target` and `data` will be passed in the Action (Service) Data.
 
 ```yaml title="Example Configuration"
 delivery:
@@ -173,4 +174,4 @@ delivery:
 
 
 !!! tip
-    If using Generic to trigger bells, sirens or other noises, consider the [Chime Transport Adaptor](chime.md), which makes that easier, especially if working with a mix of audio devices.
+    If using Generic to trigger bells, sirens or other noises, consider the [Chime Transport Adaptor](chime.md), which makes that easier, especially if working with a mix of audio devices. It has a similar set of known integrations, geared towards sounds rather than messages.
