@@ -1,6 +1,6 @@
 # Public releases
 
-## 1.5.4
+## 1.6.0
 ### Changes
 - Exposed entities are now correctly named in the `binary_sensor` platform rather than inventing a new one
 - Configuration technical entity now replaced with a `enquire_configuration` service
