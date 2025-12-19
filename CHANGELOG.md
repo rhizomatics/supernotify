@@ -19,6 +19,8 @@
   - Moved tests to `tests.components.supernotify`
   - Removed lots of pointless checks on HA presence in `hass_api`
   - Replaced `ValueError` with `ServiceValidationError` and `HomeAssistantError` for HA compatibility
+- Recipient
+  - Removed shadow state, now goes straight to Person
 ## 1.5.3
 ### Features
 - Chime alias error handling improved

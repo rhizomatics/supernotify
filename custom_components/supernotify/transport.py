@@ -12,7 +12,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
 )
-from homeassistant.exceptions import ConfigValidationError
+from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -66,7 +66,7 @@ class Transport:
     async def initialize(self) -> None:
         """Async post-construction initialization"""
         if self.name is None:
-            raise ConfigValidationError("No transport configured")
+            raise IntegrationError("Invalid nameless transport adaptor subclass")
 
         if self.device_discovery:
             for domain in self.device_domain:

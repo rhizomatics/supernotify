@@ -1,16 +1,19 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.person.const import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    ATTR_STATE,
     CONF_ALIAS,
     CONF_DEVICE_ID,
     CONF_ENABLED,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityCategory,
 )
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.util import slugify
@@ -60,6 +63,12 @@ _LOGGER = logging.getLogger(__name__)
 class Recipient:
     """Recipient to distinguish from the native HA Person"""
 
+    # for future native entity use
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_name = "Recipient"
+    _attr_icon = "mdi:inbox_text_person"
+
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
         self.entity_id = config[CONF_PERSON]
@@ -67,8 +76,8 @@ class Recipient:
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)
         self.phone_number: str | None = config.get(CONF_PHONE_NUMBER)
+        # test support only
         self.user_id: str | None = config.get(ATTR_USER_ID)
-        self.state: str | None = config.get(ATTR_STATE)
 
         self._target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
         self.delivery: dict[str, DeliveryCustomization] = {
@@ -115,7 +124,7 @@ class Recipient:
         return recipient_target
 
     def as_dict(self, occupancy_only: bool = False, **_kwargs: Any) -> dict[str, Any]:
-        result = {CONF_PERSON: self.entity_id, CONF_ENABLED: self.enabled, ATTR_STATE: self.state}
+        result = {CONF_PERSON: self.entity_id, CONF_ENABLED: self.enabled}
         if not occupancy_only:
             result.update({
                 CONF_ALIAS: self.alias,
@@ -228,27 +237,22 @@ class PeopleRegistry:
         _LOGGER.warning("SUPERNOTIFY Unknown occupancy tested: %s", delivery_occupancy)
         return []
 
-    def refresh_tracker_state(self) -> None:
-        for person_id, person_config in self.people.items():
-            # TODO: possibly rate limit this
-            if person_config.enabled:
-                try:
-                    tracker: State | None = self.hass_api.get_state(person_id)
-                    if tracker is None:
-                        person_config.state = None
-                    elif isinstance(tracker.state, str):
-                        person_config.state = tracker.state
-                    else:
-                        _LOGGER.warning("SUPERNOTIFY Unexpected state %s for %s", tracker.state, person_id)
-                except Exception as e:
-                    _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person_id, e)
+    def _fetch_person_entity_state(self, person_id: str) -> str | None:
+        try:
+            tracker: State | None = self.hass_api.get_state(person_id)
+            if tracker and isinstance(tracker.state, str):
+                return tracker.state
+            _LOGGER.warning("SUPERNOTIFY Unexpected state %s for %s", tracker, person_id)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person_id, e)
+        return None
 
     def determine_occupancy(self) -> dict[str, list[Recipient]]:
         results: dict[str, list[Recipient]] = {STATE_HOME: [], STATE_NOT_HOME: []}
-        self.refresh_tracker_state()
-        for person_config in self.people.values():
+        for person_id, person_config in self.people.items():
             if person_config.enabled:
-                if person_config.state in (None, STATE_HOME):
+                state: str | None = self._fetch_person_entity_state(person_id)
+                if state in (None, STATE_HOME):
                     # default to at home if unknown tracker
                     results[STATE_HOME].append(person_config)
                 else:

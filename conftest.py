@@ -112,10 +112,9 @@ def mock_people_registry(mock_hass_api: HomeAssistantAPI) -> PeopleRegistry:
     registry = Mock(spec=PeopleRegistry)
     registry.hass_api = mock_hass_api
     registry.people = {
-        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner", ATTR_STATE: "not_home"},
+        "person.new_home_owner": {CONF_PERSON: "person.new_home_owner"},
         "person.bidey_in": {
             CONF_PERSON: "person.bidey_in",
-            ATTR_STATE: "home",
             CONF_MOBILE_DISCOVERY: False,
             CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
         },

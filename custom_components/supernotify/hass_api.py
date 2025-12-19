@@ -23,7 +23,7 @@ from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.components.trace.util import async_store_trace
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConditionError, ConditionErrorContainer, ConfigValidationError
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer, IntegrationError
 from homeassistant.helpers import condition as condition
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
@@ -240,7 +240,7 @@ class HomeAssistantAPI:
                 self._hass, cond_list, cast("logging.Logger", capturing_logger), name
             )
             if test is None:
-                raise ConfigValidationError(f"Invalid condition {condition_config}")
+                raise IntegrationError(f"Invalid condition {condition_config}")
             test(condition_variables.as_dict())
             return test
         except Exception as e:
