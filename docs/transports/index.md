@@ -29,6 +29,11 @@ transports:
         png_opts:
           optimize: true
 ```
+## Entities
+
+Transport Adaptors are exposed as `sensor.supernotify_transport_XXXX` entities in Home Assistant, with the configuration and
+current state. All of the deliveries that use a given transport can be disabled, or re-enabled, by changing the
+state of the entity, whether via Developer Tools or another automation.
 
 ### Table of Options
 

@@ -93,7 +93,7 @@ target list with email addresses, notify entities, or direct mobile actions ).
 ```
 ## Entities
 
-Recipients are exposed to Home Assistant as `supernotify.recipient_XXXXX` entities. The entity state is
+Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is
 the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools,
 automations, API or whatever ) will disable or enable the recipient.
 

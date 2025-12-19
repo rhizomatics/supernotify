@@ -102,6 +102,11 @@ are resolved as specific to it, for example based on the `target_categories` opt
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
+## Entities
+
+Deliveries are exposed as `sensor.supernotify_delivery_XXXX` entities in Home Assistant, with the configuration and
+current state. They can be enabled or disabled like any other entities, for run-time control of notifications.
+
 ## Extreme Example
 
 Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](../developer/schemas/Delivery_Definition.md) definition.

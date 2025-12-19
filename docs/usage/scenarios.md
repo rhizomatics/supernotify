@@ -78,6 +78,12 @@ red_alert:
         camera_entity_id: camera.porch
 ```
 
+## Entities
+
+Scenarios are exposed as `sensor.supernotify_scenario_XXXX` entities in Home Assistant, with the configuration and
+current state as `unavailable` ( since their conditions are not continually being evaluated, only on demand). They can be enabled or disabled like any other entities, for run-time control of notifications.
+
+
 ## Overriding Delivery Selection and Configuration
 
 Each delivery section within scenario has an `enabled` value, which defaults to `true`:
