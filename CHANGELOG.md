@@ -1,6 +1,8 @@
 # Public releases
 
 ## 1.5.4
+### Changes
+- Exposed entities are now correctly named in the `binary_sensor` platform rather than inventing a new one
 ### Internal
 - Excess kwargs for `Context` now logged correctly
 - Added turbojpeg dependency to allow `mobile_app` integration to be setup for non-mocked testing

@@ -65,11 +65,11 @@ def test_schema() -> None:
 async def test_transport_setup(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
-    assert hass.states.get("supernotify.transport_chime").state == "on"  # type: ignore
-    assert hass.states.get("supernotify.transport_generic").state == "on"  # type: ignore
-    assert hass.states.get("supernotify.transport_email").state == "off"  # type: ignore
-    assert hass.states.get("supernotify.delivery_plain_email").state == "off"  # type: ignore
-    assert hass.states.get("supernotify.delivery_testing").state == "on"  # type: ignore
+    assert hass.states.get("binary_sensor.supernotify_transport_chime").state == "on"  # type: ignore
+    assert hass.states.get("binary_sensor.supernotify_transport_generic").state == "on"  # type: ignore
+    assert hass.states.get("binary_sensor.supernotify_transport_email").state == "off"  # type: ignore
+    assert hass.states.get("binary_sensor.supernotify_delivery_plain_email").state == "off"  # type: ignore
+    assert hass.states.get("binary_sensor.supernotify_delivery_testing").state == "on"  # type: ignore
 
 
 async def test_reload(hass: HomeAssistant) -> None:
@@ -200,14 +200,14 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
-    hass.states.async_set("supernotify.scenario_simple", "off")
+    hass.states.async_set("binary_sensor.supernotify_scenario_simple", "off")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
     assert response == {"somebody": ["chime_person"]}
-    hass.states.async_set("supernotify.scenario_simple", "on")
+    hass.states.async_set("binary_sensor.supernotify_scenario_simple", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
@@ -219,14 +219,14 @@ async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
 async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
-    hass.states.async_set("supernotify.delivery_testing", "off")
+    hass.states.async_set("binary_sensor.supernotify_delivery_testing", "off")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_implicit_deliveries", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
     assert response == {"mobile_push": ["DEFAULT_mobile_push"], "notify_entity": ["DEFAULT_notify_entity"]}
-    hass.states.async_set("supernotify.delivery_testing", "on")
+    hass.states.async_set("binary_sensor.supernotify_delivery_testing", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_implicit_deliveries", None, blocking=True, return_response=True
@@ -242,7 +242,7 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
 async def test_exposed_recipients(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
-    hass.states.async_set("supernotify.recipient_house_owner", "off")
+    hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "off")
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
     await hass.async_block_till_done()
@@ -273,7 +273,7 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
         ]
     }
     assert response == expected_response
-    hass.states.async_set("supernotify.recipient_house_owner", "on")
+    hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
     await hass.async_block_till_done()
@@ -288,7 +288,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
     await hass.async_block_till_done()
 
-    hass.states.async_set("supernotify.transport_generic", "off")
+    hass.states.async_set("binary_sensor.supernotify_transport_generic", "off")
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,
@@ -307,7 +307,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert notification["delivered_envelopes"]["chime"][0]["delivery_name"] == "chime_person"  # type: ignore[arg-type]
     assert not notification["undelivered_envelopes"]  # type: ignore[arg-type]
 
-    hass.states.async_set("supernotify.transport_generic", "on")
+    hass.states.async_set("binary_sensor.supernotify_transport_generic", "on")
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,

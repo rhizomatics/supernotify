@@ -476,9 +476,9 @@ class SupernotifyAction(BaseNotificationService):
         if event is not None:
             _LOGGER.info(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
             new_state: State | None = event.data["new_state"]
-            if new_state and event.data["entity_id"].startswith(f"{DOMAIN}.scenario_"):
+            if new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_scenario_"):
                 scenario: Scenario | None = self.context.scenario_registry.scenarios.get(
-                    event.data["entity_id"].replace(f"{DOMAIN}.scenario_", "")
+                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_scenario_", "")
                 )
                 if scenario is None:
                     _LOGGER.warning(f"SUPERNOTIFY Event for unknown scenario {event.data['entity_id']}")
@@ -493,9 +493,9 @@ class SupernotifyAction(BaseNotificationService):
                         changes += 1
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
-            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.delivery_"):
+            elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_delivery_"):
                 delivery_config: Delivery | None = self.context.delivery_registry.deliveries.get(
-                    event.data["entity_id"].replace(f"{DOMAIN}.delivery_", "")
+                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_delivery_", "")
                 )
                 if delivery_config is None:
                     _LOGGER.warning(f"SUPERNOTIFY Event for unknown delivery {event.data['entity_id']}")
@@ -510,9 +510,9 @@ class SupernotifyAction(BaseNotificationService):
                         changes += 1
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
-            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.transport_"):
+            elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_transport_"):
                 transport: Transport | None = self.context.delivery_registry.transports.get(
-                    event.data["entity_id"].replace(f"{DOMAIN}.transport_", "")
+                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_transport_", "")
                 )
                 if transport is None:
                     _LOGGER.warning(f"SUPERNOTIFY Event for unknown transport {event.data['entity_id']}")
@@ -527,9 +527,9 @@ class SupernotifyAction(BaseNotificationService):
                         changes += 1
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.name}, already {new_state}")
-            elif new_state and event.data["entity_id"].startswith(f"{DOMAIN}.recipient_"):
+            elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_recipient_"):
                 recipient: Recipient | None = self.context.people_registry.people.get(
-                    event.data["entity_id"].replace(f"{DOMAIN}.recipient_", "person.")
+                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_recipient_", "person.")
                 )
                 if recipient is None:
                     _LOGGER.warning(f"SUPERNOTIFY Event for unknown recipient {event.data['entity_id']}")
@@ -553,14 +553,15 @@ class SupernotifyAction(BaseNotificationService):
         entity_id: str,
         state: str,
         attributes: dict[str, Any],
-        original_icon: str | None,
-        entity_registry: er.EntityRegistry | None,
+        platform: str = Platform.BINARY_SENSOR,
+        original_icon: str | None = None,
+        entity_registry: er.EntityRegistry | None = None,
     ) -> None:
         """Expose a technical entity in Home Assistant representing internal state and attributes"""
         if entity_registry is not None:
             try:
                 entity_registry.async_get_or_create(
-                    Platform.NOTIFY, DOMAIN, entity_id, entity_category=EntityCategory.DIAGNOSTIC, original_icon=original_icon
+                    platform, DOMAIN, entity_id, entity_category=EntityCategory.DIAGNOSTIC, original_icon=original_icon
                 )
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_id, e)
@@ -576,7 +577,7 @@ class SupernotifyAction(BaseNotificationService):
             return
         for scenario in self.context.scenario_registry.scenarios.values():
             self.expose_entity(
-                f"{DOMAIN}.scenario_{scenario.name}",
+                f"binary_sensor.{DOMAIN}_scenario_{scenario.name}",
                 state=STATE_UNKNOWN,
                 attributes=scenario.attributes(include_condition=False),
                 original_icon="mdi:assignment",
@@ -584,7 +585,7 @@ class SupernotifyAction(BaseNotificationService):
             )
         for transport in self.context.delivery_registry.transports.values():
             self.expose_entity(
-                f"{DOMAIN}.transport_{transport.name}",
+                f"binary_sensor.{DOMAIN}_transport_{transport.name}",
                 state=STATE_ON if transport.override_enabled else STATE_OFF,
                 attributes=transport.attributes(),
                 original_icon="mdi:delivery-truck-speed",
@@ -593,7 +594,7 @@ class SupernotifyAction(BaseNotificationService):
 
         for delivery in self.context.delivery_registry.deliveries.values():
             self.expose_entity(
-                f"{DOMAIN}.delivery_{delivery.name}",
+                f"binary_sensor.{DOMAIN}_delivery_{delivery.name}",
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=delivery.attributes(),
                 original_icon="mdi:package_2",
@@ -602,7 +603,7 @@ class SupernotifyAction(BaseNotificationService):
 
         for recipient in self.context.people_registry.people.values():
             self.expose_entity(
-                f"{DOMAIN}.{recipient.name}",
+                f"binary_sensor.{DOMAIN}_{recipient.name}",
                 state=STATE_ON if recipient.enabled else STATE_OFF,
                 attributes=recipient.attributes(),
                 original_icon="mdi:inbox_text_person",
