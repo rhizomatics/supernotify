@@ -9,7 +9,9 @@
   - Fixed the provision of targets where no `target_categories` defined - all targets supplied in one big list
 - Added Home Assistant quality score report and config file
   - Replaced blocking PIL image operation and BS4 html parsing with wrapped async executor
+  - All http get now consistently used a HomeAssistant provided aiohttp session
   - Set PARALLEL_UPDATE to 0 since no operations outside of existing HomeAssistant services
+  - Technical states are now actual entities, marked as TECHNICAL category and with icons
 ## 1.5.3
 ### Features
 - Chime alias error handling improved
