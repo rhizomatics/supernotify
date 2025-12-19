@@ -136,7 +136,6 @@ rules:
 
   integration-owner:
     status: done
-    comment: Codeowners declared in manifest: @jeyrb
 
   log-when-unavailable:
     status: todo
