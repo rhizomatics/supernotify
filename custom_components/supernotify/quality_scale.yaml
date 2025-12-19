@@ -1,0 +1,240 @@
+---
+# Quality Scale tracking for Supernotify integration
+# Updated: 2025-12-19
+
+rules:
+  # ==================
+  # BRONZE TIER
+  # ==================
+
+  action-setup:
+    status: todo
+    comment: |
+      Services currently registered in async_get_service().
+      Need to move to async_setup() when implementing config entries.
+
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Integration is push-based notification service (iot_class: local_push).
+      No periodic polling required.
+
+  brands:
+    status: exempt
+    comment: |
+      Custom component not seeking official Home Assistant integration status.
+
+  common-modules:
+    status: done
+    comment: |
+      Integration has appropriate structure with model.py, context.py,
+      and registry patterns. Coordinator not needed for notification service.
+
+  config-flow:
+    status: todo
+    comment: |
+      CRITICAL BLOCKER: Must implement config flow for UI-based setup.
+      Currently YAML-only (config_flow: false in manifest).
+      Target completion: 4-6 weeks.
+
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Will be implemented after config flow is created.
+      Requires 100% coverage of config flow paths.
+
+  dependency-transparency:
+    status: done
+    comment: |
+      All dependencies are transparent utility libraries.
+      httpx used for user-controlled outbound notifications.
+
+  docs-actions:
+    status: done
+    comment: |
+      Custom services documented at https://supernotify.rhizomatics.org.uk
+
+  docs-high-level-description:
+    status: done
+
+  docs-installation-instructions:
+    status: done
+    comment: HACS installation documented.
+
+  docs-removal-instructions:
+    status: todo
+    comment: Need to add explicit uninstallation instructions.
+
+  entity-event-setup:
+    status: todo
+    comment: |
+      Event subscriptions currently at service level.
+      Need to review if entity lifecycle methods should be used.
+
+  entity-unique-id:
+    status: done
+    comment: |
+      Entities properly implement unique_id in __init__.
+
+  has-entity-name:
+    status: done
+    comment: |
+      SupernotifyEntity sets _attr_has_entity_name = True.
+
+  runtime-data:
+    status: todo
+    comment: |
+      Will be implemented with config entries.
+      Plan to store Context, registries, and transports in entry.runtime_data.
+
+  test-before-configure:
+    status: todo
+    comment: |
+      Will validate paths and permissions in config flow when implemented.
+
+  test-before-setup:
+    status: todo
+    comment: |
+      Need to review transport initialization and add explicit validation.
+
+  test-coverage:
+    status: done
+    comment: |
+      208 test functions, 5,333+ lines of test code.
+      Comprehensive coverage of models, transports, delivery, scenarios, etc.
+      Need to verify >95% with coverage report.
+
+  unique-config-entry:
+    status: todo
+    comment: |
+      Will implement duplicate prevention in config flow using unique_id.
+
+  # ==================
+  # SILVER TIER
+  # ==================
+
+  action-exceptions:
+    status: todo
+    comment: |
+      Need to verify all services raise ServiceValidationError for invalid input
+      and HomeAssistantError for failures.
+
+  config-entry-unloading:
+    status: todo
+    comment: |
+      Will implement async_unload_entry with config flow.
+
+  docs-configuration-parameters:
+    status: todo
+    comment: |
+      Documentation exists but needs verification of completeness.
+
+  docs-installation-parameters:
+    status: done
+
+  entity-unavailable:
+    status: todo
+    comment: |
+      Need to audit all transport implementations to ensure proper
+      availability marking when transport fails.
+
+  integration-owner:
+    status: done
+    comment: |
+      Codeowners declared in manifest: @jeyrb
+
+  log-when-unavailable:
+    status: todo
+    comment: |
+      Need to implement log-once pattern for transport unavailability.
+
+  parallel-updates:
+    status: done
+    comment: |
+      PARALLEL_UPDATES constant configured.
+
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Integration orchestrates notifications but doesn't authenticate
+      to external services. Individual transports handle their own auth.
+
+  # ==================
+  # GOLD TIER
+  # ==================
+
+  device-class:
+    status: todo
+    comment: |
+      Need to review sensor entities and assign appropriate device classes.
+
+  devices:
+    status: todo
+    comment: |
+      Need to determine if device creation is appropriate for this integration.
+
+  diagnostics:
+    status: todo
+    comment: |
+      Need to create diagnostics.py module to expose transport, scenario,
+      and delivery information for troubleshooting.
+
+  disabled-by-default:
+    status: todo
+    comment: |
+      Review entities to identify diagnostic/technical entities that should
+      be disabled by default.
+
+  entity-category:
+    status: todo
+    comment: |
+      Need to assign appropriate categories (DIAGNOSTIC, CONFIG) to entities.
+
+  entity-description:
+    status: todo
+    comment: |
+      Need code review to verify entity description usage.
+
+  entity-translations:
+    status: todo
+    comment: |
+      Partial implementation. Need to ensure all entities have translation_key
+      and complete strings.json entries.
+
+  exception-translations:
+    status: todo
+    comment: |
+      Need to add translatable exception messages using translation_key.
+
+  icon-translations:
+    status: todo
+    comment: |
+      Evaluate if dynamic icons needed based on state/ranges.
+
+  stale-device-removal:
+    status: todo
+    comment: |
+      Will implement if devices are created.
+
+  # ==================
+  # PLATINUM TIER
+  # ==================
+
+  async-dependency:
+    status: todo
+    comment: |
+      BLOCKING ISSUE: Pillow (PIL) and BeautifulSoup are synchronous.
+      Need to wrap all Image.open() calls in async_add_executor_job.
+      Estimated 2-4 hours to fix.
+
+  inject-websession:
+    status: done
+    comment: |
+      Properly uses async_get_clientsession(hass) in media_grab.py.
+
+  strict-typing:
+    status: todo
+    comment: |
+      Good progress with py.typed and many type hints.
+      Need to remove mypy suppressions (e.g., transport.py line 1)
+      and ensure complete type coverage.

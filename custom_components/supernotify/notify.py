@@ -87,6 +87,7 @@ if TYPE_CHECKING:
 
     from .scenario import Scenario
 
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 

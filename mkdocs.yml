@@ -33,6 +33,7 @@ theme:
     - search.share
     - toc.follow
     - toc.integrate
+
 plugins:
   - search
   - autorefs
