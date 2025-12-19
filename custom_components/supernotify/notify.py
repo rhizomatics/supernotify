@@ -550,7 +550,7 @@ class SupernotifyAction(BaseNotificationService):
 
     def expose_entity(
         self,
-        entity_id: str,
+        entity_name: str,
         state: str,
         attributes: dict[str, Any],
         platform: str = Platform.BINARY_SENSOR,
@@ -561,13 +561,17 @@ class SupernotifyAction(BaseNotificationService):
         if entity_registry is not None:
             try:
                 entity_registry.async_get_or_create(
-                    platform, DOMAIN, entity_id, entity_category=EntityCategory.DIAGNOSTIC, original_icon=original_icon
+                    platform, DOMAIN, entity_name, entity_category=EntityCategory.DIAGNOSTIC, original_icon=original_icon
                 )
             except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_id, e)
+                _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_name, e)
                 # continue anyway even if not registered as state is independent of entity
-        self.hass.states.async_set(entity_id, state, attributes)
-        self.exposed_entities.append(f"{platform}.{DOMAIN}_{entity_id}")
+        try:
+            entity_id: str = f"{platform}.{DOMAIN}_{entity_name}"
+            self.hass.states.async_set(entity_id, state, attributes)
+            self.exposed_entities.append(entity_id)
+        except Exception as e:
+            _LOGGER.error("SUPERNOTIFY Unable to set state for entity %s: %s", entity_id, e)
 
     def expose_entities(self) -> None:
         # Create on the fly entities for key internal config and state
