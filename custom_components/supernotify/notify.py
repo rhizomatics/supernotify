@@ -567,7 +567,7 @@ class SupernotifyAction(BaseNotificationService):
                 _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_id, e)
                 # continue anyway even if not registered as state is independent of entity
         self.hass.states.async_set(entity_id, state, attributes)
-        self.exposed_entities.append(entity_id)
+        self.exposed_entities.append(f"{platform}.{DOMAIN}_{entity_id}")
 
     def expose_entities(self) -> None:
         # Create on the fly entities for key internal config and state
@@ -577,7 +577,7 @@ class SupernotifyAction(BaseNotificationService):
             return
         for scenario in self.context.scenario_registry.scenarios.values():
             self.expose_entity(
-                f"binary_sensor.{DOMAIN}_scenario_{scenario.name}",
+                f"scenario_{scenario.name}",
                 state=STATE_UNKNOWN,
                 attributes=scenario.attributes(include_condition=False),
                 original_icon="mdi:assignment",
@@ -585,7 +585,7 @@ class SupernotifyAction(BaseNotificationService):
             )
         for transport in self.context.delivery_registry.transports.values():
             self.expose_entity(
-                f"binary_sensor.{DOMAIN}_transport_{transport.name}",
+                f"transport_{transport.name}",
                 state=STATE_ON if transport.override_enabled else STATE_OFF,
                 attributes=transport.attributes(),
                 original_icon="mdi:delivery-truck-speed",
@@ -594,7 +594,7 @@ class SupernotifyAction(BaseNotificationService):
 
         for delivery in self.context.delivery_registry.deliveries.values():
             self.expose_entity(
-                f"binary_sensor.{DOMAIN}_delivery_{delivery.name}",
+                f"delivery_{delivery.name}",
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=delivery.attributes(),
                 original_icon="mdi:package_2",
@@ -603,7 +603,7 @@ class SupernotifyAction(BaseNotificationService):
 
         for recipient in self.context.people_registry.people.values():
             self.expose_entity(
-                f"binary_sensor.{DOMAIN}_{recipient.name}",
+                f"recipient_{recipient.name}",
                 state=STATE_ON if recipient.enabled else STATE_OFF,
                 attributes=recipient.attributes(),
                 original_icon="mdi:inbox_text_person",
