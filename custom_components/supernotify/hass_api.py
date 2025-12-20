@@ -106,7 +106,8 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.internal_url)
 
     def disconnect(self) -> None:
-        for unsub in self.unsubscribes:
+        while self.unsubscribes:
+            unsub = self.unsubscribes.pop()
             try:
                 _LOGGER.debug("SUPERNOTIFY unsubscribing: %s", unsub)
                 unsub()

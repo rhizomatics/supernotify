@@ -225,3 +225,24 @@ async def test_mqtt_publish(mock_hass) -> None:
     hass_api.initialize()
     await hass_api.mqtt_publish("test.topic", {"foo": 123})
     mock_hass.data["mqtt"].client.async_publish.assert_called_once_with("test.topic", '{"foo":123}', 0, False)
+
+
+async def test_subscribe_and_unsubscribe(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    calls: int = 0
+
+    def listener(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+
+    hass_api.subscribe_event("wonders_of_core", listener)
+    hass.bus.async_fire("wonders_of_core", {})
+    await hass.async_block_till_done()  # type: ignore
+    assert calls == 1
+    assert hass_api.unsubscribes[0].args[0] == "wonders_of_core"  # type: ignore
+
+    hass_api.disconnect()
+    assert not hass_api.unsubscribes
+    hass.bus.async_fire("wonders_of_core", {})
+    await hass.async_block_till_done()
+    assert calls == 1
