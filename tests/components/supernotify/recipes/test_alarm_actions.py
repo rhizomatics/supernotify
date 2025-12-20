@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
+
 import pytest
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.notification import Notification
 from tests.components.supernotify.hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 
 @pytest.fixture
@@ -76,7 +81,7 @@ async def test_mobile_push_only_has_arm_when_alarm_disarmed(fixture, hass: HomeA
     await uut.deliver()
     assert uut.selected_scenario_names == ["alarm_disarmed"]
     assert len(uut.deliveries["apple_push"]["delivered_envelopes"]) == 1
-    envelope = uut.deliveries["apple_push"]["delivered_envelopes"][0]  # type:ignore
+    envelope: Envelope = uut.deliveries["apple_push"]["delivered_envelopes"][0]  # type:ignore
     assert envelope.delivery_name == "apple_push"
     assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]
         {"action": "ALARM_PANEL_RESET", "title": "Arm Alarm Panel for at Home", "icon": "sfsymbols:bell"},
@@ -94,7 +99,7 @@ async def test_mobile_push_only_has_disarm_when_alarm_armed(fixture, hass: HomeA
     await uut.deliver()
     assert uut.selected_scenario_names == ["alarm_armed"]
     assert len(uut.deliveries["apple_push"]["delivered_envelopes"]) == 1
-    envelope = uut.deliveries["apple_push"]["delivered_envelopes"][0]  # type:ignore
+    envelope: Envelope = uut.deliveries["apple_push"]["delivered_envelopes"][0]  # type:ignore
     assert envelope.delivery_name == "apple_push"
     assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]
         {"action": "ALARM_PANEL_DISARM", "title": "Disarm Alarm Panel", "icon": "sfsymbols:bell.slash"},

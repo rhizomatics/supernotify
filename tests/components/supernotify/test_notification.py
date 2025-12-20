@@ -54,7 +54,7 @@ async def test_simple_create() -> None:
     await uut.initialize()
     assert uut.enabled_scenarios == {}
     assert uut.applied_scenario_names == []
-    assert uut.target is None
+    assert uut._target is None
     assert uut.priority == "medium"
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT

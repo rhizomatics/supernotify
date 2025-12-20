@@ -60,7 +60,6 @@ async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> Non
             blob: str = "".join(await stream.readlines())
             reobj = json.loads(blob)
         assert reobj["priority"] == "critical"
-        assert reobj["target"] == {"person_id": ["person.bob"]}
         for outcome in ("delivered_envelopes", "delivered_envelopes", "no_envelopes"):
             for delivery_name in uut.last_notification.deliveries:
                 assert len(reobj["deliveries"][delivery_name].get(outcome, [])) == len(

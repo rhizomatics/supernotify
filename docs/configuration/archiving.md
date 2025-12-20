@@ -10,7 +10,7 @@ tags:
 
 Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete with its debug trail, is archived.
 
-This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select. 
+This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select.
 
 Key fields to check if something doesn't seem right:
 

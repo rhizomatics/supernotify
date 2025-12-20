@@ -2,7 +2,15 @@ from pathlib import Path
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
 
-from custom_components.supernotify import ATTR_DATA, ATTR_DELIVERY, CONF_PERSON, CONF_TEMPLATE, CONF_TRANSPORT, TRANSPORT_EMAIL
+from custom_components.supernotify import (
+    ATTR_DATA,
+    ATTR_DELIVERY,
+    ATTR_MEDIA_SNAPSHOT_PATH,
+    CONF_PERSON,
+    CONF_TEMPLATE,
+    CONF_TRANSPORT,
+    TRANSPORT_EMAIL,
+)
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
@@ -140,9 +148,9 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
         },
     )
     await notification.initialize()
-    notification.snapshot_image_path = Path("/local/picture.jpg")
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = Path("/local/picture.jpg")
     await uut.deliver(
-        Envelope(Delivery("default", context.delivery_config("default"), uut), notification, target=notification.target)
+        Envelope(Delivery("default", context.delivery_config("default"), uut), notification, target=notification._target)
     )
     context.hass.services.async_call.assert_called_with(  # type:ignore
         "notify",

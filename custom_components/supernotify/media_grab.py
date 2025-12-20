@@ -22,6 +22,7 @@ from custom_components.supernotify import (
     ATTR_MEDIA_CAMERA_DELAY,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CAMERA_PTZ_PRESET,
+    ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PNG_OPTS,
     CONF_ALT_CAMERA,
@@ -293,8 +294,8 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         return None
 
     image_path: Path | None = None
-    if notification.snapshot_image_path is not None:
-        return notification.snapshot_image_path  # type: ignore
+    if notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH) is not None:
+        return notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH)  # type: ignore
     if snapshot_url and media_path and context.hass_api:
         image_path = await snapshot_from_url(
             context.hass_api,
@@ -360,7 +361,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
         return None
     # TODO: replace poking inside notification
-    notification.snapshot_image_path = image_path
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = image_path
     return image_path
 
 

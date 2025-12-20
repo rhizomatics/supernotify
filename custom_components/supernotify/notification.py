@@ -11,11 +11,6 @@ import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
 from voluptuous import humanize
 
-from custom_components.supernotify import (
-    ATTR_MEDIA_CLIP_URL,
-    ATTR_MEDIA_SNAPSHOT_URL,
-)
-
 from . import (
     ACTION_DATA_SCHEMA,
     ATTR_ACTION_GROUPS,
@@ -24,6 +19,8 @@ from . import (
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
     ATTR_MEDIA,
+    ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
     ATTR_PERSON_ID,
     ATTR_PRIORITY,
@@ -53,8 +50,6 @@ from .envelope import Envelope
 from .model import ConditionVariables, DeliveryCustomization, SuppressionReason, Target, TargetRequired
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from .people import PeopleRegistry, Recipient
     from .scenario import Scenario
     from .transport import (
@@ -86,18 +81,15 @@ class Notification(ArchivableObject):
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         action_data = action_data or {}
-        self.target: Target | None = Target(target) if target else None
+        self._target: Target | None = Target(target) if target else None
         self.selected: Target = Target()
         self._title: str | None = title
         self.id = str(uuid.uuid1())
-        self.snapshot_image_path: Path | None = None
         self.delivered: int = 0
         self.errored: int = 0
         self.skipped: int = 0
         self.dupe: bool = False
-        self.deliveries: dict[str, dict[str, list[Envelope] | dict[str, Any]]] = {}
-        self.no_envelopes: dict[str, list[dict[str, Any]]] = {}
-        self.delivery_error: list[str] | None = None
+        self.deliveries: dict[str, dict[str, list[str] | list[Envelope] | dict[str, Any]]] = {}
         self.skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
@@ -146,13 +138,12 @@ class Notification(ArchivableObject):
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
-        self.delivery_results: dict[str, Any] = {}
-        self.delivery_errors: dict[str, Any] = {}
 
         self.selected_delivery_names: list[str] = []
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self.suppressed: SuppressionReason | None = None
+        self._delivery_error: list[str] | None = None
         self.condition_variables: ConditionVariables
 
     async def initialize(self) -> None:
@@ -385,7 +376,10 @@ class Notification(ArchivableObject):
         except Exception as e:
             _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery.name)
             _LOGGER.debug("SUPERNOTIFY %s delivery failure", delivery, exc_info=True)
-            self.delivery_errors[delivery.name] = format_exception(e)
+            self.deliveries.setdefault(delivery.name, {})
+            self.deliveries[delivery.name].setdefault("errors", [])
+            errors: list[str] = cast("list[str]", self.deliveries[delivery.name]["errors"])
+            errors.append("\n".join(format_exception(e)))
 
     def record_result(
         self,
@@ -428,6 +422,21 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         object_refs = ["context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
+        exposed_if_populated = ["_delivery_error"]
+        # fine tune dict order to ease the eye-burden when reviewing archived notifications
+        preferred_order = [
+            "created",
+            "applied_scenario_names",
+            "constrain_scenario_names",
+            "required_scenario_names",
+            "enabled_scenarios",
+            "selected_delivery_names",
+            "selected_scenario_names",
+            "delivered",
+            "errored",
+            "skipped",
+            "deliveries",
+        ]
 
         def sanitize(v: Any, minimal: bool = True, **kwargs) -> Any:
             if isinstance(v, dt.datetime | dt.time | dt.date):
@@ -450,9 +459,19 @@ class Notification(ArchivableObject):
             return None
 
         result = {
+            k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
+            for k in preferred_order
+            if (not minimal or k not in keys_only)
+        }
+        result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
             for k, v in self.__dict__.items()
-            if k not in object_refs and not k.startswith("_") and (not minimal or k not in keys_only)
+            if k not in result and k not in object_refs and not k.startswith("_") and (not minimal or k not in keys_only)
+        })
+        result = {
+            k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
+            for k in exposed_if_populated
+            if self.__dict__.get(k)
         }
         if minimal:
             result.update({
@@ -501,12 +520,12 @@ class Notification(ArchivableObject):
                 computed_target = Target(None, target_data=delivery.data)
                 self.debug_trace.record_target(delivery.name, "1b_delivery_default_fixed_empty", computed_target)
 
-        elif not self.target:
+        elif not self._target:
             # Unless there are explicit targets, include everyone on the people registry
             computed_target = self.default_person_ids(delivery)
             self.debug_trace.record_target(delivery.name, "1c_no_action_target", computed_target)
         else:
-            computed_target = self.target.safe_copy()
+            computed_target = self._target.safe_copy()
             self.debug_trace.record_target(delivery.name, "1d_action_target", computed_target)
 
         # 1st round of filtering for snooze and resolving people->direct targets
@@ -528,7 +547,7 @@ class Notification(ArchivableObject):
                 computed_target += delivery.target
                 self.debug_trace.record_target(delivery.name, "3a_delivery_default_no_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_ON_NO_ACTION_TARGETS:
-            if not self.target and delivery.target:
+            if not self._target and delivery.target:
                 computed_target += delivery.target
                 self.debug_trace.record_target(delivery.name, "3b_delivery_default_no_action_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ON_DELIVERY_TARGETS:

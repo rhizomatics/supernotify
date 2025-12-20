@@ -359,8 +359,8 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 2
-    emailed = uut.deliveries["plain_email"]["delivered_envelopes"][0]  # type:ignore
-    texted = uut.deliveries["sms"]["delivered_envelopes"][0]  # type:ignore
+    emailed: Envelope = uut.deliveries["plain_email"]["delivered_envelopes"][0]  # type:ignore
+    texted: Envelope = uut.deliveries["sms"]["delivered_envelopes"][0]  # type:ignore
     assert emailed.priority == "low"
     assert texted.priority == "medium"
 
@@ -408,8 +408,8 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 2
-    emailed = uut.deliveries["plain_email"]["delivered_envelopes"][0]  # type:ignore
-    texted = uut.deliveries["sms"]["delivered_envelopes"][0]  # type:ignore
+    emailed: Envelope = uut.deliveries["plain_email"]["delivered_envelopes"][0]  # type:ignore
+    texted: Envelope = uut.deliveries["sms"]["delivered_envelopes"][0]  # type:ignore
     assert "spambox@myhome.org" in emailed.target.email
     assert "spambox@myhome.org" not in texted.target.email
 

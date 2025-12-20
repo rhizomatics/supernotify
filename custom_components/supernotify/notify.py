@@ -440,7 +440,7 @@ class SupernotifyAction(BaseNotificationService):
             _LOGGER.exception("SUPERNOTIFY Failed to send message %s", message)
             self.failures += 1
             if notification is not None:
-                notification.delivery_error = format_exception(err)
+                notification._delivery_error = format_exception(err)
             self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
 
         if notification is None:

@@ -18,6 +18,10 @@
 - Excess kwargs for `Context` now logged correctly
 - HomeAssistant access from `notify.py` now consistently via `hass_api`
 - Added turbojpeg dependency to allow `mobile_app` integration to be setup for non-mocked testing
+- Notification
+  - Moved `snapshot_image_path` for Notification inside `media`
+  - Moved `delivery_errors` into the new `deliveries` structure under `errors`
+  - Cleaned up unused `delivery_results`
 - Generic Transport
   - Removed the default `entity_id` filter for `target_categories` option
   - Fixed the provision of targets where no `target_categories` defined - all targets supplied in one big list
