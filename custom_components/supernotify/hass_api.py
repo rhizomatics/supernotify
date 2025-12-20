@@ -5,15 +5,17 @@ from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
     import aiohttp
-    from homeassistant.core import HomeAssistant, Service
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service
     from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.typing import ConfigType
+    from homeassistant.util.event_type import EventType
 
 import re
 from typing import cast
@@ -78,6 +80,7 @@ class HomeAssistantAPI:
         self._entity_registry: er.EntityRegistry | None = None
         self._device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
+        self.unsubscribes: list[CALLBACK_TYPE] = []
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
@@ -102,6 +105,24 @@ class HomeAssistantAPI:
         if not self.internal_url or not self.internal_url.startswith("http"):
             _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.internal_url)
 
+    def disconnect(self) -> None:
+        for unsub in self.unsubscribes:
+            try:
+                _LOGGER.debug("SUPERNOTIFY unsubscribing: %s", unsub)
+                unsub()
+            except Exception as e:
+                _LOGGER.error("SUPERNOTIFY failed to unsubscribe: %s", e)
+        _LOGGER.debug("SUPERNOTIFY disconnection complete")
+
+    def subscribe_event(self, event: EventType | str, callback: Callable) -> None:
+        self.unsubscribes.append(self._hass.bus.async_listen(event, callback))
+
+    def subscribe_state(self, entity_ids: str | Iterable[str], callback: Callable) -> None:
+        self.unsubscribes.append(async_track_state_change_event(self._hass, entity_ids, callback))
+
+    def subscribe_time(self, hour: int, minute: int, second: int, callback: Callable) -> None:
+        self.unsubscribes.append(async_track_time_change(self._hass, callback, hour=hour, minute=minute, second=second))
+
     def in_hass_loop(self) -> bool:
         return self._hass is not None and self._hass.loop_thread_id == threading.get_ident()
 
@@ -111,11 +132,11 @@ class HomeAssistantAPI:
     def is_state(self, entity_id: str, state: str) -> bool:
         return self._hass.states.is_state(entity_id, state)
 
-    def set_state(self, entity_id: str, state: str) -> None:
+    def set_state(self, entity_id: str, state: str | int | bool, attributes: dict[str, Any] | None = None) -> None:
         if self.in_hass_loop():
-            self._hass.states.async_set(entity_id, state)
+            self._hass.states.async_set(entity_id, str(state), attributes=attributes)
         else:
-            self._hass.states.set(entity_id, state)
+            self._hass.states.set(entity_id, str(state), attributes=attributes)
 
     def has_service(self, domain: str, service: str) -> bool:
         return self._hass.services.has_service(domain, service)

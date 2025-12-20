@@ -103,6 +103,7 @@ def mock_hass(
     hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
     hass.data[DATA_MQTT].client.connected = True
     hass.config_entries._entries = ConfigEntryItems(hass)
+    hass.loop_thread_id = "99999"
     return hass
 
 

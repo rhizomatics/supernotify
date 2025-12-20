@@ -6,6 +6,7 @@
 - Configuration technical entity now replaced with a `enquire_configuration` service
 ### Internal
 - Excess kwargs for `Context` now logged correctly
+- HomeAssistant access from `notify.py` now consistently via `hass_api`
 - Added turbojpeg dependency to allow `mobile_app` integration to be setup for non-mocked testing
 - Generic Transport
   - Removed the default `entity_id` filter for `target_categories` option

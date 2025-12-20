@@ -14,7 +14,6 @@ from homeassistant.components.notify import (
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNKNOWN, EntityCategory, Platform
 from homeassistant.core import (
-    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -24,7 +23,6 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -119,9 +117,6 @@ async def async_get_service(
     #        except Exception as e:
     #            _LOGGER.error("SUPERNOTIFY delivery %s fails condition: %s", delivery[CONF_CONDITION], e)
     #            raise
-
-    hass.states.async_set(f"sensor.{DOMAIN}_failures", "0")
-    hass.states.async_set(f"sensor.{DOMAIN}_notifications", "0")
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     service = SupernotifyAction(
@@ -349,7 +344,6 @@ class SupernotifyAction(BaseNotificationService):
         dupe_check: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
-        self.hass: HomeAssistant = hass
         self.last_notification: Notification | None = None
         self.failures: int = 0
         self.housekeeping: dict[str, Any] = housekeeping or {}
@@ -371,7 +365,6 @@ class SupernotifyAction(BaseNotificationService):
             cameras=cameras,
         )
 
-        self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
 
     async def initialize(self) -> None:
@@ -388,25 +381,17 @@ class SupernotifyAction(BaseNotificationService):
         await self.context.media_storage.initialize(self.context.hass_api)
 
         self.expose_entities()
-        self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
-        self.unsubscribes.append(
-            async_track_state_change_event(self.hass, self.exposed_entities, self._entity_state_change_listener)
-        )
+        self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
+        self.context.hass_api.subscribe_state(self.exposed_entities, self._entity_state_change_listener)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
             _LOGGER.info("SUPERNOTIFY setting up housekeeping schedule at: %s", housekeeping_schedule)
-            self.unsubscribes.append(
-                async_track_time_change(
-                    self.hass,
-                    self.async_nightly_tasks,
-                    hour=housekeeping_schedule.hour,
-                    minute=housekeeping_schedule.minute,
-                    second=housekeeping_schedule.second,
-                )
+            self.context.hass_api.subscribe_time(
+                housekeeping_schedule.hour, housekeeping_schedule.minute, housekeeping_schedule.second, self.async_nightly_tasks
             )
 
-        self.unsubscribes.append(self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.async_shutdown))
+        self.context.hass_api.subscribe_event(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
 
     async def async_shutdown(self, event: Event) -> None:
         _LOGGER.info("SUPERNOTIFY shutting down, %s", event)
@@ -418,12 +403,7 @@ class SupernotifyAction(BaseNotificationService):
         return await super().async_unregister_services()
 
     def shutdown(self) -> None:
-        for unsub in self.unsubscribes:
-            try:
-                _LOGGER.debug("SUPERNOTIFY unsubscribing: %s", unsub)
-                unsub()
-            except Exception as e:
-                _LOGGER.error("SUPERNOTIFY failed to unsubscribe: %s", e)
+        self.context.hass_api.disconnect()
         _LOGGER.info("SUPERNOTIFY shut down")
 
     async def async_send_message(
@@ -439,7 +419,7 @@ class SupernotifyAction(BaseNotificationService):
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1
-                self.hass.states.async_set(f"sensor.{DOMAIN}_notifications", str(self.sent))
+                self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
             elif notification.errored:
                 _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
             else:
@@ -461,7 +441,7 @@ class SupernotifyAction(BaseNotificationService):
             self.failures += 1
             if notification is not None:
                 notification.delivery_error = format_exception(err)
-            self.hass.states.async_set(f"sensor.{DOMAIN}_failures", str(self.failures))
+            self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
 
         if notification is None:
             _LOGGER.warning("SUPERNOTIFY NULL Notification, %s", message)
@@ -580,7 +560,7 @@ class SupernotifyAction(BaseNotificationService):
                 # continue anyway even if not registered as state is independent of entity
                 entity_id = f"{platform}.{DOMAIN}_{entity_name}"
         try:
-            self.hass.states.async_set(entity_id, state, attributes)
+            self.context.hass_api.set_state(entity_id, state, attributes)
             self.exposed_entities.append(entity_id)
         except Exception as e:
             _LOGGER.error("SUPERNOTIFY Unable to set state for entity %s: %s", entity_id, e)
@@ -591,6 +571,10 @@ class SupernotifyAction(BaseNotificationService):
         if ent_reg is None:
             _LOGGER.error("SUPERNOTIFY Unable to access entity registry to expose entities")
             return
+
+        self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
+        self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
+
         for scenario in self.context.scenario_registry.scenarios.values():
             self.expose_entity(
                 f"scenario_{scenario.name}",
