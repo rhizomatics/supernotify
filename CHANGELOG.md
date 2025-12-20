@@ -1,9 +1,19 @@
 # Public releases
 
 ## 1.6.0
+### Fixes
+- Image attachments from mobile push style notifications not being picked up by e-mail
+   - This affected use of the Frigate Blueprint to generate both e-mail and mobile push with image attachment
+   - E2E Recipe test now in place for Frigate Blueprint notification to prevent regression
 ### Changes
-- Exposed entities are now correctly named in the `binary_sensor` platform rather than inventing a new one
+- Better Home Assistant standards compliance
+  - Exposed entities are now correctly named in the `binary_sensor` platform rather than inventing a new one
+  - Replaced `ValueError` with `ServiceValidationError` and `HomeAssistantError` for HA compatibility
 - Configuration technical entity now replaced with a `enquire_configuration` service
+- Easier to debug failed deliveries
+    - Archived notification now has a `deliveries` dict
+    - It has all delivered and un-delivered envelopes, plus details of deliveries that had no envelopes generated.
+    - Can see in one place now what happened with each selected delivery
 ### Internal
 - Excess kwargs for `Context` now logged correctly
 - HomeAssistant access from `notify.py` now consistently via `hass_api`
@@ -19,7 +29,6 @@
   - `iot_class` now `calculated` for better HA consistency
   - Moved tests to `tests.components.supernotify`
   - Removed lots of pointless checks on HA presence in `hass_api`
-  - Replaced `ValueError` with `ServiceValidationError` and `HomeAssistantError` for HA compatibility
 - Recipient
   - Removed shadow state, now goes straight to Person
 ## 1.5.3

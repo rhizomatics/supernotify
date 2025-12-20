@@ -90,12 +90,6 @@ class Envelope(DupeCheckable):
         else:
             self.condition_variables = ConditionVariables()
 
-        if not self.media:
-            override = self.delivery.transport.media_requirements(self.data)
-            if override:
-                _LOGGER.debug("SUPERNOTIFY Inferring media from transport: %s", override)
-                self.media = override
-
         self.message = self._compute_message()
         self.title = self._compute_title()
 

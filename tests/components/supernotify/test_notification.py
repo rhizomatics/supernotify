@@ -122,7 +122,7 @@ async def test_action_data_disable_delivery(
     assert uut.selected_delivery_names == unordered("plain_email", "chime")
 
 
-async def test_generate_recipients_from_entities() -> None:
+async def test_generate_targets_from_entities() -> None:
     ctx = TestingContext(
         deliveries={
             "chatty": {
@@ -137,11 +137,11 @@ async def test_generate_recipients_from_entities() -> None:
 
     uut = Notification(ctx, "testing 123")
 
-    recipients: list[Target] = uut.generate_recipients(delivery)
+    recipients: list[Target] = uut.generate_targets(delivery)
     assert recipients[0].entity_ids == ["custom.light_1", "custom.switch_2"]
 
 
-async def test_generate_recipients_from_recipients() -> None:
+async def test_generate_targets_from_recipients() -> None:
     ctx = TestingContext(
         recipients=[
             {
@@ -165,7 +165,7 @@ async def test_generate_recipients_from_recipients() -> None:
 
     uut = Notification(ctx, "testing 123")
 
-    recipients: list[Target] = uut.generate_recipients(delivery)
+    recipients: list[Target] = uut.generate_targets(delivery)
     assert recipients[0].entity_ids == ["custom.light_1"]
     assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar", "@fee", "@fum"]
 
@@ -193,7 +193,7 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
 
     uut = Notification(ctx, "testing 123")
 
-    recipients: list[Target] = uut.generate_recipients(delivery)
+    recipients: list[Target] = uut.generate_targets(delivery)
     assert recipients[0].custom_ids("_UNKNOWN_") == ["chan1", "chan2"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
@@ -202,7 +202,7 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     email = EmailTransport(ctx)
     await email.initialize()
     delivery = ctx.delivery("mail")
-    recipients = uut.generate_recipients(delivery)
+    recipients = uut.generate_targets(delivery)
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
@@ -218,7 +218,7 @@ async def test_build_targets_for_simple_case() -> None:
 
     # mock_context.deliveries={'testy':Delivery("testy",{},transport)}
     uut = Notification(ctx, "testing 123")
-    recipients: list[Target] = uut.generate_recipients(delivery)
+    recipients: list[Target] = uut.generate_targets(delivery)
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [Envelope(Delivery("simple", {}, generic), uut)]
 

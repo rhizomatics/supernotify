@@ -423,7 +423,7 @@ class SupernotifyAction(BaseNotificationService):
             elif notification.errored:
                 _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
             else:
-                if notification.undelivered_envelopes:
+                if notification.delivered == 0:
                     codes: list[SuppressionReason] = notification.skip_reasons
                     reason: str = ",".join(str(code) for code in codes)
                     problem: bool = codes != [SuppressionReason.DUPE]

@@ -203,6 +203,12 @@ def sample_image(request) -> TestImage:
 
 
 @pytest.fixture
+def sample_jpeg(request) -> TestImage:
+    path = IMAGE_PATH / "example_image.jpeg"
+    return TestImage(io.FileIO(path, "rb").readall(), path, "jpeg", "image/jpeg")
+
+
+@pytest.fixture
 def sample_image_entity_id(mock_hass_api: HomeAssistantAPI, sample_image: TestImage) -> str:
     image_entity = MockImageEntity(sample_image.path)
     mock_hass_api.domain_entity.return_value = Mock(return_value=image_entity)  # type: ignore[attr-defined]

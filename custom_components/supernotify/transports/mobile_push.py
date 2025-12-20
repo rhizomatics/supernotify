@@ -64,27 +64,6 @@ class MobilePushTransport(Transport):
     def auto_configure(self) -> bool:
         return True
 
-    def media_requirements(self, data: dict[str, Any]) -> dict[str, Any] | None:
-        """If no media defined, look for iOS / Android actions that have media defined"""
-        media_dict = {}
-        if not data:
-            return None
-        if data.get("image"):
-            media_dict[ATTR_MEDIA_SNAPSHOT_URL] = data.get("image")
-        if data.get("video"):
-            media_dict[ATTR_MEDIA_CLIP_URL] = data.get("video")
-        if data.get("attachment", {}).get("url"):
-            url = data["attachment"]["url"]
-            if url and url.endswith(".mp4") and not media_dict.get(ATTR_MEDIA_CLIP_URL):
-                media_dict[ATTR_MEDIA_CLIP_URL] = url
-            elif (
-                url
-                and (url.endswith(".jpg") or url.endswith(".jpeg") or url.endswith(".png"))
-                and not media_dict.get(ATTR_MEDIA_SNAPSHOT_URL)
-            ):
-                media_dict[ATTR_MEDIA_SNAPSHOT_URL] = url
-        return media_dict
-
     def validate_action(self, action: str | None) -> bool:
         return action is None
 

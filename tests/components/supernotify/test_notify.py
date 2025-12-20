@@ -31,7 +31,6 @@ from custom_components.supernotify import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TargetRequired
 from custom_components.supernotify.notify import SupernotifyAction
 from tests.components.supernotify.doubles_lib import DummyTransport
@@ -222,9 +221,8 @@ async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:
     notification = uut.last_notification
     assert notification is not None
     assert len(notification.undelivered_envelopes) == 1
-    assert isinstance(notification.undelivered_envelopes["dummy"][0], Envelope)
-    assert isinstance(notification.undelivered_envelopes["dummy"][0].delivery_error, list)
-    assert any("OSError" in stack for stack in notification.undelivered_envelopes["dummy"][0].delivery_error)
+    broken_envelope = notification.undelivered_envelopes[0]
+    assert any("OSError" in stack for stack in broken_envelope.delivery_error)  # type:ignore
     assert broken.error_count == 1
     assert broken.last_error_message == "a self-inflicted error has occurred"
     assert broken.last_error_in == "call_action"
@@ -253,9 +251,8 @@ async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
     notification = uut.last_notification
     assert notification is not None
     assert len(notification.undelivered_envelopes) == 1
-    assert isinstance(notification.undelivered_envelopes["dummy"][0], Envelope)
-    assert isinstance(notification.undelivered_envelopes["dummy"][0].delivery_error, list)
-    assert any("ServiceValidationError" in stack for stack in notification.undelivered_envelopes["dummy"][0].delivery_error)
+    broken_envelope = notification.undelivered_envelopes[0]
+    assert any("ServiceValidationError" in stack for stack in broken_envelope.delivery_error)  # type:ignore
     assert broken.error_count == 1
     assert broken.last_error_at is not None
     assert broken.last_error_message == "a self-inflicted error has occurred"

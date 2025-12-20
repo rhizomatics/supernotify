@@ -82,10 +82,14 @@ async def test_doesnt_double_deliver() -> None:
     await notification.deliver()
     assert notification.selected_delivery_names == unordered("custom", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
 
-    assert notification.delivered_envelopes.keys() == unordered("generic", "notify_entity")
+    assert notification.deliveries.keys() == unordered("custom", "DEFAULT_notify_entity", "DEFAULT_mobile_push")
 
-    assert notification.delivered_envelopes["generic"][0].delivery_name == "custom"
-    assert notification.delivered_envelopes["generic"][0].target.entity_ids == ["notify.entity_2", "notify.entity_3"]
+    assert "delivered_envelopes" not in notification.deliveries["DEFAULT_mobile_push"]
 
-    assert notification.delivered_envelopes["notify_entity"][0].delivery_name == "DEFAULT_notify_entity"
-    assert notification.delivered_envelopes["notify_entity"][0].target.entity_ids == ["notify.entity_1"]
+    custom_envelope = notification.deliveries["custom"]["delivered_envelopes"][0]  # type: ignore
+    assert custom_envelope.delivery_name == "custom"  # type: ignore
+    assert custom_envelope.target.entity_ids == ["notify.entity_2", "notify.entity_3"]  # type: ignore
+
+    assert len(notification.deliveries["DEFAULT_notify_entity"]["delivered_envelopes"]) == 1
+    assert notification.deliveries["DEFAULT_notify_entity"]["delivered_envelopes"][0].delivery_name == "DEFAULT_notify_entity"  # type: ignore
+    assert notification.deliveries["DEFAULT_notify_entity"]["delivered_envelopes"][0].target.entity_ids == ["notify.entity_1"]  # type: ignore

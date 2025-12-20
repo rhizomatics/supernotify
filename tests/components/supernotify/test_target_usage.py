@@ -32,7 +32,8 @@ async def test_target_use_merge_on_delivery():
     )
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.gong", "switch.pillow_vibrate"]
+    assert len(uut.delivered_envelopes) == 1
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.gong", "switch.pillow_vibrate"]
 
     uut = Notification(context, "testing")
     await uut.initialize()
@@ -50,7 +51,8 @@ async def test_target_use_fixed():
     )
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.pillow_vibrate"]
+    assert len(uut.delivered_envelopes) == 1
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
 
 
 async def test_target_use_on_no_delivery_targets():
@@ -63,12 +65,13 @@ async def test_target_use_on_no_delivery_targets():
     )
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.pillow_vibrate"]
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
 
     uut = Notification(context, "testing def")
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.pillow_vibrate"]
+    assert len(uut.delivered_envelopes) == 1
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
 
 
 async def test_target_use_on_no_action_targets():
@@ -86,7 +89,8 @@ async def test_target_use_on_no_action_targets():
     uut = Notification(context, "testing")
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.pillow_vibrate"]
+    assert len(uut.delivered_envelopes) == 1
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]
 
 
 async def test_target_use_merge_always():
@@ -95,9 +99,11 @@ async def test_target_use_merge_always():
     uut = Notification(context, "testing", target=["switch.gong"])
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.gong", "switch.pillow_vibrate"]
+    assert len(uut.delivered_envelopes) == 1
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.gong", "switch.pillow_vibrate"]
 
     uut = Notification(context, "testing")
     await uut.initialize()
     await uut.deliver()
-    assert uut.delivered_envelopes["generic"][0].target.entity_ids == ["switch.pillow_vibrate"]
+    assert len(uut.delivered_envelopes) == 1
+    assert uut.delivered_envelopes[0].target.entity_ids == ["switch.pillow_vibrate"]

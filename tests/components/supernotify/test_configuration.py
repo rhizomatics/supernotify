@@ -76,19 +76,27 @@ async def test_delivery_override_transport() -> None:
     )
     await uut.initialize()
     await uut.deliver()
-    envelope = uut.delivered_envelopes["dummy"][0]
+    assert len(uut.delivered_envelopes) == 1
+    envelope = uut.delivered_envelopes[0]
+    assert envelope.delivery_name == "regular_alert"
+    envelope = uut.delivered_envelopes[0]
     assert envelope.target.entity_ids == ["switch.gong"]
 
     uut = Notification(context, "testing target specified in delivery config", action_data={"delivery": ["quiet_alert"]})
     await uut.initialize()
 
     await uut.deliver()
-    envelope = uut.delivered_envelopes["dummy"][0]
+    assert len(uut.delivered_envelopes) == 1
+    envelope = uut.delivered_envelopes[0]
+    assert envelope.delivery_name == "quiet_alert"
     assert envelope.target.entity_ids == ["switch.pillow_vibrate"]
 
     uut = Notification(context, "testing defaulting to transport defaults", action_data={"delivery": ["day_alert"]})
     await uut.initialize()
 
     await uut.deliver()
-    envelope = uut.delivered_envelopes["dummy"][0]
+    assert len(uut.delivered_envelopes) == 1
+    envelope = uut.delivered_envelopes[0]
+    assert envelope.delivery_name == "day_alert"
+    envelope = uut.delivered_envelopes[0]
     assert envelope.target.entity_ids == ["media_player.hall"]

@@ -132,7 +132,7 @@ async def test_on_notify_mobile_push_with_person_derived_targets() -> None:
     n = Notification(ctx, message="hello there", title="testing")
     await n.initialize()
 
-    recipients: list[Target] = n.generate_recipients(delivery)
+    recipients: list[Target] = n.generate_targets(delivery)
     assert len(recipients) == 1
     assert len(recipients[0].mobile_app_ids) == 1
     assert recipients[0].mobile_app_ids[0] == "mobile_app_test_user_iphone"
@@ -237,8 +237,8 @@ async def test_message_override(hass: HomeAssistant) -> None:
         await hass.services.async_call("supernotify", "enquire_last_notification", None, blocking=True, return_response=True),
     )
     assert notification is not None
-    assert "delivered_envelopes" in notification
-    assert notification["delivered_envelopes"]["mobile_push"][0]["message"] == "FIXED_MESSAGE"
+    assert "delivered_envelopes" in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"]["delivered_envelopes"][0]["message"] == "FIXED_MESSAGE"
 
 
 async def test_top_level_data_used(hass: HomeAssistant) -> None:
@@ -262,8 +262,8 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
     )
     assert notification is not None
     # no android integration in test env
-    assert "undelivered_envelopes" in notification
-    assert notification["undelivered_envelopes"]["mobile_push"][0]["data"]["clickAction"] == "android_something"
+    assert "undelivered_envelopes" in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"]["undelivered_envelopes"][0]["data"]["clickAction"] == "android_something"
 
 
 async def test_action_title(hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:
