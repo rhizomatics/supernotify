@@ -468,11 +468,11 @@ class Notification(ArchivableObject):
             for k, v in self.__dict__.items()
             if k not in result and k not in object_refs and not k.startswith("_") and (not minimal or k not in keys_only)
         })
-        result = {
+        result.update({
             k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
             for k in exposed_if_populated
             if self.__dict__.get(k)
-        }
+        })
         if minimal:
             result.update({
                 k: sanitize(v.keys(), minimal=minimal, occupancy_only=True) for k, v in self.__dict__.items() if k in keys_only
