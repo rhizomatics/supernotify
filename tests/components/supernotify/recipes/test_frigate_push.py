@@ -89,9 +89,9 @@ async def test_frigate_blueprint_notification(hass: HomeAssistant, local_server:
         },
     )
     # set up local server for image, changing host name to mock server name, keeping path the same
-    image_url = urlparse(uut.data["image"])
+    image_url = urlparse(uut.extra_data["image"])
     snapshot_url = local_server.url_for(image_url.path)
-    uut.data["image"] = snapshot_url
+    uut.extra_data["image"] = snapshot_url
     local_server.expect_request(image_url.path).respond_with_data(sample_jpeg.contents, content_type=sample_jpeg.mime_type)  # type: ignore
 
     await uut.initialize()

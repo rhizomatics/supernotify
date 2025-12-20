@@ -82,7 +82,7 @@ class Notification(ArchivableObject):
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         action_data = action_data or {}
         self._target: Target | None = Target(target) if target else None
-        self.selected: Target = Target()
+        self._already_selected: Target = Target()
         self._title: str | None = title
         self.id = str(uuid.uuid1())
         self.delivered: int = 0
@@ -90,12 +90,14 @@ class Notification(ArchivableObject):
         self.skipped: int = 0
         self.dupe: bool = False
         self.deliveries: dict[str, dict[str, list[str] | list[Envelope] | dict[str, Any]]] = {}
-        self.skip_reasons: list[SuppressionReason] = []
+        self._skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
         # for compatibility with other notify calls, pass thru surplus data to underlying delivery transports
-        self.data: dict[str, Any] = {k: v for k, v in action_data.items() if k not in STRICT_ACTION_DATA_SCHEMA(action_data)}
-        action_data = {k: v for k, v in action_data.items() if k not in self.data}
+        self.extra_data: dict[str, Any] = {
+            k: v for k, v in action_data.items() if k not in STRICT_ACTION_DATA_SCHEMA(action_data)
+        }
+        action_data = {k: v for k, v in action_data.items() if k not in self.extra_data}
 
         self.priority: str = action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM)
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
@@ -134,7 +136,7 @@ class Notification(ArchivableObject):
 
         self.action_groups: list[str] | None = nullable_ensure_list(action_data.get(ATTR_ACTION_GROUPS))
         self.recipients_override: list[str] | None = nullable_ensure_list(action_data.get(ATTR_RECIPIENTS))
-        self.data.update(action_data.get(ATTR_DATA, {}))
+        self.extra_data.update(action_data.get(ATTR_DATA, {}))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
@@ -182,7 +184,7 @@ class Notification(ArchivableObject):
             self.apply_enabled_scenarios()
 
         if not self.media:
-            self.media = self.media_requirements(self.data)
+            self.media = self.media_requirements(self.extra_data)
 
     def media_requirements(self, data: dict[str, Any]) -> dict[str, Any]:
         """If no media defined, look for iOS / Android actions that have media defined
@@ -292,8 +294,8 @@ class Notification(ArchivableObject):
 
     def suppress(self, reason: SuppressionReason) -> None:
         self.suppressed = reason
-        if reason not in self.skip_reasons:
-            self.skip_reasons.append(reason)
+        if reason not in self._skip_reasons:
+            self._skip_reasons.append(reason)
         _LOGGER.info(f"SUPERNOTIFY Suppressing notification, reason:{reason}, id:{self.id}")
 
     async def deliver(self) -> bool:
@@ -401,8 +403,8 @@ class Notification(ArchivableObject):
                 else:
                     if suppression_reason:
                         envelope.skip_reason = suppression_reason
-                        if suppression_reason not in self.skip_reasons:
-                            self.skip_reasons.append(suppression_reason)
+                        if suppression_reason not in self._skip_reasons:
+                            self._skip_reasons.append(suppression_reason)
                         if suppression_reason == SuppressionReason.DUPE:
                             self.dupe = True
                     self.deliveries[delivery.name].setdefault(KEY_UNDELIVERED, [])
@@ -422,7 +424,7 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         object_refs = ["context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
-        exposed_if_populated = ["_delivery_error"]
+        exposed_if_populated = ["_delivery_error", "message_html", "extra_data"]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
             "created",
@@ -466,7 +468,11 @@ class Notification(ArchivableObject):
         result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
             for k, v in self.__dict__.items()
-            if k not in result and k not in object_refs and not k.startswith("_") and (not minimal or k not in keys_only)
+            if k not in result
+            and k not in exposed_if_populated
+            and k not in object_refs
+            and not k.startswith("_")
+            and (not minimal or k not in keys_only)
         })
         result.update({
             k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
@@ -587,10 +593,10 @@ class Notification(ArchivableObject):
         direct_targets: list[Target] = [t.direct() for t in split_targets]
         self.debug_trace.record_target(delivery.name, "5b_narrow_to_direct", direct_targets)
         if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
-            direct_targets = [t - self.selected for t in direct_targets]
+            direct_targets = [t - self._already_selected for t in direct_targets]
             self.debug_trace.record_target(delivery.name, "5c_make_unique_across_deliveries", direct_targets)
         for direct_target in direct_targets:
-            self.selected += direct_target
+            self._already_selected += direct_target
         self.debug_trace.record_target(delivery.name, "6_final_cut", direct_targets)
         return direct_targets
 
@@ -635,7 +641,7 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update(self.data)  # action call data
+                envelope_data.update(self.extra_data)  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
