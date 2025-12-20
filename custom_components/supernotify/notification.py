@@ -424,23 +424,27 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         object_refs = ["context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
-        exposed_if_populated = ["_delivery_error", "message_html", "extra_data"]
+        exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions"]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
+            "id",
             "created",
             "applied_scenario_names",
             "constrain_scenario_names",
             "required_scenario_names",
             "enabled_scenarios",
-            "selected_delivery_names",
             "selected_scenario_names",
+            "delivery_selection",
+            "delivery_overrides",
+            "selected_delivery_names",
+            "recipients_override",
             "delivered",
             "errored",
             "skipped",
             "deliveries",
         ]
 
-        def sanitize(v: Any, minimal: bool = True, **kwargs) -> Any:
+        def sanitize(v: Any, minimal: bool = True, top_level_keys_only: bool = False, **kwargs) -> Any:
             if isinstance(v, dt.datetime | dt.time | dt.date):
                 return v.isoformat()
             if isinstance(v, str | int | float | bool):
@@ -450,6 +454,8 @@ class Notification(ArchivableObject):
             if isinstance(v, tuple):
                 return (sanitize(vv, minimal=minimal, **kwargs) for vv in v)
             if isinstance(v, dict):
+                if top_level_keys_only:
+                    return [sanitize(k, minimal, **kwargs) for k in v]
                 return {k: sanitize(vv, minimal=minimal, **kwargs) for k, vv in v.items()}
             if isinstance(v, Enum):
                 return str(v)
@@ -461,9 +467,10 @@ class Notification(ArchivableObject):
             return None
 
         result = {
-            k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
+            k: sanitize(
+                self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
+            )
             for k in preferred_order
-            if (not minimal or k not in keys_only)
         }
         result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
@@ -479,10 +486,6 @@ class Notification(ArchivableObject):
             for k in exposed_if_populated
             if self.__dict__.get(k)
         })
-        if minimal:
-            result.update({
-                k: sanitize(v.keys(), minimal=minimal, occupancy_only=True) for k, v in self.__dict__.items() if k in keys_only
-            })
         return result
 
     def base_filename(self) -> str:
