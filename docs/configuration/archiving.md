@@ -10,7 +10,12 @@ tags:
 
 Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete with its debug trail, is archived.
 
-This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select.
+This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select. 
+
+Key fields to check if something doesn't seem right:
+
+- `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
+- `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
 
 A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.
 
