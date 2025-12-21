@@ -26,7 +26,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
-from .delivery import DeliveryRegistry
+from .delivery import Delivery, DeliveryRegistry
 from .model import ConditionVariables
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,21 +105,24 @@ class Scenario:
 
         for name_or_pattern, config in self._config_delivery.items():
             matched: bool = False
-            for delivery_name in self.delivery_registry.all_deliveries:
-                if name_or_pattern == delivery_name:
-                    self.delivery[delivery_name] = config
-                    self._delivery_selector[delivery_name] = name_or_pattern
-                    matched = True
-                elif re.fullmatch(name_or_pattern, delivery_name):
-                    if delivery_name in self._delivery_selector and self._delivery_selector.get(delivery_name) == delivery_name:
-                        _LOGGER.info(
-                            f"SUPERNOTIFY Scenario ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"
-                        )
-                    else:
-                        _LOGGER.debug(f"SUPERNOTIFY Scenario delivery '{name_or_pattern}' matched {delivery_name}")
-                        self.delivery[delivery_name] = config
-                        self._delivery_selector[delivery_name] = name_or_pattern
-                        matched = True
+            delivery: Delivery | None = self.delivery_registry.deliveries.get(name_or_pattern)
+            if delivery:
+                self.delivery[delivery.name] = config
+                self._delivery_selector[delivery.name] = name_or_pattern
+                matched = True
+            else:
+                # look for a wildcard match instead
+                for delivery_name in self.delivery_registry.all_deliveries:
+                    if re.fullmatch(name_or_pattern, delivery_name):
+                        if self._delivery_selector.get(delivery_name) == delivery_name:
+                            _LOGGER.info(
+                                f"SUPERNOTIFY Scenario ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"
+                            )
+                        else:
+                            _LOGGER.debug(f"SUPERNOTIFY Scenario delivery '{name_or_pattern}' matched {delivery_name}")
+                            self.delivery[delivery_name] = config
+                            self._delivery_selector[delivery_name] = name_or_pattern
+                            matched = True
             if not matched:
                 _LOGGER.error(f"SUPERNOTIFY Scenario {self.name} has delivery {name_or_pattern} not found")
                 self.startup_issue_count += 1
