@@ -63,7 +63,7 @@ async def test_delivery_override_transport() -> None:
             "regular_alert": {"transport": "dummy", "target": ["switch.pillow_vibrate"], "selection": ["explicit"]},
             "day_alert": {"transport": "dummy", "selection": ["explicit"]},
         },
-        transport_configs={"dummy": {CONF_DELIVERY_DEFAULTS: {"target": ["media_player.hall"]}}},
+        transports={"dummy": {CONF_DELIVERY_DEFAULTS: {"target": ["media_player.hall"]}}},
         transport_types=[DummyTransport],
     )
     await context.test_initialize()

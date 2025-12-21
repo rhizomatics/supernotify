@@ -188,11 +188,12 @@ def mock_context(
     context.hass_api.external_url = "http://hass-dev.nabu.casa"
     context.template_path = tmp_path / "templates"
 
-    mock_delivery_registry.deliveries = {
+    mock_delivery_registry._deliveries = {
         "plain_email": Delivery("plain_email", {}, EmailTransport(context)),
         "mobile": Delivery("mobile", {}, MobilePushTransport(context)),
         "chime": Delivery("chime", {}, ChimeTransport(context)),
     }
+
     return context
 
 
@@ -217,7 +218,7 @@ def sample_image_entity_id(mock_hass_api: HomeAssistantAPI, sample_image: TestIm
 
 @pytest.fixture
 def deliveries(mock_context: Context) -> dict[str, Delivery]:
-    return mock_context.delivery_registry.deliveries
+    return mock_context.delivery_registry._deliveries
 
 
 @pytest.fixture
@@ -237,8 +238,8 @@ def mock_transport() -> AsyncMock:
 
 
 @pytest.fixture
-def dummy_scenario(mock_hass_api) -> Scenario:
-    return Scenario("mockery", {}, mock_hass_api)
+def dummy_scenario(mock_hass_api, mock_delivery_registry) -> Scenario:
+    return Scenario("mockery", {}, mock_delivery_registry, mock_hass_api)
 
 
 @pytest.fixture

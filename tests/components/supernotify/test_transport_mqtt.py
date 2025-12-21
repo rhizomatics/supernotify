@@ -21,7 +21,7 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
         }
     }
     context = uninitialized_unmocked_config
-    context.delivery_registry._deliveries = deliveries
+    context.delivery_registry._config_deliveries = deliveries
     context.scenario_registry = mock_scenario_registry
 
     uut = MQTTTransport(context)

@@ -69,7 +69,8 @@ a set of delivery transports, which saves repetitive declaration in many notific
 Selection is made `implicit` so not switching off any other deliveries that would have applied.
 
 ```yaml
-red_alert:
+scenarios:
+  red_alert:
       delivery:
         chime_red_alert:
         upstairs_siren:
@@ -136,3 +137,38 @@ The templates are regular HomeAssistant `jinja2`, and have the same context vari
 Multiple scenarios can be applied, in the order provided, and each template will be applied in turn to the results of the previous template. So in the example below, you could apply both the *whisper* and *emotion* Amazon Alexa markup to the same message, or add in some sound effects based on any of the conditions.
 
 A blank `message_template` or `title_template` can also be used to selectively switch off one of those fields for a particular delivery, for example when sending a notification out via email, push and Alexa announcement.
+
+## Wildcard Deliveries
+
+Delivery names can use regular expressions rather than literal names. For example, to override the priority for
+all deliveries:
+
+```yaml
+scenarios:
+  red_alert:
+      .*:
+       data:
+        priority: critical
+```
+
+Or suppress notifications by disabling all deliveries:
+
+```yaml
+scenarios:
+  red_alert:
+      .*:
+       enabled: False
+```
+
+Any valid regular expression can be used, so for example if there are many "chime" deliveries:
+
+```yaml
+scenarios:
+  red_alert:
+      chime_.*:
+       enabled: False
+```
+
+Regular expressions can be mixed and matched with literal delivery names, where there is a clash the
+liternal name will work, where 2 regular expressions resolve to the same delivery, the last one to
+be applied is used.

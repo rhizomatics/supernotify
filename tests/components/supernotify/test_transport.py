@@ -19,10 +19,10 @@ from .doubles_lib import DummyService
 from .hass_setup_lib import TestingContext
 
 
-def test_simplify_text(mock_context: Context) -> None:
+def test_simplify_text() -> None:
     from custom_components.supernotify.transports.generic import GenericTransport
 
-    uut = GenericTransport(mock_context)
+    uut = GenericTransport(Mock())
     assert (
         uut.simplify("Hello_world! Visit https://example.com (it's great) £100 <test>", strip_urls=True)
         == "Hello world! Visit it's great 100 test"

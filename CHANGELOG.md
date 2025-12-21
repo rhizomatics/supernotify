@@ -1,7 +1,8 @@
 # Public releases
 
 ## 1.6.1
-### Changes
+### New
+- Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to every one
 - `enquire_deliveries_by_scenario` action now lists which deliveries are enabled by the scenario, disabled by it, and all the scenarios to which it applies overrides
 ## 1.6.0
 ### Fixes
@@ -196,7 +197,7 @@ is archived for debug purposes ( and supports the new unique target value functi
   - This means target category selection for generic deliveries is configured per delivery, e.g. telegram and discord
 - `Target` overhauled to simplify repetitive logic, minimize getattr use, and allow custom domains
 - Custom target domains now supported, so can have a `discord` target in addition to the standard `entity_id`,`email` etc
-- `action` for mobile app notifications is now `mobile_app_id` to be clearer and avoid ambiguity with mobile push actions
+- `action` for mobile app notifications is now `mobile_action` to be clearer and avoid ambiguity with mobile push actions
 - All personal target resolution now done at start up, and a `Target` object added to people registry entries
   - Easier to debug target selection now, and the email/sms/mobile_push transports are simpler
 

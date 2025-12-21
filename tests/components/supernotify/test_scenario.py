@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import Mock
 
 from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS
 from homeassistant.core import HomeAssistant
@@ -29,25 +30,29 @@ from .hass_setup_lib import TestingContext
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_simple_create(mock_hass_api: HomeAssistantAPI) -> None:
-    uut = Scenario("testing", {}, mock_hass_api)
+async def test_simple_create(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
+    uut = Scenario("testing", {}, mock_delivery_registry, mock_hass_api)
     assert await uut.validate()
     assert await uut.validate()
     assert not uut.evaluate(ConditionVariables())
 
 
-async def test_simple_trace(mock_hass_api: HomeAssistantAPI) -> None:
-    uut = Scenario("testing", {}, mock_hass_api)
+async def test_simple_trace(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
+    uut = Scenario("testing", {}, mock_delivery_registry, mock_hass_api)
     assert await uut.validate()
     assert await uut.validate()
     assert not await uut.trace(ConditionVariables())
 
 
-async def test_validate(mock_hass_api: HomeAssistantAPI) -> None:
+async def test_validate(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
     uut = Scenario(
-        "testing", {"delivery": {"good": {}, "bad": {}, "ok": {}}, "action_groups": ["lights", "snoozes"]}, mock_hass_api
+        "testing",
+        {"delivery": {"good": {}, "bad": {}, "ok": {}}, "action_groups": ["lights", "snoozes"]},
+        mock_delivery_registry,
+        mock_hass_api,
     )
-    await uut.validate(valid_delivery_names=["good", "ok"], valid_action_group_names=["snoozes"])
+    mock_delivery_registry.deliveries = {"good": Mock(), "ok": Mock()}
+    await uut.validate(valid_action_group_names=["snoozes"])
     assert "bad" not in uut.delivery
     assert "good" in uut.delivery
     assert "ok" in uut.delivery
@@ -64,7 +69,7 @@ async def test_validate(mock_hass_api: HomeAssistantAPI) -> None:
     )
 
 
-async def test_conditional_create(hass: HomeAssistant) -> None:
+async def test_conditional_create(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
@@ -85,6 +90,7 @@ async def test_conditional_create(hass: HomeAssistant) -> None:
                 ],
             },
         }),
+        mock_delivery_registry,
         hass_api,
     )
     assert await uut.validate()
@@ -414,8 +420,9 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
     assert "spambox@myhome.org" not in texted.target.email
 
 
-async def test_attributes(hass: HomeAssistant) -> None:
+async def test_attributes(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
+    mock_delivery_registry.deliveries = {"doorbell_chime_alexa": Mock(), "email": Mock()}
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
@@ -439,6 +446,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
                 ],
             },
         }),
+        mock_delivery_registry,
         hass_api,
     )
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
@@ -448,13 +456,14 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert attrs["delivery"]["doorbell_chime_alexa"]["data"]["amazon_magic_id"] == "a77464"
 
 
-async def test_secondary_scenario(hass: HomeAssistant) -> None:
+async def test_secondary_scenario(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
             CONF_CONDITIONS: {"condition": "template", "value_template": '{{"scenario-possible-danger" in applied_scenarios}}'}
         }),
+        mock_delivery_registry,
         hass_api,
     )
     assert await uut.validate()
@@ -465,7 +474,7 @@ async def test_secondary_scenario(hass: HomeAssistant) -> None:
     assert uut.evaluate(cvars)
 
 
-async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
+async def test_scenario_unknown_var(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
@@ -475,12 +484,13 @@ async def test_scenario_unknown_var(hass: HomeAssistant) -> None:
                 "value_template": '{{weather == "sunny" and "danger" in applied_scenarios}}',
             }
         }),
+        mock_delivery_registry,
         hass_api,
     )
     assert not await uut.validate()
 
 
-async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
+async def test_scenario_complex_hass_entities(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
     hass.states.async_set("sensor.issues", "23")
     uut = Scenario(
@@ -505,6 +515,7 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
                 ],
             }
         }),
+        mock_delivery_registry,
         hass_api,
     )
     assert await uut.validate()
@@ -513,11 +524,12 @@ async def test_scenario_complex_hass_entities(hass: HomeAssistant) -> None:
     assert not uut.evaluate(ConditionVariables())
 
 
-async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
+async def test_scenario_shortcut_style(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({CONF_CONDITIONS: "{{ (state_attr('device_tracker.iphone', 'battery_level')|int) > 50 }}"}),
+        mock_delivery_registry,
         hass_api,
     )
     hass.states.async_set("device_tracker.iphone", "on", attributes={"battery_level": 12})
@@ -527,16 +539,74 @@ async def test_scenario_shortcut_style(hass: HomeAssistant) -> None:
     assert uut.evaluate(ConditionVariables())
 
 
-async def test_trace(hass: HomeAssistant) -> None:
+async def test_trace(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
             CONF_CONDITIONS: {"condition": "template", "value_template": "{{'scenario-alert' in applied_scenarios}}"}
         }),
+        mock_delivery_registry,
         hass_api,
     )
     assert await uut.validate()
     assert await uut.trace(ConditionVariables(["scenario-alert"], [], [], PRIORITY_MEDIUM, {"AT_HOME": [{"name": "bob"}]}))
     assert uut.last_trace is not None
     _LOGGER.info("trace: %s", uut.last_trace.as_dict())
+
+
+async def test_scenario_wildcard_apply(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
+        scenarios={
+            "Suppress": {
+                CONF_DELIVERY: {".*": {"enabled": False}},
+                CONF_CONDITIONS: "{{'noisy' in notification_message|lower}}",
+            },
+        },
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy"},
+            "mobile": {CONF_TRANSPORT: "dummy"},
+            "siren": {CONF_TRANSPORT: "dummy"},
+            "chime": {CONF_TRANSPORT: "dummy"},
+        },
+        transport_types=[DummyTransport],
+    )
+
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == []
+    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime", "siren")
+
+    uut = Notification(ctx, "noisy message")
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == ["Suppress"]
+    assert uut.selected_delivery_names == []
+
+
+async def test_scenario_wildcard_and_literal_apply(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
+        scenarios={
+            "Suppress": {
+                CONF_DELIVERY: {"plain_email": {"enabled": True}, ".*": {"enabled": False}},
+                CONF_CONDITIONS: "{{'noisy' in notification_message|lower}}",
+            },
+        },
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy"},
+            "mobile": {CONF_TRANSPORT: "dummy"},
+            "siren": {CONF_TRANSPORT: "dummy"},
+            "chime": {CONF_TRANSPORT: "dummy"},
+        },
+        transport_types=[DummyTransport],
+    )
+
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "noisy message")
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == ["Suppress"]
+    assert uut.selected_delivery_names == ["plain_email"]

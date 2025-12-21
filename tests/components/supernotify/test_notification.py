@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
-from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify import (
@@ -27,17 +26,28 @@ from custom_components.supernotify import (
     TRANSPORT_MOBILE_PUSH,
     SelectionRank,
 )
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import DebugTrace, Notification
-from custom_components.supernotify.people import PeopleRegistry
-from custom_components.supernotify.scenario import Scenario
 from custom_components.supernotify.transports.email import EmailTransport
 
 from .hass_setup_lib import TestingContext
+
+DELIVERIES = """
+plain_email:
+    transport: email
+    action: notify.smtp
+mobile:
+    transport: mobile_push
+chime:
+    transport: chime
+"""
+TRANSPORTS = """
+notify_entity:
+    enabled: false
+"""
 
 
 async def test_simple_create() -> None:
@@ -49,7 +59,6 @@ async def test_simple_create() -> None:
     )
     await ctx.test_initialize()
 
-    # mock_context.delivery_registry.implicit_delivery_names=["plain_email", "mobile"]
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
     assert uut.enabled_scenarios == {}
@@ -62,12 +71,13 @@ async def test_simple_create() -> None:
     assert uut.selected_delivery_names == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
-async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context, deliveries: dict[str, Delivery]) -> None:
-    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
+async def test_explicit_delivery() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
 
     # string forces explicit selection
     uut = Notification(
-        mock_context,
+        ctx,
         "testing 123",
         action_data={CONF_DELIVERY: "mobile"},
     )
@@ -77,7 +87,7 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
 
     # list forces explicit selection
     uut = Notification(
-        mock_context,
+        ctx,
         "testing 123",
         action_data={CONF_DELIVERY: ["mobile", "chime"]},
     )
@@ -87,7 +97,7 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
 
     # dict doesn't force explicit selection
     uut = Notification(
-        mock_context,
+        ctx,
         "testing 123",
         action_data={CONF_DELIVERY: {"mobile": {CONF_DATA: {"foo": "bar"}}}},
     )
@@ -96,27 +106,52 @@ async def test_explicit_delivery(mock_hass: HomeAssistant, mock_context: Context
     assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
 
 
-async def test_scenario_delivery(mock_context: Context, dummy_scenario: Scenario, deliveries: dict[str, Delivery]) -> None:
-    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
-    mock_context.scenario_registry.scenarios = {"mockery": dummy_scenario}
-    uut = Notification(mock_context, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+async def test_scenario_delivery_no_change() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {}})
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
-async def test_explicit_list_of_deliveries(mock_context: Context) -> None:
-    uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+async def test_scenario_delivery_disable() -> None:
+    ctx = TestingContext(
+        deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {"delivery": {"chime": {"enabled": False}}}}
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    await uut.initialize()
+    assert uut.selected_delivery_names == unordered("plain_email", "mobile")
+
+
+async def test_scenario_delivery_enable() -> None:
+    ctx = TestingContext(
+        deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}}
+    )
+    await ctx.test_initialize()
+    ctx.delivery_registry.deliveries["chime"].enabled = False
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    await uut.initialize()
+    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+
+
+async def test_explicit_list_of_deliveries() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
     assert uut.selected_delivery_names == ["mobile"]
 
 
-async def test_action_data_disable_delivery(
-    mock_context: Context, dummy_scenario: Scenario, deliveries: dict[str, Delivery]
-) -> None:
-    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
-    mock_context.scenario_registry.scenarios = {"mockery": dummy_scenario}
+async def test_action_data_disable_delivery() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {}})
+    await ctx.test_initialize()
+
     uut = Notification(
-        mock_context, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
+        ctx, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
     )
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "chime")
@@ -216,27 +251,26 @@ async def test_build_targets_for_simple_case() -> None:
     generic = ctx.transport(TRANSPORT_GENERIC)
     delivery = Delivery("simple", {}, generic)
 
-    # mock_context.deliveries={'testy':Delivery("testy",{},transport)}
     uut = Notification(ctx, "testing 123")
     recipients: list[Target] = uut.generate_targets(delivery)
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [Envelope(Delivery("simple", {}, generic), uut)]
 
 
-async def test_dict_of_delivery_tuning_does_not_restrict_deliveries(
-    mock_context: Context, deliveries: dict[str, Delivery]
-) -> None:
-    ctx = TestingContext()
+async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
     await ctx.test_initialize()
-    mock_context.delivery_registry.implicit_deliveries = deliveries.values()  # type: ignore
-    uut = Notification(mock_context, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
     assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
 
 
-async def test_snapshot_url(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
+async def test_snapshot_url() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
     uut = Notification(
-        mock_context,
+        ctx,
         "testing 123",
         action_data={CONF_MEDIA: {ATTR_MEDIA_SNAPSHOT_URL: "/my_local_image"}},
     )
@@ -253,9 +287,11 @@ async def test_snapshot_url(mock_context: Context, mock_people_registry: PeopleR
         mock_snapshot.assert_not_called()
 
 
-async def test_camera_entity(mock_context: Context, mock_people_registry: PeopleRegistry) -> None:
+async def test_camera_entity() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
     uut = Notification(
-        mock_context,
+        ctx,
         "testing 123",
         action_data={CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"}},
     )

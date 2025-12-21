@@ -1,4 +1,4 @@
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
@@ -188,8 +188,8 @@ async def test_update_equiv_domain(mock_hass) -> None:
     )
 
 
-def test_prune_fields(mock_context):
-    uut = GenericTransport(mock_context)
+def test_prune_fields():
+    uut = GenericTransport(Mock())
     sample = {"foo": 123, "bar": 789, "enabled": True}
     assert (
         uut.prune_data(

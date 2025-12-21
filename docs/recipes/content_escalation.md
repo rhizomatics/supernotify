@@ -25,21 +25,17 @@ In this case a Frigate notification is usually a medium priority, however if the
     high_alert:
         alias: make a fuss if alarm armed or high priority
         conditions:
-          condition: and
-          conditions:
-            - "{{notification_priority not in ['critical','low']}}"
-            - condition: or
-              conditions:
-                - "{{notification_priority in ['high'] and 'person was detected' in notification_message|lower }}"
-                - condition: state
-                  entity_id: alarm_control_panel.home_alarm_control
-                  state:
-                    - armed_away
-                    - armed_vacation
+          - "{{notification_priority in ['high'] and 'person was detected' in notification_message|lower }}"
+          - condition: state
+            entity_id: alarm_control_panel.home_alarm_control
+            state:
+              - armed_away
+              - armed_vacation
         delivery:
-          plain_email:
-          sms:
-          apple_push:
+          .*:
+            enabled: true
+            data:
+              priority:critical
         action_groups:
           - alarm_panel
           - lights

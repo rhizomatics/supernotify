@@ -24,7 +24,7 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
         }
     }
     context = uninitialized_unmocked_config
-    context.delivery_registry._deliveries = delivery_config
+    context.delivery_registry._config_deliveries = delivery_config
 
     uut = AlexaMediaPlayerTransport(context)
     await uut.initialize()

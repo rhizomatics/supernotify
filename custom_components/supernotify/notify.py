@@ -77,8 +77,6 @@ from .transports.persistent import PersistentTransport
 from .transports.sms import SMSTransport
 
 if TYPE_CHECKING:
-    from custom_components.supernotify.delivery import Delivery
-
     from .scenario import Scenario
 
 PARALLEL_UPDATES = 0
@@ -478,22 +476,15 @@ class SupernotifyAction(BaseNotificationService):
                     else:
                         _LOGGER.info(f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
             elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_delivery_"):
-                delivery_config: Delivery | None = self.context.delivery_registry.deliveries.get(
-                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_delivery_", "")
-                )
-                if delivery_config is None:
-                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown delivery {event.data['entity_id']}")
+                delivery_name: str = event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_delivery_", "")
+                if new_state.state == "off":
+                    if self.context.delivery_registry.disable(delivery_name):
+                        changes += 1
+                elif new_state.state == "on":
+                    if self.context.delivery_registry.enable(delivery_name):
+                        changes += 1
                 else:
-                    if new_state.state == "off" and delivery_config.enabled:
-                        delivery_config.enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling delivery {delivery_config.name}")
-                        changes += 1
-                    elif new_state.state == "on" and not delivery_config.enabled:
-                        delivery_config.enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling delivery {delivery_config.name}")
-                        changes += 1
-                    else:
-                        _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_config.name}, already {new_state}")
+                    _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_name} for state {new_state.state}")
             elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_transport_"):
                 transport: Transport | None = self.context.delivery_registry.transports.get(
                     event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_transport_", "")
@@ -594,7 +585,7 @@ class SupernotifyAction(BaseNotificationService):
                 entity_registry=ent_reg,
             )
 
-        for delivery in self.context.delivery_registry.deliveries.values():
+        for delivery in self.context.delivery_registry.all_deliveries.values():
             self.expose_entity(
                 f"delivery_{delivery.name}",
                 state=STATE_ON if delivery.enabled else STATE_OFF,
@@ -626,8 +617,8 @@ class SupernotifyAction(BaseNotificationService):
     def enquire_deliveries_by_scenario(self) -> dict[str, dict[str, list[str]]]:
         return {
             name: {
-                "enabled": scenario.enabled_deliveries(),
-                "disabled": scenario.disabled_deliveries(),
+                "enabled": scenario.enabling_deliveries(),
+                "disabled": scenario.disabling_deliveries(),
                 "applies": scenario.relevant_deliveries(),
             }
             for name, scenario in self.context.scenario_registry.scenarios.items()

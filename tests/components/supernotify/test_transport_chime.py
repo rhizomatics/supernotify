@@ -89,7 +89,7 @@ async def test_deliver() -> None:
 async def test_deliver_alias() -> None:
     """Test on_notify_chime"""
     context = TestingContext(
-        transport_configs={
+        transports={
             TRANSPORT_CHIME: {
                 "delivery_defaults": {
                     "target": ["media_player.kitchen_alexa", "media_player.hall_echo", "ffff0000eeee1111dddd2222cccc3333"],
@@ -176,7 +176,7 @@ async def test_deliver_alias() -> None:
 
 async def test_script_debug() -> None:
     context = TestingContext(
-        transport_configs={
+        transports={
             TRANSPORT_CHIME: {
                 "delivery_defaults": {
                     "options": {
@@ -296,7 +296,7 @@ async def test_deliver_to_group() -> None:
 
 async def test_deliver_rest_command() -> None:
     context = TestingContext(
-        transport_configs={
+        transports={
             TRANSPORT_CHIME: {
                 "delivery_defaults": {
                     "options": {
@@ -348,7 +348,7 @@ async def test_deliver_rest_command() -> None:
 
 async def test_documentation_example() -> None:
     context = TestingContext(
-        transport_configs="""
+        transports="""
   chime:
     device_discovery: True
     device_model_include: Speaker Group

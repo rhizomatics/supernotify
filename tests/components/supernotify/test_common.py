@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from custom_components.supernotify.common import CallRecord, DupeChecker, ensure_dict, ensure_list, safe_extend, safe_get
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
@@ -10,8 +12,8 @@ def test_safe_get():
 
 
 def test_safe_extend():
-    assert safe_extend(None, None) == []
-    assert safe_extend(1, 3) == [1, 3]
+    assert safe_extend(None, None) == []  # type:ignore[invalid-argument-type]
+    assert safe_extend(1, 3) == [1, 3]  # type:ignore[invalid-argument-type]
     assert safe_extend([], 3) == [3]
     assert safe_extend([1], (2, 3)) == [1, 2, 3]
     assert safe_extend([1, 2], 3) == [1, 2, 3]
@@ -44,19 +46,19 @@ def test_call_record():
     }
 
 
-def test_dupe_check_suppresses_same_priority_and_message(mock_context) -> None:
-    delivery = mock_context.delivery_registry.deliveries["mobile"]
+def test_dupe_check_suppresses_same_priority_and_message() -> None:
+    delivery = Mock(name="tester")
     uut = DupeChecker({})
-    e1 = Envelope(delivery, Notification(mock_context, "message here", "title here"))
+    e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
-    e2 = Envelope(delivery, Notification(mock_context, "message here", "title here"))
+    e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e2) is True
 
 
-def test_dupe_check_allows_higher_priority_and_same_message(mock_context) -> None:
-    delivery = mock_context.delivery_registry.deliveries["mobile"]
+def test_dupe_check_allows_higher_priority_and_same_message() -> None:
+    delivery = Mock(name="tester")
     uut = DupeChecker({})
-    e1 = Envelope(delivery, Notification(mock_context, "message here", "title here"))
+    e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
-    e2 = Envelope(delivery, Notification(mock_context, "message here", "title here"), data={"priority": "high"})
+    e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
     assert uut.check(e2) is False

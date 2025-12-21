@@ -248,9 +248,9 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(scenario.enabled_deliveries())
+                scenario_enable_deliveries.extend(scenario.enabling_deliveries())
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(scenario.disabled_deliveries())
+                scenario_disable_deliveries.extend(scenario.disabling_deliveries())
 
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
@@ -284,10 +284,12 @@ class Notification(ArchivableObject):
         #    ]
         all_enabled = list(set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries))
         all_disabled = scenario_disable_deliveries + override_disable_deliveries
+        override_enabled = list(set(scenario_enable_deliveries + override_enable_deliveries))
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
-        unsorted_objs: list[Delivery] = [self.delivery_registry.deliveries[d] for d in all_enabled if d not in all_disabled]
+        unsorted_objs: list[Delivery] = [self.delivery_registry.all_deliveries[d] for d in all_enabled if d not in all_disabled]
+        unsorted_objs = [d for d in unsorted_objs if d.enabled or d.name in override_enabled]
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
         last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]

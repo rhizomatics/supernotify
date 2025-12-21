@@ -147,11 +147,13 @@ These two scenarios will not only override the email priority, but also trim off
 message is already at the right priority. That's completely optional, and remove the `message_template` if
 you like the whole message.
 
+This makes use of regular expressions rather than literal delivery names, so can be applied quickly to all deliveries.
+
 ```yaml title="Supernotify config snippet"
   high_risk:
       conditions: "{{notification_message is match('HIGH RISK',ignorecase=True) }}"
       delivery:
-        plain_email:
+        .*:
           data:
             priority: high
             message_template: "{{notification_message | regex_replace('high risk[:!]*','',ignorecase=True) | trim}}"
@@ -159,14 +161,12 @@ you like the whole message.
     low_risk:
         conditions: "{{notification_message is match('LOW RISK',ignorecase=True)}}"
         delivery:
-          plain_email:
+          .*:
             data:
               priority: low
               message_template: "{{notification_message | regex_replace('low risk[:!]*','',ignorecase=True) | trim}}"
 
 ```
-
-Note that you have to set priority and message per delivery - a future Supernotify might make this easier to do in bulk.
 
 ### Tuning GenAI for Specific Objects
 

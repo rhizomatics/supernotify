@@ -89,7 +89,7 @@ class TestingContext(Context):
         scenarios: ConfigType | str | None = None,
         recipients: list[dict[str, Any]] | str | None = None,
         mobile_actions: ConfigType | str | None = None,
-        transport_configs: ConfigType | str | None = None,
+        transports: ConfigType | str | None = None,
         transport_instances: list[Transport] | None = None,
         transport_types: list[type[Transport]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
@@ -122,8 +122,8 @@ class TestingContext(Context):
             raw_config[CONF_SCENARIOS] = load_config(scenarios)
         if mobile_actions:
             raw_config[CONF_ACTIONS] = load_config(mobile_actions)
-        if transport_configs:
-            raw_config[CONF_TRANSPORT] = load_config(transport_configs)
+        if transports:
+            raw_config[CONF_TRANSPORT] = load_config(transports)
         if archive_config:
             raw_config[CONF_ARCHIVE] = load_config(archive_config)
         if template_path:
@@ -236,7 +236,11 @@ class TestingContext(Context):
         return self.config.get(CONF_DELIVERY, {}).get(delivery_name)
 
     def add_delivery(self, delivery_name: str, transport: str, **kwargs: Any) -> None:
-        self.delivery_registry._deliveries[delivery_name] = {CONF_NAME: delivery_name, CONF_TRANSPORT: transport, **kwargs}
+        self.delivery_registry._config_deliveries[delivery_name] = {
+            CONF_NAME: delivery_name,
+            CONF_TRANSPORT: transport,
+            **kwargs,
+        }
         if self.initialized:
             delivery = Delivery(delivery_name, {CONF_TRANSPORT: transport, **kwargs}, self.transport(transport))
             self.delivery_registry.deliveries[delivery_name] = delivery

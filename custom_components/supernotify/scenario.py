@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_ENABLED
@@ -42,16 +43,19 @@ class ScenarioRegistry:
         mobile_actions: ConfigType,
         hass_api: HomeAssistantAPI,
     ) -> None:
-        all_delivery_names: list[str] = list(delivery_registry.deliveries)
+
         for scenario_name, scenario_definition in self._config.items():
-            scenario = Scenario(scenario_name, scenario_definition, hass_api)
-            if await scenario.validate(valid_delivery_names=all_delivery_names, valid_action_group_names=list(mobile_actions)):
+            scenario = Scenario(scenario_name, scenario_definition, delivery_registry, hass_api)
+            if await scenario.validate(valid_action_group_names=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
 
 
 class Scenario:
-    def __init__(self, name: str, scenario_definition: dict[str, Any], hass_api: HomeAssistantAPI) -> None:
+    def __init__(
+        self, name: str, scenario_definition: dict[str, Any], delivery_registry: DeliveryRegistry, hass_api: HomeAssistantAPI
+    ) -> None:
         self.hass_api: HomeAssistantAPI = hass_api
+        self.delivery_registry = delivery_registry
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
@@ -61,14 +65,14 @@ class Scenario:
             self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
-        self.delivery: dict[str, DeliveryCustomization] = {
+        self._config_delivery: dict[str, DeliveryCustomization] = {
             k: DeliveryCustomization(v) for k, v in scenario_definition.get(CONF_DELIVERY, {}).items()
         }
+        self.delivery: dict[str, DeliveryCustomization] = {}
+        self._delivery_selector: dict[str, str] = {}
         self.last_trace: ActionTrace | None = None
 
-    async def validate(
-        self, valid_delivery_names: list[str] | None = None, valid_action_group_names: list[str] | None = None
-    ) -> bool:
+    async def validate(self, valid_action_group_names: list[str] | None = None) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
         if self.conditions_config:
             error: str | None = None
@@ -96,22 +100,28 @@ class Scenario:
                 )
                 return False
 
-        if valid_delivery_names is not None:
-            invalid_deliveries: list[str] = []
-            for delivery_name in self.delivery:
-                if delivery_name not in valid_delivery_names:
-                    _LOGGER.error(f"SUPERNOTIFY Unknown delivery {delivery_name} removed from scenario {self.name}")
-                    invalid_deliveries.append(delivery_name)
-                    self.hass_api.raise_issue(
-                        f"scenario_{self.name}_delivery_{delivery_name}",
-                        is_fixable=False,
-                        issue_key="scenario_delivery",
-                        issue_map={"scenario": self.name, "delivery": delivery_name},
-                        severity=ir.IssueSeverity.WARNING,
-                        learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
-                    )
-            for delivery_name in invalid_deliveries:
-                del self.delivery[delivery_name]
+        for name_or_pattern, config in self._config_delivery.items():
+            matched: bool = False
+            for delivery_name in self.delivery_registry.deliveries:
+                if name_or_pattern == delivery_name or re.fullmatch(name_or_pattern, delivery_name):
+                    if self._delivery_selector.get(delivery_name) == delivery_name:
+                        _LOGGER.info(
+                            f"SUPERNOTIFY Scenario ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"
+                        )
+                    else:
+                        self.delivery[delivery_name] = config
+                        self._delivery_selector[delivery_name] = name_or_pattern
+                        matched = True
+            if not matched:
+                _LOGGER.error(f"SUPERNOTIFY Scenario {self.name} has no delivery to match {delivery_name}")
+                self.hass_api.raise_issue(
+                    f"scenario_{self.name}_delivery_{delivery_name}",
+                    is_fixable=False,
+                    issue_key="scenario_delivery",
+                    issue_map={"scenario": self.name, "delivery": delivery_name},
+                    severity=ir.IssueSeverity.WARNING,
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
+                )
 
         if valid_action_group_names is not None:
             invalid_action_groups: list[str] = []
@@ -131,13 +141,13 @@ class Scenario:
                 self.action_groups.remove(action_group_name)
         return True
 
-    def enabled_deliveries(self) -> list[str]:
+    def enabling_deliveries(self) -> list[str]:
         return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled]
 
     def relevant_deliveries(self) -> list[str]:
         return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled or del_config is None]
 
-    def disabled_deliveries(self) -> list[str]:
+    def disabling_deliveries(self) -> list[str]:
         return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled is False]
 
     def delivery_customization(self, delivery_name: str) -> DeliveryCustomization | None:
