@@ -5,6 +5,7 @@ tags:
   - email
   - cctv
   - frigate
+  - ios
 description: Send out multiple notification types with the Frigate Blueprint, including using attaching to emails the snapshots it generates for mobile push messages
 ---
 # Recipe - Frigate Blueprint Emails
@@ -17,9 +18,10 @@ mobile push available.
 
 ## Implementation
 
-Specify your Supernotify platform as the `notify_group`, and within Supernotify make sure email is configured. The mobile push config will automatically be turned into attachments and text for the email.
+Specify your Supernotify platform as the `notify_group` in the template, and within Supernotify make sure email is configured. The mobile push config will automatically be turned into attachments and text for the email.
 
-Note that `notify_device` currently needs specified to suppress Frigate template errors, any old ID will do.
+!!! tip
+    Note that `notify_device` currently needs specified to suppress Frigate template errors, any old ID will do.
 
 ## Example Configuration
 
