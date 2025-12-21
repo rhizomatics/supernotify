@@ -36,9 +36,6 @@ In this case a Frigate notification is usually a medium priority, however if the
             enabled: true
             data:
               priority:critical
-        action_groups:
-          - alarm_panel
-          - lights
 ```
 
 ## Variations

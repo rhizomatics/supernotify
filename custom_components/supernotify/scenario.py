@@ -48,6 +48,8 @@ class ScenarioRegistry:
             scenario = Scenario(scenario_name, scenario_definition, delivery_registry, hass_api)
             if await scenario.validate(valid_action_group_names=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
+            else:
+                _LOGGER.warning("SUPERNOTIFY Scenario %s failed to validate, ignoring", scenario.name)
 
 
 class Scenario:
@@ -71,6 +73,7 @@ class Scenario:
         self.delivery: dict[str, DeliveryCustomization] = {}
         self._delivery_selector: dict[str, str] = {}
         self.last_trace: ActionTrace | None = None
+        self.startup_issue_count: int = 0
 
     async def validate(self, valid_action_group_names: list[str] | None = None) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
@@ -90,6 +93,7 @@ class Scenario:
                 )
                 error = f"Unknown error {e}"
             if error is not None:
+                self.startup_issue_count += 1
                 self.hass_api.raise_issue(
                     f"scenario_{self.name}_condition",
                     is_fixable=False,
@@ -98,27 +102,32 @@ class Scenario:
                     severity=ir.IssueSeverity.ERROR,
                     learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                 )
-                return False
 
         for name_or_pattern, config in self._config_delivery.items():
             matched: bool = False
-            for delivery_name in self.delivery_registry.deliveries:
-                if name_or_pattern == delivery_name or re.fullmatch(name_or_pattern, delivery_name):
-                    if self._delivery_selector.get(delivery_name) == delivery_name:
+            for delivery_name in self.delivery_registry.all_deliveries:
+                if name_or_pattern == delivery_name:
+                    self.delivery[delivery_name] = config
+                    self._delivery_selector[delivery_name] = name_or_pattern
+                    matched = True
+                elif re.fullmatch(name_or_pattern, delivery_name):
+                    if delivery_name in self._delivery_selector and self._delivery_selector.get(delivery_name) == delivery_name:
                         _LOGGER.info(
                             f"SUPERNOTIFY Scenario ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"
                         )
                     else:
+                        _LOGGER.debug(f"SUPERNOTIFY Scenario delivery '{name_or_pattern}' matched {delivery_name}")
                         self.delivery[delivery_name] = config
                         self._delivery_selector[delivery_name] = name_or_pattern
                         matched = True
             if not matched:
-                _LOGGER.error(f"SUPERNOTIFY Scenario {self.name} has no delivery to match {delivery_name}")
+                _LOGGER.error(f"SUPERNOTIFY Scenario {self.name} has delivery {name_or_pattern} not found")
+                self.startup_issue_count += 1
                 self.hass_api.raise_issue(
-                    f"scenario_{self.name}_delivery_{delivery_name}",
+                    f"scenario_{self.name}_delivery_{name_or_pattern.replace('.', 'DOT').replace('*', 'STAR')}",
                     is_fixable=False,
                     issue_key="scenario_delivery",
-                    issue_map={"scenario": self.name, "delivery": delivery_name},
+                    issue_map={"scenario": self.name, "delivery": name_or_pattern},
                     severity=ir.IssueSeverity.WARNING,
                     learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
                 )
@@ -129,6 +138,7 @@ class Scenario:
                 if action_group_name not in valid_action_group_names:
                     _LOGGER.error(f"SUPERNOTIFY Unknown action group {action_group_name} removed from scenario {self.name}")
                     invalid_action_groups.append(action_group_name)
+                    self.startup_issue_count += 1
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_action_group_{action_group_name}",
                         is_fixable=False,
@@ -139,7 +149,8 @@ class Scenario:
                     )
             for action_group_name in invalid_action_groups:
                 self.action_groups.remove(action_group_name)
-        return True
+
+        return self.startup_issue_count == 0
 
     def enabling_deliveries(self) -> list[str]:
         return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled]

@@ -39,9 +39,6 @@ scenarios:
               entity_id: alarm_control_panel.home_alarm_control
               state:
               - armed_night
-        action_groups:
-            - alarm_panel
-            - lights
         delivery:
             apple_push:
             alexa_announce:

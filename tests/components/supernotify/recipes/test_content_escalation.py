@@ -45,9 +45,6 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
             enabled: true
             data:
               priority: critical
-        action_groups:
-          - alarm_panel
-          - lights
 """,
         services={"notify": ["send_message", "smtp", "4g_modem", "mobile_app_iphone"]},
     )

@@ -51,13 +51,14 @@ async def test_validate(mock_hass_api: HomeAssistantAPI, mock_delivery_registry)
         mock_delivery_registry,
         mock_hass_api,
     )
-    mock_delivery_registry.deliveries = {"good": Mock(), "ok": Mock()}
-    await uut.validate(valid_action_group_names=["snoozes"])
+    mock_delivery_registry.all_deliveries = {"good": Mock(), "ok": Mock()}
+    assert not await uut.validate(valid_action_group_names=["snoozes"])
     assert "bad" not in uut.delivery
     assert "good" in uut.delivery
     assert "ok" in uut.delivery
     assert "lights" not in uut.action_groups
     assert "snoozes" in uut.action_groups
+    assert uut.startup_issue_count == 2
 
     mock_hass_api.raise_issue.assert_called_with(  # type: ignore
         "scenario_testing_action_group_lights",
@@ -422,7 +423,7 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
 
 async def test_attributes(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
-    mock_delivery_registry.deliveries = {"doorbell_chime_alexa": Mock(), "email": Mock()}
+    mock_delivery_registry.all_deliveries = {"doorbell_chime_alexa": Mock(), "email": Mock()}
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({
@@ -469,6 +470,7 @@ async def test_secondary_scenario(hass: HomeAssistant, mock_delivery_registry) -
     assert await uut.validate()
     cvars = ConditionVariables(["scenario-no-danger", "sunny"], [], [], PRIORITY_MEDIUM, {})
     assert await uut.validate()
+
     assert not uut.evaluate(cvars)
     cvars.applied_scenarios.append("scenario-possible-danger")
     assert uut.evaluate(cvars)
