@@ -23,7 +23,7 @@
 
 An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
-Supernotify lets you make a **simple, single notification action** from all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage.
+Supernotify lets you make a **simple, single notification action** from all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. One notification with just a message defined can be enough trigger everything you need to keep everyone informed.
 
 With two lines of very simple yaml, start mobile push notifications to everyone registered in the house, without
 configuring mobile app names in notifications.
@@ -53,7 +53,7 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
     * Greatly simplified use of Mobile Push notifications, e.g. for iPhone
     * Standard HomeAssistant behaviour, including data templating and `notify.group`
 * Conditional Notifications
-    * Using standard Home Assistant `condition`
+    * Using standard Home Assistant `conditions`
     * Extra condition variables added, including message and priority
     * Combine with occupancy detection to easily tune notifications based on who is in, message priority, even the content of the message
 * **Scenarios** for simple concise configuration
@@ -63,6 +63,7 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
 * Unified Person model
     * Currently missing from Home Assistant.
     * Define an email, SMS number or mobile device, and then use the `person` entity in notification actions, Supernotify works out which attribute to use where
+    * People are auto-configured along with their mobile apps based on existing Home Assistant configuration
     * See [People](https://supernotify.rhizomatics.org.uk/people/) for more info
 * Easy **HTML email templates**
     * Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
@@ -93,7 +94,7 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
 
 Presently Supernotify supports only [YAML based configuration](configuration/yaml.md). UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
 
-You can however do a lot with very little config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation.
+You can however do a lot with only 2 lines of copy-paste config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation.
 
 ## Also From Rhizomatics
 
