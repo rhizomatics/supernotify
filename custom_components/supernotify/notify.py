@@ -373,7 +373,7 @@ class SupernotifyAction(BaseNotificationService):
         self.context.people_registry.initialize()
         await self.context.delivery_registry.initialize(self.context)
         await self.context.scenario_registry.initialize(
-            self.context.delivery_registry.deliveries,
+            self.context.delivery_registry,
             self.context.mobile_actions,
             self.context.hass_api,
         )
@@ -623,9 +623,13 @@ class SupernotifyAction(BaseNotificationService):
                     v[t].append(d.name)
         return v
 
-    def enquire_deliveries_by_scenario(self) -> dict[str, list[str]]:
+    def enquire_deliveries_by_scenario(self) -> dict[str, dict[str, list[str]]]:
         return {
-            name: list(scenario.delivery)
+            name: {
+                "enabled": scenario.enabled_deliveries(),
+                "disabled": scenario.disabled_deliveries(),
+                "applies": scenario.relevant_deliveries(),
+            }
             for name, scenario in self.context.scenario_registry.scenarios.items()
             if scenario.enabled
         }

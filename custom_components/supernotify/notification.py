@@ -64,6 +64,9 @@ KEY_DELIVERED = "delivered_envelopes"
 KEY_UNDELIVERED = "undelivered_envelopes"
 KEY_UNGENERATED = "no_envelopes"
 
+type t_delivery_name = str
+type t_outcome = str
+
 
 class Notification(ArchivableObject):
     def __init__(
@@ -89,7 +92,7 @@ class Notification(ArchivableObject):
         self.errored: int = 0
         self.skipped: int = 0
         self.dupe: bool = False
-        self.deliveries: dict[str, dict[str, list[str] | list[Envelope] | dict[str, Any]]] = {}
+        self.deliveries: dict[t_delivery_name, dict[t_outcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
         self._skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
@@ -245,9 +248,9 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(k for k, v in scenario.delivery.items() if v.enabled is True)
+                scenario_enable_deliveries.extend(scenario.enabled_deliveries())
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(k for k, v in scenario.delivery.items() if v.enabled is False)
+                scenario_disable_deliveries.extend(scenario.disabled_deliveries())
 
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
@@ -606,7 +609,7 @@ class Notification(ArchivableObject):
     def resolve_scenario_targets(self, delivery: Delivery) -> Target:
         resolved: Target = Target()
         for scenario in self.enabled_scenarios.values():
-            customization: DeliveryCustomization | None = scenario.delivery.get(delivery.name)
+            customization: DeliveryCustomization | None = scenario.delivery_customization(delivery.name)
             if customization and customization.target and customization.target.has_targets():
                 resolved += customization.target
         return resolved
@@ -649,7 +652,7 @@ class Notification(ArchivableObject):
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
                 for scenario in self.enabled_scenarios.values():
-                    customization: DeliveryCustomization | None = scenario.delivery.get(delivery.name)
+                    customization: DeliveryCustomization | None = scenario.delivery_customization(delivery.name)
                     if customization and customization.data:
                         envelope_data.update(customization.data)
                 envelopes.append(Envelope(delivery, self, target, envelope_data, context=self.context))

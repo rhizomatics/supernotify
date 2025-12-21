@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.6.1
+### Changes
+- `enquire_deliveries_by_scenario` action now lists which deliveries are enabled by the scenario, disabled by it, and all the scenarios to which it applies overrides
 ## 1.6.0
 ### Fixes
 - Image attachments from mobile push style notifications not being picked up by e-mail

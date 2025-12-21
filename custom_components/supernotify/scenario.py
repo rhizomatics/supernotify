@@ -25,26 +25,27 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from . import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
-from .delivery import Delivery
+from .delivery import DeliveryRegistry
 from .model import ConditionVariables
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class ScenarioRegistry:
-    def __init__(self, scenario_configs: ConfigType | None = None) -> None:
+    def __init__(self, scenario_configs: ConfigType) -> None:
         self._config: ConfigType = scenario_configs or {}
         self.scenarios: dict[str, Scenario] = {}
 
     async def initialize(
         self,
-        deliveries: dict[str, Delivery],
+        delivery_registry: DeliveryRegistry,
         mobile_actions: ConfigType,
         hass_api: HomeAssistantAPI,
     ) -> None:
+        all_delivery_names: list[str] = list(delivery_registry.deliveries)
         for scenario_name, scenario_definition in self._config.items():
             scenario = Scenario(scenario_name, scenario_definition, hass_api)
-            if await scenario.validate(valid_delivery_names=list(deliveries), valid_action_group_names=list(mobile_actions)):
+            if await scenario.validate(valid_delivery_names=all_delivery_names, valid_action_group_names=list(mobile_actions)):
                 self.scenarios[scenario_name] = scenario
 
 
@@ -129,6 +130,18 @@ class Scenario:
             for action_group_name in invalid_action_groups:
                 self.action_groups.remove(action_group_name)
         return True
+
+    def enabled_deliveries(self) -> list[str]:
+        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled]
+
+    def relevant_deliveries(self) -> list[str]:
+        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled or del_config is None]
+
+    def disabled_deliveries(self) -> list[str]:
+        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled is False]
+
+    def delivery_customization(self, delivery_name: str) -> DeliveryCustomization | None:
+        return self.delivery.get(delivery_name)
 
     def attributes(self, include_condition: bool = True, include_trace: bool = False) -> dict[str, Any]:
         """Return scenario attributes"""

@@ -253,7 +253,7 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
     config.people_registry.initialize()
     hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
-    await config.scenario_registry.initialize(config.delivery_registry.deliveries, {}, hass_api)
+    await config.scenario_registry.initialize(config.delivery_registry, {}, hass_api)
     return config
 
 
