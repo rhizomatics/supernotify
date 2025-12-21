@@ -213,10 +213,13 @@ class ChimeTransport(Transport):
         # FIXME: handle chime aliases in delivery so config can be broken up or overridden in delivery data  # noqa: TD001
         if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
             self.chime_aliases: ConfigType = self.build_aliases(self.delivery_defaults.options[OPTION_CHIME_ALIASES])
-            _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
+            if self.chime_aliases:
+                _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(self.chime_aliases))
+            else:
+                _LOGGER.warning("SUPERNOTIFY Chime aliases configured but not recognized")
         else:
             self.chime_aliases = {}
-            _LOGGER.info("SUPERNOTIFY No chime aliases found")
+            _LOGGER.debug("SUPERNOTIFY No chime aliases configures")
         self.mini_transports: dict[str, MiniChimeTransport] = {
             t.domain: t
             for t in [

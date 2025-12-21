@@ -392,7 +392,7 @@ class SupernotifyAction(BaseNotificationService):
         self.context.hass_api.subscribe_event(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
 
     async def async_shutdown(self, event: Event) -> None:
-        _LOGGER.info("SUPERNOTIFY shutting down, %s", event)
+        _LOGGER.info("SUPERNOTIFY shutting down, %s (%s)", event.event_type,event.time_fired)
         self.shutdown()
 
     async def async_unregister_services(self) -> None:
