@@ -463,6 +463,7 @@ class Notification(ArchivableObject):
             "failed",
             "suppressed",
             "skipped",
+            "error_count",
             "deliveries",
         ]
 
