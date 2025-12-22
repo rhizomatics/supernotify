@@ -7,6 +7,7 @@
 - Further improvements to `Notification` archive object to make it easier to debug
   - Original message now at top of object
   - Envelopes for each delivery categorized into `delivered`,`failed`,`skipped` and `no_envelopes`
+  - More stats on notification outcomes
 ## 1.6.0
 ### Fixes
 - Image attachments from mobile push style notifications not being picked up by e-mail
