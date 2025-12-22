@@ -119,7 +119,9 @@ class Scenario:
                                 f"SUPERNOTIFY Scenario {self.name} ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"  # noqa: E501
                             )
                         else:
-                            _LOGGER.debug(f"SUPERNOTIFY Scenario delivery '{name_or_pattern}' matched {delivery_name}")
+                            _LOGGER.debug(
+                                f"SUPERNOTIFY Scenario {self.name} delivery '{name_or_pattern}' matched {delivery_name}"
+                            )
                             self.delivery[delivery_name] = config
                             self._delivery_selector[delivery_name] = name_or_pattern
                             matched = True
