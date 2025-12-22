@@ -1,7 +1,7 @@
-homeassistant==2025.12.2
+homeassistant==2025.12.3
 cachetools
 bs4
-aiodns==3.5.0
+aiodns==3.6.1
 aiohttp==3.13.2
-aiofiles==24.1.0
-pycares==4.9
+aiofiles==25.1.0
+pycares==5.0.0
