@@ -78,8 +78,7 @@ async def snapshot_from_url(
         websession: ClientSession = hass_api.http_session()
         r: ClientResponse = await websession.get(image_url, timeout=ClientTimeout(total=remote_timeout))
         if r.status != HTTPStatus.OK:
-            _LOGGER.warning(
-                "SUPERNOTIFY Unable to retrieve %s: %s", image_url, r.status)
+            _LOGGER.warning("SUPERNOTIFY Unable to retrieve %s: %s", image_url, r.status)
         else:
             bitmap: bytes | None = await r.content.read()
             image_path: anyio.Path | None = await write_image_from_bitmap(
@@ -92,12 +91,10 @@ async def snapshot_from_url(
                 png_opts=png_opts,
             )
             if image_path:
-                _LOGGER.debug(
-                    "SUPERNOTIFY Fetched image from %s to %s", image_url, image_path)
+                _LOGGER.debug("SUPERNOTIFY Fetched image from %s to %s", image_url, image_path)
                 return Path(image_path)
 
-        _LOGGER.warning(
-            "SUPERNOTIFY Failed to snap image from %s", snapshot_url)
+        _LOGGER.warning("SUPERNOTIFY Failed to snap image from %s", snapshot_url)
     except Exception as e:
         _LOGGER.exception("SUPERNOTIFY Image snap fail: %s", e)
 
@@ -108,8 +105,7 @@ async def move_camera_to_ptz_preset(
     hass_api: HomeAssistantAPI, camera_entity_id: str, preset: str | int, method: str = PTZ_METHOD_ONVIF
 ) -> None:
     try:
-        _LOGGER.info("SUPERNOTIFY Executing PTZ by %s to %s for %s",
-                     method, preset, camera_entity_id)
+        _LOGGER.info("SUPERNOTIFY Executing PTZ by %s to %s for %s", method, preset, camera_entity_id)
         if method == PTZ_METHOD_FRIGATE:
             await hass_api.call_service(
                 "frigate",
@@ -132,8 +128,7 @@ async def move_camera_to_ptz_preset(
         else:
             _LOGGER.warning("SUPERNOTIFY Unknown PTZ method %s", method)
     except Exception as e:
-        _LOGGER.warning(
-            "SUPERNOTIFY Unable to move %s to ptz preset %s: %s", camera_entity_id, preset, e)
+        _LOGGER.warning("SUPERNOTIFY Unable to move %s to ptz preset %s: %s", camera_entity_id, preset, e)
 
 
 async def snap_image_entity(
@@ -148,8 +143,7 @@ async def snap_image_entity(
     """Use for any image, including MQTT Image"""
     image_path: anyio.Path | None = None
     try:
-        image_entity: ImageEntity | None = cast(
-            "ImageEntity|None", hass_api.domain_entity("image", entity_id))
+        image_entity: ImageEntity | None = cast("ImageEntity|None", hass_api.domain_entity("image", entity_id))
         if image_entity:
             bitmap: bytes | None = await image_entity.async_image()
             image_path = await write_image_from_bitmap(
@@ -162,11 +156,9 @@ async def snap_image_entity(
                 png_opts=png_opts,
             )
     except Exception as e:
-        _LOGGER.warning(
-            "SUPERNOTIFY Unable to snap image %s: %s", entity_id, e)
+        _LOGGER.warning("SUPERNOTIFY Unable to snap image %s: %s", entity_id, e)
     if image_path is None:
-        _LOGGER.warning(
-            "SUPERNOTIFY Unable to save from image entity %s", entity_id)
+        _LOGGER.warning("SUPERNOTIFY Unable to save from image entity %s", entity_id)
     return Path(image_path) if image_path else None
 
 
@@ -193,8 +185,7 @@ async def snap_camera(
         await hass_api.call_service(
             "camera",
             "snapshot",
-            service_data={"entity_id": camera_entity_id,
-                          "filename": image_path},
+            service_data={"entity_id": camera_entity_id, "filename": image_path},
             return_response=False,
             blocking=True,
         )
@@ -202,8 +193,7 @@ async def snap_camera(
         # give async service time
         cutoff_time = time.time() + max_camera_wait
         while time.time() < cutoff_time and not image_path.exists():
-            _LOGGER.info(
-                "Image file not available yet at %s, pausing", image_path)
+            _LOGGER.info("Image file not available yet at %s, pausing", image_path)
             await asyncio.sleep(1)
 
         if reprocess != ReprocessOption.NEVER:
@@ -221,12 +211,10 @@ async def snap_camera(
                 if async_path:
                     image_path = Path(async_path)
                 else:
-                    _LOGGER.warning(
-                        "SUPERNOTIFY Unable to reprocess camera image")
+                    _LOGGER.warning("SUPERNOTIFY Unable to reprocess camera image")
 
     except Exception as e:
-        _LOGGER.warning("Failed to snap avail camera %s to %s: %s",
-                        camera_entity_id, image_path, e)
+        _LOGGER.warning("Failed to snap avail camera %s to %s: %s", camera_entity_id, image_path, e)
         image_path = None
 
     return image_path
@@ -242,19 +230,24 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
             # assume unconfigured camera, or configured without tracker, available
             avail_camera_entity_id = camera_entity_id
         else:
-            state: State | None = hass_api.get_state(
-                preferred_cam[CONF_DEVICE_TRACKER])
+            state: State | None = hass_api.get_state(preferred_cam[CONF_DEVICE_TRACKER])
 
             if state and state.state == STATE_HOME:
                 avail_camera_entity_id = camera_entity_id
             else:
                 if state:
-                    _LOGGER.warning("SUPERNOTIFY Camera %s tracker %s is %s", camera_entity_id,
-                                    preferred_cam.get(CONF_DEVICE_TRACKER),
-                                    state)
+                    _LOGGER.warning(
+                        "SUPERNOTIFY Camera %s tracker %s is %s",
+                        camera_entity_id,
+                        preferred_cam.get(CONF_DEVICE_TRACKER),
+                        state,
+                    )
                 elif preferred_cam.get(CONF_DEVICE_TRACKER):
-                    _LOGGER.warning("SUPERNOTIFY Camera %s device_tracker %s seems missing", camera_entity_id,
-                                    preferred_cam.get(CONF_DEVICE_TRACKER))
+                    _LOGGER.warning(
+                        "SUPERNOTIFY Camera %s device_tracker %s seems missing",
+                        camera_entity_id,
+                        preferred_cam.get(CONF_DEVICE_TRACKER),
+                    )
                 alt_cams_with_tracker = [
                     cameras[c]
                     for c in preferred_cam.get(CONF_ALT_CAMERA, [])
@@ -281,13 +274,11 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
                         avail_camera_entity_id = alt_cam_ids_without_tracker[0]
 
         if avail_camera_entity_id is None:
-            _LOGGER.warning(
-                "%s not available and no alternative available", camera_entity_id)
+            _LOGGER.warning("%s not available and no alternative available", camera_entity_id)
             for c in cameras.values():
                 if c.get(CONF_DEVICE_TRACKER):
                     _LOGGER.debug(
-                        "SUPERNOTIFY Tracker %s: %s", c.get(
-                            CONF_DEVICE_TRACKER), hass_api.get_state(c[CONF_DEVICE_TRACKER])
+                        "SUPERNOTIFY Tracker %s: %s", c.get(CONF_DEVICE_TRACKER), hass_api.get_state(c[CONF_DEVICE_TRACKER])
                     )
 
     except Exception as e:
@@ -300,13 +291,10 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
     snapshot_url = notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
     camera_entity_id = notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
     delivery_config = notification.delivery_data(delivery_name)
-    jpeg_opts = notification.media.get(
-        ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_JPEG))
-    png_opts = notification.media.get(
-        ATTR_PNG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_PNG))
+    jpeg_opts = notification.media.get(ATTR_JPEG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_JPEG))
+    png_opts = notification.media.get(ATTR_PNG_OPTS, delivery_config.get(CONF_OPTIONS, {}).get(OPTION_PNG))
     reprocess_option = (
-        notification.media.get(MEDIA_OPTION_REPROCESS, delivery_config.get(
-            CONF_OPTIONS, {}).get(MEDIA_OPTION_REPROCESS))
+        notification.media.get(MEDIA_OPTION_REPROCESS, delivery_config.get(CONF_OPTIONS, {}).get(MEDIA_OPTION_REPROCESS))
         or "always"
     )
     media_path: anyio.Path | None = context.media_storage.media_path
@@ -317,8 +305,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
     try:
         reprocess = ReprocessOption(reprocess_option)
     except Exception:
-        _LOGGER.warning(
-            "SUPERNOTIFY Invalid reprocess option: %s", reprocess_option)
+        _LOGGER.warning("SUPERNOTIFY Invalid reprocess option: %s", reprocess_option)
 
     if not snapshot_url and not camera_entity_id:
         return None
@@ -349,20 +336,15 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         )
     elif camera_entity_id:
         if not context.hass_api or not media_path:
-            _LOGGER.warning(
-                "SUPERNOTIFY No HA ref or media path for camera %s", camera_entity_id)
+            _LOGGER.warning("SUPERNOTIFY No HA ref or media path for camera %s", camera_entity_id)
             return None
-        active_camera_entity_id = select_avail_camera(
-            context.hass_api, context.cameras, camera_entity_id)
+        active_camera_entity_id = select_avail_camera(context.hass_api, context.cameras, camera_entity_id)
         if active_camera_entity_id:
             camera_config = context.cameras.get(active_camera_entity_id, {})
-            camera_delay = notification.media.get(
-                ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
-            camera_ptz_preset_default = camera_config.get(
-                CONF_PTZ_PRESET_DEFAULT)
+            camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
+            camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
             camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
-            camera_ptz_preset = notification.media.get(
-                ATTR_MEDIA_CAMERA_PTZ_PRESET)
+            camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             _LOGGER.debug(
                 "SUPERNOTIFY snapping camera %s, ptz %s->%s, delay %s secs",
                 active_camera_entity_id,
@@ -375,8 +357,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
                     context.hass_api, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
                 )
             if camera_delay:
-                _LOGGER.debug(
-                    "SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
+                _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
                 await asyncio.sleep(camera_delay)
             image_path = await snap_camera(
                 context.hass_api,
@@ -394,8 +375,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
                 )
 
     if image_path is None:
-        _LOGGER.warning(
-            "SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
+        _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
         return None
     # TODO: replace poking inside notification
     notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = image_path
@@ -443,8 +423,7 @@ async def write_image_from_bitmap(
 
         media_ext: str = output_format if output_format else "img"
         timed: str = str(time.time()).replace(".", "_")
-        image_path = anyio.Path(media_dir) / \
-            f"{notification_id}_{timed}.{media_ext}"
+        image_path = anyio.Path(media_dir) / f"{notification_id}_{timed}.{media_ext}"
         image_path = await image_path.resolve()
         async with aiofiles.open(image_path, "wb") as file:
             await file.write(buffer.getbuffer())
@@ -459,21 +438,18 @@ async def write_image_from_bitmap(
 
 class MediaStorage:
     def __init__(self, media_path: str | None, days: int = 7) -> None:
-        self.media_path: anyio.Path | None = anyio.Path(
-            media_path) if media_path else None
+        self.media_path: anyio.Path | None = anyio.Path(media_path) if media_path else None
         self.last_purge: dt.datetime | None = None
         self.purge_minute_interval = 60 * 6
         self.days = days
 
     async def initialize(self, hass_api: HomeAssistantAPI) -> None:
         if self.media_path and not await self.media_path.exists():
-            _LOGGER.info("SUPERNOTIFY media path not found at %s",
-                         self.media_path)
+            _LOGGER.info("SUPERNOTIFY media path not found at %s", self.media_path)
             try:
                 await self.media_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
-                _LOGGER.warning(
-                    "SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
+                _LOGGER.warning("SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
                 hass_api.raise_issue(
                     "media_path",
                     "media_path",
@@ -513,12 +489,9 @@ class MediaStorage:
                         await aiofiles.os.unlink(Path(entry.path))
                         purged += 1
             except Exception as e:
-                _LOGGER.warning(
-                    "SUPERNOTIFY Unable to clean up media storage at %s: %s", self.media_path, e, exc_info=True)
-            _LOGGER.info(
-                "SUPERNOTIFY Purged %s media storage for cutoff %s", purged, cutoff)
+                _LOGGER.warning("SUPERNOTIFY Unable to clean up media storage at %s: %s", self.media_path, e, exc_info=True)
+            _LOGGER.info("SUPERNOTIFY Purged %s media storage for cutoff %s", purged, cutoff)
             self.last_purge = dt.datetime.now(dt.UTC)
         else:
-            _LOGGER.debug(
-                "SUPERNOTIFY Skipping media storage for unknown path %s", self.media_path)
+            _LOGGER.debug("SUPERNOTIFY Skipping media storage for unknown path %s", self.media_path)
         return purged
