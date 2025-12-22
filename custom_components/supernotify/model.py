@@ -1,4 +1,3 @@
-import copy
 import logging
 import re
 from collections.abc import Sequence
@@ -365,7 +364,7 @@ class Target:
         return all(self.targets.get(category, []) == other.targets.get(category, []) for category in self.CATEGORIES)
 
     def as_dict(self, **_kwargs: Any) -> dict[str, list[str]]:
-        return copy.deepcopy(self.targets)
+        return {k: v for k, v in self.targets.items() if v}
 
 
 class TransportConfig:
