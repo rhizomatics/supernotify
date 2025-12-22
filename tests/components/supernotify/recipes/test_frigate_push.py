@@ -102,8 +102,8 @@ async def test_frigate_blueprint_notification(hass: HomeAssistant, local_server:
         uut.media["clip_url"]
         == "https://home.43acaciaroad.org/api/frigate/notifications/1766218266.042615-blamq9/driveway/master.m3u8"
     )
-    assert len(uut.deliveries["plain_email"]["delivered_envelopes"]) == 1
-    call_data = uut.deliveries["plain_email"]["delivered_envelopes"][0].calls[0]  # type:ignore
+    assert len(uut.deliveries["plain_email"]["delivered"]) == 1
+    call_data = uut.deliveries["plain_email"]["delivered"][0].calls[0]  # type:ignore
 
     assert call_data.action == "smtp"
     assert call_data.domain == "notify"

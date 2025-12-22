@@ -130,7 +130,7 @@ async def test_e2e_update_input_text(hass) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    generic_calls = notification["deliveries"]["motd"]["delivered_envelopes"][0]["calls"]
+    generic_calls = notification["deliveries"]["motd"]["delivered"][0]["calls"]
     assert len(generic_calls) == 1
     assert generic_calls[0]["domain"] == "input_text"
     assert generic_calls[0]["action"] == "set_value"

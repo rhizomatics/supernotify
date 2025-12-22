@@ -17,6 +17,7 @@ from custom_components.supernotify import (
     PRIORITY_MEDIUM,
     SCENARIO_SCHEMA,
 )
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import ConditionVariables
@@ -51,7 +52,7 @@ async def test_validate(mock_hass_api: HomeAssistantAPI, mock_delivery_registry)
         mock_delivery_registry,
         mock_hass_api,
     )
-    mock_delivery_registry.all_deliveries = {"good": Mock(), "ok": Mock()}
+    mock_delivery_registry.deliveries = {"good": Delivery("good", {}, Mock()), "ok": Delivery("ok", {}, Mock())}
     assert not await uut.validate(valid_action_group_names=["snoozes"])
     assert "bad" not in uut.delivery
     assert "good" in uut.delivery
@@ -366,8 +367,10 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 2
-    emailed: Envelope = uut.deliveries["plain_email"]["delivered_envelopes"][0]  # type:ignore
-    texted: Envelope = uut.deliveries["sms"]["delivered_envelopes"][0]  # type:ignore
+    # type:ignore
+    emailed: Envelope = uut.deliveries["plain_email"]["delivered"][0]  # type: ignore
+    # type:ignore
+    texted: Envelope = uut.deliveries["sms"]["delivered"][0]  # type: ignore
     assert emailed.priority == "low"
     assert texted.priority == "medium"
 
@@ -392,7 +395,8 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 1
-    assert uut.deliveries["text"]["delivered_envelopes"][0].delivery_name == "text"  # type:ignore
+    # type:ignore
+    assert uut.deliveries["text"]["delivered"][0].delivery_name == "text"  # type: ignore
 
 
 async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
@@ -415,15 +419,20 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
     await uut.deliver()
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 2
-    emailed: Envelope = uut.deliveries["plain_email"]["delivered_envelopes"][0]  # type:ignore
-    texted: Envelope = uut.deliveries["sms"]["delivered_envelopes"][0]  # type:ignore
+    # type:ignore
+    emailed: Envelope = uut.deliveries["plain_email"]["delivered"][0]  # type: ignore
+    # type:ignore
+    texted: Envelope = uut.deliveries["sms"]["delivered"][0]  # type: ignore
     assert "spambox@myhome.org" in emailed.target.email
     assert "spambox@myhome.org" not in texted.target.email
 
 
 async def test_attributes(hass: HomeAssistant, mock_delivery_registry) -> None:
     hass_api = HomeAssistantAPI(hass)
-    mock_delivery_registry.all_deliveries = {"doorbell_chime_alexa": Mock(), "email": Mock()}
+    mock_delivery_registry.deliveries = {
+        "doorbell_chime_alexa": Delivery("doorbell_chime_alexa", {}, Mock()),
+        "email": Delivery("email", {}, Mock()),
+    }
     uut = Scenario(
         "testing",
         SCENARIO_SCHEMA({

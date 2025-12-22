@@ -124,7 +124,7 @@ async def test_deliver_alias() -> None:
     )
     await uut.deliver(envelope)
     assert envelope.skipped == 0
-    assert envelope.errored == 0
+    assert envelope.error_count == 0
     assert envelope.delivered == 1
 
     context.hass.services.async_call.assert_has_calls(  # type: ignore
@@ -203,7 +203,7 @@ async def test_script_debug() -> None:
     )
     await uut.deliver(envelope)
 
-    context.hass.services.async_call.assert_has_calls(
+    context.hass.services.async_call.assert_has_calls(  # type: ignore
         [  # type: ignore
             service_call(
                 "script",
@@ -335,8 +335,8 @@ async def test_deliver_rest_command() -> None:
             Notification(context),
         )
     )
-    assert context.hass.services.async_call.call_count == 3
-    context.hass.services.async_call.assert_has_calls(  # ty:ignore[possibly-missing-attribute]
+    assert context.hass.services.async_call.call_count == 3  # type: ignore
+    context.hass.services.async_call.assert_has_calls(  # type:ignore
         [
             service_call("switch", "turn_on", target={"entity_id": "switch.chime_sax"}),
             service_call("rest_command", "camera_siren", service_data={"alarm_code": "11"}),

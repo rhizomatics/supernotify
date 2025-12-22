@@ -56,14 +56,14 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == []
     assert uut.selected_delivery_names == ["apple_push"]
-    assert cast("Envelope", uut.deliveries["apple_push"]["delivered_envelopes"][0]).priority == "medium"  # type: ignore
+    assert cast("Envelope", uut.deliveries["apple_push"]["delivered"][0]).priority == "medium"  # type: ignore
 
     uut = Notification(ctx, "person was detected at back door", action_data={"priority": "high"})
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["high_alert"]
     assert uut.selected_delivery_names == unordered("plain_email", "apple_push", "sms")
-    assert cast("Envelope", uut.deliveries["plain_email"]["delivered_envelopes"][0]).priority == "critical"  # type: ignore
+    assert cast("Envelope", uut.deliveries["plain_email"]["delivered"][0]).priority == "critical"  # type: ignore
 
 
 async def test_content_escalation_by_priority(hass: HomeAssistant):
@@ -104,34 +104,34 @@ async def test_content_escalation_by_priority(hass: HomeAssistant):
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == []
-    assert cast("Envelope", uut.deliveries["plain_email"]["delivered_envelopes"][0]).priority == "medium"  # type: ignore
+    assert cast("Envelope", uut.deliveries["plain_email"]["delivered"][0]).priority == "medium"  # type: ignore
 
     uut = Notification(ctx, "HIGH RISK!! testing 123")
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["high_risk"]
     # type: ignore
-    assert uut.deliveries["plain_email"]["delivered_envelopes"][0].priority == "high"  # type: ignore
+    assert uut.deliveries["plain_email"]["delivered"][0].priority == "high"  # type: ignore
     # type: ignore
-    assert uut.deliveries["plain_email"]["delivered_envelopes"][0].message == "testing 123"  # type: ignore
+    assert uut.deliveries["plain_email"]["delivered"][0].message == "testing 123"  # type: ignore
 
     uut = Notification(ctx, "high risk testing 123")
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["high_risk"]
     # type: ignore
-    assert uut.deliveries["plain_email"]["delivered_envelopes"][0].priority == "high"  # type: ignore
+    assert uut.deliveries["plain_email"]["delivered"][0].priority == "high"  # type: ignore
     # type: ignore
-    assert uut.deliveries["plain_email"]["delivered_envelopes"][0].message == "testing 123"  # type: ignore
+    assert uut.deliveries["plain_email"]["delivered"][0].message == "testing 123"  # type: ignore
 
     uut = Notification(ctx, "LOW RISK: testing 123")
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["low_risk"]
 
-    assert uut.deliveries["plain_email"]["delivered_envelopes"][0].priority == "low"  # type: ignore
+    assert uut.deliveries["plain_email"]["delivered"][0].priority == "low"  # type: ignore
 
-    assert uut.deliveries["plain_email"]["delivered_envelopes"][0].message == "testing 123"  # type: ignore
+    assert uut.deliveries["plain_email"]["delivered"][0].message == "testing 123"  # type: ignore
 
     uut = Notification(ctx, "UNKNOWN BIRD: small brown flying thing at window")
     await uut.initialize()

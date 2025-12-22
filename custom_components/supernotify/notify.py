@@ -418,8 +418,8 @@ class SupernotifyAction(BaseNotificationService):
             if await notification.deliver():
                 self.sent += 1
                 self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
-            elif notification.errored:
-                _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.errored)
+            elif notification.failed:
+                _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.error_count)
             else:
                 if notification.delivered == 0:
                     codes: list[SuppressionReason] = notification._skip_reasons
@@ -447,10 +447,11 @@ class SupernotifyAction(BaseNotificationService):
             self.last_notification = notification
             await self.context.archive.archive(notification)
             _LOGGER.debug(
-                "SUPERNOTIFY %s deliveries, %s errors, %s skipped",
+                "SUPERNOTIFY %s deliveries, %s failed, %s skipped, % suppressed",
                 notification.delivered,
-                notification.errored,
+                notification.failed,
                 notification.skipped,
+                notification.suppressed,
             )
 
     async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
@@ -492,12 +493,12 @@ class SupernotifyAction(BaseNotificationService):
                 if transport is None:
                     _LOGGER.warning(f"SUPERNOTIFY Event for unknown transport {event.data['entity_id']}")
                 else:
-                    if new_state.state == "off" and transport.override_enabled:
-                        transport.override_enabled = False
+                    if new_state.state == "off" and transport.enabled:
+                        transport.enabled = False
                         _LOGGER.info(f"SUPERNOTIFY Disabling transport {transport.name}")
                         changes += 1
-                    elif new_state.state == "on" and not transport.override_enabled:
-                        transport.override_enabled = True
+                    elif new_state.state == "on" and not transport.enabled:
+                        transport.enabled = True
                         _LOGGER.info(f"SUPERNOTIFY Enabling transport {transport.name}")
                         changes += 1
                     else:
@@ -578,14 +579,14 @@ class SupernotifyAction(BaseNotificationService):
         for transport in self.context.delivery_registry.transports.values():
             self.expose_entity(
                 f"transport_{transport.name}",
-                state=STATE_ON if transport.override_enabled else STATE_OFF,
+                state=STATE_ON if transport.enabled else STATE_OFF,
                 attributes=transport.attributes(),
                 original_name=f"{transport.name} Transport Adaptor",
                 original_icon="mdi:delivery-truck-speed",
                 entity_registry=ent_reg,
             )
 
-        for delivery in self.context.delivery_registry.all_deliveries.values():
+        for delivery in self.context.delivery_registry.deliveries.values():
             self.expose_entity(
                 f"delivery_{delivery.name}",
                 state=STATE_ON if delivery.enabled else STATE_OFF,

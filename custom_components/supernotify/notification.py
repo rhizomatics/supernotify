@@ -60,9 +60,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation + string.digits)
-KEY_DELIVERED = "delivered_envelopes"
-KEY_UNDELIVERED = "undelivered_envelopes"
-KEY_UNGENERATED = "no_envelopes"
+
+# Deliveries mapping keys for debug / archive
+KEY_DELIVERED = "delivered"
+KEY_SUPPRESSED = "suppressed"
+KEY_FAILED = "failed"
+KEY_SKIPPED = "skipped"
 
 type t_delivery_name = str
 type t_outcome = str
@@ -79,7 +82,7 @@ class Notification(ArchivableObject):
     ) -> None:
         self.created: dt.datetime = dt.datetime.now(tz=dt.UTC)
         self.debug_trace: DebugTrace = DebugTrace(message=message, title=title, data=action_data, target=target)
-        self._message: str | None = message
+        self.message: str | None = message
         self.context: Context = context
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
@@ -89,8 +92,10 @@ class Notification(ArchivableObject):
         self._title: str | None = title
         self.id = str(uuid.uuid1())
         self.delivered: int = 0
-        self.errored: int = 0
+        self.error_count: int = 0
         self.skipped: int = 0
+        self.failed: int = 0
+        self.suppressed: int = 0
         self.dupe: bool = False
         self.deliveries: dict[t_delivery_name, dict[t_outcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
         self._skip_reasons: list[SuppressionReason] = []
@@ -147,7 +152,7 @@ class Notification(ArchivableObject):
         self.selected_delivery_names: list[str] = []
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
-        self.suppressed: SuppressionReason | None = None
+        self._suppression_reason: SuppressionReason | None = None
         self._delivery_error: list[str] | None = None
         self.condition_variables: ConditionVariables
 
@@ -160,7 +165,7 @@ class Notification(ArchivableObject):
             self.constrain_scenario_names,
             self.priority,
             self.occupancy,
-            self._message,
+            self.message,
             self._title,
         )  # requires occupancy first
 
@@ -268,8 +273,12 @@ class Notification(ArchivableObject):
         # apply the deliveries defined in the notification action call
         for delivery, delivery_override in self.delivery_overrides.items():
             if (
-                delivery_override is None or delivery_override.enabled is True
-            ) and delivery in self.context.delivery_registry.deliveries:
+                (delivery_override is None or delivery_override.enabled is True)
+                and delivery in self.context.delivery_registry.enabled_deliveries
+            ) or (
+                (delivery_override is not None and delivery_override.enabled is True)
+                and delivery in self.context.delivery_registry.disabled_deliveries
+            ):
                 override_enable_deliveries.append(delivery)
             elif delivery_override is not None and delivery_override.enabled is False:
                 override_disable_deliveries.append(delivery)
@@ -288,7 +297,7 @@ class Notification(ArchivableObject):
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
-        unsorted_objs: list[Delivery] = [self.delivery_registry.all_deliveries[d] for d in all_enabled if d not in all_disabled]
+        unsorted_objs: list[Delivery] = [self.delivery_registry.deliveries[d] for d in all_enabled if d not in all_disabled]
         unsorted_objs = [d for d in unsorted_objs if d.enabled or d.name in override_enabled]
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
@@ -298,7 +307,7 @@ class Notification(ArchivableObject):
         return selected
 
     def suppress(self, reason: SuppressionReason) -> None:
-        self.suppressed = reason
+        self._suppression_reason = reason
         if reason not in self._skip_reasons:
             self._skip_reasons.append(reason)
         _LOGGER.info(f"SUPERNOTIFY Suppressing notification, reason:{reason}, id:{self.id}")
@@ -306,7 +315,7 @@ class Notification(ArchivableObject):
     async def deliver(self) -> bool:
         _LOGGER.debug(
             "Message: %s, notification: %s, deliveries: %s",
-            self._message,
+            self.message,
             self.id,
             self.selected_delivery_names,
         )
@@ -314,7 +323,7 @@ class Notification(ArchivableObject):
         for delivery_name in self.selected_delivery_names:
             self.deliveries[delivery_name] = {}
             delivery = self.context.delivery_registry.deliveries.get(delivery_name)
-            if self.suppressed is not None:
+            if self._suppression_reason is not None:
                 _LOGGER.info("SUPERNOTIFY Suppressing globally silenced/snoozed notification (%s)", self.id)
                 self.record_result(delivery, suppression_reason=SuppressionReason.SNOOZED)
             elif delivery:
@@ -322,13 +331,13 @@ class Notification(ArchivableObject):
             else:
                 _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
-        if self.delivered == 0 and not self.suppressed:
-            if self.errored == 0 and not self.dupe:
+        if self.delivered == 0 and not self._suppression_reason:
+            if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
                     if delivery.name not in self.selected_delivery_names:
                         await self.call_transport(delivery)
 
-            if self.errored > 0:
+            if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
                     if delivery.name not in self.selected_delivery_names:
                         await self.call_transport(delivery)
@@ -338,7 +347,7 @@ class Notification(ArchivableObject):
     async def call_transport(self, delivery: Delivery) -> None:
         try:
             transport: Transport = delivery.transport
-            if not transport.override_enabled:
+            if not transport.enabled:
                 self.record_result(delivery, suppression_reason=SuppressionReason.TRANSPORT_DISABLED)
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on transport disabled", delivery)
                 return
@@ -366,7 +375,7 @@ class Notification(ArchivableObject):
 
             for envelope in envelopes:
                 if self.context.dupe_checker.check(envelope):
-                    _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self._message)
+                    _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self.message)
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
                 try:
@@ -375,7 +384,7 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, envelope)
                 except Exception as e2:
                     _LOGGER.exception("SUPERNOTIFY Failed to deliver %s: %s", delivery.name, e2)
-                    envelope.errored = min(1, envelope.errored)
+                    envelope.error_count = envelope.error_count + 1
                     transport.record_error(str(e2), method="deliver")
                     envelope.delivery_error = format_exception(e2)
                     self.record_result(delivery, envelope)
@@ -396,12 +405,10 @@ class Notification(ArchivableObject):
         suppression_reason: SuppressionReason | None = None,
     ) -> None:
         """Debugging (and unit test) support for notifications that failed or were skipped"""
-        if suppression_reason:
-            self.skipped += 1
         if delivery:
             if envelope:
                 self.delivered += envelope.delivered
-                self.errored += envelope.errored
+                self.error_count += envelope.error_count
                 if envelope.delivered:
                     self.deliveries[delivery.name].setdefault(KEY_DELIVERED, [])
                     self.deliveries[delivery.name][KEY_DELIVERED].append(envelope)  # type: ignore
@@ -412,8 +419,15 @@ class Notification(ArchivableObject):
                             self._skip_reasons.append(suppression_reason)
                         if suppression_reason == SuppressionReason.DUPE:
                             self.dupe = True
-                    self.deliveries[delivery.name].setdefault(KEY_UNDELIVERED, [])
-                    self.deliveries[delivery.name][KEY_UNDELIVERED].append(envelope)  # type: ignore
+                    if envelope.error_count:
+                        self.deliveries[delivery.name].setdefault(KEY_FAILED, [])
+                        self.deliveries[delivery.name][KEY_FAILED].append(envelope)  # type: ignore
+                        self.failed += 1
+                    else:
+                        self.deliveries[delivery.name].setdefault(KEY_SUPPRESSED, [])
+                        self.deliveries[delivery.name][KEY_SUPPRESSED].append(envelope)  # type: ignore
+                        self.suppressed += 1
+
         if not envelope:
             delivery_name: str = delivery.name if delivery else "!UNKNOWN!"
             skip_summary: dict[str, Any] = {
@@ -423,17 +437,19 @@ class Notification(ArchivableObject):
             self.deliveries.setdefault(delivery_name, {})
             if targets:
                 skip_summary["targets"] = targets
-            self.deliveries[delivery_name][KEY_UNGENERATED] = skip_summary
+            self.deliveries[delivery_name][KEY_SKIPPED] = skip_summary
+            self.skipped += 1
 
     def contents(self, minimal: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
         object_refs = ["context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
-        exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions"]
+        exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions", "_suppression_reason"]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
             "id",
             "created",
+            "message",
             "applied_scenario_names",
             "constrain_scenario_names",
             "required_scenario_names",
@@ -444,7 +460,8 @@ class Notification(ArchivableObject):
             "selected_delivery_names",
             "recipients_override",
             "delivered",
-            "errored",
+            "failed",
+            "suppressed",
             "skipped",
             "deliveries",
         ]
@@ -512,7 +529,8 @@ class Notification(ArchivableObject):
     def undelivered_envelopes(self) -> list[Envelope]:
         result: list[Envelope] = []
         for delivery_result in self.deliveries.values():
-            result.extend(cast("list[Envelope]", delivery_result.get(KEY_UNDELIVERED, [])))
+            result.extend(cast("list[Envelope]", delivery_result.get(KEY_SUPPRESSED, [])))
+            result.extend(cast("list[Envelope]", delivery_result.get(KEY_FAILED, [])))
         return result
 
     async def select_scenarios(self) -> list[str]:

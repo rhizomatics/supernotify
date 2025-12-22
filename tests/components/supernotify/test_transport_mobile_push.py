@@ -237,8 +237,8 @@ async def test_message_override(hass: HomeAssistant) -> None:
         await hass.services.async_call("supernotify", "enquire_last_notification", None, blocking=True, return_response=True),
     )
     assert notification is not None
-    assert "delivered_envelopes" in notification["deliveries"]["push"]
-    assert notification["deliveries"]["push"]["delivered_envelopes"][0]["message"] == "FIXED_MESSAGE"
+    assert "delivered" in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"]["delivered"][0]["message"] == "FIXED_MESSAGE"
 
 
 async def test_top_level_data_used(hass: HomeAssistant) -> None:
@@ -262,8 +262,8 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
     )
     assert notification is not None
     # no android integration in test env
-    assert "undelivered_envelopes" in notification["deliveries"]["push"]
-    assert notification["deliveries"]["push"]["undelivered_envelopes"][0]["data"]["clickAction"] == "android_something"
+    assert "failed" in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"]["failed"][0]["data"]["clickAction"] == "android_something"
 
 
 async def test_action_title(hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:

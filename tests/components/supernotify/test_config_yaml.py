@@ -17,7 +17,7 @@ from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.model import Target
 
 if TYPE_CHECKING:
-    from homeassistant.util.json import JsonObjectType, JsonValueType
+    from homeassistant.util.json import JsonObjectType
 
 FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "..", "examples", "maximal.yaml")
 
@@ -60,6 +60,49 @@ SIMPLE_CONFIG = {
 
 def test_schema() -> None:
     assert PLATFORM_SCHEMA(SIMPLE_CONFIG)
+
+
+def assert_clean_notification(
+    notobj: dict[str, Any] | None,
+    expected_delivered: int | None = None,
+    expected_skipped: int = 0,
+    expected_deliveries: dict[str, int] | None = None,
+    ignore_defaults: bool = True,
+) -> None:
+    ignore_skipped: int = 0
+    expected_suppressed: int = 0
+    assert notobj is not None
+    if expected_delivered is not None:
+        assert notobj["delivered"] == expected_delivered
+    elif expected_deliveries:
+        assert notobj["delivered"] == sum(len(v.get("delivered", ())) for v in notobj["deliveries"].values())  # type: ignore
+    assert notobj["failed"] == 0
+
+    delivered_total: int = 0
+    for delivery, notdelobj in notobj.get("deliveries", {}).items():
+        if (
+            ignore_defaults
+            and delivery.startswith("DEFAULT_")
+            and (expected_deliveries is None or delivery not in expected_deliveries)
+        ):
+            if "skipped" in notdelobj:
+                ignore_skipped += 1
+            elif "suppressed" in notdelobj:
+                expected_suppressed += len(notdelobj["suppressed"])
+        elif "delivered" in notdelobj:
+            delivered_total += len(notdelobj["delivered"])
+            if expected_deliveries is not None:
+                assert len(notdelobj["delivered"]) == expected_deliveries.get(delivery, 0)
+        elif expected_delivered is not None and expected_delivered > 0:
+            assert list(notdelobj.keys()) in ([], ["deliveries"])
+        elif expected_delivered is not None:
+            assert list(notdelobj.keys()) == []
+
+    if expected_delivered:
+        assert delivered_total == expected_delivered
+
+    assert notobj["skipped"] == expected_skipped + ignore_skipped
+    assert notobj["suppressed"] == expected_suppressed
 
 
 async def test_transport_setup(hass: HomeAssistant) -> None:
@@ -132,10 +175,10 @@ async def test_call_action(hass: HomeAssistant) -> None:
     notification = await hass.services.async_call(
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
-    assert notification is not None
-    # type: ignore
-    assert notification["deliveries"]["testing"]["delivered_envelopes"][0]["message"] == "unit test 9484"
-    assert notification["priority"] == "medium"
+    assert_clean_notification(notification)
+
+    assert notification["deliveries"]["testing"]["delivered"][0]["message"] == "unit test 9484"  # type: ignore
+    assert notification["priority"] == "medium"  # type: ignore
 
 
 async def test_empty_config(hass: HomeAssistant) -> None:
@@ -157,7 +200,7 @@ async def test_empty_config(hass: HomeAssistant) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert notification is not None
+    assert_clean_notification(notification, expected_delivered=0)
 
 
 async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> None:
@@ -184,12 +227,8 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert notification is not None
-    # type: ignore[assignment,index,call-overload]
-    notify_entity_delivery: dict[str, dict[str, JsonValueType]] = notification["deliveries"]["DEFAULT_notify_entity"]  # type: ignore
-    # type: ignore[arg-type]
-    assert len(notify_entity_delivery["delivered_envelopes"]) == 1
-    assert "undelivered_envelopes" not in notify_entity_delivery
+
+    assert_clean_notification(notification, expected_deliveries={"DEFAULT_notify_entity": 1})
 
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
     notification = await hass.services.async_call(
@@ -198,9 +237,7 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
     await hass.async_block_till_done()
     assert notification is not None
     # type: ignore[assignment,index,call-overload]
-    notify_entity_delivery = notification["deliveries"]["DEFAULT_notify_entity"]  # type: ignore
-    assert "delivered_envelopes" not in notify_entity_delivery
-    assert "undelivered_envelopes" not in notify_entity_delivery
+    assert_clean_notification(notification, 0)
 
 
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
@@ -309,14 +346,8 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
+    assert_clean_notification(notification, expected_deliveries={"chime_person": 1}, expected_skipped=1)
     assert notification is not None
-    # type: ignore[arg-type]
-    assert "delivered_envelopes" not in notification["deliveries"]["testing"]
-    assert len(notification["deliveries"]["chime_person"]["delivered_envelopes"]) == 1  # type: ignore[arg-type]
-    # type: ignore
-    assert len(notification["deliveries"]["chime_person"]["delivered_envelopes"]) == 1  # type: ignore[arg-type]
-    # type: ignore[arg-type]
-    assert "undelivered_envelopes" not in notification["deliveries"]["chime_person"]
 
     hass.states.async_set("binary_sensor.supernotify_transport_generic", "on")
     await hass.async_block_till_done()
@@ -330,13 +361,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert notification is not None
-    assert len(notification["deliveries"]["testing"]["delivered_envelopes"]) == 1  # type: ignore
-    assert len(notification["deliveries"]["chime_person"]["delivered_envelopes"]) == 1  # type: ignore
-    # type:ignore
-    assert "undelivered_envelopes" not in notification["deliveries"]["testing"]
-    # type:ignore
-    assert "undelivered_envelopes" not in notification["deliveries"]["chime_person"]
+    assert_clean_notification(notification, expected_deliveries={"testing": 1, "chime_person": 1})
 
 
 async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
@@ -410,10 +435,10 @@ async def test_template_delivery(hass: HomeAssistant) -> None:
     notification = await hass.services.async_call(
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
-    assert notification is not None
-    # type: ignore
-    assert notification["deliveries"]["testing"]["delivered_envelopes"][0]["message"] == "unit test 105"
-    assert notification["priority"] == "high"
+    assert_clean_notification(notification, expected_deliveries={"testing": 1})
+
+    assert notification["deliveries"]["testing"]["delivered"][0]["message"] == "unit test 105"  # type: ignore
+    assert notification["priority"] == "high"  # type: ignore
 
 
 async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
@@ -431,13 +456,13 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
     notification = await hass.services.async_call(
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
-    assert notification is not None
-    assert isinstance(notification["deliveries"]["testing"]["delivered_envelopes"], list)  # type: ignore
+    assert_clean_notification(notification, expected_deliveries={"chime_person": 1, "testing": 1})
 
     delivered_chimes = [
         e
         # type: ignore
-        for e in notification["deliveries"]["chime_person"]["delivered_envelopes"]
+        # type: ignore
+        for e in notification["deliveries"]["chime_person"]["delivered"]  # type: ignore
         if e and isinstance(e, dict) and e.get("delivery_name", "") == "chime_person"
     ]
     assert len(delivered_chimes) == 1

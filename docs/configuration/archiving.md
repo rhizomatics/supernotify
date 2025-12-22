@@ -138,8 +138,6 @@ notify:
   "delivered": 0,
   "errored": 0,
   "skipped": 0,
-  "delivered_envelopes": [],
-  "undelivered_envelopes": [],
   "delivery_error": null,
   "data": {
     "tag": "1762268908.791668-ksvmf7",

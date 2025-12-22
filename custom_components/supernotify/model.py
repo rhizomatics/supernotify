@@ -429,15 +429,16 @@ class DeliveryConfig:
             self.action: str | None = conf.get(CONF_ACTION) or delivery_defaults.action
             self.debug: bool = conf.get(CONF_DEBUG, delivery_defaults.debug)
 
-            self.data: ConfigType = dict(delivery_defaults.data) or {}
+            self.data: ConfigType = dict(delivery_defaults.data) if isinstance(delivery_defaults.data, dict) else {}
             self.data.update(conf.get(CONF_DATA, {}))
             self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
             self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
             self.selection_rank: SelectionRank = conf.get(CONF_SELECTION_RANK, delivery_defaults.selection_rank)
             self.options: ConfigType = conf.get(CONF_OPTIONS, {})
             # only override options not set in config
-            for opt in delivery_defaults.options:
-                self.options.setdefault(opt, delivery_defaults.options[opt])
+            if isinstance(delivery_defaults.options, dict):
+                for opt in delivery_defaults.options:
+                    self.options.setdefault(opt, delivery_defaults.options[opt])
 
         else:
             # construct the transport defaults

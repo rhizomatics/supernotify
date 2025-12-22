@@ -112,7 +112,7 @@ class Scenario:
                 matched = True
             else:
                 # look for a wildcard match instead
-                for delivery_name in self.delivery_registry.all_deliveries:
+                for delivery_name in self.delivery_registry.deliveries:
                     if re.fullmatch(name_or_pattern, delivery_name):
                         if self._delivery_selector.get(delivery_name) == delivery_name:
                             _LOGGER.info(

@@ -55,8 +55,8 @@ class Transport:
         self.device_model_include: list[str] | None = self.transport_config.device_model_include
         self.device_model_exclude: list[str] | None = self.transport_config.device_model_exclude
         self.device_discovery: bool | None = self.transport_config.device_discovery
-        self.enabled = self.transport_config.enabled
-        self.override_enabled = self.enabled
+        self.config_enabled = self.transport_config.enabled
+        self.enabled = self.config_enabled
         self.alias = self.transport_config.alias
         self.last_error_at: dt.datetime | None = None
         self.last_error_in: str | None = None
@@ -104,7 +104,7 @@ class Transport:
     def attributes(self) -> dict[str, Any]:
         attrs: dict[str, Any] = {
             ATTR_NAME: self.name,
-            ATTR_ENABLED: self.override_enabled,
+            ATTR_ENABLED: self.enabled,
             CONF_DEVICE_DOMAIN: self.device_domain,
             CONF_DEVICE_DISCOVERY: self.device_discovery,
             CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
@@ -215,7 +215,7 @@ class Transport:
                 CallRecord(time.time() - start_time, domain, service, action_data, target_data, exception=str(e))
             )
             _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.name, qualified_action, action_data)
-            envelope.errored += 1
+            envelope.error_count += 1
             envelope.delivery_error = format_exception(e)
             return False
 

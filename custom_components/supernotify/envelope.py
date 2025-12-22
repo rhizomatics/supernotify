@@ -65,7 +65,7 @@ class Envelope(DupeCheckable):
         if notification:
             delivery_config_data: dict[str, Any] = notification.delivery_data(delivery.name)
             self._enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
-            self._message = notification._message
+            self._message = notification.message
             self._title = notification._title
             self.id = f"{notification.id}_{self.delivery_name}"
         else:
@@ -94,7 +94,7 @@ class Envelope(DupeCheckable):
         self.title = self._compute_title()
 
         self.delivered: int = 0
-        self.errored: int = 0
+        self.error_count: int = 0
         self.skipped: int = 0
         self.skip_reason: SuppressionReason | None = None
         self.calls: list[CallRecord] = []
@@ -220,6 +220,7 @@ class Envelope(DupeCheckable):
                     template = self.context.hass_api.template(template_format)
                     rendered = template.async_render(variables=context_vars)
                 except TemplateError as e:
+                    self.error_count += 1
                     _LOGGER.warning(
                         "SUPERNOTIFY Rendering template %s for %s failed: %s", template_field, self.delivery.name, e
                     )

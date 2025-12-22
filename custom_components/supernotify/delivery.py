@@ -231,11 +231,15 @@ class DeliveryRegistry:
 
     @property
     def deliveries(self) -> dict[str, Delivery]:
+        return dict(self._deliveries.items())
+
+    @property
+    def enabled_deliveries(self) -> dict[str, Delivery]:
         return {d: dconf for d, dconf in self._deliveries.items() if dconf.enabled}
 
     @property
-    def all_deliveries(self) -> dict[str, Delivery]:
-        return dict(self._deliveries.items())
+    def disabled_deliveries(self) -> dict[str, Delivery]:
+        return {d: dconf for d, dconf in self._deliveries.items() if not dconf.enabled}
 
     @property
     def fallback_by_default_deliveries(self) -> list[Delivery]:
