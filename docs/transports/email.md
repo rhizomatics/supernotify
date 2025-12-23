@@ -14,11 +14,17 @@ tags:
 
 Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
 
-Also supports `message_html` override to supply html that will be ignored for other notification
-types, and does not require templates. In this case, HTML will automatically be tagged onto the
+## Pre-generated HTML
+
+The `data` section of the notification can have a `message_html` supplied for html that will be used
+in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the
 end to include any attached images.
 
-HTML templates have an `alert` variable for context.
+## HTML Templates
+
+HTML templates use the standard Home Assistant [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+
+Supernotify also adds an `alert` variable for context of the current notification, with these values:
 
 | Attribute         | Description                                                                     |
 |-------------------|---------------------------------------------------------------------------------|

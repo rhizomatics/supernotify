@@ -2,13 +2,21 @@
 
 ## 1.6.1
 ### New
-- Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to every one
+#### Scenario
+- Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to all
 - `enquire_deliveries_by_scenario` action now lists which deliveries are enabled by the scenario, disabled by it, and all the scenarios to which it applies overrides
+#### Media
 - Better diagnostics for unavailable cameras
+#### Notification Archive
 - Further improvements to `Notification` archive object to make it easier to debug
-  - Original message now at top of object
-  - Envelopes for each delivery categorized into `delivered`,`failed`,`skipped` and `no_envelopes`
-  - More stats on notification outcomes
+    - Original message now at top of object
+    - Envelopes for each delivery categorized into `delivered`,`failed`,`skipped` and `no_envelopes`
+    - More stats on notification outcomes
+#### Email Templates
+- Loading templates and rendering now using non-blocking IO
+- Standard Home Assistant templates used for full range of variables and filters
+
+
 ## 1.6.0
 ### Fixes
 - Image attachments from mobile push style notifications not being picked up by e-mail

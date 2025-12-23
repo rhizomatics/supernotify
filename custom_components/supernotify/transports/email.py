@@ -1,9 +1,10 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
+import aiofiles
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
+from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.helpers.typing import ConfigType
-from jinja2 import Environment, FileSystemLoader
 
 from custom_components.supernotify import (
     ATTR_EMAIL,
@@ -112,13 +113,13 @@ class EmailTransport(Transport):
 
                 action_data["data"]["html"] = html
         else:
-            html = self.render_template(template, envelope, action_data, snapshot_url, envelope.message_html)
+            html = await self.render_template(template, envelope, action_data, snapshot_url, envelope.message_html)
             if html:
                 action_data.setdefault("data", {})
                 action_data["data"]["html"] = html
         return await self.call_action(envelope, action_data=action_data)
 
-    def render_template(
+    async def render_template(
         self,
         template: str,
         envelope: Envelope,
@@ -127,30 +128,40 @@ class EmailTransport(Transport):
         preformatted_html: str | None,
     ) -> str | None:
         alert = {}
+        if self.template_path is None:
+            _LOGGER.error("SUPERNOTIFY No template path set")
+            return None
         try:
             alert = {
-                "message": action_data.get(ATTR_MESSAGE),
-                "title": action_data.get(ATTR_TITLE),
-                "envelope": envelope,
-                "subheading": "Home Assistant Notification",
-                "server": {
-                    "name": self.hass_api.hass_name,
-                    "internal_url": self.hass_api.internal_url,
-                    "external_url": self.hass_api.external_url,
-                },
-                "preformatted_html": preformatted_html,
-                "img": None,
+                "alert": {
+                    "message": action_data.get(ATTR_MESSAGE),
+                    "title": action_data.get(ATTR_TITLE),
+                    "envelope": envelope,
+                    "subheading": "Home Assistant Notification",
+                    "server": {
+                        "name": self.hass_api.hass_name,
+                        "internal_url": self.hass_api.internal_url,
+                        "external_url": self.hass_api.external_url,
+                    },
+                    "preformatted_html": preformatted_html,
+                    "img": None,
+                }
             }
             if snapshot_url:
                 alert["img"] = {"text": "Snapshot Image", "url": snapshot_url}
-            env = Environment(loader=FileSystemLoader(self.template_path or ""), autoescape=True)
-            template_obj = env.get_template(template)
-            html = template_obj.render(alert=alert)
+
+            template_file_path = self.template_path / template
+            template_content: str
+            async with aiofiles.open(template_file_path) as file:
+                template_content = "\n".join(await file.readlines())
+            template_obj: Template = self.context.hass_api.template(template_content)
+            html: str = template_obj.async_render(variables=alert)
             if not html:
-                _LOGGER.error("Empty result from template %s", template)
+                _LOGGER.error("SUPERNOTIFY Empty result from template %s", template)
             else:
                 return html
+        except TemplateError as te:
+            _LOGGER.error("SUPERNOTIFY Failed to render template html mail: %s", te)
         except Exception as e:
-            _LOGGER.error("SUPERNOTIFY Failed to generate html mail: %s", e)
-            _LOGGER.debug("SUPERNOTIFY Template failure: %s", alert, exc_info=True)
+            _LOGGER.exception("SUPERNOTIFY Failed to generate html mail: %s", e)
         return None

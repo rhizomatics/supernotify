@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from custom_components.supernotify import (
     ATTR_DATA,
@@ -51,39 +52,36 @@ async def test_deliver() -> None:
     )
 
 
-async def test_deliver_with_template() -> None:
-    context = TestingContext(
+async def test_deliver_with_template(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
         deliveries={
             "test_email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp", CONF_TEMPLATE: "minimal_test.html.j2"}
         },
         template_path=Path("tests/components/supernotify/fixtures/templates"),
+        services={"notify": ["smtp"]},
     )
-
-    await context.test_initialize()
-    uut = context.transport(TRANSPORT_EMAIL)
+    ctx.hass_api.set_state("device_tracker.joey_mctest", "home")
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_EMAIL)
 
     await uut.deliver(
         Envelope(
-            Delivery("test_email", context.delivery_config("test_email"), uut),
-            Notification(context, message="hello there", title="testing"),
+            Delivery("test_email", ctx.delivery_config("test_email"), uut),
+            Notification(ctx, message="hello there", title="testing"),
             target=Target(["tester9@assert.com"]),
         )
     )
-    context.hass.services.async_call.assert_called_with(  # type: ignore
-        "notify",
-        "smtp",
-        service_data={
-            "target": ["tester9@assert.com"],
-            "title": "testing",
-            "message": "hello there",
-            "data": {"html": "<H1>testing</H1>"},
-        },
-        blocking=False,
-        context=None,
-        target=None,
-        return_response=False,
-    )
+    await ctx.hass.async_block_till_done()
+    assert len(ctx.services["notify.smtp"].calls) == 1
+    service_call: ServiceCall = ctx.services["notify.smtp"].calls[0]
+    assert service_call.data == {
+        "target": ["tester9@assert.com"],
+        "title": "testing",
+        "message": "hello there",
+        "data": {"html": "<H1>testing</H1>\n\n<H2>Joey is home</H2>"},
+    }
 
 
 async def test_deliver_with_preformatted_html() -> None:

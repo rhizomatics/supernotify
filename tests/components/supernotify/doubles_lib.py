@@ -66,8 +66,16 @@ class DummyService:
                 hass.services.async_register(domain, action, self.service_call, supports_response=supports_response)
 
     def mocked_service_call(
-        self, domain, service, service_data, blocking=False, context=None, target=None, return_response=None
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any] | None,
+        blocking: bool = False,
+        context=None,
+        target=None,
+        return_response: bool | None = None,
     ) -> ServiceResponse | None:
+        return_response = False if return_response is None else return_response
         service_data = service_data or {}
         service_data.update(target or {})
         if self.hass is not None:
