@@ -31,7 +31,7 @@ from custom_components.supernotify.model import (
     QualifiedTargetType,
     RecipientType,
     TargetRequired,
-    TransportConfig,
+    TransportConfig, TransportFeature,
 )
 from custom_components.supernotify.transport import (
     Transport,
@@ -47,6 +47,11 @@ class MobilePushTransport(Transport):
         super().__init__(*args, **kwargs)
         self.action_titles: dict[str, str] = {}
         self.action_title_failures: dict[str, float] = {}
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.MESSAGE | TransportFeature.TITLE | TransportFeature.ACTIONS \
+                | TransportFeature.IMAGES | TransportFeature.VIDEO
 
     @property
     def default_config(self) -> TransportConfig:

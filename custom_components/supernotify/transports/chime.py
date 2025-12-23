@@ -28,7 +28,7 @@ from custom_components.supernotify import (
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TargetRequired, TransportConfig
+from custom_components.supernotify.model import Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
@@ -231,6 +231,10 @@ class ChimeTransport(Transport):
                 MediaPlayerChimeTransport(),
             ]
         }
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature(0)
 
     def build_aliases(self, src_config: ConfigType) -> ConfigType:
         dest_config: dict[str, Any] = {}

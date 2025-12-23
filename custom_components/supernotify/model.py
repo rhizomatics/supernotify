@@ -2,7 +2,7 @@ import logging
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from enum import StrEnum, auto
+from enum import IntFlag, StrEnum, auto
 from typing import Any, ClassVar
 
 import voluptuous as vol
@@ -57,6 +57,15 @@ _LOGGER = logging.getLogger(__name__)
 
 # See note on import of homeassistant.components.mobile_app
 MOBILE_APP_DOMAIN = "mobile_app"
+
+
+class TransportFeature(IntFlag):
+    MESSAGE = 1
+    TITLE = 2
+    IMAGES = 4
+    VIDEO = 8
+    ACTIONS = 16
+    TEMPLATE_FILE = 32
 
 
 class Target:

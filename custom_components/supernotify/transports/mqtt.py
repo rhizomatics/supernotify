@@ -6,7 +6,7 @@ from homeassistant.components.mqtt.const import ATTR_TOPIC
 
 from custom_components.supernotify import TRANSPORT_MQTT
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TargetRequired, TransportConfig
+from custom_components.supernotify.model import Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -21,6 +21,10 @@ class MQTTTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.MESSAGE | TransportFeature.TITLE
 
     @property
     def default_config(self) -> TransportConfig:

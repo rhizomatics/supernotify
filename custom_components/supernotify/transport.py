@@ -16,11 +16,10 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from custom_components.supernotify.common import CallRecord
-from custom_components.supernotify.context import Context
-from custom_components.supernotify.model import DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig
-
 from . import ATTR_ENABLED, CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN
+from .common import CallRecord
+from .context import Context
+from .model import DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature
 
 if TYPE_CHECKING:
     import datetime as dt
@@ -84,6 +83,10 @@ class Transport:
                         added += 1
 
                 _LOGGER.info(f"SUPERNOTIFY Device discovery for {domain} found {discovered} devices, added {added} new ones")
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.MESSAGE | TransportFeature.TITLE
 
     @property
     def targets(self) -> Target:

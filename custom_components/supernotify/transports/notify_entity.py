@@ -15,7 +15,7 @@ from custom_components.supernotify import (
     SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -33,6 +33,10 @@ class NotifyEntityTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.MESSAGE | TransportFeature.TITLE
 
     @property
     def default_config(self) -> TransportConfig:

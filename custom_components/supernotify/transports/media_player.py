@@ -8,7 +8,7 @@ from homeassistant.const import (
 
 from custom_components.supernotify import OPTION_TARGET_CATEGORIES, OPTION_TARGET_INCLUDE_RE, TRANSPORT_MEDIA
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import TransportConfig
+from custom_components.supernotify.model import TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
@@ -21,6 +21,11 @@ class MediaPlayerTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.IMAGES | TransportFeature.VIDEO
 
     @property
     def default_config(self) -> TransportConfig:

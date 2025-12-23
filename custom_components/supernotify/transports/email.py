@@ -19,7 +19,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -54,6 +54,11 @@ class EmailTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.MESSAGE | TransportFeature.TITLE | TransportFeature.ACTIONS \
+             | TransportFeature.IMAGES | TransportFeature.TEMPLATE_FILE
 
     @property
     def default_config(self) -> TransportConfig:

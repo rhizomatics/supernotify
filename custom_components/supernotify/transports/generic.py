@@ -20,7 +20,7 @@ from custom_components.supernotify import (
 from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig
+from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -59,6 +59,10 @@ class GenericTransport(Transport):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+
+    @property
+    def supported_features(self) -> TransportFeature:
+        return TransportFeature.MESSAGE | TransportFeature.TITLE
 
     @property
     def default_config(self) -> TransportConfig:
