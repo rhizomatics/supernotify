@@ -94,6 +94,12 @@ These options can be set in the `delivery` or `transport` configuration, or in t
 
 Use this for additional camera info:
 
+Home Assistant default camera entities have built-in device tracking, so the entity state will be `idle`,
+`recording` or `unavailable` if the camera is not available. Supernotify can use this state to switch
+to an alternative camera if the first choice isn't up. It's also possible to associate a separate
+`device_tracker` to the camera, for example using a Unifi or similar integration to track that the camera
+network device is up.
+
 * Link a `device_tracker` to the camera
   * Notifications will first check its online, then use an alternative if primary is down
 * Define alternative cameras to use if first fails using `alt_camera`
@@ -103,6 +109,18 @@ Use this for additional camera info:
   * Choose between ONVIF or Frigate PTZ control using `ptz_transport`
     * Note that ONVIF may have numeric reference for presets while Frigate uses labels
 * Configuration documentation for [Camera Schema](../developer/schemas/Camera_Definition.md).
+
+```yaml title="Example Camera Configuration"
+ cameras:
+    - camera: camera.driveway
+      alt_camera:
+        - camera.doorbell
+        - camera.courtyard
+      device_tracker: device_tracker.driveway_camera
+      ptz_method: frigate
+      ptz_delay: 10
+      ptz_default_preset: Front Door
+```
 
 ## Purging
 

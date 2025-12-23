@@ -87,12 +87,11 @@ current state as `unavailable` ( since their conditions are not continually bein
 
 ## Overriding Delivery Selection and Configuration
 
-Each delivery section within scenario has an `enabled` value, which defaults to `true` (unless a regular expression
-has been used to bulk apply, see [Wildcard Deliveries]).
+Each delivery section within scenario has an `enabled` value, which defaults to `true`.
 
 * `true` - This delivery will be enabled even if it is not an implicit delivery
 * `false` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
-* *Empty* - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied
+* *Empty* - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied. Especially useful with [Wildcard Deliveries].
 
 See the [Seasonal Greetings Recipe](../recipes/seasonal_greetings.md) for an example where the null value of `enabled`
 is useful.
@@ -181,8 +180,9 @@ Regular expressions can be mixed and matched with literal delivery names, where 
 liternal name will work, where 2 regular expressions resolve to the same delivery, the last one to
 be applied is used.
 
-Unlike normal deliveries, wildcarded ones are NOT enabled by default - this is to provide flexibility
-to apply them only to deliveries that are already selected, and not enforcing deliveries to be on.
+All deliveries are enabled by default - which makes regular scenarios easier to use - though can
+mean that a wildcard switches on more deliveries than might be the intention. The solution for this is
+to use an `enabled:` field, which won't force anything to be enabled.
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 

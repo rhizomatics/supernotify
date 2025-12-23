@@ -14,7 +14,7 @@ import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
-from homeassistant.const import STATE_HOME
+from homeassistant.const import STATE_HOME, STATE_UNAVAILABLE
 from PIL import Image
 
 from custom_components.supernotify import (
@@ -220,71 +220,80 @@ async def snap_camera(
     return image_path
 
 
+def camera_available(hass_api: HomeAssistantAPI, camera_config: dict[str, Any], non_entity: bool = False) -> bool:
+    state: State | None = None
+    tracker_entity_id: str
+    camera_entity_id: str = camera_config[CONF_CAMERA]
+    try:
+        if camera_config.get(CONF_DEVICE_TRACKER):
+            tracker_entity_id = camera_config[CONF_DEVICE_TRACKER]
+            state = hass_api.get_state(camera_config[CONF_DEVICE_TRACKER])
+            if state and state.state == STATE_HOME:
+                return True
+            _LOGGER.debug("SUPERNOTIFY Skipping camera %s tracker %s state %s", camera_entity_id, tracker_entity_id, state)
+        else:
+            tracker_entity_id = camera_entity_id
+            state = hass_api.get_state(camera_entity_id)
+            if state and state.state != STATE_UNAVAILABLE:
+                return True
+            if state is None and non_entity:
+                return True
+            _LOGGER.debug("SUPERNOTIFY Skipping camera %s with state %s", camera_entity_id, state)
+        if state is None:
+            if tracker_entity_id == camera_entity_id:
+                _LOGGER.warning(
+                    "SUPERNOTIFY Camera %s tracker %s has no entity state",
+                    camera_entity_id,
+                    tracker_entity_id,
+                )
+            else:
+                _LOGGER.warning(
+                    "SUPERNOTIFY Camera %s device_tracker %s seems missing",
+                    camera_entity_id,
+                    camera_config[CONF_DEVICE_TRACKER],
+                )
+        return False
+
+    except Exception as e:
+        _LOGGER.exception("SUPERNOTIFY Unable to determine camera state: %s, %s", camera_config, e)
+        return False
+
+
 def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], camera_entity_id: str) -> str | None:
     avail_camera_entity_id: str | None = None
 
-    try:
-        preferred_cam = cameras.get(camera_entity_id)
+    preferred_cam = cameras.get(camera_entity_id)
+    # test support FIXME
+    if preferred_cam and CONF_CAMERA not in preferred_cam:
+        preferred_cam[CONF_CAMERA] = camera_entity_id
+    if preferred_cam is None:
+        # assume unconfigured camera available
+        return camera_entity_id
+    if camera_available(hass_api, preferred_cam):
+        return camera_entity_id
 
-        if not preferred_cam or not preferred_cam.get(CONF_DEVICE_TRACKER):
-            # assume unconfigured camera, or configured without tracker, available
-            avail_camera_entity_id = camera_entity_id
-        else:
-            state: State | None = hass_api.get_state(preferred_cam[CONF_DEVICE_TRACKER])
+    alt_cams: list[dict[str, Any]] = [cameras[c] for c in preferred_cam.get(CONF_ALT_CAMERA, []) if c in cameras]
+    alt_cams.extend(
+        {CONF_CAMERA: entity_id} for entity_id in preferred_cam.get(CONF_ALT_CAMERA, []) if entity_id not in cameras
+    )
+    for alt_cam in alt_cams:
+        if camera_available(hass_api, alt_cam):
+            _LOGGER.info("SUPERNOTIFY Selecting available camera %s rather than %s", alt_cam[CONF_CAMERA], camera_entity_id)
+            return alt_cam[CONF_CAMERA]
 
-            if state and state.state == STATE_HOME:
-                avail_camera_entity_id = camera_entity_id
-            else:
-                if state:
-                    _LOGGER.warning(
-                        "SUPERNOTIFY Camera %s tracker %s is %s",
-                        camera_entity_id,
-                        preferred_cam.get(CONF_DEVICE_TRACKER),
-                        state,
-                    )
-                elif preferred_cam.get(CONF_DEVICE_TRACKER):
-                    _LOGGER.warning(
-                        "SUPERNOTIFY Camera %s device_tracker %s seems missing",
-                        camera_entity_id,
-                        preferred_cam.get(CONF_DEVICE_TRACKER),
-                    )
-                alt_cams_with_tracker = [
-                    cameras[c]
-                    for c in preferred_cam.get(CONF_ALT_CAMERA, [])
-                    if c in cameras and cameras[c].get(CONF_DEVICE_TRACKER)
-                ]
-                for alt_cam in alt_cams_with_tracker:
-                    tracker_entity_id = alt_cam.get(CONF_DEVICE_TRACKER)
-                    if tracker_entity_id and hass_api.is_state(tracker_entity_id, STATE_HOME):
-                        avail_camera_entity_id = alt_cam[CONF_CAMERA]
-                        _LOGGER.info(
-                            "SUPERNOTIFY Selecting available camera %s rather than %s", avail_camera_entity_id, camera_entity_id
-                        )
-                        break
-                if avail_camera_entity_id is None:
-                    alt_cam_ids_without_tracker = [
-                        c
-                        for c in preferred_cam.get(CONF_ALT_CAMERA, [])
-                        if c not in cameras or not cameras[c].get(CONF_DEVICE_TRACKER)
-                    ]
-                    if len(alt_cam_ids_without_tracker) > 0:
-                        _LOGGER.info(
-                            "SUPERNOTIFY Selecting untracked camera %s rather than %s", avail_camera_entity_id, camera_entity_id
-                        )
-                        avail_camera_entity_id = alt_cam_ids_without_tracker[0]
+    if avail_camera_entity_id is None:
+        _LOGGER.warning("%s not available, finding best alternative available", camera_entity_id)
+        if camera_available(hass_api, preferred_cam, non_entity=True):
+            _LOGGER.info("SUPERNOTIFY Selecting camera %s with no known entity", camera_entity_id)
+            return camera_entity_id
+        for alt_cam in alt_cams:
+            if camera_available(hass_api, alt_cam, non_entity=True):
+                _LOGGER.info(
+                    "SUPERNOTIFY Selecting alt camera %s with no known entity for %s", alt_cam[CONF_CAMERA], camera_entity_id
+                )
+            return alt_cam[CONF_CAMERA]
 
-        if avail_camera_entity_id is None:
-            _LOGGER.warning("%s not available and no alternative available", camera_entity_id)
-            for c in cameras.values():
-                if c.get(CONF_DEVICE_TRACKER):
-                    _LOGGER.debug(
-                        "SUPERNOTIFY Tracker %s: %s", c.get(CONF_DEVICE_TRACKER), hass_api.get_state(c[CONF_DEVICE_TRACKER])
-                    )
-
-    except Exception as e:
-        _LOGGER.exception("SUPERNOTIFY Unable to select available camera: %s", e)
-
-    return avail_camera_entity_id
+    return None
 
 
 async def grab_image(notification: "Notification", delivery_name: str, context: Context) -> Path | None:  # type: ignore  # noqa: F821

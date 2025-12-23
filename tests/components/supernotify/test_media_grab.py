@@ -5,7 +5,7 @@ from pathlib import Path
 import aiofiles
 import anyio
 import pytest
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -208,11 +208,19 @@ async def test_move_camera_frigate(mock_hass) -> None:
     )
 
 
-def mock_states(hass_api, home_entities: list, not_home_entities: list) -> None:
+def mock_states(
+    hass_api, home_entities: list | None = None, not_home_entities: list | None = None, unavailable_entities: list | None = None
+) -> None:
+    unavailable_entities = unavailable_entities or []
+    not_home_entities = not_home_entities or []
+    home_entities = home_entities or []
+
     def is_state_checker(entity, state) -> bool:
         if entity in home_entities and state == STATE_HOME:
             return True
         if entity in not_home_entities and state == STATE_HOME:
+            return False
+        if entity in unavailable_entities and state == STATE_HOME:
             return False
         raise ServiceValidationError("Test values not as expected")
 
@@ -221,6 +229,8 @@ def mock_states(hass_api, home_entities: list, not_home_entities: list) -> None:
             return State(entity, STATE_HOME)
         if entity in not_home_entities:
             return State(entity, STATE_NOT_HOME)
+        if entity in unavailable_entities:
+            return State(entity, STATE_UNAVAILABLE)
         return None
 
     hass_api.get_state.side_effect = get_state_checker
@@ -231,9 +241,11 @@ def test_select_camera_not_in_config(mock_hass) -> None:
     assert select_avail_camera(mock_hass, {}, "camera.unconfigured") == "camera.unconfigured"
 
 
-def test_select_untracked_primary_camera(mock_hass) -> None:
+def test_select_untracked_primary_camera(mock_hass_api) -> None:
+    mock_states(mock_hass_api, home_entities=["camera.untracked"])
+
     assert (
-        select_avail_camera(mock_hass, {"camera.untracked": {"alias": "Test Untracked"}}, "camera.untracked")
+        select_avail_camera(mock_hass_api, {"camera.untracked": {"alias": "Test Untracked"}}, "camera.untracked")
         == "camera.untracked"
     )
 
@@ -279,8 +291,33 @@ def test_select_avail_alt_camera(mock_hass_api) -> None:
     )
 
 
+def test_select_avail_alt_camera_if_camera_unavailable(mock_hass_api) -> None:
+    mock_states(
+        mock_hass_api,
+        unavailable_entities=["camera.tracked"],
+        not_home_entities=["device_tracker.altcam1", "device_tracker.altcam2"],
+        home_entities=["camera.alt3"],
+    )
+
+    assert (
+        select_avail_camera(
+            mock_hass_api,
+            {
+                "camera.tracked": {
+                    "camera": "camera.tracked",
+                    "alt_camera": ["camera.alt1", "camera.alt2", "camera.alt3"],
+                },
+                "camera.alt1": {"camera": "camera.alt1", "device_tracker": "device_tracker.altcam1"},
+                "camera.alt2": {"camera": "camera.alt2", "device_tracker": "device_tracker.altcam2"},
+            },
+            "camera.tracked",
+        )
+        == "camera.alt3"
+    )
+
+
 def test_select_untracked_alt_camera(mock_hass_api) -> None:
-    mock_states(mock_hass_api, [], ["device_tracker.cam1", "device_tracker.altcam1", "device_tracker.altcam2"])
+    mock_states(mock_hass_api, ["camera.alt3"], ["device_tracker.cam1", "device_tracker.altcam1", "device_tracker.altcam2"])
     assert (
         select_avail_camera(
             mock_hass_api,
