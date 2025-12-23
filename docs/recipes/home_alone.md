@@ -40,10 +40,10 @@ scenarios:
               state:
               - armed_night
         delivery:
-            apple_push:
-            alexa_announce:
-            plain_email:
-            chimes:
+            - apple_push
+            - alexa_announce
+            - plain_email
+            - chimes
 ```
 
 ## Variations

@@ -5,6 +5,7 @@
 #### Scenario
 - Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to all
 - `enquire_deliveries_by_scenario` action now lists which deliveries are enabled by the scenario, disabled by it, and all the scenarios to which it applies overrides
+- `delivery` section now has the same flexibility as on an action call - it can be a mapping, list or single string, the latter two are all that is needed to simply enable deliveries
 #### Media
 - Better diagnostics for unavailable cameras
 #### Notification Archive

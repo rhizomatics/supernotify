@@ -67,13 +67,31 @@ class Scenario:
             self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
-        self._config_delivery: dict[str, DeliveryCustomization] = {
-            k: DeliveryCustomization(v) for k, v in scenario_definition.get(CONF_DELIVERY, {}).items()
-        }
+        self._config_delivery: dict[str, DeliveryCustomization]
         self.delivery: dict[str, DeliveryCustomization] = {}
         self._delivery_selector: dict[str, str] = {}
         self.last_trace: ActionTrace | None = None
         self.startup_issue_count: int = 0
+
+        delivery_data = scenario_definition.get(CONF_DELIVERY)
+        if isinstance(delivery_data, list):
+            # a bare list of deliveries implies enabling
+            _LOGGER.debug("SUPERNOTIFY scenario %s delivery default enabled for list %s", self.name, delivery_data)
+            self._config_delivery = {k: DeliveryCustomization({CONF_ENABLED: True}) for k in delivery_data}
+        elif isinstance(delivery_data, str) and delivery_data:
+            # a bare list of deliveries implies enabled delivery
+            _LOGGER.debug("SUPERNOTIFY scenario %s delivery default enabled for single %s", self.name, delivery_data)
+            self._config_delivery = {delivery_data: DeliveryCustomization({CONF_ENABLED: True})}
+        elif isinstance(delivery_data, dict):
+            # whereas a dict may be used to tune or restrict
+            _LOGGER.debug("SUPERNOTIFY scenario %s delivery selection %s", self.name, delivery_data)
+            self._config_delivery = {k: DeliveryCustomization(v) for k, v in delivery_data.items()}
+        elif delivery_data:
+            _LOGGER.warning("SUPERNOTIFY Unable to interpret scenario %s delivery data %s", self.name, delivery_data)
+            self._config_delivery = {}
+        else:
+            _LOGGER.warning("SUPERNOTIFY No delivery definitions for scenario %s", self.name)
+            self._config_delivery = {}
 
     async def validate(self, valid_action_group_names: list[str] | None = None) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
@@ -161,7 +179,7 @@ class Scenario:
         return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled]
 
     def relevant_deliveries(self) -> list[str]:
-        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled or del_config is None]
+        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled or del_config.enabled is None]
 
     def disabling_deliveries(self) -> list[str]:
         return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled is False]

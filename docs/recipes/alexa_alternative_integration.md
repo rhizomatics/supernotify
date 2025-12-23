@@ -48,7 +48,7 @@ scenarios:
         conditions:
           - "{{notification_priority not in ['critical','high','low']}}"
       delivery:
-        apple_push:
-        alexa_announce:
-        alexa_backup_announce:
+        - apple_push
+        - alexa_announce
+        - alexa_backup_announce
 ```

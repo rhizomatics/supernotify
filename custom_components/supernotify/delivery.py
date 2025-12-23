@@ -181,7 +181,7 @@ class DeliveryRegistry:
         self,
         deliveries: ConfigType | None = None,
         transport_configs: ConfigType | None = None,
-        transport_types: list[type[Transport]] | None = None,
+        transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
         # for unit tests only
         transport_instances: list[Transport] | None = None,
     ) -> None:
@@ -194,8 +194,12 @@ class DeliveryRegistry:
         self._fallback_on_error: list[Delivery] = []
         self._fallback_by_default: list[Delivery] = []
         self._implicit_deliveries: list[Delivery] = []
-        self._transport_types: list[type[Transport]] = transport_types or []
         # test harness support
+        self._transport_types: dict[type[Transport], dict[str, Any]]
+        if isinstance(transport_types, list):
+            self._transport_types = {t: {} for t in transport_types}
+        else:
+            self._transport_types = transport_types or {}
         self._transport_instances: list[Transport] | None = transport_instances
 
     async def initialize(self, context: "Context") -> None:
@@ -262,9 +266,9 @@ class DeliveryRegistry:
                 await transport.initialize()
                 await self.initialize_transport_deliveries(context, transport)
         if self._transport_types:
-            for transport_class in self._transport_types:
+            for transport_class, kwargs in self._transport_types.items():
                 transport_config: ConfigType = self._transport_configs.get(transport_class.name, {})
-                transport = transport_class(context, transport_config)
+                transport = transport_class(context, transport_config, **kwargs)
                 self.transports[transport_class.name] = transport
                 await transport.initialize()
                 await self.initialize_transport_deliveries(context, transport)

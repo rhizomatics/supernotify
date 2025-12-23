@@ -398,7 +398,7 @@ class TransportConfig:
 class DeliveryCustomization:
     def __init__(self, config: ConfigType | None, target_specific: bool = False) -> None:
         config = config or {}
-        self.enabled: bool | None = config.get(CONF_ENABLED, True)
+        self.enabled: bool | None = config.get(CONF_ENABLED, True)  # perhaps should be false for wildcards
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
         self.target: Target | None
         if config.get(CONF_TARGET):

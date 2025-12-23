@@ -87,7 +87,8 @@ current state as `unavailable` ( since their conditions are not continually bein
 
 ## Overriding Delivery Selection and Configuration
 
-Each delivery section within scenario has an `enabled` value, which defaults to `true`:
+Each delivery section within scenario has an `enabled` value, which defaults to `true` (unless a regular expression
+has been used to bulk apply, see [Wildcard Deliveries]).
 
 * `true` - This delivery will be enabled even if it is not an implicit delivery
 * `false` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
@@ -95,6 +96,24 @@ Each delivery section within scenario has an `enabled` value, which defaults to 
 
 See the [Seasonal Greetings Recipe](../recipes/seasonal_greetings.md) for an example where the null value of `enabled`
 is useful.
+
+Lists and single values can also be used, if the only need is to switch on deliveries. These all do the same, so it is
+kinder on everyone who sometimes gets their YAML styles mixed up.
+
+```yaml title="Alternate Delivery Definition Styles"
+scenarios:
+  style_1:
+    alias: Switch on email
+    delivery:
+      email:
+  style_2:
+    alias: Switch on email
+    delivery:
+      - email
+  style_3:
+    alias: Switch on email
+    delivery: email
+```
 
 ## Scenario Selection at Notification
 
@@ -140,18 +159,7 @@ A blank `message_template` or `title_template` can also be used to selectively s
 
 ## Wildcard Deliveries
 
-Delivery names can use regular expressions rather than literal names. For example, to override the priority for
-all deliveries:
-
-```yaml
-scenarios:
-  red_alert:
-      .*:
-       data:
-        priority: critical
-```
-
-Or suppress notifications by disabling all deliveries:
+Delivery names can use regular expressions rather than literal names. For example, to suppress notifications by disabling all deliveries:
 
 ```yaml
 scenarios:
@@ -172,3 +180,17 @@ scenarios:
 Regular expressions can be mixed and matched with literal delivery names, where there is a clash the
 liternal name will work, where 2 regular expressions resolve to the same delivery, the last one to
 be applied is used.
+
+Unlike normal deliveries, wildcarded ones are NOT enabled by default - this is to provide flexibility
+to apply them only to deliveries that are already selected, and not enforcing deliveries to be on.
+
+For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
+
+```yaml
+scenarios:
+  red_alert:
+      .*:
+       enabled:
+       data:
+        priority: critical
+```

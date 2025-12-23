@@ -275,7 +275,7 @@ DELIVERY_CUSTOMIZE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-            vol.Optional(CONF_ENABLED, default=True): vol.Any(None, cv.boolean),
+            vol.Optional(CONF_ENABLED): vol.Any(None, cv.boolean),
             vol.Optional(CONF_DATA): DATA_SCHEMA,
         },
     ),

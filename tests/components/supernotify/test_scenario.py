@@ -1,6 +1,7 @@
 import logging
 from unittest.mock import Mock
 
+from homeassistant.components.profiler import CONF_ENABLED
 from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity
@@ -20,7 +21,7 @@ from custom_components.supernotify import (
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import ConditionVariables
+from custom_components.supernotify.model import ConditionVariables, TargetRequired
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.scenario import Scenario
@@ -566,7 +567,7 @@ async def test_trace(hass: HomeAssistant, mock_delivery_registry) -> None:
     _LOGGER.info("trace: %s", uut.last_trace.as_dict())
 
 
-async def test_scenario_wildcard_apply(hass: HomeAssistant) -> None:
+async def test_scenario_wildcard_disables_deliveries(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,
         scenarios={
@@ -595,6 +596,45 @@ async def test_scenario_wildcard_apply(hass: HomeAssistant) -> None:
     await uut.initialize()
     assert list(uut.enabled_scenarios.keys()) == ["Suppress"]
     assert uut.selected_delivery_names == []
+
+
+async def test_scenario_wildcard_overrides_deliveries(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
+        scenarios={
+            "Deprioritize": {
+                CONF_DELIVERY: {".*": {"enabled": None, "data": {"priority": "low"}}},
+                CONF_CONDITIONS: "{{'noisy' in notification_message|lower}}",
+            },
+        },
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
+            "siren": {CONF_TRANSPORT: "dummy", CONF_ENABLED: False},
+            "chime": {CONF_TRANSPORT: "dummy"},
+        },
+        transport_types={DummyTransport: {"target_required": TargetRequired.OPTIONAL}},
+    )
+
+    await ctx.test_initialize()
+
+    scenario: Scenario = ctx.scenario_registry.scenarios["Deprioritize"]
+    assert scenario.enabling_deliveries() == []
+    assert scenario.disabling_deliveries() == []
+    assert scenario.relevant_deliveries() == unordered("plain_email", "chime", "siren", "mobile")
+
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+    assert list(uut.enabled_scenarios.keys()) == []
+    assert uut.selected_delivery_names == unordered("plain_email", "chime")
+
+    uut = Notification(ctx, "noisy message")
+    await uut.initialize()
+    await uut.deliver()
+    assert list(uut.enabled_scenarios.keys()) == ["Deprioritize"]
+    assert uut.selected_delivery_names == unordered("plain_email", "chime")
+    for env in uut.delivered_envelopes:
+        assert env.priority == "low"
 
 
 async def test_scenario_wildcard_and_literal_apply(hass: HomeAssistant) -> None:

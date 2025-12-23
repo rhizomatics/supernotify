@@ -91,7 +91,7 @@ class TestingContext(Context):
         mobile_actions: ConfigType | str | None = None,
         transports: ConfigType | str | None = None,
         transport_instances: list[Transport] | None = None,
-        transport_types: list[type[Transport]] | None = None,
+        transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
         entities: dict[str, Any] | None = None,
         hass_external_url: str | None = None,
@@ -135,6 +135,7 @@ class TestingContext(Context):
 
         if transport_types:
             TRANSPORT_VALUES.extend([t.name for t in transport_types])
+
         self.config = SUPERNOTIFY_SCHEMA(raw_config)
         self.components = components
 
