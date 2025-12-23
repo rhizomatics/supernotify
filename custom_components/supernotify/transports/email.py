@@ -57,8 +57,13 @@ class EmailTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature.MESSAGE | TransportFeature.TITLE | TransportFeature.ACTIONS \
-             | TransportFeature.IMAGES | TransportFeature.TEMPLATE_FILE
+        return (
+            TransportFeature.MESSAGE
+            | TransportFeature.TITLE
+            | TransportFeature.ACTIONS
+            | TransportFeature.IMAGES
+            | TransportFeature.TEMPLATE_FILE
+        )
 
     @property
     def default_config(self) -> TransportConfig:
