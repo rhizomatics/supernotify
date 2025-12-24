@@ -409,6 +409,7 @@ class Notification(ArchivableObject):
             if envelope:
                 self.delivered += envelope.delivered
                 self.error_count += envelope.error_count
+                self.deliveries.setdefault(delivery.name, {})
                 if envelope.delivered:
                     self.deliveries[delivery.name].setdefault(KEY_DELIVERED, [])
                     self.deliveries[delivery.name][KEY_DELIVERED].append(envelope)  # type: ignore
