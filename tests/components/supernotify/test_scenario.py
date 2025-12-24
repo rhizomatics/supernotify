@@ -55,9 +55,9 @@ async def test_validate(mock_hass_api: HomeAssistantAPI, mock_delivery_registry)
     )
     mock_delivery_registry.deliveries = {"good": Delivery("good", {}, Mock()), "ok": Delivery("ok", {}, Mock())}
     assert not await uut.validate(valid_action_group_names=["snoozes"])
-    assert "bad" not in uut.delivery
-    assert "good" in uut.delivery
-    assert "ok" in uut.delivery
+    assert "bad" not in uut.delivery_overrides
+    assert "good" in uut.delivery_overrides
+    assert "ok" in uut.delivery_overrides
     assert "lights" not in uut.action_groups
     assert "snoozes" in uut.action_groups
     assert uut.startup_issue_count == 2

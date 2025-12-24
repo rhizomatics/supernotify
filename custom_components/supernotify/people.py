@@ -80,7 +80,7 @@ class Recipient:
         self.user_id: str | None = config.get(ATTR_USER_ID)
 
         self._target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
-        self.delivery: dict[str, DeliveryCustomization] = {
+        self.delivery_overrides: dict[str, DeliveryCustomization] = {
             k: DeliveryCustomization(v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
@@ -117,9 +117,12 @@ class Recipient:
                 if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
                     self.alias = attrs.get(ATTR_FRIENDLY_NAME)
 
+    def enabling_delivery_names(self) -> list[str]:
+        return [delname for delname, delconf in self.delivery_overrides.items() if delconf.enabled is True]
+
     def target(self, delivery_name: str) -> Target:
-        recipient_target = self._target
-        personal_delivery = self.delivery.get(delivery_name)
+        recipient_target: Target = self._target
+        personal_delivery: DeliveryCustomization | None = self.delivery_overrides.get(delivery_name)
         if personal_delivery and personal_delivery.enabled is not False:
             if personal_delivery.target and personal_delivery.target.has_targets():
                 recipient_target += personal_delivery.target
@@ -138,7 +141,9 @@ class Recipient:
                 CONF_MOBILE_DISCOVERY: self.mobile_discovery,
                 CONF_MOBILE_DEVICES: list(self.mobile_devices.values()),
                 CONF_TARGET: self._target.as_dict() if self._target else None,
-                CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
+                CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery_overrides.items()}
+                if self.delivery_overrides
+                else None,
             })
         return result
 
@@ -153,7 +158,7 @@ class Recipient:
             CONF_MOBILE_DEVICES: list(self.mobile_devices.values()),
             CONF_MOBILE_DISCOVERY: self.mobile_discovery,
             CONF_TARGET: self._target.as_dict() if self._target else None,
-            CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
+            CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery_overrides.items()} if self.delivery_overrides else None,
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

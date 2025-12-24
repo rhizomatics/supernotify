@@ -68,7 +68,7 @@ class Scenario:
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
         self._config_delivery: dict[str, DeliveryCustomization]
-        self.delivery: dict[str, DeliveryCustomization] = {}
+        self.delivery_overrides: dict[str, DeliveryCustomization] = {}
         self._delivery_selector: dict[str, str] = {}
         self.last_trace: ActionTrace | None = None
         self.startup_issue_count: int = 0
@@ -125,7 +125,7 @@ class Scenario:
             matched: bool = False
             delivery: Delivery | None = self.delivery_registry.deliveries.get(name_or_pattern)
             if delivery:
-                self.delivery[delivery.name] = config
+                self.delivery_overrides[delivery.name] = config
                 self._delivery_selector[delivery.name] = name_or_pattern
                 matched = True
             else:
@@ -140,7 +140,7 @@ class Scenario:
                             _LOGGER.debug(
                                 f"SUPERNOTIFY Scenario {self.name} delivery '{name_or_pattern}' matched {delivery_name}"
                             )
-                            self.delivery[delivery_name] = config
+                            self.delivery_overrides[delivery_name] = config
                             self._delivery_selector[delivery_name] = name_or_pattern
                             matched = True
             if not matched:
@@ -176,16 +176,20 @@ class Scenario:
         return self.startup_issue_count == 0
 
     def enabling_deliveries(self) -> list[str]:
-        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled]
+        return [del_name for del_name, del_config in self.delivery_overrides.items() if del_config.enabled]
 
     def relevant_deliveries(self) -> list[str]:
-        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled or del_config.enabled is None]
+        return [
+            del_name
+            for del_name, del_config in self.delivery_overrides.items()
+            if del_config.enabled or del_config.enabled is None
+        ]
 
     def disabling_deliveries(self) -> list[str]:
-        return [del_name for del_name, del_config in self.delivery.items() if del_config.enabled is False]
+        return [del_name for del_name, del_config in self.delivery_overrides.items() if del_config.enabled is False]
 
     def delivery_customization(self, delivery_name: str) -> DeliveryCustomization | None:
-        return self.delivery.get(delivery_name)
+        return self.delivery_overrides.get(delivery_name)
 
     def attributes(self, include_condition: bool = True, include_trace: bool = False) -> dict[str, Any]:
         """Return scenario attributes"""
@@ -194,7 +198,7 @@ class Scenario:
             ATTR_ENABLED: self.enabled,
             "media": self.media,
             "action_groups": self.action_groups,
-            "delivery": {k: v.as_dict() for k, v in self.delivery.items()},
+            "delivery": {k: v.as_dict() for k, v in self.delivery_overrides.items()},
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
@@ -205,7 +209,7 @@ class Scenario:
         return attrs
 
     def delivery_config(self, delivery_name: str) -> DeliveryCustomization | None:
-        return self.delivery.get(delivery_name)
+        return self.delivery_overrides.get(delivery_name)
 
     def contents(self, minimal: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """Archive friendly view of scenario"""

@@ -409,7 +409,8 @@ class DeliveryCustomization:
         config = config or {}
         self.enabled: bool | None = config.get(CONF_ENABLED, True)  # perhaps should be false for wildcards
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
-        self.target: Target | None
+        self.target: Target | None  # TODO: only works for scenario or recipient, not action call
+
         if config.get(CONF_TARGET):
             if self.data:
                 self.target = Target(config.get(CONF_TARGET), target_data=self.data, target_specific_data=target_specific)

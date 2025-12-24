@@ -48,9 +48,10 @@ from .context import Context
 from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
 from .model import ConditionVariables, DeliveryCustomization, SuppressionReason, Target, TargetRequired
+from .people import Recipient
 
 if TYPE_CHECKING:
-    from .people import PeopleRegistry, Recipient
+    from .people import PeopleRegistry
     from .scenario import Scenario
     from .transport import (
         Transport,
@@ -250,6 +251,7 @@ class Notification(ArchivableObject):
         scenario_enable_deliveries: list[str] = []
         scenario_disable_deliveries: list[str] = []
         default_enable_deliveries: list[str] = []
+        recipients_enable_deliveries: list[str] = []
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
@@ -259,6 +261,9 @@ class Notification(ArchivableObject):
 
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
+
+            for recipient in self.all_recipients():
+                recipients_enable_deliveries.extend(recipient.enabling_delivery_names())
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
                 # all deliveries with SELECTION_DEFAULT in CONF_SELECTION
                 default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
@@ -266,9 +271,10 @@ class Notification(ArchivableObject):
         self.debug_trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
         self.debug_trace.record_delivery_selection("scenario_disable_deliveries", scenario_disable_deliveries)
         self.debug_trace.record_delivery_selection("default_enable_deliveries", default_enable_deliveries)
+        self.debug_trace.record_delivery_selection("recipient_enable_deliveries", recipients_enable_deliveries)
 
-        override_enable_deliveries = []
-        override_disable_deliveries = []
+        override_enable_deliveries: list[str] = []
+        override_disable_deliveries: list[str] = []
 
         # apply the deliveries defined in the notification action call
         for delivery, delivery_override in self.delivery_overrides.items():
@@ -291,14 +297,25 @@ class Notification(ArchivableObject):
         #        and d.name not in scenario_enable_deliveries
         #        and (d.name not in override_enable_deliveries or self.delivery_selection != DELIVERY_SELECTION_EXPLICIT)
         #    ]
-        all_enabled = list(set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries))
+        all_enabled = list(
+            set(
+                scenario_enable_deliveries
+                + recipients_enable_deliveries
+                + default_enable_deliveries
+                + override_enable_deliveries
+            )
+        )
         all_disabled = scenario_disable_deliveries + override_disable_deliveries
         override_enabled = list(set(scenario_enable_deliveries + override_enable_deliveries))
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
-        unsorted_objs: list[Delivery] = [self.delivery_registry.deliveries[d] for d in all_enabled if d not in all_disabled]
-        unsorted_objs = [d for d in unsorted_objs if d.enabled or d.name in override_enabled]
+        unsorted_maybe_objs: list[Delivery | None] = [
+            self.delivery_registry.deliveries.get(d) for d in all_enabled if d not in all_disabled
+        ]
+        unsorted_objs: list[Delivery] = [
+            d for d in unsorted_maybe_objs if d is not None and (d.enabled or d.name in override_enabled)
+        ]
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
         last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]
@@ -352,7 +369,7 @@ class Notification(ArchivableObject):
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on transport disabled", delivery)
                 return
 
-            delivery_priorities = delivery.priority
+            delivery_priorities: list[str] = delivery.priority
             if self.priority and delivery_priorities and self.priority not in delivery_priorities:
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
                 self.record_result(delivery, suppression_reason=SuppressionReason.PRIORITY)
@@ -363,7 +380,7 @@ class Notification(ArchivableObject):
                 return
 
             targets: list[Target] = self.generate_targets(delivery)
-            envelopes = self.generate_envelopes(delivery, targets)
+            envelopes: list[Envelope] = self.generate_envelopes(delivery, targets)
             if not envelopes:
                 if delivery.target_required == TargetRequired.ALWAYS and (
                     not targets or not any(t.has_resolved_target() for t in targets)
@@ -636,6 +653,21 @@ class Notification(ArchivableObject):
                 resolved += customization.target
         return resolved
 
+    def all_recipients(self) -> list[Recipient]:
+        recipients: list[Recipient] = []
+        if self._target:
+            # explicit targets given
+            recipients.extend(
+                self.people_registry.people[pers_ent_id]
+                for pers_ent_id in self._target.person_ids
+                if pers_ent_id in self.people_registry.people and self.people_registry.people[pers_ent_id].enabled
+            )
+        else:
+            # default to all known recipients
+            recipients = self.people_registry.enabled_recipients()
+            recipients = [r for r in recipients if self.recipients_override is None or r.entity_id in self.recipients_override]
+        return recipients
+
     def default_person_ids(self, delivery: Delivery) -> Target:
         # If target not specified on service call or delivery, then default to std list of recipients
         people: list[Recipient] = self.people_registry.filter_recipients_by_occupancy(delivery.occupancy)
@@ -648,9 +680,9 @@ class Notification(ArchivableObject):
         additional: list[Target] = []
 
         for person_id in target.person_ids:
-            person = self.people_registry.people.get(person_id)
-            if person and person.enabled:
-                recipient_target = person.target(delivery.name)
+            recipient: Recipient | None = self.people_registry.people.get(person_id)
+            if recipient and recipient.enabled:
+                recipient_target = recipient.target(delivery.name)
                 if recipient_target.target_specific_data:
                     additional.append(recipient_target)
                 else:

@@ -31,6 +31,9 @@ async def support_case_fixture(hass: HomeAssistant):
           signal: {}
       - person: person.bar
         phone_number: "+121290067890"
+        delivery:
+           signal:
+             enabled: true
 
 """,
         services={"notify": ["signal"], "mobile_app": ["iphone"]},
@@ -46,8 +49,9 @@ async def test_mobile_push_only_when_no_explicit_delivery(support_case_fixture, 
     await uut.initialize()
     await uut.deliver()
 
-    assert list(uut.deliveries.keys()) == ["DEFAULT_mobile_push", "DEFAULT_notify_entity"]
+    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
     assert len(uut.deliveries["DEFAULT_mobile_push"]["delivered"]) == 1
+    assert len(uut.deliveries["signal"]["delivered"]) == 1
     assert len(uut.deliveries["DEFAULT_notify_entity"].get("delivered", [])) == 0
 
 
