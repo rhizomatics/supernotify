@@ -23,7 +23,15 @@ from . import (
 from .common import DupeCheckable
 from .context import Context
 from .media_grab import grab_image
-from .model import ConditionVariables, DeliveryCustomization, MessageOnlyPolicy, SuppressionReason, Target
+from .model import (
+    ConditionVariables,
+    DeliveryCustomization,
+    MessageOnlyPolicy,
+    SuppressionReason,
+    Target,
+    TargetRequired,
+    TransportFeature,
+)
 
 if typing.TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
@@ -127,7 +135,19 @@ class Envelope(DupeCheckable):
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
         exclude_attrs = ["_notification", "context"]
         if minimal:
-            exclude_attrs.extend(["delivery"])
+            exclude_attrs.append("delivery")
+        features: TransportFeature = self.delivery.transport.supported_features
+        if not features & TransportFeature.ACTIONS:
+            exclude_attrs.append(["actions", "action_groups"])
+        if not features & TransportFeature.IMAGES and not features & TransportFeature.VIDEO:
+            exclude_attrs.append("media")
+        if not features & TransportFeature.MESSAGE:
+            exclude_attrs.extend(["message_html", "message"])
+        if not features & TransportFeature.TITLE:
+            exclude_attrs.append("title")
+        if self.delivery.target_required == TargetRequired.NEVER:
+            exclude_attrs.append("target")
+
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs and not k.startswith("_")}
         json_ready["calls"] = [call.contents() for call in self.calls]
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
