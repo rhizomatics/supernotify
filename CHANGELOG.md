@@ -1,6 +1,6 @@
 # Public releases
 
-## 1.6.1
+## 1.7.0
 ### New
 #### Scenario
 - Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to all
@@ -9,8 +9,12 @@
 #### Cameras
 - Camera entity's built in device tracker will now be used, no need for separate device tracker where this supported
 - Better diagnostics for unavailable cameras
-### People
+### People / Recipients
 - Automatically discovered mobile devices merge into manually registered ones rather than overwriting them
+- Enabled flag for deliveries in Recipient are now respected in delivery selection
+  - Recipient overrides can now re-enable otherwise disabled deliveries, as scenarios have already been able to do
+  - Like scenario, deliveries can be overridden without enabling by setting `enabled:` as empty value
+  - `recipient_enable_deliveries` recorded in `debug_trace` as in the notification archive
 #### Notification Archive
 - Further improvements to `Notification` archive object to make it easier to debug
     - Original message now at top of object
