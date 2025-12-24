@@ -150,7 +150,7 @@ class Notification(ArchivableObject):
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
 
-        self.selected_delivery_names: list[str] = []
+        self.delivery_selections: dict[str, dict[str, Any]] = {}
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self._suppression_reason: SuppressionReason | None = None
@@ -179,7 +179,7 @@ class Notification(ArchivableObject):
             ]
         if self.required_scenario_names and not any(s in enabled_scenario_names for s in self.required_scenario_names):
             _LOGGER.info("SUPERNOTIFY suppressing notification, no required scenarios enabled")
-            self.selected_delivery_names = []
+            self.delivery_selections = {}
             self.suppress(SuppressionReason.NO_SCENARIO)
         else:
             for s in enabled_scenario_names:
@@ -187,7 +187,7 @@ class Notification(ArchivableObject):
                 if scenario_obj is not None:
                     self.enabled_scenarios[s] = scenario_obj
 
-            self.selected_delivery_names = self.select_deliveries()
+            self.delivery_selections = self.select_deliveries()
             if self.context.snoozer.is_global_snooze(self.priority):
                 self.suppress(SuppressionReason.SNOOZED)
             self.apply_enabled_scenarios()
@@ -247,7 +247,7 @@ class Notification(ArchivableObject):
         else:
             self.action_groups = action_groups
 
-    def select_deliveries(self) -> list[str]:
+    def select_deliveries(self) -> dict[str, dict[str, Any]]:
         scenario_enable_deliveries: list[str] = []
         scenario_disable_deliveries: list[str] = []
         default_enable_deliveries: list[str] = []
@@ -297,16 +297,12 @@ class Notification(ArchivableObject):
         #        and d.name not in scenario_enable_deliveries
         #        and (d.name not in override_enable_deliveries or self.delivery_selection != DELIVERY_SELECTION_EXPLICIT)
         #    ]
-        all_enabled = list(
-            set(
-                scenario_enable_deliveries
-                + recipients_enable_deliveries
-                + default_enable_deliveries
-                + override_enable_deliveries
-            )
+        all_global_enabled: list[str] = list(
+            set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
         )
-        all_disabled = scenario_disable_deliveries + override_disable_deliveries
-        override_enabled = list(set(scenario_enable_deliveries + override_enable_deliveries))
+        all_enabled: list[str] = all_global_enabled + recipients_enable_deliveries
+        all_disabled: list[str] = scenario_disable_deliveries + override_disable_deliveries
+        override_enabled: list[str] = list(set(scenario_enable_deliveries + override_enable_deliveries))
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
@@ -321,7 +317,20 @@ class Notification(ArchivableObject):
         last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]
         selected = first + anywhere + last
         self.debug_trace.record_delivery_selection("ranked", selected)
-        return selected
+
+        # TODO: clean up this ugly logic, reorganize delivery around people
+        results: dict[str, dict[str, Any]] = {d: {} for d in selected}
+        personal_deliveries = [d for d in selected if d not in all_global_enabled and d in recipients_enable_deliveries]
+        for personal_delivery in personal_deliveries:
+            results[personal_delivery].setdefault("recipients", [])
+            for recipient in self.all_recipients():
+                if personal_delivery in recipient.enabling_delivery_names():
+                    results[personal_delivery]["recipients"].append(recipient.entity_id)
+        return results
+
+    @property
+    def selected_delivery_names(self) -> list[str]:
+        return list(self.delivery_selections.keys())
 
     def suppress(self, reason: SuppressionReason) -> None:
         self._suppression_reason = reason
@@ -337,31 +346,31 @@ class Notification(ArchivableObject):
             self.selected_delivery_names,
         )
 
-        for delivery_name in self.selected_delivery_names:
+        for delivery_name, details in self.delivery_selections.items():
             self.deliveries[delivery_name] = {}
             delivery = self.context.delivery_registry.deliveries.get(delivery_name)
             if self._suppression_reason is not None:
                 _LOGGER.info("SUPERNOTIFY Suppressing globally silenced/snoozed notification (%s)", self.id)
                 self.record_result(delivery, suppression_reason=SuppressionReason.SNOOZED)
             elif delivery:
-                await self.call_transport(delivery)
+                await self.call_transport(delivery, recipients=details.get("recipients"))
             else:
                 _LOGGER.error(f"SUPERNOTIFY Unexpected missing delivery {delivery_name}")
 
         if self.delivered == 0 and not self._suppression_reason:
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
-                    if delivery.name not in self.selected_delivery_names:
+                    if delivery.name not in self.delivery_selections:
                         await self.call_transport(delivery)
 
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
-                    if delivery.name not in self.selected_delivery_names:
+                    if delivery.name not in self.delivery_selections:
                         await self.call_transport(delivery)
 
         return self.delivered > 0
 
-    async def call_transport(self, delivery: Delivery) -> None:
+    async def call_transport(self, delivery: Delivery, recipients: list[str] | None = None) -> None:
         try:
             transport: Transport = delivery.transport
             if not transport.enabled:
@@ -379,7 +388,7 @@ class Notification(ArchivableObject):
                 self.record_result(delivery, suppression_reason=SuppressionReason.DELIVERY_CONDITION)
                 return
 
-            targets: list[Target] = self.generate_targets(delivery)
+            targets: list[Target] = self.generate_targets(delivery, recipients=recipients)
             envelopes: list[Envelope] = self.generate_envelopes(delivery, targets)
             if not envelopes:
                 if delivery.target_required == TargetRequired.ALWAYS and (
@@ -475,7 +484,7 @@ class Notification(ArchivableObject):
             "selected_scenario_names",
             "delivery_selection",
             "delivery_overrides",
-            "selected_delivery_names",
+            "delivery_selection",
             "recipients_override",
             "delivered",
             "failed",
@@ -555,7 +564,7 @@ class Notification(ArchivableObject):
     async def select_scenarios(self) -> list[str]:
         return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(self.condition_variables)]
 
-    def generate_targets(self, delivery: Delivery) -> list[Target]:
+    def generate_targets(self, delivery: Delivery, recipients: list[str] | None = None) -> list[Target]:
 
         if delivery.target_required == TargetRequired.NEVER:
             # don't waste time computing targets for deliveries that don't need them
@@ -570,51 +579,55 @@ class Notification(ArchivableObject):
             else:
                 computed_target = Target(None, target_data=delivery.data)
                 self.debug_trace.record_target(delivery.name, "1b_delivery_default_fixed_empty", computed_target)
+        elif recipients is not None:
+            computed_target = Target(recipients)
+            self.debug_trace.record_target(delivery.name, "1a_delivery_default_fixed", computed_target)
 
         elif not self._target:
             # Unless there are explicit targets, include everyone on the people registry
             computed_target = self.default_person_ids(delivery)
-            self.debug_trace.record_target(delivery.name, "1c_no_action_target", computed_target)
+            self.debug_trace.record_target(delivery.name, "2a_no_action_target", computed_target)
         else:
             computed_target = self._target.safe_copy()
-            self.debug_trace.record_target(delivery.name, "1d_action_target", computed_target)
+            self.debug_trace.record_target(delivery.name, "2b_action_target", computed_target)
 
         # 1st round of filtering for snooze and resolving people->direct targets
         computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-        self.debug_trace.record_target(delivery.name, "2a_post_snooze", computed_target)
+        self.debug_trace.record_target(delivery.name, "3a_post_snooze", computed_target)
         # turn person_ids into emails and phone numbers
         for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
             computed_target += indirect_target
-        self.debug_trace.record_target(delivery.name, "2b_resolve_indirect", computed_target)
+        self.debug_trace.record_target(delivery.name, "4a_resolve_indirect", computed_target)
         computed_target += self.resolve_scenario_targets(delivery)
-        self.debug_trace.record_target(delivery.name, "2c_resolved_scenario_targets", computed_target)
+        self.debug_trace.record_target(delivery.name, "5a_resolved_scenario_targets", computed_target)
         # filter out target not required for this delivery
         computed_target = delivery.select_targets(computed_target)
-        self.debug_trace.record_target(delivery.name, "2d_delivery_selection", computed_target)
+        self.debug_trace.record_target(delivery.name, "6a_delivery_selection", computed_target)
         primary_count = len(computed_target)
 
         if delivery.target_usage == TARGET_USE_ON_NO_DELIVERY_TARGETS:
             if not computed_target.has_targets() and delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "3a_delivery_default_no_delivery_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "7a_delivery_default_no_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_ON_NO_ACTION_TARGETS:
             if not self._target and delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "3b_delivery_default_no_action_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "7b_delivery_default_no_action_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ON_DELIVERY_TARGETS:
             # merge in the delivery defaults if there's a target defined in action call
             if computed_target.has_targets() and delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "3c_delivery_merge_on_delivery_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "7c_delivery_merge_on_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ALWAYS:
             # merge in the delivery defaults even if there's not a target defined in action call
             if delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "3d_delivery_merge_always_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "7d_delivery_merge_always_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_FIXED:
             _LOGGER.debug("SUPERNOTIFY Fixed target on delivery %s", delivery.name)
+            self.debug_trace.record_target(delivery.name, "7e_fixed_target", computed_target)
         else:
-            self.debug_trace.record_target(delivery.name, "3f_no_target_usage_match", computed_target)
+            self.debug_trace.record_target(delivery.name, "7f_no_target_usage_match", computed_target)
             _LOGGER.debug("SUPERNOTIFY No useful target definition for delivery %s", delivery.name)
 
         if len(computed_target) > primary_count:
@@ -624,25 +637,25 @@ class Notification(ArchivableObject):
 
             # 2nd round of filtering for snooze and resolving people->direct targets after delivery target applied
             computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-            self.debug_trace.record_target(delivery.name, "4a_post_snooze", computed_target)
+            self.debug_trace.record_target(delivery.name, "8a_post_snooze", computed_target)
             for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
                 computed_target += indirect_target
-            self.debug_trace.record_target(delivery.name, "4b_resolved_indirect_targets", computed_target)
+            self.debug_trace.record_target(delivery.name, "9a_resolved_indirect_targets", computed_target)
             computed_target += self.resolve_scenario_targets(delivery)
-            self.debug_trace.record_target(delivery.name, "4c_resolved_scenario_targets", computed_target)
+            self.debug_trace.record_target(delivery.name, "10a_resolved_scenario_targets", computed_target)
             computed_target = delivery.select_targets(computed_target)
-            self.debug_trace.record_target(delivery.name, "4d_delivery_selection", computed_target)
+            self.debug_trace.record_target(delivery.name, "11a_delivery_selection", computed_target)
 
         split_targets: list[Target] = computed_target.split_by_target_data()
-        self.debug_trace.record_target(delivery.name, "5a_delivery_split_targets", split_targets)
+        self.debug_trace.record_target(delivery.name, "12_delivery_split_targets", split_targets)
         direct_targets: list[Target] = [t.direct() for t in split_targets]
-        self.debug_trace.record_target(delivery.name, "5b_narrow_to_direct", direct_targets)
+        self.debug_trace.record_target(delivery.name, "13a_narrow_to_direct", direct_targets)
         if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
             direct_targets = [t - self._already_selected for t in direct_targets]
-            self.debug_trace.record_target(delivery.name, "5c_make_unique_across_deliveries", direct_targets)
+            self.debug_trace.record_target(delivery.name, "14a_make_unique_across_deliveries", direct_targets)
         for direct_target in direct_targets:
             self._already_selected += direct_target
-        self.debug_trace.record_target(delivery.name, "6_final_cut", direct_targets)
+        self.debug_trace.record_target(delivery.name, "999_final_cut", direct_targets)
         return direct_targets
 
     def resolve_scenario_targets(self, delivery: Delivery) -> Target:

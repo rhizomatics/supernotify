@@ -16,6 +16,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceRegistry,
+    State,
     StateMachine,
     SupportsResponse,
 )
@@ -36,6 +37,7 @@ from custom_components.supernotify import (
     CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
+    CONF_PERSON,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
     CONF_TEMPLATE_PATH,
@@ -109,7 +111,7 @@ class TestingContext(Context):
             did: Mock(spec=DeviceEntry, id=did, disabled=False, discover=discover, identifiers=[(ddomain, did)])
             for ddomain, did, discover in devices or []
         }
-        self.entities = entities
+        self.entities = entities or {}
 
         raw_config: ConfigType = cast("ConfigType", load_config(yaml))
         raw_config.setdefault("name", "Supernotify")
@@ -154,8 +156,7 @@ class TestingContext(Context):
             self.device_registry.async_get = lambda did: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
-            if self.entities and isinstance(self.entities, dict):
-                self.hass.states.get.side_effect = lambda v: self.entities.get(v)  # ty:ignore[possibly-missing-attribute]
+
             self.hass.data["entity_registry"] = self.entity_registry
             self.issue_registry = AsyncMock(spec=IssueRegistry)
             self.hass.data["issue_registry"] = self.issue_registry
@@ -163,6 +164,21 @@ class TestingContext(Context):
             self.hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
             self.hass.data[DATA_MQTT].client.connected = True
             self.hass.config_entries._entries = ConfigEntryItems(self.hass)
+            self.hass.loop_thread_id = 0
+
+            for recipient in self.config.get(CONF_RECIPIENTS, []):
+                if recipient.get(CONF_PERSON):
+                    self.entities[recipient.get(CONF_PERSON)] = Mock(spec=State, attributes=recipient)
+
+            self.hass.states.get.side_effect = lambda v: self.entities.get(v)
+
+            def set_state(entity_id, v, attributes=None):  # type: ignore[possibly-missing-attribute]
+                self.entities.setdefault(entity_id, Mock(spec=State, state=v, attributes=attributes or {}))
+                self.entities[entity_id].state = v
+                if attributes:
+                    self.entities[entity_id].attributes = attributes
+
+            self.hass.states.set.side_effect = set_state
 
         self.hass_external_url = hass_external_url
         if services:

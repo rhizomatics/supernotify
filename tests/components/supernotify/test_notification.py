@@ -12,8 +12,11 @@ from custom_components.supernotify import (
     CONF_DATA,
     CONF_DELIVERY,
     CONF_MEDIA,
+    CONF_MOBILE_APP_ID,
+    CONF_MOBILE_DEVICES,
     CONF_OPTIONS,
     CONF_PERSON,
+    CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_USAGE,
     CONF_TITLE,
@@ -32,8 +35,7 @@ from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import DebugTrace, Notification
 from custom_components.supernotify.transports.email import EmailTransport
-
-from .hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 DELIVERIES = """
 plain_email:
@@ -48,6 +50,10 @@ TRANSPORTS = """
 notify_entity:
     enabled: false
 """
+
+
+def first_envelope(notification: Notification, delivery: str) -> Envelope:
+    return notification.deliveries[delivery]["delivered"][0]  # type: ignore
 
 
 async def test_simple_create() -> None:
@@ -203,6 +209,33 @@ async def test_generate_targets_from_recipients() -> None:
     recipients: list[Target] = uut.generate_targets(delivery)
     assert recipients[0].entity_ids == ["custom.light_1"]
     assert recipients[0].custom_ids("_UNKNOWN_") == ["@foo", "@bar", "@fee", "@fum"]
+
+
+async def test_select_recipient_deliveries() -> None:
+    ctx = TestingContext(
+        recipients=[
+            {
+                CONF_PERSON: "person.new_home_owner",
+                CONF_EMAIL: "owner@mctest.org",
+                CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_joephone"}],
+                CONF_DELIVERY: {"chatty": {}},
+            },
+            {
+                CONF_PERSON: "person.kid_no_3",
+                CONF_EMAIL: "kid3@mctest.org",
+                CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_kidphone"}],
+            },
+        ],
+        deliveries={"chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_SELECTION: ["explicit"]}},
+        services={"notify": ["smtp"], "mobile_app": ["kidphone", "joephone"]},
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+    await uut.deliver()
+    assert first_envelope(uut, "DEFAULT_mobile_push").target.mobile_app_ids == ["mobile_app_joephone", "mobile_app_kidphone"]
+    assert first_envelope(uut, "chatty").target.email == ["owner@mctest.org"]  # type: ignore
 
 
 async def test_explicit_recipients_only_restricts_people_targets() -> None:
