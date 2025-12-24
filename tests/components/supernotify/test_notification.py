@@ -376,7 +376,7 @@ async def test_delivery_selection_order() -> None:
     await uut.initialize()
 
     assert len(list(uut.selected_deliveries)) == 6
-    assert list(uut.selected_deliveries)[0] == "eager"
+    assert next(iter(uut.selected_deliveries)) == "eager"
     assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
     assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
 

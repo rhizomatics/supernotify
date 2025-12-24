@@ -133,12 +133,12 @@ class Envelope(DupeCheckable):
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
-        exclude_attrs = ["_notification", "context"]
+        exclude_attrs: list[str] = ["_notification", "context"]
         if minimal:
             exclude_attrs.append("delivery")
         features: TransportFeature = self.delivery.transport.supported_features
         if not features & TransportFeature.ACTIONS:
-            exclude_attrs.append(["actions", "action_groups"])
+            exclude_attrs.extend(["actions", "action_groups"])
         if not features & TransportFeature.IMAGES and not features & TransportFeature.VIDEO:
             exclude_attrs.append("media")
         if not features & TransportFeature.MESSAGE:
