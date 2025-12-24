@@ -102,6 +102,19 @@ are resolved as specific to it, for example based on the `target_categories` opt
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
+## Delivery Selection
+
+A list of `selection` options controls how deliveries are selected, each delivery can have multiple
+options selected, though some of them are mutually impossible, like `default` and `explicit`
+
+| Option              | Default | Usage                                                                                        |
+|---------------------|---------|----------------------------------------------------------------------------------------------|
+| `default`           | Y       | Use this delivery for every notification if there are targets and its not overridden         |
+| `scenario`          | N       | Only use this delivery if a scenario enables it                                              |
+| `explicit`          | N       | Doesn't do anything but can make your config easier to read than merely absence of `default` |
+| `fallback`          | N       | Use this delivery only if no other delivery was selected                                     |
+| `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors    |
+
 ## Entities
 
 Deliveries are exposed as `sensor.supernotify_delivery_XXXX` entities in Home Assistant, with the configuration and
