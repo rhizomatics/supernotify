@@ -86,6 +86,7 @@ class Recipient:
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
         self.mobile_devices: dict[str, dict[str, Any]] = {c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])}
+        _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict())
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
 
@@ -101,7 +102,11 @@ class Recipient:
                     if d[CONF_MOBILE_APP_ID] in self.mobile_devices:
                         # merge with manual registrations, with priority to manually overridden values
                         d.update(self.mobile_devices[d[CONF_MOBILE_APP_ID]])
-                    self.mobile_devices[d[CONF_MOBILE_APP_ID]] = d
+                        _LOGGER.debug(
+                            "SUPERNOTIFY Updating %s mobile device %s from registry", self.entity_id, d[CONF_MOBILE_APP_ID]
+                        )
+                    else:
+                        self.mobile_devices[d[CONF_MOBILE_APP_ID]] = d
                 _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", self.entity_id, discovered_devices)
             else:
                 _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
@@ -116,6 +121,10 @@ class Recipient:
                     self.alias = attrs.get(ATTR_ALIAS)
                 if not self.alias and attrs.get(ATTR_FRIENDLY_NAME) and isinstance(attrs.get(ATTR_FRIENDLY_NAME), str):
                     self.alias = attrs.get(ATTR_FRIENDLY_NAME)
+                _LOGGER.debug("SUPERNOTIFY Person attrs found for %s: %s,%s", self.entity_id, self.alias, self.user_id)
+            else:
+                _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
+        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict())
 
     def enabling_delivery_names(self) -> list[str]:
         return [delname for delname, delconf in self.delivery_overrides.items() if delconf.enabled is True]
