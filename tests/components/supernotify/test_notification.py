@@ -74,7 +74,7 @@ async def test_simple_create() -> None:
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
     assert uut.recipients_override is None
-    assert uut.selected_delivery_names == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
+    assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
 async def test_explicit_delivery() -> None:
@@ -89,7 +89,7 @@ async def test_explicit_delivery() -> None:
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_EXPLICIT
-    assert uut.selected_delivery_names == ["mobile"]
+    assert list(uut.selected_deliveries) == ["mobile"]
 
     # list forces explicit selection
     uut = Notification(
@@ -99,7 +99,7 @@ async def test_explicit_delivery() -> None:
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_EXPLICIT
-    assert uut.selected_delivery_names == unordered(["mobile", "chime"])
+    assert list(uut.selected_deliveries) == unordered(["mobile", "chime"])
 
     # dict doesn't force explicit selection
     uut = Notification(
@@ -109,7 +109,7 @@ async def test_explicit_delivery() -> None:
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert uut.selected_delivery_names == unordered(["mobile", "plain_email", "chime"])
+    assert list(uut.selected_deliveries) == unordered(["mobile", "plain_email", "chime"])
 
 
 async def test_scenario_delivery_no_change() -> None:
@@ -118,7 +118,7 @@ async def test_scenario_delivery_no_change() -> None:
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")
 
 
 async def test_scenario_delivery_disable() -> None:
@@ -129,7 +129,7 @@ async def test_scenario_delivery_disable() -> None:
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile")
 
 
 async def test_scenario_delivery_enable() -> None:
@@ -141,7 +141,7 @@ async def test_scenario_delivery_enable() -> None:
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")
 
 
 async def test_explicit_list_of_deliveries() -> None:
@@ -149,7 +149,7 @@ async def test_explicit_list_of_deliveries() -> None:
     await ctx.test_initialize()
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
-    assert uut.selected_delivery_names == ["mobile"]
+    assert list(uut.selected_deliveries) == ["mobile"]
 
 
 async def test_action_data_disable_delivery() -> None:
@@ -160,7 +160,7 @@ async def test_action_data_disable_delivery() -> None:
         ctx, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
     )
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "chime")
 
 
 async def test_generate_targets_from_entities() -> None:
@@ -296,7 +296,7 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
 
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")
 
 
 async def test_snapshot_url() -> None:
@@ -375,10 +375,10 @@ async def test_delivery_selection_order() -> None:
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
 
-    assert len(uut.selected_delivery_names) == 6
-    assert uut.selected_delivery_names[0] == "eager"
-    assert uut.selected_delivery_names[-2:] == unordered("fallback", "naturally_last")
-    assert uut.selected_delivery_names[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
+    assert len(list(uut.selected_deliveries)) == 6
+    assert list(uut.selected_deliveries)[0] == "eager"
+    assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
+    assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
 
 
 def test_debug_trace_for_targets():

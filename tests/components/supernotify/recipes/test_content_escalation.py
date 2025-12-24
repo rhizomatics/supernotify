@@ -55,14 +55,14 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == []
-    assert uut.selected_delivery_names == ["apple_push"]
+    assert list(uut.selected_deliveries) == ["apple_push"]
     assert cast("Envelope", uut.deliveries["apple_push"]["delivered"][0]).priority == "medium"  # type: ignore
 
     uut = Notification(ctx, "person was detected at back door", action_data={"priority": "high"})
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["high_alert"]
-    assert uut.selected_delivery_names == unordered("plain_email", "apple_push", "sms")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "apple_push", "sms")
     assert cast("Envelope", uut.deliveries["plain_email"]["delivered"][0]).priority == "critical"  # type: ignore
 
 

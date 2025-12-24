@@ -55,4 +55,4 @@ scenarios:
     await uut.initialize()
     await uut.deliver()
     assert "lone_night" in uut.selected_scenario_names
-    assert "chimes" in uut.selected_delivery_names
+    assert "chimes" in list(uut.selected_deliveries)

@@ -246,14 +246,14 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["Alarm"]})
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime", "siren")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime", "siren")
     uut = Notification(
         ctx,
         "testing 123",
         action_data={ATTR_SCENARIOS_CONSTRAIN: ["NULL"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
     )
     await uut.initialize()
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime")  # siren constrained
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")  # siren constrained
 
 
 async def test_scenario_suppress(hass: HomeAssistant) -> None:
@@ -293,14 +293,14 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
     await uut.initialize()
     assert uut.applied_scenario_names == ["Alarm"]
     assert uut.selected_scenario_names == ["Mostly"]
-    assert uut.selected_delivery_names == unordered("chime", "siren")
+    assert list(uut.selected_deliveries) == unordered("chime", "siren")
 
     # No selected scenarios
     uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL})
     await uut.initialize()
     assert uut.applied_scenario_names == []
     assert uut.selected_scenario_names == []
-    assert uut.selected_delivery_names == []
+    assert list(uut.selected_deliveries) == []
 
     # Single scenario with no deliveries
     uut = Notification(
@@ -311,7 +311,7 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
     await uut.initialize()
     assert uut.applied_scenario_names == ["DevNull"]
     assert list(uut.enabled_scenarios.keys()) == ["DevNull"]
-    assert uut.selected_delivery_names == []
+    assert list(uut.selected_deliveries) == []
 
     # Switch off one delivery
     uut = Notification(
@@ -345,7 +345,7 @@ async def test_scenario_selectively_disable_delivery(hass: HomeAssistant) -> Non
     await uut.initialize()
     assert uut.applied_scenario_names == ["No_Mobile"]
     assert list(uut.enabled_scenarios.keys()) == ["No_Mobile"]
-    assert uut.selected_delivery_names == unordered("plain_email", "siren", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "siren", "chime")
 
 
 async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> None:
@@ -590,12 +590,12 @@ async def test_scenario_wildcard_disables_deliveries(hass: HomeAssistant) -> Non
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
     assert list(uut.enabled_scenarios.keys()) == []
-    assert uut.selected_delivery_names == unordered("plain_email", "mobile", "chime", "siren")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime", "siren")
 
     uut = Notification(ctx, "noisy message")
     await uut.initialize()
     assert list(uut.enabled_scenarios.keys()) == ["Suppress"]
-    assert uut.selected_delivery_names == []
+    assert list(uut.selected_deliveries) == []
 
 
 async def test_scenario_wildcard_overrides_deliveries(hass: HomeAssistant) -> None:
@@ -626,13 +626,13 @@ async def test_scenario_wildcard_overrides_deliveries(hass: HomeAssistant) -> No
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
     assert list(uut.enabled_scenarios.keys()) == []
-    assert uut.selected_delivery_names == unordered("plain_email", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "chime")
 
     uut = Notification(ctx, "noisy message")
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["Deprioritize"]
-    assert uut.selected_delivery_names == unordered("plain_email", "chime")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "chime")
     for env in uut.delivered_envelopes:
         assert env.priority == "low"
 
@@ -660,4 +660,4 @@ async def test_scenario_wildcard_and_literal_apply(hass: HomeAssistant) -> None:
     uut = Notification(ctx, "noisy message")
     await uut.initialize()
     assert list(uut.enabled_scenarios.keys()) == ["Suppress"]
-    assert uut.selected_delivery_names == ["plain_email"]
+    assert list(uut.selected_deliveries) == ["plain_email"]

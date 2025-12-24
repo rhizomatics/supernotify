@@ -150,7 +150,7 @@ class Notification(ArchivableObject):
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
 
-        self.delivery_selections: dict[str, dict[str, Any]] = {}
+        self.selected_deliveries: dict[str, dict[str, Any]] = {}
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self._suppression_reason: SuppressionReason | None = None
@@ -179,7 +179,7 @@ class Notification(ArchivableObject):
             ]
         if self.required_scenario_names and not any(s in enabled_scenario_names for s in self.required_scenario_names):
             _LOGGER.info("SUPERNOTIFY suppressing notification, no required scenarios enabled")
-            self.delivery_selections = {}
+            self.selected_deliveries = {}
             self.suppress(SuppressionReason.NO_SCENARIO)
         else:
             for s in enabled_scenario_names:
@@ -187,7 +187,7 @@ class Notification(ArchivableObject):
                 if scenario_obj is not None:
                     self.enabled_scenarios[s] = scenario_obj
 
-            self.delivery_selections = self.select_deliveries()
+            self.selected_deliveries = self.select_deliveries()
             if self.context.snoozer.is_global_snooze(self.priority):
                 self.suppress(SuppressionReason.SNOOZED)
             self.apply_enabled_scenarios()
@@ -328,10 +328,6 @@ class Notification(ArchivableObject):
                     results[personal_delivery]["recipients"].append(recipient.entity_id)
         return results
 
-    @property
-    def selected_delivery_names(self) -> list[str]:
-        return list(self.delivery_selections.keys())
-
     def suppress(self, reason: SuppressionReason) -> None:
         self._suppression_reason = reason
         if reason not in self._skip_reasons:
@@ -343,10 +339,10 @@ class Notification(ArchivableObject):
             "Message: %s, notification: %s, deliveries: %s",
             self.message,
             self.id,
-            self.selected_delivery_names,
+            self.selected_deliveries,
         )
 
-        for delivery_name, details in self.delivery_selections.items():
+        for delivery_name, details in self.selected_deliveries.items():
             self.deliveries[delivery_name] = {}
             delivery = self.context.delivery_registry.deliveries.get(delivery_name)
             if self._suppression_reason is not None:
@@ -360,12 +356,12 @@ class Notification(ArchivableObject):
         if self.delivered == 0 and not self._suppression_reason:
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
-                    if delivery.name not in self.delivery_selections:
+                    if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
 
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
-                    if delivery.name not in self.delivery_selections:
+                    if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
 
         return self.delivered > 0
@@ -485,6 +481,7 @@ class Notification(ArchivableObject):
             "delivery_selection",
             "delivery_overrides",
             "delivery_selection",
+            "selected_deliveries",
             "recipients_override",
             "delivered",
             "failed",
