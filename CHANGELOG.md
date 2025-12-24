@@ -9,6 +9,8 @@
 #### Cameras
 - Camera entity's built in device tracker will now be used, no need for separate device tracker where this supported
 - Better diagnostics for unavailable cameras
+### People
+- Automatically discovered mobile devices merge into manually registered ones rather than overwriting them
 #### Notification Archive
 - Further improvements to `Notification` archive object to make it easier to debug
     - Original message now at top of object

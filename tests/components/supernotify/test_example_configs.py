@@ -42,6 +42,7 @@ async def test_examples(hass: HomeAssistant, config_name: str) -> None:
         TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"],
         TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
     }
+
     expected: dict[str, list[str]] = {}
     configured: dict[str, list[str]] = {}
     for d, dc in uut_config.get(CONF_DELIVERY, {}).items():
@@ -58,6 +59,10 @@ async def test_examples(hass: HomeAssistant, config_name: str) -> None:
     assert deliveries is not None
     assert deliveries == expected
 
+    recipients = deliveries = await hass.services.async_call(
+        platform, "enquire_recipients", blocking=True, return_response=True
+    )
+    assert recipients is not None
     await hass.services.async_call(
         DOMAIN,
         service_name,

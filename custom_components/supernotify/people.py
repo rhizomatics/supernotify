@@ -85,7 +85,7 @@ class Recipient:
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
-        self.mobile_devices: list[dict[str, Any]] = config.get(CONF_MOBILE_DEVICES) or []
+        self.mobile_devices: dict[str, dict[str, Any]] = {c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])}
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
 
@@ -96,13 +96,17 @@ class Recipient:
             self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
             discovered_devices: list[dict[str, Any]] = people_registry.mobile_devices_for_person(self.entity_id)
-            self.mobile_devices.extend(discovered_devices)
             if discovered_devices:
+                for d in discovered_devices:
+                    if d[CONF_MOBILE_APP_ID] in self.mobile_devices:
+                        # merge with manual registrations, with priority to manually overridden values
+                        d.update(self.mobile_devices[d[CONF_MOBILE_APP_ID]])
+                    self.mobile_devices[d[CONF_MOBILE_APP_ID]] = d
                 _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", self.entity_id, discovered_devices)
             else:
-                _LOGGER.warning("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
+                _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:
-            self._target.extend(ATTR_MOBILE_APP_ID, [d[CONF_MOBILE_APP_ID] for d in self.mobile_devices])
+            self._target.extend(ATTR_MOBILE_APP_ID, list(self.mobile_devices))
         if not self.user_id or not self.alias:
             attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
             if attrs:
@@ -132,7 +136,7 @@ class Recipient:
                 CONF_PHONE_NUMBER: self.phone_number,
                 ATTR_USER_ID: self.user_id,
                 CONF_MOBILE_DISCOVERY: self.mobile_discovery,
-                CONF_MOBILE_DEVICES: self.mobile_devices,
+                CONF_MOBILE_DEVICES: list(self.mobile_devices.values()),
                 CONF_TARGET: self._target.as_dict() if self._target else None,
                 CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
             })
@@ -146,7 +150,7 @@ class Recipient:
             CONF_EMAIL: self.email,
             CONF_PHONE_NUMBER: self.phone_number,
             ATTR_USER_ID: self.user_id,
-            CONF_MOBILE_DEVICES: self.mobile_devices,
+            CONF_MOBILE_DEVICES: list(self.mobile_devices.values()),
             CONF_MOBILE_DISCOVERY: self.mobile_discovery,
             CONF_TARGET: self._target.as_dict() if self._target else None,
             CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery.items()} if self.delivery else None,
@@ -274,7 +278,7 @@ class PeopleRegistry:
             list: mobile target actions for this person
 
         """
-        mobile_devices = []
+        mobile_devices: list[dict[str, Any]] = []
         device_trackers: list[str] | None = None
         try:
             person_state = self.hass_api.get_state(person_entity_id)

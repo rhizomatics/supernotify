@@ -117,6 +117,30 @@ The entity also exposes the recipient attributes, such as email, mobile devices,
 
 ## Manual Device Registration
 
+### Simple
+
+One good reason for manual device registration is that adding devices to the Person in Home Assistant affects
+the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you
+would like to have notifications on, but aren't always with you, adding them to Person might make it it look
+as if you're home when its only an iPad sitting on a shelf.
+
+So adding these devices to the `recipients` section of Supernotify configuration will mean they get included
+in notifications, but won't be used for occupancy, by Supernotify or other integrations.
+
+``` title="Simple Example"
+recipients:
+    - person: person.new_home_owner
+      mobile_devices:
+        - mobile_app_id: mobile_app_old_laptop
+        - mobile_app_id: mobile_app_ipad11
+```
+
+
+### Complicated
+
+Its possible to hold as many details about the device as Home Assistant itself does, although Supernotify
+does not currently care about manufacturers and models.
+
 ``` yaml title="Complicated Example"
  recipients:
     - person: person.new_home_owner

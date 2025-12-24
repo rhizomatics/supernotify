@@ -1,9 +1,10 @@
 from homeassistant.components import person
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
+from pytest_unordered import unordered
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.people import PeopleRegistry
+from custom_components.supernotify.people import PeopleRegistry, Recipient
 
 from .hass_setup_lib import TestingContext, register_mobile_app
 
@@ -47,6 +48,28 @@ def test_autoresolve_mobile_devices_for_devices(
             # "device_labels": set(),
         }
     ]
+
+
+async def test_autoresolve_mobile_devices_blended_with_manual_registration(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
+        recipients="""
+    - person: person.test_user
+      mobile_devices:
+        - mobile_app_id: mobile_app_old_laptop
+        - mobile_app_id: mobile_app_ipad11
+        - mobile_app_id: mobile_app_bobs_watch
+""",
+        components={"person": {}},
+    )
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="bobs_phone", title="Bobs Phone")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="bobs_watch", title="Bobs Watch")
+    await ctx.test_initialize()
+
+    bob: Recipient = ctx.people_registry.people["person.test_user"]
+    assert list(bob.mobile_devices) == unordered(
+        "mobile_app_old_laptop", "mobile_app_ipad11", "mobile_app_bobs_watch", "mobile_app_bobs_phone"
+    )
 
 
 async def test_filter_recipients(hass: HomeAssistant) -> None:

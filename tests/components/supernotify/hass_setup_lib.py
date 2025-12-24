@@ -272,15 +272,19 @@ def register_mobile_app(
     if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
         return None
-    hass_api.set_state(person, "home")
+    # hass_api.set_state(person, "home")
     try:
         hass_api._hass.config_entries._entries[config_entry.entry_id] = config_entry
         hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(config_entry)
     except Exception as e:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking: %s", e)
-    hass_api._hass.states.async_set(
-        person, "home", attributes={"device_trackers": [f"device_tracker.mobile_app_{device_name}", "dev002"]}
-    )
+    existing = hass_api.get_state(person)
+    if not existing or "device_trackers" not in existing.attributes:
+        hass_api.set_state(person, "home", attributes={"device_trackers": [f"device_tracker.mobile_app_{device_name}"]})
+    else:
+        trackers: list[str] = [f"device_tracker.mobile_app_{device_name}"]
+        trackers.extend(existing.attributes.get("device_trackers", []))
+        hass_api.set_state(person, "home", attributes={"device_trackers": trackers})
 
     device_registry = hass_api.device_registry()
     device_entry = None
