@@ -39,7 +39,7 @@ jobs:
         ruff check --output-format=github .
     - name: Test with pytest
       run: |
-        pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.autoarm --cov-report=xml --cov-report=html
+        pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=custom_components.supernotify --cov-report=xml --cov-report=html
     - name: HACS Action
       uses: "hacs/action@6f81caf1dd4cc0f615444dba4d4a3ceaa22db99c"
       with:
