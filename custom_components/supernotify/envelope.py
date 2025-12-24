@@ -136,17 +136,17 @@ class Envelope(DupeCheckable):
         exclude_attrs: list[str] = ["_notification", "context"]
         if minimal:
             exclude_attrs.append("delivery")
-        features: TransportFeature = self.delivery.transport.supported_features
-        if not features & TransportFeature.ACTIONS:
-            exclude_attrs.extend(["actions", "action_groups"])
-        if not features & TransportFeature.IMAGES and not features & TransportFeature.VIDEO:
-            exclude_attrs.append("media")
-        if not features & TransportFeature.MESSAGE:
-            exclude_attrs.extend(["message_html", "message"])
-        if not features & TransportFeature.TITLE:
-            exclude_attrs.append("title")
-        if self.delivery.target_required == TargetRequired.NEVER:
-            exclude_attrs.append("target")
+            features: TransportFeature = self.delivery.transport.supported_features
+            if not features & TransportFeature.ACTIONS:
+                exclude_attrs.extend(["actions", "action_groups"])
+            if not features & TransportFeature.IMAGES and not features & TransportFeature.VIDEO:
+                exclude_attrs.append("media")
+            if not features & TransportFeature.MESSAGE:
+                exclude_attrs.extend(["message_html", "message"])
+            if not features & TransportFeature.TITLE:
+                exclude_attrs.append("title")
+            if self.delivery.target_required == TargetRequired.NEVER:
+                exclude_attrs.append("target")
 
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs and not k.startswith("_")}
         json_ready["calls"] = [call.contents() for call in self.calls]
