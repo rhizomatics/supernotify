@@ -19,7 +19,7 @@ An HTML template is used to pull in values from Home Assistant's self-monitoring
 
 ## Example Configuration
 
-``` yaml
+```yaml title="default.html.j2"
 automations:
 - id: notify-restart
   alias: Notify on HomeAssistant start up

@@ -47,6 +47,7 @@ IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "
 
 @dataclass
 class TestImage:
+    __test__ = False
     contents: bytes
     path: Path
     ext: str

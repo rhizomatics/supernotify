@@ -29,7 +29,7 @@ With the `recipient` definition you can:
 
 The registry is automatically populated from all *Person* entities defined in HomeAssistant, unless you switch this off using `recipient_discovery: false` in the configuration. And sice each *Recipient* is automatically populated with all their mobile devices, an empty YAML config can do a lot.
 
-``` yaml title="Disabling One of the Automatic Discoveries"
+```yaml title="Disabling One of the Automatic Discoveries"
  recipients:
     - person: person.new_home_owner
       enabled: false
@@ -50,7 +50,7 @@ This can be switched off by default for everyone:
 
 or per recipient:
 
-``` yaml
+```yaml
  recipients:
     - person: person.new_home_owner
       mobile_discovery: false
@@ -104,7 +104,7 @@ The entity also exposes the recipient attributes, such as email, mobile devices,
 
 ## Manual Configuration
 
-``` yaml title="Simple Example"
+```yaml title="Simple Example"
  recipients:
     - person: person.new_home_owner
       email: jalaboli@myhome.net
@@ -127,7 +127,7 @@ as if you're home when its only an iPad sitting on a shelf.
 So adding these devices to the `recipients` section of Supernotify configuration will mean they get included
 in notifications, but won't be used for occupancy, by Supernotify or other integrations.
 
-``` title="Simple Example"
+```title="Simple Example"
 recipients:
     - person: person.new_home_owner
       mobile_devices:
@@ -141,7 +141,7 @@ recipients:
 Its possible to hold as many details about the device as Home Assistant itself does, although Supernotify
 does not currently care about manufacturers and models.
 
-``` yaml title="Complicated Example"
+```yaml title="Complicated Example"
  recipients:
     - person: person.new_home_owner
       alias: sysadmin

@@ -23,7 +23,7 @@ yet automatically provisioned by Zigbee2MQTT, and its fussy to set up.
 Here is an example working config for a Heiman HS2WD-E plugin Zigbee siren
 
 
-``` yaml
+```yaml
    - unique_id: downstairs_east_wing_heiman
     name: "Scullery Siren"
     default_entity_id: siren.downstairs

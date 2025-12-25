@@ -5,6 +5,7 @@ tags:
   - configuration
   - debugging
   - housekeeping
+description: Archive notifications in Supernotify, including for debugging notification rules or formatting
 ---
 # Notification Archiving
 
