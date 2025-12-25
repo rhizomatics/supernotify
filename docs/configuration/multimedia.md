@@ -17,8 +17,7 @@ tags:
 
 ## Basic Configuration
 
-In order to handle attachments, Supernotify needs to temporarily store images on the file system, so some extra configuration
-is needed. This includes camera snapshots, a `snapshot_url`, or any other image source.
+In order to handle attachments, Supernotify needs to temporarily store images on the file system, so some extra configuration is needed. This includes camera snapshots, a `snapshot_url`, or any other image source.
 
 * A valid `media_path` directory, usually somewhere under the main `/config` directory
 * Add this directory to the `allowlist_external_dirs` in the main HomeAssistant config
@@ -47,7 +46,7 @@ Images can be included by:
 - Image Entity
     - For example an [MQTT Image](https://www.home-assistant.io/integrations/image.mqtt/), ideal for Frigate or cameras that stream to MQTT
 - Web Image
-    - Use `snapshot_url` to grab from any HTTP(S) address
+    - Use `snapshot_url` in the `media` section to grab from any HTTP(S) address
 
 Additionally a video clip can be referenced by `clip_url` where supported by a transport (currently mobile push only).
 
