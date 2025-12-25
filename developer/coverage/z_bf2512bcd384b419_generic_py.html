@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for custom_components/supernotify/transports/generic.py: 90%</title>
+    <title>Coverage for custom_components/supernotify/transports/generic.py: 87%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>custom_components/supernotify/transports/generic.py</b>:
-            <span class="pc_cov">90%</span>
+            <span class="pc_cov">87%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">114 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">103<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">11<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">99<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">15<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_bf2512bcd384b419_media_player_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-12-25 01:37 +0000
+            created at 2025-12-25 11:15 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -214,16 +214,16 @@
     <p class="run"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">        <span class="key">elif</span> <span class="nam">equiv_domain</span> <span class="op">==</span> <span class="str">"rest_command"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">            <span class="nam">action_data</span> <span class="op">=</span> <span class="nam">data</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">        <span class="key">elif</span> <span class="nam">equiv_domain</span> <span class="op">==</span> <span class="str">"script"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">            <span class="key">if</span> <span class="nam">qualified_action</span> <span class="key">in</span> <span class="op">(</span><span class="str">"script.turn_on"</span><span class="op">,</span> <span class="str">"script.turn_off"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">            <span class="key">if</span> <span class="nam">qualified_action</span> <span class="key">in</span> <span class="op">(</span><span class="str">"script.turn_on"</span><span class="op">,</span> <span class="str">"script.turn_off"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">                <span class="nam">target_data</span> <span class="op">=</span> <span class="op">{</span><span class="nam">ATTR_ENTITY_ID</span><span class="op">:</span> <span class="nam">envelope</span><span class="op">.</span><span class="nam">target</span><span class="op">.</span><span class="nam">entity_ids</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">                <span class="nam">action_data</span><span class="op">[</span><span class="str">"variables"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">core_action_data</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">                <span class="key">if</span> <span class="str">"variables"</span> <span class="key">in</span> <span class="nam">data</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">                    <span class="nam">action_data</span><span class="op">[</span><span class="str">"variables"</span><span class="op">]</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">data</span><span class="op">.</span><span class="nam">pop</span><span class="op">(</span><span class="str">"variables"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">                <span class="nam">action_data</span><span class="op">[</span><span class="str">"variables"</span><span class="op">]</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">            <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">                <span class="nam">action_data</span> <span class="op">=</span> <span class="nam">core_action_data</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">                <span class="nam">action_data</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">                <span class="nam">prune_data</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">                <span class="nam">action_data</span> <span class="op">=</span> <span class="nam">core_action_data</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">                <span class="nam">action_data</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">                <span class="nam">prune_data</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">            <span class="nam">action_data</span> <span class="op">=</span> <span class="nam">core_action_data</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">            <span class="nam">action_data</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -278,7 +278,7 @@
             <a class="nav" href="z_bf2512bcd384b419_media_player_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-12-25 01:37 +0000
+            created at 2025-12-25 11:15 +0000
         </p>
     </div>
 </footer>
