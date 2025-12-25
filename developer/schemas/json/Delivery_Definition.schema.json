@@ -1,0 +1,222 @@
+{
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "debug": {
+      "type": "string"
+    },
+    "options": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "entity_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "device_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "area_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "floor_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "label_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "email": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "phone": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mobile_app_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "person_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [],
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "target_required": {
+      "anyOf": [
+        {},
+        {
+          "type": "string",
+          "enum": [
+            "always",
+            "never",
+            "optional"
+          ]
+        }
+      ]
+    },
+    "target_usage": {
+      "type": "string",
+      "enum": [
+        "no_delivery",
+        "no_action",
+        "merge_delivery",
+        "merge_always",
+        "fixed"
+      ]
+    },
+    "selection": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "fallback_on_error",
+          "explicit",
+          "scenario",
+          "default",
+          "fallback"
+        ]
+      }
+    },
+    "priority": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
+      }
+    },
+    "selection_rank": {
+      "type": "string",
+      "enum": [
+        "ANY",
+        "FIRST",
+        "LAST"
+      ]
+    },
+    "transport": {
+      "type": "string",
+      "enum": [
+        "sms",
+        "mqtt",
+        "alexa_devices",
+        "alexa_media_player",
+        "mobile_push",
+        "chime",
+        "email",
+        "media",
+        "persistent",
+        "generic",
+        "notify_entity"
+      ]
+    },
+    "alias": {
+      "type": "string"
+    },
+    "template": {
+      "type": "string"
+    },
+    "message": {
+      "nullable": true,
+      "type": "string"
+    },
+    "title": {
+      "nullable": true,
+      "type": "string"
+    },
+    "enabled": {
+      "type": "string"
+    },
+    "occupancy": {
+      "type": "string",
+      "enum": [
+        "all_in",
+        "all_out",
+        "any_in",
+        "any_out",
+        "only_in",
+        "only_out",
+        "all",
+        "none"
+      ],
+      "default": "all"
+    },
+    "condition": {
+      "type": "array",
+      "items": {
+        "nullable": true,
+        "type": "string"
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "nullable": true,
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "transport"
+  ],
+  "title": "Delivery Definition",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Delivery_Definition.json",
+  "description": "Voluptuous validation schema for Delivery_Definition",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
