@@ -320,7 +320,7 @@
                               <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                                               <div
                                   style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:24px;font-weight:400;line-height:30px;text-align:left;color:#ffffff;">
-                                  <p class="date" style="margin: 0; margin-bottom: 5px; font-size: 16px;">{{ alert.priority
+                                  <p class="date" style="margin: 0; margin-bottom: 5px; font-size: 16px;">{{ alert.level
                                     }}</p>
                                   <h2 style="margin: 0; font-size: 20px; font-weight: 300; line-height: 24px;">{{
                                     alert.title}}</h2>
@@ -331,11 +331,10 @@
                               <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                 <div
                                   style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:20px;text-align:left;color:#ffffff;">
-                                  <p style="margin: 0;" class="alert_message">{{ alert.message }}</p>
+                                  <p style="margin: 0;">{{ alert.message }} </p>
                                 </div>
                               </td>
                             </tr>
-                            {% if alert.action_url is not none %}
                             <tr>
                               <td align="right" vertical-align="middle"
                                 style="font-size:0px;padding:10px 25px;word-break:break-word;">
@@ -345,16 +344,16 @@
                                     <td align="center" bgcolor="#ffffff" role="presentation"
                                       style="border:none;border-radius:3px;cursor:auto;mso-padding-alt:10px 25px;background:#ffffff;"
                                       valign="middle">
-                                      <a href="{{ alert.action_url }}"
+                                      <a href="{{ alert.detail_url }}"
                                         style="display: inline-block; background: #ffffff; color: #FF5121; font-family: Roboto, Helvetica, Arial, sans-serif; font-size: 13px; font-weight: normal; line-height: 120%; margin: 0; text-decoration: none; text-transform: none; padding: 10px 25px; mso-padding-alt: 0px; border-radius: 3px;"
-                                        class="alert_action"
-                                        target="_blank">{{ alert.action_url_title }}</a>
+                                        target="_blank">
+                                        <strong>more details</strong>
+                                      </a>
                                     </td>
                                   </tr>
                                 </table>
                               </td>
                             </tr>
-                            {% endif %}
                           </table>
                         </div>
                         <!--[if mso | IE]>
@@ -498,26 +497,26 @@
                class="" style="vertical-align:top;width:600px;"
             >
           <![endif]-->
-
+                        <% if alert.img %>
                         <div class="mj-column-per-100 mj-outlook-group-fix"
                           style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation"
                             style="vertical-align:top;" width="100%">
                             <tr>
                               <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                {% if alert.img is not none %}
+                                <% if alert.img.url %>
                                 <a href="{{alert.img.url}}">
                                 <img
                                   width="550"
                                   alt="{{ alert.img.desc }}"
                                   src="{{ alert.img.url }}"/>
                               </a>
-                                {% endif %}
+                                <% endif %>
                               </td>
                             </tr>
                           </table>
                         </div>
-
+                        <% endif %>
                         <!--[if mso | IE]>
             </td>
 

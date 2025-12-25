@@ -1,5 +1,6 @@
 import logging
-from typing import TYPE_CHECKING, Any
+import os
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import aiofiles
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
@@ -7,12 +8,15 @@ from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify import (
+    ATTR_ACTION_URL,
+    ATTR_ACTION_URL_TITLE,
     ATTR_EMAIL,
     CONF_TEMPLATE,
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
     OPTION_PNG,
     OPTION_SIMPLIFY_TEXT,
+    OPTION_STRICT_TEMPLATE,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_EMAIL,
@@ -33,6 +37,30 @@ RE_VALID_EMAIL = (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AlertServer(TypedDict):
+    name: str
+    internal_url: str
+    external_url: str
+
+
+class AlertImage(TypedDict):
+    url: str
+    desc: str
+
+
+class Alert(TypedDict):
+    message: str | None
+    title: str | None
+    priority: str
+    envelope: Envelope
+    action_url: str | None
+    action_url_title: str | None
+    subheading: str
+    server: AlertServer
+    preformatted_html: str | None
+    img: AlertImage | None
 
 
 class EmailTransport(Transport):
@@ -76,6 +104,7 @@ class EmailTransport(Transport):
             # use sensible defaults for image attachments
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
             OPTION_PNG: {"optimize": "true"},
+            OPTION_STRICT_TEMPLATE: False,
         }
         return config
 
@@ -85,13 +114,18 @@ class EmailTransport(Transport):
         data: dict[str, Any] = envelope.data or {}
         html: str | None = data.get("html")
         template: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
+        strict_template: bool = envelope.delivery.options.get(OPTION_STRICT_TEMPLATE, False)
         addresses: list[str] = envelope.target.email or []
-        snapshot_url: str | None = data.get("snapshot_url")
+        snapshot_url: str | None = data.get("media", {}).get("snapshot_url")
+        if snapshot_url is None:
+            # older location for backward compatibility
+            snapshot_url = data.get("snapshot_url")
         # TODO: centralize in config
         footer_template = data.get("footer")
         footer = footer_template.format(e=envelope) if footer_template else None
 
         action_data: dict[str, Any] = envelope.core_action_data()
+        extra_data: dict[str, Any] = {k: v for k, v in data.items() if k not in action_data}
 
         if len(addresses) > 0:
             action_data[ATTR_TARGET] = addresses
@@ -123,7 +157,14 @@ class EmailTransport(Transport):
 
                 action_data["data"]["html"] = html
         else:
-            html = await self.render_template(template, envelope, action_data, snapshot_url, envelope.message_html)
+            html = await self.render_template(
+                template,
+                envelope,
+                action_data,
+                snapshot_url=snapshot_url,
+                extra_data=extra_data,
+                strict_template=strict_template,
+            )
             if html:
                 action_data.setdefault("data", {})
                 action_data["data"]["html"] = html
@@ -134,40 +175,45 @@ class EmailTransport(Transport):
         template: str,
         envelope: Envelope,
         action_data: dict[str, Any],
-        snapshot_url: str | None,
-        preformatted_html: str | None,
+        snapshot_url: str | None = None,
+        extra_data: dict[str, Any] | None = None,
+        strict_template: bool = False,
     ) -> str | None:
-        alert = {}
+        extra_data = extra_data or {}
+        alert: Alert
         if self.template_path is None:
             _LOGGER.error("SUPERNOTIFY No template path set")
             return None
         try:
-            alert = {
-                "alert": {
-                    "message": action_data.get(ATTR_MESSAGE),
-                    "title": action_data.get(ATTR_TITLE),
-                    "envelope": envelope,
-                    "subheading": "Home Assistant Notification",
-                    "server": {
-                        "name": self.hass_api.hass_name,
-                        "internal_url": self.hass_api.internal_url,
-                        "external_url": self.hass_api.external_url,
-                    },
-                    "preformatted_html": preformatted_html,
-                    "img": None,
-                }
-            }
+            alert = Alert(
+                message=action_data.get(ATTR_MESSAGE),
+                title=action_data.get(ATTR_TITLE),
+                priority=envelope.priority,
+                action_url=extra_data.get(ATTR_ACTION_URL),
+                action_url_title=extra_data.get(ATTR_ACTION_URL_TITLE),
+                envelope=envelope,
+                subheading="Home Assistant Notification",
+                server=AlertServer(
+                    name=self.hass_api.hass_name,
+                    internal_url=self.hass_api.internal_url,
+                    external_url=self.hass_api.external_url,
+                ),
+                preformatted_html=envelope.message_html,
+                img=None,
+            )
+
             if snapshot_url:
-                alert["img"] = {"text": "Snapshot Image", "url": snapshot_url}
+                alert["img"] = AlertImage(url=snapshot_url, desc="Snapshot Image")
 
             template_file_path = self.template_path / template
             template_content: str
             async with aiofiles.open(template_file_path) as file:
-                template_content = "\n".join(await file.readlines())
+                template_content = os.linesep.join(await file.readlines())
             template_obj: Template = self.context.hass_api.template(template_content)
-            html: str = template_obj.async_render(variables=alert)
+            template_obj.ensure_valid()
+            html: str = template_obj.async_render(variables={"alert": alert}, parse_result=False, strict=strict_template)
             if not html:
-                _LOGGER.error("SUPERNOTIFY Empty result from template %s", template)
+                _LOGGER.error("SUPERNOTIFY Empty result from template %s", template_file_path)
             else:
                 return html
         except TemplateError as te:

@@ -46,7 +46,10 @@ class MediaPlayerTransport(Transport):
             _LOGGER.debug("SUPERNOTIFY skipping media show, no targets")
             return False
 
-        snapshot_url = data.get("snapshot_url")
+        snapshot_url = data.get("media", {}).get("snapshot_url")
+        if snapshot_url is None:
+            # fallback to older idiosyncratic way for backward compatibility
+            snapshot_url = data.get("snapshot_url")
         if snapshot_url is None:
             _LOGGER.debug("SUPERNOTIFY skipping media player, no snapshot url")
             return False

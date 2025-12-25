@@ -28,8 +28,10 @@ Supernotify also adds an `alert` variable for context of the current notificatio
 
 | Attribute         | Description                                                                     |
 |-------------------|---------------------------------------------------------------------------------|
+| message.          | Notification message                                                            |
 | title             | Notification title                                                              |
-| envelope          | Delivery Envelope                                                               |
+| priority          | Notification priority                                                           |
+| envelope          | Delivery Envelope (complex nested object)                                       |
 | subheading        | Defaults to "Home Assistant Notification"                                       |
 | server            | Access to `name`,`internal_url` and `external_url` of this HomeAssistant server |
 | preformatted_html | HTML supplied to the notify action, for example by an Automation                |

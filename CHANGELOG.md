@@ -1,5 +1,16 @@
 # Public releases
 
+## 1.7.1
+### HTML Email Templates
+- Added new `strict_template` to the transport option to perform more validation of template, useful when developing new templates
+- Changed Alert variables to TypedDicts
+- Added `ensure_valid` step before rendering
+- Switched off `parse_results` for rendering
+- Fixed Jinja2 format and variable name issues in default template
+- `action_url` and `action_url_title` now passed to template
+- Corrected `snapshot_url` to be taken from `media` section as other transports
+### Media Player Transport
+- Corrected `snapshot_url` to be taken from `media` section as other transports
 ## 1.7.0
 ### New
 #### Scenario
