@@ -1,6 +1,7 @@
-from pathlib import Path
+import pathlib
 
 import pytest
+from anyio import Path
 from bs4 import BeautifulSoup
 from homeassistant.components.notify.const import DOMAIN
 from homeassistant.config import (
@@ -31,7 +32,7 @@ from .hass_setup_lib import TestingContext
 
 EXAMPLES_ROOT = "examples"
 
-examples = [str(p.name) for p in Path(EXAMPLES_ROOT).iterdir() if p.name.endswith(".yaml")]
+examples = [str(p.name) for p in pathlib.Path(EXAMPLES_ROOT).iterdir() if p.name.endswith(".yaml")]
 
 
 @pytest.mark.parametrize("config_name", examples)
@@ -94,7 +95,7 @@ async def test_example_template_strict_parsed(hass: HomeAssistant) -> None:
                 CONF_OPTIONS: {OPTION_STRICT_TEMPLATE: True},
             }
         },
-        template_path=Path("examples/templates"),
+        template_path=pathlib.Path("examples/templates"),
         services={"notify": ["smtp"]},
     )
     await ctx.test_initialize()
@@ -122,7 +123,13 @@ async def test_example_template_strict_parsed(hass: HomeAssistant) -> None:
     service_call: ServiceCall = ctx.services["notify.smtp"].calls[0]
     html: str = service_call.data["data"]["html"]
     assert "{%" not in html
-    assert "{{ alert.level }}" not in html
+    assert "{{" not in html
     parsed = BeautifulSoup(html, "html.parser")
     assert parsed.find("p", class_="alert_message").get_text() == "hello there"  # type: ignore
     assert parsed.find("a", class_="alert_action").get_text() == "Event Detail"  # type: ignore
+    assert "None" not in html
+
+    artefact_path: Path = Path("site/tests/results")
+    await artefact_path.mkdir(parents=True, exist_ok=True)
+    async with await (artefact_path / "email_template.html").open("w") as f:
+        await f.write(html)

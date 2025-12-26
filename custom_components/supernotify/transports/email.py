@@ -43,6 +43,7 @@ class AlertServer(TypedDict):
     name: str
     internal_url: str
     external_url: str
+    language: str
 
 
 class AlertImage(TypedDict):
@@ -53,6 +54,7 @@ class AlertImage(TypedDict):
 class Alert(TypedDict):
     message: str | None
     title: str | None
+    preheader: str | None
     priority: str
     envelope: Envelope
     action_url: str | None
@@ -185,9 +187,14 @@ class EmailTransport(Transport):
             _LOGGER.error("SUPERNOTIFY No template path set")
             return None
         try:
+            title: str | None = action_data.get(ATTR_TITLE)
+            message: str | None = action_data.get(ATTR_MESSAGE)
+            preheader: str = f"{title or ''}{' ' if title else ''}{message}"
+            preheader = preheader or "Home Assistant Notification"
             alert = Alert(
-                message=action_data.get(ATTR_MESSAGE),
-                title=action_data.get(ATTR_TITLE),
+                message=message,
+                title=title,
+                preheader=preheader,
                 priority=envelope.priority,
                 action_url=extra_data.get(ATTR_ACTION_URL),
                 action_url_title=extra_data.get(ATTR_ACTION_URL_TITLE),
@@ -197,6 +204,7 @@ class EmailTransport(Transport):
                     name=self.hass_api.hass_name,
                     internal_url=self.hass_api.internal_url,
                     external_url=self.hass_api.external_url,
+                    language=self.hass_api.language,
                 ),
                 preformatted_html=envelope.message_html,
                 img=None,

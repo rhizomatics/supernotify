@@ -28,8 +28,9 @@ Supernotify also adds an `alert` variable for context of the current notificatio
 
 | Attribute         | Description                                                                     |
 |-------------------|---------------------------------------------------------------------------------|
-| message.          | Notification message                                                            |
+| message           | Notification message                                                            |
 | title             | Notification title                                                              |
+| preheader         | Invisible `div` contents at top of html used to show info below heading         |
 | priority          | Notification priority                                                           |
 | envelope          | Delivery Envelope (complex nested object)                                       |
 | subheading        | Defaults to "Home Assistant Notification"                                       |

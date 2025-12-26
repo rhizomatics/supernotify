@@ -76,6 +76,7 @@ class HomeAssistantAPI:
         self._hass: HomeAssistant = hass
         self.internal_url: str = ""
         self.external_url: str = ""
+        self.language: str = ""
         self.hass_name: str = "!UNDEFINED!"
         self._entity_registry: er.EntityRegistry | None = None
         self._device_registry: dr.DeviceRegistry | None = None
@@ -84,6 +85,7 @@ class HomeAssistantAPI:
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
+        self.language = self._hass.config.language
         try:
             self.internal_url = get_url(self._hass, prefer_external=False)
         except Exception as e:

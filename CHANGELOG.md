@@ -1,5 +1,9 @@
 # Public releases
 
+## 1.7.2
+### HTML Email Templates
+- `alert.server.language` added for Home Assistant configured language code, e.g. `en`
+- `alert.preheader` added for pre-header text, defaulting to combination of title and message
 ## 1.7.1
 ### HTML Email Templates
 - Added new `strict_template` to the transport option to perform more validation of template, useful when developing new templates
