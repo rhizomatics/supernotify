@@ -25,5 +25,5 @@
         "cachetools",
         "httpx"
     ],
-    "version":"1.7.2"
+    "version":"1.7.1"
 }
