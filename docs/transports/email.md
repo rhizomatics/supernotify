@@ -36,7 +36,25 @@ Supernotify also adds an `alert` variable for context of the current notificatio
 | subheading        | Defaults to "Home Assistant Notification"                                       |
 | server            | Access to `name`,`internal_url` and `external_url` of this HomeAssistant server |
 | preformatted_html | HTML supplied to the notify action, for example by an Automation                |
-| img               | Snapshot image attachment                                                       |
+| img               | Snapshot image attachment, with `url` and `desc` fields                         |
+
+The `preheader` defaults to a minimum 100 characters packed with `&#847;&zwnj;&nbsp;` to force e-mail clients
+not to dig into the message contents when showing a preview in the in-box.
+
+Where the image is snapped rather than being only a URL, it will be included as an attachment and
+an `cid:XXXX` URL generated to point to the attachment name.
 
 !!! info
     The additional `data` options for Google Mail (`cc`,`bcc`,`from`) are not yet supported.
+
+## Default Delivery
+
+A default Delivery called `DEFAULT_email` will be automatically generated for Email transport if no explicit ones
+created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then
+use configuration as below, or configure your own delivery for the transport.
+
+```yaml
+transports:
+  email:
+    disabled: false
+```

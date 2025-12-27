@@ -32,6 +32,8 @@ from custom_components.supernotify.transport import Transport
 RE_VALID_EMAIL = (
     r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
 )
+OPTION_PREHEADER_BLANK = "preheader_blank"
+OPTION_PREHEADER_LENGTH = "preheader_length"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +114,8 @@ class EmailTransport(Transport):
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
             OPTION_PNG: {"optimize": "true"},
             OPTION_STRICT_TEMPLATE: False,
+            OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;",
+            OPTION_PREHEADER_LENGTH: 100,
         }
         return config
 
@@ -201,6 +205,7 @@ class EmailTransport(Transport):
             message: str | None = action_data.get(ATTR_MESSAGE)
             preheader: str = f"{title or ''}{' ' if title else ''}{message}"
             preheader = preheader or "Home Assistant Notification"
+            preheader = preheader + "&#847;&zwnj;&nbsp;" * (100 - len(preheader))
             alert = Alert(
                 message=message,
                 title=title,

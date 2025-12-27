@@ -44,6 +44,8 @@ All of these set by passing an `options` block in Delivery config or Transport d
 | chime_aliases        | chime      | Map tunes to device name or config                                         |
 | jpeg_opts            | mail       | Tune image grabs                                                           |
 | png_opts             | mail       | Tune image grabs                                                           |
+| preheader_blank      | mail       | HTML code used to pack the pre-header with blanks for HTML email           |
+| preheader_length     | mail       | Minimum size to pack the pre-header with blanks for HTML email             |
 | message_usage        | all        | Combine message and title, default title                                   |
 | simplify_text        | all        | Remove some common symbols that can trip up voice assistants               |
 | strip_urls           | all        | Remove URLs from message and title                                         |

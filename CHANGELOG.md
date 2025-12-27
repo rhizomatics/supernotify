@@ -13,6 +13,7 @@
 - `alert` template object now preserved in `debug_trace` for archived notifications
 - `alert.server.language` added for Home Assistant configured language code, e.g. `en`
 - `alert.preheader` added for pre-header text, defaulting to combination of title and message
+- New options `preheader_blank` and `preheader_length` to control packing out the pre-header with blanks for cleaner inbox visibility
 - Added new `strict_template` to the transport option to perform more validation of template, useful when developing new templates
 - Changed Alert variables to TypedDicts
 - Added `ensure_valid` step before rendering
