@@ -15,6 +15,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
+    DebugTrace,
     MessageOnlyPolicy,
     SelectionRank,
     TargetRequired,
@@ -59,7 +60,7 @@ class AlexaDevicesTransport(Transport):
         }
         return config
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)
 
         targets = envelope.target.entity_ids or []

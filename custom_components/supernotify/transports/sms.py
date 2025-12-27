@@ -12,7 +12,7 @@ from custom_components.supernotify import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -48,7 +48,7 @@ class SMSTransport(Transport):
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY notify_sms: %s", envelope.delivery_name)
 
         data: dict[str, Any] = envelope.data or {}

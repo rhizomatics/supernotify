@@ -28,7 +28,7 @@ from custom_components.supernotify import (
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
@@ -286,7 +286,7 @@ class ChimeTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         data: dict[str, Any] = {}
         data.update(envelope.delivery.data)
         data.update(envelope.data or {})

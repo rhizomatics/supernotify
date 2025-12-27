@@ -15,7 +15,7 @@ from custom_components.supernotify import (
     SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -57,7 +57,7 @@ class NotifyEntityTransport(Transport):
     def auto_configure(self) -> bool:
         return True
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         action_data = envelope.core_action_data()
         targets = envelope.target.entity_ids or []
         if not targets:

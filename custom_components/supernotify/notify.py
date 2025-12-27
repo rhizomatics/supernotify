@@ -75,6 +75,7 @@ from .transports.mqtt import MQTTTransport
 from .transports.notify_entity import NotifyEntityTransport
 from .transports.persistent import PersistentTransport
 from .transports.sms import SMSTransport
+from .transports.tts import TTSTransport
 
 if TYPE_CHECKING:
     from .scenario import Scenario
@@ -96,6 +97,7 @@ TRANSPORTS: list[type[Transport]] = [
     ChimeTransport,
     PersistentTransport,
     GenericTransport,
+    TTSTransport,
     NotifyEntityTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 

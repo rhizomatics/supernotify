@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 from . import ATTR_ENABLED, CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN
 from .common import CallRecord
 from .context import Context
-from .model import DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature
+from .model import DebugTrace, DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature
 
 if TYPE_CHECKING:
     import datetime as dt
@@ -122,12 +122,13 @@ class Transport:
         return attrs
 
     @abstractmethod
-    async def deliver(self, envelope: "Envelope") -> bool:  # type: ignore # noqa: F821
+    async def deliver(self, envelope: "Envelope", debug_trace: DebugTrace | None = None) -> bool:  # type: ignore # noqa: F821
         """Delivery implementation
 
         Args:
         ----
             envelope (Envelope): envelope to be delivered
+            debug_trace (DebugTrace): debug info collector
 
         """
 

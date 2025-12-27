@@ -1,7 +1,13 @@
 # Public releases
 
-## 1.7.1
+## 1.8.0
+### TTS Transport
+- New transport for TTS integration, hiding its complicated double entity_id call
+### Generic Transport
+- New `raw` option to switch off domain-specific shaping of `data` contents
+- Will now prune fields for `tts`
 ### HTML Email Templates
+- `alert` template object now preserved in `debug_trace` for archived notifications
 - `alert.server.language` added for Home Assistant configured language code, e.g. `en`
 - `alert.preheader` added for pre-header text, defaulting to combination of title and message
 - Added new `strict_template` to the transport option to perform more validation of template, useful when developing new templates

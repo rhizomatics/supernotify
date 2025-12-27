@@ -1,4 +1,4 @@
-homeassistant==2025.12.2
+homeassistant==2025.12.1
 cachetools
 bs4
 aiodns==3.5.0

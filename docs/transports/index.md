@@ -53,6 +53,7 @@ All of these set by passing an `options` block in Delivery config or Transport d
 | data_keys_include_re | generic    | List of values or regex full match patterns allowed in `data` block        |
 | data_keys_exclude_re | generic    | List of values or regex full match patterns not allowed in `data` block    |
 | handle_as_domain     | generic    | Treat the action call in same way as a known domain                        |
+| raw                  | generic    | Don't apply domain specific `data` handling and pruning rules              |
 | strict_template      | email      | Fail template if Jinja2 issues found when `true`, render anyway if `false` |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.

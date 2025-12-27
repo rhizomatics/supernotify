@@ -208,8 +208,10 @@ TARGET_USE_MERGE_ON_DELIVERY_TARGETS = "merge_delivery"
 OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
+OPTION_RAW = "raw"
 OPTION_JPEG = "jpeg_opts"
 OPTION_PNG = "png_opts"
+OPTION_TTS_ENTITY_ID = "tts_entity_id"
 MEDIA_OPTION_REPROCESS = "reprocess"
 OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
@@ -320,6 +322,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
 })
 
 TRANSPORT_SMS = "sms"
+TRANSPORT_TTS = "tts"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_EMAIL = "email"
 TRANSPORT_ALEXA = "alexa_devices"
@@ -340,6 +343,7 @@ TRANSPORT_VALUES = [
     TRANSPORT_EMAIL,
     TRANSPORT_MEDIA,
     TRANSPORT_PERSISTENT,
+    TRANSPORT_TTS,
     TRANSPORT_GENERIC,
     TRANSPORT_NOTIFY_ENTITY,
 ]

@@ -6,6 +6,7 @@ tags:
   - genai
   - gemini
   - alexa
+  - tts
   - echo
   - accessibility
   - template
@@ -32,7 +33,7 @@ also work with any notify implementation. It uses both AI image detection to wor
 * MQTT Broker configured in Home Assistant
 * Home Asssistant template logic
 * Voice Assistant
-    * In this example, Amazon Echo devices using the *Alexa Devices* integration, although *Alexa Media Player* can be easily switched for it
+    * In this example, Amazon Echo devices using the *Alexa Devices* integration, although *TTS* or *Alexa Media Player* can be easily switched for it
     * If you don't have one of these, then use another voice assistant, Mobile Push, e-mail or similar
 
 

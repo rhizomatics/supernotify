@@ -35,7 +35,7 @@ from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import DebugTrace, Notification
 from custom_components.supernotify.transports.email import EmailTransport
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
 DELIVERIES = """
 plain_email:
@@ -50,10 +50,6 @@ TRANSPORTS = """
 notify_entity:
     enabled: false
 """
-
-
-def first_envelope(notification: Notification, delivery: str) -> Envelope:
-    return notification.deliveries[delivery]["delivered"][0]  # type: ignore
 
 
 async def test_simple_create() -> None:

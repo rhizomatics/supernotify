@@ -26,6 +26,7 @@ from custom_components.supernotify import (
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     CommandType,
+    DebugTrace,
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
@@ -100,7 +101,7 @@ class MobilePushTransport(Transport):
             self.action_title_failures[url] = time.time()
         return None
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         if not envelope.target.mobile_app_ids:
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False

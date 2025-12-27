@@ -17,6 +17,7 @@ from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TargetRequired, TransportConfig
+from custom_components.supernotify.notification import DebugTrace
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
@@ -117,7 +118,7 @@ class DummyTransport(Transport):
         config.delivery_defaults.target_required = self.target_required
         return config
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         if self.transport_exception:
             raise self.transport_exception
         return await self.call_action(

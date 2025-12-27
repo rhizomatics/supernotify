@@ -48,7 +48,7 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
     * Adaptors automatically tune notification data for each integration
     * For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](https://supernotify.rhizomatics.org.uk/recipes/frigate_emails/) for more info.
 * Go beyond `notify` integrations
-    * Chimes, sirens, SMS, Alexa Announcements and Sounds, API calls, MQTT devices
+    * Chimes, sirens, SMS, TTS, Alexa Announcements and Sounds, API calls, MQTT devices
     * All the standard `notify` and  `notify.group` implementations available, including the modern `NotifyEntity` based ones
     * Greatly simplified use of Mobile Push notifications, e.g. for iPhone
     * Standard HomeAssistant behaviour, including data templating and `notify.group`

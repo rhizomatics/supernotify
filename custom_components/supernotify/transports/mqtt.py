@@ -6,7 +6,7 @@ from homeassistant.components.mqtt.const import ATTR_TOPIC
 
 from custom_components.supernotify import TRANSPORT_MQTT
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -41,7 +41,7 @@ class MQTTTransport(Transport):
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:  # noqa: ARG002
         return None
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY notify_mqtt: %s", envelope.delivery_name)
 
         if not envelope.data or ATTR_TOPIC not in envelope.data:

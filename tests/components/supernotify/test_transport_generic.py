@@ -259,3 +259,34 @@ async def test_slack_notify() -> None:
         context=None,
         return_response=False,
     )
+
+
+async def test_raw() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            disco:
+                transport: generic
+                action: light.turn_on
+                options:
+                    raw: true
+                target:
+                    - light.disco_1
+            """,
+        services={"light": ["turn_on"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test message", action_data={"delivery": "disco", "data": {"strobe_period": 10}})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "light",
+        "turn_on",
+        service_data={"message": "test message", "strobe_period": 10, "target": "light.disco_1"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )

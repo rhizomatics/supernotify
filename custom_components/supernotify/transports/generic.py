@@ -12,6 +12,7 @@ from custom_components.supernotify import (
     OPTION_DATA_KEYS_INCLUDE_RE,
     OPTION_GENERIC_DOMAIN_STYLE,
     OPTION_MESSAGE_USAGE,
+    OPTION_RAW,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
@@ -20,7 +21,7 @@ from custom_components.supernotify import (
 from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -49,6 +50,7 @@ DATA_FIELDS_ALLOWED = {
     "siren": ["tone", "duration", "volume_level"],
     "mqtt": ["topic", "payload", "evaluate_payload", "qos", "retain"],
     "script": ["variables", "wait", "wait_template"],
+    "tts": ["cache", "options", "message", "language", "media_player_entity_id", "entity_id", "target"],
 }
 
 
@@ -71,6 +73,7 @@ class GenericTransport(Transport):
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
+            OPTION_RAW: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             # OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_DATA_KEYS_INCLUDE_RE: None,
@@ -85,7 +88,7 @@ class GenericTransport(Transport):
         _LOGGER.warning("SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         # inputs
         data: dict[str, Any] = envelope.data or {}
         core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
@@ -102,7 +105,11 @@ class GenericTransport(Transport):
         build_targets: bool = False
         prune_data: bool = True
 
-        if equiv_domain == "notify":
+        if envelope.delivery.options.get(OPTION_RAW, False):
+            action_data = core_action_data
+            action_data.update(data)
+            build_targets = True
+        elif equiv_domain == "notify":
             action_data = core_action_data
             if qualified_action == "notify.send_message":
                 # amongst the wild west of notifty handling, at least care for the modern core one
@@ -126,6 +133,10 @@ class GenericTransport(Transport):
             if "payload" not in action_data:
                 action_data["payload"] = envelope.message
                 # add `payload:` with empty value for empty topic
+        elif equiv_domain == "tts":
+            action_data = core_action_data
+            action_data.update(data)
+            build_targets = True
         elif equiv_domain in ("siren", "light"):
             target_data = {ATTR_ENTITY_ID: envelope.target.entity_ids}
             action_data = data
@@ -159,10 +170,11 @@ class GenericTransport(Transport):
             elif len(all_targets) >= 1:
                 action_data[ATTR_TARGET] = all_targets
 
-        if prune_data:
-            self.prune_data(action_data, domain, envelope.delivery)
-        if domain in DATA_FIELDS_ALLOWED and action_data:
-            action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
+        if not envelope.delivery.options.get(OPTION_RAW, False):
+            if prune_data:
+                self.prune_data(action_data, domain, envelope.delivery)
+            if domain in DATA_FIELDS_ALLOWED and action_data:
+                action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
 
         target_data = target_data or None
         if ATTR_DATA in action_data and not action_data[ATTR_DATA]:

@@ -8,7 +8,7 @@ from homeassistant.const import (
 
 from custom_components.supernotify import OPTION_TARGET_CATEGORIES, OPTION_TARGET_INCLUDE_RE, TRANSPORT_MEDIA
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
@@ -36,7 +36,7 @@ class MediaPlayerTransport(Transport):
         }
         return config
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)
 
         data: dict[str, Any] = envelope.data or {}

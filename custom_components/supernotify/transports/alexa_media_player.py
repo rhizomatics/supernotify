@@ -14,7 +14,7 @@ from custom_components.supernotify import (
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -60,7 +60,7 @@ class AlexaMediaPlayerTransport(Transport):
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY notify_alexa_media %s", envelope.message)
 
         media_players = envelope.target.entity_ids or []

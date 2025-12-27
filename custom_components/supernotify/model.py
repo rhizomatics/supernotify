@@ -603,3 +603,58 @@ class MessageOnlyPolicy(StrEnum):
     USE_TITLE = "USE_TITLE"  # use title in place of message, no title
     # use combined title and message as message, no title
     COMBINE_TITLE = "COMBINE_TITLE"
+
+
+class DebugTrace:
+    def __init__(
+        self,
+        message: str | None,
+        title: str | None,
+        data: dict[str, Any] | None,
+        target: dict[str, list[str]] | list[str] | str | None,
+    ) -> None:
+        self.message: str | None = message
+        self.title: str | None = title
+        self.data: dict[str, Any] | None = dict(data) if data else data
+        self.target: dict[str, list[str]] | list[str] | str | None = list(target) if target else target
+        self.resolved: dict[str, dict[str, Any]] = {}
+        self.delivery_selection: dict[str, list[str]] = {}
+        self.delivery_artefacts: dict[str, Any] = {}
+        self._last_stage: dict[str, str] = {}
+
+    def contents(self, **_kwargs: Any) -> dict[str, Any]:
+        return {
+            "message": self.message,
+            "title": self.title,
+            "data": self.data,
+            "target": self.target,
+            "resolved": self.resolved,
+            "delivery_selection": self.delivery_selection,
+        }
+
+    def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
+        """Debug support for recording detailed target resolution in archived notification"""
+        self.resolved.setdefault(delivery_name, {})
+        self.resolved[delivery_name].setdefault(stage, {})
+        if isinstance(computed, Target):
+            combined = computed
+        else:
+            combined = Target()
+            for target in ensure_list(computed):
+                combined += target
+        result: str | dict[str, Any] = combined.as_dict()
+        if self._last_stage.get(delivery_name):
+            last_target = self.resolved[delivery_name][self._last_stage[delivery_name]]
+            if last_target is not None and last_target == result:
+                result = "NO_CHANGE"
+
+        self.resolved[delivery_name][stage] = result
+        self._last_stage[delivery_name] = stage
+
+    def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:
+        """Debug support for recording detailed target resolution in archived notification"""
+        self.delivery_selection[stage] = delivery_selection
+
+    def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:
+        self.delivery_artefacts.setdefault(delivery, {})
+        self.delivery_artefacts[delivery][artefact_name] = artefact

@@ -47,7 +47,7 @@ from .common import ensure_list, nullable_ensure_list
 from .context import Context
 from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
-from .model import ConditionVariables, DeliveryCustomization, SuppressionReason, Target, TargetRequired
+from .model import ConditionVariables, DebugTrace, DeliveryCustomization, SuppressionReason, Target, TargetRequired
 from .people import Recipient
 
 if TYPE_CHECKING:
@@ -401,7 +401,7 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
                 try:
-                    if not await transport.deliver(envelope):
+                    if not await transport.deliver(envelope, debug_trace=self.debug_trace):
                         _LOGGER.debug("SUPERNOTIFY No delivery for %s", delivery.name)
                     self.record_result(delivery, envelope)
                 except Exception as e2:
@@ -722,53 +722,3 @@ class Notification(ArchivableObject):
                 envelopes.append(Envelope(delivery, self, target, envelope_data, context=self.context))
 
         return envelopes
-
-
-class DebugTrace:
-    def __init__(
-        self,
-        message: str | None,
-        title: str | None,
-        data: dict[str, Any] | None,
-        target: dict[str, list[str]] | list[str] | str | None,
-    ) -> None:
-        self.message: str | None = message
-        self.title: str | None = title
-        self.data: dict[str, Any] | None = dict(data) if data else data
-        self.target: dict[str, list[str]] | list[str] | str | None = list(target) if target else target
-        self.resolved: dict[str, dict[str, Any]] = {}
-        self.delivery_selection: dict[str, list[str]] = {}
-        self._last_stage: dict[str, str] = {}
-
-    def contents(self, **_kwargs: Any) -> dict[str, Any]:
-        return {
-            "message": self.message,
-            "title": self.title,
-            "data": self.data,
-            "target": self.target,
-            "resolved": self.resolved,
-            "delivery_selection": self.delivery_selection,
-        }
-
-    def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
-        """Debug support for recording detailed target resolution in archived notification"""
-        self.resolved.setdefault(delivery_name, {})
-        self.resolved[delivery_name].setdefault(stage, {})
-        if isinstance(computed, Target):
-            combined = computed
-        else:
-            combined = Target()
-            for target in ensure_list(computed):
-                combined += target
-        result: str | dict[str, Any] = combined.as_dict()
-        if self._last_stage.get(delivery_name):
-            last_target = self.resolved[delivery_name][self._last_stage[delivery_name]]
-            if last_target is not None and last_target == result:
-                result = "NO_CHANGE"
-
-        self.resolved[delivery_name][stage] = result
-        self._last_stage[delivery_name] = stage
-
-    def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:
-        """Debug support for recording detailed target resolution in archived notification"""
-        self.delivery_selection[stage] = delivery_selection

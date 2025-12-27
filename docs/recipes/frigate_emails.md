@@ -44,4 +44,4 @@ automations:
 
 - Use this anywhere else you want to get multiple notification channels without changing templates
 - Simplify automations and templates by moving complex setup and rules into Supernotify, such as using a single **Scenario** to configure dozens of automations
-- Have Alexa devices announce the notification too, using the `alexa_devices` or `alexa_media_player` integrations, or have a sound alert via an Alexa or 433Mhz doorbell chime
+- Have TTS or Alexa devices announce the notification too, using the `tts`, `alexa_devices` or `alexa_media_player` integrations, or have a sound alert via an Alexa or 433Mhz doorbell chime

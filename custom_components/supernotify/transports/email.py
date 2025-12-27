@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import TYPE_CHECKING, Any, TypedDict
+from pathlib import Path
+from typing import Any, TypedDict
 
 import aiofiles
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
@@ -23,14 +24,8 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import MessageOnlyPolicy, TransportConfig, TransportFeature
-from custom_components.supernotify.transport import (
-    Transport,
-)
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
+from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.transport import Transport
 
 RE_VALID_EMAIL = (
     r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
@@ -110,7 +105,7 @@ class EmailTransport(Transport):
         }
         return config
 
-    async def deliver(self, envelope: Envelope) -> bool:
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)
 
         data: dict[str, Any] = envelope.data or {}
@@ -136,14 +131,15 @@ class EmailTransport(Transport):
         if data and data.get("data"):
             action_data[ATTR_DATA] = data.get("data")
 
+        image_path: Path | None = await envelope.grab_image()
+        if image_path:
+            action_data.setdefault("data", {})
+            action_data["data"]["images"] = [str(image_path)]
+
         if not template or not self.template_path:
             if footer and action_data.get(ATTR_MESSAGE):
                 action_data[ATTR_MESSAGE] = f"{action_data[ATTR_MESSAGE]}\n\n{footer}"
 
-            image_path: Path | None = await envelope.grab_image()
-            if image_path:
-                action_data.setdefault("data", {})
-                action_data["data"]["images"] = [str(image_path)]
             if envelope.message_html:
                 action_data.setdefault("data", {})
                 html = envelope.message_html
@@ -163,6 +159,8 @@ class EmailTransport(Transport):
                 template,
                 envelope,
                 action_data,
+                debug_trace,
+                image_path=image_path,
                 snapshot_url=snapshot_url,
                 extra_data=extra_data,
                 strict_template=strict_template,
@@ -177,6 +175,8 @@ class EmailTransport(Transport):
         template: str,
         envelope: Envelope,
         action_data: dict[str, Any],
+        debug_trace: DebugTrace | None = None,
+        image_path: Path | None = None,
         snapshot_url: str | None = None,
         extra_data: dict[str, Any] | None = None,
         strict_template: bool = False,
@@ -212,6 +212,8 @@ class EmailTransport(Transport):
 
             if snapshot_url:
                 alert["img"] = AlertImage(url=snapshot_url, desc="Snapshot Image")
+            elif image_path:
+                alert["img"] = AlertImage(url=f"cid:{image_path.name}", desc=image_path.name)
 
             template_file_path = self.template_path / template
             template_content: str
@@ -219,6 +221,10 @@ class EmailTransport(Transport):
                 template_content = os.linesep.join(await file.readlines())
             template_obj: Template = self.context.hass_api.template(template_content)
             template_obj.ensure_valid()
+
+            if debug_trace:
+                debug_trace.record_delivery_artefact(envelope.delivery.name, "alert", alert)
+
             html: str = template_obj.async_render(variables={"alert": alert}, parse_result=False, strict=strict_template)
             if not html:
                 _LOGGER.error("SUPERNOTIFY Empty result from template %s", template_file_path)
