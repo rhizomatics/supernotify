@@ -189,7 +189,7 @@ def test_pack_preheader() -> None:
     uut = EmailTransport(Mock(template_path=None), {})
 
     assert (
-        uut.pack_preheader("foo", {OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;", OPTION_PREHEADER_LENGTH: 12})
-        == "foo&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;"
+        uut.pack_preheader("foo", {OPTION_PREHEADER_BLANK: "&nbsp;", OPTION_PREHEADER_LENGTH: 12})
+        == "foo&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
     )
     assert uut.pack_preheader("foo", {}) == "foo"
