@@ -623,7 +623,7 @@ class DebugTrace:
         self._last_stage: dict[str, str] = {}
 
     def contents(self, **_kwargs: Any) -> dict[str, Any]:
-        return {
+        results: dict[str, Any] = {
             "message": self.message,
             "title": self.title,
             "data": self.data,
@@ -631,6 +631,9 @@ class DebugTrace:
             "resolved": self.resolved,
             "delivery_selection": self.delivery_selection,
         }
+        if self.delivery_artefacts:
+            results["delivery_artefacts"] = self.delivery_artefacts
+        return results
 
     def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
