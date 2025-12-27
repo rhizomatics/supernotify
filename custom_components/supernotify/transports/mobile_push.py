@@ -24,9 +24,11 @@ from custom_components.supernotify import (
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
+    DeliveryConfig,
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
@@ -71,9 +73,8 @@ class MobilePushTransport(Transport):
         }
         return config
 
-    @property
-    def auto_configure(self) -> bool:
-        return True
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:  # noqa: ARG002
+        return self.delivery_defaults
 
     def validate_action(self, action: str | None) -> bool:
         return action is None

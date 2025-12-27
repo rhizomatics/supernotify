@@ -23,7 +23,7 @@
 
 An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
-Supernotify lets you make a **simple, single notification action** from all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. One notification with just a message defined can be enough trigger everything you need to keep everyone informed.
+Supernotify lets you make a **simple, single notification action** from all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed.
 
 With two lines of very simple yaml, start mobile push notifications to everyone registered in the house, without
 configuring mobile app names in notifications.

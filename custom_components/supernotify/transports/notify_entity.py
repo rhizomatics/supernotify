@@ -15,7 +15,8 @@ from custom_components.supernotify import (
     SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -53,9 +54,8 @@ class NotifyEntityTransport(Transport):
         }
         return config
 
-    @property
-    def auto_configure(self) -> bool:
-        return True
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:  # noqa: ARG002
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         action_data = envelope.core_action_data()

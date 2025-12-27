@@ -87,7 +87,7 @@ class ChimeTargetConfig:
             "tune": self.tune,
             "duration": self.duration,
             "volume": self.volume,
-            "data": self.data
+            "data": self.data,
         }
 
     def __repr__(self) -> str:

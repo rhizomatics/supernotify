@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 
 from custom_components.supernotify import (
     ATTR_DATA,
@@ -122,7 +122,6 @@ async def test_deliver_with_preformatted_html() -> None:
     )
 
 
-# type: ignore
 async def test_deliver_with_preformatted_html_and_image() -> None:
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
@@ -164,3 +163,21 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
         target=None,
         return_response=False,
     )
+
+
+async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass)
+
+    def service_call(call: ServiceCall) -> ServiceResponse | None:
+        return {}
+
+    ctx.hass_api._hass.services.async_register(domain="smtp", service="mailserver", service_func=service_call)
+    await ctx.test_initialize()
+    assert "DEFAULT_email" in ctx.delivery_registry.deliveries
+    assert ctx.delivery_registry.deliveries["DEFAULT_email"].action == "notify.mailserver"
+
+
+async def test_discover_no_smtp_integration(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    assert "DEFAULT_email" not in ctx.delivery_registry.deliveries

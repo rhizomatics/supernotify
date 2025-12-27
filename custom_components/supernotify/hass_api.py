@@ -210,6 +210,25 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
         return supports_response or SupportsResponse.NONE  # default to no response
 
+    def find_service(self, domain: str) -> str | None:
+        try:
+            service_objs: dict[str, dict[str, Service]] = self._hass.services.async_services()
+            if service_objs:
+                domain_objs: dict[str, Service] = service_objs.get(domain, {})
+                if domain_objs is not None and len(domain_objs) > 0:
+                    if len(domain_objs) > 1:
+                        _LOGGER.warning(
+                            "SUPERNOTIFY Found multiple %s services, choosing first: %s", domain, ", ".join(domain_objs.keys())
+                        )
+                    service: str = next(iter(domain_objs.keys()))
+                    if service:
+                        _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s", domain, service)
+                        return service
+            _LOGGER.debug("SUPERNOTIFY Unable to find service for %s", domain)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to find service for %s: %s", domain, e)
+        return None
+
     def http_session(self) -> aiohttp.ClientSession:
         """Client aiohttp session for async web requests"""
         return async_get_clientsession(self._hass)
@@ -231,6 +250,7 @@ class HomeAssistantAPI:
         this_trace: ActionTrace | None = None
         if DATA_TRACE not in self._hass.data:
             _LOGGER.warning("SUPERNOTIFY tracing not configured, attempting to set up")
+            # type: ignore
             await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
         with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
             cond_trace.set_trace(trace_get())

@@ -24,7 +24,8 @@ From the HACS page on Home Assistant, select **Supernotify** in the list of avai
 
 Add Supernotify to the Home Assistant YAML configuration ([YAML Configuration](configuration/yaml.md)).
 
-The [Configuration](configuration/index.md) pages have instructions and examples, including a [minimal](configuration/examples/minimal.md) one that is only two lines of YAML and is good enough to get mobile push notifications working.
+The [Configuration](configuration/index.md) pages have instructions and examples, including a [minimal](configuration/examples/minimal.md) one that is only two lines of YAML and is good enough to get mobile push notifications working, plus use an
+existing SMTP integration if you have it or any notify entities.
 
 ## Send
 

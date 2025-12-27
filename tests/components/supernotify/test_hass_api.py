@@ -2,7 +2,7 @@ import socket
 from typing import TYPE_CHECKING
 
 import pytest
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
@@ -218,6 +218,19 @@ async def test_hass_calls_service_fire_and_forget(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     with pytest.raises(ServiceNotFound):
         assert await hass_api.call_service("nosuchdomain", "nosuchservice") is None
+
+
+def test_finds_service(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+
+    def service_call(call: ServiceCall) -> ServiceResponse | None:
+        return {}
+
+    hass.services.async_register(domain="foo", service="bar", service_func=service_call)
+    hass.services.async_register(domain="foo", service="xxx", service_func=service_call)
+
+    assert hass_api.find_service("foo") == "bar"
+    assert hass_api.find_service("bar") is None
 
 
 async def test_mqtt_publish(mock_hass) -> None:

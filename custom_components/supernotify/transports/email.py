@@ -5,6 +5,7 @@ from typing import Any, TypedDict
 
 import aiofiles
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
+from homeassistant.components.smtp.const import DOMAIN as SMTP_DOMAIN
 from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.helpers.typing import ConfigType
 
@@ -24,7 +25,8 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_EMAIL = (
@@ -79,6 +81,14 @@ class EmailTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        service: str | None = hass_api.find_service(SMTP_DOMAIN)
+        if service:
+            delivery_config = self.delivery_defaults
+            delivery_config.action = f"notify.{service}"
+            return delivery_config
+        return None
 
     @property
     def supported_features(self) -> TransportFeature:

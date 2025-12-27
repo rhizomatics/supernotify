@@ -19,13 +19,13 @@ from homeassistant.util import dt as dt_util
 from . import ATTR_ENABLED, CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN
 from .common import CallRecord
 from .context import Context
+from .hass_api import HomeAssistantAPI
 from .model import DebugTrace, DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature
 
 if TYPE_CHECKING:
     import datetime as dt
 
     from .delivery import Delivery, DeliveryRegistry
-    from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,9 +96,8 @@ class Transport:
     def default_config(self) -> TransportConfig:
         return TransportConfig()
 
-    @property
-    def auto_configure(self) -> bool:
-        return False
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:  # noqa: ARG002
+        return None
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

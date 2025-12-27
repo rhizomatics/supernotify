@@ -6,6 +6,9 @@
 ### Generic Transport
 - New `raw` option to switch off domain-specific shaping of `data` contents
 - Will now prune fields for `tts`
+### Email Transport
+- The first available `smtp` integration is automatically configured as `DEFAULT_email` delivery
+  - So, zero-config usage now accepts notifications with email addresses as targets
 ### HTML Email Templates
 - `alert` template object now preserved in `debug_trace` for archived notifications
 - `alert.server.language` added for Home Assistant configured language code, e.g. `en`

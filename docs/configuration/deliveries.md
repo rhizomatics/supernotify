@@ -11,7 +11,20 @@ tags:
 You should create a Delivery only for the [transports](../transports/index.md)
 you want to use, though sometimes you may want to create multiple Deliveries for the same channel, for example a `plain_email` and `html_email` delivery, or different custom notification platforms using the `generic` transport.
 
-With the exception of *Notify Entity*, none of the transport adaptors will do anything unless there is a Delivery configured in the `delivery:` section of the Supernotify config. (And if you really don't want a default Notify Entity delivery, set its transport `enabled` to `false`).
+Three of the transports will automatically create these deliveries where there is not an explicit delivery defined (if you really don't want a default delivery, set its transport `enabled` to `false`):
+
+- `DEFAULT_email`
+ - Only if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) already configured ( it picks the first available one as the `action`, if you want another one then define the delivery explicitly)
+- `DEFAULT_mobile_push`
+- `DEFAULT_notify_entity`
+
+```yaml title="Example of switching off a default delivery
+transports:
+  mobile_push:
+    disabled: true
+```
+
+All other transport adaptors will not do anything unless there is a Delivery configured in the `delivery:` section of the Supernotify config.
 
 ## Simple Example
 
