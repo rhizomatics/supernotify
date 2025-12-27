@@ -92,6 +92,7 @@ class GenericTransport(Transport):
         # inputs
         data: dict[str, Any] = envelope.data or {}
         core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
+        raw_mode: bool = envelope.delivery.options.get(OPTION_RAW, False)
         qualified_action: str | None = envelope.delivery.action
         domain: str | None = qualified_action.split(".", 1)[0] if qualified_action and "." in qualified_action else None
         equiv_domain: str | None = domain
@@ -105,7 +106,7 @@ class GenericTransport(Transport):
         build_targets: bool = False
         prune_data: bool = True
 
-        if envelope.delivery.options.get(OPTION_RAW, False):
+        if raw_mode:
             action_data = core_action_data
             action_data.update(data)
             build_targets = True
@@ -170,11 +171,10 @@ class GenericTransport(Transport):
             elif len(all_targets) >= 1:
                 action_data[ATTR_TARGET] = all_targets
 
-        if not envelope.delivery.options.get(OPTION_RAW, False):
-            if prune_data:
-                self.prune_data(action_data, domain, envelope.delivery)
-            if domain in DATA_FIELDS_ALLOWED and action_data:
-                action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
+        if prune_data:
+            self.prune_data(action_data, domain if not raw_mode else None, envelope.delivery)
+        if domain in DATA_FIELDS_ALLOWED and action_data and not raw_mode:
+            action_data = {k: v for k, v in action_data.items() if k in DATA_FIELDS_ALLOWED[domain]}
 
         target_data = target_data or None
         if ATTR_DATA in action_data and not action_data[ATTR_DATA]:
