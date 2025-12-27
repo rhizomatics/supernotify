@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_bf2512bcd384b419_email_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-12-26 23:26 +0000
+            created at 2025-12-27 18:34 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -110,7 +110,7 @@
     <p class="run run2"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">    <span class="nam">TRANSPORT_CHIME</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">envelope</span> <span class="key">import</span> <span class="nam">Envelope</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">model</span> <span class="key">import</span> <span class="nam">Target</span><span class="op">,</span> <span class="nam">TargetRequired</span><span class="op">,</span> <span class="nam">TransportConfig</span><span class="op">,</span> <span class="nam">TransportFeature</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">model</span> <span class="key">import</span> <span class="nam">DebugTrace</span><span class="op">,</span> <span class="nam">Target</span><span class="op">,</span> <span class="nam">TargetRequired</span><span class="op">,</span> <span class="nam">TransportConfig</span><span class="op">,</span> <span class="nam">TransportFeature</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">transport</span> <span class="key">import</span> <span class="nam">Transport</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t"><span class="nam">RE_VALID_CHIME</span> <span class="op">=</span> <span class="str">r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"</span>&nbsp;</span><span class="r"></span></p>
@@ -368,7 +368,7 @@
     <p class="run"><span class="n"><a id="t286" href="#t286">286</a></span><span class="t">    <span class="key">def</span> <span class="nam">validate_action</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">action</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t287" href="#t287">287</a></span><span class="t">        <span class="key">return</span> <span class="nam">action</span> <span class="key">is</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t288" href="#t288">288</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">deliver</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">:</span> <span class="nam">Envelope</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t289" href="#t289">289</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">deliver</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">:</span> <span class="nam">Envelope</span><span class="op">,</span> <span class="nam">debug_trace</span><span class="op">:</span> <span class="nam">DebugTrace</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>  <span class="com"># noqa: ARG002</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t290" href="#t290">290</a></span><span class="t">        <span class="nam">data</span><span class="op">:</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span> <span class="op">=</span> <span class="op">{</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t291" href="#t291">291</a></span><span class="t">        <span class="nam">data</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">envelope</span><span class="op">.</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t292" href="#t292">292</a></span><span class="t">        <span class="nam">data</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">envelope</span><span class="op">.</span><span class="nam">data</span> <span class="key">or</span> <span class="op">{</span><span class="op">}</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -503,7 +503,7 @@
             <a class="nav" href="z_bf2512bcd384b419_email_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-12-26 23:26 +0000
+            created at 2025-12-27 18:34 +0000
         </p>
     </div>
 </footer>

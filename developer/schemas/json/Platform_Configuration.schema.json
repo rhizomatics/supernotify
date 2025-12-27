@@ -263,6 +263,7 @@
               "email",
               "media",
               "persistent",
+              "tts",
               "generic",
               "notify_entity"
             ]

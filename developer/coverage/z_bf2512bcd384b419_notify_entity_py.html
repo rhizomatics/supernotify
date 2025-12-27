@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_bf2512bcd384b419_persistent_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-12-26 23:26 +0000
+            created at 2025-12-27 18:34 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -97,7 +97,7 @@
     <p class="run run2"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">    <span class="nam">SelectionRank</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">envelope</span> <span class="key">import</span> <span class="nam">Envelope</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">model</span> <span class="key">import</span> <span class="nam">MessageOnlyPolicy</span><span class="op">,</span> <span class="nam">TransportConfig</span><span class="op">,</span> <span class="nam">TransportFeature</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">model</span> <span class="key">import</span> <span class="nam">DebugTrace</span><span class="op">,</span> <span class="nam">MessageOnlyPolicy</span><span class="op">,</span> <span class="nam">TransportConfig</span><span class="op">,</span> <span class="nam">TransportFeature</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">transport</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="nam">Transport</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -139,7 +139,7 @@
     <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="key">def</span> <span class="nam">auto_configure</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">        <span class="key">return</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">deliver</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">:</span> <span class="nam">Envelope</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">deliver</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">:</span> <span class="nam">Envelope</span><span class="op">,</span> <span class="nam">debug_trace</span><span class="op">:</span> <span class="nam">DebugTrace</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="key">None</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>  <span class="com"># noqa: ARG002</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">        <span class="nam">action_data</span> <span class="op">=</span> <span class="nam">envelope</span><span class="op">.</span><span class="nam">core_action_data</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">        <span class="nam">targets</span> <span class="op">=</span> <span class="nam">envelope</span><span class="op">.</span><span class="nam">target</span><span class="op">.</span><span class="nam">entity_ids</span> <span class="key">or</span> <span class="op">[</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">targets</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -160,7 +160,7 @@
             <a class="nav" href="z_bf2512bcd384b419_persistent_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-12-26 23:26 +0000
+            created at 2025-12-27 18:34 +0000
         </p>
     </div>
 </footer>
