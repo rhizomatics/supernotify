@@ -41,4 +41,4 @@ async def test_title_not_passed_to_action(support_case_fixture, hass: HomeAssist
     envelope = uut.deliveries["tts"]["delivered"][0]  # type: ignore
     service_call = envelope.calls[0]  # type: ignore
     assert service_call.action_data == {"message": "testing 123"}
-    assert service_call.domain == 'tts'
+    assert service_call.domain == "tts"

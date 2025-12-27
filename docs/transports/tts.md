@@ -29,7 +29,7 @@ The `message_usage` option can be set to `combine_title` or `use_title` to overr
 delivery:
   speak_it_out:
     transport: tts
-    options:  
+    options:
       - tts_entity_id: tts.google_ai_tts
 ```
 
@@ -40,7 +40,7 @@ delivery:
   speak_it_out:
     transport: tts
     action: tts.speak_cloud
-    options:  
+    options:
       - tts_entity_id: tts.google_ai_tts
 ```
 

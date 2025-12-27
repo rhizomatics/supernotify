@@ -55,7 +55,7 @@ class TTSTransport(Transport):
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER],
-            OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud"
+            OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
         }
         return config
 
