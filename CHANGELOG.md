@@ -14,18 +14,18 @@
 - Changed Alert variables to TypedDicts
 - Added `ensure_valid` step before rendering
 - Switched off `parse_results` for rendering
+- Image now available for attachments, previously only where `snapshot_url` given
 - Fixed Jinja2 format and variable name issues in default template
 - `action_url` and `action_url_title` now passed to template
 - Corrected `snapshot_url` to be taken from `media` section as other transports
 ### Media Player Transport
 - Corrected `snapshot_url` to be taken from `media` section as other transports
 ## 1.7.0
-### New
-#### Scenario
+### Scenario
 - Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to all
 - `enquire_deliveries_by_scenario` action now lists which deliveries are enabled by the scenario, disabled by it, and all the scenarios to which it applies overrides
 - `delivery` section now has the same flexibility as on an action call - it can be a mapping, list or single string, the latter two are all that is needed to simply enable deliveries
-#### Cameras
+### Cameras
 - Camera entity's built in device tracker will now be used, no need for separate device tracker where this supported
 - Better diagnostics for unavailable cameras
 ### People / Recipients
@@ -34,12 +34,12 @@
   - Recipient overrides can now re-enable otherwise disabled deliveries, as scenarios have already been able to do
   - Like scenario, deliveries can be overridden without enabling by setting `enabled:` as empty value
   - `recipient_enable_deliveries` recorded in `debug_trace` as in the notification archive
-#### Notification Archive
+### Notification Archive
 - Further improvements to `Notification` archive object to make it easier to debug
     - Original message now at top of object
     - Envelopes for each delivery categorized into `delivered`,`failed`,`skipped` and `no_envelopes`
     - More stats on notification outcomes
-#### Email Templates
+### Email Templates
 - Loading templates and rendering now using non-blocking IO
 - Standard Home Assistant templates used for full range of variables and filters
 
@@ -80,23 +80,25 @@
 - Recipient
   - Removed shadow state, now goes straight to Person
 ## 1.5.3
-### Features
+### Chime Transport
 - Chime alias error handling improved
   - Humanize validation errors
   - Validate targets and build Target objects at start-up
   - Normalize and default the alias config at start-up
   - Chime alias can now have an empty config - where the alias is the tune and domain needs nothing else
   - scripts now run async with `script.turn_on`, with `wait: True` if delivery debug flag on
-- Media Player
+  - Chime now has MiniChimeTransport to replace the if logic and dicts for chime transports
+  - Defaulting for device inclusion/exclusion from hard-coded values (`DEVICE_MODEL_EXCLUDE`) switched off by either explicit include or exclude ( affects Chime use of `Speaker Group` as default exclusion)
+### Media Player Transport
   - Data section now uses the modern HA style with `media:` subsection rather than old Alexa Media Player style, which works with new style
-### Internal
-- More logging for device inclusion/exclusion during discovery
-- Defaulting for device inclusion/exclusion from hard-coded values switched off by either explicit include or exclude ( affects Chime use of `Speaker Group` as default exclusion)
+### Archived Notification
 - Easier to check archived notifications
   - Both `delivered_envelopes` and `undelivered_envelopes` list envelopes by transport rather than a flat list
 - Centralize results handling for notification
+### Internal
+- More logging for device inclusion/exclusion during discovery
 - Test Context can now take yaml rather than just dicts for config snippets
-- Chime now has MiniChimeTransport to replace the if logic and dicts for chime transports
+
 ## 1.5.2
 ### Fixes
 - Better error handling for broken scenario conditions
