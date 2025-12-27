@@ -205,11 +205,10 @@ class EmailTransport(Transport):
             message: str | None = action_data.get(ATTR_MESSAGE)
             preheader: str = f"{title or ''}{' ' if title else ''}{message}"
             preheader = preheader or "Home Assistant Notification"
-            preheader = preheader + "&#847;&zwnj;&nbsp;" * (100 - len(preheader))
             alert = Alert(
                 message=message,
                 title=title,
-                preheader=preheader,
+                preheader=self.pack_preheader(preheader, envelope.delivery.options),
                 priority=envelope.priority,
                 action_url=extra_data.get(ATTR_ACTION_URL),
                 action_url_title=extra_data.get(ATTR_ACTION_URL_TITLE),
@@ -250,3 +249,10 @@ class EmailTransport(Transport):
         except Exception as e:
             _LOGGER.exception("SUPERNOTIFY Failed to generate html mail: %s", e)
         return None
+
+    def pack_preheader(self, preheader: str, options: dict[str, Any]) -> str:
+        phchars: str = options.get(OPTION_PREHEADER_BLANK, "")
+        phlength: int = options.get(OPTION_PREHEADER_LENGTH, 0)
+        if phlength and phchars:
+            return f"{preheader}{phchars * (phlength - len(preheader))}"
+        return preheader

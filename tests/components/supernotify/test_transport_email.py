@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import Mock
 
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
@@ -16,6 +17,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.email import OPTION_PREHEADER_BLANK, OPTION_PREHEADER_LENGTH, EmailTransport
 
 from .hass_setup_lib import TestingContext
 
@@ -181,3 +183,13 @@ async def test_discover_no_smtp_integration(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     assert "DEFAULT_email" not in ctx.delivery_registry.deliveries
+
+
+def test_pack_preheader() -> None:
+    uut = EmailTransport(Mock(template_path=None), {})
+
+    assert (
+        uut.pack_preheader("foo", {OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;", OPTION_PREHEADER_LENGTH: 12})
+        == "foo&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;"
+    )
+    assert uut.pack_preheader("foo", {}) == "foo"
