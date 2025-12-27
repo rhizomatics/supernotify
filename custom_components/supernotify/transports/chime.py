@@ -57,7 +57,6 @@ class ChimeTargetConfig:
         volume: float | None = None,
         data: dict[str, Any] | None = None,
         domain: str | None = None,
-        target: Target | None = None,  # noqa: ARG002
         **kwargs: Any,
     ) -> None:
         self.entity_id: str | None = entity_id
@@ -79,6 +78,17 @@ class ChimeTargetConfig:
         self.tune: str | None = tune
         self.duration: int | None = duration
         self.data: dict[str, Any] | None = data or {}
+
+    def as_dict(self, **kwargs) -> dict[str, Any]:  # noqa: ARG002
+        return {
+            "entity_id": self.entity_id,
+            "device_id": self.device_id,
+            "domain": self.domain,
+            "tune": self.tune,
+            "duration": self.duration,
+            "volume": self.volume,
+            "data": self.data
+        }
 
     def __repr__(self) -> str:
         """Return a developer-oriented string representation of this ChimeTargetConfig"""
@@ -286,7 +296,7 @@ class ChimeTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data: dict[str, Any] = {}
         data.update(envelope.delivery.data)
         data.update(envelope.data or {})
@@ -321,6 +331,9 @@ class ChimeTransport(Transport):
         if not expanded_targets:
             _LOGGER.info("SUPERNOTIFY skipping chime, no targets")
             return False
+        if debug_trace:
+            debug_trace.record_delivery_artefact(envelope.delivery.name, "expanded_targets", expanded_targets)
+
         for chime_entity_config in expanded_targets.values():
             _LOGGER.debug("SUPERNOTIFY chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
             action_data: dict[str, Any] | None = None
