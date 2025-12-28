@@ -24,6 +24,7 @@
 - Corrected `snapshot_url` to be taken from `media` section as other transports
 ### Media Player Transport
 - Corrected `snapshot_url` to be taken from `media` section as other transports
+
 ## 1.7.0
 ### Scenario
 - Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to all
