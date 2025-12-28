@@ -25,3 +25,4 @@ PyTurboJPEG==1.8.0
 
 # home assistant email integration testing
 smtpdfix
+pytest-env
