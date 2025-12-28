@@ -44,6 +44,7 @@ from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
 
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 
+
 @dataclass
 class TestImage:
     __test__ = False

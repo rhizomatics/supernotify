@@ -188,5 +188,3 @@ addopts = [
     "--allow-hosts=127.0.0.1,127.0.1.1,localhost,localhost.localdomain,::1",
 ]
 
-[tool.pytest_env]
-SMTPD_HOST="127.0.0.1"

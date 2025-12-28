@@ -1,7 +1,6 @@
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-import pytest
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
@@ -169,28 +168,27 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
     )
 
 
-@pytest.mark.enable_socket
-async def test_discover_smtp_integration(hass: HomeAssistant, smtpd) -> None:
+async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
 
-    assert await async_setup_component(
-        hass,
-        "notify",
-        {
-            "notify": [
-                {
-                    "name": "mailservice",
-                    "platform": "smtp",
-                    "server": smtpd.hostname,
-                    "port": smtpd.port,
-                    "encryption": "none",
-                    "sender": "hass@localhost.org",
-                    "recipient": ["tester@localhost.org"],
-                }
-            ]
-        },
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"):
+        assert await async_setup_component(
+            hass,
+            "notify",
+            {
+                "notify": [
+                    {
+                        "name": "mailservice",
+                        "platform": "smtp",
+                        "server": "localhost",
+                        "encryption": "none",
+                        "sender": "hass@localhost.org",
+                        "recipient": ["tester@localhost.org"],
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
 
     await ctx.test_initialize()
     assert "DEFAULT_email" in ctx.delivery_registry.deliveries
