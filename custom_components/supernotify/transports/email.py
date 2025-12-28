@@ -5,7 +5,6 @@ from typing import Any, TypedDict
 
 import aiofiles
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.components.smtp.const import DOMAIN as SMTP_DOMAIN
 from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.helpers.typing import ConfigType
 
@@ -85,10 +84,10 @@ class EmailTransport(Transport):
         return action is not None
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        service: str | None = hass_api.find_service(SMTP_DOMAIN)
-        if service:
+        action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
+        if action:
             delivery_config = self.delivery_defaults
-            delivery_config.action = f"notify.{service}"
+            delivery_config.action = action
             return delivery_config
         return None
 

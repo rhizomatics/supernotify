@@ -226,11 +226,17 @@ def test_finds_service(hass: HomeAssistant) -> None:
     def service_call(call: ServiceCall) -> ServiceResponse | None:
         return {}
 
+    class TestingService:
+        async def service_call(self, call: ServiceCall) -> ServiceResponse | None:
+            return {}
+
     hass.services.async_register(domain="foo", service="bar", service_func=service_call)
     hass.services.async_register(domain="foo", service="xxx", service_func=service_call)
+    hass.services.async_register(domain="foo2", service="clz", service_func=TestingService.service_call)  # type: ignore
 
-    assert hass_api.find_service("foo") == "bar"
-    assert hass_api.find_service("bar") is None
+    assert hass_api.find_service("bar", "supernotify.test_hass_api") is None
+    assert hass_api.find_service("foo", "supernotify.test_hass_api") == "foo.bar"
+    assert hass_api.find_service("foo2", "supernotify.test_hass_api") == "foo2.clz"
 
 
 async def test_mqtt_publish(mock_hass) -> None:
@@ -252,6 +258,7 @@ async def test_subscribe_and_unsubscribe(hass: HomeAssistant) -> None:
     hass.bus.async_fire("wonders_of_core", {})
     await hass.async_block_till_done()  # type: ignore
     assert calls == 1
+
     assert hass_api.unsubscribes[0].args[0] == "wonders_of_core"  # type: ignore
 
     hass_api.disconnect()

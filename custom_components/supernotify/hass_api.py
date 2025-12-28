@@ -210,20 +210,21 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
         return supports_response or SupportsResponse.NONE  # default to no response
 
-    def find_service(self, domain: str) -> str | None:
+    def find_service(self, domain: str, module: str) -> str | None:
         try:
             service_objs: dict[str, dict[str, Service]] = self._hass.services.async_services()
             if service_objs:
-                domain_objs: dict[str, Service] = service_objs.get(domain, {})
-                if domain_objs is not None and len(domain_objs) > 0:
-                    if len(domain_objs) > 1:
-                        _LOGGER.warning(
-                            "SUPERNOTIFY Found multiple %s services, choosing first: %s", domain, ", ".join(domain_objs.keys())
+                for service, domain_obj in service_objs.get(domain, {}).items():
+                    if domain_obj.job and domain_obj.job.target:
+                        target_module: str | None = (
+                            domain_obj.job.target.__self__.__module__
+                            if hasattr(domain_obj.job.target, "__self__")
+                            else domain_obj.job.target.__module__
                         )
-                    service: str = next(iter(domain_objs.keys()))
-                    if service:
-                        _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s", domain, service)
-                        return service
+                        if target_module == module:
+                            _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s", domain, service)
+                            return f"{domain}.{service}"
+
             _LOGGER.debug("SUPERNOTIFY Unable to find service for %s", domain)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to find service for %s: %s", domain, e)
