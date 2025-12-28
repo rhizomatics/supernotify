@@ -189,4 +189,4 @@ addopts = [
 ]
 
 [tool.pytest_env]
-SMTPD_HOST=127.0.0.1
+SMTPD_HOST="127.0.0.1"
