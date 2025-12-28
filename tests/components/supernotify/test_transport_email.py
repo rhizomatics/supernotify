@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import (
@@ -173,9 +173,6 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
 async def test_discover_smtp_integration(hass: HomeAssistant, smtpd) -> None:
     ctx = TestingContext(homeassistant=hass)
 
-    def service_call(call: ServiceCall) -> ServiceResponse | None:
-        return {}
-
     assert await async_setup_component(
         hass,
         "notify",
@@ -194,7 +191,7 @@ async def test_discover_smtp_integration(hass: HomeAssistant, smtpd) -> None:
         },
     )
     await hass.async_block_till_done()
-    # ctx.hass_api._hass.services.async_register(domain="smtp", service="mailserver", service_func=service_call)
+
     await ctx.test_initialize()
     assert "DEFAULT_email" in ctx.delivery_registry.deliveries
     assert ctx.delivery_registry.deliveries["DEFAULT_email"].action == "notify.mailservice"

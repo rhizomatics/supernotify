@@ -43,7 +43,7 @@ from tests.components.supernotify.doubles_lib import MockImageEntity
 from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
 
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
-
+pytest_plugins = "smtpdfix"
 
 @dataclass
 class TestImage:

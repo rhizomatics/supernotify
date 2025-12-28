@@ -185,5 +185,5 @@ addopts = [
     "--cov-report=term-missing",
     "--cov=custom_components.supernotify",
     "--cov-fail-under=80",
-    "--allow-hosts=127.0.0.1,127.0.1.1,localhost",
+    "--allow-hosts=127.0.0.1,127.0.1.1, 0.0.0.1,localhost,localhost.localdomain,::1",
 ]
