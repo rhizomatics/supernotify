@@ -1,5 +1,6 @@
 
 config/
+!docs/developer/schemas/index.md 
 docs/developer/schemas/
 
 # Byte-compiled / optimized / DLL files
