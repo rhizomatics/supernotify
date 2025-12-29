@@ -88,8 +88,8 @@ class EmailTransport(Transport):
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if action:
-            delivery_config = self.delivery_defaults
-            delivery_config.action = action
+            delivery_config: DeliveryConfig = self.delivery_defaults
+            delivery_config.action: str = action
             return delivery_config
         return None
 

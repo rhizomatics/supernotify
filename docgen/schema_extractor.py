@@ -108,7 +108,7 @@ def schema_doc() -> None:
             logging.exception(f"Error processing schema {schema_name}")
             continue
 
-    with mkdocs_gen_files.open("developer/schemas/index_gen.md", "w") as df:
+    with mkdocs_gen_files.open("developer/schemas/index.md", "w") as df:
         df.write("# JSON Schema for Supernotify\n")
         df.write("""These are auto-generated from the Home Assistant
          [voluptuous](https://github.com/alecthomas/voluptuous) schema definitions

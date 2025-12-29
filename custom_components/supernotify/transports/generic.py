@@ -89,7 +89,6 @@ class GenericTransport(Transport):
             OPTION_STRIP_URLS: False,
             OPTION_RAW: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            # OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_DATA_KEYS_INCLUDE_RE: None,
             OPTION_DATA_KEYS_EXCLUDE_RE: None,
             OPTION_GENERIC_DOMAIN_STYLE: None,
