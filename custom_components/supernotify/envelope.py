@@ -11,6 +11,7 @@ from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from jinja2 import TemplateError
 
 from . import (
+    ATTR_MEDIA,
     ATTR_MESSAGE_HTML,
     ATTR_PRIORITY,
     ATTR_TIMESTAMP,
@@ -18,7 +19,6 @@ from . import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
-    PRIORITY_VALUES,
 )
 from .common import DupeCheckable
 from .context import Context
@@ -140,7 +140,7 @@ class Envelope(DupeCheckable):
             if not features & TransportFeature.ACTIONS:
                 exclude_attrs.extend(["actions", "action_groups"])
             if not features & TransportFeature.IMAGES and not features & TransportFeature.VIDEO:
-                exclude_attrs.append("media")
+                exclude_attrs.append(ATTR_MEDIA)
             if not features & TransportFeature.MESSAGE:
                 exclude_attrs.extend(["message_html", "message"])
             if not features & TransportFeature.TITLE:
@@ -248,11 +248,6 @@ class Envelope(DupeCheckable):
         return original
 
     # DupeCheckable implementation
-
-    def skip_priorities(self) -> list[str]:
-        if self.priority in PRIORITY_VALUES:
-            return PRIORITY_VALUES[PRIORITY_VALUES.index(self.priority) :]
-        return [self.priority]
 
     def hash(self) -> int:
         """Alpha hash to reduce noise from messages with timestamps or incrementing counts"""

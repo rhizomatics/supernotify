@@ -30,7 +30,7 @@ async def test_simple_create(mock_context: Context) -> None:
     assert uut.template is None
     assert uut.alias is None
     assert uut.conditions is None
-    assert uut.priority == PRIORITY_VALUES
+    assert uut.priority == list(PRIORITY_VALUES.keys())
     assert uut.selection == [SELECTION_DEFAULT]
     assert uut.transport.name == "notify_entity"
     assert uut.data == {}

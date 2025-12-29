@@ -14,6 +14,10 @@ tags:
 
 Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
 
+!!! note
+    The Home Assistant [SMTP](https://www.home-assistant.io/integrations/smtp/) integration for e-mail doesn't allow
+    priority to be set.
+
 ## Pre-generated HTML
 
 The `data` section of the notification can have a `message_html` supplied for html that will be used

@@ -8,6 +8,9 @@ tags:
   - siren
   - mqtt
   - input_text
+  - ntfy
+  - siren
+  - light
   - switch
   - notify
   - custom
@@ -112,6 +115,7 @@ notifications without worrying too much about the variety of `data` mappings etc
 | siren                         | All [permitted](https://www.home-assistant.io/integrations/siren/#action-sirenturn_on) `data` elements                                                      | `entity_id` map         |
 | light                         | All [permitted](https://www.home-assistant.io/integrations/light/#action-lightturn_on) `data` elements                                                      | `entity_id` map         |
 | rest_command | All of `data | Empty |
+| ntfy (`ntfy.publish`) | All [permitted](https://www.home-assistant.io/integrations/ntfy/#publish-notification) `data` elements. `snapshot_url` will be used for `image` and `action_url` for `click`. `email` and/or `call` set for targets | Use `notify` domain targets |
 | script (`turn_on` and `turn_off` only) | `variables` contains a mapping of `message`,`title` plus any `variables` items in `data`. Other `data` elements added in their own right  | `entity_id` map |
 | script (script name as action) | `message` and `title` plus all `data` elements | `entity_id` map |
 | *default* |  `message` and `title` plus all `data` elements | big list of all targets |

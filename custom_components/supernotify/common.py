@@ -17,6 +17,7 @@ from . import (
     CONF_DUPE_POLICY,
     CONF_SIZE,
     CONF_TTL,
+    PRIORITY_VALUES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,10 +99,6 @@ class DupeCheckable:
     priority: str
 
     @abstractmethod
-    def skip_priorities(self) -> list[str]:
-        raise NotImplementedError
-
-    @abstractmethod
     def hash(self) -> int:
         raise NotImplementedError
 
@@ -110,7 +107,7 @@ class DupeChecker:
     def __init__(self, dupe_check_config: ConfigType) -> None:
         self.policy = dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
         # dupe check cache, key is (priority, message hash)
-        self.cache: TTLCache[tuple[int, str], str] = TTLCache(
+        self.cache: TTLCache[tuple[int, int], str] = TTLCache(
             maxsize=dupe_check_config.get(CONF_SIZE, 100), ttl=dupe_check_config.get(CONF_TTL, 120)
         )
 
@@ -118,10 +115,11 @@ class DupeChecker:
         if self.policy == ATTR_DUPE_POLICY_NONE:
             return False
         hashed: int = dupe_candidate.hash()
-        same_or_higher_priority: list[str] = dupe_candidate.skip_priorities()
+        ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
         dupe = False
-        if any((hashed, p) in self.cache for p in same_or_higher_priority):
-            _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
-            dupe = True
-        self.cache[hashed, dupe_candidate.priority] = dupe_candidate.id
+        for prev_hash, prev_prior in self.cache:
+            if prev_hash == hashed and prev_prior >= ranked_priority:
+                _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
+                dupe = True
+        self.cache[hashed, ranked_priority] = dupe_candidate.id
         return dupe

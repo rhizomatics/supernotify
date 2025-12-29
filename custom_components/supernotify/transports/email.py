@@ -12,6 +12,8 @@ from custom_components.supernotify import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_EMAIL,
+    ATTR_MEDIA,
+    ATTR_MEDIA_SNAPSHOT_URL,
     CONF_TEMPLATE,
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
@@ -126,10 +128,10 @@ class EmailTransport(Transport):
         template: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
         strict_template: bool = envelope.delivery.options.get(OPTION_STRICT_TEMPLATE, False)
         addresses: list[str] = envelope.target.email or []
-        snapshot_url: str | None = data.get("media", {}).get("snapshot_url")
+        snapshot_url: str | None = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is None:
             # older location for backward compatibility
-            snapshot_url = data.get("snapshot_url")
+            snapshot_url = data.get(ATTR_MEDIA_SNAPSHOT_URL)
         # TODO: centralize in config
         footer_template = data.get("footer")
         footer = footer_template.format(e=envelope) if footer_template else None

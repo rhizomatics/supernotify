@@ -1,6 +1,5 @@
 import datetime as dt
 import logging
-import string
 import uuid
 from collections.abc import KeysView
 from enum import Enum
@@ -58,9 +57,6 @@ if TYPE_CHECKING:
     )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation + string.digits)
 
 # Deliveries mapping keys for debug / archive
 KEY_DELIVERED = "delivered"
@@ -222,8 +218,7 @@ class Notification(ArchivableObject):
 
     def validate_action_data(self, action_data: dict[str, Any]) -> None:
         if action_data.get(ATTR_PRIORITY) and action_data.get(ATTR_PRIORITY) not in PRIORITY_VALUES:
-            _LOGGER.warning("SUPERNOTIFY invalid priority %s - overriding to medium", action_data.get(ATTR_PRIORITY))
-            action_data[ATTR_PRIORITY] = PRIORITY_MEDIUM
+            _LOGGER.info("SUPERNOTIFY custom priority %s", action_data.get(ATTR_PRIORITY))
         try:
             humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)
         except vol.Invalid as e:

@@ -1,4 +1,11 @@
-from custom_components.supernotify import ATTR_DELIVERY, CONF_DATA, CONF_TRANSPORT, TRANSPORT_MEDIA
+from custom_components.supernotify import (
+    ATTR_DELIVERY,
+    ATTR_MEDIA,
+    ATTR_MEDIA_SNAPSHOT_URL,
+    CONF_DATA,
+    CONF_TRANSPORT,
+    TRANSPORT_MEDIA,
+)
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
@@ -27,7 +34,9 @@ async def test_notify_media_image() -> None:
             Notification(
                 context,
                 "hello there",
-                action_data={ATTR_DELIVERY: {"alexa_show": {CONF_DATA: {"media": {"snapshot_url": "/ftp/pic.jpeg"}}}}},
+                action_data={
+                    ATTR_DELIVERY: {"alexa_show": {CONF_DATA: {ATTR_MEDIA: {ATTR_MEDIA_SNAPSHOT_URL: "/ftp/pic.jpeg"}}}}
+                },
             ),
             target=Target(["media_player.echo_show_8", "media_player.echo_show_10"]),
         )

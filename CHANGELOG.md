@@ -1,5 +1,12 @@
 # Public releases
 
+## 1.8.1
+### Generic Transport
+- Can now adapt a message for the *ntfy* Home Assistant integration
+- Entity selection is now specific to the domain, e.g. `switch`,`input_text`,`notify`
+### Priority
+- Custom priorities now supported ( default continues to be `medium` )
+- New standard priority `minimum` and mapping of all priorities to the common `1..5` range with 5 as `critical`
 ## 1.8.0
 ### TTS Transport
 - New transport for TTS integration, hiding its complicated double entity_id call

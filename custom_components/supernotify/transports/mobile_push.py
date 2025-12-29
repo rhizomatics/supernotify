@@ -32,6 +32,7 @@ from custom_components.supernotify.model import (
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
+    Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -128,6 +129,8 @@ class MobilePushTransport(Transport):
                 push_priority = "active"
             case custom_components.supernotify.PRIORITY_LOW:
                 push_priority = "passive"
+            case custom_components.supernotify.PRIORITY_MINIMUM:
+                push_priority = "passive"
             case _:
                 push_priority = "active"
                 _LOGGER.warning("SUPERNOTIFY Unexpected priority %s", envelope.priority)
@@ -177,12 +180,12 @@ class MobilePushTransport(Transport):
         action_data[ATTR_DATA] = data
         hits = 0
         for mobile_target in envelope.target.mobile_app_ids:
-            full_target = mobile_target if mobile_target.startswith("notify.") else f"notify.{mobile_target}"
+            full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
             if await self.call_action(envelope, qualified_action=full_target, action_data=action_data, implied_target=True):
                 hits += 1
             else:
                 simple_target = (
-                    mobile_target if not mobile_target.startswith("notify.") else mobile_target.replace("notify.", "")
+                    mobile_target if not Target.is_notify_entity(mobile_target) else mobile_target.replace("notify.", "")
                 )
                 _LOGGER.warning("SUPERNOTIFY Failed to send to %s, snoozing for a day", simple_target)
                 if self.people_registry:

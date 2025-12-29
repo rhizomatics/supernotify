@@ -6,6 +6,7 @@ from enum import IntFlag, StrEnum, auto
 from typing import Any, ClassVar
 
 import voluptuous as vol
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 
 # This import brings in a bunch of other dependency noises, make it manual until py3.14/lazy import/HA updated
 # from homeassistant.components.mobile_app import DOMAIN as MOBILE_APP_DOMAIN
@@ -186,6 +187,9 @@ class Target:
     def mobile_app_ids(self) -> list[str]:
         return self.targets.get(ATTR_MOBILE_APP_ID, [])
 
+    def domain_entity_ids(self, domain: str | None) -> list[str]:
+        return [t for t in self.targets.get(ATTR_ENTITY_ID, []) if domain is not None and t and t.startswith(f"{domain}.")]
+
     def custom_ids(self, category: str) -> list[str]:
         return self.targets.get(category, []) if category not in self.CATEGORIES else []
 
@@ -225,6 +229,10 @@ class Target:
     @classmethod
     def is_mobile_app_id(cls, target: str) -> bool:
         return not valid_entity_id(target) and target.startswith(f"{MOBILE_APP_DOMAIN}_")
+
+    @classmethod
+    def is_notify_entity(cls, target: str) -> bool:
+        return valid_entity_id(target) and target.startswith(f"{NOTIFY_DOMAIN}.")
 
     @classmethod
     def is_email(cls, target: str) -> bool:
@@ -459,7 +467,7 @@ class DeliveryConfig:
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})
             self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
-            self.priority = conf.get(CONF_PRIORITY, PRIORITY_VALUES)
+            self.priority = conf.get(CONF_PRIORITY, list(PRIORITY_VALUES.keys()))
             self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:

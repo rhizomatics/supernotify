@@ -22,7 +22,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
-from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.generic import GenericTransport, customize_data
 
 from .hass_setup_lib import TestingContext
 
@@ -192,7 +192,7 @@ def test_prune_fields():
     uut = GenericTransport(Mock())
     sample = {"foo": 123, "bar": 789, "enabled": True}
     assert (
-        uut.prune_data(
+        customize_data(
             sample,
             "testing",
             Delivery(
@@ -203,24 +203,24 @@ def test_prune_fields():
         )
         == {}
     )
-    assert uut.prune_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"]}}, uut)) == {
+    assert customize_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"]}}, uut)) == {
         "foo": 123
     }
-    assert uut.prune_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled"]}}, uut)) == {
+    assert customize_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled"]}}, uut)) == {
         "foo": 123,
         "bar": 789,
     }
 
     assert (
-        uut.prune_data(
-            None,
+        customize_data(
+            {},
             "testing",
             Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled"]}}, uut),
         )
-        is None
+        == {}
     )
 
-    assert uut.prune_data({"duration": 1.0, "foo": 123}, "siren", Delivery("", {}, uut)) == {"duration": 1.0}
+    assert customize_data({"duration": 1.0, "foo": 123}, "siren", Delivery("", {}, uut)) == {"duration": 1.0}
 
 
 async def test_slack_notify() -> None:
@@ -261,6 +261,62 @@ async def test_slack_notify() -> None:
     )
 
 
+async def test_ntfy_publish() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            ntfy:
+                transport: generic
+                action: ntfy.publish
+                target:
+                    - notify.topic_1
+                    - notify.topic_2
+                    - joe@mctest.org
+                    - mary@mctest.org
+            """,
+        services={"ntfy": ["publish"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx, message="test message", action_data={"delivery": {"ntfy": {"enabled": True}}, "data": {"tags": ["a", "b"]}}
+    )
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_has_calls(  # type:ignore [union-attr]
+        [
+            call(
+                "ntfy",
+                "publish",
+                service_data={"message": "test message", "tags": ["a", "b"], "email": "joe@mctest.org"},
+                blocking=False,
+                target=None,
+                context=None,
+                return_response=False,
+            ),
+            call(
+                "ntfy",
+                "publish",
+                service_data={"message": "test message", "tags": ["a", "b"], "email": "mary@mctest.org"},
+                blocking=False,
+                target=None,
+                context=None,
+                return_response=False,
+            ),
+            call(
+                "ntfy",
+                "publish",
+                service_data={"message": "test message", "tags": ["a", "b"], "entity_id": ["notify.topic_1", "notify.topic_2"]},
+                blocking=False,
+                target={"entity_id": ["notify.topic_1", "notify.topic_2"]},
+                context=None,
+                return_response=False,
+            ),
+        ]
+    )
+
+
 async def test_raw() -> None:
     ctx = TestingContext(
         deliveries="""
@@ -287,6 +343,34 @@ async def test_raw() -> None:
         service_data={"message": "test message", "strobe_period": 10, "target": "light.disco_1"},
         blocking=False,
         target=None,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_script_turn_on() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            customize:
+                transport: generic
+                action: script.turn_on
+                target: script.dazzle
+            """,
+        services={"script": ["turn_on"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test message", action_data={"delivery": "customize", "data": {"strobe_period": 10}})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "script",
+        "turn_on",
+        service_data={"variables": {"message": "test message", "strobe_period": 10}, "entity_id": ["script.dazzle"]},
+        blocking=False,
+        target={"entity_id": ["script.dazzle"]},
         context=None,
         return_response=False,
     )

@@ -6,7 +6,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
 
-from custom_components.supernotify import OPTION_TARGET_CATEGORIES, OPTION_TARGET_INCLUDE_RE, TRANSPORT_MEDIA
+from custom_components.supernotify import (
+    ATTR_MEDIA,
+    ATTR_MEDIA_SNAPSHOT_URL,
+    OPTION_TARGET_CATEGORIES,
+    OPTION_TARGET_INCLUDE_RE,
+    TRANSPORT_MEDIA,
+)
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
@@ -46,10 +52,10 @@ class MediaPlayerTransport(Transport):
             _LOGGER.debug("SUPERNOTIFY skipping media show, no targets")
             return False
 
-        snapshot_url = data.get("media", {}).get("snapshot_url")
+        snapshot_url = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is None:
             # fallback to older idiosyncratic way for backward compatibility
-            snapshot_url = data.get("snapshot_url")
+            snapshot_url = data.get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is None:
             _LOGGER.debug("SUPERNOTIFY skipping media player, no snapshot url")
             return False

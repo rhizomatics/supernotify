@@ -6,6 +6,7 @@ from homeassistant.core import (
 from pytest_httpserver import BlockingHTTPServer
 
 from conftest import TestImage
+from custom_components.supernotify import ATTR_MEDIA_SNAPSHOT_URL
 from custom_components.supernotify.notification import Notification
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -97,7 +98,7 @@ async def test_frigate_blueprint_notification(hass: HomeAssistant, local_server:
     await uut.initialize()
     await uut.deliver()
 
-    assert uut.media["snapshot_url"] == snapshot_url
+    assert uut.media[ATTR_MEDIA_SNAPSHOT_URL] == snapshot_url
     assert (
         uut.media["clip_url"]
         == "https://home.43acaciaroad.org/api/frigate/notifications/1766218266.042615-blamq9/driveway/master.m3u8"

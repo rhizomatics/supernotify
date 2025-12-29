@@ -19,6 +19,7 @@ from custom_components.supernotify import (
     PRIORITY_HIGH,
     PRIORITY_LOW,
     PRIORITY_MEDIUM,
+    PRIORITY_MINIMUM,
     PRIORITY_VALUES,
     TRANSPORT_MOBILE_PUSH,
 )
@@ -176,13 +177,14 @@ async def test_on_notify_mobile_push_with_critical_priority() -> None:
     )
 
 
-@pytest.mark.parametrize("priority", PRIORITY_VALUES)
+@pytest.mark.parametrize("priority", list(PRIORITY_VALUES.keys()))
 async def test_priority_interpretation(mock_hass: HomeAssistant, unmocked_config: Context, priority: LiteralString) -> None:
     priority_map = {
         PRIORITY_CRITICAL: "critical",
         PRIORITY_HIGH: "time-sensitive",
         PRIORITY_LOW: "passive",
         PRIORITY_MEDIUM: "active",
+        PRIORITY_MINIMUM: "passive",
     }
     context = unmocked_config
     delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}}

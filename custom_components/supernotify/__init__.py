@@ -102,7 +102,6 @@ CONF_TITLE_TEMPLATE: Final[str] = "title_template"
 CONF_MEDIA: Final[str] = "media"
 CONF_CAMERA: Final[str] = "camera"
 CONF_CLIP_URL: Final[str] = "clip_url"
-CONF_SNAPSHOT_URL: Final[str] = "snapshot_url"
 CONF_PTZ_DELAY: Final[str] = "ptz_delay"
 CONF_PTZ_METHOD: Final[str] = "ptz_method"
 CONF_PTZ_PRESET_DEFAULT: Final[str] = "ptz_default_preset"
@@ -195,8 +194,15 @@ PRIORITY_CRITICAL = "critical"
 PRIORITY_HIGH = "high"
 PRIORITY_MEDIUM = "medium"
 PRIORITY_LOW = "low"
+PRIORITY_MINIMUM = "minimum"
 
-PRIORITY_VALUES = [PRIORITY_LOW, PRIORITY_MEDIUM, PRIORITY_HIGH, PRIORITY_CRITICAL]
+PRIORITY_VALUES: dict[str, int] = {
+    PRIORITY_MINIMUM: 1,
+    PRIORITY_LOW: 2,
+    PRIORITY_MEDIUM: 3,
+    PRIORITY_HIGH: 4,
+    PRIORITY_CRITICAL: 5,
+}
 
 CONF_TARGET_USAGE = "target_usage"
 TARGET_USE_ON_NO_DELIVERY_TARGETS = "no_delivery"
@@ -250,7 +256,7 @@ def phone(value: str) -> str:
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
     cv.TARGET_FIELDS
     | {
-        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),  # type: ignore[call-arg]
+        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email]),
         vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
         vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
         vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
@@ -313,7 +319,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         TARGET_USE_FIXED,
     ]),
     vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
-    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.In(PRIORITY_VALUES)]),
+    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.Any(int, str, vol.In(PRIORITY_VALUES.keys()))]),
     vol.Optional(CONF_SELECTION_RANK): vol.In([
         SelectionRank.ANY,
         SelectionRank.FIRST,
@@ -513,7 +519,7 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
 ACTION_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DELIVERY): vol.Any(cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)}),
-        vol.Optional(ATTR_PRIORITY): vol.In(PRIORITY_VALUES),
+        vol.Optional(ATTR_PRIORITY): vol.Any(int, str, vol.In(PRIORITY_VALUES.keys())),
         vol.Optional(ATTR_SCENARIOS_REQUIRE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_SCENARIOS_APPLY): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_SCENARIOS_CONSTRAIN): vol.All(cv.ensure_list, [cv.string]),

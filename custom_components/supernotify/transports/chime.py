@@ -17,6 +17,7 @@ from voluptuous.humanize import humanize_error
 
 from custom_components.supernotify import (
     ATTR_DATA,
+    ATTR_MEDIA,
     ATTR_PRIORITY,
     CHIME_ALIASES_SCHEMA,
     CONF_TUNE,
@@ -199,7 +200,7 @@ class MediaPlayerChimeTransport(MiniChimeTransport):
             input_data.update(action_data)
         output_data: dict[str, Any] = {
             "media": {
-                "media_content_type": input_data.get("media", {"media_content_type": "sound"}).get(
+                "media_content_type": input_data.get(ATTR_MEDIA, {"media_content_type": "sound"}).get(
                     "media_content_type", "sound"
                 ),
                 "media_content_id": target_config.tune,

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import issue_registry as ir
 
-from . import ConditionsFunc
+from . import ATTR_MEDIA, ConditionsFunc
 from .hass_api import HomeAssistantAPI
 from .model import DeliveryCustomization
 
@@ -196,7 +196,7 @@ class Scenario:
         attrs = {
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
-            "media": self.media,
+            ATTR_MEDIA: self.media,
             "action_groups": self.action_groups,
             "delivery": {k: v.as_dict() for k, v in self.delivery_overrides.items()},
         }
