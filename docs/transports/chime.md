@@ -264,3 +264,27 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 Chimes work well with scenarios, you can easily add a chime for all critical notifications without
 having to change any of the automations. See [Scenarios](../usage/scenarios.md) and [Recipes](../recipes/index.md)
 for more details.
+
+## References
+
+### Home Assistant Core
+- Supported Integrations
+  - [Alexa Devices](https://www.home-assistant.io/integrations/alexa_devices/)
+  - [Alexa Media Player](https://github.com/alandtse/alexa_media_player)
+  - [Group](https://www.home-assistant.io/integrations/group/)
+  - [Media Player](https://www.home-assistant.io/integrations/media_player/)
+  - [RESTful Command](https://www.home-assistant.io/integrations/rest_command/)
+  - [RFLink](https://www.home-assistant.io/integrations/rflink/)
+  - [RFXCOM RFXtrx](https://www.home-assistant.io/integrations/rfxtrx/)
+  - [Scripts](https://www.home-assistant.io/integrations/script/)
+  - [Siren](https://www.home-assistant.io/integrations/siren/)
+  - [Switch](https://www.home-assistant.io/integrations/switch/)
+
+### Vendor
+- Amazon Echo
+    - [Alexa Skills Kit Sound Library](https://developer.amazon.com/en-US/docs/alexa/custom-skills/ask-soundlibrary.html)
+- Hikvision
+    - [How to Upload Custom Sound of Audible Alarm](https://www.hikvisioneurope.com/eu/portal/portal/Technical%20Materials/24%20How%20To/CCTV/How%20to%20Upload%20Custom%20Sound%20of%20Audible%20Alarm.pdf)
+    - [Hikvision Audible Warnings Tutorial Videos](https://ssrtrading.co.uk/audible-warnings/)
+- Zigbee
+    - [zigbee2mqtt Supported Sirens](https://www.zigbee2mqtt.io/supported-devices/#s=siren)

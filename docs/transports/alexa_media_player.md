@@ -17,5 +17,7 @@ The `message_usage` option can be set to `combine_title` or `use_title` to overr
 
 ## References
 
-- Home Assistant
-  - [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player)
+### Home Assistant Core
+- [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player)
+### Other
+- [alexapy](https://alexapy.readthedocs.io/en/latest/index.html)

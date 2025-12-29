@@ -9,7 +9,7 @@ tags:
 
 | Transport ID         | Source      | Requirements | Optional |
 | -------------------- | ----------- | ------------ | -------- |
-| `mobile_push` | :material-github:[`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | :material-home-assistant: [iOS Companion App Integration](https://www.home-assistant.io/integrations/ios/) | - |
+| `mobile_push` | :material-github:[`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | :material-home-assistant: [Companion App Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic) | - |
 
 
 Send a push message out, with option for camera integration, mobile actions, and
@@ -59,3 +59,10 @@ transports:
   mobile_push:
     disabled: false
 ```
+
+## References
+
+### Home Assistant Core
+- [Mobile App Integration](https://www.home-assistant.io/integrations/mobile_app/)
+  - [Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic)
+  - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20mobile_app%22%20state%3Aopen)

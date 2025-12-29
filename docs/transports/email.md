@@ -65,6 +65,12 @@ transports:
 
 ## Reference
 
-- Home Assistant
-  - [SMTP Integration](https://www.home-assistant.io/integrations/smtp/)
-  - [SMTP Integration Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20smtp%22%20state%3Aopen)
+### Home Assistant Core
+- [SMTP Integration](https://www.home-assistant.io/integrations/smtp/)
+    - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20smtp%22%20state%3Aopen)
+- [Templating](https://www.home-assistant.io/docs/configuration/templating/)
+### Home Assistant Other
+- [Mastering Dynamic HTML Email Alerts in Home Assistant: Secure SMTP & Custom Content](https://newerest.space/home-assistant-dynamic-html-email-alerts-secure-smtp-custom-content/)
+### General
+- [MailChimp HTML Email Template Guide](https://templates.mailchimp.com)
+- [Jinja2 Template Designer Documentation](https://jinja.palletsprojects.com/en/stable/templates/)

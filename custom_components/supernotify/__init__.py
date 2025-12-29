@@ -319,7 +319,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         TARGET_USE_FIXED,
     ]),
     vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
-    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.Any(int, str, vol.In(PRIORITY_VALUES.keys()))]),
+    vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys())))]),
     vol.Optional(CONF_SELECTION_RANK): vol.In([
         SelectionRank.ANY,
         SelectionRank.FIRST,
@@ -519,7 +519,7 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
 ACTION_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DELIVERY): vol.Any(cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)}),
-        vol.Optional(ATTR_PRIORITY): vol.Any(int, str, vol.In(PRIORITY_VALUES.keys())),
+        vol.Optional(ATTR_PRIORITY): vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys()))),
         vol.Optional(ATTR_SCENARIOS_REQUIRE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_SCENARIOS_APPLY): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_SCENARIOS_CONSTRAIN): vol.All(cv.ensure_list, [cv.string]),

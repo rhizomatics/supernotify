@@ -14,3 +14,9 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
 
 - Payloads can be defined in YAML rather than escaped JSON, and will be JSONified if needed on delivery
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
+
+## Reference
+
+### Home Assistant
+- [MQTT Integration](https://www.home-assistant.io/integrations/mqtt/#action-mqttpublish)
+    - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20mqtt%22%20state%3Aopen)

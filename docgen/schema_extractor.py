@@ -8,7 +8,6 @@ from types import FunctionType
 import mkdocs_gen_files
 from json_schema_for_humans.generate import generate_from_schema  # type: ignore
 from json_schema_for_humans.generation_configuration import GenerationConfiguration  # type: ignore
-from voluptuous import Any
 from voluptuous_openapi import convert  # type: ignore
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
@@ -52,8 +51,8 @@ def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) ->
                 elif node[key].__name__ == "boolean":
                     node[key] = bool
 
-                if isinstance(node[key], Any):
-                    node[key].validators = [defuncify(v) for v in node[key].validators]
+            if hasattr(node[key], "validators"):
+                node[key].validators: list[FunctionType] = [defuncify(v) for v in node[key].validators]
 
 
 def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -> None:
@@ -72,7 +71,10 @@ def schema_doc() -> None:
 
     v_schemas = {s: getattr(custom_components.supernotify, s) for s in TOP_LEVEL_SCHEMAS}
     for vol_schema in v_schemas.values():
-        walk_schema(vol_schema.schema)
+        try:
+            walk_schema(vol_schema.schema)
+        except Exception as e:
+            logging.exception("Failed on %s: %s", vol_schema, e)
     j_schemas = {TOP_LEVEL_SCHEMAS[s[0]]: convert(s[1]) for s in v_schemas.items()}
     config = GenerationConfiguration(
         examples_as_yaml=True,

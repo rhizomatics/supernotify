@@ -61,6 +61,8 @@ To get canned sounds rather than speech, use the [Chime](./chime.md) transport a
 
 ## References
 
-* [Nabu Casa TTS](https://support.nabucasa.com/hc/en-us/articles/25619386304541-Text-to-speech-TTS)
-* [Home Assistant TTS Integrations](https://www.home-assistant.io/integrations/#text-to-speech)
-* [Home Assistant TTS](https://www.home-assistant.io/integrations/tts/)
+### Home Assistant
+* [TTS Integration](https://www.home-assistant.io/integrations/tts/)
+      * [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20tts%22%20state%3Aopen)
+* [TTS Integrations](https://www.home-assistant.io/integrations/#text-to-speech)
+    * [Nabu Casa TTS](https://support.nabucasa.com/hc/en-us/articles/25619386304541-Text-to-speech-TTS)

@@ -29,6 +29,8 @@ When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skill
 
 ## References
 
-- Home Assistant
-  - [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/)
-  - [Alexa Devices Integration Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20alexa_devices%22%20state%3Aopen)
+### Home Assistant Core
+- [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/)
+    - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20alexa_devices%22%20state%3Aopen)
+### Amazon
+- [Speech Synthesis Markup Language (SSML) Reference](https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html)
