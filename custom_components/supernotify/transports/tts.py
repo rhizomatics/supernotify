@@ -12,7 +12,7 @@ from custom_components.supernotify import (
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
     OPTION_TTS_ENTITY_ID,
-    TRANSPORT_TTS,
+    TRANSPORT_TTS, SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
@@ -49,6 +49,7 @@ class TTSTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "tts.speak"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.selection_rank = SelectionRank.FIRST
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
