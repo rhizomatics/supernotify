@@ -3,7 +3,9 @@
   "properties": {
     "delivery": {
       "anyOf": [
-        {},
+        {
+          "type": "string"
+        },
         {
           "type": "array",
           "items": {
@@ -53,6 +55,7 @@
                       "email": {
                         "type": "array",
                         "items": {
+                          "format": "email",
                           "type": "string"
                         }
                       },
@@ -110,12 +113,23 @@
       ]
     },
     "priority": {
-      "type": "string",
-      "enum": [
-        "low",
-        "medium",
-        "high",
-        "critical"
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "string",
+          "enum": [
+            "minimum",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        }
       ]
     },
     "require_scenarios": {

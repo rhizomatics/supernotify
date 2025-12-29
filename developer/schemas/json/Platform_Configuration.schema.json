@@ -154,6 +154,7 @@
                   "email": {
                     "type": "array",
                     "items": {
+                      "format": "email",
                       "type": "string"
                     }
                   },
@@ -234,12 +235,23 @@
           "priority": {
             "type": "array",
             "items": {
-              "type": "string",
-              "enum": [
-                "low",
-                "medium",
-                "high",
-                "critical"
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "minimum",
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ]
+                }
               ]
             }
           },
@@ -410,6 +422,7 @@
                   "email": {
                     "type": "array",
                     "items": {
+                      "format": "email",
                       "type": "string"
                     }
                   },
@@ -523,6 +536,7 @@
                         "email": {
                           "type": "array",
                           "items": {
+                            "format": "email",
                             "type": "string"
                           }
                         },
@@ -727,6 +741,7 @@
                         "email": {
                           "type": "array",
                           "items": {
+                            "format": "email",
                             "type": "string"
                           }
                         },
@@ -876,6 +891,7 @@
                       "email": {
                         "type": "array",
                         "items": {
+                          "format": "email",
                           "type": "string"
                         }
                       },
@@ -956,12 +972,23 @@
               "priority": {
                 "type": "array",
                 "items": {
-                  "type": "string",
-                  "enum": [
-                    "low",
-                    "medium",
-                    "high",
-                    "critical"
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "minimum",
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                      ]
+                    }
                   ]
                 }
               },
@@ -1010,7 +1037,9 @@
                 "type": "integer",
                 "minimum": 0
               },
-              {}
+              {
+                "type": "string"
+              }
             ],
             "default": 1
           },

@@ -25,7 +25,9 @@
           "type": "integer",
           "minimum": 0
         },
-        {}
+        {
+          "type": "string"
+        }
       ],
       "default": 1
     },

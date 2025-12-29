@@ -52,6 +52,7 @@
             "email": {
               "type": "array",
               "items": {
+                "format": "email",
                 "type": "string"
               }
             },
@@ -165,6 +166,7 @@
                   "email": {
                     "type": "array",
                     "items": {
+                      "format": "email",
                       "type": "string"
                     }
                   },
