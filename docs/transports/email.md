@@ -62,3 +62,9 @@ transports:
   email:
     disabled: false
 ```
+
+## Reference
+
+- Home Assistant
+  - [SMTP Integration](https://www.home-assistant.io/integrations/smtp/)
+  - [SMTP Integration Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20smtp%22%20state%3Aopen)

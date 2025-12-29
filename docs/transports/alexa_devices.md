@@ -26,3 +26,9 @@ When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skill
 - ```<prosody rate='x-slow'>Saying this slowly</prosody>```
 - ```<voice name='Geraint'>hello I'm from Abergavenny</voice>```
 - ```<say-as interpret-as='date'>????0922</say-as>``` ( will read as 'September 22nd' )
+
+## References
+
+- Home Assistant
+  - [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/)
+  - [Alexa Devices Integration Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20alexa_devices%22%20state%3Aopen)

@@ -14,3 +14,8 @@ tags:
 Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
 
 The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
+
+## References
+
+- Home Assistant
+  - [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player)
