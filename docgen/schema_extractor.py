@@ -109,6 +109,10 @@ def schema_doc() -> None:
             continue
 
     with mkdocs_gen_files.open("developer/schemas/index_gen.md", "w") as df:
+        df.write('# JSON Schema for Supernotify\n')
+        df.write('''These are auto-generated from the Home Assistant
+         [voluptuous](https://github.com/alecthomas/voluptuous) schema definitions 
+         for configuration and action `data` calls.\n\n''')
         df.write("## JSON Schema Files\n")
         df.write("|Schema|JSON Definition|Documentation|\n")
         df.write("|------|---------------|-------|\n")
