@@ -64,6 +64,12 @@ of target it wants, for example the SMS one picking phone number and the SMTP on
 - *Envelope* isn't present in the configuration - aside from the code, its only
 visible when viewing an [archived notification](configuration/archiving.md), where a list of *delivered* and *undelivered* envelopes is kept.
 
+## Priority
+- An urgency level for notifications
+   - There is no standard way to prioritize notifications, within or outside Home Assistant
+   - Supernotify has its own 5 level scheme, which follows the most common practices, from `minimum` to `critical`
+   - Priority can be used for things like scenario and delivery rules, and passed onto notify integrations that support it
+
 !!! info
     For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core classes matching these concepts.
 

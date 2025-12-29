@@ -12,7 +12,8 @@ from custom_components.supernotify import (
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
     OPTION_TTS_ENTITY_ID,
-    TRANSPORT_TTS, SelectionRank,
+    TRANSPORT_TTS,
+    SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature

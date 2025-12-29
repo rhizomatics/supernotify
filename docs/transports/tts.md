@@ -55,7 +55,7 @@ to preserve the order in which the `media_player` entities were listed.
 ## Alternatives
 
 For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](./alexa_devices.md) and
-[Alexa Media Player](./alexa_media_player.md) transport adaptors. 
+[Alexa Media Player](./alexa_media_player.md) transport adaptors.
 
 To get canned sounds rather than speech, use the [Chime](./chime.md) transport adaptor.
 
