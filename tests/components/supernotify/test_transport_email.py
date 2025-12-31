@@ -1,6 +1,7 @@
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import anyio
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
@@ -202,10 +203,28 @@ async def test_discover_no_smtp_integration(hass: HomeAssistant) -> None:
 
 
 def test_pack_preheader() -> None:
-    uut = EmailTransport(Mock(template_path=None), {})
+    uut = EmailTransport(Mock(custom_template_path=None), {})
 
     assert (
         uut.pack_preheader("foo", {OPTION_PREHEADER_BLANK: "&nbsp;", OPTION_PREHEADER_LENGTH: 12})
         == "foo&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
     )
     assert uut.pack_preheader("foo", {}) == "foo"
+
+
+async def test_find_default_template(tmp_path: Path) -> None:
+
+    uut = EmailTransport(Mock(custom_template_path=tmp_path), {})
+    html = await uut.load_template("default.html.j2")
+    assert html.startswith("<!doctype html>")  # type:ignore
+
+    async with await anyio.Path(tmp_path / "default.html.j2").open("w") as f:
+        await f.write("{{ 1+1 }}")
+    uut = EmailTransport(Mock(custom_template_path=tmp_path), {})
+    assert await uut.load_template("default.html.j2") == "{{ 1+1 }}"
+
+    (tmp_path / "email").mkdir()
+    async with await anyio.Path(tmp_path / "email" / "default.html.j2").open("w") as f:
+        await f.write("{{ 2+2 }}")
+    uut = EmailTransport(Mock(custom_template_path=tmp_path), {})
+    assert await uut.load_template("default.html.j2") == "{{ 2+2 }}"

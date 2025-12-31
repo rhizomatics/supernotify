@@ -4,9 +4,9 @@ import string
 import time
 import typing
 import uuid
-from pathlib import Path
 from typing import Any
 
+from anyio import Path
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from jinja2 import TemplateError
 

@@ -187,7 +187,7 @@ def mock_context(
     context.mobile_actions = {}
     context.hass_api.internal_url = "http://hass-dev"
     context.hass_api.external_url = "http://hass-dev.nabu.casa"
-    context.template_path = tmp_path / "templates"
+    context.custom_template_path = tmp_path / "templates"
 
     mock_delivery_registry._deliveries = {
         "plain_email": Delivery("plain_email", {}, EmailTransport(context)),

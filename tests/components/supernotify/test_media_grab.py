@@ -49,7 +49,7 @@ async def test_snapshot_url_with_abs_path(
     )
 
     assert retrieved_image_path is not None
-    retrieved_image = Image.open(retrieved_image_path)
+    retrieved_image = Image.open(str(retrieved_image_path))
     original_image = Image.open(sample_image.path)
     assert retrieved_image.size == original_image.size
     if sample_image.ext in UNLOSSY_FORMATS:
@@ -65,7 +65,7 @@ async def test_snapshot_url_with_opts(
 
     snapshot_url = local_server.url_for("/snapshot_image")
     local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
-    retrieved_image_path: Path | None = await snapshot_from_url(
+    retrieved_image_path: anyio.Path | None = await snapshot_from_url(
         unmocked_hass_api,
         snapshot_url,
         "notify-uuid-1",
@@ -120,7 +120,7 @@ async def test_snap_camera(unmocked_hass_api, reprocess: ReprocessOption, tmp_pa
     if reprocess == ReprocessOption.PRESERVE:
         del jpeg_opts["comment"]
 
-    image_path: Path | None = await snap_camera(
+    image_path: anyio.Path | None = await snap_camera(
         unmocked_hass_api,
         "camera.xunit",
         "notify-uuid-1",
@@ -151,7 +151,7 @@ async def test_snap_image_entity(
         hass_api, sample_image_entity_id, media_path=anyio.Path(tmp_path), notification_id="notify_001"
     )
     assert snap_image_path is not None
-    retrieved_image = Image.open(snap_image_path)
+    retrieved_image = Image.open(str(snap_image_path))
 
     original_image = Image.open(sample_image.path)
     assert "exif" not in retrieved_image.info
@@ -170,13 +170,13 @@ async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> No
     local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)  # type: ignore
 
     notification = Notification(ctx, "Test Me 123")
-    result: Path | None = await grab_image(notification, "mail", ctx)
+    result: anyio.Path | None = await grab_image(notification, "mail", ctx)
     assert result is None
 
     notification = Notification(ctx, "Test Me 123", action_data={"media": {"snapshot_url": snapshot_url}})
     result = await grab_image(notification, "mail", ctx)
     assert result is not None
-    retrieved_image = Image.open(result)
+    retrieved_image = Image.open(str(result))
     assert retrieved_image is not None  # images tested by lower funcs
 
 

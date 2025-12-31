@@ -19,7 +19,7 @@ from tests.components.supernotify.hass_setup_lib import TestingContext
 if TYPE_CHECKING:
     from custom_components.supernotify.transports.email import EmailTransport
 
-output_root = "developer/html_email_renders"
+output_root = "developer/HTML Email Renders"
 
 
 async def create_examples() -> None:
@@ -27,7 +27,7 @@ async def create_examples() -> None:
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={"examples": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
-        template_path=Path("examples/templates"),
+        template_path=Path("custom_components/supernotify/default_templates"),
     )
     await ctx.test_initialize()
     uut: EmailTransport = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))

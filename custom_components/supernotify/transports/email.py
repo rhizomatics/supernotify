@@ -1,13 +1,15 @@
 import logging
 import os
-from pathlib import Path
+import os.path
 from typing import Any, TypedDict
 
 import aiofiles
+from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.helpers.typing import ConfigType
 
+import custom_components.supernotify
 from custom_components.supernotify import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
@@ -70,17 +72,20 @@ class EmailTransport(Transport):
 
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
         super().__init__(context, transport_config)
-        self.template_path: Path | None = None
+        self.default_template_path: Path = Path(os.path.join(custom_components.supernotify.__path__[0], "default_templates"))  # noqa: PTH118
+        self.custom_template_path: Path | None = None
+        self.custom_email_template_path: Path | None = None
+        self.template_cache: dict[str, str] = {}
 
-        if context.template_path:
-            self.template_path = context.template_path / "email"
-            if not self.template_path.exists():
-                _LOGGER.warning("SUPERNOTIFY Email templates not available at %s", self.template_path.absolute())
-                self.template_path = None
+        if context.custom_template_path is not None:
+            self.custom_template_path = Path(context.custom_template_path)
+            if (context.custom_template_path / "email").exists():
+                self.custom_email_template_path = Path(context.custom_template_path / "email")
             else:
-                _LOGGER.debug("SUPERNOTIFY Loading email templates from %s", self.template_path.absolute())
+                _LOGGER.debug("SUPERNOTIFY Email specific custom templates not configured")
         else:
-            _LOGGER.warning("SUPERNOTIFY Email templates not available - no configured path")
+            _LOGGER.info("SUPERNOTIFY Custom templates not configured")
+            self.custom_template_path = None
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
@@ -126,7 +131,7 @@ class EmailTransport(Transport):
 
         data: dict[str, Any] = envelope.data or {}
         html: str | None = data.get("html")
-        template: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
+        template_name: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
         strict_template: bool = envelope.delivery.options.get(OPTION_STRICT_TEMPLATE, False)
         addresses: list[str] = envelope.target.email or []
         snapshot_url: str | None = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
@@ -152,7 +157,7 @@ class EmailTransport(Transport):
             action_data.setdefault("data", {})
             action_data["data"]["images"] = [str(image_path)]
 
-        if not template or not self.template_path:
+        if not template_name:
             if footer and action_data.get(ATTR_MESSAGE):
                 action_data[ATTR_MESSAGE] = f"{action_data[ATTR_MESSAGE]}\n\n{footer}"
 
@@ -172,7 +177,7 @@ class EmailTransport(Transport):
                 action_data["data"]["html"] = html
         else:
             html = await self.render_template(
-                template,
+                template_name,
                 envelope,
                 action_data,
                 debug_trace,
@@ -186,9 +191,29 @@ class EmailTransport(Transport):
                 action_data["data"]["html"] = html
         return await self.call_action(envelope, action_data=action_data)
 
+    async def load_template(self, template_name: str) -> str | None:
+        if template_name in self.template_cache:
+            return self.template_cache[template_name]
+
+        for root_path in (
+            self.custom_email_template_path,
+            self.custom_template_path,
+            self.default_template_path / "email",
+            self.default_template_path,
+        ):
+            if root_path is not None:
+                template_path: Path = root_path / template_name
+                if await template_path.exists():
+                    template: str
+                    async with aiofiles.open(template_path) as file:
+                        template = os.linesep.join(await file.readlines())
+                        self.template_cache[template_name] = template
+                        return template
+        return None
+
     async def render_template(
         self,
-        template: str,
+        template_name: str,
         envelope: Envelope,
         action_data: dict[str, Any],
         debug_trace: DebugTrace | None = None,
@@ -199,9 +224,7 @@ class EmailTransport(Transport):
     ) -> str | None:
         extra_data = extra_data or {}
         alert: Alert
-        if self.template_path is None:
-            _LOGGER.error("SUPERNOTIFY No template path set")
-            return None
+
         try:
             title: str | None = action_data.get(ATTR_TITLE)
             message: str | None = action_data.get(ATTR_MESSAGE)
@@ -231,13 +254,12 @@ class EmailTransport(Transport):
             elif image_path:
                 alert["img"] = AlertImage(url=f"cid:{image_path.name}", desc=image_path.name)
 
-            template_file_path = self.template_path / template
-            if not template_file_path.exists():
-                _LOGGER.warning("SUPERNOTIFY Unable to find %s template at %s", template, template_file_path.absolute())
+            template_content: str | None = await self.load_template(template_name)
+
+            if template_content is None:
+                _LOGGER.error("SUPERNOTIFY No template found for %s", template_name)
                 return None
-            template_content: str
-            async with aiofiles.open(template_file_path) as file:
-                template_content = os.linesep.join(await file.readlines())
+
             template_obj: Template = self.context.hass_api.template(template_content)
             template_obj.ensure_valid()
 
@@ -246,7 +268,7 @@ class EmailTransport(Transport):
 
             html: str = template_obj.async_render(variables={"alert": alert}, parse_result=False, strict=strict_template)
             if not html:
-                _LOGGER.error("SUPERNOTIFY Empty result from template %s", template_file_path)
+                _LOGGER.error("SUPERNOTIFY Empty result from template %s", template_name)
             else:
                 return html
         except TemplateError as te:

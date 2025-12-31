@@ -61,7 +61,7 @@ class Context:
 
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.mobile_actions: ConfigType = mobile_actions or {}
-        self.template_path: Path | None = Path(template_path) if template_path else None
+        self.custom_template_path: Path | None = Path(template_path) if template_path else None
 
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
         self.snoozer = snoozer
@@ -69,9 +69,9 @@ class Context:
             _LOGGER.warning("SUPERNOTIFY Context threw away kwargs: %s", kwargs)
 
     async def initialize(self) -> None:
-        if self.template_path and not self.template_path.exists():
-            _LOGGER.warning("SUPERNOTIFY template path not found at %s", self.template_path)
-            self.template_path = None
+        if self.custom_template_path and not self.custom_template_path.exists():
+            _LOGGER.warning("SUPERNOTIFY custom template path not found at %s", self.custom_template_path)
+            self.custom_template_path = None
 
     def configure_for_tests(self, transport_instances: list[Transport] | None = None) -> None:
         self.delivery_registry._transport_instances = transport_instances

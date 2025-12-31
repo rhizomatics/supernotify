@@ -6,6 +6,7 @@
 ### Email Transport
 - Extra check on template living on file system
 ### Example HTML Email Template
+- Now the default template always available, though overridable
 - Colours now set by priority, `message_html` used if set, and general cleanup
 - Example renders now on docs page
 ## 1.8.1

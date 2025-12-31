@@ -6,14 +6,13 @@ import time
 from enum import StrEnum, auto
 from http import HTTPStatus
 from io import BytesIO
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 import aiofiles
 import aiofiles.os
-import anyio
 import homeassistant.util.dt as dt_util
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
+from anyio import Path
 from homeassistant.const import STATE_HOME, STATE_UNAVAILABLE
 from PIL import Image
 
@@ -59,7 +58,7 @@ async def snapshot_from_url(
     hass_api: HomeAssistantAPI,
     snapshot_url: str,
     notification_id: str,
-    media_path: anyio.Path,
+    media_path: Path,
     hass_base_url: str | None,
     remote_timeout: int = 15,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
@@ -68,7 +67,7 @@ async def snapshot_from_url(
 ) -> Path | None:
     hass_base_url = hass_base_url or ""
     try:
-        media_dir: anyio.Path = anyio.Path(media_path) / "snapshot"
+        media_dir: Path = Path(media_path) / "snapshot"
         await media_dir.mkdir(parents=True, exist_ok=True)
 
         if snapshot_url.startswith("http"):
@@ -81,7 +80,7 @@ async def snapshot_from_url(
             _LOGGER.warning("SUPERNOTIFY Unable to retrieve %s: %s", image_url, r.status)
         else:
             bitmap: bytes | None = await r.content.read()
-            image_path: anyio.Path | None = await write_image_from_bitmap(
+            image_path: Path | None = await write_image_from_bitmap(
                 hass_api,
                 bitmap,
                 media_path,
@@ -134,14 +133,14 @@ async def move_camera_to_ptz_preset(
 async def snap_image_entity(
     hass_api: HomeAssistantAPI,
     entity_id: str,
-    media_path: anyio.Path,
+    media_path: Path,
     notification_id: str,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
     jpeg_opts: dict[str, Any] | None = None,
     png_opts: dict[str, Any] | None = None,
 ) -> Path | None:
     """Use for any image, including MQTT Image"""
-    image_path: anyio.Path | None = None
+    image_path: Path | None = None
     try:
         image_entity: ImageEntity | None = cast("ImageEntity|None", hass_api.domain_entity("image", entity_id))
         if image_entity:
@@ -166,7 +165,7 @@ async def snap_camera(
     hass_api: HomeAssistantAPI,
     camera_entity_id: str,
     notification_id: str,
-    media_path: anyio.Path,
+    media_path: Path,
     max_camera_wait: int = 20,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
     jpeg_opts: dict[str, Any] | None = None,
@@ -178,7 +177,7 @@ async def snap_camera(
         return image_path
 
     try:
-        media_dir: anyio.Path = anyio.Path(media_path) / "camera"
+        media_dir: Path = Path(media_path) / "camera"
         await media_dir.mkdir(parents=True, exist_ok=True)
         timed = str(time.time()).replace(".", "_")
         image_path = Path(media_dir) / f"{camera_entity_id}_{timed}.jpg"
@@ -197,9 +196,9 @@ async def snap_camera(
             await asyncio.sleep(1)
 
         if reprocess != ReprocessOption.NEVER:
-            async with await anyio.Path(image_path).open("rb") as f:
+            async with await Path(image_path).open("rb") as f:
                 bitmap: bytes | None = await f.read()
-                async_path: anyio.Path | None = await write_image_from_bitmap(
+                async_path: Path | None = await write_image_from_bitmap(
                     hass_api,
                     bitmap,
                     media_path,
@@ -306,7 +305,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         notification.media.get(MEDIA_OPTION_REPROCESS, delivery_config.get(CONF_OPTIONS, {}).get(MEDIA_OPTION_REPROCESS))
         or "always"
     )
-    media_path: anyio.Path | None = context.media_storage.media_path
+    media_path: Path | None = context.media_storage.media_path
     if not media_path:
         return None
 
@@ -394,19 +393,19 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
 async def write_image_from_bitmap(
     hass_api: HomeAssistantAPI,
     bitmap: bytes | None,
-    media_path: anyio.Path,
+    media_path: Path,
     notification_id: str,
     reprocess: ReprocessOption = ReprocessOption.ALWAYS,
     output_format: str | None = None,
     jpeg_opts: dict[str, Any] | None = None,
     png_opts: dict[str, Any] | None = None,
-) -> anyio.Path | None:
-    image_path: anyio.Path | None = None
+) -> Path | None:
+    image_path: Path | None = None
     if bitmap is None:
         _LOGGER.debug("SUPERNOTIFY Empty bitmap for image")
         return None
     try:
-        media_dir: anyio.Path = anyio.Path(media_path) / "image"
+        media_dir: Path = Path(media_path) / "image"
         if not await media_dir.exists():
             await media_dir.mkdir(parents=True, exist_ok=True)
 
@@ -432,7 +431,7 @@ async def write_image_from_bitmap(
 
         media_ext: str = output_format if output_format else "img"
         timed: str = str(time.time()).replace(".", "_")
-        image_path = anyio.Path(media_dir) / f"{notification_id}_{timed}.{media_ext}"
+        image_path = Path(media_dir) / f"{notification_id}_{timed}.{media_ext}"
         image_path = await image_path.resolve()
         async with aiofiles.open(image_path, "wb") as file:
             await file.write(buffer.getbuffer())
@@ -447,7 +446,7 @@ async def write_image_from_bitmap(
 
 class MediaStorage:
     def __init__(self, media_path: str | None, days: int = 7) -> None:
-        self.media_path: anyio.Path | None = anyio.Path(media_path) if media_path else None
+        self.media_path: Path | None = Path(media_path) if media_path else None
         self.last_purge: dt.datetime | None = None
         self.purge_minute_interval = 60 * 6
         self.days = days
@@ -470,7 +469,7 @@ class MediaStorage:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", await self.media_path.absolute())
 
     async def size(self) -> int:
-        path: anyio.Path | None = self.media_path
+        path: Path | None = self.media_path
         if path and await path.exists():
             return sum(1 for p in await aiofiles.os.listdir(path))
         return 0
