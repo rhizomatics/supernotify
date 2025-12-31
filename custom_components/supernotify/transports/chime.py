@@ -350,8 +350,10 @@ class ChimeTransport(Transport):
                         chimes += 1
                 else:
                     _LOGGER.debug("SUPERNOTIFY Chime skipping incomplete service for %s", chime_entity_config.entity_id)
-            except Exception:
-                _LOGGER.exception("SUPERNOTIFY Failed to chime %s: %s [%s]", chime_entity_config.entity_id, action_data)
+            except Exception as e:
+                _LOGGER.error("SUPERNOTIFY Failed to chime %s: %s [%s]", chime_entity_config.entity_id, action_data)
+                if debug_trace:
+                    debug_trace.record_delivery_exception(envelope.delivery.name, "analyze_target", e)
         return chimes > 0
 
     def analyze_target(self, target_config: ChimeTargetConfig, data: dict[str, Any], envelope: Envelope) -> ActionCall | None:

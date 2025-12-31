@@ -89,7 +89,7 @@ class EmailTransport(Transport):
         action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if action:
             delivery_config: DeliveryConfig = self.delivery_defaults
-            delivery_config.action: str = action
+            delivery_config.action = action
             return delivery_config
         return None
 
@@ -246,9 +246,13 @@ class EmailTransport(Transport):
             else:
                 return html
         except TemplateError as te:
-            _LOGGER.error("SUPERNOTIFY Failed to render template html mail: %s", te)
+            _LOGGER.exception("SUPERNOTIFY Failed to render template html mail: %s", te)
+            if debug_trace:
+                debug_trace.record_delivery_exception(envelope.delivery.name, "html_template", te)
         except Exception as e:
             _LOGGER.exception("SUPERNOTIFY Failed to generate html mail: %s", e)
+            if debug_trace:
+                debug_trace.record_delivery_exception(envelope.delivery.name, "html_template", e)
         return None
 
     def pack_preheader(self, preheader: str, options: dict[str, Any]) -> str:

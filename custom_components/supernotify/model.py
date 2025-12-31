@@ -3,6 +3,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import IntFlag, StrEnum, auto
+from traceback import format_exception
 from typing import Any, ClassVar
 
 import voluptuous as vol
@@ -415,9 +416,11 @@ class TransportConfig:
 class DeliveryCustomization:
     def __init__(self, config: ConfigType | None, target_specific: bool = False) -> None:
         config = config or {}
-        self.enabled: bool | None = config.get(CONF_ENABLED, True)  # perhaps should be false for wildcards
+        # perhaps should be false for wildcards
+        self.enabled: bool | None = config.get(CONF_ENABLED, True)
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
-        self.target: Target | None  # TODO: only works for scenario or recipient, not action call
+        # TODO: only works for scenario or recipient, not action call
+        self.target: Target | None
 
         if config.get(CONF_TARGET):
             if self.data:
@@ -628,19 +631,24 @@ class DebugTrace:
         self.resolved: dict[str, dict[str, Any]] = {}
         self.delivery_selection: dict[str, list[str]] = {}
         self.delivery_artefacts: dict[str, Any] = {}
+        self.delivery_exceptions: dict[str, Any] = {}
         self._last_stage: dict[str, str] = {}
 
     def contents(self, **_kwargs: Any) -> dict[str, Any]:
         results: dict[str, Any] = {
-            "message": self.message,
-            "title": self.title,
-            "data": self.data,
-            "target": self.target,
-            "resolved": self.resolved,
+            "arguments": {
+                "message": self.message,
+                "title": self.title,
+                "data": self.data,
+                "target": self.target,
+            },
             "delivery_selection": self.delivery_selection,
+            "resolved": self.resolved,
         }
         if self.delivery_artefacts:
             results["delivery_artefacts"] = self.delivery_artefacts
+        if self.delivery_artefacts:
+            results["delivery_exceptions"] = self.delivery_exceptions
         return results
 
     def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
@@ -669,3 +677,8 @@ class DebugTrace:
     def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:
         self.delivery_artefacts.setdefault(delivery, {})
         self.delivery_artefacts[delivery][artefact_name] = artefact
+
+    def record_delivery_exception(self, delivery: str, context: str, exception: Exception) -> None:
+        self.delivery_exceptions.setdefault(delivery, {})
+        self.delivery_exceptions[delivery].setdefault(context, [])
+        self.delivery_exceptions[delivery][context].append(format_exception(exception))

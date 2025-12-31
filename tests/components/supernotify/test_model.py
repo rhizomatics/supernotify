@@ -1,4 +1,9 @@
-from custom_components.supernotify.model import Target, TargetRequired
+import json
+from typing import Any
+
+from homeassistant.exceptions import HomeAssistantError
+
+from custom_components.supernotify.model import DebugTrace, Target, TargetRequired
 
 
 def test_target_in_dict_mode() -> None:
@@ -201,3 +206,17 @@ def test_target_required() -> None:
     assert TargetRequired("optional") == TargetRequired.OPTIONAL
     assert TargetRequired("true") == TargetRequired.ALWAYS
     assert TargetRequired("false") == TargetRequired.OPTIONAL
+
+
+def test_debug_trace() -> None:
+    uut = DebugTrace("test message", "test title", {}, ["joe@mctest.org", "siren.hallway"])
+    uut.record_target("mixed", "sortout", [Target("mrst@mctest.org"), Target("switch.gong")])
+    uut.record_delivery_artefact("plain_email", "foo", {"a": 12, "header": False})
+    uut.record_delivery_selection("pre-cogitate", ["plain_email", "siren"])
+    uut.record_delivery_exception("plain_email", "validating", HomeAssistantError())
+    result = uut.contents()
+    assert "foo" in result["delivery_artefacts"]["plain_email"]
+
+    serialized: str = json.dumps(uut.contents())
+    deserialized: Any = json.loads(serialized)
+    assert deserialized
