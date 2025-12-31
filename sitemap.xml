@@ -89,6 +89,26 @@
          <lastmod>2025-12-31</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/developer/html_email_renders/example-default-critical/</loc>
+         <lastmod>2025-12-31</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/developer/html_email_renders/example-default-high/</loc>
+         <lastmod>2025-12-31</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/developer/html_email_renders/example-default-low/</loc>
+         <lastmod>2025-12-31</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/developer/html_email_renders/example-default-medium/</loc>
+         <lastmod>2025-12-31</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/developer/html_email_renders/example-default-minimum/</loc>
+         <lastmod>2025-12-31</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/developer/schemas/</loc>
          <lastmod>2025-12-31</lastmod>
     </url>
