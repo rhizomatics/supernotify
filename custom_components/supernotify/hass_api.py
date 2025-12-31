@@ -345,7 +345,7 @@ class HomeAssistantAPI:
     ) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
-        if dev_reg is None:
+        if dev_reg is None or not hasattr(dev_reg, "devices"):
             _LOGGER.warning(f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
             return []
 

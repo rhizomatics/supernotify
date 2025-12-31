@@ -180,16 +180,22 @@
               <!-- Notification Body with Priority-based Color -->
               {% if alert.priority == 'critical' %}
                 {% set bg_color = '#D32F2F' %}
+                {% set light_bg_color = '#FFEBEE' %}
               {% elif alert.priority == 'high' %}
                 {% set bg_color = '#FF5722' %}
+                {% set light_bg_color = '#FBE9E7' %}
               {% elif alert.priority == 'medium' %}
                 {% set bg_color = '#FF9800' %}
+                {% set light_bg_color = '#FFF3E0' %}
               {% elif alert.priority == 'low' %}
                 {% set bg_color = '#4CAF50' %}
+                {% set light_bg_color = '#E8F5E9' %}
               {% elif alert.priority == 'minimum' %}
                 {% set bg_color = '#2196F3' %}
+                {% set light_bg_color = '#E3F2FD' %}
               {% else %}
                 {% set bg_color = '#FF5121' %}
+                {% set light_bg_color = '#FBE9E7' %}
               {% endif %}
 
               <div id="notification-body" style="background-color:{{ bg_color }};margin:0px auto;border-radius:4px;max-width:560px;">
@@ -202,9 +208,9 @@
                             <!-- Priority and Title -->
                             <tr>
                               <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                <div style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:24px;font-weight:400;line-height:30px;text-align:left;color:#ffffff;">
-                                  <p class="date" style="margin: 0; margin-bottom: 5px; font-size: 16px;">{{ alert.priority | capitalize }}</p>
-                                  <h2 style="margin: 0; font-size: 20px; font-weight: 300; line-height: 24px;">{{ alert.title or "Home Assistant Notification" }}</h2>
+                                <div style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:24px;font-weight:400;line-height:30px;text-align:left;">
+                                  <p class="priority" style="margin: 0; margin-bottom: 5px; font-size: 16px; font-weight: 900; background-color: {{ bg_color }}; color: #ffffff; display: inline-block; padding: 4px 12px; border-radius: 4px;">{{ alert.priority | capitalize }}</p>
+                                  <h2 style="margin: 0; font-size: 20px; font-weight: 600; line-height: 24px; color: {{ bg_color }};">{{ alert.title or "Home Assistant Notification" }}</h2>
                                 </div>
                               </td>
                             </tr>
@@ -212,8 +218,8 @@
                             <!-- Message -->
                             <tr>
                               <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                <div style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:20px;text-align:left;color:#ffffff;">
-                                  {% if alert.preformatted_html is not none %}
+                                <div style="font-family:Roboto, Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:20px;text-align:left;color:#333333;background-color:{{ light_bg_color }};padding:15px;border-radius:4px;">
+                                  {% if alert.preformatted_html %}
                                     <p style="margin: 0;" class="alert_message">{{ alert.preformatted_html }}</p>
                                   {% else %}
                                     <p style="margin: 0;" class="alert_message">{{ alert.message }}</p>

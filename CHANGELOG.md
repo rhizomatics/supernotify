@@ -5,6 +5,7 @@
 - Debug trace now holds exception traces for email templates and chime action building
 ### Example HTML Email Template
 - Colours now set by priority, `message_html` used if set, and general cleanup
+- Example renders now on docs page
 ## 1.8.1
 ### Generic Transport
 - Can now adapt a message for the *ntfy* Home Assistant integration

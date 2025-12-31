@@ -147,9 +147,11 @@ class TestingContext(Context):
         self.config = SUPERNOTIFY_SCHEMA(raw_config)
         self.components = components
 
-        if homeassistant:  # real class or own mock
+        if homeassistant is not None:  # real class or own mock
             self.hass = homeassistant
+            _LOGGER.debug("TESTCONTEXT Real HomeAssistant")
         else:
+            _LOGGER.debug("TESTCONTEXT Mock HomeAssistant")
             self.hass = Mock(spec=MockableHomeAssistant)
             self.hass.states = Mock(StateMachine)
             self.hass.services = Mock(ServiceRegistry)

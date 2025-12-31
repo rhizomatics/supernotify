@@ -118,6 +118,7 @@ class Envelope(DupeCheckable):
 
     def core_action_data(self, force_message: bool = True) -> dict[str, Any]:
         """Build the core set of `service_data` dict to pass to underlying notify service"""
+        # TODO: remove all logic, so only called to pre-populate `data`
         data: dict[str, Any] = {}
         # message is mandatory for notify platform
         if self.message is None:

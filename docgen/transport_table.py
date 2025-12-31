@@ -22,6 +22,8 @@ def transport_doc() -> None:
         option_keys.extend(transport.default_config.delivery_defaults.options.keys())
     option_keys = sorted(set(option_keys))
 
+    mkdocs_gen_files.set_edit_path(doc_filename, "../docgen/transport_table.py")
+
     with mkdocs_gen_files.open(doc_filename, "w") as df:
         df.write("# Transport Configuration\n\n")
         df.write("See the [Options Table](../transports/index.md/#table-of-options) for a description of each option.\n\n")

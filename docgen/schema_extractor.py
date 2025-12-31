@@ -52,17 +52,17 @@ def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) ->
                     node[key] = bool
 
             if hasattr(node[key], "validators"):
-                node[key].validators: list[FunctionType] = [defuncify(v) for v in node[key].validators]
+                node[key].validators: list[FunctionType] = [defuncify(v) for v in node[key].validators]  # ty:ignore[possibly-missing-attribute]
 
 
 def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -> None:
     tune_schema(schema)
     if isinstance(schema, dict):
         for key in schema:
-            walk_schema(schema[key])
+            walk_schema(schema[key])  # ty:ignore[invalid-argument-type]
     elif isinstance(schema, list):
         for sub_schema in schema:
-            walk_schema(sub_schema)
+            walk_schema(sub_schema)  # ty:ignore[invalid-argument-type]
 
 
 def schema_doc() -> None:
@@ -75,7 +75,7 @@ def schema_doc() -> None:
             walk_schema(vol_schema.schema)
         except Exception as e:
             logging.exception("Failed on %s: %s", vol_schema, e)
-    j_schemas = {TOP_LEVEL_SCHEMAS[s[0]]: convert(s[1]) for s in v_schemas.items()}
+    j_schemas = {s[0]: (TOP_LEVEL_SCHEMAS[s[0]], convert(s[1])) for s in v_schemas.items()}
     config = GenerationConfiguration(
         examples_as_yaml=True,
         template_name="md",
@@ -87,7 +87,7 @@ def schema_doc() -> None:
     )
 
     # parser = jsonschema2md.Parser(collapse_children=True)
-    for schema_name, schema in j_schemas.items():
+    for schema_id, (schema_name, schema) in j_schemas.items():
         schema_link_name = schema_name.replace(" ", "_")
         logging.info(f"Exporting {schema_name}")
         try:
@@ -104,6 +104,10 @@ def schema_doc() -> None:
             doc_filename = f"developer/schemas/{schema_link_name}.md"
             with mkdocs_gen_files.open(doc_filename, "w") as df:
                 df.write(lines)
+            mkdocs_gen_files.set_edit_path(
+                doc_filename,
+                f"https://github.com/search?q=repo%3Arhizomatics%2Fsupernotify+path%3Acustom_components%2Fsupernotify%2F__init__.py+{schema_id}&type=code",
+            )
         except Exception:
             logging.exception(f"Error processing schema {schema_name}")
             continue
@@ -122,6 +126,8 @@ def schema_doc() -> None:
             df.write(f"[Schema Doc]({schema_link_name}.md)|\n")
 
         df.write("\n")
+
+    mkdocs_gen_files.set_edit_path("developer/schemas/index.md", "../docgen/schema_extractor.py")
 
 
 schema_doc()

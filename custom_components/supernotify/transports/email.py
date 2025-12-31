@@ -71,13 +71,14 @@ class EmailTransport(Transport):
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
         super().__init__(context, transport_config)
         self.template_path: Path | None = None
+
         if context.template_path:
             self.template_path = context.template_path / "email"
             if not self.template_path.exists():
-                _LOGGER.warning("SUPERNOTIFY Email templates not available at %s", self.template_path)
+                _LOGGER.warning("SUPERNOTIFY Email templates not available at %s", self.template_path.absolute())
                 self.template_path = None
             else:
-                _LOGGER.debug("SUPERNOTIFY Loading email templates from %s", self.template_path)
+                _LOGGER.debug("SUPERNOTIFY Loading email templates from %s", self.template_path.absolute())
         else:
             _LOGGER.warning("SUPERNOTIFY Email templates not available - no configured path")
 
@@ -231,6 +232,9 @@ class EmailTransport(Transport):
                 alert["img"] = AlertImage(url=f"cid:{image_path.name}", desc=image_path.name)
 
             template_file_path = self.template_path / template
+            if not template_file_path.exists():
+                _LOGGER.warning("SUPERNOTIFY Unable to find %s template at %s", template, template_file_path.absolute())
+                return None
             template_content: str
             async with aiofiles.open(template_file_path) as file:
                 template_content = os.linesep.join(await file.readlines())
@@ -256,6 +260,7 @@ class EmailTransport(Transport):
         return None
 
     def pack_preheader(self, preheader: str, options: dict[str, Any]) -> str:
+        preheader = preheader or ""
         phchars: str = options.get(OPTION_PREHEADER_BLANK, "")
         phlength: int = options.get(OPTION_PREHEADER_LENGTH, 0)
         if phlength and phchars:

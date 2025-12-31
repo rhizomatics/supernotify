@@ -65,8 +65,9 @@ plugins:
             docstring_section_style: spacy
   - gen-files:
       scripts:
-      - docgen/schema_extractor.py
-      - docgen/transport_table.py
+        - docgen/schema_extractor.py
+        - docgen/transport_table.py
+        - docgen/render_templates.py
 
 
 watch:
