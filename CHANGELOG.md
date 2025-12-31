@@ -3,6 +3,8 @@
 ## 1.8.2
 ### Debugging
 - Debug trace now holds exception traces for email templates and chime action building
+### Email Transport
+- Extra check on template living on file system
 ### Example HTML Email Template
 - Colours now set by priority, `message_html` used if set, and general cleanup
 - Example renders now on docs page
