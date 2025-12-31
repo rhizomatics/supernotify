@@ -191,7 +191,7 @@ async def snap_camera(
 
         # give async service time
         cutoff_time = time.time() + max_camera_wait
-        while time.time() < cutoff_time and not image_path.exists():
+        while time.time() < cutoff_time and not await image_path.exists():
             _LOGGER.info("Image file not available yet at %s, pausing", image_path)
             await asyncio.sleep(1)
 
