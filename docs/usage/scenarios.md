@@ -124,7 +124,7 @@ prevents any scenario other than `unoccupied` or the ones explicitly applied her
 other scenarios, use `NULL`).
 
 ```yaml
-  - action: notify.supernotifier
+  - action: notify.supernotify
     data:
         title: Security Notification
         message: '{{state_attr(sensor,"friendly_name")}} triggered'

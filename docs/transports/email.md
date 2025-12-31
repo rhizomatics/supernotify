@@ -22,11 +22,24 @@ Can be used for plain or HTML template emails, and handle images as attachments 
 
 The `data` section of the notification can have a `message_html` supplied for html that will be used
 in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the
-end to include any attached images.
+end to include any attached images. The `data` can be configured as part of the fixed configuration, or in the `data` of the action call.
 
 ## HTML Templates
 
-HTML templates use the standard Home Assistant [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+HTML templates use the standard Home Assistant Jinja2 [Templating](https://www.home-assistant.io/docs/configuration/templating) with access to entity states, additional filters etc.
+
+### Configuration
+
+Supernotify ships with a built in template, `default.html.j2` which can be used by using `template: default.html.j2` in the `data` section. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
+it into a custom template directory, usually inside Home Assistant's `\config` directory. Templates can live in this directory, or in an `email` subdirectory ( the top-level is for templates that could be used with any transport, and `email` only for this one).
+
+```yaml title="Example Supernotify Configuration"
+- name: SuperNotify
+  platform: supernotify
+  template_path: /config/templates/supernotify
+```
+
+### Template Variables
 
 Supernotify also adds an `alert` variable for context of the current notification, with these values:
 
@@ -44,6 +57,8 @@ Supernotify also adds an `alert` variable for context of the current notificatio
 
 The `preheader` defaults to a minimum 100 characters packed with `&#847;&zwnj;&nbsp;` to force e-mail clients
 not to dig into the message contents when showing a preview in the in-box.
+
+### Image Attachments
 
 Where the image is snapped rather than being only a URL, it will be included as an attachment and
 an `cid:XXXX` URL generated to point to the attachment name.

@@ -17,8 +17,9 @@ def esc(v: Any) -> str:
 def transport_doc() -> None:
     doc_filename = "developer/transports.md"
     option_keys = []
+    mock_context = Mock(custom_template_path=Path())
     for transport_class in TRANSPORTS:
-        transport = transport_class(Mock(template_path=Path()))
+        transport = transport_class(mock_context)
         option_keys.extend(transport.default_config.delivery_defaults.options.keys())
     option_keys = sorted(set(option_keys))
 
@@ -33,7 +34,7 @@ def transport_doc() -> None:
         df.write("|Transport|Rank|Target Required|Auto Default Delivery|Features|\n")
         df.write("|---------|----|---------------|---------------------|--------|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
-            transport = transport_class(Mock(template_path=Path()))
+            transport = transport_class(mock_context)
             features: list[str] = [f.name for f in transport.supported_features]
             df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
             df.write(f"|{transport.default_config.delivery_defaults.selection_rank}")
@@ -47,7 +48,7 @@ def transport_doc() -> None:
         df.write(f"|Transport|{'|'.join(option_keys)}|\n")
         df.write(f"|---------|{'-------|' * len(option_keys)}\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
-            transport = transport_class(Mock(template_path=Path()))
+            transport = transport_class(mock_context)
             options = transport.default_config.delivery_defaults.options
             df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
             df.write(f"|{'|'.join(esc(options.get(k, 'N/A')) for k in option_keys)}|\n")
@@ -58,9 +59,9 @@ def transport_doc() -> None:
         df.write("|Transport|Device Discovery|Device Domain|Device Model Exclude|\n")
         df.write("|---------|----------------|-------------|--------------------|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
-            transport = transport_class(Mock(template_path=Path()))
+            transport = transport_class(mock_context)
             if transport.default_config.device_discovery:
-                transport = transport_class(Mock(template_path=Path()))
+                transport = transport_class(mock_context)
                 df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
                 df.write(f"|{transport.default_config.device_discovery}")
                 df.write(f"|{','.join(transport.default_config.device_domain or [])}")

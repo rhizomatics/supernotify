@@ -77,15 +77,18 @@ class EmailTransport(Transport):
         self.custom_email_template_path: Path | None = None
         self.template_cache: dict[str, str] = {}
 
-        if context.custom_template_path is not None:
-            self.custom_template_path = Path(context.custom_template_path)
-            if (context.custom_template_path / "email").exists():
-                self.custom_email_template_path = Path(context.custom_template_path / "email")
+        try:
+            if context.custom_template_path is not None:
+                self.custom_template_path = Path(context.custom_template_path)
+                if (context.custom_template_path / "email").exists():
+                    self.custom_email_template_path = Path(context.custom_template_path / "email")
+                else:
+                    _LOGGER.debug("SUPERNOTIFY Email specific custom templates not configured")
             else:
-                _LOGGER.debug("SUPERNOTIFY Email specific custom templates not configured")
-        else:
-            _LOGGER.info("SUPERNOTIFY Custom templates not configured")
-            self.custom_template_path = None
+                _LOGGER.info("SUPERNOTIFY Custom templates not configured")
+                self.custom_template_path = None
+        except Exception as e:
+            _LOGGER.error("SUPERNOTIFY Failed to verify custom template path %s: %s", context.custom_template_path, e)
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

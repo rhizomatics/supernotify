@@ -5,7 +5,7 @@ tags:
   - jinja2
   - templating
   - html_email
-description: An example Jinja2 template for creating HTML Email notifications in Supernotify
+description: A default Jinja2 template for creating HTML Email notifications in Supernotify
 ---
 # HTML Email Template
 
