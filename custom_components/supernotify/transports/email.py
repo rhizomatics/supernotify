@@ -110,7 +110,15 @@ class EmailTransport(Transport):
             | TransportFeature.ACTIONS
             | TransportFeature.IMAGES
             | TransportFeature.TEMPLATE_FILE
+            | TransportFeature.SNAPSHOT
         )
+
+    def extra_attributes(self) -> dict[str, Any]:
+        return {
+            "cached_templates": list(self.template_cache.keys()),
+            "custom_templates": self.custom_template_path,
+            "custom_email_templates": self.custom_email_template_path,
+        }
 
     @property
     def default_config(self) -> TransportConfig:

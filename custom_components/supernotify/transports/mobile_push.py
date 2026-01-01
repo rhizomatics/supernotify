@@ -62,6 +62,9 @@ class MobilePushTransport(Transport):
             | TransportFeature.VIDEO
         )
 
+    def extra_attributes(self) -> dict[str, Any]:
+        return {"action_titles": self.action_titles, "action_title_failures": self.action_title_failures}
+
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()

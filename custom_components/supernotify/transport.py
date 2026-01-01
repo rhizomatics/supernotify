@@ -118,7 +118,11 @@ class Transport:
             attrs["last_error_in"] = self.last_error_in
             attrs["last_error_message"] = self.last_error_message
         attrs["error_count"] = self.error_count
+        attrs.update(self.extra_attributes())
         return attrs
+
+    def extra_attributes(self) -> dict[str, Any]:
+        return {}
 
     @abstractmethod
     async def deliver(self, envelope: "Envelope", debug_trace: DebugTrace | None = None) -> bool:  # type: ignore # noqa: F821

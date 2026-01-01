@@ -3,6 +3,7 @@
 ## 1.8.2
 ### Debugging
 - Debug trace now holds exception traces for email templates and chime action building
+- Transport Adaptor entities now expose more transport specific attributes
 ### Email Transport
 - Extra check on template living on file system
 ### Example HTML Email Template

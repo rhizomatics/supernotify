@@ -68,6 +68,7 @@ class TransportFeature(IntFlag):
     VIDEO = 8
     ACTIONS = 16
     TEMPLATE_FILE = 32
+    SNAPSHOT = 64
 
 
 class Target:

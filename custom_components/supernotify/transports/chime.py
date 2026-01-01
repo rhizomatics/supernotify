@@ -247,6 +247,9 @@ class ChimeTransport(Transport):
     def supported_features(self) -> TransportFeature:
         return TransportFeature(0)
 
+    def extra_attributes(self) -> dict[str, Any]:
+        return {"mini_transports": [t.domain for t in self.mini_transports.values()]}
+
     def build_aliases(self, src_config: ConfigType) -> ConfigType:
         dest_config: dict[str, Any] = {}
         try:

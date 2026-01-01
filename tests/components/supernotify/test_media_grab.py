@@ -1,6 +1,8 @@
 import io
+import time
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import aiofiles
 import anyio
@@ -20,6 +22,7 @@ from conftest import IMAGE_PATH, TestImage
 from custom_components.supernotify import PTZ_METHOD_FRIGATE
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
+    MediaStorage,
     ReprocessOption,
     grab_image,
     move_camera_to_ptz_preset,
@@ -334,3 +337,28 @@ def test_select_untracked_alt_camera(mock_hass_api) -> None:
         )
         == "camera.alt3"
     )
+
+
+async def test_media_storage(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
+
+    uut = MediaStorage(tmp_path, 7)
+    await uut.initialize(mock_hass_api)
+    old_time = Mock(return_value=Mock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
+    new_time = Mock(return_value=Mock(st_ctime=time.time() - (5 * 24 * 60 * 60)))
+    mock_files = [
+        Mock(path="abc", stat=new_time),
+        Mock(path="def", stat=new_time),
+        Mock(path="xyz", stat=old_time),
+    ]
+    with patch("aiofiles.os.listdir", return_value=mock_files) as _scan:
+        assert await uut.size() == 3
+
+    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan:
+        with patch("aiofiles.os.unlink") as rmfr:
+            await uut.cleanup()
+            rmfr.assert_called_once_with(Path("xyz"))
+    # skip cleanup for a few hours
+    assert uut.media_path is not None
+    first_purge = uut.last_purge
+    await uut.cleanup()
+    assert first_purge == uut.last_purge
