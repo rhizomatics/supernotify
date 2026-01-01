@@ -351,7 +351,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             camera_config = context.cameras.get(active_camera_entity_id, {})
             camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
             camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
-            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
+            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             _LOGGER.debug(
                 "SUPERNOTIFY snapping camera %s, ptz %s->%s, delay %s secs",

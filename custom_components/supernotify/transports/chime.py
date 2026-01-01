@@ -404,7 +404,8 @@ class ChimeTransport(Transport):
         target_configs: dict[str, ChimeTargetConfig] = {}
         if tune_or_alias is not None:
             for alias_config in self.chime_aliases.get(tune_or_alias, {}).values():
-                target = alias_config.get(CONF_TARGET, None)
+                target: Target | None = alias_config.get(CONF_TARGET, None)
+                alias_config = {k: v for k, v in alias_config.items() if k != CONF_TARGET}
                 # pass through variables or data if present
                 if target is not None:
                     target_configs.update({t: ChimeTargetConfig(entity_id=t, **alias_config) for t in target.entity_ids})
