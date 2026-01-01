@@ -5,6 +5,10 @@ notify:
     media_path: config/media/supernotify
     recipients_discovery: true
     mobile_discovery: true
+    dupe_check:
+      ttl: 300
+      size: 100
+      dupe_policy: dupe_policy_message_title_same_or_lower_priority
     archive:
       enabled: true
       file_retention_days: 4
@@ -12,6 +16,8 @@ notify:
       mqtt_topic: notifications/supernotify
       mqtt_qos: 1
       mqtt_retain: False
+      purge_interval: 60
+      debug: false
     housekeeping:
       media_storage_days: 7
       housekeeping_time: 00:00:00
@@ -19,6 +25,9 @@ notify:
       html_email:
         transport: email
         template: default.html.j2
+        title: "Notification: {{notification_title}}"
+        enabled: true
+        debug: false
         conditions:
             condition: or
             conditions:
@@ -61,6 +70,7 @@ notify:
         selection:
           - scenario
           - fallback_on_error
+        selection_rank: FIRST
       my_hw_notifiers:
          transport: generic
          action: script.hw_alerts
@@ -157,6 +167,8 @@ notify:
         delivery:
           text_message:
             enabled: false
+      - person: person.kid_3
+        enabled: false
     transports:
       email:
         delivery_defaults:
@@ -168,7 +180,23 @@ notify:
               progressive: true
               optimize: true
               quality: 50
+            png_opts:
+              optimize: true
+            preheader_blank: "&#847;&zwnj;&nbsp;"
+            preheader_length: 100
+            simplify_text: false
+            strip_urls: false
+            target_categories:
+              - email
       alexa_media_player:
+        device_discovery: true
+        device_domain:
+          - media_player
+        device_model_include:
+          - "Echo*"
+          - "Fire*"
+        device_model_exclude:
+          - "*TV*"
         delivery_defaults:
           target:
             - media_player.kitchen
@@ -178,6 +206,11 @@ notify:
             - media_player.studio
           options:
             message_usage: combine_title
+            unique_targets: true
+            target_categories:
+              - entity_id
+            target_include_re:
+              - "media_player\\.echo.*"
       alexa_devices:
         delivery_defaults:
           target:
@@ -189,10 +222,19 @@ notify:
         delivery_defaults:
           action: notify.mikrotik_sms
           target_required: always
+          options:
+            simplify_text: true
+            strip_urls: true
+            target_categories:
+              - phone
       mobile_push:
         delivery_defaults:
           options:
             timestamp: '%H:%M'
+            simplify_text: false
+            strip_urls: false
+            target_categories:
+              - mobile_app_id
       chime:
         delivery_defaults:
           target:
@@ -229,6 +271,17 @@ notify:
                   target: switch.chime_ding
               xmas_person:
                 media_player: christmas_05
+              detailed_chime:
+                media_player:
+                  tune: amzn_sfx_bell_short_chime_02
+                  volume: 0.7
+                switch:
+                  target: switch.chime_ding
+                siren:
+                  tune: burglar
+                  duration: 10
+                  data:
+                    strobe: true
 
     scenarios:
       image_tune:
@@ -239,6 +292,15 @@ notify:
       doorbell:
         media:
           camera_entity_id: camera.doorbell
+          camera_delay: 500
+          camera_ptz_preset: 2
+          clip_url: "http://frigate/api/events/{{frigate_event_id}}/clip.mp4"
+          snapshot_url: "http://frigate/api/events/{{frigate_event_id}}/snapshot.jpg"
+          jpeg_opts:
+            progressive: true
+            quality: 75
+          png_opts:
+            optimize: true
         delivery:
           doorbell_chime_alexa:
             data:
@@ -291,7 +353,9 @@ notify:
         alias: Front Door
         device_tracker: device_tracker.cam_axis_door
         alt_camera: camera.front_garden
+        url: http://192.168.1.100/camera/front_garden/live
         ptz_default_preset: 1
+        ptz_method: frigate
         ptz_delay: 5
       - camera: camera.front_garden
         alias: Front Garden
