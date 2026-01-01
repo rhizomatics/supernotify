@@ -1,6 +1,8 @@
 """Test fixture support"""
 
+import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
@@ -62,6 +64,24 @@ from custom_components.supernotify.transport import Transport
 from .doubles_lib import DummyService
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class ContextualError(Exception):
+    exception: Exception
+    label: str
+
+
+def assert_json_round_trip(v, label=None):
+    try:
+        serialized: str = json.dumps(v)
+    except Exception as e:
+        raise ContextualError(e, label or "unknown") from e
+    try:
+        deserialized: Any = json.loads(serialized)
+    except Exception as e:
+        raise ContextualError(e, label or "unknown") from e
+    assert deserialized, f"{label or 'unknown'} should be roundtrippable in json"
 
 
 class MockableHomeAssistant(HomeAssistant):

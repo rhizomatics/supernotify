@@ -109,7 +109,7 @@ class Transport:
             ATTR_ENABLED: self.enabled,
             CONF_DEVICE_DOMAIN: self.device_domain,
             CONF_DEVICE_DISCOVERY: self.device_discovery,
-            CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
+            CONF_DELIVERY_DEFAULTS: self.delivery_defaults.as_dict(),
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

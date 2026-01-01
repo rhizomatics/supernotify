@@ -1,6 +1,5 @@
 """Config file loading tests"""
 
-import json
 import pathlib
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import patch
@@ -8,13 +7,15 @@ from unittest.mock import patch
 from homeassistant import config as hass_config
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF_PLATFORM, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceResponse, State
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.model import Target
+
+from .hass_setup_lib import assert_json_round_trip
 
 if TYPE_CHECKING:
     from homeassistant.util.json import JsonObjectType
@@ -240,6 +241,16 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
     assert_clean_notification(notification, 0)
 
 
+async def test_exposed_states(hass: HomeAssistant) -> None:
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await hass.async_block_till_done()
+    states: list[State] = [state for state in hass.states.async_all() if "supernotify" in state.entity_id]
+
+    for state in states:
+        if state.attributes:
+            assert_json_round_trip(state.attributes, label=state.entity_id)
+
+
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
@@ -387,7 +398,7 @@ async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert response == {"scenarios": []}
-    json.dumps(response)
+    assert_json_round_trip(response, label="scenarios")
 
     response = await hass.services.async_call(
         "supernotify", "enquire_active_scenarios", {"trace": True}, blocking=True, return_response=True
@@ -405,14 +416,14 @@ async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
     assert [s["name"] for s in disabled] == ["simple", "somebody"]
     assert enabled == []
     assert cvars["notification_priority"] == "medium"
-    json.dumps(response)
+    assert_json_round_trip(response, label="active_scenarios")
 
     response = await hass.services.async_call("supernotify", "purge_archive", None, blocking=True, return_response=True)
     await hass.async_block_till_done()
     assert response is not None
     assert "purged" in response
     assert cast("int", response["purged"]) >= 0
-    json.dumps(response)
+    assert_json_round_trip(response, label="purged")
 
 
 async def test_template_delivery(hass: HomeAssistant) -> None:

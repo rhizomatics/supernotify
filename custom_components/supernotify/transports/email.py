@@ -116,8 +116,8 @@ class EmailTransport(Transport):
     def extra_attributes(self) -> dict[str, Any]:
         return {
             "cached_templates": list(self.template_cache.keys()),
-            "custom_templates": self.custom_template_path,
-            "custom_email_templates": self.custom_email_template_path,
+            "custom_templates": str(self.custom_template_path) if self.custom_template_path else None,
+            "custom_email_templates": str(self.custom_email_template_path) if self.custom_email_template_path else None,
         }
 
     @property

@@ -1,9 +1,8 @@
-import json
-from typing import Any
-
 from homeassistant.exceptions import HomeAssistantError
 
 from custom_components.supernotify.model import DebugTrace, Target, TargetRequired
+
+from .hass_setup_lib import assert_json_round_trip
 
 
 def test_target_in_dict_mode() -> None:
@@ -217,6 +216,4 @@ def test_debug_trace() -> None:
     result = uut.contents()
     assert "foo" in result["delivery_artefacts"]["plain_email"]
 
-    serialized: str = json.dumps(uut.contents())
-    deserialized: Any = json.loads(serialized)
-    assert deserialized
+    assert_json_round_trip(uut.contents())
