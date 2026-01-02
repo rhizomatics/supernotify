@@ -198,7 +198,7 @@ class Scenario:
             ATTR_ENABLED: self.enabled,
             ATTR_MEDIA: self.media,
             "action_groups": self.action_groups,
-            "delivery": {k: v.as_dict() for k, v in self.delivery_overrides.items()},
+            "delivery": self.delivery_overrides
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

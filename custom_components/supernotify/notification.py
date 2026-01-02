@@ -1,8 +1,6 @@
 import datetime as dt
 import logging
 import uuid
-from collections.abc import KeysView
-from enum import Enum
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any, cast
 
@@ -42,7 +40,7 @@ from . import (
     SelectionRank,
 )
 from .archive import ArchivableObject
-from .common import ensure_list, nullable_ensure_list
+from .common import ensure_list, nullable_ensure_list, sanitize
 from .context import Context
 from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
@@ -485,28 +483,6 @@ class Notification(ArchivableObject):
             "error_count",
             "deliveries",
         ]
-
-        def sanitize(v: Any, minimal: bool = True, top_level_keys_only: bool = False, **kwargs) -> Any:
-            if isinstance(v, dt.datetime | dt.time | dt.date):
-                return v.isoformat()
-            if isinstance(v, str | int | float | bool):
-                return v
-            if isinstance(v, list | KeysView):
-                return [sanitize(vv, minimal=minimal, **kwargs) for vv in v]
-            if isinstance(v, tuple):
-                return (sanitize(vv, minimal=minimal, **kwargs) for vv in v)
-            if isinstance(v, dict):
-                if top_level_keys_only:
-                    return [sanitize(k, minimal, **kwargs) for k in v]
-                return {k: sanitize(vv, minimal=minimal, **kwargs) for k, vv in v.items()}
-            if isinstance(v, Enum):
-                return str(v)
-            if isinstance(v, object):
-                if hasattr(v, "contents"):
-                    return sanitize(v.contents(**kwargs), minimal=minimal, **kwargs)
-                if hasattr(v, "as_dict"):
-                    return v.as_dict(**kwargs)
-            return None
 
         result = {
             k: sanitize(

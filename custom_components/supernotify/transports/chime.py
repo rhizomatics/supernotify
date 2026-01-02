@@ -239,7 +239,7 @@ class ChimeTransport(Transport):
     def setup_delivery_options(self, options: dict[str, Any]) -> dict[str, Any]:
         # FIXME: handle chime aliases in delivery so config can be broken up or overridden in delivery data  # noqa: TD001
         if OPTION_CHIME_ALIASES in options:
-            chime_aliases: ConfigType = self.build_aliases(options[OPTION_CHIME_ALIASES])
+            chime_aliases: ConfigType = build_aliases(options[OPTION_CHIME_ALIASES])
             if chime_aliases:
                 _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(chime_aliases))
             else:
@@ -255,39 +255,6 @@ class ChimeTransport(Transport):
 
     def extra_attributes(self) -> dict[str, Any]:
         return {"mini_transports": [t.domain for t in self.mini_transports.values()]}
-
-    def build_aliases(self, src_config: ConfigType) -> ConfigType:
-        dest_config: dict[str, Any] = {}
-        try:
-            validated: ConfigType = CHIME_ALIASES_SCHEMA({OPTION_CHIME_ALIASES: src_config})
-            for alias, alias_config in validated[OPTION_CHIME_ALIASES].items():
-                alias_config = alias_config or {}
-                for domain_or_label, domain_config in alias_config.items():
-                    domain_config = domain_config or {}
-                    if isinstance(domain_config, str):
-                        domain_config = {CONF_TUNE: domain_config}
-                    domain_config.setdefault(CONF_TUNE, alias)
-                    if domain_or_label in OPTIONS_CHIME_DOMAINS:
-                        domain_config.setdefault(CONF_DOMAIN, domain_or_label)
-
-                    try:
-                        if domain_config.get(CONF_TARGET):
-                            domain_config[CONF_TARGET] = Target(domain_config[CONF_TARGET])
-                            if not domain_config[CONF_TARGET].has_targets():
-                                _LOGGER.warning("SUPERNOTIFY chime alias %s has empty target", alias)
-                            elif domain_config[CONF_TARGET].has_unknown_targets():
-                                _LOGGER.warning("SUPERNOTIFY chime alias %s has unknown targets", alias)
-                        dest_config.setdefault(alias, {})
-                        dest_config[alias][domain_or_label] = domain_config
-                    except Exception as e:
-                        _LOGGER.exception("SUPERNOTIFY chime alias %s has invalid target: %s", alias, e)
-
-        except vol.Invalid as ve:
-            _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
-            _LOGGER.error("SUPERNOTIFY %s", humanize_error(src_config, ve))
-        except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Chime alias unexpected error: %s", e)
-        return dest_config
 
     @property
     def default_config(self) -> TransportConfig:
@@ -442,3 +409,37 @@ class ChimeTransport(Transport):
                     target_configs.update(bulk_apply)
         _LOGGER.debug("SUPERNOTIFY transport_chime: Resolved tune %s to %s", tune_or_alias, target_configs)
         return target_configs
+
+
+def build_aliases(src_config: ConfigType) -> ConfigType:
+    dest_config: dict[str, Any] = {}
+    try:
+        validated: ConfigType = CHIME_ALIASES_SCHEMA({OPTION_CHIME_ALIASES: src_config})
+        for alias, alias_config in validated[OPTION_CHIME_ALIASES].items():
+            alias_config = alias_config or {}
+            for domain_or_label, domain_config in alias_config.items():
+                domain_config = domain_config or {}
+                if isinstance(domain_config, str):
+                    domain_config = {CONF_TUNE: domain_config}
+                domain_config.setdefault(CONF_TUNE, alias)
+                if domain_or_label in OPTIONS_CHIME_DOMAINS:
+                    domain_config.setdefault(CONF_DOMAIN, domain_or_label)
+
+                try:
+                    if domain_config.get(CONF_TARGET):
+                        domain_config[CONF_TARGET] = Target(domain_config[CONF_TARGET])
+                        if not domain_config[CONF_TARGET].has_targets():
+                            _LOGGER.warning("SUPERNOTIFY chime alias %s has empty target", alias)
+                        elif domain_config[CONF_TARGET].has_unknown_targets():
+                            _LOGGER.warning("SUPERNOTIFY chime alias %s has unknown targets", alias)
+                    dest_config.setdefault(alias, {})
+                    dest_config[alias][domain_or_label] = domain_config
+                except Exception as e:
+                    _LOGGER.exception("SUPERNOTIFY chime alias %s has invalid target: %s", alias, e)
+
+    except vol.Invalid as ve:
+        _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
+        _LOGGER.error("SUPERNOTIFY %s", humanize_error(src_config, ve))
+    except Exception as e:
+        _LOGGER.exception("SUPERNOTIFY Chime alias unexpected error: %s", e)
+    return dest_config

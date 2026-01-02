@@ -31,6 +31,7 @@ from . import (
     CONF_TEMPLATE,
     CONF_TITLE,
     CONF_TRANSPORT,
+    CONF_TRANSPORT_DATA,
     OCCUPANCY_ALL,
     OPTION_DEVICE_DISCOVERY_ENABLED,
     OPTION_DEVICE_DOMAIN,
@@ -197,6 +198,7 @@ class Delivery(DeliveryConfig):
             CONF_ENABLED: self.enabled,
             CONF_OCCUPANCY: self.occupancy,
             CONF_CONDITIONS: self.conditions,
+            CONF_TRANSPORT_DATA: self.transport_data
         })
         return base
 
@@ -210,6 +212,7 @@ class Delivery(DeliveryConfig):
             CONF_OPTIONS: self.options,
             CONF_SELECTION: self.selection,
             CONF_DEBUG: self.debug,
+            CONF_TRANSPORT_DATA: self.transport_data
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

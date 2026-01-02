@@ -91,12 +91,12 @@ class Transport:
         attrs: dict[str, Any] = {
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
-            CONF_DELIVERY_DEFAULTS: self.delivery_defaults.as_dict(),
+            CONF_DELIVERY_DEFAULTS: self.delivery_defaults,
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
         if self.last_error_at:
-            attrs["last_error_at"] = self.last_error_at.isoformat()
+            attrs["last_error_at"] = self.last_error_at
             attrs["last_error_in"] = self.last_error_in
             attrs["last_error_message"] = self.last_error_message
         attrs["error_count"] = self.error_count

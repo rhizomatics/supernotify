@@ -158,8 +158,8 @@ class Recipient:
             ATTR_USER_ID: self.user_id,
             CONF_MOBILE_DEVICES: list(self.mobile_devices.values()),
             CONF_MOBILE_DISCOVERY: self.mobile_discovery,
-            CONF_TARGET: self._target.as_dict() if self._target else None,
-            CONF_DELIVERY: {d: c.as_dict() for d, c in self.delivery_overrides.items()} if self.delivery_overrides else None,
+            CONF_TARGET: self._target,
+            CONF_DELIVERY: self.delivery_overrides
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

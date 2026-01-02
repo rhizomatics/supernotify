@@ -53,7 +53,7 @@ from . import (
 )
 from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker
+from .common import DupeChecker, sanitize
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
@@ -573,7 +573,7 @@ class SupernotifyAction(BaseNotificationService):
             self.expose_entity(
                 f"scenario_{scenario.name}",
                 state=STATE_UNKNOWN,
-                attributes=scenario.attributes(include_condition=False),
+                attributes=sanitize(scenario.attributes(include_condition=False)),
                 original_name=f"{scenario.name} Scenario",
                 original_icon="mdi:assignment",
                 entity_registry=ent_reg,
@@ -582,7 +582,7 @@ class SupernotifyAction(BaseNotificationService):
             self.expose_entity(
                 f"transport_{transport.name}",
                 state=STATE_ON if transport.enabled else STATE_OFF,
-                attributes=transport.attributes(),
+                attributes=sanitize(transport.attributes()),
                 original_name=f"{transport.name} Transport Adaptor",
                 original_icon="mdi:delivery-truck-speed",
                 entity_registry=ent_reg,
@@ -592,7 +592,7 @@ class SupernotifyAction(BaseNotificationService):
             self.expose_entity(
                 f"delivery_{delivery.name}",
                 state=STATE_ON if delivery.enabled else STATE_OFF,
-                attributes=delivery.attributes(),
+                attributes=sanitize(delivery.attributes()),
                 original_name=f"{delivery.name} Delivery Configuration",
                 original_icon="mdi:package_2",
                 entity_registry=ent_reg,
@@ -602,7 +602,7 @@ class SupernotifyAction(BaseNotificationService):
             self.expose_entity(
                 f"recipient_{recipient.name}",
                 state=STATE_ON if recipient.enabled else STATE_OFF,
-                attributes=recipient.attributes(),
+                attributes=sanitize(recipient.attributes()),
                 original_name=f"{recipient.name}",
                 original_icon="mdi:inbox_text_person",
                 entity_registry=ent_reg,

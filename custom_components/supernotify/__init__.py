@@ -240,6 +240,7 @@ CONF_SIZE: Final[str] = "size"
 ATTR_DUPE_POLICY_MTSLP: Final[str] = "dupe_policy_message_title_same_or_lower_priority"
 ATTR_DUPE_POLICY_NONE: Final[str] = "dupe_policy_none"
 CONF_MOBILE_APP_ID: Final[str] = "mobile_app_id"
+CONF_TRANSPORT_DATA: Final[str] = "transport_data"
 
 
 def phone(value: str) -> str:
