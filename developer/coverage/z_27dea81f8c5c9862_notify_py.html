@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_people_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2026-01-01 20:14 +0000
+            created at 2026-01-02 11:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -541,7 +541,7 @@
     <p class="run"><span class="n"><a id="t459" href="#t459">459</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">_entity_state_change_listener</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">event</span><span class="op">:</span> <span class="nam">Event</span><span class="op">[</span><span class="nam">EventStateChangedData</span><span class="op">]</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t460" href="#t460">460</a></span><span class="t">        <span class="nam">changes</span> <span class="op">=</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t461" href="#t461">461</a></span><span class="t">        <span class="key">if</span> <span class="nam">event</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t462" href="#t462">462</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">SUPERNOTIFY </span><span class="op">{</span><span class="nam">event</span><span class="op">.</span><span class="nam">event_type</span><span class="op">}</span><span class="fst"> event for entity: </span><span class="op">{</span><span class="nam">event</span><span class="op">.</span><span class="nam">data</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t462" href="#t462">462</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f"</span><span class="fst">SUPERNOTIFY </span><span class="op">{</span><span class="nam">event</span><span class="op">.</span><span class="nam">event_type</span><span class="op">}</span><span class="fst"> event for entity: </span><span class="op">{</span><span class="nam">event</span><span class="op">.</span><span class="nam">data</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t463" href="#t463">463</a></span><span class="t">            <span class="nam">new_state</span><span class="op">:</span> <span class="nam">State</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="nam">event</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">"new_state"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t464" href="#t464">464</a></span><span class="t">            <span class="key">if</span> <span class="nam">new_state</span> <span class="key">and</span> <span class="nam">event</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">"entity_id"</span><span class="op">]</span><span class="op">.</span><span class="nam">startswith</span><span class="op">(</span><span class="fst">f"</span><span class="fst">binary_sensor.</span><span class="op">{</span><span class="nam">DOMAIN</span><span class="op">}</span><span class="fst">_scenario_</span><span class="fst">"</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t465" href="#t465">465</a></span><span class="t">                <span class="nam">scenario</span><span class="op">:</span> <span class="nam">Scenario</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">scenario_registry</span><span class="op">.</span><span class="nam">scenarios</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -784,7 +784,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_people_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2026-01-01 20:14 +0000
+            created at 2026-01-02 11:30 +0000
         </p>
     </div>
 </footer>
