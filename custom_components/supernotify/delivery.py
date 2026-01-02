@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_NAME,
     CONF_OPTIONS,
+    CONF_TARGET,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -24,14 +25,16 @@ from custom_components.supernotify.transport import Transport
 from . import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
+    CONF_DATA,
     CONF_MESSAGE,
     CONF_MOBILE_APP_ID,
     CONF_OCCUPANCY,
     CONF_SELECTION,
+    CONF_TARGET_REQUIRED,
+    CONF_TARGET_USAGE,
     CONF_TEMPLATE,
     CONF_TITLE,
     CONF_TRANSPORT,
-    CONF_TRANSPORT_DATA,
     OCCUPANCY_ALL,
     OPTION_DEVICE_DISCOVERY_ENABLED,
     OPTION_DEVICE_DOMAIN,
@@ -197,8 +200,7 @@ class Delivery(DeliveryConfig):
             CONF_TITLE: self.title,
             CONF_ENABLED: self.enabled,
             CONF_OCCUPANCY: self.occupancy,
-            CONF_CONDITIONS: self.conditions,
-            CONF_TRANSPORT_DATA: self.transport_data,
+            CONF_CONDITIONS: self.conditions
         })
         return base
 
@@ -211,8 +213,11 @@ class Delivery(DeliveryConfig):
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_SELECTION: self.selection,
-            CONF_DEBUG: self.debug,
-            CONF_TRANSPORT_DATA: self.transport_data,
+            CONF_TARGET: self.target,
+            CONF_TARGET_REQUIRED: self.target_required,
+            CONF_TARGET_USAGE: self.target_usage,
+            CONF_DATA: self.data,
+            CONF_DEBUG: self.debug
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
