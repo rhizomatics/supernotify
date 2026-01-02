@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_notification_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2026-01-02 20:14 +0000
+            created at 2026-01-02 22:07 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -127,7 +127,7 @@
     <p class="run run2"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">    <span class="nam">CONF_SELECTION_RANK</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">    <span class="nam">CONF_TARGET_REQUIRED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">    <span class="nam">CONF_TARGET_USAGE</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">    <span class="nam">OPTION_DEVICE_DISCOVERY_ENABLED</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">    <span class="nam">OPTION_DEVICE_DISCOVERY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">    <span class="nam">OPTION_DEVICE_DOMAIN</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">    <span class="nam">OPTION_DEVICE_MODEL_SELECT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">    <span class="nam">PRIORITY_MEDIUM</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -499,8 +499,8 @@
     <p class="run run2"><span class="n"><a id="t417" href="#t417">417</a></span><span class="t">                <span class="nam">SELECT_EXCLUDE</span><span class="op">:</span> <span class="nam">device_model_exclude</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t418" href="#t418">418</a></span><span class="t">            <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t419" href="#t419">419</a></span><span class="t">        <span class="nam">device_discovery</span> <span class="op">=</span> <span class="nam">conf</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">CONF_DEVICE_DISCOVERY</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t420" href="#t420">420</a></span><span class="t">        <span class="key">if</span> <span class="nam">device_discovery</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t421" href="#t421">421</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_defaults</span><span class="op">.</span><span class="nam">options</span><span class="op">[</span><span class="nam">OPTION_DEVICE_DISCOVERY_ENABLED</span><span class="op">]</span> <span class="op">=</span> <span class="nam">device_discovery</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t420" href="#t420">420</a></span><span class="t">        <span class="key">if</span> <span class="nam">device_discovery</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span> <span class="key">and</span> <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_defaults</span><span class="op">.</span><span class="nam">options</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">OPTION_DEVICE_DISCOVERY</span><span class="op">)</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t421" href="#t421">421</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_defaults</span><span class="op">.</span><span class="nam">options</span><span class="op">[</span><span class="nam">OPTION_DEVICE_DISCOVERY</span><span class="op">]</span> <span class="op">=</span> <span class="nam">device_discovery</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t422" href="#t422">422</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t423" href="#t423">423</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t424" href="#t424">424</a></span><span class="t"><span class="key">class</span> <span class="nam">DeliveryCustomization</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -808,7 +808,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_notification_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2026-01-02 20:14 +0000
+            created at 2026-01-02 22:07 +0000
         </p>
     </div>
 </footer>

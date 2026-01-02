@@ -23,7 +23,6 @@
       }
     },
     "device_discovery": {
-      "default": false,
       "type": "string"
     },
     "enabled": {
