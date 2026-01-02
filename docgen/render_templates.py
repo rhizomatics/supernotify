@@ -45,7 +45,7 @@ async def create_examples() -> None:
                 action_data={"message": "Example notification message", "title": "Example notification title"},
                 debug_trace=None,
                 image_path=None,
-                snapshot_url="https://supernotify.rhizomatics.org.uk/assets/images/dark_icon.png",
+                snapshot_url="https://upload.wikimedia.org/wikipedia/commons/a/a5/Information_example_page2_300px.jpg",
                 extra_data={},
                 strict_template=False,
             )
