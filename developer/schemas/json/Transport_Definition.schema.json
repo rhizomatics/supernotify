@@ -22,25 +22,13 @@
         "type": "string"
       }
     },
-    "device_manufacturer_include": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "device_manufacturer_exclude": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
     "device_discovery": {
-      "type": "boolean",
-      "default": false
+      "default": false,
+      "type": "string"
     },
     "enabled": {
-      "type": "boolean",
-      "default": true
+      "default": true,
+      "type": "string"
     },
     "delivery_defaults": {
       "type": "object",

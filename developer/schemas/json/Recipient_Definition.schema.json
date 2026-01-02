@@ -112,6 +112,9 @@
           "model": {
             "type": "string"
           },
+          "class": {
+            "type": "string"
+          },
           "mobile_app_id": {
             "type": "string"
           },
