@@ -1,15 +1,16 @@
 # Public releases
 
-## 1.8.3
+## 1.9.0
 ### Device Discovery
 - Now configured via `options` and can be used for mobile_app_ids or device_ids
+- Discovery now happens at *Delivery* level rather than *Transport*
+  - Discovery can filter in or out device by platform, model or manufacturer
+  - This makes it possible to have separarte Mobile Push Delivery configurations for Android and Apple where needed
 ### Mobile Push
-- Now supports push to all known mobile apps using device discovery
+- Now supports push to all known mobile apps using device discovery, not just the Device Trackers assigned in the Person integration
 ### TTS
 - TTS Transport Adaptor supports TTS delivery to Android mobile apps
-### Device Discovery
-- Include/exclude by manufacturer as well as model
-- All mobile apps now discovered at startup
+
 ## 1.8.2
 ### Debugging
 - Debug trace now holds exception traces for email templates and chime action building
