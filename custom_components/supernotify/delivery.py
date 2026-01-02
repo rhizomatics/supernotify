@@ -134,16 +134,16 @@ class Delivery(DeliveryConfig):
                         mobile_app: dict[str, str | None] | None = context.hass_api.mobile_app_by_device_id(d.id)
                         mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
                         if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
-                            _LOGGER.info(f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}")
+                            _LOGGER.debug(f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}")
                             self.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
                             added += 1
                     else:
                         if d.id not in self.target.device_ids:
-                            _LOGGER.info(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
+                            _LOGGER.debug(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
                             self.target.extend(ATTR_DEVICE_ID, d.id)
                             added += 1
 
-                _LOGGER.info(f"SUPERNOTIFY Device discovery for {domain} found {discovered} devices, added {added} new ones")
+                _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")
 
     def select_targets(self, target: Target) -> Target:
         def selected(category: str, targets: list[str]) -> list[str]:
