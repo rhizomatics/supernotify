@@ -41,7 +41,6 @@ RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DOMAINS = ["alexa_devices"]
-DEVICE_MODEL_EXCLUDE = ["Speaker Group"]
 
 
 @dataclass
@@ -300,7 +299,7 @@ class ChimeTransport(Transport):
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY_ENABLED: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,
-            OPTION_DEVICE_MODEL_SELECT: {SELECT_EXCLUDE: DEVICE_MODEL_EXCLUDE},
+            OPTION_DEVICE_MODEL_SELECT: {SELECT_EXCLUDE: ["Speaker Group"]},
         }
         return config
 

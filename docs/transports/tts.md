@@ -68,13 +68,16 @@ action: notify.mobile_app_my_pixel
       tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on at the transport definition, in which
-case every notification will be announced on every Android companion app unless overridden.
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which
+case every notification will be announced on every Android companion app unless overridden. This example
+uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries.
 
 ```yaml title="Configuration Snippet"
 transports:
   tts:
-    device_discovery: true
+    delivery_defaults:
+      options:
+        device_discovery: true
 ```
 
 Media Player and Android targets can be combined in one call - the `tts` transport will work out which calls to make.

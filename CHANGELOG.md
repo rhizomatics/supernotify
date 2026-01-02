@@ -1,6 +1,8 @@
 # Public releases
 
 ## 1.8.3
+### Device Discovery
+- Now configured via `options` and can be used for mobile_app_ids or device_ids
 ### Mobile Push
 - Now supports push to all known mobile apps using device discovery
 ### TTS

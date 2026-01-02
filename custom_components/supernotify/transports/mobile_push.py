@@ -76,7 +76,7 @@ class MobilePushTransport(Transport):
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_CATEGORIES: [ATTR_MOBILE_APP_ID],
-            OPTION_DEVICE_DISCOVERY_ENABLED: False,
+            OPTION_DEVICE_DISCOVERY_ENABLED: True,
             OPTION_DEVICE_DOMAIN: ["mobile_app"],
         }
         return config

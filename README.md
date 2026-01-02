@@ -23,7 +23,9 @@
 
 An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
-Supernotify lets you make a **simple, single notification action** from all your automations, scripts, AppDaemon apps etc and have all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed.
+Supernotify has one goal - to make the **simplest possible notification do as many notifications as you need with no code and minimal configuration**.
+
+This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
 With two lines of very simple yaml, start mobile push notifications to everyone registered in the house, without
 configuring mobile app names in notifications.
@@ -34,8 +36,7 @@ Supernotify is a custom component available via the [Home Assistant Community Sh
 
 ## Documentation
 
-Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do. [Notifying](usage/notifying.md) shows how to call Supernotify from
-automations or the Developer Tools action page.
+Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do. [Notifying](usage/notifying.md) shows how to call Supernotify from automations or the Developer Tools action page.
 
 There are lots of [recipes](https://supernotify.rhizomatics.org.uk/recipes/) with sample
 config snippers to give you some more ideas, or browse by [tags](https://supernotify.rhizomatics.org.uk/tags/).
@@ -47,6 +48,10 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
     * Remove repetitive config and code from automations
     * Adaptors automatically tune notification data for each integration
     * For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](https://supernotify.rhizomatics.org.uk/recipes/frigate_emails/) for more info.
+* Automated set-up
+    * Delivery configuration for Mobile Push, Email (SMTP) and Notify Entity set up automatically
+    * Mobile Apps automatically discovered, including Manufacturer and Model of the phone, which can be used to customize delivery
+    * Alexa Devices for sending chime noises automatically discovered from Home Assistant
 * Go beyond `notify` integrations
     * Chimes, sirens, SMS, TTS, Alexa Announcements and Sounds, API calls, MQTT devices
     * All the standard `notify` and  `notify.group` implementations available, including the modern `NotifyEntity` based ones

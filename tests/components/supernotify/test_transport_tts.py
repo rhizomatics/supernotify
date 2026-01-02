@@ -128,7 +128,7 @@ async def test_manual_android_tts_provider(hass: HomeAssistant) -> None:
 async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_OPTIONS: {"device_discovery_enabled": True}}},
+        deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_OPTIONS: {"device_discovery": True}}},
         transport_types=[TTSTransport],
     )
     register_mobile_app(ctx.hass_api, device_name="jeans_phone", manufacturer="Apple")
