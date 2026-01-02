@@ -58,7 +58,7 @@ to preserve the order in which the `media_player` entities were listed.
 ## Android Companion App
 
 If a `mobile_app_XXXX` target is passed to this transport, it will check if its an Android ( or more precisely
-not an Apple) mobile app, and make a call like:
+not an Apple) mobile app, and generate an action call like:
 
 ```yaml title="Android TTS"
 action: notify.mobile_app_my_pixel
@@ -66,6 +66,15 @@ action: notify.mobile_app_my_pixel
     message: "TTS"
     data:
       tts_text: "This is the notification message"
+```
+
+The targets can be skipped if device discovery is switched on at the transport definition, in which
+case every notification will be announced on every Android companion app unless overridden.
+
+```yaml title="Configuration Snippet"
+transports:
+  tts:
+    device_discovery: true
 ```
 
 Media Player and Android targets can be combined in one call - the `tts` transport will work out which calls to make.

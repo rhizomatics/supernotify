@@ -16,7 +16,14 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import ATTR_ENABLED, CONF_DELIVERY_DEFAULTS, CONF_DEVICE_DISCOVERY, CONF_DEVICE_DOMAIN
+from . import (
+    ATTR_ENABLED,
+    ATTR_MOBILE_APP_ID,
+    CONF_DELIVERY_DEFAULTS,
+    CONF_DEVICE_DISCOVERY,
+    CONF_DEVICE_DOMAIN,
+    CONF_MOBILE_APP_ID,
+)
 from .common import CallRecord
 from .context import Context
 from .hass_api import HomeAssistantAPI
@@ -84,10 +91,18 @@ class Transport:
                     discovered += 1
                     if self.delivery_defaults.target is None:
                         self.delivery_defaults.target = Target()
-                    if d.id not in self.delivery_defaults.target.device_ids:
-                        _LOGGER.info(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
-                        self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
-                        added += 1
+                    if domain == "mobile_app":
+                        mobile_app: dict[str, str | None] | None = self.hass_api.mobile_app_by_device_id(d.id)
+                        mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
+                        if mobile_app_id and mobile_app_id not in self.delivery_defaults.target.mobile_app_ids:
+                            _LOGGER.info(f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}")
+                            self.delivery_defaults.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
+                            added += 1
+                    else:
+                        if d.id not in self.delivery_defaults.target.device_ids:
+                            _LOGGER.info(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
+                            self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
+                            added += 1
 
                 _LOGGER.info(f"SUPERNOTIFY Device discovery for {domain} found {discovered} devices, added {added} new ones")
 

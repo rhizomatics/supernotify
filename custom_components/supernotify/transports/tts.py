@@ -61,6 +61,9 @@ class TTSTransport(Transport):
         config.delivery_defaults.action = "tts.speak"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.selection_rank = SelectionRank.FIRST
+        config.device_discovery = False
+        config.device_domain = ["mobile_app"]
+        config.device_manufacturer_exclude = ["Apple"]
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,

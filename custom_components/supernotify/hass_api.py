@@ -87,6 +87,7 @@ class HomeAssistantAPI:
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.mobile_apps_by_tracker: dict[str, dict[str, str | None]] = {}
         self.mobile_apps_by_app_id: dict[str, dict[str, str | None]] = {}
+        self.mobile_apps_by_device_id: dict[str, dict[str, str | None]] = {}
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
@@ -353,6 +354,9 @@ class HomeAssistantAPI:
     def mobile_app_by_id(self, mobile_app_id: str) -> dict[str, str | None] | None:
         return self.mobile_apps_by_app_id.get(mobile_app_id)
 
+    def mobile_app_by_device_id(self, device_id: str) -> dict[str, str | None] | None:
+        return self.mobile_apps_by_device_id.get(device_id)
+
     def build_mobile_app_cache(self) -> None:
         """All enabled mobile apps"""
         ent_reg: EntityRegistry | None = self.entity_registry()
@@ -385,6 +389,7 @@ class HomeAssistantAPI:
                 # CONF_DEVICE_LABELS: device.labels,
             }
             self.mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
+            self.mobile_apps_by_device_id[device.id] = mobile_app_info
             if device_tracker:
                 self.mobile_apps_by_tracker[device_tracker] = mobile_app_info
 
