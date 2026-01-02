@@ -159,7 +159,7 @@ class Recipient:
             CONF_MOBILE_DEVICES: list(self.mobile_devices.values()),
             CONF_MOBILE_DISCOVERY: self.mobile_discovery,
             CONF_TARGET: self._target,
-            CONF_DELIVERY: self.delivery_overrides
+            CONF_DELIVERY: self.delivery_overrides,
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

@@ -198,7 +198,7 @@ class Scenario:
             ATTR_ENABLED: self.enabled,
             ATTR_MEDIA: self.media,
             "action_groups": self.action_groups,
-            "delivery": self.delivery_overrides
+            "delivery": self.delivery_overrides,
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

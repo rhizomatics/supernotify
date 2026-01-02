@@ -464,7 +464,7 @@ async def test_attributes(hass: HomeAssistant, mock_delivery_registry) -> None:
     assert await uut.validate()
     attrs = uut.attributes()
 
-    assert attrs["delivery"]["doorbell_chime_alexa"]["data"]["amazon_magic_id"] == "a77464"
+    assert attrs["delivery"]["doorbell_chime_alexa"].data["amazon_magic_id"] == "a77464"
 
 
 async def test_secondary_scenario(hass: HomeAssistant, mock_delivery_registry) -> None:
