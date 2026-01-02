@@ -307,7 +307,7 @@ OPTION_DEVICE_DOMAIN: Final[str] = "device_domain"
 
 OPTION_DEVICE_MODEL_SELECT: Final[str] = "device_model_select"
 OPTION_DEVICE_MANUFACTURER_SELECT: Final[str] = "device_manufacturer_select"
-OPTION_DEVICE_DISCOVERY_ENABLED: Final[str] = "device_discovery"
+OPTION_DEVICE_DISCOVERY: Final[str] = "device_discovery"
 
 
 TARGET_REQUIRE_ALWAYS = "always"
@@ -396,7 +396,7 @@ TRANSPORT_SCHEMA = vol.All(
         vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
+        vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
         vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
     }),

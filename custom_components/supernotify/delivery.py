@@ -36,7 +36,7 @@ from . import (
     CONF_TITLE,
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
-    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MANUFACTURER_SELECT,
     OPTION_DEVICE_MODEL_SELECT,
@@ -118,7 +118,7 @@ class Delivery(DeliveryConfig):
         return errors == 0
 
     def discover_devices(self, context: "Context") -> None:
-        if self.options.get(OPTION_DEVICE_DISCOVERY_ENABLED, False):
+        if self.options.get(OPTION_DEVICE_DISCOVERY, False):
             for domain in self.options.get(OPTION_DEVICE_DOMAIN, []):
                 discovered: int = 0
                 added: int = 0
@@ -200,7 +200,7 @@ class Delivery(DeliveryConfig):
             CONF_TITLE: self.title,
             CONF_ENABLED: self.enabled,
             CONF_OCCUPANCY: self.occupancy,
-            CONF_CONDITIONS: self.conditions
+            CONF_CONDITIONS: self.conditions,
         })
         return base
 
@@ -217,7 +217,7 @@ class Delivery(DeliveryConfig):
             CONF_TARGET_REQUIRED: self.target_required,
             CONF_TARGET_USAGE: self.target_usage,
             CONF_DATA: self.data,
-            CONF_DEBUG: self.debug
+            CONF_DEBUG: self.debug,
         }
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias

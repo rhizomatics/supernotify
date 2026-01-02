@@ -22,7 +22,7 @@ from custom_components.supernotify import (
     CHIME_ALIASES_SCHEMA,
     CONF_TUNE,
     OPTION_CHIME_ALIASES,
-    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
     OPTION_TARGET_CATEGORIES,
@@ -263,7 +263,7 @@ class ChimeTransport(Transport):
         config.delivery_defaults.options = {
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_CHIME, RE_DEVICE_ID],
-            OPTION_DEVICE_DISCOVERY_ENABLED: True,
+            OPTION_DEVICE_DISCOVERY: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,
             OPTION_DEVICE_MODEL_SELECT: {SELECT_EXCLUDE: ["Speaker Group"]},
         }

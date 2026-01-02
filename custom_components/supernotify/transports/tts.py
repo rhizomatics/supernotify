@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from custom_components.supernotify import (
     ATTR_MOBILE_APP_ID,
     CONF_MANUFACTURER,
-    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MANUFACTURER_SELECT,
     OPTION_MESSAGE_USAGE,
@@ -72,7 +72,7 @@ class TTSTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_MOBILE_APP_ID],
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
-            OPTION_DEVICE_DISCOVERY_ENABLED: False,
+            OPTION_DEVICE_DISCOVERY: False,
             OPTION_DEVICE_DOMAIN: ["mobile_app"],
             OPTION_DEVICE_MANUFACTURER_SELECT: {SELECT_EXCLUDE: ["Apple"]},
         }

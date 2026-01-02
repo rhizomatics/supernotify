@@ -1,6 +1,14 @@
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import CONF_DATA, CONF_DEBUG, CONF_DEVICE_DISCOVERY, CONF_TRANSPORT, TRANSPORT_CHIME
+from custom_components.supernotify import (
+    CONF_DATA,
+    CONF_DEBUG,
+    CONF_DEVICE_DISCOVERY,
+    CONF_OPTIONS,
+    CONF_TRANSPORT,
+    OPTION_DEVICE_DISCOVERY,
+    TRANSPORT_CHIME,
+)
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
@@ -223,6 +231,25 @@ async def test_script_debug() -> None:
         ],
         any_order=True,
     )
+
+
+async def test_default_discovery_inheritance():
+    ctx = TestingContext(
+        transports={TRANSPORT_CHIME: {"delivery_defaults": {CONF_OPTIONS: {"chime_aliases": {"alexa_devices": "bell01"}}}}},
+        deliveries={
+            "chime_1": {
+                CONF_TRANSPORT: TRANSPORT_CHIME,
+                CONF_OPTIONS: {"chime_aliases": {"media_player": "amzn_sfx_doorbell"}},
+            },
+            "chime_2": {CONF_TRANSPORT: TRANSPORT_CHIME},
+            "chime_3": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_duration": 10}},
+        },
+        transport_types=[ChimeTransport],
+    )
+    await ctx.test_initialize()
+    assert len(ctx.delivery_registry.deliveries) == 3
+    for delivery in ctx.delivery_registry.deliveries.values():
+        assert delivery.option_bool(OPTION_DEVICE_DISCOVERY)
 
 
 class MockGroup:

@@ -45,7 +45,7 @@ from . import (
     CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
-    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
     PRIORITY_MEDIUM,
@@ -417,8 +417,8 @@ class TransportConfig:
                 SELECT_EXCLUDE: device_model_exclude,
             }
         device_discovery = conf.get(CONF_DEVICE_DISCOVERY)
-        if device_discovery is not None:
-            self.delivery_defaults.options[OPTION_DEVICE_DISCOVERY_ENABLED] = device_discovery
+        if device_discovery is not None and self.delivery_defaults.options.get(OPTION_DEVICE_DISCOVERY) is None:
+            self.delivery_defaults.options[OPTION_DEVICE_DISCOVERY] = device_discovery
 
 
 class DeliveryCustomization:
