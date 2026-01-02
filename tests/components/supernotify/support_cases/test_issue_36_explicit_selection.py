@@ -36,9 +36,9 @@ async def support_case_fixture(hass: HomeAssistant):
              enabled: true
 
 """,
-        services={"notify": ["signal"], "mobile_app": ["iphone"]},
+        services={"notify": ["signal"]},
     )
-    register_mobile_app(ctx.hass_api, person="person.foo", device_name="foophone", title="Foo Phone")
+    register_mobile_app(ctx.hass_api, person="person.foo", device_name="Foo Phone")
     await ctx.test_initialize()
     return ctx
 

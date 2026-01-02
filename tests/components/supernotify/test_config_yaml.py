@@ -15,7 +15,7 @@ from custom_components.supernotify import DOMAIN
 from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.model import Target
 
-from .hass_setup_lib import assert_json_round_trip
+from .hass_setup_lib import assert_clean_notification, assert_json_round_trip
 
 if TYPE_CHECKING:
     from homeassistant.util.json import JsonObjectType
@@ -63,49 +63,6 @@ def test_schema() -> None:
     assert PLATFORM_SCHEMA(SIMPLE_CONFIG)
 
 
-def assert_clean_notification(
-    notobj: dict[str, Any] | None,
-    expected_delivered: int | None = None,
-    expected_skipped: int = 0,
-    expected_deliveries: dict[str, int] | None = None,
-    ignore_defaults: bool = True,
-) -> None:
-    ignore_skipped: int = 0
-    expected_suppressed: int = 0
-    assert notobj is not None
-    if expected_delivered is not None:
-        assert notobj["delivered"] == expected_delivered
-    elif expected_deliveries:
-        assert notobj["delivered"] == sum(len(v.get("delivered", ())) for v in notobj["deliveries"].values())  # type: ignore
-    assert notobj["failed"] == 0
-
-    delivered_total: int = 0
-    for delivery, notdelobj in notobj.get("deliveries", {}).items():
-        if (
-            ignore_defaults
-            and delivery.startswith("DEFAULT_")
-            and (expected_deliveries is None or delivery not in expected_deliveries)
-        ):
-            if "skipped" in notdelobj:
-                ignore_skipped += 1
-            elif "suppressed" in notdelobj:
-                expected_suppressed += len(notdelobj["suppressed"])
-        elif "delivered" in notdelobj:
-            delivered_total += len(notdelobj["delivered"])
-            if expected_deliveries is not None:
-                assert len(notdelobj["delivered"]) == expected_deliveries.get(delivery, 0)
-        elif expected_delivered is not None and expected_delivered > 0:
-            assert list(notdelobj.keys()) in ([], ["deliveries"])
-        elif expected_delivered is not None:
-            assert list(notdelobj.keys()) == []
-
-    if expected_delivered:
-        assert delivered_total == expected_delivered
-
-    assert notobj["skipped"] == expected_skipped + ignore_skipped
-    assert notobj["suppressed"] == expected_suppressed
-
-
 async def test_transport_setup(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
     await hass.async_block_till_done()
@@ -136,7 +93,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert not hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     uut = hass.data["notify_services"][DOMAIN][0]
-    assert len(uut.context.people_registry.people) == 2
+    assert len(uut.context.people_registry.people) == 3
 
     assert "DEFAULT_notify_entity" in uut.context.delivery_registry.deliveries
     assert "html_email" in uut.context.delivery_registry.deliveries

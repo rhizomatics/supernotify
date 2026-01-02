@@ -1,5 +1,11 @@
 # Public releases
 
+## 1.8.3
+### TTS Transport Adaptor
+- Now supports TTS delivery to Android mobile apps
+### Device Discovery
+- Include/exclude by manufacturer as well as model
+- All mobile apps now discovered at startup
 ## 1.8.2
 ### Debugging
 - Debug trace now holds exception traces for email templates and chime action building

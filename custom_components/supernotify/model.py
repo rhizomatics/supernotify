@@ -38,6 +38,8 @@ from . import (
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
+    CONF_DEVICE_MANUFACTURER_EXCLUDE,
+    CONF_DEVICE_MANUFACTURER_INCLUDE,
     CONF_DEVICE_MODEL_EXCLUDE,
     CONF_DEVICE_MODEL_INCLUDE,
     CONF_PRIORITY,
@@ -398,6 +400,13 @@ class TransportConfig:
             else:
                 self.device_model_include = class_config.device_model_include
                 self.device_model_exclude = class_config.device_model_exclude
+            if CONF_DEVICE_MANUFACTURER_INCLUDE in conf or CONF_DEVICE_MANUFACTURER_EXCLUDE in conf:
+                # source include and exclude atomically either explicit config or default
+                self.device_manufacturer_include: list[str] | None = conf.get(CONF_DEVICE_MANUFACTURER_INCLUDE)
+                self.device_manufacturer_exclude: list[str] | None = conf.get(CONF_DEVICE_MANUFACTURER_EXCLUDE)
+            else:
+                self.device_manufacturer_include = class_config.device_manufacturer_include
+                self.device_manufacturer_exclude = class_config.device_manufacturer_exclude
             self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
             self.alias = conf.get(CONF_ALIAS)
@@ -408,6 +417,8 @@ class TransportConfig:
             self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
             self.device_model_include = conf.get(CONF_DEVICE_MODEL_INCLUDE)
             self.device_model_exclude = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
+            self.device_manufacturer_include = conf.get(CONF_DEVICE_MANUFACTURER_INCLUDE)
+            self.device_manufacturer_exclude = conf.get(CONF_DEVICE_MANUFACTURER_EXCLUDE)
             self.device_discovery = conf.get(CONF_DEVICE_DISCOVERY, False)
             self.enabled = conf.get(CONF_ENABLED, True)
             self.alias = conf.get(CONF_ALIAS)

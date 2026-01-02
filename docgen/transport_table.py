@@ -56,8 +56,10 @@ def transport_doc() -> None:
         df.write("\n")
         df.write("## Automatic Device Discovery\n")
 
-        df.write("|Transport|Device Discovery|Device Domain|Device Model Exclude|\n")
-        df.write("|---------|----------------|-------------|--------------------|\n")
+        df.write("|Transport|Device Discovery|Device Domain|Device Manufacturer Include|")
+        df.write("Device Manufacturer Exclude|Device Model Include | Device Model Exclude|\n")
+        df.write("|---------|----------------|-------------|---------------------------|")
+        df.write("---------------------------|---------------------|---------------------|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
             transport = transport_class(mock_context)
             if transport.default_config.device_discovery:
@@ -65,6 +67,9 @@ def transport_doc() -> None:
                 df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
                 df.write(f"|{transport.default_config.device_discovery}")
                 df.write(f"|{','.join(transport.default_config.device_domain or [])}")
+                df.write(f"|{','.join(transport.default_config.device_manufacturer_include or [])}|\n")
+                df.write(f"|{','.join(transport.default_config.device_manufacturer_exclude or [])}|\n")
+                df.write(f"|{','.join(transport.default_config.device_model_include or [])}|\n")
                 df.write(f"|{','.join(transport.default_config.device_model_exclude or [])}|\n")
 
         df.write("\n")

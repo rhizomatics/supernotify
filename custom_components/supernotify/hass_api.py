@@ -4,8 +4,10 @@ import logging
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import CONF_ACTION, CONF_DEVICE_ID, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
+from homeassistant.util import slugify
 
 if TYPE_CHECKING:
     import asyncio
@@ -14,6 +16,7 @@ if TYPE_CHECKING:
     import aiohttp
     from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service
     from homeassistant.helpers.entity import Entity
+    from homeassistant.helpers.entity_registry import EntityRegistry
     from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.event_type import EventType
 
@@ -60,7 +63,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.network import get_url
 
-from . import DOMAIN, ConditionsFunc
+from . import CONF_DEVICE_NAME, CONF_DEVICE_TRACKER, CONF_MANUFACTURER, CONF_MOBILE_APP_ID, DOMAIN, ConditionsFunc
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -82,6 +85,8 @@ class HomeAssistantAPI:
         self._device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
+        self.mobile_apps_by_tracker: dict[str, dict[str, str | None]] = {}
+        self.mobile_apps_by_app_id: dict[str, dict[str, str | None]] = {}
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
@@ -96,6 +101,8 @@ class HomeAssistantAPI:
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY could not get external hass url, defaulting to internal url: %s", e)
             self.external_url = self.internal_url
+
+        self.build_mobile_app_cache()
 
         _LOGGER.debug(
             "SUPERNOTIFY Configured for HomeAssistant instance %s at %s , %s",
@@ -340,8 +347,56 @@ class HomeAssistantAPI:
             is_fixable=is_fixable,
         )
 
+    def mobile_app_by_tracker(self, device_tracker: str) -> dict[str, str | None] | None:
+        return self.mobile_apps_by_tracker.get(device_tracker)
+
+    def mobile_app_by_id(self, mobile_app_id: str) -> dict[str, str | None] | None:
+        return self.mobile_apps_by_app_id.get(mobile_app_id)
+
+    def build_mobile_app_cache(self) -> None:
+        """All enabled mobile apps"""
+        ent_reg: EntityRegistry | None = self.entity_registry()
+        if not ent_reg:
+            _LOGGER.warning("SUPERNOTIFY Unable to discover devices for - no entity registry found")
+            return
+
+        found: int = 0
+        for device in self.discover_devices("mobile_app"):
+            mobile_app_id: str = f"mobile_app_{slugify(device.name)}"
+            device_tracker: str | None = None
+            notify_action: str | None = None
+            if self.has_service("notify", mobile_app_id):
+                notify_action = f"notify.{mobile_app_id}"
+            else:
+                _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
+            registry_entries = ent_reg.entities.get_entries_for_device_id(device.id)
+            for reg_entry in registry_entries:
+                if reg_entry.platform == "mobile_app" and reg_entry.domain == "device_tracker":
+                    device_tracker = reg_entry.entity_id
+
+            mobile_app_info = {
+                CONF_MANUFACTURER: device.manufacturer,
+                CONF_MODEL: device.model,
+                CONF_MOBILE_APP_ID: mobile_app_id,
+                CONF_DEVICE_TRACKER: device_tracker,
+                CONF_ACTION: notify_action,
+                CONF_DEVICE_ID: device.id,
+                CONF_DEVICE_NAME: device.name,
+                # CONF_DEVICE_LABELS: device.labels,
+            }
+            self.mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
+            if device_tracker:
+                self.mobile_apps_by_tracker[device_tracker] = mobile_app_info
+
+        _LOGGER.info(f"SUPERNOTIFY Found {found} enabled notifiable mobile app devices")
+
     def discover_devices(
-        self, discover_domain: str, device_model_include: list[str] | None = None, device_model_exclude: list[str] | None = None
+        self,
+        discover_domain: str,
+        device_model_include: list[str] | None = None,
+        device_model_exclude: list[str] | None = None,
+        device_manufacturer_include: list[str] | None = None,
+        device_manufacturer_exclude: list[str] | None = None,
     ) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
@@ -352,6 +407,20 @@ class HomeAssistantAPI:
         all_devs = enabled_devs = found_devs = skipped_devs = 0
         for dev in dev_reg.devices.values():
             all_devs += 1
+            if device_manufacturer_include is not None and (
+                dev.manufacturer is None or not any(re.fullmatch(pat, dev.manufacturer) for pat in device_manufacturer_include)
+            ):
+                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, manufacturer %s not match include pattern", dev.name, dev.model)
+                skipped_devs += 1
+                continue
+            if (
+                device_manufacturer_exclude is not None
+                and dev.manufacturer is not None
+                and any(re.fullmatch(pat, dev.manufacturer) for pat in device_manufacturer_exclude)
+            ):
+                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, manufacturer %s match exclude pattern", dev.name, dev.model)
+                skipped_devs += 1
+                continue
             if device_model_include is not None and (
                 dev.model is None or not any(re.fullmatch(pat, dev.model) for pat in device_model_include)
             ):

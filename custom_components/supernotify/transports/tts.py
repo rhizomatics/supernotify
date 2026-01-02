@@ -1,11 +1,13 @@
 import logging
 from typing import Any
 
-from homeassistant.components.notify.const import ATTR_MESSAGE
+from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.components.tts.const import ATTR_CACHE, ATTR_LANGUAGE, ATTR_OPTIONS
 from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify import (
+    ATTR_MOBILE_APP_ID,
+    CONF_MANUFACTURER,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -16,11 +18,19 @@ from custom_components.supernotify import (
     SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    MessageOnlyPolicy,
+    Target,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
+RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"  # mypy flags up import from tts
 
 
@@ -55,8 +65,8 @@ class TTSTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
-            OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER],
+            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_MOBILE_APP_ID],
+            OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
         }
         return config
@@ -64,12 +74,19 @@ class TTSTransport(Transport):
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY tts: %s", envelope.message)
 
-        targets = envelope.target.entity_ids or []
+        delivered: bool = False
 
-        if not targets:
-            _LOGGER.debug("SUPERNOTIFY skipping tts devices, no targets")
-            return False
+        media_player_targets = envelope.target.entity_ids or []
+        if media_player_targets:
+            delivered = await self.call_media_players(envelope, media_player_targets)
 
+        mobile_targets = envelope.target.mobile_app_ids or []
+        if mobile_targets:
+            if await self.call_mobile_apps(envelope, mobile_targets):
+                delivered = True
+        return delivered
+
+    async def call_media_players(self, envelope: Envelope, targets: list[str]) -> bool:
         action_data: dict[str, Any] = {ATTR_MESSAGE: envelope.message or ""}
         if ATTR_LANGUAGE in envelope.data:
             action_data[ATTR_LANGUAGE] = envelope.data[ATTR_LANGUAGE]
@@ -86,3 +103,20 @@ class TTSTransport(Transport):
             action_data[ATTR_MEDIA_PLAYER_ENTITY_ID] = targets
 
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)
+
+    async def call_mobile_apps(self, envelope: Envelope, targets: list[str]) -> bool:
+        action_data: dict[str, Any] = {ATTR_MESSAGE: "TTS", ATTR_DATA: {"tts_text": envelope.message or ""}}
+        if "media_stream" in envelope.data:
+            action_data["media_stream"] = envelope.data["media_stream"]
+
+        at_least_one: bool = False
+        for target in targets:
+            bare_target = target.replace("notify.", "", 1) if target.startswith("notify.") else target
+            mobile_info = self.context.hass_api.mobile_app_by_id(bare_target)
+            if not mobile_info or mobile_info.get(CONF_MANUFACTURER) == "Apple":
+                _LOGGER.debug("SUPERNOTIFY Skipping tts target that isn't confirmed as android: %s", mobile_info)
+            else:
+                full_target = target if Target.is_notify_entity(target) else f"notify.{target}"
+                if await self.call_action(envelope, qualified_action=full_target, action_data=action_data, implied_target=True):
+                    at_least_one = True
+        return at_least_one

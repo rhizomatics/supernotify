@@ -459,7 +459,7 @@ class SupernotifyAction(BaseNotificationService):
     async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
         changes = 0
         if event is not None:
-            _LOGGER.info(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
+            _LOGGER.debug(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
             new_state: State | None = event.data["new_state"]
             if new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_scenario_"):
                 scenario: Scenario | None = self.context.scenario_registry.scenarios.get(

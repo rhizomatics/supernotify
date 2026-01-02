@@ -84,6 +84,50 @@ def assert_json_round_trip(v, label=None):
     assert deserialized, f"{label or 'unknown'} should be roundtrippable in json"
 
 
+def assert_clean_notification(
+    notobj: dict[str, Any] | Notification | None,
+    expected_delivered: int | None = None,
+    expected_skipped: int = 0,
+    expected_deliveries: dict[str, int] | None = None,
+    ignore_defaults: bool = True,
+) -> None:
+    notobj = notobj.__dict__ if isinstance(notobj, Notification) else notobj
+    ignore_skipped: int = 0
+    expected_suppressed: int = 0
+    assert notobj is not None
+    if expected_delivered is not None:
+        assert notobj["delivered"] == expected_delivered
+    elif expected_deliveries:
+        assert notobj["delivered"] == sum(len(v.get("delivered", ())) for v in notobj["deliveries"].values())  # type: ignore
+    assert notobj["failed"] == 0
+
+    delivered_total: int = 0
+    for delivery, notdelobj in notobj.get("deliveries", {}).items():
+        if (
+            ignore_defaults
+            and delivery.startswith("DEFAULT_")
+            and (expected_deliveries is None or delivery not in expected_deliveries)
+        ):
+            if "skipped" in notdelobj:
+                ignore_skipped += 1
+            elif "suppressed" in notdelobj:
+                expected_suppressed += len(notdelobj["suppressed"])
+        elif "delivered" in notdelobj:
+            delivered_total += len(notdelobj["delivered"])
+            if expected_deliveries is not None:
+                assert len(notdelobj["delivered"]) == expected_deliveries.get(delivery, 0)
+        elif expected_delivered is not None and expected_delivered > 0:
+            assert list(notdelobj.keys()) in ([], ["deliveries"])
+        elif expected_delivered is not None:
+            assert list(notdelobj.keys()) == []
+
+    if expected_delivered:
+        assert delivered_total == expected_delivered
+
+    assert notobj["skipped"] == expected_skipped + ignore_skipped
+    assert notobj["suppressed"] == expected_suppressed
+
+
 class MockableHomeAssistant(HomeAssistant):
     config: ConfigEntries = Mock(spec=ConfigEntries)  # type: ignore
     services: ServiceRegistry = AsyncMock(spec=ServiceRegistry)
@@ -297,10 +341,14 @@ def register_mobile_app(
     manufacturer: str = "xUnit",
     model: str = "PyTest001",
     device_name: str = "phone01",
-    domain: str = "test",
+    domain: str = "mobile_app",
     source: str = "unit_test",
-    title: str = "Test Device",
 ) -> DeviceEntry | None:
+
+    if hass_api is None:
+        _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
+        return None
+    # hass_api.set_state(person, "home")
     config_entry = config_entries.ConfigEntry(
         domain=domain,
         data={},
@@ -308,25 +356,22 @@ def register_mobile_app(
         minor_version=1,
         unique_id=None,
         options=None,
-        title=title,
+        title=device_name,
         source=source,
         discovery_keys=MappingProxyType({}),
         subentries_data=None,
     )
-    if hass_api is None:
-        _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
-        return None
-    # hass_api.set_state(person, "home")
     try:
         hass_api._hass.config_entries._entries[config_entry.entry_id] = config_entry
         hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(config_entry)
     except Exception as e:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking: %s", e)
-    existing = hass_api.get_state(person)
+    existing: State | None = hass_api.get_state(person)
+    device_slug: str = slugify(device_name)
     if not existing or "device_trackers" not in existing.attributes:
-        hass_api.set_state(person, "home", attributes={"device_trackers": [f"device_tracker.mobile_app_{device_name}"]})
+        hass_api.set_state(person, "home", attributes={"device_trackers": [f"device_tracker.mobile_app_{device_slug}"]})
     else:
-        trackers: list[str] = [f"device_tracker.mobile_app_{device_name}"]
+        trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
         trackers.extend(existing.attributes.get("device_trackers", []))
         hass_api.set_state(person, "home", attributes={"device_trackers": trackers})
 
@@ -337,7 +382,8 @@ def register_mobile_app(
             config_entry_id=config_entry.entry_id,
             manufacturer=manufacturer,
             model=model,
-            identifiers={(domain, f"device-id_{device_name}")},
+            name=device_name,
+            identifiers={(domain, f"device-id_{device_slug}")},
         )
 
     if hass_api._hass.services and device_entry:
@@ -347,11 +393,12 @@ def register_mobile_app(
 
         # device.name seems to be derived from title, not the name supplied here
         hass_api._hass.services.async_register(
-            "notify", slugify(f"mobile_app_{title}"), service_func=fake_service, supports_response=SupportsResponse.NONE
+            "notify", slugify(f"mobile_app_{device_name}"), service_func=fake_service, supports_response=SupportsResponse.NONE
         )
     entity_registry: EntityRegistry | None = hass_api.entity_registry()
     if entity_registry and device_entry:
         entity_registry.async_get_or_create("device_tracker", "mobile_app", device_name, device_id=device_entry.id)
+    hass_api.build_mobile_app_cache()
     return device_entry
 
 

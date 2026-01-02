@@ -1,4 +1,7 @@
+from typing import TYPE_CHECKING
+
 from homeassistant.const import CONF_ACTION, CONF_OPTIONS, CONF_TARGET
+from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify import CONF_DATA, CONF_DELIVERY, CONF_TRANSPORT, TRANSPORT_TTS
 from custom_components.supernotify.delivery import Delivery
@@ -6,7 +9,10 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.tts import TTSTransport
 
-from .hass_setup_lib import TestingContext
+from .hass_setup_lib import TestingContext, assert_clean_notification, register_mobile_app
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.common import CallRecord
 
 
 async def test_transport_tts() -> None:
@@ -97,3 +103,22 @@ async def test_alt_tts_provider() -> None:
         target={"entity_id": "tts.google_ai_tts"},
         return_response=False,
     )
+
+
+async def test_android_tts_provider(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS}})
+    register_mobile_app(ctx.hass_api, device_name="jeans_phone", manufacturer="Apple")
+    register_mobile_app(ctx.hass_api, device_name="bobs_phone", manufacturer="Xiaomi")
+    await ctx.test_initialize()
+    n = Notification(
+        ctx, "testing 123", target=["mobile_app_bobs_phone", "mobile_app_jeans_phone"], action_data={"delivery": "phone_tts"}
+    )
+    await n.initialize()
+    await n.deliver()
+
+    assert_clean_notification(n, expected_deliveries={"phone_tts": 1})
+    assert len(n.deliveries["phone_tts"]["delivered"][0].calls) == 1  # type: ignore
+    call: CallRecord = n.deliveries["phone_tts"]["delivered"][0].calls[0]  # type: ignore
+    assert call.domain == "notify"
+    assert call.action == "mobile_app_bobs_phone"
+    assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}}

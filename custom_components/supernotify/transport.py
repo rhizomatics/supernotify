@@ -53,6 +53,9 @@ class Transport:
         self.device_domain: list[str] = self.transport_config.device_domain or []
         self.device_model_include: list[str] | None = self.transport_config.device_model_include
         self.device_model_exclude: list[str] | None = self.transport_config.device_model_exclude
+        self.device_manufacturer_include: list[str] | None = self.transport_config.device_manufacturer_include
+        self.device_manufacturer_exclude: list[str] | None = self.transport_config.device_manufacturer_exclude
+
         self.device_discovery: bool | None = self.transport_config.device_discovery
         self.config_enabled = self.transport_config.enabled
         self.enabled = self.config_enabled
@@ -72,7 +75,11 @@ class Transport:
                 discovered: int = 0
                 added: int = 0
                 for d in self.hass_api.discover_devices(
-                    domain, device_model_include=self.device_model_include, device_model_exclude=self.device_model_exclude
+                    domain,
+                    device_model_include=self.device_model_include,
+                    device_model_exclude=self.device_model_exclude,
+                    device_manufacturer_include=self.device_manufacturer_include,
+                    device_manufacturer_exclude=self.device_manufacturer_exclude,
                 ):
                     discovered += 1
                     if self.delivery_defaults.target is None:

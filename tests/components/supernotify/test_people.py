@@ -35,14 +35,15 @@ def test_autoresolve_mobile_devices_for_devices(
     hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
     uut = PeopleRegistry([], hass_api)
     uut.initialize()
-    device = register_mobile_app(hass_api, person="person.test_user", device_name="phone_bob", title="Bobs Phone")
+    device = register_mobile_app(hass_api, person="person.test_user", device_name="Bobs Phone")
     assert device is not None
     assert uut.mobile_devices_for_person("person.test_user") == [
         {
             "manufacturer": "xUnit",
             "model": "PyTest001",
+            "action": "notify.mobile_app_bobs_phone",
             "mobile_app_id": "mobile_app_bobs_phone",
-            "device_tracker": "device_tracker.mobile_app_phone_bob",
+            "device_tracker": "device_tracker.mobile_app_bobs_phone",
             "device_id": device.id,
             "device_name": "Bobs Phone",
             # "device_labels": set(),
@@ -62,8 +63,8 @@ async def test_autoresolve_mobile_devices_blended_with_manual_registration(hass:
 """,
         components={"person": {}},
     )
-    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="bobs_phone", title="Bobs Phone")
-    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="bobs_watch", title="Bobs Watch")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Phone")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Watch")
     await ctx.test_initialize()
 
     bob: Recipient = ctx.people_registry.people["person.test_user"]

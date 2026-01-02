@@ -218,7 +218,7 @@ async def test_message_override(hass: HomeAssistant) -> None:
 
     local_config = dict(INTEGRATION_CONFIG)
     local_config["delivery"]["push"]["message"] = "FIXED_MESSAGE"
-    register_mobile_app(HomeAssistantAPI(hass), person="person.bob_mctest", title="New iPhone")
+    register_mobile_app(HomeAssistantAPI(hass), person="person.bob_mctest", device_name="New iPhone")
     await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
     assert await async_setup_component(hass, NOTIFY_DOMAIN, config={NOTIFY_DOMAIN: [local_config]})
     await hass.async_block_till_done()
