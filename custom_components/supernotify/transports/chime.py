@@ -32,6 +32,7 @@ from custom_components.supernotify import (
     SELECT_EXCLUDE,
     TRANSPORT_CHIME,
 )
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
@@ -236,17 +237,16 @@ class ChimeTransport(Transport):
             ]
         }
 
-    def setup_delivery_options(self, options: dict[str, Any]) -> dict[str, Any]:
-        # FIXME: handle chime aliases in delivery so config can be broken up or overridden in delivery data  # noqa: TD001
+    def setup_delivery_options(self, options: dict[str, Any], delivery: Delivery) -> dict[str, Any]:
         if OPTION_CHIME_ALIASES in options:
             chime_aliases: ConfigType = build_aliases(options[OPTION_CHIME_ALIASES])
             if chime_aliases:
-                _LOGGER.info("SUPERNOTIFY Set up %s chime aliases", len(chime_aliases))
+                _LOGGER.info("SUPERNOTIFY Set up %s chime aliases for %s", len(chime_aliases), delivery.name)
             else:
-                _LOGGER.warning("SUPERNOTIFY Chime aliases configured but not recognized")
+                _LOGGER.warning("SUPERNOTIFY Chime aliases for %s configured but not recognized", delivery.name)
         else:
             chime_aliases = {}
-            _LOGGER.debug("SUPERNOTIFY No chime aliases configures")
+            _LOGGER.debug("SUPERNOTIFY No chime aliases configured for %s", delivery.name)
         return {"chime_aliases": chime_aliases}
 
     @property

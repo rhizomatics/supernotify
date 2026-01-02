@@ -21,13 +21,14 @@ from . import (
 )
 from .common import CallRecord
 from .context import Context
+from .delivery import Delivery
 from .hass_api import HomeAssistantAPI
 from .model import DebugTrace, DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature
 
 if TYPE_CHECKING:
     import datetime as dt
 
-    from .delivery import Delivery, DeliveryRegistry
+    from .delivery import DeliveryRegistry
     from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +66,7 @@ class Transport:
         if self.name is None:
             raise IntegrationError("Invalid nameless transport adaptor subclass")
 
-    def setup_delivery_options(self, options: dict[str, Any]) -> dict[str, Any]:  # noqa: ARG002
+    def setup_delivery_options(self, options: dict[str, Any], delivery: Delivery) -> dict[str, Any]:  # noqa: ARG002
         return {}
 
     @property
