@@ -7,7 +7,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import ConditionVariables
+from custom_components.supernotify.model import ConditionVariables, SelectionRule
 
 from .hass_setup_lib import register_device
 
@@ -199,11 +199,11 @@ def test_discover_devices_filters_models(hass: HomeAssistant) -> None:
         title="2nd test fixture",
     )
 
-    devices = hass_api.discover_devices("testing", device_model_include=["Uni.*"])
+    devices = hass_api.discover_devices("testing", device_model_select=SelectionRule(["Uni.*"]))
     assert len(devices) == 1
     assert devices[0].identifiers == {("testing", "test_02")}
 
-    devices = hass_api.discover_devices("testing", device_model_exclude=["Uni.*"])
+    devices = hass_api.discover_devices("testing", device_model_select=SelectionRule({"exclude": ["Uni.*"]}))
     assert len(devices) == 2
     assert devices[0].identifiers == {("testing", "test_01")}
     assert devices[1].identifiers == {("testing", "test_03")}

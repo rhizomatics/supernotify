@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
 from homeassistant.const import (
-    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
@@ -18,11 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     ATTR_ENABLED,
-    ATTR_MOBILE_APP_ID,
     CONF_DELIVERY_DEFAULTS,
-    CONF_DEVICE_DISCOVERY,
-    CONF_DEVICE_DOMAIN,
-    CONF_MOBILE_APP_ID,
 )
 from .common import CallRecord
 from .context import Context
@@ -57,13 +52,6 @@ class Transport:
         self.transport_config = TransportConfig(transport_config, class_config=self.default_config)
 
         self.delivery_defaults: DeliveryConfig = self.transport_config.delivery_defaults
-        self.device_domain: list[str] = self.transport_config.device_domain or []
-        self.device_model_include: list[str] | None = self.transport_config.device_model_include
-        self.device_model_exclude: list[str] | None = self.transport_config.device_model_exclude
-        self.device_manufacturer_include: list[str] | None = self.transport_config.device_manufacturer_include
-        self.device_manufacturer_exclude: list[str] | None = self.transport_config.device_manufacturer_exclude
-
-        self.device_discovery: bool | None = self.transport_config.device_discovery
         self.config_enabled = self.transport_config.enabled
         self.enabled = self.config_enabled
         self.alias = self.transport_config.alias
@@ -77,34 +65,8 @@ class Transport:
         if self.name is None:
             raise IntegrationError("Invalid nameless transport adaptor subclass")
 
-        if self.device_discovery:
-            for domain in self.device_domain:
-                discovered: int = 0
-                added: int = 0
-                for d in self.hass_api.discover_devices(
-                    domain,
-                    device_model_include=self.device_model_include,
-                    device_model_exclude=self.device_model_exclude,
-                    device_manufacturer_include=self.device_manufacturer_include,
-                    device_manufacturer_exclude=self.device_manufacturer_exclude,
-                ):
-                    discovered += 1
-                    if self.delivery_defaults.target is None:
-                        self.delivery_defaults.target = Target()
-                    if domain == "mobile_app":
-                        mobile_app: dict[str, str | None] | None = self.hass_api.mobile_app_by_device_id(d.id)
-                        mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
-                        if mobile_app_id and mobile_app_id not in self.delivery_defaults.target.mobile_app_ids:
-                            _LOGGER.info(f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}")
-                            self.delivery_defaults.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
-                            added += 1
-                    else:
-                        if d.id not in self.delivery_defaults.target.device_ids:
-                            _LOGGER.info(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
-                            self.delivery_defaults.target.extend(ATTR_DEVICE_ID, d.id)
-                            added += 1
-
-                _LOGGER.info(f"SUPERNOTIFY Device discovery for {domain} found {discovered} devices, added {added} new ones")
+    def setup_delivery_options(self, options: dict[str, Any]) -> dict[str, Any]:  # noqa: ARG002
+        return {}
 
     @property
     def supported_features(self) -> TransportFeature:
@@ -129,8 +91,6 @@ class Transport:
         attrs: dict[str, Any] = {
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
-            CONF_DEVICE_DOMAIN: self.device_domain,
-            CONF_DEVICE_DISCOVERY: self.device_discovery,
             CONF_DELIVERY_DEFAULTS: self.delivery_defaults.as_dict(),
         }
         if self.alias:

@@ -1,8 +1,16 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_ACTION, CONF_CONDITION
+from homeassistant.helpers.device_registry import DeviceEntry
 
-from custom_components.supernotify import CONF_DELIVERY_DEFAULTS, OCCUPANCY_ALL, PRIORITY_VALUES, SELECTION_DEFAULT
+from custom_components.supernotify import (
+    CONF_DELIVERY_DEFAULTS,
+    CONF_DEVICE_DISCOVERY,
+    CONF_DEVICE_DOMAIN,
+    OCCUPANCY_ALL,
+    PRIORITY_VALUES,
+    SELECTION_DEFAULT,
+)
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
@@ -21,7 +29,7 @@ async def test_target_selection() -> None:
 
 async def test_simple_create(mock_context: Context) -> None:
     uut = Delivery("unit_testing", {}, NotifyEntityTransport(mock_context, {}))
-    assert await uut.validate(mock_context)
+    assert await uut.initialize(mock_context)
     assert uut.name == "unit_testing"
     assert uut.enabled is True
     assert uut.occupancy == OCCUPANCY_ALL
@@ -41,7 +49,7 @@ async def test_simple_create(mock_context: Context) -> None:
 
 async def test_broken_create_using_reserved_word(mock_context: Context) -> None:
     uut = Delivery("ALL", {}, NotifyEntityTransport(mock_context))
-    assert await uut.validate(mock_context) is False
+    assert await uut.initialize(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_ALL_reserved_name",
         issue_key="delivery_reserved_name",
@@ -52,7 +60,7 @@ async def test_broken_create_using_reserved_word(mock_context: Context) -> None:
 
 async def test_broken_create_with_missing_action(mock_context: Context) -> None:
     uut = Delivery("generic", {}, GenericTransport(mock_context))
-    assert await uut.validate(mock_context) is False
+    assert await uut.initialize(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_action",
         issue_key="delivery_invalid_action",
@@ -68,10 +76,25 @@ async def test_repair_for_bad_conditions(mock_context: Context) -> None:
         {CONF_CONDITION: {"condition": "xor"}},
         GenericTransport(mock_context, {CONF_DELIVERY_DEFAULTS: {CONF_ACTION: "notify.notify"}}),
     )
-    assert await uut.validate(mock_context) is False
+    assert await uut.initialize(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_condition",
         issue_key="delivery_invalid_condition",
         issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "integrations"},
         learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
     )
+
+
+def test_device_discovery(unmocked_config: Context) -> None:
+    uut = Delivery(
+        "devicey",
+        {},
+        transport=GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True}),
+    )
+
+    dev: DeviceEntry = Mock(spec=DeviceEntry, id="11112222ffffeeee00009999ddddcccc")
+    unmocked_config.hass_api.discover_devices = Mock(  # type: ignore
+        return_value=[dev]
+    )
+    uut.discover_devices(unmocked_config)
+    assert uut.target.device_ids == [dev.id]  # type: ignore

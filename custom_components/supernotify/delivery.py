@@ -3,6 +3,7 @@ import re
 from typing import Any
 
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     CONF_ACTION,
@@ -17,18 +18,24 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, Target
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
 from custom_components.supernotify.transport import Transport
 
 from . import (
     ATTR_ENABLED,
+    ATTR_MOBILE_APP_ID,
     CONF_MESSAGE,
+    CONF_MOBILE_APP_ID,
     CONF_OCCUPANCY,
     CONF_SELECTION,
     CONF_TEMPLATE,
     CONF_TITLE,
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
+    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MANUFACTURER_SELECT,
+    OPTION_DEVICE_MODEL_SELECT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
     RESERVED_DELIVERY_NAMES,
@@ -59,8 +66,9 @@ class Delivery(DeliveryConfig):
         if not conf.get(CONF_CONDITIONS) and conf.get(CONF_CONDITION):
             self.conditions_config = conf.get(CONF_CONDITION)
         self.conditions: ConditionsFunc | None = None
+        self.transport_data: dict[str, Any] = {}
 
-    async def validate(self, context: "Context") -> bool:
+    async def initialize(self, context: "Context") -> bool:
         errors = 0
         if self.name in RESERVED_DELIVERY_NAMES:
             _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", self.name)
@@ -100,7 +108,38 @@ class Delivery(DeliveryConfig):
                     learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
                 )
                 errors += 1
+
+        self.discover_devices(context)
+        self.transport_data = self.transport.setup_delivery_options(self.options)
         return errors == 0
+
+    def discover_devices(self, context: "Context") -> None:
+        if self.options.get(OPTION_DEVICE_DISCOVERY_ENABLED, False):
+            for domain in self.options.get(OPTION_DEVICE_DOMAIN, []):
+                discovered: int = 0
+                added: int = 0
+                for d in context.hass_api.discover_devices(
+                    domain,
+                    device_model_select=SelectionRule(self.options.get(OPTION_DEVICE_MODEL_SELECT)),
+                    device_manufacturer_select=SelectionRule(self.options.get(OPTION_DEVICE_MANUFACTURER_SELECT)),
+                ):
+                    discovered += 1
+                    if self.target is None:
+                        self.target = Target()
+                    if domain == "mobile_app":
+                        mobile_app: dict[str, str | None] | None = context.hass_api.mobile_app_by_device_id(d.id)
+                        mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
+                        if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
+                            _LOGGER.info(f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}")
+                            self.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
+                            added += 1
+                    else:
+                        if d.id not in self.target.device_ids:
+                            _LOGGER.info(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
+                            self.target.extend(ATTR_DEVICE_ID, d.id)
+                            added += 1
+
+                _LOGGER.info(f"SUPERNOTIFY Device discovery for {domain} found {discovered} devices, added {added} new ones")
 
     def select_targets(self, target: Target) -> Target:
         def selected(category: str, targets: list[str]) -> list[str]:
@@ -128,23 +167,23 @@ class Delivery(DeliveryConfig):
         # TODO: reconsider hass_api injection
         return self.transport.hass_api.evaluate_conditions(self.conditions, condition_variables)
 
-    def option(self, option_name: str) -> str | bool:
+    def option(self, option_name: str, default: str | bool) -> str | bool:
         """Get an option value from delivery config or transport default options"""
         opt: str | bool | None = None
         if option_name in self.options:
             opt = self.options[option_name]
         if opt is None:
             _LOGGER.debug(
-                "SUPERNOTIFY No default in delivery %s for option %s, setting to empty string", self.name, option_name
+                "SUPERNOTIFY No default in delivery %s for option %s, setting to default %s", self.name, option_name, default
             )
-            opt = ""
+            opt = default
         return opt
 
-    def option_bool(self, option_name: str) -> bool:
-        return bool(self.option(option_name))
+    def option_bool(self, option_name: str, default: bool = False) -> bool:
+        return bool(self.option(option_name, default=default))
 
     def option_str(self, option_name: str) -> str:
-        return str(self.option(option_name))
+        return str(self.option(option_name, default=""))
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
         base = super().as_dict()
@@ -295,7 +334,7 @@ class DeliveryRegistry:
         for d, dc in deliveries_for_this_transport.items():
             # don't care about ENABLED here since disabled deliveries can be overridden later
             delivery = Delivery(d, dc, transport)
-            if not await delivery.validate(context):
+            if not await delivery.initialize(context):
                 _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
             else:
                 validated_deliveries[d] = delivery

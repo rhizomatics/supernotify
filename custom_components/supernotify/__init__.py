@@ -83,15 +83,8 @@ CONF_PRIORITY: Final[str] = "priority"
 CONF_OCCUPANCY: Final[str] = "occupancy"
 CONF_SCENARIOS: Final[str] = "scenarios"
 CONF_MANUFACTURER: Final[str] = "manufacturer"
-CONF_DEVICE_DISCOVERY: Final[str] = "device_discovery"
-CONF_DEVICE_TRACKER: Final[str] = "device_tracker"
-CONF_DEVICE_NAME: Final[str] = "device_name"
-CONF_DEVICE_LABELS: Final[str] = "device_labels"
-CONF_DEVICE_DOMAIN: Final[str] = "device_domain"
-CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
-CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
-CONF_DEVICE_MANUFACTURER_INCLUDE: Final[str] = "device_manufacturer_include"
-CONF_DEVICE_MANUFACTURER_EXCLUDE: Final[str] = "device_manufacturer_exclude"
+CONF_CLASS: Final[str] = "class"
+
 
 CONF_MODEL: Final[str] = "model"
 CONF_MESSAGE: Final[str] = "message"
@@ -230,6 +223,9 @@ OPTION_DATA_KEYS_EXCLUDE_RE = "data_keys_exclude_re"
 OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
 OPTION_STRICT_TEMPLATE = "strict_template"
 
+SELECT_INCLUDE = "include"
+SELECT_EXCLUDE = "exclude"
+
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
 RESERVED_DELIVERY_NAMES: list[str] = ["ALL"]
@@ -269,9 +265,12 @@ TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into firs
 )
 
 DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
+
+CONF_DEVICE_TRACKER: Final[str] = "device_tracker"
 MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MANUFACTURER): cv.string,
     vol.Optional(CONF_MODEL): cv.string,
+    vol.Optional(CONF_CLASS): cv.string,
     vol.Optional(CONF_MOBILE_APP_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKER): cv.entity_id,
 })
@@ -298,6 +297,17 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_NAME): cv.string,
 })
+
+
+CONF_DEVICE_NAME: Final[str] = "device_name"
+CONF_DEVICE_LABELS: Final[str] = "device_labels"
+
+OPTION_DEVICE_DOMAIN: Final[str] = "device_domain"
+
+OPTION_DEVICE_MODEL_SELECT: Final[str] = "device_model_select"
+OPTION_DEVICE_MANUFACTURER_SELECT: Final[str] = "device_manufacturer_select"
+OPTION_DEVICE_DISCOVERY_ENABLED: Final[str] = "device_discovery_enabled"
+
 
 TARGET_REQUIRE_ALWAYS = "always"
 TARGET_REQUIRE_NEVER = "never"
@@ -370,17 +380,26 @@ DELIVERY_SCHEMA = vol.All(
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
     }),
 )
-TRANSPORT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ALIAS): cv.string,
-    vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_MANUFACTURER_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_MANUFACTURER_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-    vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
-})
+
+CONF_DEVICE_DISCOVERY: Final[str] = "device_discovery"
+CONF_DEVICE_DOMAIN: Final[str] = OPTION_DEVICE_DOMAIN
+CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
+CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
+TRANSPORT_SCHEMA = vol.All(
+    cv.deprecated(key=CONF_DEVICE_DOMAIN),
+    cv.deprecated(key=CONF_DEVICE_DISCOVERY),
+    cv.deprecated(key=CONF_DEVICE_MODEL_INCLUDE),
+    cv.deprecated(key=CONF_DEVICE_MODEL_EXCLUDE),
+    vol.Schema({
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICE_DISCOVERY, default=False): cv.boolean,
+        vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+        vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
+    }),
+)
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
 # May need condition, and also enabled if delivery disabled
 # CONF_OCCUPANCY="occupancy"

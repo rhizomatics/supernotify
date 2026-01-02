@@ -178,7 +178,7 @@ class GenericTransport(Transport):
         if build_targets:
             all_targets: list[str] = []
             if OPTION_TARGET_CATEGORIES in envelope.delivery.options:
-                for category in ensure_list(envelope.delivery.option(OPTION_TARGET_CATEGORIES)):
+                for category in ensure_list(envelope.delivery.options.get(OPTION_TARGET_CATEGORIES, [])):
                     all_targets.extend(envelope.target.for_category(category))
             else:
                 all_targets = envelope.target.resolved_targets()

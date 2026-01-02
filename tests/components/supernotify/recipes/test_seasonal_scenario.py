@@ -77,7 +77,7 @@ async def test_seasonal_scenario_on_xmas_day(recipe_fixture):
     call = uut.deliveries["doorbell_rang"]["delivered"][0].calls[0]  # type:ignore
     assert call.action == "send_sound"
     assert call.domain == "alexa_devices"
-    assert call.action_data["sound"] == "christmas_05"  # ty:ignore[non-subscriptable]
+    assert call.action_data["sound"] == "christmas_05"  # type:ignore
 
 
 @pytest.mark.freeze_time(dt.datetime(2024, 12, 25, 11, tzinfo=dt.UTC))
@@ -92,7 +92,7 @@ async def test_unseasonal_scenario_on_xmas_day(recipe_fixture):
     call = uut.deliveries["driveway_alarm"]["delivered"][0].calls[0]  # type:ignore
     assert call.action == "send_sound"
     assert call.domain == "alexa_devices"
-    assert call.action_data["sound"] == "amzn_sfx_trumpet_bugle_04"  # ty:ignore[non-subscriptable]
+    assert call.action_data["sound"] == "amzn_sfx_trumpet_bugle_04"  # type:ignore
 
 
 @pytest.mark.freeze_time(dt.datetime(2024, 6, 25, 11, tzinfo=dt.UTC))
@@ -107,4 +107,4 @@ async def test_seasonal_scenario_in_summer(recipe_fixture):
     call = uut.deliveries["doorbell_rang"]["delivered"][0].calls[0]  # type:ignore
     assert call.action == "send_sound"
     assert call.domain == "alexa_devices"
-    assert call.action_data["sound"] == "amzn_sfx_doorbell_chime_02"  # ty:ignore[non-subscriptable]
+    assert call.action_data["sound"] == "amzn_sfx_doorbell_chime_02"  # type:ignore

@@ -38,8 +38,6 @@ from . import (
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
-    CONF_DEVICE_MANUFACTURER_EXCLUDE,
-    CONF_DEVICE_MANUFACTURER_INCLUDE,
     CONF_DEVICE_MODEL_EXCLUDE,
     CONF_DEVICE_MODEL_INCLUDE,
     CONF_PRIORITY,
@@ -47,9 +45,14 @@ from . import (
     CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
+    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MODEL_SELECT,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     RE_DEVICE_ID,
+    SELECT_EXCLUDE,
+    SELECT_INCLUDE,
     SELECTION_DEFAULT,
     TARGET_USE_ON_NO_ACTION_TARGETS,
     SelectionRank,
@@ -392,37 +395,30 @@ class TransportConfig:
     def __init__(self, conf: ConfigType | None = None, class_config: "TransportConfig|None" = None) -> None:
         conf = conf or {}
         if class_config is not None:
-            self.device_domain: list[str] = conf.get(CONF_DEVICE_DOMAIN, class_config.device_domain)
-            if CONF_DEVICE_MODEL_INCLUDE in conf or CONF_DEVICE_MODEL_EXCLUDE in conf:
-                # source include and exclude atomically either explicit config or default
-                self.device_model_include: list[str] | None = conf.get(CONF_DEVICE_MODEL_INCLUDE)
-                self.device_model_exclude: list[str] | None = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
-            else:
-                self.device_model_include = class_config.device_model_include
-                self.device_model_exclude = class_config.device_model_exclude
-            if CONF_DEVICE_MANUFACTURER_INCLUDE in conf or CONF_DEVICE_MANUFACTURER_EXCLUDE in conf:
-                # source include and exclude atomically either explicit config or default
-                self.device_manufacturer_include: list[str] | None = conf.get(CONF_DEVICE_MANUFACTURER_INCLUDE)
-                self.device_manufacturer_exclude: list[str] | None = conf.get(CONF_DEVICE_MANUFACTURER_EXCLUDE)
-            else:
-                self.device_manufacturer_include = class_config.device_manufacturer_include
-                self.device_manufacturer_exclude = class_config.device_manufacturer_exclude
-            self.device_discovery: bool = conf.get(CONF_DEVICE_DISCOVERY, class_config.device_discovery)
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
             self.alias = conf.get(CONF_ALIAS)
             self.delivery_defaults: DeliveryConfig = DeliveryConfig(
                 conf.get(CONF_DELIVERY_DEFAULTS, {}), class_config.delivery_defaults or None
             )
         else:
-            self.device_domain = conf.get(CONF_DEVICE_DOMAIN, [])
-            self.device_model_include = conf.get(CONF_DEVICE_MODEL_INCLUDE)
-            self.device_model_exclude = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
-            self.device_manufacturer_include = conf.get(CONF_DEVICE_MANUFACTURER_INCLUDE)
-            self.device_manufacturer_exclude = conf.get(CONF_DEVICE_MANUFACTURER_EXCLUDE)
-            self.device_discovery = conf.get(CONF_DEVICE_DISCOVERY, False)
             self.enabled = conf.get(CONF_ENABLED, True)
             self.alias = conf.get(CONF_ALIAS)
             self.delivery_defaults = DeliveryConfig(conf.get(CONF_DELIVERY_DEFAULTS) or {})
+
+        # deprecation support
+        device_domain = conf.get(CONF_DEVICE_DOMAIN)
+        if device_domain is not None:
+            self.delivery_defaults.options[OPTION_DEVICE_DOMAIN] = device_domain
+        device_model_include = conf.get(CONF_DEVICE_MODEL_INCLUDE)
+        device_model_exclude = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
+        if device_model_include is not None or device_model_exclude is not None:
+            self.delivery_defaults.options[OPTION_DEVICE_MODEL_SELECT] = {
+                SELECT_INCLUDE: device_model_include,
+                SELECT_EXCLUDE: device_model_exclude,
+            }
+        device_discovery = conf.get(CONF_DEVICE_DISCOVERY)
+        if device_discovery is not None:
+            self.delivery_defaults.options[OPTION_DEVICE_DISCOVERY_ENABLED] = device_discovery
 
 
 class DeliveryCustomization:
@@ -449,10 +445,38 @@ class DeliveryCustomization:
         return {CONF_TARGET: self.target.as_dict() if self.target else None, CONF_ENABLED: self.enabled, CONF_DATA: self.data}
 
 
+class SelectionRule:
+    def __init__(self, config: "str | list[str] | dict | SelectionRule | None") -> None:
+        self.include: list[str] | None = None
+        self.exclude: list[str] | None = None
+        if config is None:
+            return
+        if isinstance(config, SelectionRule):
+            self.include = config.include
+            self.exclude = config.exclude
+        elif isinstance(config, str):
+            self.include = [config]
+        elif isinstance(config, list):
+            self.include = config
+        else:
+            if config.get(SELECT_INCLUDE):
+                self.include = ensure_list(config.get(SELECT_INCLUDE))
+            if config.get(SELECT_EXCLUDE):
+                self.exclude = ensure_list(config.get(SELECT_EXCLUDE))
+
+    def match(self, v: str | None) -> bool:
+        if self.include is None and self.exclude is None:
+            return True
+        if self.exclude is not None and v is not None and any(re.fullmatch(pat, v) for pat in self.exclude):
+            return False
+        return bool(self.include is None or (v is not None and any(re.fullmatch(pat, v) for pat in self.include)))
+
+
 class DeliveryConfig:
     """Shared config for transport defaults and Delivery definitions"""
 
     def __init__(self, conf: ConfigType, delivery_defaults: "DeliveryConfig|None" = None) -> None:
+
         if delivery_defaults is not None:
             # use transport defaults where no delivery level override
             self.target: Target | None = Target(conf.get(CONF_TARGET)) if CONF_TARGET in conf else delivery_defaults.target
@@ -471,7 +495,6 @@ class DeliveryConfig:
             if isinstance(delivery_defaults.options, dict):
                 for opt in delivery_defaults.options:
                     self.options.setdefault(opt, delivery_defaults.options[opt])
-
         else:
             # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None

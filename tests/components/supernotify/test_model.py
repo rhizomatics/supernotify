@@ -1,6 +1,6 @@
 from homeassistant.exceptions import HomeAssistantError
 
-from custom_components.supernotify.model import DebugTrace, Target, TargetRequired
+from custom_components.supernotify.model import DebugTrace, SelectionRule, Target, TargetRequired
 
 from .hass_setup_lib import assert_json_round_trip
 
@@ -217,3 +217,48 @@ def test_debug_trace() -> None:
     assert "foo" in result["delivery_artefacts"]["plain_email"]
 
     assert_json_round_trip(uut.contents())
+
+
+def test_selection_rule_construction():
+    uut = SelectionRule(None)
+    assert uut.include is None
+    assert uut.exclude is None
+
+    uut = SelectionRule("Goog.*")
+    assert uut.include == ["Goog.*"]
+    assert uut.exclude is None
+
+    uut = SelectionRule(["Goog.*", "Nest.*"])
+    assert uut.include == ["Goog.*", "Nest.*"]
+    assert uut.exclude is None
+
+    uut = SelectionRule({"include": ["Goog.*", "Nest.*"], "exclude": ["Amazon.*"]})
+    assert uut.include == ["Goog.*", "Nest.*"]
+    assert uut.exclude == ["Amazon.*"]
+
+
+def test_selection_rule_match():
+    uut = SelectionRule({"include": ["Goog.*", "Nest.*"], "exclude": [".*Legacy"]})
+    assert uut.match("Google Pixie")
+    assert uut.match("Nest 99")
+    assert not uut.match("Google Pixie Legacy")
+    assert not uut.match(None)
+    assert not uut.match("Random Device")
+
+    uut = SelectionRule({"include": ["Goog.*", "Nest.*"]})
+    assert uut.match("Google Pixie")
+    assert uut.match("Nest 99")
+    assert uut.match("Google Pixie Legacy")
+    assert not uut.match(None)
+    assert not uut.match("Random Device")
+
+    uut = SelectionRule({"exclude": [".*Legacy"]})
+    assert uut.match("Google Pixie")
+    assert uut.match("Nest 99")
+    assert not uut.match("Google Pixie Legacy")
+    assert uut.match(None)
+    assert uut.match("Random Device")
+
+    uut = SelectionRule(None)
+    assert uut.match("Google Pixie")
+    assert uut.match("Anything")

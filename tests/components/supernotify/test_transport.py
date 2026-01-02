@@ -2,14 +2,10 @@ from unittest.mock import Mock
 
 from homeassistant.const import CONF_DEBUG
 from homeassistant.core import HomeAssistant, SupportsResponse
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from custom_components.supernotify import (
-    CONF_DEVICE_DISCOVERY,
-    CONF_DEVICE_DOMAIN,
     TRANSPORT_GENERIC,
 )
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
@@ -20,7 +16,6 @@ from .hass_setup_lib import TestingContext
 
 
 def test_simplify_text() -> None:
-    from custom_components.supernotify.transports.generic import GenericTransport
 
     uut = GenericTransport(Mock())
     assert (
@@ -32,21 +27,6 @@ def test_simplify_text() -> None:
         == "Hello world! Visit https://example.com it's great 100 test"
     )
     assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
-
-
-async def test_device_discovery(unmocked_config: Context) -> None:
-    uut = GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True})
-    await uut.initialize()
-    assert uut.delivery_defaults.target is None
-    dev: DeviceEntry = Mock(spec=DeviceEntry, id="11112222ffffeeee00009999ddddcccc")
-    unmocked_config.hass_api.discover_devices = Mock(  # type: ignore
-        return_value=[dev]
-    )
-
-    uut = GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True})
-    await uut.initialize()
-    assert uut.delivery_defaults.target is not None
-    assert uut.delivery_defaults.target.device_ids == [dev.id]
 
 
 async def test_call_action_simple(hass: HomeAssistant) -> None:

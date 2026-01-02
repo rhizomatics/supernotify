@@ -8,12 +8,16 @@ from homeassistant.const import ATTR_ENTITY_ID
 from custom_components.supernotify import (
     ATTR_MOBILE_APP_ID,
     CONF_MANUFACTURER,
+    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MANUFACTURER_SELECT,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
     OPTION_TTS_ENTITY_ID,
+    SELECT_EXCLUDE,
     TRANSPORT_TTS,
     SelectionRank,
 )
@@ -61,9 +65,6 @@ class TTSTransport(Transport):
         config.delivery_defaults.action = "tts.speak"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.selection_rank = SelectionRank.FIRST
-        config.device_discovery = False
-        config.device_domain = ["mobile_app"]
-        config.device_manufacturer_exclude = ["Apple"]
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
@@ -71,6 +72,9 @@ class TTSTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_MOBILE_APP_ID],
             OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
+            OPTION_DEVICE_DISCOVERY_ENABLED: False,
+            OPTION_DEVICE_DOMAIN: ["mobile_app"],
+            OPTION_DEVICE_MANUFACTURER_SELECT: {SELECT_EXCLUDE: ["Apple"]},
         }
         return config
 

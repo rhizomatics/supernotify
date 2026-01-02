@@ -1,8 +1,10 @@
 # Public releases
 
 ## 1.8.3
-### TTS Transport Adaptor
-- Now supports TTS delivery to Android mobile apps
+### Mobile Push
+- Now supports push to all known mobile apps using device discovery
+### TTS
+- TTS Transport Adaptor supports TTS delivery to Android mobile apps
 ### Device Discovery
 - Include/exclude by manufacturer as well as model
 - All mobile apps now discovered at startup

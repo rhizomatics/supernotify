@@ -1,5 +1,3 @@
-from typing import cast
-
 from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify import CONF_DATA, CONF_DEBUG, CONF_DEVICE_DISCOVERY, CONF_TRANSPORT, TRANSPORT_CHIME
@@ -88,7 +86,7 @@ async def test_deliver() -> None:
 
 async def test_deliver_alias() -> None:
     """Test on_notify_chime"""
-    context = TestingContext(
+    ctx: TestingContext = TestingContext(
         transports={
             TRANSPORT_CHIME: {
                 "delivery_defaults": {
@@ -113,21 +111,21 @@ async def test_deliver_alias() -> None:
                 },
             }
         },
+        transport_types=[ChimeTransport],
         deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "doorbell"}}},
     )
 
-    await context.test_initialize()
-    uut = context.transport(TRANSPORT_CHIME)
+    await ctx.test_initialize()
+    n = Notification(ctx, message="for script only")
+    await n.initialize()
+    await n.deliver()
 
-    envelope: Envelope = Envelope(
-        Delivery("chimes", context.delivery_config("chimes"), uut), Notification(context, message="for script only")
-    )
-    await uut.deliver(envelope)
+    envelope = n.delivered_envelopes[0]
     assert envelope.skipped == 0
     assert envelope.error_count == 0
     assert envelope.delivered == 1
 
-    context.hass.services.async_call.assert_has_calls(  # type: ignore
+    ctx.hass.services.async_call.assert_has_calls(  # type: ignore
         [
             service_call(
                 "media_player",
@@ -198,9 +196,7 @@ async def test_script_debug() -> None:
     await context.test_initialize()
     uut = context.transport(TRANSPORT_CHIME)
 
-    envelope: Envelope = Envelope(
-        Delivery("chimes", context.delivery_config("chimes"), uut), Notification(context, message="for script only")
-    )
+    envelope: Envelope = Envelope(context.delivery("chimes"), Notification(context, message="for script only"))
     await uut.deliver(envelope)
 
     context.hass.services.async_call.assert_has_calls(  # type: ignore
@@ -347,7 +343,7 @@ async def test_deliver_rest_command() -> None:
 
 
 async def test_documentation_example() -> None:
-    context = TestingContext(
+    ctx = TestingContext(
         transports="""
   chime:
     device_discovery: True
@@ -405,12 +401,12 @@ async def test_documentation_example() -> None:
                     # tune defaults to alias ('red_alert')
 """
     )
-    await context.test_initialize()
-    uut: ChimeTransport = cast("ChimeTransport", context.transport("chime"))
-    await uut.initialize()
+    await ctx.test_initialize()
+    uut: Delivery = Delivery("chimey", {}, transport=ctx.transport("chime"))
+    await uut.initialize(ctx)
 
-    assert len(uut.chime_aliases) == 2
-    doorbell = uut.chime_aliases["doorbell"]
+    assert len(uut.transport_data["chime_aliases"]) == 2
+    doorbell = uut.transport_data["chime_aliases"]["doorbell"]
     assert len(doorbell) == 8
     assert sum(1 for c in doorbell.values() if c.get("domain") or c.get("target")) == 8
 
@@ -432,7 +428,7 @@ async def test_documentation_example() -> None:
     assert doorbell["siren_bedroom"]["volume"] == 0.1
     assert doorbell["siren_bedroom"]["domain"] == "siren"
 
-    red_alert = uut.chime_aliases["red_alert"]
+    red_alert = uut.transport_data["chime_aliases"]["red_alert"]
     assert len(red_alert) == 3
     assert sum(1 for c in red_alert.values() if c["domain"]) == 3
     assert red_alert["media_player"] == {"tune": "red_alert", "domain": "media_player"}

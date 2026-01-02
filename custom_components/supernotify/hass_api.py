@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.event_type import EventType
 
-import re
 from typing import cast
 
 import homeassistant.components.trace
@@ -52,7 +51,7 @@ from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 
-from .model import ConditionVariables
+from .model import ConditionVariables, SelectionRule
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -398,10 +397,8 @@ class HomeAssistantAPI:
     def discover_devices(
         self,
         discover_domain: str,
-        device_model_include: list[str] | None = None,
-        device_model_exclude: list[str] | None = None,
-        device_manufacturer_include: list[str] | None = None,
-        device_manufacturer_exclude: list[str] | None = None,
+        device_model_select: SelectionRule | None = None,
+        device_manufacturer_select: SelectionRule | None = None,
     ) -> list[DeviceEntry]:
         devices: list[DeviceEntry] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
@@ -412,32 +409,12 @@ class HomeAssistantAPI:
         all_devs = enabled_devs = found_devs = skipped_devs = 0
         for dev in dev_reg.devices.values():
             all_devs += 1
-            if device_manufacturer_include is not None and (
-                dev.manufacturer is None or not any(re.fullmatch(pat, dev.manufacturer) for pat in device_manufacturer_include)
-            ):
-                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, manufacturer %s not match include pattern", dev.name, dev.model)
+            if device_model_select is not None and not device_model_select.match(dev.model):
+                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no model %s match", dev.name, dev.model)
                 skipped_devs += 1
                 continue
-            if (
-                device_manufacturer_exclude is not None
-                and dev.manufacturer is not None
-                and any(re.fullmatch(pat, dev.manufacturer) for pat in device_manufacturer_exclude)
-            ):
-                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, manufacturer %s match exclude pattern", dev.name, dev.model)
-                skipped_devs += 1
-                continue
-            if device_model_include is not None and (
-                dev.model is None or not any(re.fullmatch(pat, dev.model) for pat in device_model_include)
-            ):
-                _LOGGER.debug("SUPERNOTIFY Skipped dev %s because model %s not match include pattern", dev.name, dev.model)
-                skipped_devs += 1
-                continue
-            if (
-                device_model_exclude is not None
-                and dev.model is not None
-                and any(re.fullmatch(pat, dev.model) for pat in device_model_exclude)
-            ):
-                _LOGGER.debug("SUPERNOTIFY Skipped dev %s because model %s match exclude pattern", dev.name, dev.model)
+            if device_manufacturer_select is not None and not device_manufacturer_select.match(dev.manufacturer):
+                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no manufacturer %s match", dev.name, dev.manufacturer)
                 skipped_devs += 1
                 continue
 

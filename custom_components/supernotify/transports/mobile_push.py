@@ -17,6 +17,8 @@ from custom_components.supernotify import (
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MOBILE_APP_ID,
+    OPTION_DEVICE_DISCOVERY_ENABLED,
+    OPTION_DEVICE_DOMAIN,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -74,6 +76,8 @@ class MobilePushTransport(Transport):
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_CATEGORIES: [ATTR_MOBILE_APP_ID],
+            OPTION_DEVICE_DISCOVERY_ENABLED: False,
+            OPTION_DEVICE_DOMAIN: ["mobile_app"],
         }
         return config
 

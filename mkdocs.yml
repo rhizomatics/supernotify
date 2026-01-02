@@ -34,6 +34,10 @@ theme:
     - toc.follow
     - toc.integrate
 
+extra:
+  version:
+    provider: mike
+
 plugins:
   - search
   - autorefs
@@ -46,6 +50,15 @@ plugins:
         logo: docs/assets/images/icon.png
         background_image: docs/assets/images/logo-dim-social-640x320.png
         background_color: transparent
+  - mike:
+      # These fields are all optional; the defaults are as below...
+      alias_type: symlink
+      redirect_template: null
+      deploy_prefix: ''
+      canonical_version: null
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
   - minify:
       minify_html: true
   - git-revision-date-localized:
