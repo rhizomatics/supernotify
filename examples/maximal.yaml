@@ -189,14 +189,6 @@ notify:
             target_categories:
               - email
       alexa_media_player:
-        device_discovery: true
-        device_domain:
-          - media_player
-        device_model_include:
-          - "Echo*"
-          - "Fire*"
-        device_model_exclude:
-          - "*TV*"
         delivery_defaults:
           target:
             - media_player.kitchen
@@ -211,6 +203,15 @@ notify:
               - entity_id
             target_include_re:
               - "media_player\\.echo.*"
+            device_discovery: true
+            device_domain:
+              - media_player
+            device_model_select:
+              include:
+                - "Echo*"
+                - "Fire*"
+              exclude:
+                - "*TV*"
       alexa_devices:
         delivery_defaults:
           target:
