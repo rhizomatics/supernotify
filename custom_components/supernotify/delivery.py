@@ -114,7 +114,7 @@ class Delivery(DeliveryConfig):
                 errors += 1
 
         self.discover_devices(context)
-        self.transport_data = self.transport.setup_delivery_options(self.options, self)
+        self.transport_data = self.transport.setup_delivery_options(self.options, self.name)
         return errors == 0
 
     def discover_devices(self, context: "Context") -> None:
