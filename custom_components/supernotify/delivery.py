@@ -132,11 +132,16 @@ class Delivery(DeliveryConfig):
                         self.target = Target()
                     if domain == "mobile_app":
                         mobile_app: dict[str, str | None] | None = context.hass_api.mobile_app_by_device_id(d.id)
-                        mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
-                        if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
-                            _LOGGER.debug(f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}")
-                            self.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
-                            added += 1
+                        if mobile_app and mobile_app.get(CONF_ACTION):
+                            mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
+                            if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
+                                _LOGGER.debug(
+                                    f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}"
+                                )
+                                self.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
+                                added += 1
+                        else:
+                            _LOGGER.debug(f"SUPERNOTIFY Skipped mobile without notify entity {d.name}, id {d.id}")
                     else:
                         if d.id not in self.target.device_ids:
                             _LOGGER.debug(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")

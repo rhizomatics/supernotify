@@ -409,14 +409,6 @@ class HomeAssistantAPI:
         all_devs = enabled_devs = found_devs = skipped_devs = 0
         for dev in dev_reg.devices.values():
             all_devs += 1
-            if device_model_select is not None and not device_model_select.match(dev.model):
-                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no model %s match", dev.name, dev.model)
-                skipped_devs += 1
-                continue
-            if device_manufacturer_select is not None and not device_manufacturer_select.match(dev.manufacturer):
-                _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no manufacturer %s match", dev.name, dev.manufacturer)
-                skipped_devs += 1
-                continue
 
             if dev.disabled:
                 _LOGGER.debug("SUPERNOTIFY excluded disabled device %s", dev.name)
@@ -425,8 +417,17 @@ class HomeAssistantAPI:
                 for identifier in dev.identifiers:
                     if identifier and len(identifier) > 1 and identifier[0] == discover_domain:
                         _LOGGER.debug("SUPERNOTIFY discovered %s device %s for id %s", dev.model, dev.name, identifier)
-                        devices.append(dev)
                         found_devs += 1
+                        if device_model_select is not None and not device_model_select.match(dev.model):
+                            _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no model %s match", dev.name, dev.model)
+                            skipped_devs += 1
+                            continue
+                        if device_manufacturer_select is not None and not device_manufacturer_select.match(dev.manufacturer):
+                            _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no manufacturer %s match", dev.name, dev.manufacturer)
+                            skipped_devs += 1
+                            continue
+                        devices.append(dev)
+
                     elif identifier:
                         # HomeKit has triples for identifiers, other domains may behave similarly
                         _LOGGER.debug("SUPERNOTIFY Unexpected device %s id: %s", dev.name, identifier)
@@ -435,8 +436,8 @@ class HomeAssistantAPI:
                             "SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name
                         )
 
-        _LOGGER.info(f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs}, skipped={skipped_devs}")
-        _LOGGER.info(f"SUPERNOTIFY {discover_domain} enabled={enabled_devs}, found={found_devs}")
+        _LOGGER.debug(f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs},enabled={enabled_devs} ")
+        _LOGGER.info(f"SUPERNOTIFY {discover_domain} skipped={skipped_devs}, found={found_devs}")
 
         return devices
 
