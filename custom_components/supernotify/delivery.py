@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.supernotify.hass_api import HomeAssistantAPI, MobileAppInfo
+from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
 from custom_components.supernotify.transport import Transport
 
@@ -39,6 +39,7 @@ from . import (
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MANUFACTURER_SELECT,
     OPTION_DEVICE_MODEL_SELECT,
+    OPTION_DEVICE_OS_SELECT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
     RESERVED_DELIVERY_NAMES,
@@ -125,26 +126,27 @@ class Delivery(DeliveryConfig):
                     domain,
                     device_model_select=SelectionRule(self.options.get(OPTION_DEVICE_MODEL_SELECT)),
                     device_manufacturer_select=SelectionRule(self.options.get(OPTION_DEVICE_MANUFACTURER_SELECT)),
+                    device_os_select=SelectionRule(self.options.get(OPTION_DEVICE_OS_SELECT)),
                 ):
                     discovered += 1
                     if self.target is None:
                         self.target = Target()
                     if domain == "mobile_app":
-                        mobile_app: MobileAppInfo | None = context.hass_api.mobile_app_by_device_id(d.id)
+                        mobile_app: DeviceInfo | None = context.hass_api.mobile_app_by_device_id(d.device_id)
                         if mobile_app and mobile_app.action:
                             mobile_app_id = mobile_app.mobile_app_id if mobile_app else None
                             if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
                                 _LOGGER.debug(
-                                    f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}"
+                                    f"SUPERNOTIFY Found mobile {d.model} device {d.device_name} for {domain}, id {d.device_id}"
                                 )
                                 self.target.extend(ATTR_MOBILE_APP_ID, mobile_app_id)
                                 added += 1
                         else:
-                            _LOGGER.debug(f"SUPERNOTIFY Skipped mobile without notify entity {d.name}, id {d.id}")
+                            _LOGGER.debug(f"SUPERNOTIFY Skipped mobile without notify entity {d.device_name}, id {d.device_id}")
                     else:
-                        if d.id not in self.target.device_ids:
-                            _LOGGER.debug(f"SUPERNOTIFY Discovered {d.model} device {d.name} for {domain}, id {d.id}")
-                            self.target.extend(ATTR_DEVICE_ID, d.id)
+                        if d.device_id not in self.target.device_ids:
+                            _LOGGER.debug(f"SUPERNOTIFY Found {d.model} device {d.device_name} for {domain}, id {d.device_id}")
+                            self.target.extend(ATTR_DEVICE_ID, d.device_id)
                             added += 1
 
                 _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")

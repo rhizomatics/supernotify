@@ -74,7 +74,7 @@ transports:
         device_discovery: true
 ```
 
-By default this will look for all `mobile_app` devices, and can be narrowed down by using the `device_model_include`,`device_model_exclude`,`device_manufacturer_include` and `device_manufacturer_exclude` patterns.
+By default this will look for all `mobile_app` devices, and can be narrowed down by using the `device_model_select`,`device_manufacturer_select` and `device_os_select` patterns.
 
 ```yaml title="Configuration snippet"
 transports:
@@ -90,6 +90,10 @@ transports:
           include:
             - .*Pixel.*
             - .*Fold.*
+        device_os_select:
+          exclude:
+            - MacOS
+            - iOS
 ```
 
 

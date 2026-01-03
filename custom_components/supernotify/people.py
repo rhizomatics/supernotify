@@ -43,7 +43,7 @@ from . import (
     OCCUPANCY_ONLY_OUT,
 )
 from .common import ensure_list
-from .hass_api import HomeAssistantAPI, MobileAppInfo
+from .hass_api import DeviceInfo, HomeAssistantAPI
 from .model import DeliveryCustomization, Target
 
 if TYPE_CHECKING:
@@ -80,6 +80,7 @@ class Recipient:
         self.mobile_devices: dict[str, dict[str, str | list[str] | None]] = {
             c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])
         }
+        self.disabled_mobile_app_ids: list[str] = [k for k, v in self.mobile_devices.items() if not v.get(CONF_ENABLED, True)]
         _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict())
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
@@ -90,26 +91,29 @@ class Recipient:
         if self.phone_number:
             self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
-            discovered_devices: list[MobileAppInfo] = people_registry.mobile_devices_for_person(self.entity_id)
+            discovered_devices: list[DeviceInfo] = people_registry.mobile_devices_for_person(self.entity_id)
             if discovered_devices:
+                new_ids = []
                 for d in discovered_devices:
                     if d.mobile_app_id in self.mobile_devices:
                         # merge with manual registrations, with priority to manually overridden values
                         merged = d.as_dict()
                         merged.update(self.mobile_devices[d.mobile_app_id])
                         self.mobile_devices[d.mobile_app_id] = merged
+                        new_ids.append(d.mobile_app_id)
                         _LOGGER.debug("SUPERNOTIFY Updating %s mobile device %s from registry", self.entity_id, d.mobile_app_id)
-                    else:
+                    elif d.mobile_app_id is not None:
                         self.mobile_devices[d.mobile_app_id] = d.as_dict()
+                        new_ids.append(d.mobile_app_id)
                 _LOGGER.info(
                     "SUPERNOTIFY Auto configured %s for mobile devices %s",
                     self.entity_id,
-                    ",".join(d.mobile_app_id for d in discovered_devices),
+                    ",".join(new_ids),
                 )
             else:
                 _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:
-            self._target.extend(ATTR_MOBILE_APP_ID, list(self.mobile_devices))
+            self._target.extend(ATTR_MOBILE_APP_ID, list(self.enabled_mobile_devices.keys()))
         if not self.user_id or not self.alias:
             attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
             if attrs:
@@ -123,6 +127,10 @@ class Recipient:
             else:
                 _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
         _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict())
+
+    @property
+    def enabled_mobile_devices(self) -> dict[str, dict[str, str | list[str] | None]]:
+        return {k: v for k, v in self.mobile_devices.items() if v.get(CONF_ENABLED, True)}
 
     def enabling_delivery_names(self) -> list[str]:
         return [delname for delname, delconf in self.delivery_overrides.items() if delconf.enabled is True]
@@ -275,7 +283,7 @@ class PeopleRegistry:
                     results[STATE_NOT_HOME].append(person_config)
         return results
 
-    def mobile_devices_for_person(self, person_entity_id: str) -> list[MobileAppInfo]:
+    def mobile_devices_for_person(self, person_entity_id: str) -> list[DeviceInfo]:
         """Auto detect mobile_app targets for a person.
 
         Targets not currently validated as async registration may not be complete at this stage

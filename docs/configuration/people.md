@@ -61,6 +61,22 @@ the folk you want, using the `recipients` configuration.
 
 If you want to do the device registration manually, see [Manual Device Registration](#manual-device-registration)
 
+### Disabling Auto Discovered Devices
+
+Its usually easier to let Supernotify automatically find devices, and only intervene when there's one you
+don't want, or isn't working. Use the `enabled` flag to stop this being used for notifications.
+
+```yaml
+recipients:
+   - person: person.joe_mctest
+     mobile_devices:
+       - mobile_app_id: mobile_app_joes_broken_phone
+         enabled: False
+```
+
+If for some odd reason auto-discover doesn't find a device, you can enable it by listing it under `mobile_devices`
+in a similar way (`enabled` defaults to `True`).
+
 ## Sending Notifications
 
 This means you can do multi-channel notification with a single reference to a `person` entity in a notification,
@@ -165,9 +181,9 @@ does not currently care about manufacturers and models.
       mobile_discovery: false
       mobile_devices:
         - manufacturer: nokia
-        model: 6110
-        mobile_app_id: mobile_old
-        device_tracker: device_tracker.nokia_6110
+          model: 6110
+          mobile_app_id: mobile_old
+          device_tracker: device_tracker.nokia_6110
       delivery:
         text_message:
         enabled: false

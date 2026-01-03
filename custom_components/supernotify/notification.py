@@ -19,6 +19,7 @@ from . import (
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
+    ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_PRIORITY,
     ATTR_RECIPIENTS,
@@ -618,6 +619,9 @@ class Notification(ArchivableObject):
             computed_target = delivery.select_targets(computed_target)
             self.debug_trace.record_target(delivery.name, "11a_delivery_selection", computed_target)
 
+        disabled_targets = self.disabled_recipient_targets(computed_target)
+        if disabled_targets.has_targets():
+            computed_target.remove(ATTR_MOBILE_APP_ID, disabled_targets.mobile_app_ids)
         split_targets: list[Target] = computed_target.split_by_target_data()
         self.debug_trace.record_target(delivery.name, "12_delivery_split_targets", split_targets)
         direct_targets: list[Target] = [t.direct() for t in split_targets]
@@ -658,6 +662,16 @@ class Notification(ArchivableObject):
         people: list[Recipient] = self.people_registry.filter_recipients_by_occupancy(delivery.occupancy)
         people = [p for p in people if self.recipients_override is None or p.entity_id in self.recipients_override]
         return Target({ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id]})
+
+    def disabled_recipient_targets(self, target: Target) -> Target:
+        negative_target: Target = Target()
+        for person_id in target.person_ids:
+            recipient: Recipient | None = self.people_registry.people.get(person_id)
+            if recipient and recipient.disabled_mobile_app_ids:
+                negative_target += Target(recipient.disabled_mobile_app_ids)
+        if len(negative_target) > 0:
+            _LOGGER.debug("SUPERNOTIFY Found %s mobile targets to filter for recipients", len(negative_target))
+        return negative_target
 
     def resolve_indirect_targets(self, target: Target, delivery: Delivery) -> list[Target]:
         # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone

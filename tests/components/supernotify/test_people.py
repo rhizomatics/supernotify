@@ -4,7 +4,9 @@ from homeassistant.helpers import device_registry, entity_registry
 from pytest_unordered import unordered
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry, Recipient
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
 from .hass_setup_lib import TestingContext, register_mobile_app
 
@@ -59,16 +61,37 @@ async def test_autoresolve_mobile_devices_blended_with_manual_registration(hass:
         - mobile_app_id: mobile_app_old_laptop
         - mobile_app_id: mobile_app_ipad11
         - mobile_app_id: mobile_app_bobs_watch
+        - mobile_app_id: mobile_app_bobs_broken_phone
+          enabled: False
 """,
         components={"person": {}},
+        transport_types=[MobilePushTransport],
     )
     register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Phone")
     register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Watch")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Broken Phone")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Other Phone")
     await ctx.test_initialize()
 
     bob: Recipient = ctx.people_registry.people["person.test_user"]
-    assert list(bob.mobile_devices) == unordered(
-        "mobile_app_old_laptop", "mobile_app_ipad11", "mobile_app_bobs_watch", "mobile_app_bobs_phone"
+    assert list(bob.enabled_mobile_devices) == unordered(
+        "mobile_app_old_laptop",
+        "mobile_app_ipad11",
+        "mobile_app_bobs_watch",
+        "mobile_app_bobs_phone",
+        "mobile_app_bobs_other_phone",
+    )
+    assert list(bob.disabled_mobile_app_ids) == ["mobile_app_bobs_broken_phone"]
+
+    n: Notification = Notification(ctx, "testing 123")
+    await n.initialize()
+    await n.deliver()
+    assert n.delivered_envelopes[0].target.mobile_app_ids == unordered(
+        "mobile_app_old_laptop",
+        "mobile_app_ipad11",
+        "mobile_app_bobs_watch",
+        "mobile_app_bobs_phone",
+        "mobile_app_bobs_other_phone",
     )
 
 

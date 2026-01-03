@@ -274,6 +274,7 @@ MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_CLASS): cv.string,
     vol.Optional(CONF_MOBILE_APP_ID): cv.string,
     vol.Optional(CONF_DEVICE_TRACKER): cv.entity_id,
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
 })
 NOTIFICATION_DUPE_SCHEMA = vol.Schema({
     vol.Optional(CONF_TTL): cv.positive_int,
@@ -307,6 +308,7 @@ OPTION_DEVICE_DOMAIN: Final[str] = "device_domain"
 
 OPTION_DEVICE_MODEL_SELECT: Final[str] = "device_model_select"
 OPTION_DEVICE_MANUFACTURER_SELECT: Final[str] = "device_manufacturer_select"
+OPTION_DEVICE_OS_SELECT: Final[str] = "device_os_select"
 OPTION_DEVICE_DISCOVERY: Final[str] = "device_discovery"
 
 

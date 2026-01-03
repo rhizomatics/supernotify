@@ -4,11 +4,12 @@
 ### Device Discovery
 - Now configured via `options` and can be used for mobile_app_ids or device_ids
 - Discovery now happens at *Delivery* level rather than *Transport*
-  - Discovery can filter in or out device by platform, model or manufacturer
+  - Discovery can filter in or out device by platform, operating system, model or manufacturer
   - This makes it possible to have separate Mobile Push Delivery configurations for Android and Apple where needed
 - Mobile App info now has a typed class rather than dict for better type safety
 - More attributes now picked up for mobile app, incl OS name and version, app version
 - Discovered mobile apps are linked back to people, and recipient objects, where possible
+- Allow auto-discovered mobile apps to be disabled for notification in Recipient
 ### Mobile Push
 - Now supports push to all known mobile apps using device discovery, not just the Device Trackers assigned in the Person integration
 ### TTS
