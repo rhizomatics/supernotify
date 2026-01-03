@@ -203,7 +203,7 @@ class Scenario:
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
         if include_condition:
-            attrs["conditions"] = self.conditions
+            attrs["conditions"] = self.conditions_config
         if include_trace and self.last_trace:
             attrs["trace"] = self.last_trace.as_extended_dict()
         return attrs
@@ -222,10 +222,10 @@ class Scenario:
             try:
                 result = self.hass_api.evaluate_conditions(self.conditions, condition_variables)
                 if result is None:
-                    _LOGGER.warning("SUPERNOTIFY Scenario condition empty result")
+                    _LOGGER.warning(f"SUPERNOTIFY Scenario {self.name} condition empty result")
             except Exception as e:
                 _LOGGER.error(
-                    "SUPERNOTIFY Scenario condition eval failed: %s, vars: %s",
+                    f"SUPERNOTIFY Scenario {self.name} condition eval failed: %s, vars: %s",
                     e,
                     condition_variables.as_dict() if condition_variables else {},
                 )

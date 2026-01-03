@@ -4,7 +4,7 @@ import string
 import time
 import typing
 import uuid
-from typing import Any
+from typing import Any, cast
 
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
@@ -224,6 +224,7 @@ class Envelope(DupeCheckable):
         return str(msg)
 
     def _render_scenario_templates(self, original: str | None, template_field: str, matching_ctx: str) -> str | None:
+        """Apply templating to a field, like message or title"""
         rendered = original if original is not None else ""
         delivery_configs: list[DeliveryCustomization] = list(
             filter(None, (scenario.delivery_config(self.delivery.name) for scenario in self._enabled_scenarios.values()))
@@ -234,7 +235,10 @@ class Envelope(DupeCheckable):
             if dc is not None and dc.data_value(template_field) is not None
         ]
         if template_formats and self.context:
-            context_vars = self.condition_variables.as_dict() if self.condition_variables else {}
+            if self.condition_variables:
+                context_vars: dict[str, Any] = cast("dict[str,Any]", self.condition_variables.as_dict())
+            else:
+                context_vars = {}
             for template_format in template_formats:
                 context_vars[matching_ctx] = rendered
                 try:

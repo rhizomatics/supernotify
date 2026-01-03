@@ -12,58 +12,41 @@ from homeassistant.util import slugify
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable, Iterable
+    from collections.abc import Callable, Iterable, Iterator
 
     import aiohttp
-    from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service
+    from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service, ServiceResponse, State
     from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_registry import EntityRegistry
     from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.event_type import EventType
 
-from typing import cast
-
-import homeassistant.components.trace
-from homeassistant.components.trace.const import DATA_TRACE
-from homeassistant.components.trace.models import ActionTrace
-from homeassistant.components.trace.util import async_store_trace
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConditionError, ConditionErrorContainer, IntegrationError
-from homeassistant.helpers import condition as condition
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
-
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-    from homeassistant.helpers.typing import ConfigType
 import socket
 import threading
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+import homeassistant.components.trace
 from homeassistant.components import mqtt
 from homeassistant.components.group import expand_entity_ids
-
-# type: ignore[attr-defined,unused-ignore]
+from homeassistant.components.trace.const import DATA_TRACE
+from homeassistant.components.trace.models import ActionTrace
+from homeassistant.components.trace.util import async_store_trace
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer, IntegrationError
+from homeassistant.helpers import condition as condition
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.network import get_url
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 
-from .model import ConditionVariables, SelectionRule
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
-
-    from homeassistant.core import ServiceResponse, State
-
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.network import get_url
-
 from . import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID, DOMAIN, ConditionsFunc
+from .model import ConditionVariables, SelectionRule
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -354,11 +337,13 @@ class HomeAssistantAPI:
 
     def evaluate_conditions(
         self,
-        condition: ConditionsFunc,
+        conditions: ConditionsFunc,
         condition_variables: ConditionVariables,
     ) -> bool | None:
         try:
-            return condition(condition_variables.as_dict() if condition_variables else None)
+            if not condition_variables:
+                _LOGGER.warning("SUPERNOTIFY No cond vars provided for condition: %s", conditions)
+            return conditions(condition_variables.as_dict() if condition_variables is not None else None)
         except Exception as e:
             _LOGGER.error("SUPERNOTIFY Condition eval failed: %s", e)
             raise
@@ -513,7 +498,7 @@ class HomeAssistantAPI:
                         )
 
         _LOGGER.debug(f"SUPERNOTIFY {discover_domain} device discovery, all={all_devs},enabled={enabled_devs} ")
-        _LOGGER.info(f"SUPERNOTIFY {discover_domain} skipped={skipped_devs}, found={found_devs}")
+        _LOGGER.debug(f"SUPERNOTIFY {discover_domain} skipped={skipped_devs}, found={found_devs}")
 
         return devices
 

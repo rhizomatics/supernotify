@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import valid_entity_id
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import (
     ATTR_EMAIL,
@@ -577,7 +577,7 @@ class ConditionVariables:
         self.notification_message = message
         self.notification_title = title
 
-    def as_dict(self, **_kwargs: Any) -> ConfigType:
+    def as_dict(self, **_kwargs: Any) -> TemplateVarsType:
         return {
             "applied_scenarios": self.applied_scenarios,
             "required_scenarios": self.required_scenarios,
