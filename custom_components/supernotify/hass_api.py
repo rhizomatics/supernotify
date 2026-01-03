@@ -504,7 +504,7 @@ class HomeAssistantAPI:
 
                     elif identifier:
                         # HomeKit has triples for identifiers, other domains may behave similarly
-                        _LOGGER.debug("SUPERNOTIFY Unexpected device %s id: %s", dev.name, identifier)
+                        _LOGGER.debug("SUPERNOTIFY Ignoring device %s id: %s", dev.name, identifier)
                     else:
                         _LOGGER.debug(  # type: ignore
                             "SUPERNOTIFY Unexpected %s device %s without id", dev.model, dev.name
