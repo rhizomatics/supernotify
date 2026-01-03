@@ -490,6 +490,10 @@
                 },
                 "device_tracker": {
                   "type": "string"
+                },
+                "enabled": {
+                  "default": true,
+                  "type": "string"
                 }
               },
               "required": []
