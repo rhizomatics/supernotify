@@ -364,6 +364,7 @@ class HomeAssistantAPI:
             return
 
         found: int = 0
+        complete: int = 0
         for device in self.discover_devices("mobile_app"):
             mobile_app_id: str = f"mobile_app_{slugify(device.name)}"
             device_tracker: str | None = None
@@ -377,6 +378,9 @@ class HomeAssistantAPI:
                 if reg_entry.platform == "mobile_app" and reg_entry.domain == "device_tracker":
                     device_tracker = reg_entry.entity_id
 
+            if device_tracker and notify_action:
+                complete += 1
+
             mobile_app_info = {
                 CONF_MANUFACTURER: device.manufacturer,
                 CONF_MODEL: device.model,
@@ -387,12 +391,13 @@ class HomeAssistantAPI:
                 CONF_DEVICE_NAME: device.name,
                 # CONF_DEVICE_LABELS: device.labels,
             }
+            found += 1
             self.mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
             self.mobile_apps_by_device_id[device.id] = mobile_app_info
             if device_tracker:
                 self.mobile_apps_by_tracker[device_tracker] = mobile_app_info
 
-        _LOGGER.info(f"SUPERNOTIFY Found {found} enabled notifiable mobile app devices")
+        _LOGGER.info(f"SUPERNOTIFY Found {found} enabled mobile app devices, {complete} complete config")
 
     def discover_devices(
         self,
