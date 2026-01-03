@@ -460,6 +460,7 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         object_refs = ["context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
+        debug_only = ["debug_trace"]
         exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions", "_suppression_reason"]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
@@ -483,13 +484,14 @@ class Notification(ArchivableObject):
             "error_count",
             "deliveries",
         ]
-
+        # preferred fields
         result = {
             k: sanitize(
                 self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
             )
             for k in preferred_order
         }
+        # all the rest not explicitly excluded
         result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
             for k, v in self.__dict__.items()
@@ -498,7 +500,9 @@ class Notification(ArchivableObject):
             and k not in object_refs
             and not k.startswith("_")
             and (not minimal or k not in keys_only)
+            and (not minimal or k not in debug_only)
         })
+        # the exposed only if populated fields
         result.update({
             k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
             for k in exposed_if_populated

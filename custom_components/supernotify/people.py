@@ -101,7 +101,11 @@ class Recipient:
                         _LOGGER.debug("SUPERNOTIFY Updating %s mobile device %s from registry", self.entity_id, d.mobile_app_id)
                     else:
                         self.mobile_devices[d.mobile_app_id] = d.as_dict()
-                _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", self.entity_id, discovered_devices)
+                _LOGGER.info(
+                    "SUPERNOTIFY Auto configured %s for mobile devices %s",
+                    self.entity_id,
+                    ",".join(d.mobile_app_id for d in discovered_devices),
+                )
             else:
                 _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:

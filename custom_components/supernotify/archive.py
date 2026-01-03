@@ -57,7 +57,7 @@ class ArchiveTopic:
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
             return False
-        payload = archive_object.contents(minimal=self.debug)
+        payload = archive_object.contents(minimal=not self.debug)
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
@@ -116,7 +116,7 @@ class ArchiveDirectory:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
                 if self.debug:
                     try:
-                        save_json(archive_path, archive_object.contents(minimal=self.debug))
+                        save_json(archive_path, archive_object.contents(minimal=not self.debug))
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
                         archived = True
                     except Exception as e2:
