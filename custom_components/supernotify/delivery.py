@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.hass_api import HomeAssistantAPI, MobileAppInfo
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
 from custom_components.supernotify.transport import Transport
 
@@ -27,7 +27,6 @@ from . import (
     ATTR_MOBILE_APP_ID,
     CONF_DATA,
     CONF_MESSAGE,
-    CONF_MOBILE_APP_ID,
     CONF_OCCUPANCY,
     CONF_SELECTION,
     CONF_TARGET_REQUIRED,
@@ -131,9 +130,9 @@ class Delivery(DeliveryConfig):
                     if self.target is None:
                         self.target = Target()
                     if domain == "mobile_app":
-                        mobile_app: dict[str, str | None] | None = context.hass_api.mobile_app_by_device_id(d.id)
-                        if mobile_app and mobile_app.get(CONF_ACTION):
-                            mobile_app_id = mobile_app.get(CONF_MOBILE_APP_ID) if mobile_app else None
+                        mobile_app: MobileAppInfo | None = context.hass_api.mobile_app_by_device_id(d.id)
+                        if mobile_app and mobile_app.action:
+                            mobile_app_id = mobile_app.mobile_app_id if mobile_app else None
                             if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
                                 _LOGGER.debug(
                                     f"SUPERNOTIFY Discovered mobile {d.model} device {d.name} for {domain}, id {d.id}"

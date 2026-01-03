@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.components.tts.const import ATTR_CACHE, ATTR_LANGUAGE, ATTR_OPTIONS
@@ -7,7 +7,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify import (
     ATTR_MOBILE_APP_ID,
-    CONF_MANUFACTURER,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MANUFACTURER_SELECT,
@@ -31,6 +30,9 @@ from custom_components.supernotify.model import (
     TransportFeature,
 )
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.hass_api import MobileAppInfo
 
 _LOGGER = logging.getLogger(__name__)
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
@@ -119,8 +121,8 @@ class TTSTransport(Transport):
         at_least_one: bool = False
         for target in targets:
             bare_target = target.replace("notify.", "", 1) if target.startswith("notify.") else target
-            mobile_info = self.context.hass_api.mobile_app_by_id(bare_target)
-            if not mobile_info or mobile_info.get(CONF_MANUFACTURER) == "Apple":
+            mobile_info: MobileAppInfo | None = self.context.hass_api.mobile_app_by_id(bare_target)
+            if not mobile_info or mobile_info.manufacturer == "Apple":
                 _LOGGER.debug("SUPERNOTIFY Skipping tts target that isn't confirmed as android: %s", mobile_info)
             else:
                 full_target = target if Target.is_notify_entity(target) else f"notify.{target}"

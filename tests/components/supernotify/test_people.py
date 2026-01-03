@@ -37,18 +37,17 @@ def test_autoresolve_mobile_devices_for_devices(
     uut.initialize()
     device = register_mobile_app(hass_api, person="person.test_user", device_name="Bobs Phone")
     assert device is not None
-    assert uut.mobile_devices_for_person("person.test_user") == [
-        {
-            "manufacturer": "xUnit",
-            "model": "PyTest001",
-            "action": "notify.mobile_app_bobs_phone",
-            "mobile_app_id": "mobile_app_bobs_phone",
-            "device_tracker": "device_tracker.mobile_app_bobs_phone",
-            "device_id": device.id,
-            "device_name": "Bobs Phone",
-            # "device_labels": set(),
-        }
-    ]
+    mobiles = uut.mobile_devices_for_person("person.test_user")
+    assert len(mobiles) == 1
+    mobile = mobiles[0]
+
+    assert mobile.manufacturer == "xUnit"
+    assert mobile.model == "PyTest001"
+    assert mobile.action == "notify.mobile_app_bobs_phone"
+    assert mobile.mobile_app_id == "mobile_app_bobs_phone"
+    assert mobile.device_tracker == "device_tracker.mobile_app_bobs_phone"
+    assert mobile.device_id == device.id
+    assert mobile.device_name == "Bobs Phone"
 
 
 async def test_autoresolve_mobile_devices_blended_with_manual_registration(hass: HomeAssistant) -> None:

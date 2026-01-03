@@ -91,7 +91,7 @@ def test_snooze_everything(mock_hass: HomeAssistant) -> None:
 
 async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
     hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
-    register_mobile_app(hass_api, person="person.bob_mctest")
+    register_mobile_app(hass_api, person="person.bob_mctest", user_id="eee999111")
 
     uut = SupernotifyAction(
         hass,

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -30,6 +31,7 @@ from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from custom_components.supernotify import (
+    ATTR_USER_ID,
     CONF_ACTION_GROUPS,
     CONF_ACTIONS,
     CONF_ARCHIVE,
@@ -52,7 +54,7 @@ from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.hass_api import ATTR_OS_NAME, HomeAssistantAPI
 from custom_components.supernotify.media_grab import MediaStorage
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
@@ -74,11 +76,11 @@ class ContextualError(Exception):
 
 def assert_json_round_trip(v, label=None):
     try:
-        serialized: str = json.dumps(v)
+        serialized: str = json.dumps(v)  # type:ignore[annotation-unchecked]
     except Exception as e:
         raise ContextualError(e, label or "unknown") from e
     try:
-        deserialized: Any = json.loads(serialized)
+        deserialized: Any = json.loads(serialized)  # type:ignore[annotation-unchecked]
     except Exception as e:
         raise ContextualError(e, label or "unknown") from e
     assert deserialized, f"{label or 'unknown'} should be roundtrippable in json"
@@ -343,15 +345,26 @@ def register_mobile_app(
     device_name: str = "phone01",
     domain: str = "mobile_app",
     source: str = "unit_test",
+    os_name: str = "iOS",
+    user_id: str | None = None,
 ) -> DeviceEntry | None:
 
     if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
         return None
     # hass_api.set_state(person, "home")
+    existing: State | None = hass_api.get_state(person)
+    if existing and existing.attributes and ATTR_USER_ID in existing.attributes:
+        user_id = existing.attributes[ATTR_USER_ID]
+    else:
+        user_id = user_id or str(uuid.uuid1())
+        attrs = dict(existing.attributes) if existing and existing.attributes else {}
+        attrs[ATTR_USER_ID] = user_id
+        hass_api.set_state(person, "home", attributes=attrs)
+
     config_entry = config_entries.ConfigEntry(
         domain=domain,
-        data={},
+        data={ATTR_USER_ID: user_id, ATTR_OS_NAME: os_name},
         version=1,
         minor_version=1,
         unique_id=None,
@@ -366,14 +379,16 @@ def register_mobile_app(
         hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(config_entry)
     except Exception as e:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking: %s", e)
-    existing: State | None = hass_api.get_state(person)
+
     device_slug: str = slugify(device_name)
     if not existing or "device_trackers" not in existing.attributes:
-        hass_api.set_state(person, "home", attributes={"device_trackers": [f"device_tracker.mobile_app_{device_slug}"]})
+        hass_api.set_state(
+            person, "home", attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]}
+        )
     else:
         trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
         trackers.extend(existing.attributes.get("device_trackers", []))
-        hass_api.set_state(person, "home", attributes={"device_trackers": trackers})
+        hass_api.set_state(person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
 
     device_registry = hass_api.device_registry()
     device_entry = None

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import CONF_ACTION, CONF_DEVICE_ID, CONF_MODEL
+from homeassistant.const import CONF_ACTION, CONF_DEVICE_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
 from homeassistant.util import slugify
@@ -62,15 +63,60 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.network import get_url
 
-from . import CONF_DEVICE_NAME, CONF_DEVICE_TRACKER, CONF_MANUFACTURER, CONF_MOBILE_APP_ID, DOMAIN, ConditionsFunc
+from . import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID, DOMAIN, ConditionsFunc
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
     from homeassistant.helpers.typing import ConfigType
 
+# avoid importing from homeassistant.components.mobile_app.const and triggering dependency chain
+
+CONF_USER_ID = "user_id"
+ATTR_OS_NAME = "os_name"
+ATTR_OS_VERSION = "os_version"
+ATTR_APP_VERSION = "app_version"
+ATTR_DEVICE_NAME = "device_name"
+ATTR_MANUFACTURER = "manufacturer"
+ATTR_MODEL = "model"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class MobileAppInfo:
+    mobile_app_id: str
+    device_name: str | None
+    device_id: str | None
+    device_tracker: str | None
+    action: str | None
+    user_id: str | None
+    manufacturer: str | None
+    model: str | None
+    os_name: str | None
+    os_version: str | None
+    app_version: str | None
+    device_labels: list[str]
+
+    def as_dict(self) -> dict[str, str | list[str] | None]:
+        return {
+            CONF_MOBILE_APP_ID: self.mobile_app_id,
+            ATTR_DEVICE_NAME: self.device_name,
+            CONF_DEVICE_ID: self.device_id,
+            CONF_USER_ID: self.user_id,
+            CONF_DEVICE_TRACKER: self.device_tracker,
+            CONF_ACTION: self.action,
+            ATTR_OS_NAME: self.os_name,
+            ATTR_OS_VERSION: self.os_version,
+            ATTR_APP_VERSION: self.app_version,
+            ATTR_MANUFACTURER: self.manufacturer,
+            ATTR_MODEL: self.model,
+            CONF_DEVICE_LABELS: self.device_labels,
+        }
+
+    def __eq__(self, other: Any) -> bool:
+        """Test support"""
+        return other is not None and other.as_dict() == self.as_dict()
 
 
 class HomeAssistantAPI:
@@ -84,9 +130,10 @@ class HomeAssistantAPI:
         self._device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
-        self.mobile_apps_by_tracker: dict[str, dict[str, str | None]] = {}
-        self.mobile_apps_by_app_id: dict[str, dict[str, str | None]] = {}
-        self.mobile_apps_by_device_id: dict[str, dict[str, str | None]] = {}
+        self.mobile_apps_by_tracker: dict[str, MobileAppInfo] = {}
+        self.mobile_apps_by_app_id: dict[str, MobileAppInfo] = {}
+        self.mobile_apps_by_device_id: dict[str, MobileAppInfo] = {}
+        self.mobile_apps_by_user_id: dict[str, list[MobileAppInfo]] = {}
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
@@ -258,7 +305,6 @@ class HomeAssistantAPI:
         this_trace: ActionTrace | None = None
         if DATA_TRACE not in self._hass.data:
             _LOGGER.warning("SUPERNOTIFY tracing not configured, attempting to set up")
-            # type: ignore
             await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
         with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
             cond_trace.set_trace(trace_get())
@@ -347,14 +393,17 @@ class HomeAssistantAPI:
             is_fixable=is_fixable,
         )
 
-    def mobile_app_by_tracker(self, device_tracker: str) -> dict[str, str | None] | None:
+    def mobile_app_by_tracker(self, device_tracker: str) -> MobileAppInfo | None:
         return self.mobile_apps_by_tracker.get(device_tracker)
 
-    def mobile_app_by_id(self, mobile_app_id: str) -> dict[str, str | None] | None:
+    def mobile_app_by_id(self, mobile_app_id: str) -> MobileAppInfo | None:
         return self.mobile_apps_by_app_id.get(mobile_app_id)
 
-    def mobile_app_by_device_id(self, device_id: str) -> dict[str, str | None] | None:
+    def mobile_app_by_device_id(self, device_id: str) -> MobileAppInfo | None:
         return self.mobile_apps_by_device_id.get(device_id)
+
+    def mobile_app_by_user_id(self, user_id: str) -> list[MobileAppInfo] | None:
+        return self.mobile_apps_by_user_id.get(user_id)
 
     def build_mobile_app_cache(self) -> None:
         """All enabled mobile apps"""
@@ -366,36 +415,58 @@ class HomeAssistantAPI:
         found: int = 0
         complete: int = 0
         for device in self.discover_devices("mobile_app"):
-            mobile_app_id: str = f"mobile_app_{slugify(device.name)}"
-            device_tracker: str | None = None
-            notify_action: str | None = None
-            if self.has_service("notify", mobile_app_id):
-                notify_action = f"notify.{mobile_app_id}"
-            else:
-                _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
-            registry_entries = ent_reg.entities.get_entries_for_device_id(device.id)
-            for reg_entry in registry_entries:
-                if reg_entry.platform == "mobile_app" and reg_entry.domain == "device_tracker":
-                    device_tracker = reg_entry.entity_id
+            try:
+                mobile_app_id: str = f"mobile_app_{slugify(device.name)}"
+                device_tracker: str | None = None
+                notify_action: str | None = None
+                os_name: str | None = None
+                os_version: str | None = None
+                app_version: str | None = None
+                user_id: str | None = None
+                if self.has_service("notify", mobile_app_id):
+                    notify_action = f"notify.{mobile_app_id}"
+                else:
+                    _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
+                registry_entries = ent_reg.entities.get_entries_for_device_id(device.id)
+                for reg_entry in registry_entries:
+                    if reg_entry.platform == "mobile_app" and reg_entry.domain == "device_tracker":
+                        device_tracker = reg_entry.entity_id
+                for config_entry_id in device.config_entries:
+                    config_entry = self._hass.config_entries.async_get_entry(config_entry_id)
+                    if config_entry and config_entry.data:
+                        os_name = config_entry.data.get(ATTR_OS_NAME) or os_name
+                        os_version = config_entry.data.get(ATTR_OS_VERSION) or os_version
+                        user_id = config_entry.data.get(CONF_USER_ID) or user_id
+                        app_version = config_entry.data.get(ATTR_APP_VERSION) or app_version
 
-            if device_tracker and notify_action:
-                complete += 1
+                if device_tracker and notify_action:
+                    complete += 1
 
-            mobile_app_info = {
-                CONF_MANUFACTURER: device.manufacturer,
-                CONF_MODEL: device.model,
-                CONF_MOBILE_APP_ID: mobile_app_id,
-                CONF_DEVICE_TRACKER: device_tracker,
-                CONF_ACTION: notify_action,
-                CONF_DEVICE_ID: device.id,
-                CONF_DEVICE_NAME: device.name,
-                # CONF_DEVICE_LABELS: device.labels,
-            }
-            found += 1
-            self.mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
-            self.mobile_apps_by_device_id[device.id] = mobile_app_info
-            if device_tracker:
-                self.mobile_apps_by_tracker[device_tracker] = mobile_app_info
+                mobile_app_info: MobileAppInfo = MobileAppInfo(
+                    manufacturer=device.manufacturer,
+                    model=device.model,
+                    mobile_app_id=mobile_app_id,
+                    device_tracker=device_tracker,
+                    action=notify_action,
+                    device_id=device.id,
+                    user_id=user_id,
+                    os_name=os_name,
+                    os_version=os_version,
+                    app_version=app_version,
+                    device_name=device.name,
+                    device_labels=list(device.labels) if device.labels else [],
+                )
+                found += 1
+                self.mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
+                self.mobile_apps_by_device_id[device.id] = mobile_app_info
+                if device_tracker:
+                    self.mobile_apps_by_tracker[device_tracker] = mobile_app_info
+                if user_id:
+                    self.mobile_apps_by_user_id.setdefault(user_id, [])
+                    self.mobile_apps_by_user_id[user_id].append(mobile_app_info)
+
+            except Exception as e:
+                _LOGGER.error("SUPERNOTIFY Failure examining device %s: %s", device, e)
 
         _LOGGER.info(f"SUPERNOTIFY Found {found} enabled mobile app devices, {complete} complete config")
 

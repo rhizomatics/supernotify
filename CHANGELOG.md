@@ -6,6 +6,9 @@
 - Discovery now happens at *Delivery* level rather than *Transport*
   - Discovery can filter in or out device by platform, model or manufacturer
   - This makes it possible to have separate Mobile Push Delivery configurations for Android and Apple where needed
+- Mobile App info now has a typed class rather than dict for better type safety
+- More attributes now picked up for mobile app, incl OS name and version, app version
+- Discovered mobile apps are linked back to people, and recipient objects, where possible
 ### Mobile Push
 - Now supports push to all known mobile apps using device discovery, not just the Device Trackers assigned in the Person integration
 ### TTS

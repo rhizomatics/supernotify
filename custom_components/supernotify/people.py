@@ -43,7 +43,7 @@ from . import (
     OCCUPANCY_ONLY_OUT,
 )
 from .common import ensure_list
-from .hass_api import HomeAssistantAPI
+from .hass_api import HomeAssistantAPI, MobileAppInfo
 from .model import DeliveryCustomization, Target
 
 if TYPE_CHECKING:
@@ -77,7 +77,9 @@ class Recipient:
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
-        self.mobile_devices: dict[str, dict[str, Any]] = {c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])}
+        self.mobile_devices: dict[str, dict[str, str | list[str] | None]] = {
+            c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])
+        }
         _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict())
 
     def initialize(self, people_registry: "PeopleRegistry") -> None:
@@ -88,17 +90,17 @@ class Recipient:
         if self.phone_number:
             self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
-            discovered_devices: list[dict[str, Any]] = people_registry.mobile_devices_for_person(self.entity_id)
+            discovered_devices: list[MobileAppInfo] = people_registry.mobile_devices_for_person(self.entity_id)
             if discovered_devices:
                 for d in discovered_devices:
-                    if d[CONF_MOBILE_APP_ID] in self.mobile_devices:
+                    if d.mobile_app_id in self.mobile_devices:
                         # merge with manual registrations, with priority to manually overridden values
-                        d.update(self.mobile_devices[d[CONF_MOBILE_APP_ID]])
-                        _LOGGER.debug(
-                            "SUPERNOTIFY Updating %s mobile device %s from registry", self.entity_id, d[CONF_MOBILE_APP_ID]
-                        )
+                        merged = d.as_dict()
+                        merged.update(self.mobile_devices[d.mobile_app_id])
+                        self.mobile_devices[d.mobile_app_id] = merged
+                        _LOGGER.debug("SUPERNOTIFY Updating %s mobile device %s from registry", self.entity_id, d.mobile_app_id)
                     else:
-                        self.mobile_devices[d[CONF_MOBILE_APP_ID]] = d
+                        self.mobile_devices[d.mobile_app_id] = d.as_dict()
                 _LOGGER.info("SUPERNOTIFY Auto configured %s for mobile devices %s", self.entity_id, discovered_devices)
             else:
                 _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
@@ -269,7 +271,7 @@ class PeopleRegistry:
                     results[STATE_NOT_HOME].append(person_config)
         return results
 
-    def mobile_devices_for_person(self, person_entity_id: str) -> list[dict[str, Any]]:
+    def mobile_devices_for_person(self, person_entity_id: str) -> list[MobileAppInfo]:
         """Auto detect mobile_app targets for a person.
 
         Targets not currently validated as async registration may not be complete at this stage
@@ -283,24 +285,12 @@ class PeopleRegistry:
             list: mobile target actions for this person
 
         """
-        mobile_devices: list[dict[str, Any]] = []
-        device_trackers: list[str] | None = None
-        try:
-            person_state = self.hass_api.get_state(person_entity_id)
-            if not person_state:
-                _LOGGER.warning("SUPERNOTIFY Unable to resolve %s", person_entity_id)
-            else:
-                device_trackers = person_state.attributes.get("device_trackers", [])
-                _LOGGER.debug("SUPERNOTIFY Found device trackers for %s:%s", person_entity_id, ",".join(device_trackers))
-        except Exception as e:
-            device_trackers = None
-            _LOGGER.warning("SUPERNOTIFY Device_trackers data can't be retrieved for %s: %s", person_entity_id, e)
-        if device_trackers:
-            for d_t in device_trackers:
-                mobile_device = self.hass_api.mobile_app_by_tracker(d_t)
-                if mobile_device:
-                    mobile_devices.append(mobile_device)
-                else:
-                    _LOGGER.debug("SUPERNOTIFY Ignoring device tracker %s", d_t)
-
-        return mobile_devices
+        person_state = self.hass_api.get_state(person_entity_id)
+        if not person_state:
+            _LOGGER.warning("SUPERNOTIFY Unable to resolve %s", person_entity_id)
+        else:
+            user_id = person_state.attributes.get(ATTR_USER_ID)
+            if user_id:
+                return self.hass_api.mobile_app_by_user_id(user_id) or []
+            _LOGGER.debug("SUPERNOTIFY Unable to link %s to a user_id", person_entity_id)
+        return []
