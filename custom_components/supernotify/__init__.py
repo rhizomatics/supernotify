@@ -309,6 +309,8 @@ OPTION_DEVICE_DOMAIN: Final[str] = "device_domain"
 OPTION_DEVICE_MODEL_SELECT: Final[str] = "device_model_select"
 OPTION_DEVICE_MANUFACTURER_SELECT: Final[str] = "device_manufacturer_select"
 OPTION_DEVICE_OS_SELECT: Final[str] = "device_os_select"
+OPTION_DEVICE_LABEL_SELECT: Final[str] = "device_label_select"
+OPTION_DEVICE_AREA_SELECT: Final[str] = "device_area_select"
 OPTION_DEVICE_DISCOVERY: Final[str] = "device_discovery"
 
 

@@ -76,6 +76,7 @@ class DeviceInfo:
     device_tracker: str | None = None
     action: str | None = None
     user_id: str | None = None
+    area_id: str | None = None
     manufacturer: str | None = None
     model: str | None = None
     os_name: str | None = None
@@ -453,6 +454,8 @@ class HomeAssistantAPI:
         device_model_select: SelectionRule | None = None,
         device_manufacturer_select: SelectionRule | None = None,
         device_os_select: SelectionRule | None = None,
+        device_area_select: SelectionRule | None = None,
+        device_label_select: SelectionRule | None = None,
     ) -> list[DeviceInfo]:
         devices: list[DeviceInfo] = []
         dev_reg: DeviceRegistry | None = self.device_registry()
@@ -487,12 +490,21 @@ class HomeAssistantAPI:
                             )
                             skipped_devs += 1
                             continue
+                        if device_area_select is not None and not device_area_select.match(dev.area_id):
+                            _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no area %s match", dev.name, dev.area_id)
+                            skipped_devs += 1
+                            continue
+                        if device_label_select is not None and not device_label_select.match(dev.labels):
+                            _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no label %s match", dev.name, dev.labels)
+                            skipped_devs += 1
+                            continue
                         devices.append(
                             DeviceInfo(
                                 device_id=dev.id,
                                 device_name=dev.name,
                                 manufacturer=dev.manufacturer,
                                 model=dev.model,
+                                area_id=dev.area_id,
                                 user_id=device_config_info[ATTR_USER_ID],
                                 os_name=device_config_info[ATTR_OS_NAME],
                                 os_version=device_config_info[ATTR_OS_VERSION],

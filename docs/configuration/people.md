@@ -155,7 +155,7 @@ recipients:
 ### Complicated
 
 Its possible to hold as many details about the device as Home Assistant itself does, although Supernotify
-does not currently care about manufacturers and models.
+does not currently care about manufacturers and models other than for matching rules.
 
 ```yaml title="Complicated Example"
  recipients:

@@ -1,6 +1,6 @@
 import logging
 import re
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import IntFlag, StrEnum, auto
 from traceback import format_exception
@@ -464,12 +464,22 @@ class SelectionRule:
             if config.get(SELECT_EXCLUDE):
                 self.exclude = ensure_list(config.get(SELECT_EXCLUDE))
 
-    def match(self, v: str | None) -> bool:
+    def match(self, v: str | Iterable[str] | None) -> bool:
         if self.include is None and self.exclude is None:
             return True
-        if self.exclude is not None and v is not None and any(re.fullmatch(pat, v) for pat in self.exclude):
-            return False
-        return bool(self.include is None or (v is not None and any(re.fullmatch(pat, v) for pat in self.include)))
+        if isinstance(v, str) or v is None:
+            if self.exclude is not None and v is not None and any(re.fullmatch(pat, v) for pat in self.exclude):
+                return False
+            if self.include is not None and (v is None or not any(re.fullmatch(pat, v) for pat in self.include)):
+                return False
+        else:
+            if self.exclude is not None:
+                for vv in v:
+                    if any(re.fullmatch(pat, vv) for pat in self.exclude):
+                        return False
+            if self.include is not None:
+                return any(any(re.fullmatch(pat, vv) for pat in self.include) for vv in v)
+        return True
 
 
 class DeliveryConfig:

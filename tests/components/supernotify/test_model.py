@@ -251,6 +251,8 @@ def test_selection_rule_match():
     assert uut.match("Google Pixie Legacy")
     assert not uut.match(None)
     assert not uut.match("Random Device")
+    assert uut.match(["Foo", "Bar", "Nest Pro"])
+    assert not uut.match(["Foo", "Bar"])
 
     uut = SelectionRule({"exclude": [".*Legacy"]})
     assert uut.match("Google Pixie")
@@ -258,6 +260,8 @@ def test_selection_rule_match():
     assert not uut.match("Google Pixie Legacy")
     assert uut.match(None)
     assert uut.match("Random Device")
+    assert uut.match(v=["Foo", "Bar"])
+    assert not uut.match(v=["Foo", "Bar", "The Legacy"])
 
     uut = SelectionRule(None)
     assert uut.match("Google Pixie")

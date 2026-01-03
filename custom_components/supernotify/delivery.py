@@ -35,8 +35,10 @@ from . import (
     CONF_TITLE,
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
+    OPTION_DEVICE_AREA_SELECT,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_LABEL_SELECT,
     OPTION_DEVICE_MANUFACTURER_SELECT,
     OPTION_DEVICE_MODEL_SELECT,
     OPTION_DEVICE_OS_SELECT,
@@ -127,6 +129,8 @@ class Delivery(DeliveryConfig):
                     device_model_select=SelectionRule(self.options.get(OPTION_DEVICE_MODEL_SELECT)),
                     device_manufacturer_select=SelectionRule(self.options.get(OPTION_DEVICE_MANUFACTURER_SELECT)),
                     device_os_select=SelectionRule(self.options.get(OPTION_DEVICE_OS_SELECT)),
+                    device_area_select=SelectionRule(self.options.get(OPTION_DEVICE_AREA_SELECT)),
+                    device_label_select=SelectionRule(self.options.get(OPTION_DEVICE_LABEL_SELECT)),
                 ):
                     discovered += 1
                     if self.target is None:

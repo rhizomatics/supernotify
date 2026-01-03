@@ -7,7 +7,7 @@
   - Discovery can filter in or out device by platform, operating system, model or manufacturer
   - This makes it possible to have separate Mobile Push Delivery configurations for Android and Apple where needed
 - Mobile App info now has a typed class rather than dict for better type safety
-- More attributes now picked up for mobile app, incl OS name and version, app version
+- More attributes now picked up for mobile app, incl OS name and version, app version, area_id and label
 - Discovered mobile apps are linked back to people, and recipient objects, where possible
 - Allow auto-discovered mobile apps to be disabled for notification in Recipient
 ### Mobile Push
