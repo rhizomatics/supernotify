@@ -3,9 +3,9 @@
 ## 1.9.0
 ### Device Discovery
 - Now configured via `options` and can be used for mobile_app_ids or device_ids
+- Mobile app discovery improved, no longer needs mobile app device trackers to be configured in Home Assistant Person screen
 - Discovery now happens at *Delivery* level rather than *Transport*
   - Discovery can filter in or out device by platform, operating system, area_id, label, model or manufacturer
-  - This makes it possible to have separate Mobile Push Delivery configurations for Android and Apple where needed
 - Mobile App info now has a typed class rather than dict for better type safety
 - More attributes now picked up for mobile app, incl OS name and version, app version, user_id, area_id and label
 - Discovered mobile apps are linked back to people, and recipient objects, where possible
