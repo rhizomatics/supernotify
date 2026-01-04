@@ -85,7 +85,7 @@ jobs:
           TAG="${{ github.event.release.tag_name }}"
           if [[ "$TAG" == *-beta* ]]; then
             echo "Deploying beta version: $TAG"
-            uv run mike deploy --push "$TAG"
+            uv run mike deploy --push --update-aliases "$TAG" beta
           else
             echo "Deploying stable release: $TAG"
             uv run mike deploy --push --update-aliases "$TAG" latest
