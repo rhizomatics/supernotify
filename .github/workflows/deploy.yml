@@ -59,8 +59,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        genbadge coverage -i coverage.xml -o badges/coverage.svg
-        genbadge tests -i junit/test-results-${{ matrix.python-version }}.xml -o badges/tests.svg
+        uv run genbadge coverage -i coverage.xml -o badges/coverage.svg
+        uv run genbadge tests -i junit/test-results-${{ matrix.python-version }}.xml -o badges/tests.svg
 
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -81,6 +81,6 @@ jobs:
       run: |
         sudo apt-get install libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
         uv sync --group docs
-        mkdocs gh-deploy --force --config-file mkdocs.yml
+        uv run mkdocs gh-deploy --force --config-file mkdocs.yml
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
