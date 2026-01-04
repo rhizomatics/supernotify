@@ -15,3 +15,5 @@ venv/
 *.pyo
 .DS_Store
 node_modules/
+supernotify/
+config/
