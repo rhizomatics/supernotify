@@ -81,6 +81,12 @@ jobs:
       run: |
         sudo apt-get install pngquant
         uv sync --group docs
-        uv run mkdocs gh-deploy --force --config-file mkdocs.yml
+        if [ "${{ github.event_name }}" = "release" ]; then
+          uv run mike deploy --push --update-aliases ${{ github.event.release.tag_name }} latest
+          uv run mike set-default --push latest
+        else
+          uv run mike deploy --push main
+        fi
+
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
