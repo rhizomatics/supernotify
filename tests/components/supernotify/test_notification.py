@@ -33,7 +33,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import Target
-from custom_components.supernotify.notification import DebugTrace, Notification
+from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.email import EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
@@ -375,19 +375,3 @@ async def test_delivery_selection_order() -> None:
     assert next(iter(uut.selected_deliveries)) == "eager"
     assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
     assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
-
-
-def test_debug_trace_for_targets():
-    uut = DebugTrace("message", "title", {}, {})
-    uut.record_target("omni", "stage_1", Target(["switch.hall", "joe@mctoe.com"]))
-    uut.record_target("omni", "stage_2", Target(["switch.hall", "joe@mctoe.com"]))
-    uut.record_target("omni", "stage_3", Target(["joe@mctoe.com"]))
-    uut.record_target("omni", "stage_4", Target(["joe@mctoe.com", "home@24acacia.ave"]))
-    uut.record_target("omni", "stage_5", Target())
-
-    assert len(uut.contents()["resolved"]["omni"]) == 5
-    assert uut.contents()["resolved"]["omni"]["stage_1"] == {"email": ["joe@mctoe.com"], "entity_id": ["switch.hall"]}
-    assert uut.contents()["resolved"]["omni"]["stage_2"] == "NO_CHANGE"
-    assert uut.contents()["resolved"]["omni"]["stage_3"] == {"email": ["joe@mctoe.com"]}
-    assert uut.contents()["resolved"]["omni"]["stage_4"] == {"email": ["joe@mctoe.com", "home@24acacia.ave"]}
-    assert uut.contents()["resolved"]["omni"]["stage_5"] == {}

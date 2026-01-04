@@ -9,7 +9,7 @@ from custom_components.supernotify import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
     TRANSPORT_ALEXA,
 )
@@ -56,7 +56,7 @@ class AlexaDevicesTransport(Transport):
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
-            OPTION_TARGET_INCLUDE_RE: [r"notify\.[a-z0-9_]+\_(speak|announce)", r"group\.[a-z0-9_]+"],
+            OPTION_TARGET_SELECT: [r"notify\.[a-z0-9_]+\_(speak|announce)", r"group\.[a-z0-9_]+"],
         }
         return config
 

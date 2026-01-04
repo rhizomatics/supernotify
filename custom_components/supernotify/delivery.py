@@ -1,6 +1,5 @@
 import logging
-import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -18,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
 from custom_components.supernotify.transport import Transport
 
@@ -35,6 +33,9 @@ from . import (
     CONF_TITLE,
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
+    OPTION_DATA_KEYS_EXCLUDE_RE,
+    OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_DATA_KEYS_SELECT,
     OPTION_DEVICE_AREA_SELECT,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
@@ -44,13 +45,19 @@ from . import (
     OPTION_DEVICE_OS_SELECT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_SELECT,
     RESERVED_DELIVERY_NAMES,
+    SELECT_EXCLUDE,
+    SELECT_INCLUDE,
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
     ConditionsFunc,
 )
 from .context import Context
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.hass_api import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +80,11 @@ class Delivery(DeliveryConfig):
             self.conditions_config = conf.get(CONF_CONDITION)
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
+        if self.options.get(OPTION_TARGET_SELECT):
+            self.target_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_SELECT))
+        else:
+            self.target_selector = None
+        self.upgrade_deprecations()
 
     async def initialize(self, context: "Context") -> bool:
         errors = 0
@@ -119,6 +131,23 @@ class Delivery(DeliveryConfig):
         self.transport_data = self.transport.setup_delivery_options(self.options, self.name)
         return errors == 0
 
+    def upgrade_deprecations(self) -> None:
+        # v1.9.0
+        if (
+            OPTION_DATA_KEYS_INCLUDE_RE in self.options or OPTION_DATA_KEYS_EXCLUDE_RE in self.options
+        ) and not self.options.get(OPTION_DATA_KEYS_SELECT):
+            _LOGGER.warning(
+                "SUPERNOTIFY Deprecated use of data_keys_include_re/data_keys_exclude_re options - use data_keys_select"
+            )
+            self.options[OPTION_DATA_KEYS_SELECT] = {
+                SELECT_INCLUDE: self.options.get(OPTION_DATA_KEYS_INCLUDE_RE),
+                SELECT_EXCLUDE: self.options.get(OPTION_DATA_KEYS_EXCLUDE_RE),
+            }
+        # v1.9.0
+        if OPTION_TARGET_INCLUDE_RE in self.options and not self.options.get(OPTION_TARGET_SELECT):
+            _LOGGER.warning("SUPERNOTIFY Deprecated use of target_include_re option - use target_select")
+            self.options[OPTION_TARGET_SELECT] = {SELECT_INCLUDE: self.options.get(OPTION_TARGET_INCLUDE_RE)}
+
     def discover_devices(self, context: "Context") -> None:
         if self.options.get(OPTION_DEVICE_DISCOVERY, False):
             for domain in self.options.get(OPTION_DEVICE_DOMAIN, []):
@@ -159,8 +188,8 @@ class Delivery(DeliveryConfig):
         def selected(category: str, targets: list[str]) -> list[str]:
             if OPTION_TARGET_CATEGORIES in self.options and category not in self.options[OPTION_TARGET_CATEGORIES]:
                 return []
-            if OPTION_TARGET_INCLUDE_RE in self.options:
-                return [t for t in targets if any(re.fullmatch(r, t) for r in self.options[OPTION_TARGET_INCLUDE_RE])]
+            if self.target_selector:
+                return [t for t in targets if self.target_selector.match(t)]
             return targets
 
         filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
@@ -262,7 +291,7 @@ class DeliveryRegistry:
 
     async def initialize(self, context: "Context") -> None:
         await self.initialize_transports(context)
-        self.autogenerate_deliveries(context.hass_api)
+        await self.autogenerate_deliveries(context)
         self.initialize_deliveries()
 
     def initialize_deliveries(self) -> None:
@@ -366,7 +395,7 @@ class DeliveryRegistry:
             [d for d in self._deliveries.values() if d.enabled and d.transport == transport],
         )
 
-    def autogenerate_deliveries(self, hass_api: HomeAssistantAPI) -> None:
+    async def autogenerate_deliveries(self, context: "Context") -> None:
         # If the config has no deliveries, check if a default delivery should be auto-generated
         # where there is a empty config, supernotify can at least handle NotifyEntities sensibly
 
@@ -376,7 +405,7 @@ class DeliveryRegistry:
                 # don't auto-configure if there's an explicit delivery configured for this transport
                 continue
 
-            transport_definition: DeliveryConfig | None = transport.auto_configure(hass_api)
+            transport_definition: DeliveryConfig | None = transport.auto_configure(context.hass_api)
             if transport_definition:
                 _LOGGER.debug(
                     "SUPERNOTIFY Building default delivery for %s from transport %s", transport.name, transport_definition
@@ -385,6 +414,7 @@ class DeliveryRegistry:
                 if transport.validate_action(transport_definition.action):
                     # auto generate a delivery that will be implicitly selected
                     default_delivery = Delivery(f"DEFAULT_{transport.name}", transport_definition.as_dict(), transport)
+                    await default_delivery.initialize(context)
                     default_delivery.enabled = transport.enabled
                     autogenerated[default_delivery.name] = default_delivery
                     _LOGGER.info(

@@ -81,7 +81,6 @@ async def test_autoresolve_mobile_devices_blended_with_manual_registration(hass:
         "mobile_app_bobs_phone",
         "mobile_app_bobs_other_phone",
     )
-    assert list(bob.disabled_mobile_app_ids) == ["mobile_app_bobs_broken_phone"]
 
     n: Notification = Notification(ctx, "testing 123")
     await n.initialize()

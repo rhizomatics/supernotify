@@ -207,18 +207,6 @@ def test_target_required() -> None:
     assert TargetRequired("false") == TargetRequired.OPTIONAL
 
 
-def test_debug_trace() -> None:
-    uut = DebugTrace("test message", "test title", {}, ["joe@mctest.org", "siren.hallway"])
-    uut.record_target("mixed", "sortout", [Target("mrst@mctest.org"), Target("switch.gong")])
-    uut.record_delivery_artefact("plain_email", "foo", {"a": 12, "header": False})
-    uut.record_delivery_selection("pre-cogitate", ["plain_email", "siren"])
-    uut.record_delivery_exception("plain_email", "validating", HomeAssistantError())
-    result = uut.contents()
-    assert "foo" in result["delivery_artefacts"]["plain_email"]
-
-    assert_json_round_trip(uut.contents())
-
-
 def test_selection_rule_construction():
     uut = SelectionRule(None)
     assert uut.include is None
@@ -266,3 +254,33 @@ def test_selection_rule_match():
     uut = SelectionRule(None)
     assert uut.match("Google Pixie")
     assert uut.match("Anything")
+
+
+def test_debug_trace() -> None:
+    uut = DebugTrace("test message", "test title", {}, ["joe@mctest.org", "siren.hallway"])
+    uut.record_target("mixed", "sortout", [Target("mrst@mctest.org"), Target("switch.gong")])
+    uut.record_delivery_artefact("plain_email", "foo", {"a": 12, "header": False})
+    uut.record_delivery_selection("pre-cogitate", ["plain_email", "siren"])
+    uut.record_delivery_exception("plain_email", "validating", HomeAssistantError())
+    result = uut.contents()
+    assert "foo" in result["delivery_artefacts"]["plain_email"]
+
+    assert_json_round_trip(uut.contents())
+
+
+def test_debug_trace_for_targets():
+    uut = DebugTrace("message", "title", {}, {})
+    uut.record_target("omni", "stage_1", Target(["switch.hall", "joe@mctoe.com"]))
+    uut.record_target("omni", "stage_2", Target(["switch.hall", "joe@mctoe.com"]))
+    uut.record_target("omni", "stage_3", Target(["switch.hall", "joe@mctoe.com"]))
+    uut.record_target("omni", "stage_4", Target(["joe@mctoe.com"]))
+    uut.record_target("omni", "stage_5", Target(["joe@mctoe.com", "home@24acacia.ave"]))
+    uut.record_target("omni", "stage_6", Target())
+
+    assert len(uut.contents()["resolved"]["omni"]) == 6
+    assert uut.contents()["resolved"]["omni"]["stage_1"] == {"email": ["joe@mctoe.com"], "entity_id": ["switch.hall"]}
+    assert uut.contents()["resolved"]["omni"]["stage_2"] == "NO_CHANGE"
+    assert uut.contents()["resolved"]["omni"]["stage_3"] == "NO_CHANGE"
+    assert uut.contents()["resolved"]["omni"]["stage_4"] == {"email": ["joe@mctoe.com"]}
+    assert uut.contents()["resolved"]["omni"]["stage_5"] == {"email": ["joe@mctoe.com", "home@24acacia.ave"]}
+    assert uut.contents()["resolved"]["omni"]["stage_6"] == {}

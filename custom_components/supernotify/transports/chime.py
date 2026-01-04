@@ -26,7 +26,7 @@ from custom_components.supernotify import (
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
     OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_SELECT,
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
     SELECT_EXCLUDE,
@@ -262,7 +262,7 @@ class ChimeTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.options = {
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
-            OPTION_TARGET_INCLUDE_RE: [RE_VALID_CHIME, RE_DEVICE_ID],
+            OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,
             OPTION_DEVICE_MODEL_SELECT: {SELECT_EXCLUDE: ["Speaker Group"]},

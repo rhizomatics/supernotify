@@ -10,7 +10,7 @@ from custom_components.supernotify import (
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_SELECT,
     TRANSPORT_MEDIA,
 )
 from custom_components.supernotify.envelope import Envelope
@@ -37,7 +37,7 @@ class MediaPlayerTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "media_player.play_media"
         config.delivery_defaults.options = {
-            OPTION_TARGET_INCLUDE_RE: [RE_VALID_MEDIA_PLAYER],
+            OPTION_TARGET_SELECT: [RE_VALID_MEDIA_PLAYER],
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
         return config

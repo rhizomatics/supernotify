@@ -10,10 +10,25 @@
 - More attributes now picked up for mobile app, incl OS name and version, app version, user_id, area_id and label
 - Discovered mobile apps are linked back to people, and recipient objects, where possible
 - Allow auto-discovered mobile apps to be disabled for notification in Recipient
+- Device discovery now also occurs for auto generated default delivery, e.g. mobile_push
 ### Mobile Push
 - Now supports push to all known mobile apps using device discovery, not just the Device Trackers assigned in the Person integration
 ### TTS
 - TTS Transport Adaptor supports TTS delivery to Android mobile apps
+### Delivery Options
+- All `include` options now consistently use the selection block model and named in `xxxx_select` pattern
+   - Also means that target selection now supports inclusion or exclusion
+   - Auto upgrade of previous deprecated options, though only live, config now re-written
+### Deprecated
+#### Options
+- `data_keys_include_re` - Use `data_keys_select`
+- `data_keys_exclude_re`  - Use `data_keys_select`
+- `target_include_re` - Use `target_select`
+#### Transports
+- `device_discovery` - Use `device_discovery` in `options:`
+- `device_options` - Use `device_options` in `options:`
+- `device_model_include` - Use `device_model_select` in `options:`
+- `device_model_exclude` - Use `device_model_select` in `options:`
 
 ## 1.8.2
 ### Debugging

@@ -9,7 +9,7 @@ from custom_components.supernotify import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
@@ -52,7 +52,7 @@ class AlexaMediaPlayerTransport(Transport):
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
-            OPTION_TARGET_INCLUDE_RE: [RE_VALID_ALEXA],
+            OPTION_TARGET_SELECT: [RE_VALID_ALEXA],
         }
         return config
 

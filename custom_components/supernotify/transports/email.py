@@ -110,7 +110,7 @@ class EmailTransport(Transport):
             | TransportFeature.ACTIONS
             | TransportFeature.IMAGES
             | TransportFeature.TEMPLATE_FILE
-            | TransportFeature.SNAPSHOT
+            | TransportFeature.SNAPSHOT_IMAGE
         )
 
     def extra_attributes(self) -> dict[str, Any]:

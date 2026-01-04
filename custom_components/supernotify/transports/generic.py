@@ -1,5 +1,4 @@
 import logging
-import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -13,8 +12,7 @@ from custom_components.supernotify import (
     ATTR_ACTION_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PRIORITY,
-    OPTION_DATA_KEYS_EXCLUDE_RE,
-    OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_DATA_KEYS_SELECT,
     OPTION_GENERIC_DOMAIN_STYLE,
     OPTION_MESSAGE_USAGE,
     OPTION_RAW,
@@ -22,6 +20,7 @@ from custom_components.supernotify import (
     OPTION_STRIP_URLS,
     OPTION_TARGET_CATEGORIES,
     PRIORITY_VALUES,
+    SELECT_INCLUDE,
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.common import ensure_list
@@ -30,6 +29,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
+    SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
@@ -89,8 +89,7 @@ class GenericTransport(Transport):
             OPTION_STRIP_URLS: False,
             OPTION_RAW: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_DATA_KEYS_INCLUDE_RE: None,
-            OPTION_DATA_KEYS_EXCLUDE_RE: None,
+            OPTION_DATA_KEYS_SELECT: None,
             OPTION_GENERIC_DOMAIN_STYLE: None,
         }
         return config
@@ -196,17 +195,19 @@ class GenericTransport(Transport):
 def customize_data(data: dict[str, Any], domain: str | None, delivery: Delivery) -> dict[str, Any]:
     if not data:
         return data
-    includes = delivery.options.get(OPTION_DATA_KEYS_INCLUDE_RE)
-    excludes = delivery.options.get(OPTION_DATA_KEYS_EXCLUDE_RE)
-    if includes is None and domain and domain in DATA_FIELDS_ALLOWED:
-        includes = DATA_FIELDS_ALLOWED[domain]
-    if not includes and not excludes and ATTR_DATA not in data:
+    if delivery.options.get(OPTION_DATA_KEYS_SELECT):
+        selection_rule: SelectionRule | None = SelectionRule(delivery.options.get(OPTION_DATA_KEYS_SELECT))
+    else:
+        selection_rule = None
+
+    if selection_rule is None and domain and domain in DATA_FIELDS_ALLOWED:
+        selection_rule = SelectionRule({SELECT_INCLUDE: DATA_FIELDS_ALLOWED[domain]})
+
+    if selection_rule is None and ATTR_DATA not in data:
         return data
     pruned: dict[str, Any] = {}
     for key in data:
-        if (not excludes or not any(re.fullmatch(pat, key) for pat in excludes)) and (
-            not includes or any(re.fullmatch(pat, key) for pat in includes)
-        ):
+        if selection_rule is None or selection_rule.match(key):
             pruned[key] = data[key]
     if ATTR_DATA in pruned and not pruned[ATTR_DATA]:
         del pruned[ATTR_DATA]

@@ -158,7 +158,7 @@ delivery:
   light_flasher:
   action: zigzag.zig
   options:
-    data_keys_include_re:
+    data_keys_select:
       - enabled
       - value
       - zig.*
@@ -172,9 +172,10 @@ delivery:
   light_flasher:
   action: zigzag.zig
   options:
-    data_keys_exclude_re:
-      - duration
-      - volume
+    data_keys_select:
+      exclude:
+        - duration
+        - volume
 ```
 
 

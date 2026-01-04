@@ -9,7 +9,7 @@ from custom_components.supernotify import (
     CONF_OPTIONS,
     CONF_TRANSPORT,
     OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_SELECT,
     TRANSPORT_GENERIC,
     TRANSPORT_NOTIFY_ENTITY,
 )
@@ -66,7 +66,7 @@ async def test_doesnt_double_deliver() -> None:
             "custom": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "notify.custom",
-                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID], OPTION_TARGET_INCLUDE_RE: [r".*(2|3)"]},
+                CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID], OPTION_TARGET_SELECT: [r".*(2|3)"]},
             }
         },
     )

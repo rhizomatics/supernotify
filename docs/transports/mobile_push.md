@@ -62,9 +62,9 @@ transports:
 
 ### Auto generating targets
 
-By default, mobile push will send to all mobile apps found in Home Assistant that have Notify Entities available.
+By default, where no explicit target is given, mobile push will send to all known devices of all known recipients ( usually the list of [Person](https://www.home-assistant.io/integrations/person/) integration entries in Home Assistant, and mobile apps found in Home Assistant that have their `user_id` and Notify Entities available), and filter those recipients by occupancy status if wanted in the Delivery configuration.
 
-If you want to switch off that behaviour, and drive it only by the defined recipients, (usually the list of [Person](https://www.home-assistant.io/integrations/person/) integration entries in Home Assistant), then switch off device discovery.
+Mobile Push can also do its own device discovery and ignore recipients. If you want to switch off that behaviour, and drive it only by the defined recipients, then switch on device discovery.
 
 ```yaml title="Configuration snippet"
 transports:
@@ -82,6 +82,11 @@ transports:
     delivery_defaults:
       options:
         device_discovery: true
+        device_label_select:
+          include:
+            - parents
+          exclude:
+            - kids
         device_manufacturer_select:
           exclude:
             - Apple

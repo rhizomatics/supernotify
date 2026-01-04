@@ -13,8 +13,11 @@ from custom_components.supernotify import (
     CONF_TRANSPORT,
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_DATA_KEYS_SELECT,
     OPTION_GENERIC_DOMAIN_STYLE,
     OPTION_TARGET_CATEGORIES,
+    SELECT_EXCLUDE,
+    SELECT_INCLUDE,
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -191,22 +194,32 @@ async def test_update_equiv_domain(mock_hass) -> None:
 def test_prune_fields():
     uut = GenericTransport(Mock())
     sample = {"foo": 123, "bar": 789, "enabled": True}
+    delivery = Delivery(
+        "",
+        {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}},
+        uut,
+    )
+    delivery.upgrade_deprecations()
     assert (
         customize_data(
             sample,
             "testing",
-            Delivery(
-                "",
-                {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}},
-                uut,
-            ),
+            delivery,
         )
         == {}
     )
-    assert customize_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"]}}, uut)) == {
+    assert customize_data(
+        {"fee": 123, "foo": 789},
+        "testing",
+        delivery,
+    ) == {"fee": 123}
+
+    assert customize_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_SELECT: "f.*"}}, uut)) == {
         "foo": 123
     }
-    assert customize_data(sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled"]}}, uut)) == {
+    assert customize_data(
+        sample, "testing", Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_SELECT: {SELECT_EXCLUDE: ["enabled"]}}}, uut)
+    ) == {
         "foo": 123,
         "bar": 789,
     }
@@ -215,7 +228,9 @@ def test_prune_fields():
         customize_data(
             {},
             "testing",
-            Delivery("", {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled"]}}, uut),
+            Delivery(
+                "", {CONF_OPTIONS: {OPTION_DATA_KEYS_SELECT: {SELECT_INCLUDE: ["f.*"], SELECT_EXCLUDE: ["enabled"]}}}, uut
+            ),
         )
         == {}
     )

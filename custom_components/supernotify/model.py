@@ -73,7 +73,7 @@ class TransportFeature(IntFlag):
     VIDEO = 8
     ACTIONS = 16
     TEMPLATE_FILE = 32
-    SNAPSHOT = 64
+    SNAPSHOT_IMAGE = 64
 
 
 class Target:
@@ -678,6 +678,7 @@ class DebugTrace:
         self.delivery_artefacts: dict[str, Any] = {}
         self.delivery_exceptions: dict[str, Any] = {}
         self._last_stage: dict[str, str] = {}
+        self._last_target: dict[str, Any] = {}
 
     def contents(self, **_kwargs: Any) -> dict[str, Any]:
         results: dict[str, Any] = {
@@ -700,20 +701,24 @@ class DebugTrace:
         """Debug support for recording detailed target resolution in archived notification"""
         self.resolved.setdefault(delivery_name, {})
         self.resolved[delivery_name].setdefault(stage, {})
+        self._last_target.setdefault(delivery_name, {})
+        self._last_target[delivery_name].setdefault(stage, {})
         if isinstance(computed, Target):
             combined = computed
         else:
             combined = Target()
             for target in ensure_list(computed):
                 combined += target
-        result: str | dict[str, Any] = combined.as_dict()
+        new_target: dict[str, Any] = combined.as_dict()
+        result: str | dict[str, Any] = new_target
         if self._last_stage.get(delivery_name):
-            last_target = self.resolved[delivery_name][self._last_stage[delivery_name]]
+            last_target = self._last_target[delivery_name][self._last_stage[delivery_name]]
             if last_target is not None and last_target == result:
                 result = "NO_CHANGE"
 
         self.resolved[delivery_name][stage] = result
         self._last_stage[delivery_name] = stage
+        self._last_target[delivery_name][stage] = new_target
 
     def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""

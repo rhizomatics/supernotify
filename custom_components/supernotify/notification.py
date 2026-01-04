@@ -19,7 +19,6 @@ from . import (
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
-    ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
     ATTR_PRIORITY,
     ATTR_RECIPIENTS,
@@ -548,59 +547,59 @@ class Notification(ArchivableObject):
         if delivery.target_usage == TARGET_USE_FIXED:
             if delivery.target:
                 computed_target = delivery.target.safe_copy()
-                self.debug_trace.record_target(delivery.name, "1a_delivery_default_fixed", computed_target)
+                self.debug_trace.record_target(delivery.name, "100_delivery_default_fixed", computed_target)
             else:
                 computed_target = Target(None, target_data=delivery.data)
-                self.debug_trace.record_target(delivery.name, "1b_delivery_default_fixed_empty", computed_target)
+                self.debug_trace.record_target(delivery.name, "101_delivery_default_fixed_empty", computed_target)
         elif recipients is not None:
             computed_target = Target(recipients)
-            self.debug_trace.record_target(delivery.name, "1a_delivery_default_fixed", computed_target)
+            self.debug_trace.record_target(delivery.name, "102_delivery_default_fixed", computed_target)
 
         elif not self._target:
             # Unless there are explicit targets, include everyone on the people registry
             computed_target = self.default_person_ids(delivery)
-            self.debug_trace.record_target(delivery.name, "2a_no_action_target", computed_target)
+            self.debug_trace.record_target(delivery.name, "201_no_action_target", computed_target)
         else:
             computed_target = self._target.safe_copy()
-            self.debug_trace.record_target(delivery.name, "2b_action_target", computed_target)
+            self.debug_trace.record_target(delivery.name, "202_action_target", computed_target)
 
         # 1st round of filtering for snooze and resolving people->direct targets
         computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-        self.debug_trace.record_target(delivery.name, "3a_post_snooze", computed_target)
+        self.debug_trace.record_target(delivery.name, "300_post_snooze", computed_target)
         # turn person_ids into emails and phone numbers
         for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
             computed_target += indirect_target
-        self.debug_trace.record_target(delivery.name, "4a_resolve_indirect", computed_target)
+        self.debug_trace.record_target(delivery.name, "310_resolve_indirect", computed_target)
         computed_target += self.resolve_scenario_targets(delivery)
-        self.debug_trace.record_target(delivery.name, "5a_resolved_scenario_targets", computed_target)
+        self.debug_trace.record_target(delivery.name, "320_resolved_scenario_targets", computed_target)
         # filter out target not required for this delivery
         computed_target = delivery.select_targets(computed_target)
-        self.debug_trace.record_target(delivery.name, "6a_delivery_selection", computed_target)
+        self.debug_trace.record_target(delivery.name, "330_delivery_selection", computed_target)
         primary_count = len(computed_target)
 
         if delivery.target_usage == TARGET_USE_ON_NO_DELIVERY_TARGETS:
             if not computed_target.has_targets() and delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "7a_delivery_default_no_delivery_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "400_delivery_default_no_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_ON_NO_ACTION_TARGETS:
             if not self._target and delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "7b_delivery_default_no_action_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "401_delivery_default_no_action_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ON_DELIVERY_TARGETS:
             # merge in the delivery defaults if there's a target defined in action call
             if computed_target.has_targets() and delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "7c_delivery_merge_on_delivery_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "402_delivery_merge_on_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ALWAYS:
             # merge in the delivery defaults even if there's not a target defined in action call
             if delivery.target:
                 computed_target += delivery.target
-                self.debug_trace.record_target(delivery.name, "7d_delivery_merge_always_targets", computed_target)
+                self.debug_trace.record_target(delivery.name, "403_delivery_merge_always_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_FIXED:
             _LOGGER.debug("SUPERNOTIFY Fixed target on delivery %s", delivery.name)
-            self.debug_trace.record_target(delivery.name, "7e_fixed_target", computed_target)
+            self.debug_trace.record_target(delivery.name, "404_fixed_target", computed_target)
         else:
-            self.debug_trace.record_target(delivery.name, "7f_no_target_usage_match", computed_target)
+            self.debug_trace.record_target(delivery.name, "405_no_target_usage_match", computed_target)
             _LOGGER.debug("SUPERNOTIFY No useful target definition for delivery %s", delivery.name)
 
         if len(computed_target) > primary_count:
@@ -610,25 +609,24 @@ class Notification(ArchivableObject):
 
             # 2nd round of filtering for snooze and resolving people->direct targets after delivery target applied
             computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-            self.debug_trace.record_target(delivery.name, "8a_post_snooze", computed_target)
+            self.debug_trace.record_target(delivery.name, "501_post_snooze", computed_target)
             for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
                 computed_target += indirect_target
-            self.debug_trace.record_target(delivery.name, "9a_resolved_indirect_targets", computed_target)
+            self.debug_trace.record_target(delivery.name, "502_resolved_indirect_targets", computed_target)
             computed_target += self.resolve_scenario_targets(delivery)
-            self.debug_trace.record_target(delivery.name, "10a_resolved_scenario_targets", computed_target)
+            self.debug_trace.record_target(delivery.name, "503_resolved_scenario_targets", computed_target)
             computed_target = delivery.select_targets(computed_target)
-            self.debug_trace.record_target(delivery.name, "11a_delivery_selection", computed_target)
+            self.debug_trace.record_target(delivery.name, "504_delivery_selection", computed_target)
 
-        disabled_targets = self.disabled_recipient_targets(computed_target)
-        if disabled_targets.has_targets():
-            computed_target.remove(ATTR_MOBILE_APP_ID, disabled_targets.mobile_app_ids)
         split_targets: list[Target] = computed_target.split_by_target_data()
-        self.debug_trace.record_target(delivery.name, "12_delivery_split_targets", split_targets)
+        self.debug_trace.record_target(delivery.name, "610_delivery_split_targets", split_targets)
+
         direct_targets: list[Target] = [t.direct() for t in split_targets]
-        self.debug_trace.record_target(delivery.name, "13a_narrow_to_direct", direct_targets)
+        self.debug_trace.record_target(delivery.name, "620_narrow_to_direct", direct_targets)
+
         if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
             direct_targets = [t - self._already_selected for t in direct_targets]
-            self.debug_trace.record_target(delivery.name, "14a_make_unique_across_deliveries", direct_targets)
+            self.debug_trace.record_target(delivery.name, "630_make_unique_across_deliveries", direct_targets)
         for direct_target in direct_targets:
             self._already_selected += direct_target
         self.debug_trace.record_target(delivery.name, "999_final_cut", direct_targets)
@@ -662,16 +660,6 @@ class Notification(ArchivableObject):
         people: list[Recipient] = self.people_registry.filter_recipients_by_occupancy(delivery.occupancy)
         people = [p for p in people if self.recipients_override is None or p.entity_id in self.recipients_override]
         return Target({ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id]})
-
-    def disabled_recipient_targets(self, target: Target) -> Target:
-        negative_target: Target = Target()
-        for person_id in target.person_ids:
-            recipient: Recipient | None = self.people_registry.people.get(person_id)
-            if recipient and recipient.disabled_mobile_app_ids:
-                negative_target += Target(recipient.disabled_mobile_app_ids)
-        if len(negative_target) > 0:
-            _LOGGER.debug("SUPERNOTIFY Found %s mobile targets to filter for recipients", len(negative_target))
-        return negative_target
 
     def resolve_indirect_targets(self, target: Target, delivery: Delivery) -> list[Target]:
         # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone

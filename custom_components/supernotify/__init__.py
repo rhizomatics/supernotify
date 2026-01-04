@@ -216,10 +216,12 @@ OPTION_TTS_ENTITY_ID = "tts_entity_id"
 MEDIA_OPTION_REPROCESS = "reprocess"
 OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
-OPTION_TARGET_INCLUDE_RE = "target_include_re"
+OPTION_TARGET_INCLUDE_RE = "target_include_re"  # deprecated v1.9.0
+OPTION_TARGET_SELECT = "target_select"
 OPTION_CHIME_ALIASES = "chime_aliases"
-OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"
-OPTION_DATA_KEYS_EXCLUDE_RE = "data_keys_exclude_re"
+OPTION_DATA_KEYS_SELECT = "data_keys_select"
+OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"  # deprecated v1.9.0
+OPTION_DATA_KEYS_EXCLUDE_RE = "data_keys_exclude_re"  # deprecated v1.9.0
 OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
 OPTION_STRICT_TEMPLATE = "strict_template"
 
@@ -391,10 +393,10 @@ CONF_DEVICE_DOMAIN: Final[str] = OPTION_DEVICE_DOMAIN
 CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
 CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
 TRANSPORT_SCHEMA = vol.All(
-    cv.deprecated(key=CONF_DEVICE_DOMAIN),
-    cv.deprecated(key=CONF_DEVICE_DISCOVERY),
-    cv.deprecated(key=CONF_DEVICE_MODEL_INCLUDE),
-    cv.deprecated(key=CONF_DEVICE_MODEL_EXCLUDE),
+    cv.deprecated(key=CONF_DEVICE_DOMAIN),  # deprecated v1.9.0
+    cv.deprecated(key=CONF_DEVICE_DISCOVERY),  # deprecated v1.9.0
+    cv.deprecated(key=CONF_DEVICE_MODEL_INCLUDE),  # deprecated v1.9.0
+    cv.deprecated(key=CONF_DEVICE_MODEL_EXCLUDE),  # deprecated v1.9.0
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),

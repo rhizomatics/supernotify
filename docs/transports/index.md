@@ -39,23 +39,66 @@ state of the entity, whether via Developer Tools or another automation.
 
 All of these set by passing an `options` block in Delivery config or Transport defaults.
 
-| Option               | Transports | Description                                                                |
-|----------------------|------------|----------------------------------------------------------------------------|
-| chime_aliases        | chime      | Map tunes to device name or config                                         |
-| jpeg_opts            | mail       | Tune image grabs                                                           |
-| png_opts             | mail       | Tune image grabs                                                           |
-| preheader_blank      | mail       | HTML code used to pack the pre-header with blanks for HTML email           |
-| preheader_length     | mail       | Minimum size to pack the pre-header with blanks for HTML email             |
-| message_usage        | all        | Combine message and title, default title                                   |
-| simplify_text        | all        | Remove some common symbols that can trip up voice assistants               |
-| strip_urls           | all        | Remove URLs from message and title                                         |
-| target_categories    | all        | Which targets to pass, e.g. `entity_id`,`email`,`device_id`                |
-| target_include_re    | all        | Only use targets fully matching these regular expressions                  |
-| unique_targets       | all        | Don't pass targets already used in this notification                       |
-| data_keys_include_re | generic    | List of values or regex full match patterns allowed in `data` block        |
-| data_keys_exclude_re | generic    | List of values or regex full match patterns not allowed in `data` block    |
-| handle_as_domain     | generic    | Treat the action call in same way as a known domain                        |
-| raw                  | generic    | Don't apply domain specific `data` handling and pruning rules              |
-| strict_template      | email      | Fail template if Jinja2 issues found when `true`, render anyway if `false` |
+| Option                     | Type      | Transports | Description                                                                  |
+|----------------------------|-----------|------------|------------------------------------------------------------------------------|
+| chime_aliases              | mapping   | chime      | Map tunes to device name or config                                           |
+| jpeg_opts                  | mapping   | mail       | Tune image grabs                                                             |
+| png_opts                   | mapping   | mail       | Tune image grabs                                                             |
+| preheader_blank            | str       | mail       | HTML code used to pack the pre-header with blanks for HTML email             |
+| preheader_length           | int       | mail       | Minimum size to pack the pre-header with blanks for HTML email               |
+| message_usage              | str       | all        | Combine message and title, default title                                     |
+| simplify_text              | bool      | all        | Remove some common symbols that can trip up voice assistants                 |
+| strip_urls                 | bool      | all        | Remove URLs from message and title                                           |
+| target_categories          | list      | all        | Which targets to pass, e.g. `entity_id`,`email`,`device_id`                  |
+| target_select              | Selection | all        | Only use targets fully matching these regular expressions                    |
+| unique_targets             | bool      | all        | Don't pass targets already used in this notification                         |
+| data_keys_select           | Selection | generic    | Prune `data` block by including/excluding values or by regex pattern.        |
+| handle_as_domain           | bool      | generic    | Treat the action call in same way as a known domain                          |
+| raw                        | bool      | generic    | Don't apply domain specific `data` handling and pruning rules                |
+| strict_template            | bool      | email      | Fail template if Jinja2 issues found when `true`, render anyway if `false`   |
+| device_discovery           | bool      | all        | Switch automatic device discovery on or off for delivery configuration       |
+| device_domain              | list      | all        | One or more Home Assistant domains to discover devices, e.g. `alexa_devices` |
+| device_os_select           | Selection | all        | Choose device models in device discovery                                     |
+| device_manufacturer_select | Selection | all        | Choose device manufactures in device discovery                               |
+| device_os_select           | Selection | all        | Choose device operating systems in device discovery                          |
+| device_label_select        | Selection | all        | Choose devices by label in device discovery                                  |
+| device_area_select         | Selection | all        | Choose devices by Home Assistant area in device discovery                    |
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.
+
+#### Selections
+
+Selections have a common flexible form, and can have simple strings or regular expressions. Inclusion or
+exclusion can be single values or lists. If not explicitly include or exclude, then include assumed.
+
+```yaml title="Simple Include"
+device_os_select: iOS
+```
+
+```yaml title="Simple Include List"
+device_os_select:
+  - iOS
+  - MacOS
+```
+
+```yaml title="Explicit Include List"
+device_os_select:
+  include:
+  - iOS
+  - MacOS
+```
+
+```yaml title="Explicit Exclude List"
+device_os_select:
+  exclude:
+  - iOS
+  - MacOS
+```
+
+```yaml title="Everything"
+device_os_select:
+  include: .*Pixel.*
+  exclude:
+  - iOS
+  - MacOS
+```
