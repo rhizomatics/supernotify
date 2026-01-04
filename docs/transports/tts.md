@@ -72,7 +72,8 @@ The targets can be skipped if device discovery is switched on in the delivery co
 case every notification will be announced on every Android companion app unless overridden. This example
 uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts`
 adaptor always filters out Apple devices, and further filtering can be made in the `options` for model,
-manufacturer, label and area.
+manufacturer, label and area (see [Table of Options](./index.md#table-of-options) for the list of options
+and the include/exclude syntax).
 
 ```yaml title="Configuration Snippet"
 transports:
