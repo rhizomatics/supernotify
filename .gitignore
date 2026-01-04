@@ -1,0 +1,17 @@
+# Ignore the MkDocs build output directory
+site/
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+# Ignore virtual environment directories
+.venv/
+venv/
+# Ignore other common files
+*.log
+*.DS_Store
+*.egg-info/
+*.egg
+*.pyc
+*.pyo
+.DS_Store
+node_modules/
