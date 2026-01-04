@@ -20,6 +20,7 @@
    - Also means that target selection now supports inclusion or exclusion
    - Auto upgrade of previous deprecated options, though only live, config now re-written
 ### Deprecated
+All deprecations will be automatically handled in config as if newer config used, and details sent to log
 #### Options
 - `data_keys_include_re` - Use `data_keys_select`
 - `data_keys_exclude_re`  - Use `data_keys_select`

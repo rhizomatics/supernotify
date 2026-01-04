@@ -408,16 +408,19 @@ class TransportConfig:
         # deprecation support
         device_domain = conf.get(CONF_DEVICE_DOMAIN)
         if device_domain is not None:
+            _LOGGER.warning("SUPERNOTIFY device_domain on transport deprecated, use options instead")
             self.delivery_defaults.options[OPTION_DEVICE_DOMAIN] = device_domain
         device_model_include = conf.get(CONF_DEVICE_MODEL_INCLUDE)
         device_model_exclude = conf.get(CONF_DEVICE_MODEL_EXCLUDE)
         if device_model_include is not None or device_model_exclude is not None:
+            _LOGGER.warning("SUPERNOTIFY device_model_include/exclude on transport deprecated, use options instead")
             self.delivery_defaults.options[OPTION_DEVICE_MODEL_SELECT] = {
                 SELECT_INCLUDE: device_model_include,
                 SELECT_EXCLUDE: device_model_exclude,
             }
         device_discovery = conf.get(CONF_DEVICE_DISCOVERY)
         if device_discovery is not None and self.delivery_defaults.options.get(OPTION_DEVICE_DISCOVERY) is None:
+            _LOGGER.warning("SUPERNOTIFY device_discovery on transport deprecated, use options instead")
             self.delivery_defaults.options[OPTION_DEVICE_DISCOVERY] = device_discovery
 
 
