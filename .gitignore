@@ -17,3 +17,9 @@ venv/
 node_modules/
 supernotify/
 config/
+.env
+cov.xml
+.coverage
+examples
+.vscode
+.pyre
