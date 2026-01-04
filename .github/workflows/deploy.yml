@@ -32,10 +32,8 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        sudo apt-get install pngquant
-        python -m pip install --upgrade pip
-        if [ -f requirements_test.txt ]; then pip install -r requirements_test.txt; fi
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        sudo apt-get install pngquant 
+        uv sync
     - name: Ruff
       run: |
         ruff check --output-format=github .
@@ -79,8 +77,8 @@ jobs:
     - name: Deploy docs
       # run in the build workflow since schemagen has homeassistant dependency
       run: |
-        if [ -f requirements_docs.txt ]; then pip install -r requirements_docs.txt; fi
+        sudo apt-get install libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
+        uv sync --group docs
         mkdocs gh-deploy --force --config-file mkdocs.yml
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        REQUIREMENTS: requirements_docs.txt
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        

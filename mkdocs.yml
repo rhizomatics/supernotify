@@ -1,6 +1,6 @@
 site_name: Home Assistant Supernotify
 site_url: https://supernotify.rhizomatics.org.uk
-site_description: Advanced, concise, flexible notification upgrade for Home Assistant
+site_description: Advanced, concise, flexible notifications for Home Assistant
 
 repo_name: rhizomatics/supernotify
 repo_url: https://github.com/rhizomatics/supernotify
@@ -37,6 +37,9 @@ theme:
 extra:
   version:
     provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rhizomatics
 
 plugins:
   - search
@@ -63,6 +66,7 @@ plugins:
       minify_html: true
   - git-revision-date-localized:
       enable_creation_date: true
+      type: timeago
   - coverage:
       page_path: developer/coverage
       html_report_dir: htmlcov

@@ -1,3 +1,4 @@
+mkdocs-material>=9.7.1
 mkdocstrings
 mkdocstrings-python
 mkdocs-minify-plugin
@@ -11,6 +12,6 @@ json-schema-for-humans
 mkdocs-gen-files
 voluptuous-openapi>=0.2.0
 mkdocs-git-revision-date-localized-plugin
+mkdocs-minify-html-plugin
 mkdocs-meta-descriptions-plugin
-mkdocs-material[imaging]
 mike
