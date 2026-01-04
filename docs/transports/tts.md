@@ -70,7 +70,9 @@ action: notify.mobile_app_my_pixel
 
 The targets can be skipped if device discovery is switched on in the delivery configuration, in which
 case every notification will be announced on every Android companion app unless overridden. This example
-uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries.
+uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts`
+adaptor always filters out Apple devices, and further filtering can be made in the `options` for model,
+manufacturer, label and area.
 
 ```yaml title="Configuration Snippet"
 transports:
