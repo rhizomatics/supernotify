@@ -16,7 +16,7 @@ dependencies = [
 
 [tool.poetry]
 package-mode = false
-version = "1.9.1"
+version = "1.9.2"
 packages = [{ include = "custom_components.supernotify" }]
 
 [tool.setuptools.packages.find]
