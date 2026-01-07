@@ -87,7 +87,7 @@ jobs:
           TAG="${{ github.event.release.tag_name }}"
           if [[ "${{ github.event.release.draft }}"]]; then
             echo "Deploying draft version: $TAG"
-            uv run mike deploy --push --update-aliases "$TAG" beta
+            uv run mike deploy --push --update-aliases "$TAG" draft
           else
             echo "Deploying stable release: $TAG"
             uv run mike deploy --push --update-aliases "$TAG" latest
