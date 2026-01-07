@@ -78,6 +78,15 @@ Whatever method has been defined, you can always override it on an notification 
 
 ## Example SMTP Configuration
 
+Only 1.5% of Home Assistant users who share their data use the SMTP integration, so it is relatively
+rare for people to use email notifications, despite that being the simplest, most common way to communicate.
+
+Much of the complexity of e-mail is in receiving mail, its much simpler to send it, and lots of services on the internet to do so, some of which have free tiers for low volume.
+
+### Google Mail
+
+Out of the box, there's support in Home Assistant for [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail). See the [Home Assistant Example](https://www.home-assistant.io/integrations/smtp/#google-mail)
+
 ### Amazon Simple Email Service
 
 In this example, the username and password live separately in the `secrets.yaml` file, see [Storing Secrets](https://www.home-assistant.io/docs/configuration/secrets/) for more on that.
@@ -97,6 +106,8 @@ In this example, the username and password live separately in the `secrets.yaml`
   password: !secret aws_smtp_secret
 ```
 
+Amazon have more help on how to get their SMTP set up at [Set up email sending with Amazon SES](https://docs.aws.amazon.com/ses/latest/dg/send-email.html)
+
 !!! warning
     Amazon AWS can be a *very* cheap way of getting services like e-mail and storage with its
     pay-as-you-go serverless model, 10c a month buys a decent amount of emails.
@@ -110,6 +121,12 @@ In this example, the username and password live separately in the `secrets.yaml`
     Add a [budget](https://blog.thecloudengineers.com/p/aws-budgets-for-beginners-how-to) and
     [cost alerts](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/monitor_estimated_charges_with_cloudwatch.html) if you're still worried!
 
-### Google Mail
+## Other Email Options
 
-See the [Home Assistant Example](https://www.home-assistant.io/integrations/smtp/#google-mail)
+* [ha-smtp](https://github.com/manjotsc/ha-smtp) - HACS integration for SMTP that doesn't need YAML config
+* [email-notifier](https://github.com/microteq/email_notifier) - Another UI-configured alternative SMTP integration
+* [MS365 Mail for Home Assistant](https://rogerselwyn.github.io/MS365-Mail/) - Microsoft based e-mail sending
+* Self Hosting
+    * [Mail-in-a-Box](https://mailinabox.email) - Run on your own server, including receiving mail, running own webmail service
+    * [Mailu](https://mailu.io/) - Docker based self-hosted email
+    * [Mailcow](https://mailcow.email/) - Docker based self-hosted email

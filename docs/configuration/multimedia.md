@@ -99,12 +99,14 @@ to an alternative camera if the first choice isn't up. It's also possible to ass
 `device_tracker` to the camera, for example using a Unifi or similar integration to track that the camera
 network device is up.
 
-* Link a `device_tracker` to the camera
+* Link an alternative `device_tracker` to the camera
   * Notifications will first check its online, then use an alternative if primary is down
 * Define alternative cameras to use if first fails using `alt_camera`
 * For ONVIF or Frigate cameras set up for PTZ
   * Home preset can be defined using `ptz_default_preset` so camera can be reset after taking a snapshot
   * Delay between PTZ command and snapshot can be defined using `ptz_delay`
+  * An alternative camera entity can be chosen for the PTZ command using `ptz_camera`
+    * This can be helpful if there are multiple Home Assistant entities for the same camera
   * Choose between ONVIF or Frigate PTZ control using `ptz_transport`
     * Note that ONVIF may have numeric reference for presets while Frigate uses text labels
     * The camera configuration, or a good ONVIF client like [IP Cams](https://ipcams.app), will show the preset number and description. Its good practice to make preset `1` your default.
