@@ -356,11 +356,12 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             _LOGGER.debug(
-                "SUPERNOTIFY snapping camera %s, ptz %s->%s, delay %s secs",
-                camera_ptz_entity_id,
+                "SUPERNOTIFY snapping camera %s, ptz %s->%s (%s), delay %s secs",
+                active_camera_entity_id,
                 camera_ptz_preset,
                 camera_ptz_preset_default,
-                camera_delay,
+                camera_ptz_entity_id,
+                camera_delay
             )
             if camera_ptz_preset:
                 await move_camera_to_ptz_preset(
