@@ -1037,6 +1037,9 @@
           "device_tracker": {
             "type": "string"
           },
+          "ptz_camera": {
+            "type": "string"
+          },
           "ptz_default_preset": {
             "anyOf": [
               {
