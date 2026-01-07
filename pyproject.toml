@@ -90,6 +90,7 @@ docs=[
 [tool.uv]
 override-dependencies = [
     "voluptuous-openapi==0.2.0",
+    "aiohttp==3.13.3"
 ]
 
 [tool.ruff]
