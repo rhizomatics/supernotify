@@ -361,7 +361,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
                 camera_ptz_preset,
                 camera_ptz_preset_default,
                 camera_ptz_entity_id,
-                camera_delay
+                camera_delay,
             )
             if camera_ptz_preset:
                 await move_camera_to_ptz_preset(

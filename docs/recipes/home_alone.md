@@ -5,7 +5,7 @@ tags:
   - scenario
   - condition
   - occupancy
-title: Home Alone - Tuned Notifications 
+title: Home Alone - Tuned Notifications
 description: Change which notifications are sent, and how they're sent, based on how many people in the house
 ---
 # Recipe - Home Alone
