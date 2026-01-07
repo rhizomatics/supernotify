@@ -85,9 +85,9 @@ jobs:
         uv sync --group docs
         if [ "${{ github.event_name }}" = "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
-          if [[ "${{ github.event.release.draft }}"]]; then
-            echo "Deploying draft version: $TAG"
-            uv run mike deploy --push --update-aliases "$TAG" draft
+          if [[ "${{ github.event.release.prerelease }}" = "true" ]]; then
+            echo "Deploying prerelease version: $TAG"
+            uv run mike deploy --push --update-aliases "$TAG" beta
           else
             echo "Deploying stable release: $TAG"
             uv run mike deploy --push --update-aliases "$TAG" latest
