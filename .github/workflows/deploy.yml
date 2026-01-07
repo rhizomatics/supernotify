@@ -8,6 +8,8 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -83,8 +85,8 @@ jobs:
         uv sync --group docs
         if [ "${{ github.event_name }}" = "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
-          if [[ "$TAG" == *-beta* ]]; then
-            echo "Deploying beta version: $TAG"
+          if [[ "${{ github.event.release.draft }}"]]; then
+            echo "Deploying draft version: $TAG"
             uv run mike deploy --push --update-aliases "$TAG" beta
           else
             echo "Deploying stable release: $TAG"
