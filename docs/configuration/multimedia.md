@@ -106,7 +106,8 @@ network device is up.
   * Home preset can be defined using `ptz_default_preset` so camera can be reset after taking a snapshot
   * Delay between PTZ command and snapshot can be defined using `ptz_delay`
   * Choose between ONVIF or Frigate PTZ control using `ptz_transport`
-    * Note that ONVIF may have numeric reference for presets while Frigate uses labels
+    * Note that ONVIF may have numeric reference for presets while Frigate uses text labels
+    * The camera configuration, or a good ONVIF client like [IP Cams](https://ipcams.app), will show the preset number and description. Its good practice to make preset `1` your default.
 * Configuration documentation for [Camera Schema](../developer/schemas/Camera_Definition.md).
 
 ```yaml title="Example Camera Configuration"
