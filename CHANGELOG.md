@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.9.1
+### Cameras
+- Allow a separate entity id for PTZ movements, `ptz_camera`
 ## 1.9.0
 ### Device Discovery
 - Now configured via `options` and can be used for mobile_app_ids or device_ids

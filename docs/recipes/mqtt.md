@@ -2,9 +2,12 @@
 tags:
   - mqtt
   - recipe
+  - siren
+  - sounder
+title: Trigger MQTT Device for Notification
 description: Send out notification from Home Assistant to MQTT topics using Supernotify
 ---
-# Recipe - MQTT
+# Recipe - Notify to an MQTT Device
 
 ## Purpose
 

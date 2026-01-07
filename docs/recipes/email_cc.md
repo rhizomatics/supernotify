@@ -2,6 +2,8 @@
 tags:
   - email
   - recipe
+  - html_email
+title: CC All Emails
 description: Automatically carbon copy all email notifications from Home Assistant to an email account
 ---
 # Recipe - Email CC

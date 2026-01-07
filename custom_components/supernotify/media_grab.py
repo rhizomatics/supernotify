@@ -28,6 +28,7 @@ from custom_components.supernotify import (
     CONF_CAMERA,
     CONF_DEVICE_TRACKER,
     CONF_OPTIONS,
+    CONF_PTZ_CAMERA,
     CONF_PTZ_DELAY,
     CONF_PTZ_METHOD,
     CONF_PTZ_PRESET_DEFAULT,
@@ -349,20 +350,21 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         active_camera_entity_id = select_avail_camera(context.hass_api, context.cameras, camera_entity_id)
         if active_camera_entity_id:
             camera_config = context.cameras.get(active_camera_entity_id, {})
+            camera_ptz_entity_id: str = camera_config.get(CONF_PTZ_CAMERA, active_camera_entity_id)
             camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
             camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
             camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             _LOGGER.debug(
                 "SUPERNOTIFY snapping camera %s, ptz %s->%s, delay %s secs",
-                active_camera_entity_id,
+                camera_ptz_entity_id,
                 camera_ptz_preset,
                 camera_ptz_preset_default,
                 camera_delay,
             )
             if camera_ptz_preset:
                 await move_camera_to_ptz_preset(
-                    context.hass_api, active_camera_entity_id, camera_ptz_preset, method=camera_ptz_method
+                    context.hass_api, camera_ptz_entity_id, camera_ptz_preset, method=camera_ptz_method
                 )
             if camera_delay:
                 _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
@@ -379,7 +381,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
             )
             if camera_ptz_preset and camera_ptz_preset_default:
                 await move_camera_to_ptz_preset(
-                    context.hass_api, active_camera_entity_id, camera_ptz_preset_default, method=camera_ptz_method
+                    context.hass_api, camera_ptz_entity_id, camera_ptz_preset_default, method=camera_ptz_method
                 )
 
     if image_path is None:

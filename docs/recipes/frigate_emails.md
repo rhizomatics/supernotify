@@ -6,6 +6,8 @@ tags:
   - cctv
   - frigate
   - ios
+  - blueprint
+title: Frigate Blueprint for Email and Mobile Notification
 description: Send out multiple notification types with the Frigate Blueprint, including using attaching to emails the snapshots it generates for mobile push messages
 ---
 # Recipe - Frigate Blueprint Emails

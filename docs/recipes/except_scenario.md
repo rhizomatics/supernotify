@@ -4,6 +4,7 @@ tags:
   - template
   - recipe
   - condition
+title: Apply a Scenario Exception
 description: Define an exception to application of a Supernotify scenario based on another scenario already applied
 ---
 # Recipe - Except Scenario

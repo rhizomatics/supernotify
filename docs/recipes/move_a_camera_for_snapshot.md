@@ -5,6 +5,7 @@ tags:
   - cctv
   - onvif
   - ptz
+title: Camera PTZ For Notifications
 description: Move a CCTV camera to a preset PTZ position, take a snapshot image for notifications, then move the camera back.
 ---
 # Recipe - Move a Camera for Snapshot

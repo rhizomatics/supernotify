@@ -3,7 +3,11 @@ tags:
   - alexa
   - scenario
   - condition
+  - echo
+  - amazon
+  - tts
   - recipe
+title: Alexa Whispering Low Priority Announcements
 description: Use a Supernotify Scenario to automatically make an Amazon Echo Alexa device whisper all low priority Home Assistant notifications
 ---
 # Recipe - Alexa Whispering

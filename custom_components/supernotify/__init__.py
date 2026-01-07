@@ -99,6 +99,7 @@ CONF_CAMERA: Final[str] = "camera"
 CONF_CLIP_URL: Final[str] = "clip_url"
 CONF_PTZ_DELAY: Final[str] = "ptz_delay"
 CONF_PTZ_METHOD: Final[str] = "ptz_method"
+CONF_PTZ_CAMERA: Final[str] = "ptz_camera"
 CONF_PTZ_PRESET_DEFAULT: Final[str] = "ptz_default_preset"
 CONF_ALT_CAMERA: Final[str] = "alt_camera"
 CONF_CAMERAS: Final[str] = "cameras"
@@ -434,6 +435,7 @@ CAMERA_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_URL): cv.url,
     vol.Optional(CONF_DEVICE_TRACKER): cv.entity_id,
+    vol.Optional(CONF_PTZ_CAMERA): cv.entity_id,
     vol.Optional(CONF_PTZ_PRESET_DEFAULT, default=1): vol.Any(cv.positive_int, cv.string),
     vol.Optional(CONF_PTZ_DELAY, default=0): int,
     vol.Optional(CONF_PTZ_METHOD, default=PTZ_METHOD_ONVIF): vol.In(PTZ_METHOD_VALUES),

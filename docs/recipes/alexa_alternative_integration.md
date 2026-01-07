@@ -3,7 +3,9 @@ tags:
   - alexa
   - recipe
   - echo
+  - amazon
   - condition
+title: Backup Alexa Integration
 description: Use an alternative Amazon Alexa integration in case the main one is having issues
 ---
 # Recipe - Alexa Alternative Integration

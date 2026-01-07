@@ -4,6 +4,7 @@ tags:
   - recipe
   - occupancy
   - condition
+title: Content Based Escalation
 description: Use a Supernotify Scenario to set the priority of multiple Home Assistant notifications based on the message content
 ---
 # Recipe - Content Escalation

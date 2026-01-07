@@ -5,8 +5,11 @@ tags:
   - autoarm
   - alarm_control_panel
   - mobile_actions
+  - mobile_push
+  - ios
+  - android
   - actionable_notifications
-  - autoarm
+title: Context-Sensitive Mobile Actions
 description: Select the mobile actions to appear on notifications based on alarm arm state
 ---
 # Recipe - Contextual Mobile Actions
