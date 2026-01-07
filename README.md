@@ -95,11 +95,17 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
     * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](usage/actions.md)
     * Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
-## YAML Still Required
+## Some YAML Needed
 
-Presently Supernotify supports only [YAML based configuration](configuration/yaml.md). UI based config will be added, however YAML will be preserved for ease of working with larger rule bases.
+Presently Supernotify supports only [YAML based configuration](configuration/yaml.md). UI based config will be added, though YAML will be preserved for ease of working with larger rule bases.
 
-You can however do a lot with only 2 lines of copy-paste config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation.
+You can however do a lot with only 2 lines of copy-paste config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation - that's enough to do this:
+
+```yaml title="With the default 2 lines of YAML"
+  - action: notify.supernotify
+    data:
+        message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
+```
 
 ## Also From Rhizomatics
 
