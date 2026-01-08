@@ -321,7 +321,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
 
     image_path: Path | None = None
     if notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH) is not None:
-        return notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH)  # type: ignore
+        return Path(notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH))  # type: ignore
     if snapshot_url and media_path and context.hass_api:
         image_path = await snapshot_from_url(
             context.hass_api,
