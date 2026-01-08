@@ -81,6 +81,7 @@ jobs:
     - name: Deploy docs
       # run in the build workflow since schemagen has homeassistant dependency
       run: |
+        git pull
         sudo apt-get install pngquant
         uv sync --group docs
         if [ "${{ github.event_name }}" = "release" ]; then
