@@ -3925,7 +3925,7 @@ docs = [
 requires-dist = [
     { name = "aiodns", specifier = "==3.5.0" },
     { name = "aiofiles", specifier = "==24.1.0" },
-    { name = "aiohttp", specifier = "==3.13.2" },
+    { name = "aiohttp", specifier = "==3.13.3" },
     { name = "bs4" },
     { name = "cachetools" },
     { name = "homeassistant", specifier = ">=2025.12.2" },
