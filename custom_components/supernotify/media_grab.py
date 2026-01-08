@@ -389,7 +389,7 @@ async def grab_image(notification: "Notification", delivery_name: str, context: 
         _LOGGER.warning("SUPERNOTIFY No media available to attach (%s,%s)", snapshot_url, camera_entity_id)
         return None
     # TODO: replace poking inside notification
-    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = image_path
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = str(image_path)
     return image_path
 
 

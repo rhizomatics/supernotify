@@ -125,8 +125,7 @@ async def test_bad_priority() -> None:
     await ctx.test_initialize()
 
     with pytest.raises(vol.Invalid):
-        uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: {"pri": 9, "desc": "most_urgent"}})
-        await uut.initialize()
+        Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: {"pri": 9, "desc": "most_urgent"}})
 
 
 async def test_scenario_delivery_no_change() -> None:

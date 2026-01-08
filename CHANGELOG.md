@@ -1,5 +1,9 @@
 # Public releases
 
+## 1.9.2
+### Fixes
+- `snapshot_image_path` now always a string rather than path object when added back to `data`
+- Prevent a dict or list value for `priority` raising unexpected error
 ## 1.9.1
 ### Cameras
 - Allow a separate entity id for PTZ movements, `ptz_camera`
