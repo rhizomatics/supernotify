@@ -2,12 +2,15 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
 from pytest_unordered import unordered
 
 from custom_components.supernotify import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
+    ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     CONF_DATA,
     CONF_DELIVERY,
@@ -106,6 +109,24 @@ async def test_explicit_delivery() -> None:
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
     assert list(uut.selected_deliveries) == unordered(["mobile", "plain_email", "chime"])
+
+
+async def test_custom_priority() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: "most_urgent"})
+    await uut.initialize()
+    assert uut.priority == "most_urgent"
+
+
+async def test_bad_priority() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+
+    with pytest.raises(vol.Invalid):
+        uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: {"pri": 9, "desc": "most_urgent"}})
+        await uut.initialize()
 
 
 async def test_scenario_delivery_no_change() -> None:

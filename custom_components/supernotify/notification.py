@@ -215,8 +215,13 @@ class Notification(ArchivableObject):
         return media_dict
 
     def validate_action_data(self, action_data: dict[str, Any]) -> None:
-        if action_data.get(ATTR_PRIORITY) and action_data.get(ATTR_PRIORITY) not in PRIORITY_VALUES:
-            _LOGGER.info("SUPERNOTIFY custom priority %s", action_data.get(ATTR_PRIORITY))
+        if action_data.get(ATTR_PRIORITY):
+            if isinstance(action_data.get(ATTR_PRIORITY), (str, int, float)):
+                if action_data.get(ATTR_PRIORITY) not in PRIORITY_VALUES:
+                    _LOGGER.info("SUPERNOTIFY custom priority %s", action_data.get(ATTR_PRIORITY))
+            else:
+               _LOGGER.info("SUPERNOTIFY Invalid priority %s", action_data.get(ATTR_PRIORITY))
+               raise vol.Invalid("Priority value must be a simple value")
         try:
             humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)
         except vol.Invalid as e:
