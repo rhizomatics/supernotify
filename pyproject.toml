@@ -8,10 +8,10 @@ dependencies = [
     "homeassistant>=2025.12.2",
     "cachetools",
     "bs4",
-    "aiodns==3.5.0",
+    "aiodns==3.6.1",
     "aiohttp==3.13.3",
-    "aiofiles==24.1.0",
-    "pycares==4.9"
+    "aiofiles==25.1.0",
+    "pycares==5.0.1"
 ]
 
 [tool.poetry]
@@ -37,7 +37,7 @@ namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 [dependency-groups]
 dev=[
     "homeassistant-stubs == 2025.12.2",
-    "pytest==9.0.0",
+    "pytest==9.0.2",
     "pytest-cov==7.0.0",
     "pytest-socket==0.7.0",
     "pytest-homeassistant-custom-component>=0.13.300",
@@ -47,7 +47,7 @@ dev=[
     "pytest-mock",
     "pytest-xdist",
     "pytest-icdiff",
-    "types-aiofiles==24.1.0.20250822",
+    "types-aiofiles==25.1.0.20251011",
     "types-cachetools",
     "pre-commit",
     "pytest-httpserver>=1.0.10",
@@ -60,7 +60,7 @@ dev=[
     "ha-ffmpeg",
 
     # home assistant mobile push testing
-    "PyTurboJPEG==1.8.0"
+    "PyTurboJPEG==1.8.2"
 ]
 docs=[
     "mkdocs-material>=9.7.1",
