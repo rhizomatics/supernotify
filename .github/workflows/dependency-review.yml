@@ -31,7 +31,7 @@ jobs:
       pull-requests: write
     steps:
       - name: 'Checkout repository'
-        uses: actions/checkout@v6.0.0
+        uses: actions/checkout@v6.0.2
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@v4
         # Commonly enabled options, see https://github.com/actions/dependency-review-action#configuration-options for all available options.
