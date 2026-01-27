@@ -43,6 +43,14 @@ extra:
 
 plugins:
   - search
+  - htmlproofer:
+      skip_downloads: True
+      ignore_pages:
+        - developer/schemas/*
+        - developer/classes.md
+      ignore_urls:
+        - ../../developer/schemas/*
+
   - autorefs
   - pagetree
   - optimize
@@ -110,3 +118,9 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn 

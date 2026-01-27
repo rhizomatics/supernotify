@@ -158,7 +158,7 @@ a list of known tunes that work with Alexa devices.
 This supports the newer built-in [Alexa Devices](https://www.home-assistant.io/integrations/alexa_devices/)
 integration introduced in 2025.
 
-The list of sounds can be found on the [Alexa API](https://alexa.amazon.com/api/behaviors/entities?skillId=amzn1.ask.1p.sound), after authenticating, or on the [Home Assistant source code](https://github.com/home-assistant/core/blob/dev/homeassistant/components/alexa_devices/strings.json#L105). It includes a generous helping of Halloween specific sounds.
+The list of sounds can be found on the [Alexa API](https://developer.amazon.com/en-US/docs/alexa/custom-skills/ask-soundlibrary.html), after authenticating, or on the [Home Assistant source code](https://github.com/home-assistant/core/blob/dev/homeassistant/components/alexa_devices/strings.json#L105). It includes a generous helping of Halloween specific sounds.
 
 One oddity of this integration is that although it generates traditional entity IDs for notifying Alexa devices,
 sending a sound ( or command ) requires a long and obscure `device_id` (a 32 character random hexadecimal pseudo-UUID). While you can find these from the *Devices* section of the *Alexa Devices* integration config, or using the *Action*

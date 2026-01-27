@@ -14,7 +14,7 @@ description: Send out multiple notification types with the Frigate Blueprint, in
 
 ## Purpose
 
-The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/blob/main/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded
+The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded
 and links to the Frigate UI. You need to have this also as email for family members without
 mobile push available.
 

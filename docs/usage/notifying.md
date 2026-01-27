@@ -172,7 +172,7 @@ Note here that the `clickAction` is defined only on the `mobile_push` delivery. 
 it is also possible to simply define everything at the top level `data` section and let the individual
 transport adaptors pick out the attributes they need. This is helpful either if you don't care about
 fine tuning delivery configurations, or using existing notification blueprints, such as the popular
-[Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate%20Camera%20Notifications).
+[Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications).
 
 
 ## References

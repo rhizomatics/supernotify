@@ -9,8 +9,7 @@ description: A default Jinja2 template for creating HTML Email notifications in 
 ---
 # HTML Email Template
 
-Default HTML email template, with support for an image and action link. See the [Developer](../../developer/HTML Email Renders/example-default-medium.md) documentation for
-example renders of this for different message priorities.
+Default HTML email template, with support for an image and action link. See the [Developer](../../developer/index.md) documentation for example renders of this for different message priorities.
 
 ```html+jinja
 --8<-- "custom_components/supernotify/default_templates/email/default.html.j2"

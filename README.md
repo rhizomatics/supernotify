@@ -69,7 +69,7 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
     * Currently missing from Home Assistant.
     * Define an email, SMS number or mobile device, and then use the `person` entity in notification actions, Supernotify works out which attribute to use where
     * People are auto-configured along with their mobile apps based on existing Home Assistant configuration
-    * See [People](https://supernotify.rhizomatics.org.uk/people/) for more info
+    * See [People](https://supernotify.rhizomatics.org.uk/configuration/people/) for more info
 * Easy **HTML email templates**
     * Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
     * Default general template supplied
@@ -79,7 +79,7 @@ config snippers to give you some more ideas, or browse by [tags](https://superno
 * Flexible **Image Snapshots**
     * Supports cameras, MQTT Images and image URLs.
     * Reposition cameras to PTZ presets before and after a snapshot is taken, including special support for Frigate PTZ presets
-    * See the [Multimedia](https://supernotify.rhizomatics.org.uk/multimedia/) documentation for more information.
+    * See the [Multimedia](https://supernotify.rhizomatics.org.uk/configuration/multimedia/) documentation for more information.
 * Choose Your Level Configuration
     * Set defaults, including lists of targets at
       - Transport Adaptor level, for example `alexa_devices`

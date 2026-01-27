@@ -81,7 +81,8 @@ docs=[
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-minify-html-plugin",
     "mkdocs-meta-descriptions-plugin",
-    "mike"
+    "mike",
+    "mkdocs-htmlproofer-plugin"
 ]
 
 [project.optional-dependencies]
