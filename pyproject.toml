@@ -180,6 +180,7 @@ ignore = [
     "COM812",
     "COM819",
     "ISC001",
+    "RUF067",  # __init__ more than exports
     "ISC002",  # std formatter conflicts
     "D203",
     "D213",    # other formatter clashes
