@@ -1,10 +1,15 @@
 # CLAUDE.md
 
-Behavioral guidelines to reduce common LLM coding mistakes. 
+Behavioral guidelines to reduce common LLM coding mistakes.
 
 **Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
-## 1. Think Before Coding
+**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+
+## How to Contribute
+
+### 1. Think Before Coding
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
@@ -14,7 +19,7 @@ Before implementing:
 - If a simpler approach exists, say so. Push back when warranted.
 - If something is unclear, stop. Name what's confusing. Ask.
 
-## 2. Simplicity First
+### 2. Simplicity First
 
 **Minimum code that solves the problem. Nothing speculative.**
 
@@ -26,7 +31,7 @@ Before implementing:
 
 Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## 3. Surgical Changes
+### 3. Surgical Changes
 
 **Touch only what you must. Clean up only your own mess.**
 
@@ -42,7 +47,7 @@ When your changes create orphans:
 
 The test: Every changed line should trace directly to the user's request.
 
-## 4. Goal-Driven Execution
+### 4. Goal-Driven Execution
 
 **Define success criteria. Loop until verified.**
 
@@ -60,19 +65,26 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## 5. Home Assistant Compatibility
 
-While this is a HACS component, it should be built wherever possible to adhere to the [Home Assistant Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at the highest level. This also means all dependencies must be
-consistent with the set of Home Assistant production dependencies.
+## Project Context
 
-## 6. Project Tooling
-
-The project uses Ruff for formatting and linting, uv for depenendency management,
-mypy for type checking, pytest for unit and integration testing, and codespell for spell checking. It is anticipated that type checking will move to ty when it is production ready.
+The project uses Ruff for formatting and linting, uv for dependency management,
+mypy for type checking, pytest for unit and integration testing, and codespell for spell checking. It is anticipated that type checking will move to [ty](https://github.com/astral-sh/ty) when it is production ready.
 
 Documentation uses mkdocs with the Material theme, and is published using Github Pages with a
 custom domain of supernotify.rhizomatics.org.
 
----
+While this is a HACS component, it should be built wherever possible to adhere to the [Home Assistant Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at the highest level. This also means all dependencies must be
+consistent with the set of Home Assistant production dependencies, and test coverage
+maintained above 90%, with regression tests for bug fixes and new tests for all new features.
 
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+### Project Commands
+
+Common commands:
+- `uv run pytest` - run tests
+- `uv run ruff check --fix` - lint and auto-fix
+- `uv run ruff format` - format code
+- `uv run mypy custom_components/supernotify` - type check
+- `uv run codespell` - spell check
+- `pre-commit run` - check all staged files
+- `mkdocs build` - build the documentation without starting a server

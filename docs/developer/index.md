@@ -1,6 +1,6 @@
 # Developer Documentation
 
-* [Schemas](schemas/index.md) 
+* [Schemas](schemas/index.md)
     - Automatically generated from Home Assistant `voluptuous` Python schemas, covering both configuration and *Action* `data`
 * [Classes](./classes.md)
     - Most important classes used inside Supernotify
