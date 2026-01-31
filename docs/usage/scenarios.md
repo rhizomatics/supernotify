@@ -119,9 +119,11 @@ scenarios:
 Conditions aren't essential for scenarios, since they can also be switched on by a notification.
 
 For example in this case, where the `home_security` and `garden` scenarios are explicitly
-triggered, and so any overrides declared in those scenarios will be applied. The `constrain_scenarios`
-prevents any scenario other than `unoccupied` or the ones explicitly applied here ( to switch off all
-other scenarios, use `NULL`).
+triggered by using `apply_scenarios`, and so any overrides declared in those scenarios will be applied. Other scenarios may also select themselves based on condition logic.
+
+The `constrain_scenarios` prevents any scenario other than `unoccupied` or the ones explicitly applied here ( to switch off all other scenarios, use `NULL`). Constraining a scenario doesn't actually select it,
+only permit it if otherwise selected by a condition. To apply a scenario, and prevent other scenarios,
+the list it under both `apply_scenarios` and `constrain_scenario`.
 
 ```yaml
   - action: notify.supernotify
@@ -149,6 +151,21 @@ The templates are regular HomeAssistant `jinja2`, and have the same context vari
           data:
             title_template: '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
 ```
+
+## Using Scenarios to Suppress Notifications
+
+Using `required_scenarios`, a notification can be genearated that will only be delivered if one of the
+listed scenarios has an active condition.
+
+```yaml
+  - action: notify.supernotify
+    data:
+        title: Hallway PIR
+        message: Somebody in the hall
+        required_scenarios:
+          - nobody_home
+```
+
 
 ## Multiple Scenarios
 
