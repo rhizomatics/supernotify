@@ -5,13 +5,10 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
 dependencies = [
-    "homeassistant>=2025.12.2",
+    "homeassistant>=2026.1",
     "cachetools",
     "bs4",
-    "aiodns==3.5.0",
-    "aiohttp==3.13.3",
-    "aiofiles==24.1.0",
-    "pycares==4.9"
+    "aiofiles"
 ]
 
 [tool.poetry]
@@ -36,7 +33,7 @@ namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 
 [dependency-groups]
 dev=[
-    "homeassistant-stubs == 2025.12.2",
+    "homeassistant-stubs == 2026.1.1",
     "pytest==9.0.0",
     "pytest-cov==7.0.0",
     "pytest-socket==0.7.0",
@@ -47,7 +44,7 @@ dev=[
     "pytest-mock",
     "pytest-xdist",
     "pytest-icdiff",
-    "types-aiofiles==24.1.0.20250822",
+    "types-aiofiles",
     "types-cachetools",
     "pre-commit",
     "pytest-httpserver>=1.0.10",

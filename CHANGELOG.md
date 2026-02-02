@@ -1,6 +1,8 @@
 # Public releases
 
 ## 1.9.3
+### Dependencies
+- Primary target Home Assistant version now 2026.1
 ### Scenario names
 - Added `NO_SCENARIO` as a reserved name for scenarios, since Home Assistant Dev Tools action panel will translate `NULL` into
 a None value
