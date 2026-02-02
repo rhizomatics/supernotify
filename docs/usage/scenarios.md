@@ -121,9 +121,7 @@ Conditions aren't essential for scenarios, since they can also be switched on by
 For example in this case, where the `home_security` and `garden` scenarios are explicitly
 triggered by using `apply_scenarios`, and so any overrides declared in those scenarios will be applied. Other scenarios may also select themselves based on condition logic.
 
-The `constrain_scenarios` prevents any scenario other than `unoccupied` or the ones explicitly applied here ( to switch off all other scenarios, use `NULL`). Constraining a scenario doesn't actually select it,
-only permit it if otherwise selected by a condition. To apply a scenario, and prevent other scenarios,
-the list it under both `apply_scenarios` and `constrain_scenario`.
+The `constrain_scenarios` prevents any scenario other than `unoccupied` or the ones explicitly applied here ( to switch off all other scenarios, use `NO_SCENARIO`). Constraining a scenario doesn't actually select it, only permits it if otherwise selected by a condition, and it doesn't affect scenarios explicitly switched on in the same data block by `apply_scenarios`.
 
 ```yaml
   - action: notify.supernotify

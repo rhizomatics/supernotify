@@ -232,7 +232,7 @@ SELECT_EXCLUDE = "exclude"
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
 RESERVED_DELIVERY_NAMES: list[str] = ["ALL"]
-RESERVED_SCENARIO_NAMES: list[str] = ["NULL"]
+RESERVED_SCENARIO_NAMES: list[str] = ["NO_SCENARIO","NULL"]
 RESERVED_DATA_KEYS: list[str] = [ATTR_DOMAIN, ATTR_SERVICE, "action"]
 
 
@@ -252,6 +252,14 @@ def phone(value: str) -> str:
     if not regex.match(value):
         raise vol.Invalid("Invalid Phone Number")
     return str(value)
+
+
+def validate_scenario_names(scenarios: dict) -> dict:
+    """Validate that scenario names are not reserved."""
+    for name in scenarios:
+        if name in RESERVED_SCENARIO_NAMES:
+            raise vol.Invalid(f"'{name}' is a reserved scenario name")
+    return scenarios
 
 
 # TARGET_FIELDS includes entity, device, area, floor, label ids
@@ -515,7 +523,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
     vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),
-    vol.Optional(CONF_SCENARIOS, default=dict): {cv.string: SCENARIO_SCHEMA},
+    vol.Optional(CONF_SCENARIOS, default=dict): vol.All(
+        {cv.string: SCENARIO_SCHEMA},
+        validate_scenario_names,
+    ),
     vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
     vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
 })

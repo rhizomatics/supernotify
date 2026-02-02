@@ -105,6 +105,18 @@ async def test_conditional_create(hass: HomeAssistant, mock_delivery_registry) -
     assert uut.evaluate(ConditionVariables([], [], [], PRIORITY_CRITICAL, {}))
 
 
+def test_invalid_scenario_name(hass: HomeAssistant) -> None:
+    import pytest
+    import voluptuous as vol
+
+    with pytest.raises(vol.Invalid, match="reserved scenario name"):
+        TestingContext(
+            homeassistant=hass,
+            scenarios={
+                "NO_SCENARIO": {}
+            }
+        )
+
 async def test_select_scenarios(hass: HomeAssistant) -> None:
 
     ctx = TestingContext(
@@ -250,10 +262,22 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={ATTR_SCENARIOS_CONSTRAIN: ["NULL"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
+        action_data={ATTR_SCENARIOS_CONSTRAIN: ["NO_SCENARIO"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
     )
     await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")  # siren constrained
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile","chime") # siren constrained
+    assert uut.constrain_scenario_names == ["NO_SCENARIO"]
+    assert list(uut.enabled_scenarios) == ["Alarm"]
+
+    uut = Notification(
+        ctx,
+        "testing 123",
+        action_data={ATTR_SCENARIOS_CONSTRAIN: "NO_SCENARIO"},
+    )
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile")
+    assert uut.constrain_scenario_names == ["NO_SCENARIO"]
+    assert uut.enabled_scenarios == {}
 
 
 async def test_scenario_suppress(hass: HomeAssistant) -> None:

@@ -1,5 +1,12 @@
 # Public releases
 
+## 1.9.3
+### Scenario names
+- Added `NO_SCENARIO` as a reserved name for scenarios, since Home Assistant Dev Tools action panel will translate `NULL` into
+a None value
+- Scenario names now validated at startup
+### Action Data Validation
+- Improved handling of failures in humanize library to handle validation
 ## 1.9.2
 ### Fixes
 - `snapshot_image_path` now always a string rather than path object when added back to `data`

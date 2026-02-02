@@ -221,12 +221,18 @@ class Notification(ArchivableObject):
                     _LOGGER.info("SUPERNOTIFY custom priority %s", action_data.get(ATTR_PRIORITY))
             else:
                 _LOGGER.info("SUPERNOTIFY Invalid priority %s", action_data.get(ATTR_PRIORITY))
+                self.suppress(SuppressionReason.INVALID_ACTION_DATA)
                 raise vol.Invalid("Priority value must be a simple value")
         try:
             humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)
         except vol.Invalid as e:
-            _LOGGER.warning("SUPERNOTIFY invalid service data %s: %s", action_data, e)
+            _LOGGER.warning("SUPERNOTIFY invalid action data %s: %s", action_data, e)
+            self.suppress(SuppressionReason.INVALID_ACTION_DATA)
             raise
+        except vol.error.Error as e2:
+            _LOGGER.warning("SUPERNOTIFY failed to validate action data %s: %s", action_data, e2)
+            self.suppress(SuppressionReason.INVALID_ACTION_DATA)
+            raise vol.Invalid(f"Unable to validate action data - {e2}") from e2
 
     def apply_enabled_scenarios(self) -> None:
         """Set media and action_groups from scenario if defined, first come first applied"""
