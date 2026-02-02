@@ -110,12 +110,8 @@ def test_invalid_scenario_name(hass: HomeAssistant) -> None:
     import voluptuous as vol
 
     with pytest.raises(vol.Invalid, match="reserved scenario name"):
-        TestingContext(
-            homeassistant=hass,
-            scenarios={
-                "NO_SCENARIO": {}
-            }
-        )
+        TestingContext(homeassistant=hass, scenarios={"NO_SCENARIO": {}})
+
 
 async def test_select_scenarios(hass: HomeAssistant) -> None:
 
@@ -265,7 +261,7 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
         action_data={ATTR_SCENARIOS_CONSTRAIN: ["NO_SCENARIO"], ATTR_SCENARIOS_APPLY: ["Alarm"]},
     )
     await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile","chime") # siren constrained
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")  # siren constrained
     assert uut.constrain_scenario_names == ["NO_SCENARIO"]
     assert list(uut.enabled_scenarios) == ["Alarm"]
 
