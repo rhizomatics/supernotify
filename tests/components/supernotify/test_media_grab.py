@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 import aiofiles
 import anyio
 import pytest
-from custom_components.supernotify.const import PTZ_METHOD_FRIGATE
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import (
     HomeAssistant,
@@ -20,6 +19,7 @@ from PIL import Image, ImageChops
 from pytest_httpserver import HTTPServer
 
 from conftest import IMAGE_PATH, TestImage
+from custom_components.supernotify.const import PTZ_METHOD_FRIGATE
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
     MediaStorage,
