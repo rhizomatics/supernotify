@@ -5,7 +5,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.components.tts.const import ATTR_CACHE, ATTR_LANGUAGE, ATTR_OPTIONS
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_MOBILE_APP_ID,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
@@ -18,7 +18,6 @@ from custom_components.supernotify import (
     OPTION_TTS_ENTITY_ID,
     SELECT_EXCLUDE,
     TRANSPORT_TTS,
-    SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
@@ -29,6 +28,7 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:

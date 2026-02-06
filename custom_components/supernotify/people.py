@@ -9,14 +9,17 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     CONF_ALIAS,
+    CONF_EMAIL,
     CONF_ENABLED,
+    CONF_TARGET,
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
 )
 from homeassistant.helpers import device_registry, entity_registry
 
-from . import (
+from .common import ensure_list
+from .const import (
     ATTR_ALIAS,
     ATTR_EMAIL,
     ATTR_ENABLED,
@@ -26,13 +29,11 @@ from . import (
     ATTR_USER_ID,
     CONF_DATA,
     CONF_DELIVERY,
-    CONF_EMAIL,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_MOBILE_DISCOVERY,
     CONF_PERSON,
     CONF_PHONE_NUMBER,
-    CONF_TARGET,
     OCCUPANCY_ALL,
     OCCUPANCY_ALL_IN,
     OCCUPANCY_ALL_OUT,
@@ -42,7 +43,6 @@ from . import (
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
 )
-from .common import ensure_list
 from .hass_api import DeviceInfo, HomeAssistantAPI
 from .model import DeliveryCustomization, Target
 

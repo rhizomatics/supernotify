@@ -1,12 +1,10 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION, CONF_NAME, CONF_OPTIONS
 from pytest_unordered import unordered
 
-from custom_components.supernotify import (
-    CONF_ACTION,
+from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
-    CONF_OPTIONS,
     CONF_TRANSPORT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,

@@ -14,7 +14,7 @@ from typing import Any
 from cachetools import TTLCache
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
+from .const import (
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
     CONF_DUPE_POLICY,

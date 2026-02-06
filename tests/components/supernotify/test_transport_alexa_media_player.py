@@ -1,6 +1,6 @@
 from homeassistant.const import CONF_ACTION
 
-from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_ALEXA_MEDIA_PLAYER
+from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_ALEXA_MEDIA_PLAYER
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope

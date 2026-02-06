@@ -10,7 +10,7 @@ from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.helpers.typing import ConfigType
 
 import custom_components.supernotify
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_EMAIL,

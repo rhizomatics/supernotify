@@ -22,6 +22,8 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.event_type import EventType
 
+    from .schema import ConditionsFunc
+
 import socket
 import threading
 from contextlib import contextmanager
@@ -46,7 +48,8 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID, DOMAIN, ConditionsFunc
+from . import DOMAIN
+from .const import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID
 from .model import ConditionVariables, SelectionRule
 
 if TYPE_CHECKING:

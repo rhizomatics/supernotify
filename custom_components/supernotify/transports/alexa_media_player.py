@@ -4,7 +4,7 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,

@@ -12,7 +12,7 @@ from custom_components.supernotify.model import ConditionVariables, SelectionRul
 from .hass_setup_lib import register_device
 
 if TYPE_CHECKING:
-    from custom_components.supernotify import ConditionsFunc
+    from custom_components.supernotify.schema import ConditionsFunc
 
 
 def test_abs_url(hass: HomeAssistant) -> None:

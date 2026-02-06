@@ -1,12 +1,11 @@
 from datetime import timedelta
 
-from homeassistant.const import CONF_EMAIL
+from homeassistant.const import CONF_ACTION, CONF_EMAIL
 from homeassistant.core import Context, Event, HomeAssistant
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_ACTION,
     ATTR_USER_ID,
-    CONF_ACTION,
     CONF_PERSON,
     CONF_SELECTION,
     CONF_TRANSPORT,

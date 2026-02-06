@@ -1,7 +1,7 @@
 import logging
 from typing import Any
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_NOTIFICATION_ID,
     TRANSPORT_PERSISTENT,
 )

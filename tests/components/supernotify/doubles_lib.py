@@ -12,7 +12,7 @@ from homeassistant.core import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from custom_components.supernotify import CONF_TRANSPORT
+from custom_components.supernotify.const import CONF_TRANSPORT
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope

@@ -15,11 +15,11 @@ from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import (
+from .common import CallRecord
+from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
 )
-from .common import CallRecord
 from .context import Context
 from .hass_api import HomeAssistantAPI
 from .model import DebugTrace, DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature

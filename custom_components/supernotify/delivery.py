@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
 from custom_components.supernotify.transport import Transport
 
-from . import (
+from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
     CONF_DATA,
@@ -52,12 +52,13 @@ from . import (
     SELECTION_DEFAULT,
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
-    ConditionsFunc,
 )
 from .context import Context
 
 if TYPE_CHECKING:
     from custom_components.supernotify.hass_api import DeviceInfo
+
+    from .schema import ConditionsFunc
 
 _LOGGER = logging.getLogger(__name__)
 

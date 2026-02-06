@@ -3,9 +3,7 @@ from unittest.mock import Mock
 from homeassistant.const import CONF_DEBUG
 from homeassistant.core import HomeAssistant, SupportsResponse
 
-from custom_components.supernotify import (
-    TRANSPORT_GENERIC,
-)
+from custom_components.supernotify.const import TRANSPORT_GENERIC
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification

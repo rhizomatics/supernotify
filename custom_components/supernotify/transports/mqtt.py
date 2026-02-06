@@ -4,7 +4,7 @@ from typing import Any
 
 from homeassistant.components.mqtt.const import ATTR_TOPIC
 
-from custom_components.supernotify import TRANSPORT_MQTT
+from custom_components.supernotify.const import TRANSPORT_MQTT
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (

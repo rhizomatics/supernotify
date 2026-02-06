@@ -1,8 +1,10 @@
-from homeassistant.const import ATTR_ENTITY_ID
-
-from custom_components.supernotify import (
-    CONF_DATA,
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEBUG,
+)
+
+from custom_components.supernotify.const import (
+    CONF_DATA,
     CONF_DEVICE_DISCOVERY,
     CONF_OPTIONS,
     CONF_TRANSPORT,

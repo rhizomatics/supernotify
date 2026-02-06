@@ -7,8 +7,8 @@ from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
 from homeassistant.components.notify.const import ATTR_DATA
 
-import custom_components.supernotify
-from custom_components.supernotify import (
+import custom_components.supernotify.const as const
+from custom_components.supernotify.const import (
     ATTR_ACTION_CATEGORY,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
@@ -128,15 +128,15 @@ class MobilePushTransport(Transport):
         # options = data.get(CONF_OPTIONS, {})
 
         match envelope.priority:
-            case custom_components.supernotify.PRIORITY_CRITICAL:
+            case const.PRIORITY_CRITICAL:
                 push_priority = "critical"
-            case custom_components.supernotify.PRIORITY_HIGH:
+            case const.PRIORITY_HIGH:
                 push_priority = "time-sensitive"
-            case custom_components.supernotify.PRIORITY_MEDIUM:
+            case const.PRIORITY_MEDIUM:
                 push_priority = "active"
-            case custom_components.supernotify.PRIORITY_LOW:
+            case const.PRIORITY_LOW:
                 push_priority = "passive"
-            case custom_components.supernotify.PRIORITY_MINIMUM:
+            case const.PRIORITY_MINIMUM:
                 push_priority = "passive"
             case _:
                 push_priority = "active"

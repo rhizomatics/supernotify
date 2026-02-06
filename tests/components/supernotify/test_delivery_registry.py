@@ -3,7 +3,7 @@ from typing import Any
 from homeassistant.const import CONF_ACTION, CONF_ENABLED, CONF_TARGET
 from homeassistant.core import HomeAssistant
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
     CONF_SELECTION,
     CONF_TRANSPORT,

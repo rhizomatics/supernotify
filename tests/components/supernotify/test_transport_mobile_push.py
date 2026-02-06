@@ -7,14 +7,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from pytest_httpserver import HTTPServer
 
-from custom_components.supernotify import (
+from custom_components.supernotify import DOMAIN
+from custom_components.supernotify.const import (
     ATTR_PRIORITY,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_PERSON,
     CONF_PRIORITY,
     CONF_TRANSPORT,
-    DOMAIN,
     PRIORITY_CRITICAL,
     PRIORITY_HIGH,
     PRIORITY_LOW,

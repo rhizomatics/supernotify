@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from homeassistant.core import Event
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_ACTION,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,

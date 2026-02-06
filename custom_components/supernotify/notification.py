@@ -8,8 +8,11 @@ import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
 from voluptuous import humanize
 
-from . import (
-    ACTION_DATA_SCHEMA,
+from custom_components.supernotify.schema import SelectionRank
+
+from .archive import ArchivableObject
+from .common import ensure_list, nullable_ensure_list, sanitize
+from .const import (
     ATTR_ACTION_GROUPS,
     ATTR_ACTIONS,
     ATTR_DEBUG,
@@ -31,21 +34,25 @@ from . import (
     OPTION_UNIQUE_TARGETS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
-    STRICT_ACTION_DATA_SCHEMA,
     TARGET_USE_FIXED,
     TARGET_USE_MERGE_ALWAYS,
     TARGET_USE_MERGE_ON_DELIVERY_TARGETS,
     TARGET_USE_ON_NO_ACTION_TARGETS,
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
-    SelectionRank,
 )
-from .archive import ArchivableObject
-from .common import ensure_list, nullable_ensure_list, sanitize
 from .context import Context
 from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
-from .model import ConditionVariables, DebugTrace, DeliveryCustomization, SuppressionReason, Target, TargetRequired
+from .model import (
+    ConditionVariables,
+    DebugTrace,
+    DeliveryCustomization,
+    SuppressionReason,
+    Target,
+    TargetRequired,
+)
 from .people import Recipient
+from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA
 
 if TYPE_CHECKING:
     from .people import PeopleRegistry

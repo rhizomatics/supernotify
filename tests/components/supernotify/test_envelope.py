@@ -1,6 +1,6 @@
 import time
 
-from custom_components.supernotify import CONF_TRANSPORT
+from custom_components.supernotify.const import CONF_TRANSPORT
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import MessageOnlyPolicy
 from custom_components.supernotify.notification import Notification

@@ -1,13 +1,12 @@
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.const import CONF_CONDITION, CONF_CONDITIONS, CONF_ENTITY_ID, CONF_STATE
+from homeassistant.const import CONF_ACTION, CONF_CONDITION, CONF_CONDITIONS, CONF_ENTITY_ID, CONF_STATE, CONF_TARGET
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_NONE,
-    CONF_ACTION,
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DUPE_POLICY,
@@ -15,10 +14,8 @@ from custom_components.supernotify import (
     CONF_PHONE_NUMBER,
     CONF_PRIORITY,
     CONF_SELECTION,
-    CONF_TARGET,
     CONF_TARGET_REQUIRED,
     CONF_TRANSPORT,
-    DELIVERY_SCHEMA,
     DELIVERY_SELECTION_EXPLICIT,
     PRIORITY_CRITICAL,
     SELECTION_BY_SCENARIO,
@@ -33,6 +30,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.model import TargetRequired
 from custom_components.supernotify.notify import SupernotifyAction
+from custom_components.supernotify.schema import DELIVERY_SCHEMA
 from tests.components.supernotify.doubles_lib import DummyTransport
 
 DELIVERY: dict[str, dict] = {

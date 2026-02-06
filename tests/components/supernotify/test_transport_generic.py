@@ -6,7 +6,7 @@ from homeassistant.const import CONF_ACTION
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
     CONF_OPTIONS,

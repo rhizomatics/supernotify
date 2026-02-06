@@ -16,7 +16,7 @@ from anyio import Path
 from homeassistant.const import STATE_HOME, STATE_UNAVAILABLE
 from PIL import Image
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_JPEG_OPTS,
     ATTR_MEDIA_CAMERA_DELAY,
     ATTR_MEDIA_CAMERA_ENTITY_ID,

@@ -1,4 +1,4 @@
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_DELIVERY,
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,

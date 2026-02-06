@@ -1,12 +1,12 @@
 from urllib.parse import urlparse
 
+from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL
 from homeassistant.core import (
     HomeAssistant,
 )
 from pytest_httpserver import BlockingHTTPServer
 
 from conftest import TestImage
-from custom_components.supernotify import ATTR_MEDIA_SNAPSHOT_URL
 from custom_components.supernotify.notification import Notification
 from tests.components.supernotify.hass_setup_lib import TestingContext
 

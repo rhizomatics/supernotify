@@ -1,7 +1,7 @@
 from homeassistant.const import CONF_ACTION
 from pytest_unordered import unordered
 
-from custom_components.supernotify import CONF_TRANSPORT, TRANSPORT_ALEXA
+from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_ALEXA
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target

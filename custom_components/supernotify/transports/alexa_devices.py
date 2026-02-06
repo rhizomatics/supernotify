@@ -4,7 +4,7 @@ from typing import Any
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -17,11 +17,11 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
-    SelectionRank,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)

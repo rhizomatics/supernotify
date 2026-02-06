@@ -6,7 +6,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,

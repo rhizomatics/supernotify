@@ -1,6 +1,6 @@
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 
-from custom_components.supernotify import ATTR_NOTIFICATION_ID, CONF_TRANSPORT, TRANSPORT_PERSISTENT
+from custom_components.supernotify.const import ATTR_NOTIFICATION_ID, CONF_TRANSPORT, TRANSPORT_PERSISTENT
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification

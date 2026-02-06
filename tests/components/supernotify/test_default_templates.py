@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from homeassistant.const import CONF_ACTION, CONF_OPTIONS
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     CONF_TEMPLATE,
     CONF_TRANSPORT,
     OPTION_STRICT_TEMPLATE,

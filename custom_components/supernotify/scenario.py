@@ -5,13 +5,15 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import issue_registry as ir
 
-from . import ATTR_MEDIA, ConditionsFunc
+from .const import ATTR_MEDIA
 from .hass_api import HomeAssistantAPI
 from .model import DeliveryCustomization
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
+
+    from .schema import ConditionsFunc
 
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -25,7 +27,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from . import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
+from .const import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
 from .delivery import Delivery, DeliveryRegistry
 from .model import ConditionVariables
 

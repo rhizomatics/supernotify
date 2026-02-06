@@ -14,10 +14,10 @@ if TYPE_CHECKING:
     from .snoozer import Snoozer
 from homeassistant.helpers import condition as condition
 
-from . import (
+from .common import ensure_list
+from .const import (
     CONF_CAMERA,
 )
-from .common import ensure_list
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType

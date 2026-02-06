@@ -3,7 +3,7 @@ from typing import Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_PHONE,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,

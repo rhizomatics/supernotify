@@ -30,7 +30,9 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
-from custom_components.supernotify import (
+from custom_components.supernotify.archive import NotificationArchive
+from custom_components.supernotify.common import DupeChecker
+from custom_components.supernotify.const import (
     ATTR_USER_ID,
     CONF_ACTION_GROUPS,
     CONF_ACTIONS,
@@ -46,11 +48,8 @@ from custom_components.supernotify import (
     CONF_SCENARIOS,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORT,
-    SUPERNOTIFY_SCHEMA,
     TRANSPORT_VALUES,
 )
-from custom_components.supernotify.archive import NotificationArchive
-from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
 from custom_components.supernotify.envelope import Envelope
@@ -60,6 +59,7 @@ from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
+from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA
 from custom_components.supernotify.snoozer import Snoozer
 from custom_components.supernotify.transport import Transport
 

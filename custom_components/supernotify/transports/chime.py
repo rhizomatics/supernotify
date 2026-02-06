@@ -15,11 +15,10 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.typing import ConfigType
 from voluptuous.humanize import humanize_error
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA,
     ATTR_PRIORITY,
-    CHIME_ALIASES_SCHEMA,
     CONF_TUNE,
     OPTION_CHIME_ALIASES,
     OPTION_DEVICE_DISCOVERY,
@@ -34,6 +33,7 @@ from custom_components.supernotify import (
 )
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.schema import CHIME_ALIASES_SCHEMA
 from custom_components.supernotify.transport import Transport
 
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"

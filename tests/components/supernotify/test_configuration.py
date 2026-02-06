@@ -1,11 +1,12 @@
 from typing import cast
 
-from custom_components.supernotify import (
+from homeassistant.const import CONF_TARGET
+
+from custom_components.supernotify.const import (
     ATTR_RECIPIENTS,
     CONF_DELIVERY_DEFAULTS,
     CONF_MOBILE_DISCOVERY,
     CONF_PERSON,
-    CONF_TARGET,
     CONF_TRANSPORT,
 )
 from custom_components.supernotify.notification import Notification

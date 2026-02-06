@@ -12,8 +12,8 @@ from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
-from custom_components.supernotify import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 
 from .hass_setup_lib import assert_clean_notification, assert_json_round_trip
 

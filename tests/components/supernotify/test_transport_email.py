@@ -6,7 +6,7 @@ from homeassistant.const import CONF_ACTION, CONF_EMAIL
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_DELIVERY,
     ATTR_MEDIA_SNAPSHOT_PATH,

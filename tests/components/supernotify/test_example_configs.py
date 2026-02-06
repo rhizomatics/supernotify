@@ -10,7 +10,7 @@ from homeassistant.const import CONF_ENABLED, CONF_NAME, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     CONF_DELIVERY,
     CONF_NOTIFY,
     CONF_SELECTION,

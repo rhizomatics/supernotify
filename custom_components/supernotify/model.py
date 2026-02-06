@@ -29,7 +29,8 @@ from homeassistant.const import (
 from homeassistant.core import valid_entity_id
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import (
+from .common import ensure_list
+from .const import (
     ATTR_EMAIL,
     ATTR_MOBILE_APP_ID,
     ATTR_PERSON_ID,
@@ -55,10 +56,8 @@ from . import (
     SELECT_INCLUDE,
     SELECTION_DEFAULT,
     TARGET_USE_ON_NO_ACTION_TARGETS,
-    SelectionRank,
-    phone,
 )
-from .common import ensure_list
+from .schema import SelectionRank, phone
 
 _LOGGER = logging.getLogger(__name__)
 

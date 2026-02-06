@@ -2,7 +2,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from custom_components.supernotify import CONF_DATA, CONF_TRANSPORT, TRANSPORT_MQTT
+from custom_components.supernotify.const import CONF_DATA, CONF_TRANSPORT, TRANSPORT_MQTT
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.mqtt import MQTTTransport
 

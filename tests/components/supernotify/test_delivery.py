@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_ACTION, CONF_CONDITION
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,

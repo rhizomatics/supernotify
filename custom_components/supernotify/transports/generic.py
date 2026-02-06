@@ -8,7 +8,8 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_
 # ATTR_VARIABLES from script.const has import issues
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.supernotify import (
+from custom_components.supernotify.common import ensure_list
+from custom_components.supernotify.const import (
     ATTR_ACTION_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PRIORITY,
@@ -23,7 +24,6 @@ from custom_components.supernotify import (
     SELECT_INCLUDE,
     TRANSPORT_GENERIC,
 )
-from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (

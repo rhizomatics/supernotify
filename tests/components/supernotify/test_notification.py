@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
 from pytest_unordered import unordered
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PRIORITY,
@@ -30,13 +30,13 @@ from custom_components.supernotify import (
     TRANSPORT_EMAIL,
     TRANSPORT_GENERIC,
     TRANSPORT_MOBILE_PUSH,
-    SelectionRank,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transports.email import EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 

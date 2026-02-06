@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity
 from pytest_unordered import unordered
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
@@ -16,7 +16,6 @@ from custom_components.supernotify import (
     CONF_TRANSPORT,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
-    SCENARIO_SCHEMA,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
@@ -25,6 +24,7 @@ from custom_components.supernotify.model import ConditionVariables, TargetRequir
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.scenario import Scenario
+from custom_components.supernotify.schema import SCENARIO_SCHEMA
 
 from .doubles_lib import DummyTransport
 from .hass_setup_lib import TestingContext

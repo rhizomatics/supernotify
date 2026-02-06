@@ -27,7 +27,10 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import DOMAIN, PLATFORMS
+from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
+from .common import DupeChecker, sanitize
+from .const import (
     ATTR_ACTION,
     ATTR_DATA,
     CONF_ACTION_GROUPS,
@@ -47,13 +50,8 @@ from . import (
     CONF_SCENARIOS,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
-    DOMAIN,
-    PLATFORMS,
     PRIORITY_MEDIUM,
 )
-from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker, sanitize
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
@@ -62,6 +60,7 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
+from .schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .snoozer import Snoozer
 from .transport import Transport
 from .transports.alexa_devices import AlexaDevicesTransport

@@ -4,7 +4,7 @@ from typing import Any
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 from homeassistant.exceptions import ServiceValidationError
 
-from custom_components.supernotify import (
+from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -12,11 +12,17 @@ from custom_components.supernotify import (
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
     TRANSPORT_NOTIFY_ENTITY,
-    SelectionRank,
 )
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    DeliveryConfig,
+    MessageOnlyPolicy,
+    TransportConfig,
+    TransportFeature,
+)
+from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import (
     Transport,
 )
