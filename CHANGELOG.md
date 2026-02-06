@@ -1,5 +1,8 @@
 # Public releases
 
+## 1.10.0
+### Internal
+- `__init__.py` refactored into `schema.py` and `const.py`
 ## 1.9.3
 ### Dependencies
 - Primary target Home Assistant version now 2026.1
