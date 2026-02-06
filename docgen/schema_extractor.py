@@ -12,7 +12,7 @@ from voluptuous_openapi import convert  # type: ignore
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # import must come after sys.path append
-import custom_components.supernotify  # noqa: I001
+import custom_components.supernotify.schema  # noqa: I001
 
 
 ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
@@ -69,7 +69,7 @@ def schema_doc() -> None:
     Path("docs/developer/schemas").mkdir(exist_ok=True)
     Path("docs/developer/schemas/js").mkdir(exist_ok=True)
 
-    v_schemas = {s: getattr(custom_components.supernotify, s) for s in TOP_LEVEL_SCHEMAS}
+    v_schemas = {s: getattr(custom_components.supernotify.schema, s) for s in TOP_LEVEL_SCHEMAS}
     for vol_schema in v_schemas.values():
         try:
             walk_schema(vol_schema.schema)

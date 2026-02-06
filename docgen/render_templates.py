@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # imports must come after sys.path append
-from custom_components.supernotify import CONF_TRANSPORT, PRIORITY_VALUES, TRANSPORT_EMAIL
+from custom_components.supernotify.const import CONF_TRANSPORT, PRIORITY_VALUES, TRANSPORT_EMAIL
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
