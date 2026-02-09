@@ -2,310 +2,310 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/changelog/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/concepts/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/getting_started/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/tags/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/email/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/levels/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/people/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/examples/html_email_template/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/examples/maximal/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/class_diagram/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/coverage/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/quality_scale_audit/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/transports/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-critical/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-high/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-low/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-medium/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-minimum/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Camera_Definition/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Customization/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Definition/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action_Data/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Platform_Configuration/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Recipient_Definition/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Scenario_Definition/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Transport_Definition/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/chime/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/email/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/generic/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/media/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/persistent/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/sms/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/tts/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/usage/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/usage/actions/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/usage/notifying/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/usage/scenarios/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/</loc>
-         <lastmod>2026-02-02</lastmod>
+         <lastmod>2026-02-09</lastmod>
     </url>
 </urlset>
