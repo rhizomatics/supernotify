@@ -19,9 +19,9 @@
 <br/>
 <br/>
 
-**Easy multi-channel rich notifications.**
+**Unified Notification for Home Assistant**
 
-An extension of HomeAssistant's built in `notify` platform that can greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
+A unified interface on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
 Supernotify has one goal - to make the **simplest possible notification do as many notifications as you need with no code and minimal configuration**.
 
