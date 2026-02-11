@@ -2,6 +2,6 @@ title: Recipes for Home Assistant Notifications using Supernotify
 ---
 # Recipe Index
 
-Ideas for using Supernotify, with example configurations.
+Ideas for Home Assistant notifications using Supernotify, with example configurations.
 
 {{ pagetree(siblings) }}

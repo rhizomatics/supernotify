@@ -27,8 +27,13 @@ Supernotify has one goal - to make the **simplest possible notification do as ma
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
-With two lines of very simple yaml, start mobile push notifications to everyone registered in the house, without
-configuring mobile app names in notifications.
+With two lines of very simple yaml, start mobile push notifications to everyone registered in the house, without configuring mobile app names in notifications.
+
+!!! tip
+    Get started quickly, or get inspired with one of the notification [recipes](./recipes/index.md).
+    
+    Make Alexa whisper low priority notifications, set off sirens for critical alerts, send HomeAssistant
+    themed HTML e-mail, use the Frigate blueprint to send emails with attached images, move and zoom a camera to take a snapshot, suppress notifications based on content and more.
 
 ## Distribution
 
