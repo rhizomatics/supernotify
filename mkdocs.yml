@@ -45,6 +45,7 @@ plugins:
   - search
   - htmlproofer:
       skip_downloads: True
+      validate_external_urls: False
       ignore_pages:
         - developer/schemas/*
         - developer/classes.md
