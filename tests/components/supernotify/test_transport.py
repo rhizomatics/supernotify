@@ -1,12 +1,18 @@
+
 from unittest.mock import Mock
 
-from homeassistant.const import CONF_DEBUG
+import pytest
+from homeassistant.const import ATTR_NAME, CONF_DEBUG, CONF_ENABLED
 from homeassistant.core import HomeAssistant, SupportsResponse
 
-from custom_components.supernotify.const import TRANSPORT_GENERIC
+from custom_components.supernotify.const import CONF_DELIVERY_DEFAULTS, TRANSPORT_GENERIC
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.model import DeliveryConfig, Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.notify import TRANSPORTS
+from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .doubles_lib import DummyService
@@ -100,3 +106,21 @@ async def test_call_action_debug_failing_service(hass: HomeAssistant) -> None:
     )
     response: bool = await uut.call_action(envelope, "notify.custom_test", {"message": "hello"}, None, False)
     assert response is False
+
+
+@pytest.mark.parametrize("transport_type", TRANSPORTS)
+async def test_common_features(mock_hass: HomeAssistant, mock_hass_api: HomeAssistantAPI, transport_type: Transport) -> None:
+    ctx = TestingContext(homeassistant=mock_hass)
+    await ctx.test_initialize()
+
+    transport = transport_type(ctx, {})
+    assert isinstance(transport.supported_features, TransportFeature)
+    assert isinstance(transport.setup_delivery_options({}, "testing"), dict)
+    assert isinstance(transport.extra_attributes(), dict)
+    assert isinstance(transport.default_config, TransportConfig)
+    assert isinstance(transport.targets, Target)
+    attrs = transport.attributes()
+    assert attrs[ATTR_NAME] == transport_type.name
+    assert isinstance(attrs[CONF_ENABLED], bool)
+    assert attrs[CONF_DELIVERY_DEFAULTS] == transport.delivery_defaults
+    assert isinstance(transport.auto_configure(mock_hass_api), (DeliveryConfig, type(None)))
