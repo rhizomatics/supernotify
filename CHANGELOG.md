@@ -3,6 +3,7 @@
 ## 1.10.0
 ### Internal
 - `__init__.py` refactored into `schema.py` and `const.py`
+- Python default now 3.14, in line with Home Assistant
 ## 1.9.3
 ### Dependencies
 - Primary target Home Assistant version now 2026.1
