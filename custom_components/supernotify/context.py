@@ -64,7 +64,6 @@ class Context:
         self.custom_template_path: Path | None = Path(template_path) if template_path else None
 
         self.cameras: dict[str, Any] = {c[CONF_CAMERA]: c for c in cameras} if cameras else {}
-        self.snoozer = snoozer
         if kwargs:
             _LOGGER.warning("SUPERNOTIFY Context threw away kwargs: %s", kwargs)
 
