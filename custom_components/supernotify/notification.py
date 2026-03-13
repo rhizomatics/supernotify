@@ -422,7 +422,11 @@ class Notification(ArchivableObject):
                     continue
                 try:
                     if not await transport.deliver(envelope, debug_trace=self.debug_trace):
-                        _LOGGER.debug("SUPERNOTIFY No delivery for %s", delivery.name)
+                        _LOGGER.info(
+                            "SUPERNOTIFY No delivery for %s (targets: %s)",
+                            delivery.name,
+                            envelope.target.as_dict() if envelope.target else "none",
+                        )
                     self.record_result(delivery, envelope)
                 except Exception as e2:
                     _LOGGER.exception("SUPERNOTIFY Failed to deliver %s: %s", delivery.name, e2)
@@ -432,8 +436,11 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, envelope)
 
         except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery.name)
-            _LOGGER.debug("SUPERNOTIFY %s delivery failure", delivery, exc_info=True)
+            _LOGGER.exception(
+                "SUPERNOTIFY Failed to notify using delivery %s via %s",
+                delivery.name,
+                type(delivery.transport).__name__,
+            )
             self.deliveries.setdefault(delivery.name, {})
             self.deliveries[delivery.name].setdefault("errors", [])
             errors: list[str] = cast("list[str]", self.deliveries[delivery.name]["errors"])
