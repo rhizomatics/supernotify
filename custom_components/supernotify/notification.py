@@ -368,11 +368,19 @@ class Notification(ArchivableObject):
         if self.delivered == 0 and not self._suppression_reason:
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY no delivery succeeded, activating fallback_by_default: %s",
+                        delivery.name,
+                    )
                     if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
 
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY delivery failed, activating fallback_on_error: %s",
+                        delivery.name,
+                    )
                     if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
 
