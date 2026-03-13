@@ -1,5 +1,6 @@
 import logging
 import time
+import unicodedata
 from abc import abstractmethod
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any
@@ -222,5 +223,9 @@ class Transport:
             words = text.split()
             text = " ".join(word for word in words if not urlparse(word).scheme)
         text = text.translate(str.maketrans("_", " ", "()£$<>"))
+        text = "".join(
+            c for c in text
+            if unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn")
+        )
         _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", text)
         return text
