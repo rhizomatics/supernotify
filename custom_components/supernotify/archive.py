@@ -1,3 +1,4 @@
+import asyncio
 import datetime as dt
 import logging
 from abc import abstractmethod
@@ -113,14 +114,18 @@ class ArchiveDirectory:
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_path = str(self.archive_path.joinpath(filename))
-                save_json(archive_path, archive_object.contents(minimal=not self.debug))
+                loop = asyncio.get_running_loop()
+                data = archive_object.contents(minimal=not self.debug)
+                await loop.run_in_executor(None, save_json, archive_path, data)
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
                 archived = True
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
                 if self.debug:
                     try:
-                        save_json(archive_path, archive_object.contents(minimal=not self.debug))
+                        loop = asyncio.get_running_loop()
+                        data = archive_object.contents(minimal=not self.debug)
+                        await loop.run_in_executor(None, save_json, archive_path, data)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
                         archived = True
                     except Exception as e2:
