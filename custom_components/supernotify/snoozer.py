@@ -85,9 +85,12 @@ class Snooze:
 class Snoozer:
     """Manage snoozing"""
 
-    def __init__(self, people_registry: PeopleRegistry | None = None) -> None:
+    def __init__(self, people_registry: PeopleRegistry | None = None, default_snooze_hours: int | None = None) -> None:
         self.snoozes: dict[str, Snooze] = {}
         self.people_registry: PeopleRegistry | None = people_registry
+        if default_snooze_hours is not None:
+            global SNOOZE_TIME
+            SNOOZE_TIME = timedelta(hours=default_snooze_hours)
 
     def handle_command_event(self, event: Event, people: list[Recipient] | None = None) -> None:
         people = people or []
