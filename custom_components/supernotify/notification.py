@@ -527,6 +527,34 @@ class Notification(ArchivableObject):
             for k in exposed_if_populated
             if self.__dict__.get(k)
         })
+        # delivery_stats: aggregate delivery metrics
+        try:
+            all_durations: dict[str, float] = {}
+            total_ok = 0
+            total_all = 0
+            for d_name, outcomes in self.deliveries.items():
+                for envelope in outcomes.get(KEY_DELIVERED, []):
+                    dur = sum(
+                        c.contents().get("elapsed", 0)
+                        for c in getattr(envelope, "calls", [])
+                    ) * 1000
+                    all_durations[d_name] = dur
+                    total_ok += 1
+                    total_all += 1
+                for _envelope in outcomes.get(KEY_FAILED, []):
+                    all_durations.setdefault(d_name, 0)
+                    total_all += 1
+                if outcomes.get(KEY_SKIPPED):
+                    total_all += 1
+            if all_durations:
+                result["stats"] = {
+                    "total_duration_ms": round(sum(all_durations.values()), 1),
+                    "slowest_delivery": max(all_durations, key=all_durations.get),
+                    "fastest_delivery": min(all_durations, key=all_durations.get),
+                    "delivery_success_rate": round(total_ok / total_all, 2) if total_all else 1.0,
+                }
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY delivery_stats computation failed: %s", e)
         return result
 
     def base_filename(self) -> str:
