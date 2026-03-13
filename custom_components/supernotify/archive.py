@@ -55,6 +55,8 @@ class ArchiveTopic:
         if await self.hass_api.mqtt_available(raise_on_error=False):
             _LOGGER.info(f"SUPERNOTIFY Archiving to MQTT topic {self.topic}, qos {self.qos}, retain {self.retain}")
             self.enabled = True
+        else:
+            _LOGGER.warning("SUPERNOTIFY MQTT not available at startup, archive topic disabled")
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
