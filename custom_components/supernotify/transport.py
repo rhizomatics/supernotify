@@ -223,9 +223,6 @@ class Transport:
             words = text.split()
             text = " ".join(word for word in words if not urlparse(word).scheme)
         text = text.translate(str.maketrans("_", " ", "()£$<>"))
-        text = "".join(
-            c for c in text
-            if unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn")
-        )
+        text = "".join(c for c in text if unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn"))
         _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", text)
         return text

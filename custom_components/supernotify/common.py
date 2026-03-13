@@ -142,10 +142,7 @@ class DupeChecker:
             return False
         hashed: int = dupe_candidate.hash()
         ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
-        dupe = any(
-            prev_hash == hashed and prev_prior >= ranked_priority
-            for prev_hash, prev_prior in self.cache
-        )
+        dupe = any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in self.cache)
         if dupe:
             _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
         self.cache[hashed, ranked_priority] = dupe_candidate.id

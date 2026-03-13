@@ -549,10 +549,7 @@ class Notification(ArchivableObject):
             total_all = 0
             for d_name, outcomes in self.deliveries.items():
                 for envelope in outcomes.get(KEY_DELIVERED, []):
-                    dur = sum(
-                        c.contents().get("elapsed", 0)
-                        for c in getattr(envelope, "calls", [])
-                    ) * 1000
+                    dur = sum(c.contents().get("elapsed", 0) for c in getattr(envelope, "calls", [])) * 1000
                     all_durations[d_name] = dur
                     total_ok += 1
                     total_all += 1
