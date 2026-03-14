@@ -27,7 +27,7 @@ Supernotify has one goal - to make the **simplest possible notification do as ma
 
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
-    
+
      * [Make Alexa whisper low priority notifications](./recipes/alexa_whisper.md)
      * [Set off sirens for critical alerts](./recipes/all_sirens_go.md)
      * [Send HomeAssistant themed HTML e-mail](./recipes/basic_html_email.md)

@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNKNOWN, EntityCategory, Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -38,7 +38,6 @@ from . import (
     CONF_DUPE_CHECK,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
-    CONF_SNOOZE_HOURS,
     CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
@@ -46,6 +45,7 @@ from . import (
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SCENARIOS,
+    CONF_SNOOZE_HOURS,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
     DOMAIN,
