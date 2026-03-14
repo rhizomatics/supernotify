@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_notify_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2026-03-14 17:49 +0000
+            created at 2026-03-14 17:57 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -450,7 +450,7 @@
     <p class="run"><span class="n"><a id="t368" href="#t368">368</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">delivered</span> <span class="op">==</span> <span class="num">0</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_suppression_reason</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">            <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">failed</span> <span class="op">==</span> <span class="num">0</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">self</span><span class="op">.</span><span class="nam">dupe</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">                <span class="key">for</span> <span class="nam">delivery</span> <span class="key">in</span> <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">delivery_registry</span><span class="op">.</span><span class="nam">fallback_by_default_deliveries</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">                    <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">                    <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">                        <span class="str">"SUPERNOTIFY no delivery succeeded, activating fallback_by_default: %s"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">                        <span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t">                    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -507,7 +507,7 @@
     <p class="run"><span class="n"><a id="t425" href="#t425">425</a></span><span class="t">                        <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t426" href="#t426">426</a></span><span class="t">                            <span class="str">"SUPERNOTIFY No delivery for %s (targets: %s)"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">                            <span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">                            <span class="nam">envelope</span><span class="op">.</span><span class="nam">target</span><span class="op">.</span><span class="nam">as_dict</span><span class="op">(</span><span class="op">)</span> <span class="key">if</span> <span class="nam">envelope</span><span class="op">.</span><span class="nam">target</span> <span class="key">else</span> <span class="str">"none"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">                            <span class="nam">envelope</span><span class="op">.</span><span class="nam">target</span><span class="op">.</span><span class="nam">as_dict</span><span class="op">(</span><span class="op">)</span> <span class="key">if</span> <span class="nam">envelope</span><span class="op">.</span><span class="nam">target</span> <span class="key">else</span> <span class="str">"NONE"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">                        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">                    <span class="nam">self</span><span class="op">.</span><span class="nam">record_result</span><span class="op">(</span><span class="nam">delivery</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t431" href="#t431">431</a></span><span class="t">                <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e2</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -849,7 +849,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_notify_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2026-03-14 17:49 +0000
+            created at 2026-03-14 17:57 +0000
         </p>
     </div>
 </footer>
