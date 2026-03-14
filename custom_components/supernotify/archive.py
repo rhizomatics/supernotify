@@ -1,3 +1,5 @@
+import asyncio
+import json
 import datetime as dt
 import logging
 from abc import abstractmethod
@@ -7,23 +9,21 @@ from typing import Any
 import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    CONF_DEBUG,
-    CONF_ENABLED,
-)
+from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import condition as condition
-from homeassistant.helpers.json import save_json
+import aiofiles
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 
-from .const import (
+from . import (
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
     CONF_ARCHIVE_PURGE_INTERVAL,
+    CONF_DEBUG,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +55,13 @@ class ArchiveTopic:
         if await self.hass_api.mqtt_available(raise_on_error=False):
             _LOGGER.info(f"SUPERNOTIFY Archiving to MQTT topic {self.topic}, qos {self.qos}, retain {self.retain}")
             self.enabled = True
+        else:
+            _LOGGER.warning(
+                "SUPERNOTIFY mqtt_topic configurato (%s) ma integrazione MQTT "
+                "non disponibile — archivio MQTT disabilitato. "
+                "Rimuovere mqtt_topic da archive.yaml oppure configurare MQTT in HA.",
+                self.topic
+            )
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
@@ -111,14 +118,24 @@ class ArchiveDirectory:
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_path = str(self.archive_path.joinpath(filename))
-                save_json(archive_path, archive_object.contents(minimal=not self.debug))
+                data = archive_object.contents(minimal=not self.debug)
+                tmp_path = archive_path + ".tmp"
+                json_data = json.dumps(data, indent=2, default=str)
+                async with aiofiles.open(tmp_path, "w", encoding="utf-8") as f:
+                    await f.write(json_data)
+                await aiofiles.os.rename(tmp_path, archive_path)
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
                 archived = True
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
                 if self.debug:
                     try:
-                        save_json(archive_path, archive_object.contents(minimal=not self.debug))
+                        data = archive_object.contents(minimal=not self.debug)
+                        tmp_path = archive_path + ".tmp"
+                        json_data = json.dumps(data, indent=2, default=str)
+                        async with aiofiles.open(tmp_path, "w", encoding='utf-8') as f:
+                            await f.write(json_data)
+                        await aiofiles.os.rename(tmp_path, archive_path)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
                         archived = True
                     except Exception as e2:
