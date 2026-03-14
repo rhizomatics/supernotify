@@ -3,11 +3,11 @@
     "services": {
         "reload": {
             "name": "[%key:common::action::reload%]",
-            "description": "Ricarica i servizi di Supernotify."
+            "description": "Ricarica i servizi di supernotify."
         },
         "enquire_deliveries_by_scenario": {
-            "name": "Mostra Consegne per Scenario",
-            "description": "Strumento di debug per visualizzare la lista delle consegne per ogni scenario, incluso l'utilizzo predefinito."
+            "name": "Richiedi Consegne per Scenario",
+            "description": "Assistente di debug per mostrare l'elenco delle consegne per ogni scenario, incluso l'utilizzo predefinito"
         }
     },
     "config": {
@@ -20,33 +20,45 @@
                     "archive_path": "Percorso Archivio"
                 },
                 "data_description": {
-                    "template_path": "Percorso opzionale in cui si trovano i template Jinja2 per le email HTML",
-                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
-                    "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug della configurazione, degli scenari ecc."
+                    "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
+                    "media_path": "Percorso di archiviazione per i media creati durante le notifiche, ad esempio snapshot della telecamera per gli allegati",
+                    "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc."
                 }
             }
         }
     },
     "issues": {
         "scenario_delivery": {
-            "title": "Consegna non valida per lo Scenario",
-            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di Supernotify."
+            "title": "Consegna Non Valida per Scenario",
+            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di supernotify"
         },
         "scenario_action_group": {
-            "title": "Gruppo Azione Mobile non valido per lo Scenario",
-            "description": "La definizione dello scenario {scenario} fa riferimento a un gruppo di azioni {action_group} che non esiste nella configurazione di Supernotify."
+            "title": "Gruppo Azione Mobile Non Valido per Scenario",
+            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {action_group} che non esiste nella configurazione di supernotify"
         },
         "scenario_condition": {
-            "title": "Condizione non valida per lo Scenario",
-            "description": "La definizione dello scenario {scenario} contiene una condizione che non può essere valutata da Home Assistant."
+            "title": "Condizione Non Valida per Scenario",
+            "description": "La definizione dello scenario {scenario} contiene una condizione che non può essere valutata da Home Assistant"
         },
         "delivery_unknown_transport": {
-            "title": "Trasporto sconosciuto per la Consegna",
-            "description": "La configurazione della consegna {delivery} fa riferimento a un trasporto {transport} non fornito da SuperNotify."
+            "title": "Trasporto Sconosciuto per Consegna",
+            "description": "La configurazione della consegna {delivery} fa riferimento a un trasporto {transport} non fornito da SuperNotify"
         },
         "media_path": {
-            "title": "Percorso Media non utilizzabile",
-            "description": "È stato fornito un percorso ({path}) per la conservazione dei file multimediali come le istantanee delle telecamere durante le notifiche, ma non può essere utilizzato (errore: {error})."
+            "title": "Percorso Media Non Utilizzabile",
+            "description": "È stato fornito un percorso ({path}) per conservare media come snapshot della telecamera durante le notifiche, ma non è utilizzabile (errore: {error})"
+        },
+        "delivery_reserved_name": {
+            "title": "La Consegna Ha un Nome Riservato",
+            "description": "Il nome della consegna {delivery} è riservato per uso di Supernotify"
+        },
+        "delivery_invalid_action": {
+            "title": "La Consegna Ha un'Azione Non Valida",
+            "description": "La consegna {delivery} ha un'azione non valida {action}"
+        },
+        "delivery_invalid_condition": {
+            "title": "La Consegna Ha una Condizione Non Valida",
+            "description": "La consegna {delivery} ha una condizione non valida {condition}"
         }
     }
 }

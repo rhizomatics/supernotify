@@ -5,10 +5,11 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.14.2"
 dependencies = [
-    "homeassistant>=2026.3.1",
+    "homeassistant>=2026.3.0",
     "cachetools",
     "bs4",
-    "aiofiles"
+    "aiofiles",
+    "orjson==3.11.5" # pip resolution issue with HA 2026.3.1 
 ]
 
 [tool.poetry]
@@ -71,7 +72,7 @@ docs=[
     "mkdocs-autorefs",
     "mkdocs-coverage",
     "mkdocs-pagetree-plugin",
-    "mkdocs",
+    "mkdocs<2.0.0",
     "json-schema-for-humans",
     "mkdocs-gen-files",
     "voluptuous-openapi>=0.2.0",

@@ -47,6 +47,18 @@
         "media_path":{
             "title":"Media Path Cannot be Used",
             "description":"A path ({path}) has been provided for holding media such as camera snapshots during notifications but cannot be used (error: {error})"
+        },
+        "delivery_reserved_name":{
+            "title":"Delivery Has Reserved Delivery Name",
+            "description":"The delivery {delivery} name is reserved for Supernotify use"
+        },
+        "delivery_invalid_action":{
+            "title":"Delivery Has Invalid Action",
+            "description":"The delivery {delivery} has an invalid action {action}"
+        },
+        "delivery_invalid_condition":{
+            "title":"Delivery Has Invalid Condition",
+            "description":"The {delivery} delivery has an invalid condition {condition}"
         }
     }
 }

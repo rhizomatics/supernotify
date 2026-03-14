@@ -1,0 +1,64 @@
+{
+    "title": "Supernotify",
+    "services": {
+        "reload": {
+            "name": "[%key:common::action::reload%]",
+            "description": "Recharge les services Supernotify."
+        },
+        "enquire_deliveries_by_scenario": {
+            "name": "Consulter les livraisons par scénario",
+            "description": "Assistant de débogage pour afficher la liste des livraisons pour chaque scénario, y compris l'utilisation par défaut"
+        }
+    },
+    "config": {
+        "step": {
+            "user": {
+                "title": "Environnement",
+                "data": {
+                    "template_path": "Chemin des modèles",
+                    "media_path": "Chemin des médias",
+                    "archive_path": "Chemin des archives"
+                },
+                "data_description": {
+                    "template_path": "Emplacement optionnel des modèles Jinja2 pour les e-mails HTML",
+                    "media_path": "Chemin de stockage pour les médias créés lors des notifications, par exemple les captures de caméra pour les pièces jointes",
+                    "archive_path": "Chemin de stockage pour les notifications archivées, utile pour déboguer la configuration, les scénarios, etc."
+                }
+            }
+        }
+    },
+    "issues": {
+        "scenario_delivery": {
+            "title": "Livraison invalide pour le scénario",
+            "description": "La définition du scénario {scenario} fait référence à une livraison {delivery} qui n'existe pas dans la configuration de supernotify"
+        },
+        "scenario_action_group": {
+            "title": "Groupe d'actions mobile invalide pour le scénario",
+            "description": "La définition du scénario {scenario} fait référence à une livraison {action_group} qui n'existe pas dans la configuration de supernotify"
+        },
+        "scenario_condition": {
+            "title": "Condition invalide pour le scénario",
+            "description": "La définition du scénario {scenario} contient une condition qui ne peut pas être évaluée par Home Assistant"
+        },
+        "delivery_unknown_transport": {
+            "title": "Transport inconnu pour la livraison",
+            "description": "La configuration de livraison {delivery} fait référence à un transport {transport} qui n'est pas fourni par SuperNotify"
+        },
+        "media_path": {
+            "title": "Le chemin des médias ne peut pas être utilisé",
+            "description": "Un chemin ({path}) a été fourni pour stocker des médias tels que des captures de caméra lors des notifications, mais ne peut pas être utilisé (erreur : {error})"
+        },
+        "delivery_reserved_name": {
+            "title": "La livraison a un nom réservé",
+            "description": "Le nom de la livraison {delivery} est réservé à l'usage de Supernotify"
+        },
+        "delivery_invalid_action": {
+            "title": "La livraison a une action invalide",
+            "description": "La livraison {delivery} a une action invalide {action}"
+        },
+        "delivery_invalid_condition": {
+            "title": "La livraison a une condition invalide",
+            "description": "La livraison {delivery} a une condition invalide {condition}"
+        }
+    }
+}

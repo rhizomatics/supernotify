@@ -1,9 +1,11 @@
 # Public releases
 
-## 1.10.0
+## 1.9.4
 ### Internal
 - `__init__.py` refactored into `schema.py` and `const.py`
 - Python default now 3.14, in line with Home Assistant
+- Added translations for Italian, French, German and Spanish
+- Primary target Home Assistant version now 2026.3
 ## 1.9.3
 ### Dependencies
 - Primary target Home Assistant version now 2026.1

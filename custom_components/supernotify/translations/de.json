@@ -1,0 +1,64 @@
+{
+    "title": "Supernotify",
+    "services": {
+        "reload": {
+            "name": "[%key:common::action::reload%]",
+            "description": "Lädt die Supernotify-Dienste neu."
+        },
+        "enquire_deliveries_by_scenario": {
+            "name": "Lieferungen nach Szenario abfragen",
+            "description": "Debug-Assistent zur Anzeige der Lieferungsliste für jedes Szenario, einschließlich Standardnutzung"
+        }
+    },
+    "config": {
+        "step": {
+            "user": {
+                "title": "Umgebung",
+                "data": {
+                    "template_path": "Vorlagenpfad",
+                    "media_path": "Medienpfad",
+                    "archive_path": "Archivpfad"
+                },
+                "data_description": {
+                    "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails",
+                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge",
+                    "archive_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw."
+                }
+            }
+        }
+    },
+    "issues": {
+        "scenario_delivery": {
+            "title": "Ungültige Lieferung für Szenario",
+            "description": "Die Szenariodefinition {scenario} verweist auf eine Lieferung {delivery}, die in der Supernotify-Konfiguration nicht existiert"
+        },
+        "scenario_action_group": {
+            "title": "Ungültige Mobile Aktionsgruppe für Szenario",
+            "description": "Die Szenariodefinition {scenario} verweist auf eine Lieferung {action_group}, die in der Supernotify-Konfiguration nicht existiert"
+        },
+        "scenario_condition": {
+            "title": "Ungültige Bedingung für Szenario",
+            "description": "Die Szenariodefinition {scenario} enthält eine Bedingung, die von Home Assistant nicht ausgewertet werden kann"
+        },
+        "delivery_unknown_transport": {
+            "title": "Unbekannter Transport für Lieferung",
+            "description": "Die Lieferungskonfiguration {delivery} verweist auf einen Transport {transport}, der nicht von SuperNotify bereitgestellt wird"
+        },
+        "media_path": {
+            "title": "Medienpfad kann nicht verwendet werden",
+            "description": "Ein Pfad ({path}) wurde für die Speicherung von Medien wie Kamera-Snapshots während Benachrichtigungen angegeben, kann jedoch nicht verwendet werden (Fehler: {error})"
+        },
+        "delivery_reserved_name": {
+            "title": "Lieferung hat einen reservierten Namen",
+            "description": "Der Name der Lieferung {delivery} ist für die Verwendung durch Supernotify reserviert"
+        },
+        "delivery_invalid_action": {
+            "title": "Lieferung hat eine ungültige Aktion",
+            "description": "Die Lieferung {delivery} hat eine ungültige Aktion {action}"
+        },
+        "delivery_invalid_condition": {
+            "title": "Lieferung hat eine ungültige Bedingung",
+            "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
+        }
+    }
+}
