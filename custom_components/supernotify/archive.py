@@ -161,7 +161,9 @@ class ArchiveDirectory(ArchiveDestination):
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_path = str(self.archive_path.joinpath(filename))
-                mode, serialized = prepare_save_json(archive_object.contents(diagnostics=archive_object.selected(self.diagnostics)))
+                mode, serialized = prepare_save_json(
+                    archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
+                )
                 async with aiofiles.open(archive_path, mode) as file:
                     await file.write(serialized)
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
