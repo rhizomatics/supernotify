@@ -3069,6 +3069,7 @@ dependencies = [
     { name = "bs4" },
     { name = "cachetools" },
     { name = "homeassistant" },
+    { name = "orjson" },
 ]
 
 [package.dev-dependencies]
@@ -3124,6 +3125,7 @@ requires-dist = [
     { name = "bs4" },
     { name = "cachetools" },
     { name = "homeassistant", specifier = ">=2026.3.0" },
+    { name = "orjson", specifier = "==3.11.5" },
 ]
 
 [package.metadata.requires-dev]
