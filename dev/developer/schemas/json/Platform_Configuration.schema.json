@@ -47,6 +47,20 @@
           "minimum": 0,
           "default": 60
         },
+        "event_name": {
+          "default": "supernotification",
+          "type": "string"
+        },
+        "event_selection": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": 0
+        },
+        "diagnostics": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": 16
+        },
         "debug": {
           "default": false,
           "type": "string"
