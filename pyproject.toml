@@ -9,7 +9,7 @@ dependencies = [
     "cachetools",
     "bs4",
     "aiofiles",
-    "orjson==3.11.5" # pip resolution issue with HA 2026.3.1 
+    "orjson==3.11.5" # pip resolution issue with HA 2026.3.1
 ]
 
 [tool.poetry]
