@@ -571,6 +571,7 @@ class ConditionVariables:
         occupiers: dict[str, list[Any]] | None = None,
         message: str | None = None,
         title: str | None = None,
+        extra_data: dict[str, Any] | None = None,
     ) -> None:
         occupiers = occupiers or {}
         self.occupancy = []
@@ -588,6 +589,7 @@ class ConditionVariables:
         self.notification_priority = delivery_priority or PRIORITY_MEDIUM
         self.notification_message = message
         self.notification_title = title
+        self.extra_data: dict[str, Any] = extra_data or {}
 
     def as_dict(self, **_kwargs: Any) -> TemplateVarsType:
         return {
@@ -598,6 +600,7 @@ class ConditionVariables:
             "notification_title": self.notification_title,
             "notification_priority": self.notification_priority,
             "occupancy": self.occupancy,
+            "extra_data": self.extra_data,
         }
 
 

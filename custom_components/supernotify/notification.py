@@ -169,6 +169,7 @@ class Notification(ArchivableObject):
             self.occupancy,
             self.message,
             self._title,
+            self.extra_data,
         )  # requires occupancy first
 
         enabled_scenario_names: list[str] = list(self.applied_scenario_names) or []
@@ -367,11 +368,19 @@ class Notification(ArchivableObject):
         if self.delivered == 0 and not self._suppression_reason:
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY no delivery succeeded, activating fallback_by_default: %s",
+                        delivery.name,
+                    )
                     if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
 
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY delivery failed, activating fallback_on_error: %s",
+                        delivery.name,
+                    )
                     if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
 
@@ -413,7 +422,11 @@ class Notification(ArchivableObject):
                     continue
                 try:
                     if not await transport.deliver(envelope, debug_trace=self.debug_trace):
-                        _LOGGER.debug("SUPERNOTIFY No delivery for %s", delivery.name)
+                        _LOGGER.info(
+                            "SUPERNOTIFY No delivery for %s (targets: %s)",
+                            delivery.name,
+                            envelope.target.as_dict() if envelope.target else "none",
+                        )
                     self.record_result(delivery, envelope)
                 except Exception as e2:
                     _LOGGER.exception("SUPERNOTIFY Failed to deliver %s: %s", delivery.name, e2)
@@ -423,8 +436,11 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, envelope)
 
         except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Failed to notify using %s", delivery.name)
-            _LOGGER.debug("SUPERNOTIFY %s delivery failure", delivery, exc_info=True)
+            _LOGGER.exception(
+                "SUPERNOTIFY Failed to notify using delivery %s via %s",
+                delivery.name,
+                type(delivery.transport).__name__,
+            )
             self.deliveries.setdefault(delivery.name, {})
             self.deliveries[delivery.name].setdefault("errors", [])
             errors: list[str] = cast("list[str]", self.deliveries[delivery.name]["errors"])
@@ -526,6 +542,31 @@ class Notification(ArchivableObject):
             for k in exposed_if_populated
             if self.__dict__.get(k)
         })
+        # delivery_stats: aggregate delivery metrics
+        try:
+            all_durations: dict[str, float] = {}
+            total_ok = 0
+            total_all = 0
+            for d_name, outcomes in self.deliveries.items():
+                for envelope in outcomes.get(KEY_DELIVERED, []):
+                    dur = sum(c.contents().get("elapsed", 0) for c in getattr(envelope, "calls", [])) * 1000
+                    all_durations[d_name] = dur
+                    total_ok += 1
+                    total_all += 1
+                for _envelope in outcomes.get(KEY_FAILED, []):
+                    all_durations.setdefault(d_name, 0)
+                    total_all += 1
+                if outcomes.get(KEY_SKIPPED):
+                    total_all += 1
+            if all_durations:
+                result["stats"] = {
+                    "total_duration_ms": round(sum(all_durations.values()), 1),
+                    "slowest_delivery": max(all_durations, key=all_durations.get),
+                    "fastest_delivery": min(all_durations, key=all_durations.get),
+                    "delivery_success_rate": round(total_ok / total_all, 2) if total_all else 1.0,
+                }
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY delivery_stats computation failed: %s", e)
         return result
 
     def base_filename(self) -> str:

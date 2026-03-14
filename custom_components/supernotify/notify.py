@@ -83,8 +83,6 @@ PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-SNOOZE_TIME = 60 * 60  # TODO: move to configuration
-
 TRANSPORTS: list[type[Transport]] = [
     EmailTransport,
     SMSTransport,
@@ -356,7 +354,7 @@ class SupernotifyAction(BaseNotificationService):
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
             MediaStorage(media_path, self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7)),
-            Snoozer(),
+            Snoozer(default_snooze_hours=housekeeping.get("default_snooze_hours")),
             links or [],
             recipients or [],
             mobile_actions,

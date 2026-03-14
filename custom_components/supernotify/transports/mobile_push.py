@@ -115,7 +115,6 @@ class MobilePushTransport(Transport):
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False
         data: dict[str, Any] = envelope.data or {}
-        # TODO: category not passed anywhere
         category = data.get(ATTR_ACTION_CATEGORY, "general")
         action_groups = envelope.action_groups
 
