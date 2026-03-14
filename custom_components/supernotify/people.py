@@ -17,6 +17,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.helpers import device_registry, entity_registry
+
 from .common import ensure_list
 from .const import (
     ATTR_ALIAS,
