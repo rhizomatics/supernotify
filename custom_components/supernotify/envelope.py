@@ -10,8 +10,7 @@ from anyio import Path
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from jinja2 import TemplateError
 
-from .common import DupeCheckable
-from .const import (
+from . import (
     ATTR_MEDIA,
     ATTR_MESSAGE_HTML,
     ATTR_PRIORITY,
@@ -21,6 +20,7 @@ from .const import (
     OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
 )
+from .common import DupeCheckable
 from .context import Context
 from .media_grab import grab_image
 from .model import (
@@ -150,9 +150,43 @@ class Envelope(DupeCheckable):
                 exclude_attrs.append("target")
 
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs and not k.startswith("_")}
+        json_ready["data"] = self._resolve_data_templates(self.data)
         json_ready["calls"] = [call.contents() for call in self.calls]
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
         return json_ready
+
+    def _resolve_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Resolve Jinja2 templates in data dict for archive readability.
+
+        Returns a copy of data with template strings replaced by their
+        resolved values. Raw template string is preserved alongside as
+        <key>_template for debugging. Non-template values are unchanged.
+        """
+        if not data or not self.context:
+            return data
+        resolved: dict[str, Any] = {}
+        context_vars = (
+            cast("dict[str, Any]", self.condition_variables.as_dict())
+            if self.condition_variables
+            else {}
+        )
+        for key, value in data.items():
+            if isinstance(value, str) and "{{" in value:
+                try:
+                    rendered = self.context.hass_api.template(value).async_render(
+                        variables=context_vars
+                    )
+                    resolved[key] = rendered
+                    resolved[f"{key}_template"] = value
+                except Exception as e:
+                    _LOGGER.debug(
+                        "SUPERNOTIFY Could not resolve template for %s in %s: %s",
+                        key, self.delivery_name, e
+                    )
+                    resolved[key] = value
+            else:
+                resolved[key] = value
+        return resolved
 
     def __eq__(self, other: Any | None) -> bool:
         """Specialized equality check for subset of attributes"""
@@ -206,6 +240,13 @@ class Envelope(DupeCheckable):
             msg = self._message
         else:
             msg = self.delivery.message if self.delivery.message is not None else self._message
+            if msg and self.context and "{{" in msg:
+                try:
+                    context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
+                    template = self.context.hass_api.template(msg)
+                    msg = template.async_render(variables=context_vars)
+                except TemplateError as e:
+                    _LOGGER.warning("SUPERNOTIFY Rendering delivery message template for %s failed: %s", self.delivery_name, e)
             message_usage: str = str(self.delivery.option_str(OPTION_MESSAGE_USAGE))
             if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
                 title = self._compute_title(ignore_usage=True)
@@ -260,4 +301,12 @@ class Envelope(DupeCheckable):
         def alphaize(v: str | None) -> str | None:
             return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
 
-        return hash((alphaize(self._message), alphaize(self.delivery.name), self.target.hash_resolved(), alphaize(self._title)))
+        spoken = getattr(self, "extra_data", {}) or {}
+        spoken = spoken.get("spoken_message", "") if spoken else ""
+        return hash((
+            alphaize(self._message),
+            alphaize(self.delivery.name),
+            self.target.hash_resolved(),
+            alphaize(self._title),
+            alphaize(str(spoken)),
+        ))

@@ -1,5 +1,6 @@
-import datetime as dt
+import asyncio
 import json
+import datetime as dt
 import logging
 from abc import abstractmethod
 from pathlib import Path
@@ -8,27 +9,22 @@ from typing import Any
 import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
-from homeassistant.const import (
-    CONF_DEBUG,
-    CONF_ENABLED,
-)
+from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import condition as condition
+import aiofiles
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 
-from .const import (
+from . import (
     CONF_ARCHIVE_DAYS,
-    CONF_ARCHIVE_DIAGNOSTICS,
-    CONF_ARCHIVE_EVENT_NAME,
-    CONF_ARCHIVE_EVENT_SELECTION,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
     CONF_ARCHIVE_PURGE_INTERVAL,
+    CONF_DEBUG,
 )
-from .schema import Outcome, OutcomeSelection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,81 +38,17 @@ class ArchivableObject:
     def base_filename(self) -> str:
         pass
 
-    @abstractmethod
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
-        pass
-
-    def outcome(self) -> Outcome:
-        return Outcome.NO_DELIVERY
-
-    def selected(self, outcome_policy: OutcomeSelection) -> bool:
-        if outcome_policy & OutcomeSelection.NONE:
-            return False
-        return bool(
-            outcome_policy & OutcomeSelection.ALL
-            or (outcome_policy & OutcomeSelection.SUCCESS and self.outcome() == Outcome.SUCCESS)
-            or (outcome_policy & OutcomeSelection.NO_DELIVERY and self.outcome() == Outcome.NO_DELIVERY)
-            or (outcome_policy & OutcomeSelection.PARTIAL_DELIVERY and self.outcome() == Outcome.PARTIAL_DELIVERY)
-            or (outcome_policy & OutcomeSelection.DUPE and self.outcome() == Outcome.DUPE)
-            or (outcome_policy & OutcomeSelection.FALLBACK_DELIVERY and self.outcome() == Outcome.FALLBACK_DELIVERY)
-            or (outcome_policy & OutcomeSelection.ERROR and self.outcome() == Outcome.ERROR)
-        )
-
-
-class ArchiveDestination:
-    @abstractmethod
-    async def archive(self, archive_object: ArchivableObject) -> bool:
+    def contents(self, minimal: bool = False, **_kwargs: Any) -> Any:
         pass
 
 
-class EventArchiver(ArchiveDestination):
-    def __init__(
-        self, hass_api: HomeAssistantAPI, event_name: str, diagnostics: OutcomeSelection = OutcomeSelection.ERROR
-    ) -> None:
-        self.hass_api = hass_api
-        self.event_name = event_name
-        self.diagnostics = diagnostics
-        if diagnostics & OutcomeSelection.NONE:
-            pass
-        elif diagnostics & OutcomeSelection.ALL:
-            _LOGGER.info("SUPERNOTIFY archiving all notifications as %s events", event_name)
-        else:
-            if diagnostics & OutcomeSelection.SUCCESS:
-                _LOGGER.info("SUPERNOTIFY archiving successful notifications as %s events", event_name)
-            if diagnostics & OutcomeSelection.PARTIAL_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY archiving partial delivery notifications as %s events", event_name)
-
-            if diagnostics & OutcomeSelection.NO_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY archiving fallback notifications as %s events", event_name)
-            if diagnostics & OutcomeSelection.NO_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY archiving no delivery notifications as %s events", event_name)
-
-            if diagnostics & OutcomeSelection.ERROR:
-                _LOGGER.info("SUPERNOTIFY archiving error notifications as %s events", event_name)
-
-            if diagnostics & OutcomeSelection.DUPE:
-                _LOGGER.info("SUPERNOTIFY archiving dupe notifications as %s events", event_name)
-
-    async def archive(self, archive_object: ArchivableObject) -> bool:
-        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
-        self.hass_api.fire_event(self.event_name, payload)
-        return True
-
-
-class ArchiveTopic(ArchiveDestination):
-    def __init__(
-        self,
-        hass_api: HomeAssistantAPI,
-        topic: str,
-        qos: int = 0,
-        retain: bool = True,
-        diagnostics: OutcomeSelection = OutcomeSelection.ERROR,
-    ) -> None:
+class ArchiveTopic:
+    def __init__(self, hass_api: HomeAssistantAPI, topic: str, qos: int = 0, retain: bool = True, debug: bool = False) -> None:
         self.hass_api: HomeAssistantAPI = hass_api
         self.topic: str = topic
         self.qos: int = qos
         self.retain: bool = retain
-        self.diagnostics: OutcomeSelection = diagnostics
+        self.debug: bool = debug
         self.enabled: bool = False
 
     async def initialize(self) -> None:
@@ -124,12 +56,17 @@ class ArchiveTopic(ArchiveDestination):
             _LOGGER.info(f"SUPERNOTIFY Archiving to MQTT topic {self.topic}, qos {self.qos}, retain {self.retain}")
             self.enabled = True
         else:
-            _LOGGER.warning("SUPERNOTIFY MQTT not available at startup, archive topic disabled")
+            _LOGGER.warning(
+                "SUPERNOTIFY mqtt_topic configurato (%s) ma integrazione MQTT "
+                "non disponibile — archivio MQTT disabilitato. "
+                "Rimuovere mqtt_topic da archive.yaml oppure configurare MQTT in HA.",
+                self.topic
+            )
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
             return False
-        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
+        payload = archive_object.contents(minimal=not self.debug)
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
@@ -145,12 +82,12 @@ class ArchiveTopic(ArchiveDestination):
             return False
 
 
-class ArchiveDirectory(ArchiveDestination):
-    def __init__(self, path: str, purge_minute_interval: int, diagnostics: OutcomeSelection = OutcomeSelection.ERROR) -> None:
+class ArchiveDirectory:
+    def __init__(self, path: str, purge_minute_interval: int, debug: bool) -> None:
         self.configured_path: str = path
         self.archive_path: anyio.Path | None = None
         self.enabled: bool = False
-        self.diagnostics: OutcomeSelection = diagnostics
+        self.debug: bool = debug
         self.last_purge: dt.datetime | None = None
         self.purge_minute_interval: int = purge_minute_interval
 
@@ -177,24 +114,29 @@ class ArchiveDirectory(ArchiveDestination):
         archived: bool = False
 
         if self.enabled and self.archive_path:  # archive_path to assuage mypy
-            archive_filepath: anyio.Path | None = None
-            diagnostics: bool = archive_object.selected(self.diagnostics)
+            archive_path: str = ""
             try:
                 filename = f"{archive_object.base_filename()}.json"
-                archive_filepath = self.archive_path.joinpath(filename)
-                serialized: str = json.dumps(archive_object.contents(diagnostics=diagnostics), indent=2)
-                async with aiofiles.open(archive_filepath, mode="w") as file:
-                    await file.write(serialized)
-                _LOGGER.debug("SUPERNOTIFY Archived notification %s", await archive_filepath.absolute())
+                archive_path = str(self.archive_path.joinpath(filename))
+                data = archive_object.contents(minimal=not self.debug)
+                tmp_path = archive_path + ".tmp"
+                json_data = json.dumps(data, indent=2, default=str)
+                async with aiofiles.open(tmp_path, "w", encoding="utf-8") as f:
+                    await f.write(json_data)
+                await aiofiles.os.rename(tmp_path, archive_path)
+                _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
                 archived = True
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
-                if diagnostics and archive_filepath:
+                if self.debug:
                     try:
-                        serialized = json.dumps(archive_object.contents(diagnostics=False), indent=2)
-                        async with aiofiles.open(archive_filepath, mode="w") as file:
-                            await file.write(serialized)
-                        _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", await archive_filepath.absolute())
+                        data = archive_object.contents(minimal=not self.debug)
+                        tmp_path = archive_path + ".tmp"
+                        json_data = json.dumps(data, indent=2, default=str)
+                        async with aiofiles.open(tmp_path, "w", encoding='utf-8') as f:
+                            await f.write(json_data)
+                        await aiofiles.os.rename(tmp_path, archive_path)
+                        _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
                         archived = True
                     except Exception as e2:
                         _LOGGER.exception("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
@@ -246,10 +188,6 @@ class NotificationArchive:
         self.enabled = bool(config.get(CONF_ENABLED, False))
         self.archive_directory: ArchiveDirectory | None = None
         self.archive_topic: ArchiveTopic | None = None
-        self.event_archiver: EventArchiver | None = None
-        self.event_selection: OutcomeSelection = config.get(CONF_ARCHIVE_EVENT_SELECTION, OutcomeSelection.NONE)
-        self.diagnostics: OutcomeSelection = config.get(CONF_ARCHIVE_DIAGNOSTICS, OutcomeSelection.ERROR)
-        self.archive_event_name: str = config.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")
         self.configured_archive_path: str | None = config.get(CONF_ARCHIVE_PATH)
         self.archive_days = int(config.get(CONF_ARCHIVE_DAYS, ARCHIVE_DEFAULT_DAYS))
         self.mqtt_topic: str | None = config.get(CONF_ARCHIVE_MQTT_TOPIC)
@@ -267,15 +205,13 @@ class NotificationArchive:
             _LOGGER.warning("SUPERNOTIFY archive path not configured")
         else:
             self.archive_directory = ArchiveDirectory(
-                self.configured_archive_path, purge_minute_interval=self.purge_minute_interval, diagnostics=self.diagnostics
+                self.configured_archive_path, purge_minute_interval=self.purge_minute_interval, debug=self.debug
             )
             await self.archive_directory.initialize()
 
         if self.mqtt_topic is not None:
-            self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.diagnostics)
+            self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.debug)
             await self.archive_topic.initialize()
-
-        self.event_archiver = EventArchiver(self.hass_api, self.archive_event_name, self.diagnostics)
 
     async def size(self) -> int:
         return await self.archive_directory.size() if self.archive_directory else 0
@@ -292,7 +228,5 @@ class NotificationArchive:
         if self.archive_directory:
             if await self.archive_directory.archive(archive_object):
                 archived = True
-        if self.event_archiver and archive_object.selected(self.event_selection):
-            await self.event_archiver.archive(archive_object)
 
         return archived
