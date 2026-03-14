@@ -1070,6 +1070,18 @@
         ]
       },
       "default": []
+    },
+    "snooze": {
+      "type": "object",
+      "properties": {
+        "snooze_time": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3600
+        }
+      },
+      "required": [],
+      "default": {}
     }
   },
   "required": [
