@@ -2,7 +2,7 @@
 
 import re
 from collections.abc import Callable
-from enum import StrEnum
+from enum import IntFlag, StrEnum, auto
 
 import voluptuous as vol
 from homeassistant.components.notify import PLATFORM_SCHEMA
@@ -66,6 +66,9 @@ from .const import (
     CONF_ALT_CAMERA,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
+    CONF_ARCHIVE_DIAGNOSTICS_POLICY,
+    CONF_ARCHIVE_EVENT_NAME,
+    CONF_ARCHIVE_EVENT_POLICY,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
@@ -147,6 +150,38 @@ from .const import (
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
     TRANSPORT_VALUES,
 )
+
+
+class OutcomeSelection(IntFlag):
+    NONE = 0
+    SUCCESS = 1
+    NO_DELIVERY = 2
+    PARTIAL_DELIVERY = 4
+    FALLBACK_DELIVERY = 8
+    ERROR = 16
+    DUPE = 32
+
+
+def parse_event_policy(value: object) -> "OutcomeSelection":
+    if isinstance(value, OutcomeSelection):
+        return value
+    if isinstance(value, int):
+        return OutcomeSelection(value)
+    if isinstance(value, str):
+        result = OutcomeSelection.NONE
+        for part in value.split("|"):
+            result |= OutcomeSelection[part.strip()]
+        return result
+    raise vol.Invalid(f"expected OutcomeSelection, got {value!r}")
+
+
+class Outcome(StrEnum):
+    SUCCESS = auto()
+    NO_DELIVERY = auto()
+    PARTIAL_DELIVERY = auto()
+    FALLBACK_DELIVERY = auto()
+    ERROR = auto()
+    DUPE = auto()
 
 
 class SelectionRank(StrEnum):
@@ -362,7 +397,9 @@ MOBILE_ACTION_SCHEMA = vol.Schema(
 )
 
 
-ARCHIVE_SCHEMA = vol.Schema({
+ARCHIVE_SCHEMA =  vol.All(
+    cv.deprecated(key=CONF_DEBUG),  # deprecated v1.10.0
+    vol.Schema({
     vol.Optional(CONF_ARCHIVE_PATH): cv.path,
     vol.Optional(CONF_ENABLED, default=False): cv.boolean,
     vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
@@ -370,8 +407,12 @@ ARCHIVE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
     vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
     vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
+    vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
+    vol.Optional(CONF_ARCHIVE_EVENT_POLICY, default=OutcomeSelection.NONE): parse_event_policy,
+    vol.Optional(CONF_ARCHIVE_DIAGNOSTICS_POLICY, default=OutcomeSelection.ERROR): parse_event_policy,
     vol.Optional(CONF_DEBUG, default=False): cv.boolean,
 })
+)
 
 HOUSEKEEPING_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOUSEKEEPING_TIME, default="00:00:01"): cv.time,

@@ -24,6 +24,10 @@ A housekeeping job will run automatically each night to prune notifications olde
     Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app
     to search and browse the archived notifications.
 
+The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. 
+Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration
+for this is the same as for selecting [Event Generation](#event-generation).
+
 ## Example Configuration
 
 This example switches on both file system and MQTT topic archiving. Additional options (`mqtt_qos`, `mqtt_retain`) are available if needed to fine tune the MQTT publication.
@@ -38,6 +42,38 @@ notify:
       file_path: config/archive/supernotify
       mqtt_topic: notifications/supernotify
 ```
+
+## Event Generation
+
+HomeAssistant [events](https://www.home-assistant.io/docs/configuration/events/) can be generated for
+notifications, with the option of full debug tracing. These can be consumed by other HomeAssistant integrations
+and automations, including by [Remote Logger](https://remote-logger.rhizomatics.org.uk) which can be used to
+send them off to an OpenTelemetry or Syslog service.
+
+Event generation is switched on by setting `event_policy` to the combination of notification outcomes desired, otherwise
+it will default to `NONE`
+
+```yaml
+ archive:
+      event_name: supernotification # optional, defaults to `supernotification`
+      event_policy: NO_DELIVERY | BACKUP_DELIVERY | ERROR
+```
+
+The options for event policy selection are:
+
+| Policy Flag       | Usage                                                               |
+|-------------------|---------------------------------------------------------------------|
+| NONE              | Default, send no events. Flag ignored if other policies included    |
+| SUCCESS           | Sucessful delivery with no errors, skips or suppressions            |
+| NO_DELIVERY       | No deliveries made, with no errors                                  |
+| PARTIAL_DELIVERY  | Some deliveries made, others suppressed or skipped                  |
+| FALLBACK_DELIVERY | Fallback delivery made due to error or no other delivery applicable |
+| ERROR             | Notifications with at least one delivery error                      |
+| DUPE              | Notifications suppressed as duplicates                              |
+
+(These are the same options used for `diagnostics`)
+
+See the [Otel Event Recipe](../recipes/otel_events.md) for more.
 
 ## Example Notification
 

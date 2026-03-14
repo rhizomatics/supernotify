@@ -52,7 +52,7 @@ from .model import (
     TargetRequired,
 )
 from .people import Recipient
-from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA
+from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, Outcome
 
 if TYPE_CHECKING:
     from .people import PeopleRegistry
@@ -98,6 +98,7 @@ class Notification(ArchivableObject):
         self.skipped: int = 0
         self.failed: int = 0
         self.suppressed: int = 0
+        self.fallback: int = 0
         self.dupe: bool = False
         self.deliveries: dict[t_delivery_name, dict[t_outcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
         self._skip_reasons: list[SuppressionReason] = []
@@ -196,6 +197,19 @@ class Notification(ArchivableObject):
 
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
+
+    def outcome(self) -> Outcome:
+        if self.error_count > 0:
+            return Outcome.ERROR
+        if self.dupe:
+            return Outcome.DUPE
+        if not self.delivered:
+            return Outcome.NO_DELIVERY
+        if self.fallback:
+            return Outcome.FALLBACK_DELIVERY
+        if self.skipped:
+            return Outcome.PARTIAL_DELIVERY
+        return Outcome.SUCCESS
 
     def media_requirements(self, data: dict[str, Any]) -> dict[str, Any]:
         """If no media defined, look for iOS / Android actions that have media defined
@@ -374,6 +388,7 @@ class Notification(ArchivableObject):
                     )
                     if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
+                        self.fallback += 1
 
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
@@ -383,6 +398,7 @@ class Notification(ArchivableObject):
                     )
                     if delivery.name not in self.selected_deliveries:
                         await self.call_transport(delivery)
+                        self.fallback += 1
 
         return self.delivered > 0
 

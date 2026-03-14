@@ -78,7 +78,7 @@ class Snooze:
 class Snoozer:
     """Manage snoozing"""
 
-    def __init__(self, config: dict[str, Any]|None=None, people_registry: PeopleRegistry | None = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None, people_registry: PeopleRegistry | None = None) -> None:
         self.snoozes: dict[str, Snooze] = {}
         self.people_registry: PeopleRegistry | None = people_registry
         self.config = config or {}

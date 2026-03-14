@@ -41,7 +41,7 @@ Switch on debug mode for archiving, so a `debug_trace` is preserved with each no
     archive:
       file_path: /config/archive/supernotify
       file_retention_days: 3
-      debug: true
+      diagnostics: ERROR | PARTIAL_DELIVERY
 ```
 
 ## Implementation - Debug Service Calls

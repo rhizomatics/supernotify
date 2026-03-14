@@ -48,7 +48,7 @@ async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> Non
             },
             deliveries={"chime": {"transport": "chime"}},
             recipients=[],  # recipients will generate mock person_config data and break json
-            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_DEBUG: debug},
+            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
         )
         await uut.initialize()
         await uut.async_send_message(

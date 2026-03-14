@@ -248,7 +248,7 @@ class Target:
             return False
 
     def has_targets(self) -> bool:
-        return any(targets for category, targets in self.targets.items())
+        return any(targets for targets in self.targets.values())
 
     def has_resolved_target(self) -> bool:
         return any(targets for category, targets in self.targets.items() if category not in self.INDIRECT_CATEGORIES)

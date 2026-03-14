@@ -17,7 +17,9 @@ notify:
       mqtt_qos: 1
       mqtt_retain: False
       purge_interval: 60
-      debug: false
+      diagnostics: ERROR | PARTIAL_DELIVERY
+      event_name: supernotification
+      event_policy: NO_DELIVERY | FALLBACK_DELIVERY | PARTIAL_DELIVERY | ERROR
     housekeeping:
       media_storage_days: 7
       housekeeping_time: 00:00:00

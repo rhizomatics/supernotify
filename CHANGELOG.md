@@ -1,11 +1,17 @@
 # Public releases
 
+
 ## 1.10.0
 Includes Italian translations, fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 ### Configuration
 - New `snooze` config, with configurable default snooze time to replace hard coded 1 hour
 ### Templating
 - Extra data passed via notification now available on templates as `notification_data`
+### Archive
+- Can now send HomeAssistant events in the archiver, which also
+enables Syslog or OTLP event creation using [Remote Logger](https://remote-logger.rhizomatics.org.uk)
+- `debug` option replaced by `diagnostics` to automatically switch maximal archive messages on or off
+depending on notification outcome, using same policy as event selection
 ### Fixes
 - Deprecated and obsoleted icons replaced
 - Sanitizing messages for voice assistants now strips emojis and other weird unicode

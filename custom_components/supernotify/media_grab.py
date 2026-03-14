@@ -418,7 +418,7 @@ async def write_image_from_bitmap(
         if reprocess == ReprocessOption.ALWAYS:
             # rewrite to remove metadata, incl custom CCTV comments that confusie python MIMEImage
             clean_image: Image.Image = Image.new(image.mode, image.size)
-            clean_image.putdata(image.getdata()) # being removed in 2027
+            clean_image.putdata(image.getdata())  # being removed in 2027
             # clean_image.putdata(image.get_flattened_data()) # added in jan 2026
             image = clean_image
 
