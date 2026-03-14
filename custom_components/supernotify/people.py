@@ -17,8 +17,8 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.helpers import device_registry, entity_registry
-
-from . import (
+from .common import ensure_list
+from .const import (
     ATTR_ALIAS,
     ATTR_EMAIL,
     ATTR_ENABLED,
@@ -42,7 +42,6 @@ from . import (
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
 )
-from .common import ensure_list
 from .hass_api import DeviceInfo, HomeAssistantAPI
 from .model import DeliveryCustomization, Target
 
