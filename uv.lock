@@ -3154,7 +3154,7 @@ docs = [
     { name = "cairosvg", specifier = "~=2.6" },
     { name = "json-schema-for-humans" },
     { name = "mike" },
-    { name = "mkdocs" },
+    { name = "mkdocs", specifier = "<2.0.0" },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-coverage" },
     { name = "mkdocs-gen-files" },
