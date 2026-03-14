@@ -368,7 +368,7 @@ class Notification(ArchivableObject):
         if self.delivered == 0 and not self._suppression_reason:
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
-                    _LOGGER.warning(
+                    _LOGGER.info(
                         "SUPERNOTIFY no delivery succeeded, activating fallback_by_default: %s",
                         delivery.name,
                     )
@@ -425,7 +425,7 @@ class Notification(ArchivableObject):
                         _LOGGER.info(
                             "SUPERNOTIFY No delivery for %s (targets: %s)",
                             delivery.name,
-                            envelope.target.as_dict() if envelope.target else "none",
+                            envelope.target.as_dict() if envelope.target else "NONE",
                         )
                     self.record_result(delivery, envelope)
                 except Exception as e2:

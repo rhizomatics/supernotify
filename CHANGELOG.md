@@ -8,6 +8,8 @@ Includes Italian translations, fixes and improvements contributed by [@lollox80]
 - Extra data passed via notification now available on templates as `notification_data`
 ### Fixes
 - Deprecated and obsoleted icons replaced
+- Sanitizing messages for voice assistants now strips emojis and other weird unicode
+- Archive writing now async
 ## 1.9.4
 ### Internal
 - `__init__.py` refactored into `schema.py` and `const.py`
