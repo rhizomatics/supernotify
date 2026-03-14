@@ -259,6 +259,9 @@ CONF_DEVICE_DOMAIN: Final[str] = OPTION_DEVICE_DOMAIN
 CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
 CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
 
+CONF_SNOOZE = "snooze"
+CONF_SNOOZE_TIME = "snooze_time"
+
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
 # May need condition, and also enabled if delivery disabled
 # CONF_OCCUPANCY="occupancy"

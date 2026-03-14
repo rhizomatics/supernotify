@@ -1,5 +1,13 @@
 # Public releases
 
+## 1.10.0
+Includes Italian translations, fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
+### Configuration
+- New `snooze` config, with configurable default snooze time to replace hard coded 1 hour
+### Templating
+- Extra data passed via notification now available on templates as `notification_data`
+### Fixes
+- Deprecated and obsoleted icons replaced
 ## 1.9.4
 ### Internal
 - `__init__.py` refactored into `schema.py` and `const.py`

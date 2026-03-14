@@ -1,4 +1,3 @@
-import asyncio
 import datetime as dt
 import logging
 from abc import abstractmethod
@@ -13,7 +12,7 @@ from homeassistant.const import (
     CONF_ENABLED,
 )
 from homeassistant.helpers import condition as condition
-from homeassistant.helpers.json import save_json
+from homeassistant.helpers.json import prepare_save_json
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -114,18 +113,18 @@ class ArchiveDirectory:
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_path = str(self.archive_path.joinpath(filename))
-                loop = asyncio.get_running_loop()
-                data = archive_object.contents(minimal=not self.debug)
-                await loop.run_in_executor(None, save_json, archive_path, data)
+                mode, serialized = prepare_save_json(archive_object.contents(minimal=not self.debug))
+                async with aiofiles.open(archive_path, mode) as file:
+                     await file.write(serialized)
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
                 archived = True
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
-                if self.debug:
+                if self.debug and archive_path:
                     try:
-                        loop = asyncio.get_running_loop()
-                        data = archive_object.contents(minimal=not self.debug)
-                        await loop.run_in_executor(None, save_json, archive_path, data)
+                        mode, serialized = prepare_save_json(archive_object.contents(minimal=True))
+                        async with aiofiles.open(archive_path, mode) as file:
+                            await file.write(serialized)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
                         archived = True
                     except Exception as e2:

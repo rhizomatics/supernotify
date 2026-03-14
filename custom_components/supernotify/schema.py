@@ -112,6 +112,8 @@ from .const import (
     CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_SIZE,
+    CONF_SNOOZE,
+    CONF_SNOOZE_TIME,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
     CONF_TEMPLATE,
@@ -220,6 +222,10 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
+SNOOZE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_SNOOZE_TIME, default=60 * 60): cv.positive_int
+
+})
 
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
     # defaults set in model.DeliveryConfig
@@ -390,6 +396,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     ),
     vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
     vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
+    vol.Optional(CONF_SNOOZE, default=dict): SNOOZE_SCHEMA
 })
 SUPERNOTIFY_SCHEMA = PLATFORM_SCHEMA
 

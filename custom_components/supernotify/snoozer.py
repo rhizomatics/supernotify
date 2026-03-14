@@ -6,18 +6,11 @@ from typing import Any
 from homeassistant.core import Event
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_ACTION,
-    ATTR_MOBILE_APP_ID,
-    ATTR_PERSON_ID,
-    PRIORITY_CRITICAL,
-    PRIORITY_MEDIUM,
-)
+from .const import ATTR_ACTION, ATTR_MOBILE_APP_ID, ATTR_PERSON_ID, CONF_SNOOZE_TIME, PRIORITY_CRITICAL, PRIORITY_MEDIUM
 from .delivery import Delivery
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
 from .people import PeopleRegistry, Recipient
 
-SNOOZE_TIME = timedelta(hours=1)  # TODO: move to configuration
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -85,12 +78,11 @@ class Snooze:
 class Snoozer:
     """Manage snoozing"""
 
-    def __init__(self, people_registry: PeopleRegistry | None = None, default_snooze_hours: int | None = None) -> None:
+    def __init__(self, config: dict[str, Any]|None=None, people_registry: PeopleRegistry | None = None) -> None:
         self.snoozes: dict[str, Snooze] = {}
         self.people_registry: PeopleRegistry | None = people_registry
-        if default_snooze_hours is not None:
-            global SNOOZE_TIME
-            SNOOZE_TIME = timedelta(hours=default_snooze_hours)
+        self.config = config or {}
+        self.snooze_period = timedelta(seconds=self.config.get(CONF_SNOOZE_TIME, 60 * 60))
 
     def handle_command_event(self, event: Event, people: list[Recipient] | None = None) -> None:
         people = people or []
@@ -98,7 +90,7 @@ class Snoozer:
             cmd: CommandType
             target_type: TargetType | None = None
             target: str | None = None
-            snooze_for: timedelta = SNOOZE_TIME
+            snooze_for: timedelta = self.snooze_period
             recipient_type: RecipientType | None = None
             event_name = event.data.get(ATTR_ACTION)
 
@@ -124,10 +116,10 @@ class Snoozer:
             if event_parts[3] in QualifiedTargetType and len(event_parts) > 4:
                 target_type = QualifiedTargetType[event_parts[3]]
                 target = event_parts[4]
-                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 6 else SNOOZE_TIME
+                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 6 else self.snooze_period
             elif event_parts[3] in GlobalTargetType and len(event_parts) >= 4:
                 target_type = GlobalTargetType[event_parts[3]]
-                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 5 else SNOOZE_TIME
+                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 5 else self.snooze_period
 
             if cmd is None or target_type is None or recipient_type is None:
                 _LOGGER.warning("SUPERNOTIFY Invalid mobile event name %s", event_name)

@@ -74,9 +74,9 @@ async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> Non
             assert reobj["enabled_scenarios"] == ["alarming", "critical"]
 
 
-async def test_file_archive(mock_hass_api: HomeAssistantAPI) -> None:
+async def test_file_archive(hass_api: HomeAssistantAPI) -> None:
     with tempfile.TemporaryDirectory() as archive:
-        uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, mock_hass_api)
+        uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, hass_api)
         await uut.initialize()
         msg = ArchiveCrashDummy()
         assert await uut.archive(msg)

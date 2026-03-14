@@ -22,6 +22,7 @@ automatically available:
 | required_scenarios    | Scenarios a notification mandates to be enabled or else suppressed | `[]`     |
 | constrain_scenarios   | Restricted list of scenarios                                       | `[]`     |
 | occupancy             | One or more occupancy states, e.g. ALL_HOME, LONE_HOME             | `{}`     |
+| notification_data     | Additional `data` passed on notification action call               | `{}`     |
 
 These recipes demonstrate how the template variables can be used:
 
