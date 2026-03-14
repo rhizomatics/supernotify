@@ -1,0 +1,52 @@
+{
+    "title": "Supernotify",
+    "services": {
+        "reload": {
+            "name": "[%key:common::action::reload%]",
+            "description": "Ricarica i servizi di Supernotify."
+        },
+        "enquire_deliveries_by_scenario": {
+            "name": "Mostra Consegne per Scenario",
+            "description": "Strumento di debug per visualizzare la lista delle consegne per ogni scenario, incluso l'utilizzo predefinito."
+        }
+    },
+    "config": {
+        "step": {
+            "user": {
+                "title": "Ambiente",
+                "data": {
+                    "template_path": "Percorso Template",
+                    "media_path": "Percorso Media",
+                    "archive_path": "Percorso Archivio"
+                },
+                "data_description": {
+                    "template_path": "Percorso opzionale in cui si trovano i template Jinja2 per le email HTML",
+                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
+                    "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug della configurazione, degli scenari ecc."
+                }
+            }
+        }
+    },
+    "issues": {
+        "scenario_delivery": {
+            "title": "Consegna non valida per lo Scenario",
+            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di Supernotify."
+        },
+        "scenario_action_group": {
+            "title": "Gruppo Azione Mobile non valido per lo Scenario",
+            "description": "La definizione dello scenario {scenario} fa riferimento a un gruppo di azioni {action_group} che non esiste nella configurazione di Supernotify."
+        },
+        "scenario_condition": {
+            "title": "Condizione non valida per lo Scenario",
+            "description": "La definizione dello scenario {scenario} contiene una condizione che non può essere valutata da Home Assistant."
+        },
+        "delivery_unknown_transport": {
+            "title": "Trasporto sconosciuto per la Consegna",
+            "description": "La configurazione della consegna {delivery} fa riferimento a un trasporto {transport} non fornito da SuperNotify."
+        },
+        "media_path": {
+            "title": "Percorso Media non utilizzabile",
+            "description": "È stato fornito un percorso ({path}) per la conservazione dei file multimediali come le istantanee delle telecamere durante le notifiche, ma non può essere utilizzato (errore: {error})."
+        }
+    }
+}
