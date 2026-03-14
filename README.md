@@ -121,6 +121,8 @@ You can however do a lot with only 2 lines of copy-paste config, using the [exam
 
 - [updates2mqtt](https://updates2mqtt.rhizomatics.org.uk) - Automatically update self-hosted Docker containers via Home Assistant's Updates UI, or any other MQTT consumer
 - [AutoArm](https://autoarm.rhizomatics.org.uk) - Automate state transitions for Home Assistant alarm control panels
+- [ANPR2MQTT](https://anpr2mqtt.rhizomatics.org.uk) - Integrate with ANPR or face detection cameras via the file system, with image analysis and DVLA integration
+- [Remote Logger](https://remote-logger.rhizomatics.org.uk) - Log Home Assistant system log and optionally other events to Syslog or OpenTelemetry (OTEL OTLP)
 - [awesome-mqtt](https://github.com/rhizomatics/awesome-mqtt) -  Curated list of MQTT resources
 
 
