@@ -576,7 +576,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_UNKNOWN,
                 attributes=sanitize(scenario.attributes(include_condition=False)),
                 original_name=f"{scenario.name} Scenario",
-                original_icon="mdi:assignment",
+                original_icon="mdi:clipboard-text",
                 entity_registry=ent_reg,
             )
         for transport in self.context.delivery_registry.transports.values():
@@ -585,7 +585,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if transport.enabled else STATE_OFF,
                 attributes=sanitize(transport.attributes()),
                 original_name=f"{transport.name} Transport Adaptor",
-                original_icon="mdi:delivery-truck-speed",
+                original_icon="mdi:truck-fast",
                 entity_registry=ent_reg,
             )
 
@@ -595,7 +595,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=sanitize(delivery.attributes()),
                 original_name=f"{delivery.name} Delivery Configuration",
-                original_icon="mdi:package_2",
+                original_icon="mdi:package_variant",
                 entity_registry=ent_reg,
             )
 
@@ -605,7 +605,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if recipient.enabled else STATE_OFF,
                 attributes=sanitize(recipient.attributes()),
                 original_name=f"{recipient.name}",
-                original_icon="mdi:inbox_text_person",
+                original_icon="mdi:account-arrow-left",
                 entity_registry=ent_reg,
             )
 

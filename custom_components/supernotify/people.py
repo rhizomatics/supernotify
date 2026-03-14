@@ -59,7 +59,7 @@ class Recipient:
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_name = "Recipient"
-    _attr_icon = "mdi:inbox_text_person"
+    _attr_icon = "account-arrow-left"
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}

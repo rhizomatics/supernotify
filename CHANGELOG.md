@@ -16,6 +16,7 @@ depending on notification outcome, using same policy as event selection
 - Deprecated and obsoleted icons replaced
 - Sanitizing messages for voice assistants now strips emojis and other weird unicode
 - Archive writing now async
+- Corrected MDI icons for developer tools view
 ## 1.9.4
 ### Internal
 - `__init__.py` refactored into `schema.py` and `const.py`
