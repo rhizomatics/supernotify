@@ -3123,7 +3123,7 @@ requires-dist = [
     { name = "aiofiles" },
     { name = "bs4" },
     { name = "cachetools" },
-    { name = "homeassistant", specifier = ">=2026.3.1" },
+    { name = "homeassistant", specifier = ">=2026.3.0" },
 ]
 
 [package.metadata.requires-dev]
