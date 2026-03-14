@@ -66,9 +66,9 @@ from .const import (
     CONF_ALT_CAMERA,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
-    CONF_ARCHIVE_DIAGNOSTICS_POLICY,
+    CONF_ARCHIVE_DIAGNOSTICS,
     CONF_ARCHIVE_EVENT_NAME,
-    CONF_ARCHIVE_EVENT_POLICY,
+    CONF_ARCHIVE_EVENT_SELECTION,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
@@ -160,6 +160,7 @@ class OutcomeSelection(IntFlag):
     FALLBACK_DELIVERY = 8
     ERROR = 16
     DUPE = 32
+    ALL = 65536
 
 
 def parse_event_policy(value: object) -> "OutcomeSelection":
@@ -397,7 +398,7 @@ MOBILE_ACTION_SCHEMA = vol.Schema(
 )
 
 
-ARCHIVE_SCHEMA =  vol.All(
+ARCHIVE_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEBUG),  # deprecated v1.10.0
     vol.Schema({
     vol.Optional(CONF_ARCHIVE_PATH): cv.path,
@@ -408,8 +409,8 @@ ARCHIVE_SCHEMA =  vol.All(
     vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
     vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
     vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
-    vol.Optional(CONF_ARCHIVE_EVENT_POLICY, default=OutcomeSelection.NONE): parse_event_policy,
-    vol.Optional(CONF_ARCHIVE_DIAGNOSTICS_POLICY, default=OutcomeSelection.ERROR): parse_event_policy,
+    vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=OutcomeSelection.NONE): parse_event_policy,
+    vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=OutcomeSelection.ERROR): parse_event_policy,
     vol.Optional(CONF_DEBUG, default=False): cv.boolean,
 })
 )

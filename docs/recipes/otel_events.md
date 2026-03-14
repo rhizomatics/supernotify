@@ -26,7 +26,7 @@ deliveries are ignored.
 
 ```yaml title="supernotify config"
     archive:
-      event_policy: NO_DELIVERY | BACKUP_DELIVERY | ERROR
+      event_selection: NO_DELIVERY | BACKUP_DELIVERY | ERROR
 ```
 
 ### 2. Configure Remote Logger

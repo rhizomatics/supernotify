@@ -506,8 +506,9 @@ class Notification(ArchivableObject):
             self.deliveries[delivery_name][KEY_SKIPPED] = skip_summary
             self.skipped += 1
 
-    def contents(self, minimal: bool = False, **_kwargs: Any) -> dict[str, Any]:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
+        minimal = not diagnostics
         object_refs = ["context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
         debug_only = ["debug_trace"]

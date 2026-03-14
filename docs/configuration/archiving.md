@@ -50,20 +50,21 @@ notifications, with the option of full debug tracing. These can be consumed by o
 and automations, including by [Remote Logger](https://remote-logger.rhizomatics.org.uk) which can be used to
 send them off to an OpenTelemetry or Syslog service.
 
-Event generation is switched on by setting `event_policy` to the combination of notification outcomes desired, otherwise
+Event generation is switched on by setting `event_selection` to the combination of notification outcomes desired, otherwise
 it will default to `NONE`
 
 ```yaml
  archive:
       event_name: supernotification # optional, defaults to `supernotification`
-      event_policy: NO_DELIVERY | BACKUP_DELIVERY | ERROR
+      event_selection: NO_DELIVERY | BACKUP_DELIVERY | ERROR
 ```
 
 The options for event policy selection are:
 
 | Policy Flag       | Usage                                                               |
 |-------------------|---------------------------------------------------------------------|
-| NONE              | Default, send no events. Flag ignored if other policies included    |
+| NONE              | Default, send no events. All other flags ignored if set             |
+| ALL               | Default, send all events. All other flags ignored if set            |
 | SUCCESS           | Sucessful delivery with no errors, skips or suppressions            |
 | NO_DELIVERY       | No deliveries made, with no errors                                  |
 | PARTIAL_DELIVERY  | Some deliveries made, others suppressed or skipped                  |

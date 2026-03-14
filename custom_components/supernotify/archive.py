@@ -19,9 +19,9 @@ from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 from .const import (
     CONF_ARCHIVE_DAYS,
-    CONF_ARCHIVE_DIAGNOSTICS_POLICY,
+    CONF_ARCHIVE_DIAGNOSTICS,
     CONF_ARCHIVE_EVENT_NAME,
-    CONF_ARCHIVE_EVENT_POLICY,
+    CONF_ARCHIVE_EVENT_SELECTION,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
@@ -43,21 +43,24 @@ class ArchivableObject:
         pass
 
     @abstractmethod
-    def contents(self, minimal: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
         pass
 
     @abstractmethod
     def outcome(self) -> Outcome:
         pass
 
-    def selected(self,outcome_policy:OutcomeSelection)->bool:
-        return (
-            (outcome_policy | OutcomeSelection.SUCCESS and self.outcome == Outcome.SUCCESS)
-            or (outcome_policy | OutcomeSelection.NO_DELIVERY and self.outcome == Outcome.NO_DELIVERY)
-            or (outcome_policy | OutcomeSelection.PARTIAL_DELIVERY and self.outcome == Outcome.PARTIAL_DELIVERY)
-            or (outcome_policy | OutcomeSelection.DUPE and self.outcome == Outcome.DUPE)
-            or (outcome_policy | OutcomeSelection.FALLBACK_DELIVERY and self.outcome == Outcome.FALLBACK_DELIVERY)
-            or (outcome_policy | OutcomeSelection.ERROR and self.outcome == Outcome.ERROR)
+    def selected(self, outcome_policy: OutcomeSelection) -> bool:
+        if outcome_policy & OutcomeSelection.NONE:
+            return False
+        return bool(
+            outcome_policy & OutcomeSelection.ALL
+            or (outcome_policy & OutcomeSelection.SUCCESS and self.outcome() == Outcome.SUCCESS)
+            or (outcome_policy & OutcomeSelection.NO_DELIVERY and self.outcome() == Outcome.NO_DELIVERY)
+            or (outcome_policy & OutcomeSelection.PARTIAL_DELIVERY and self.outcome() == Outcome.PARTIAL_DELIVERY)
+            or (outcome_policy & OutcomeSelection.DUPE and self.outcome() == Outcome.DUPE)
+            or (outcome_policy & OutcomeSelection.FALLBACK_DELIVERY and self.outcome() == Outcome.FALLBACK_DELIVERY)
+            or (outcome_policy & OutcomeSelection.ERROR and self.outcome() == Outcome.ERROR)
         )
 
 
@@ -68,18 +71,27 @@ class ArchiveDestination:
 
 
 class ArchiveEvent(ArchiveDestination):
-    def __init__(self, hass_api: HomeAssistantAPI, event_name: str, diagnostics: OutcomeSelection = OutcomeSelection.ERROR) -> None:
+    def __init__(
+        self, hass_api: HomeAssistantAPI, event_name: str, diagnostics: OutcomeSelection = OutcomeSelection.ERROR
+    ) -> None:
         self.hass_api = hass_api
         self.event_name = event_name
         self.diagnostics = diagnostics
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
-        payload = archive_object.contents(minimal=archive_object.selected(self.diagnostics))
+        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
         self.hass_api.fire_event(self.event_name, payload)
 
 
 class ArchiveTopic(ArchiveDestination):
-    def __init__(self, hass_api: HomeAssistantAPI, topic: str, qos: int = 0, retain: bool = True, diagnostics: OutcomeSelection = OutcomeSelection.ERROR) -> None:
+    def __init__(
+        self,
+        hass_api: HomeAssistantAPI,
+        topic: str,
+        qos: int = 0,
+        retain: bool = True,
+        diagnostics: OutcomeSelection = OutcomeSelection.ERROR,
+    ) -> None:
         self.hass_api: HomeAssistantAPI = hass_api
         self.topic: str = topic
         self.qos: int = qos
@@ -97,7 +109,7 @@ class ArchiveTopic(ArchiveDestination):
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
             return False
-        payload = archive_object.contents(minimal=archive_object.selected(self.diagnostics))
+        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
@@ -149,7 +161,7 @@ class ArchiveDirectory(ArchiveDestination):
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_path = str(self.archive_path.joinpath(filename))
-                mode, serialized = prepare_save_json(minimal=archive_object.selected(self.diagnostics))
+                mode, serialized = prepare_save_json(archive_object.contents(diagnostics=archive_object.selected(self.diagnostics)))
                 async with aiofiles.open(archive_path, mode) as file:
                     await file.write(serialized)
                 _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
@@ -158,7 +170,7 @@ class ArchiveDirectory(ArchiveDestination):
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
                 if self.debug and archive_path:
                     try:
-                        mode, serialized = prepare_save_json(archive_object.contents(minimal=True))
+                        mode, serialized = prepare_save_json(archive_object.contents(diagnostics=False))
                         async with aiofiles.open(archive_path, mode) as file:
                             await file.write(serialized)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
@@ -214,8 +226,8 @@ class NotificationArchive:
         self.archive_directory: ArchiveDirectory | None = None
         self.archive_topic: ArchiveTopic | None = None
         self.event_archiver: ArchiveEvent | None = None
-        self.event_policy: OutcomeSelection = config.get(CONF_ARCHIVE_EVENT_POLICY, OutcomeSelection.NONE)
-        self.diagnostics: OutcomeSelection = config.get(CONF_ARCHIVE_DIAGNOSTICS_POLICY, OutcomeSelection.ERROR)
+        self.event_selection: OutcomeSelection = config.get(CONF_ARCHIVE_EVENT_SELECTION, OutcomeSelection.NONE)
+        self.diagnostics: OutcomeSelection = config.get(CONF_ARCHIVE_DIAGNOSTICS, OutcomeSelection.ERROR)
         self.archive_event_name: str = config.get(CONF_ARCHIVE_EVENT_NAME)
         self.configured_archive_path: str | None = config.get(CONF_ARCHIVE_PATH)
         self.archive_days = int(config.get(CONF_ARCHIVE_DAYS, ARCHIVE_DEFAULT_DAYS))
@@ -259,7 +271,7 @@ class NotificationArchive:
         if self.archive_directory:
             if await self.archive_directory.archive(archive_object):
                 archived = True
-        if archive_object.selected(self.event_policy):
+        if archive_object.selected(self.event_selection):
             self.event_archiver.archive(archive_object)
 
         return archived

@@ -8,15 +8,13 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiofiles
 import anyio
 import pytest
-from homeassistant.const import (
-    CONF_DEBUG,
-    CONF_ENABLED,
-)
+from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
 from custom_components.supernotify.const import (
     CONF_ARCHIVE_DAYS,
+    CONF_ARCHIVE_DIAGNOSTICS,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
@@ -24,7 +22,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notify import SupernotifyAction
-from custom_components.supernotify.schema import SCENARIO_SCHEMA
+from custom_components.supernotify.schema import SCENARIO_SCHEMA, OutcomeSelection
 
 
 class ArchiveCrashDummy(ArchivableObject):
@@ -35,8 +33,12 @@ class ArchiveCrashDummy(ArchivableObject):
         return "testing"
 
 
-@pytest.mark.parametrize(argnames="debug", argvalues=[True, False], ids=["debug", "non_debug"])
-async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> None:
+@pytest.mark.parametrize(
+    argnames="diagnostics",
+    argvalues=[OutcomeSelection.NONE, OutcomeSelection.ALL],
+    ids=["normal", "trace"],
+)
+async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: OutcomeSelection) -> None:
     with tempfile.TemporaryDirectory() as archive:
         uut = SupernotifyAction(
             mock_hass,
@@ -48,7 +50,7 @@ async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> Non
             },
             deliveries={"chime": {"transport": "chime"}},
             recipients=[],  # recipients will generate mock person_config data and break json
-            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
+            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DIAGNOSTICS: diagnostics},
         )
         await uut.initialize()
         await uut.async_send_message(
@@ -68,10 +70,10 @@ async def test_integration_archive(mock_hass: HomeAssistant, debug: bool) -> Non
                     uut.last_notification.deliveries[delivery_name].get(outcome, [])
                 )
 
-        if debug:
-            assert reobj["enabled_scenarios"]["alarming"]["enabled"]
-        else:
+        if diagnostics == OutcomeSelection.NONE:
             assert reobj["enabled_scenarios"] == ["alarming", "critical"]
+        else:
+            assert reobj["enabled_scenarios"]["alarming"]["enabled"]
 
 
 async def test_file_archive(hass_api: HomeAssistantAPI) -> None:
