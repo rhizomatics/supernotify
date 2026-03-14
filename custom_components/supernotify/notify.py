@@ -27,10 +27,7 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
-from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker, sanitize
-from .const import (
+from . import (
     ATTR_ACTION,
     ATTR_DATA,
     CONF_ACTION_GROUPS,
@@ -41,6 +38,7 @@ from .const import (
     CONF_DUPE_CHECK,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
+    CONF_SNOOZE_HOURS,
     CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
@@ -50,8 +48,13 @@ from .const import (
     CONF_SCENARIOS,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
+    DOMAIN,
+    PLATFORMS,
     PRIORITY_MEDIUM,
 )
+from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
+from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
+from .common import DupeChecker, sanitize
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
@@ -60,7 +63,6 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
-from .schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .snoozer import Snoozer
 from .transport import Transport
 from .transports.alexa_devices import AlexaDevicesTransport
@@ -82,8 +84,6 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
-
-SNOOZE_TIME = 60 * 60  # TODO: move to configuration
 
 TRANSPORTS: list[type[Transport]] = [
     EmailTransport,
@@ -356,7 +356,7 @@ class SupernotifyAction(BaseNotificationService):
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
             MediaStorage(media_path, self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7)),
-            Snoozer(),
+            Snoozer(default_snooze_hours=self.housekeeping.get(CONF_SNOOZE_HOURS, 1)),
             links or [],
             recipients or [],
             mobile_actions,
@@ -571,10 +571,10 @@ class SupernotifyAction(BaseNotificationService):
         for scenario in self.context.scenario_registry.scenarios.values():
             self.expose_entity(
                 f"scenario_{scenario.name}",
-                state=STATE_UNKNOWN,
+                state=STATE_ON if scenario.enabled else STATE_OFF,
                 attributes=sanitize(scenario.attributes(include_condition=False)),
                 original_name=f"{scenario.name} Scenario",
-                original_icon="mdi:assignment",
+                original_icon="mdi:clipboard-text",
                 entity_registry=ent_reg,
             )
         for transport in self.context.delivery_registry.transports.values():
@@ -583,7 +583,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if transport.enabled else STATE_OFF,
                 attributes=sanitize(transport.attributes()),
                 original_name=f"{transport.name} Transport Adaptor",
-                original_icon="mdi:delivery-truck-speed",
+                original_icon="mdi:truck-fast",
                 entity_registry=ent_reg,
             )
 
@@ -593,7 +593,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=sanitize(delivery.attributes()),
                 original_name=f"{delivery.name} Delivery Configuration",
-                original_icon="mdi:package_2",
+                original_icon="mdi:package-variant",
                 entity_registry=ent_reg,
             )
 
@@ -603,7 +603,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if recipient.enabled else STATE_OFF,
                 attributes=sanitize(recipient.attributes()),
                 original_name=f"{recipient.name}",
-                original_icon="mdi:inbox_text_person",
+                original_icon="mdi:account-arrow-left",
                 entity_registry=ent_reg,
             )
 
