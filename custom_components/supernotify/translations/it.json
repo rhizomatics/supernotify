@@ -7,7 +7,7 @@
         },
         "enquire_deliveries_by_scenario": {
             "name": "Richiedi Consegne per Scenario",
-            "description": "Assistente di debug per mostrare l'elenco delle consegne per ogni scenario, incluso l'utilizzo predefinito"
+            "description": "Strumento di debug per visualizzare la lista delle consegne per ogni scenario, incluso l'utilizzo predefinito."
         }
     },
     "config": {
@@ -21,7 +21,7 @@
                 },
                 "data_description": {
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
-                    "media_path": "Percorso di archiviazione per i media creati durante le notifiche, ad esempio snapshot della telecamera per gli allegati",
+                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
                     "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc."
                 }
             }
