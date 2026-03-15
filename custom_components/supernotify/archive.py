@@ -294,6 +294,6 @@ class NotificationArchive:
             if await self.archive_directory.archive(archive_object):
                 archived = True
         if archive_object.selected(self.event_selection):
-            self.event_archiver.archive(archive_object)
+            await self.event_archiver.archive(archive_object)
 
         return archived
