@@ -65,7 +65,7 @@ The options for event policy selection are:
 |-------------------|---------------------------------------------------------------------|
 | NONE              | Default, send no events. All other flags ignored if set             |
 | ALL               | Default, send all events. All other flags ignored if set            |
-| SUCCESS           | Sucessful delivery with no errors, skips or suppressions            |
+| SUCCESS           | Successful delivery with no errors, skips or suppressions            |
 | NO_DELIVERY       | No deliveries made, with no errors                                  |
 | PARTIAL_DELIVERY  | Some deliveries made, others suppressed or skipped                  |
 | FALLBACK_DELIVERY | Fallback delivery made due to error or no other delivery applicable |
