@@ -144,9 +144,13 @@ def mock_delivery_registry() -> DeliveryRegistry:
 
 
 @pytest.fixture
-def hass_api(hass: HomeAssistant, sample_image: TestImage) -> HomeAssistantAPI:
+def hass_api(hass: HomeAssistant) -> HomeAssistantAPI:
+    return HomeAssistantAPI(hass)
+
+
+@pytest.fixture
+def hass_api_with_image(hass_api: HomeAssistantAPI, sample_image: TestImage) -> HomeAssistantAPI:
     image_entity = MockImageEntity(sample_image.path)
-    hass_api = HomeAssistantAPI(hass)
     hass_api._hass.data["image"] = Mock(spec=EntityComponent)  # type: ignore[attr-defined,union-attr]
     hass_api._hass.data["image"].get_entity = Mock(return_value=image_entity)  # type: ignore[attr-defined,union-attr]
     return hass_api

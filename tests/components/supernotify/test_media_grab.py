@@ -147,11 +147,11 @@ async def test_snap_camera(unmocked_hass_api, reprocess: ReprocessOption, tmp_pa
 
 
 async def test_snap_image_entity(
-    hass_api: HomeAssistantAPI, sample_image_entity_id: str, sample_image: TestImage, tmp_path: Path
+    hass_api_with_image: HomeAssistantAPI, sample_image_entity_id: str, sample_image: TestImage, tmp_path: Path
 ) -> None:
 
     snap_image_path = await snap_image_entity(
-        hass_api, sample_image_entity_id, media_path=anyio.Path(tmp_path), notification_id="notify_001"
+        hass_api_with_image, sample_image_entity_id, media_path=anyio.Path(tmp_path), notification_id="notify_001"
     )
     assert snap_image_path is not None
     retrieved_image = Image.open(str(snap_image_path))
