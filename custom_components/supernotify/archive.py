@@ -77,8 +77,26 @@ class EventArchiver(ArchiveDestination):
         self.hass_api = hass_api
         self.event_name = event_name
         self.diagnostics = diagnostics
-        if diagnostics != OutcomeSelection.NONE:
-            _LOGGER.info("SUPERNOTIFY archiving notifications to Home Assistant events as %s", event_name)
+        if diagnostics & OutcomeSelection.NONE:
+            pass
+        elif diagnostics & OutcomeSelection.ALL:
+            _LOGGER.info("SUPERNOTIFY archiving all notifications as %s events", event_name)
+        else:
+            if diagnostics & OutcomeSelection.SUCCESS:
+                _LOGGER.info("SUPERNOTIFY archiving successful notifications as %s events", event_name)
+            if diagnostics & OutcomeSelection.PARTIAL_DELIVERY:
+                _LOGGER.info("SUPERNOTIFY archiving partial delivery notifications as %s events", event_name)
+
+            if diagnostics & OutcomeSelection.NO_DELIVERY:
+                _LOGGER.info("SUPERNOTIFY archiving fallback notifications as %s events", event_name)
+            if diagnostics & OutcomeSelection.NO_DELIVERY:
+                _LOGGER.info("SUPERNOTIFY archiving no delivery notifications as %s events", event_name)
+
+            if diagnostics & OutcomeSelection.ERROR:
+                _LOGGER.info("SUPERNOTIFY archiving error notifications as %s events", event_name)
+
+            if diagnostics & OutcomeSelection.DUPE:
+                _LOGGER.info("SUPERNOTIFY archiving dupe notifications as %s events", event_name)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
