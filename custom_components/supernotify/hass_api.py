@@ -198,8 +198,8 @@ class HomeAssistantAPI:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
         return self._hass.async_add_executor_job(func, *args)
 
-    def fire_event(self, event_name: str, event_data: {}) -> None:
-        self.hass.bus.async_fire(event_name, event_data)
+    def fire_event(self, event_name: str, event_data: dict[str, Any] | None = None) -> None:
+        self._hass.bus.async_fire(event_name, event_data)
 
     async def call_service(
         self,
