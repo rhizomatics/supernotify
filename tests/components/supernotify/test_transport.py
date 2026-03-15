@@ -112,7 +112,7 @@ async def test_common_features(mock_hass: HomeAssistant, mock_hass_api: HomeAssi
     ctx = TestingContext(homeassistant=mock_hass)
     await ctx.test_initialize()
 
-    transport = transport_type(ctx, {})
+    transport = transport_type(ctx, {})  # type: ignore[operator]
     assert isinstance(transport.supported_features, TransportFeature)
     assert isinstance(transport.setup_delivery_options({}, "testing"), dict)
     assert isinstance(transport.extra_attributes(), dict)

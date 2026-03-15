@@ -1,6 +1,7 @@
 # Public releases
 
-
+## 1.10.1
+- Lint and type fixes
 ## 1.10.0
 Includes Italian translations, fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 ### Configuration

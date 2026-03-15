@@ -601,7 +601,7 @@ class ConditionVariables:
             "notification_title": self.notification_title,
             "notification_priority": self.notification_priority,
             "occupancy": self.occupancy,
-            "notification_data": self.notification_data
+            "notification_data": self.notification_data,
         }
 
 

@@ -26,7 +26,7 @@ from custom_components.supernotify.schema import SCENARIO_SCHEMA, OutcomeSelecti
 
 
 class ArchiveCrashDummy(ArchivableObject):
-    def contents(self, minimal: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
         return {"a_dict": {}, "a_list": [], "a_str": "", "a_int": 984}
 
     def base_filename(self) -> str:

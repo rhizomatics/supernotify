@@ -133,7 +133,7 @@ async def async_get_service(
         transport_configs=config[CONF_TRANSPORTS],
         cameras=config[CONF_CAMERAS],
         dupe_check=config[CONF_DUPE_CHECK],
-        snooze=config[CONF_SNOOZE]
+        snooze=config[CONF_SNOOZE],
     )
     await service.initialize()
 
@@ -154,7 +154,7 @@ async def async_get_service(
             CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
             CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
             CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
-            CONF_SNOOZE: config.get(CONF_SNOOZE, {})
+            CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
         }
 
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
@@ -342,7 +342,7 @@ class SupernotifyAction(BaseNotificationService):
         transport_configs: dict[str, Any] | None = None,
         cameras: list[dict[str, Any]] | None = None,
         dupe_check: dict[str, Any] | None = None,
-        snooze: dict[str, Any] | None = None
+        snooze: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None

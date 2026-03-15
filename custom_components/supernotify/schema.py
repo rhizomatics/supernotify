@@ -258,10 +258,7 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
-SNOOZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SNOOZE_TIME, default=60 * 60): cv.positive_int
-
-})
+SNOOZE_SCHEMA = vol.Schema({vol.Optional(CONF_SNOOZE_TIME, default=60 * 60): cv.positive_int})
 
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
     # defaults set in model.DeliveryConfig
@@ -401,18 +398,18 @@ MOBILE_ACTION_SCHEMA = vol.Schema(
 ARCHIVE_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEBUG),  # deprecated v1.10.0
     vol.Schema({
-    vol.Optional(CONF_ARCHIVE_PATH): cv.path,
-    vol.Optional(CONF_ENABLED, default=False): cv.boolean,
-    vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
-    vol.Optional(CONF_ARCHIVE_MQTT_TOPIC): cv.string,
-    vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
-    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
-    vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
-    vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
-    vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=OutcomeSelection.NONE): parse_event_policy,
-    vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=OutcomeSelection.ERROR): parse_event_policy,
-    vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-})
+        vol.Optional(CONF_ARCHIVE_PATH): cv.path,
+        vol.Optional(CONF_ENABLED, default=False): cv.boolean,
+        vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
+        vol.Optional(CONF_ARCHIVE_MQTT_TOPIC): cv.string,
+        vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
+        vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
+        vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
+        vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
+        vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=OutcomeSelection.NONE): parse_event_policy,
+        vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=OutcomeSelection.ERROR): parse_event_policy,
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+    }),
 )
 
 HOUSEKEEPING_SCHEMA = vol.Schema({
@@ -438,7 +435,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     ),
     vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
     vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
-    vol.Optional(CONF_SNOOZE, default=dict): SNOOZE_SCHEMA
+    vol.Optional(CONF_SNOOZE, default=dict): SNOOZE_SCHEMA,
 })
 SUPERNOTIFY_SCHEMA = PLATFORM_SCHEMA
 

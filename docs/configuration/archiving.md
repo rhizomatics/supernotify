@@ -24,7 +24,7 @@ A housekeeping job will run automatically each night to prune notifications olde
     Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app
     to search and browse the archived notifications.
 
-The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. 
+The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content.
 Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration
 for this is the same as for selecting [Event Generation](#event-generation).
 

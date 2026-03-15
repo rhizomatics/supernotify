@@ -1,4 +1,5 @@
 import datetime as dt
+import json
 import logging
 from abc import abstractmethod
 from pathlib import Path
@@ -12,7 +13,6 @@ from homeassistant.const import (
     CONF_ENABLED,
 )
 from homeassistant.helpers import condition as condition
-from homeassistant.helpers.json import prepare_save_json
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -46,9 +46,8 @@ class ArchivableObject:
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
         pass
 
-    @abstractmethod
     def outcome(self) -> Outcome:
-        pass
+        return Outcome.NO_DELIVERY
 
     def selected(self, outcome_policy: OutcomeSelection) -> bool:
         if outcome_policy & OutcomeSelection.NONE:
@@ -101,6 +100,7 @@ class EventArchiver(ArchiveDestination):
     async def archive(self, archive_object: ArchivableObject) -> bool:
         payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
         self.hass_api.fire_event(self.event_name, payload)
+        return True
 
 
 class ArchiveTopic(ArchiveDestination):
@@ -177,25 +177,24 @@ class ArchiveDirectory(ArchiveDestination):
         archived: bool = False
 
         if self.enabled and self.archive_path:  # archive_path to assuage mypy
-            archive_path: str = ""
+            archive_filepath: anyio.Path | None = None
+            diagnostics: bool = archive_object.selected(self.diagnostics)
             try:
                 filename = f"{archive_object.base_filename()}.json"
-                archive_path = str(self.archive_path.joinpath(filename))
-                mode, serialized = prepare_save_json(
-                    archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
-                )
-                async with aiofiles.open(archive_path, mode) as file:
+                archive_filepath = self.archive_path.joinpath(filename)
+                serialized: str = json.dumps(archive_object.contents(diagnostics=diagnostics), indent=2)
+                async with aiofiles.open(archive_filepath, mode="w") as file:
                     await file.write(serialized)
-                _LOGGER.debug("SUPERNOTIFY Archived notification %s", archive_path)
+                _LOGGER.debug("SUPERNOTIFY Archived notification %s", await archive_filepath.absolute())
                 archived = True
             except Exception as e:
                 _LOGGER.warning("SUPERNOTIFY Unable to archive notification: %s", e)
-                if self.debug and archive_path:
+                if diagnostics and archive_filepath:
                     try:
-                        mode, serialized = prepare_save_json(archive_object.contents(diagnostics=False))
-                        async with aiofiles.open(archive_path, mode) as file:
+                        serialized = json.dumps(archive_object.contents(diagnostics=False), indent=2)
+                        async with aiofiles.open(archive_filepath, mode="w") as file:
                             await file.write(serialized)
-                        _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
+                        _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", await archive_filepath.absolute())
                         archived = True
                     except Exception as e2:
                         _LOGGER.exception("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
@@ -250,7 +249,7 @@ class NotificationArchive:
         self.event_archiver: EventArchiver | None = None
         self.event_selection: OutcomeSelection = config.get(CONF_ARCHIVE_EVENT_SELECTION, OutcomeSelection.NONE)
         self.diagnostics: OutcomeSelection = config.get(CONF_ARCHIVE_DIAGNOSTICS, OutcomeSelection.ERROR)
-        self.archive_event_name: str = config.get(CONF_ARCHIVE_EVENT_NAME)
+        self.archive_event_name: str = config.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")
         self.configured_archive_path: str | None = config.get(CONF_ARCHIVE_PATH)
         self.archive_days = int(config.get(CONF_ARCHIVE_DAYS, ARCHIVE_DEFAULT_DAYS))
         self.mqtt_topic: str | None = config.get(CONF_ARCHIVE_MQTT_TOPIC)
@@ -293,7 +292,7 @@ class NotificationArchive:
         if self.archive_directory:
             if await self.archive_directory.archive(archive_object):
                 archived = True
-        if archive_object.selected(self.event_selection):
+        if self.event_archiver and archive_object.selected(self.event_selection):
             await self.event_archiver.archive(archive_object)
 
         return archived

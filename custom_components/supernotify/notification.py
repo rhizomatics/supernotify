@@ -578,8 +578,8 @@ class Notification(ArchivableObject):
             if all_durations:
                 result["stats"] = {
                     "total_duration_ms": round(sum(all_durations.values()), 1),
-                    "slowest_delivery": max(all_durations, key=all_durations.get),
-                    "fastest_delivery": min(all_durations, key=all_durations.get),
+                    "slowest_delivery": max(all_durations, key=lambda k: all_durations[k]),
+                    "fastest_delivery": min(all_durations, key=lambda k: all_durations[k]),
                     "delivery_success_rate": round(total_ok / total_all, 2) if total_all else 1.0,
                 }
         except Exception as e:
