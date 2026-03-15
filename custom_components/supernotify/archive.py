@@ -70,13 +70,15 @@ class ArchiveDestination:
         pass
 
 
-class ArchiveEvent(ArchiveDestination):
+class EventArchiver(ArchiveDestination):
     def __init__(
         self, hass_api: HomeAssistantAPI, event_name: str, diagnostics: OutcomeSelection = OutcomeSelection.ERROR
     ) -> None:
         self.hass_api = hass_api
         self.event_name = event_name
         self.diagnostics = diagnostics
+        if diagnostics != OutcomeSelection.NONE:
+            _LOGGER.info("SUPERNOTIFY archiving notifications to Home Assistant events as %s", event_name)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
@@ -227,7 +229,7 @@ class NotificationArchive:
         self.enabled = bool(config.get(CONF_ENABLED, False))
         self.archive_directory: ArchiveDirectory | None = None
         self.archive_topic: ArchiveTopic | None = None
-        self.event_archiver: ArchiveEvent | None = None
+        self.event_archiver: EventArchiver | None = None
         self.event_selection: OutcomeSelection = config.get(CONF_ARCHIVE_EVENT_SELECTION, OutcomeSelection.NONE)
         self.diagnostics: OutcomeSelection = config.get(CONF_ARCHIVE_DIAGNOSTICS, OutcomeSelection.ERROR)
         self.archive_event_name: str = config.get(CONF_ARCHIVE_EVENT_NAME)
@@ -256,7 +258,7 @@ class NotificationArchive:
             self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.diagnostics)
             await self.archive_topic.initialize()
 
-        self.event_archiver = ArchiveEvent(self.hass_api, self.archive_event_name, self.diagnostics)
+        self.event_archiver = EventArchiver(self.hass_api, self.archive_event_name, self.diagnostics)
 
     async def size(self) -> int:
         return await self.archive_directory.size() if self.archive_directory else 0
