@@ -1,0 +1,142 @@
+{
+  "type": "object",
+  "properties": {
+    "chime_aliases": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "anyOf": [
+            {},
+            {
+              "type": "string",
+              "enum": [
+                "media_player",
+                "switch",
+                "script",
+                "rest_command",
+                "siren",
+                "alexa_devices"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "alias": {
+                  "type": "string"
+                },
+                "domain": {
+                  "type": "string"
+                },
+                "tune": {
+                  "type": "string"
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "volume": {
+                  "type": "number"
+                },
+                "target": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "entity_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "device_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "area_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "floor_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "label_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "email": {
+                          "type": "array",
+                          "items": {
+                            "format": "email",
+                            "type": "string"
+                          }
+                        },
+                        "phone": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "mobile_app_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "person_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "duration": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": []
+            }
+          ],
+          "nullable": true
+        }
+      },
+      "default": {}
+    }
+  },
+  "required": [
+    "chime_aliases"
+  ],
+  "title": "Chime Aliases Definition",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Chime_Aliases_Definition.json",
+  "description": "Voluptuous validation schema for Chime_Aliases_Definition",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
