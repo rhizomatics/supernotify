@@ -15,6 +15,7 @@ from cachetools import TTLCache
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
     CONF_DUPE_POLICY,
@@ -141,8 +142,13 @@ class DupeChecker:
         if self.policy == ATTR_DUPE_POLICY_NONE:
             return False
         hashed: int = dupe_candidate.hash()
-        ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
-        dupe = any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in self.cache)
+        if self.policy == ATTR_DUPE_POLICY_MTSLP:
+            ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
+            dupe: bool = any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in self.cache)
+        elif self.policy == ATTR_DUPE_POLICY_MT:
+            dupe = any(prev_hash == hashed for prev_hash, _prev_prior in self.cache)
+        else:
+            dupe = False
         if dupe:
             _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
         self.cache[hashed, ranked_priority] = dupe_candidate.id

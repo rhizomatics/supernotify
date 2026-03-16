@@ -72,6 +72,20 @@ is most convenient
               - mobile_app.john_ipad
 ```
 
+## Duplicate Notifications
+
+Notifications are checked for duplicates based on a selected policy. This
+can also be turned off for individual notifications using `force_resend`.
+
+```yaml
+  - action: notify.supernotify
+    data:
+        message: Something happened
+        force_resend: true
+```
+
+See [Duplicate Configuration](../configuration/dupe_detection.md) for more information.
+
 ## Controlling Delivery Selection
 
 Delivery selection can be passed in the `data` of an action call, or implied from the

@@ -7,6 +7,7 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_NONE,
+    ATTR_FORCE_RESEND,
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DUPE_POLICY,
@@ -319,6 +320,35 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
         target=None,
         return_response=False,
     )
+
+
+async def test_dupe_check_suppresses_repeat_message(mock_hass: HomeAssistant) -> None:
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy"})
+    assert len(dummy.service.calls) == 2
+
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy"})
+    assert len(dummy.service.calls) == 2  # both suppressed as dupes
+
+
+async def test_force_resend_bypasses_dupe_check(mock_hass: HomeAssistant) -> None:
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy"})
+    assert len(dummy.service.calls) == 2
+
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy"})
+    assert len(dummy.service.calls) == 2  # duped
+
+    await uut.async_send_message(message="door still open!", data={"delivery": "dummy", ATTR_FORCE_RESEND: True})
+    assert len(dummy.service.calls) == 4  # force_resend bypasses dupe check
 
 
 async def test_send_message_with_conditions(hass: HomeAssistant) -> None:

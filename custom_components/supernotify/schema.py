@@ -38,6 +38,7 @@ from .const import (
     ATTR_DEBUG,
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
+    ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
     ATTR_EMAIL,
@@ -236,9 +237,13 @@ MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENABLED, default=True): cv.boolean,
 })
 NOTIFICATION_DUPE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_TTL): cv.positive_int,
+    vol.Optional(CONF_TTL, default=300): cv.positive_int,
     vol.Optional(CONF_SIZE, default=100): cv.positive_int,
-    vol.Optional(CONF_DUPE_POLICY, default=ATTR_DUPE_POLICY_MTSLP): vol.In([ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_NONE]),
+    vol.Optional(CONF_DUPE_POLICY, default=ATTR_DUPE_POLICY_MTSLP): vol.In([
+        ATTR_DUPE_POLICY_MTSLP,
+        ATTR_DUPE_POLICY_MT,
+        ATTR_DUPE_POLICY_NONE,
+    ]),
 })
 
 

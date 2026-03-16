@@ -2,6 +2,7 @@
 
 ## 1.11.0
 - `force_resend` can be set in `data` section to override dupe handling ( contribution by [@lollox80](https://github.com/lollox80))
+- `dupe_policy_message_title_same` duplicate detection policy added
 ## 1.10.1
 - Lint and type fixes
 ## 1.10.0
