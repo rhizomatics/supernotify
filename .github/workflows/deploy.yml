@@ -91,11 +91,11 @@ jobs:
           else
             echo "Deploying stable release: $TAG"
             uv run mike deploy --push --ignore-remote-status --update-aliases "$TAG" latest
-            uv run mike set-default --push latest
+            uv run mike set-default --push --ignore-remote-status latest
           fi
         else
           echo "Deploying development docs"
-          uv run mike deploy --push --update-aliases dev
+          uv run mike deploy --push --ignore-remote-status --update-aliases dev
         fi
 
       env:
