@@ -165,24 +165,15 @@ class Envelope(DupeCheckable):
         if not data or not self.context:
             return data
         resolved: dict[str, Any] = {}
-        context_vars = (
-            cast("dict[str, Any]", self.condition_variables.as_dict())
-            if self.condition_variables
-            else {}
-        )
+        context_vars = cast("dict[str, Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
         for key, value in data.items():
             if isinstance(value, str) and "{{" in value:
                 try:
-                    rendered = self.context.hass_api.template(value).async_render(
-                        variables=context_vars
-                    )
+                    rendered = self.context.hass_api.template(value).async_render(variables=context_vars)
                     resolved[key] = rendered
                     resolved[f"{key}_template"] = value
                 except Exception as e:
-                    _LOGGER.debug(
-                        "SUPERNOTIFY Could not resolve template for %s in %s: %s",
-                        key, self.delivery_name, e
-                    )
+                    _LOGGER.debug("SUPERNOTIFY Could not resolve template for %s in %s: %s", key, self.delivery_name, e)
                     resolved[key] = value
             else:
                 resolved[key] = value

@@ -1,17 +1,16 @@
-import asyncio
-import json
 import datetime as dt
+import json
 import logging
 from abc import abstractmethod
 from pathlib import Path
 from typing import Any
 
+import aiofiles
 import aiofiles.os
 import anyio
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import condition as condition
-import aiofiles
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -60,7 +59,7 @@ class ArchiveTopic:
                 "SUPERNOTIFY mqtt_topic configurato (%s) ma integrazione MQTT "
                 "non disponibile — archivio MQTT disabilitato. "
                 "Rimuovere mqtt_topic da archive.yaml oppure configurare MQTT in HA.",
-                self.topic
+                self.topic,
             )
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
@@ -133,7 +132,7 @@ class ArchiveDirectory:
                         data = archive_object.contents(minimal=not self.debug)
                         tmp_path = archive_path + ".tmp"
                         json_data = json.dumps(data, indent=2, default=str)
-                        async with aiofiles.open(tmp_path, "w", encoding='utf-8') as f:
+                        async with aiofiles.open(tmp_path, "w", encoding="utf-8") as f:
                             await f.write(json_data)
                         await aiofiles.os.rename(tmp_path, archive_path)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", archive_path)
