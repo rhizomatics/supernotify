@@ -18,6 +18,7 @@ from .const import (
     ATTR_DEBUG,
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
+    ATTR_FORCE_RESEND,
     ATTR_MEDIA,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
@@ -112,6 +113,7 @@ class Notification(ArchivableObject):
 
         self.priority: str = action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM)
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
+        self.force_resend: bool = action_data.get(ATTR_FORCE_RESEND, False)
         self.required_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_REQUIRE))
         self.applied_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_APPLY))
         self.constrain_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_CONSTRAIN))
@@ -432,7 +434,7 @@ class Notification(ArchivableObject):
                 self.record_result(delivery, targets=targets, suppression_reason=reason)
 
             for envelope in envelopes:
-                if not self.extra_data.get("force_resend", False) and self.context.dupe_checker.check(envelope):
+                if not self.force_resend and self.context.dupe_checker.check(envelope):
                     _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self.message)
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
@@ -764,7 +766,6 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update({k: v for k, v in self.extra_data.items() if k != "force_resend"})  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios

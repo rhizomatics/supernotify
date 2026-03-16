@@ -1,5 +1,7 @@
 # Public releases
 
+## 1.11.0
+- `force_resend` can be set in `data` section to override dupe handling ( contribution by [@lollox80](https://github.com/lollox80))
 ## 1.10.1
 - Lint and type fixes
 ## 1.10.0
