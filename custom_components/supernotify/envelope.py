@@ -199,6 +199,33 @@ class Envelope(DupeCheckable):
             return None
         return str(title)
 
+    def _resolve_channel_message(self) -> str | None:
+        """Resolve channel-specific message override from extra_data.
+
+        Lookup priority (highest to lowest):
+          1. channel_message.<delivery_name>   e.g. channel_message.alexa_announce
+          2. channel_message.<transport_name>  e.g. channel_message.alexa_media_player
+          3. spoken_message                    backward compat alias for alexa/tts transports
+          4. None (caller falls back to default message)
+        """
+        extra = self.extra_data if hasattr(self, "extra_data") else {}
+        if not extra:
+            return None
+        channel_messages: dict[str, str] = extra.get("channel_message", {})
+        transport_name: str | None = (
+            self.delivery.transport.name if self.delivery and self.delivery.transport else None
+        )
+        # 1. delivery-specific override (most specific)
+        if self.delivery_name in channel_messages:
+            return str(channel_messages[self.delivery_name])
+        # 2. transport-specific override
+        if transport_name and transport_name in channel_messages:
+            return str(channel_messages[transport_name])
+        # 3. spoken_message backward compat — applies to voice transports only
+        if "spoken_message" in extra and transport_name in ("alexa_media_player", "alexa_devices", "tts"):
+            return str(extra["spoken_message"])
+        return None
+
     def _compute_message(self) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
 
@@ -207,6 +234,11 @@ class Envelope(DupeCheckable):
             msg = self._message
         else:
             msg = self.delivery.message if self.delivery.message is not None else self._message
+            # channel_message override — delivery-level config takes priority
+            if self.delivery.message is None:
+                channel_msg = self._resolve_channel_message()
+                if channel_msg is not None:
+                    msg = channel_msg
             message_usage: str = str(self.delivery.option_str(OPTION_MESSAGE_USAGE))
             if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
                 title = self._compute_title(ignore_usage=True)

@@ -767,7 +767,7 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update(self.extra_data)  # action call data
+                envelope_data.update({k: v for k, v in self.extra_data.items() if k not in (ATTR_FORCE_RESEND, ATTR_CHANNEL_MESSAGE)})  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
