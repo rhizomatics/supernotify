@@ -432,7 +432,7 @@ class Notification(ArchivableObject):
                 self.record_result(delivery, targets=targets, suppression_reason=reason)
 
             for envelope in envelopes:
-                if self.context.dupe_checker.check(envelope):
+                if not self.extra_data.get("force_resend", False) and self.context.dupe_checker.check(envelope):
                     _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self.message)
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
@@ -764,7 +764,7 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update(self.extra_data)  # action call data
+                envelope_data.update({k: v for k, v in self.extra_data.items() if k != "force_resend"})  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
