@@ -93,7 +93,7 @@
         "ttl": {
           "type": "integer",
           "minimum": 0,
-          "default": 300
+          "default": 120
         },
         "size": {
           "type": "integer",
