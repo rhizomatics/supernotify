@@ -36,6 +36,8 @@ destination.
 
 In the Home Assistant integration dialog, select custom event generation, and add `supernotification`.
 
+![Remote Logger Subscription](../assets/images/remote_logger_sub.png)
+
 ### If you don't have a log aggregator
 
 [OpenObserve](https://openobserve.ai) has a free, open source logging
