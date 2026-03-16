@@ -51,3 +51,87 @@ async def test_notify_media_image() -> None:
         context=None,
         return_response=False,
     )
+
+
+async def test_notify_media_no_targets() -> None:
+    context = TestingContext(
+        deliveries={"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA}},
+        hass_external_url="https://myserver",
+    )
+    uut = MediaPlayerTransport(context)
+    await context.test_initialize(transport_instances=[uut])
+    await uut.initialize()
+
+    result = await uut.deliver(
+        Envelope(
+            Delivery("alexa_show", context.delivery_config("alexa_show"), uut),
+            Notification(context, "hello there"),
+            target=Target([]),
+        )
+    )
+    assert result is False
+
+
+async def test_notify_media_no_snapshot_url() -> None:
+    context = TestingContext(
+        deliveries={"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA}},
+        hass_external_url="https://myserver",
+    )
+    uut = MediaPlayerTransport(context)
+    await context.test_initialize(transport_instances=[uut])
+    await uut.initialize()
+
+    result = await uut.deliver(
+        Envelope(
+            Delivery("alexa_show", context.delivery_config("alexa_show"), uut),
+            Notification(context, "hello there"),
+            target=Target(["media_player.echo_show_8"]),
+        )
+    )
+    assert result is False
+
+
+async def test_notify_media_image_with_announce_and_enqueue() -> None:
+    context = TestingContext(
+        deliveries={"alexa_show": {CONF_TRANSPORT: TRANSPORT_MEDIA}},
+        hass_external_url="https://myserver",
+    )
+    uut = MediaPlayerTransport(context)
+    await context.test_initialize(transport_instances=[uut])
+    await uut.initialize()
+
+    await uut.deliver(
+        Envelope(
+            Delivery("alexa_show", context.delivery_config("alexa_show"), uut),
+            Notification(
+                context,
+                "hello there",
+                action_data={
+                    ATTR_DELIVERY: {
+                        "alexa_show": {
+                            CONF_DATA: {
+                                ATTR_MEDIA: {ATTR_MEDIA_SNAPSHOT_URL: "/ftp/pic.jpeg"},
+                                "announce": True,
+                                "enqueue": "add",
+                            }
+                        }
+                    }
+                },
+            ),
+            target=Target(["media_player.echo_show_8"]),
+        )
+    )
+
+    context.hass.services.async_call.assert_called_with(  # type: ignore
+        "media_player",
+        "play_media",
+        service_data={
+            "media": {"media_content_id": "https://myserver/ftp/pic.jpeg", "media_content_type": "image"},
+            "announce": True,
+            "enqueue": "add",
+        },
+        target={"entity_id": ["media_player.echo_show_8"]},
+        blocking=False,
+        context=None,
+        return_response=False,
+    )

@@ -1,5 +1,7 @@
+import pytest
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION, CONF_NAME, CONF_OPTIONS
+from homeassistant.exceptions import ServiceValidationError
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -51,6 +53,28 @@ async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
         target={ATTR_ENTITY_ID: ["notify.pong"]},
         debug=False,
     )
+
+
+async def test_deliver_no_targets(mock_hass, unmocked_config) -> None:  # type: ignore
+    context = unmocked_config
+    delivery_config = {
+        "ping": {
+            CONF_TRANSPORT: TRANSPORT_NOTIFY_ENTITY,
+            CONF_NAME: "teleport",
+        }
+    }
+    uut = NotifyEntityTransport(context)
+    await uut.initialize()
+    context.configure_for_tests([uut])
+    await context.initialize()
+    with pytest.raises(ServiceValidationError):
+        await uut.deliver(
+            Envelope(
+                Delivery("ping", delivery_config["ping"], uut),
+                Notification(context, message="hello there"),
+                target=Target([]),
+            )
+        )
 
 
 async def test_selects_group_targets() -> None:

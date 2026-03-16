@@ -125,6 +125,75 @@ async def test_manual_android_tts_provider(hass: HomeAssistant) -> None:
     assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}}
 
 
+async def test_multiple_media_player_targets() -> None:
+    ctx = TestingContext(
+        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS}},
+        services={"tts": ["speak"]},
+    )
+    await ctx.test_initialize()
+    n = Notification(ctx, "testing 123", target=["media_player.kitchen_speakers", "media_player.living_room"])
+    await n.initialize()
+    await n.deliver()
+
+    ctx.hass.services.async_call.assert_called_with(  # type: ignore
+        "tts",
+        "speak",
+        service_data={
+            "message": "testing 123",
+            "media_player_entity_id": ["media_player.kitchen_speakers", "media_player.living_room"],
+            "entity_id": "tts.home_assistant_cloud",
+        },
+        blocking=False,
+        context=None,
+        target={"entity_id": "tts.home_assistant_cloud"},
+        return_response=False,
+    )
+
+
+async def test_tts_with_language_option() -> None:
+    ctx = TestingContext(
+        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_DATA: {"language": "fr-FR"}}},
+        services={"tts": ["speak"]},
+    )
+    await ctx.test_initialize()
+    n = Notification(ctx, "testing 123", target="media_player.kitchen_speakers")
+    await n.initialize()
+    await n.deliver()
+
+    ctx.hass.services.async_call.assert_called_with(  # type: ignore
+        "tts",
+        "speak",
+        service_data={
+            "message": "testing 123",
+            "language": "fr-FR",
+            "media_player_entity_id": "media_player.kitchen_speakers",
+            "entity_id": "tts.home_assistant_cloud",
+        },
+        blocking=False,
+        context=None,
+        target={"entity_id": "tts.home_assistant_cloud"},
+        return_response=False,
+    )
+
+
+async def test_mobile_tts_with_media_stream(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS}})
+    register_mobile_app(ctx.hass_api, device_name="bobs_phone", manufacturer="Xiaomi")
+    await ctx.test_initialize()
+    n = Notification(
+        ctx,
+        "testing 123",
+        target=["mobile_app_bobs_phone"],
+        action_data={"delivery": "phone_tts", "data": {"media_stream": "alarm_stream"}},
+    )
+    await n.initialize()
+    await n.deliver()
+
+    assert_clean_notification(n, expected_deliveries={"phone_tts": 1})
+    call: CallRecord = n.deliveries["phone_tts"]["delivered"][0].calls[0]  # type: ignore
+    assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}, "media_stream": "alarm_stream"}
+
+
 async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,

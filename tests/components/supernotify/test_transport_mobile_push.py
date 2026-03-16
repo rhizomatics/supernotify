@@ -1,4 +1,6 @@
+import time
 from typing import TYPE_CHECKING, Any, LiteralString, cast
+from unittest.mock import patch
 
 import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
@@ -91,6 +93,21 @@ async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: C
         target=None,
         return_response=False,
     )
+
+
+async def test_on_notify_mobile_push_no_targets() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
+
+    result = await uut.deliver(
+        Envelope(
+            Delivery("media_test", ctx.delivery_config("media_test"), uut),
+            Notification(ctx, message="hello there"),
+            target=Target({}),
+        )
+    )
+    assert result is False
 
 
 async def test_on_notify_mobile_push_with_explicit_target() -> None:
@@ -312,6 +329,65 @@ async def test_on_notify_mobile_push_with_broken_mobile_targets() -> None:
     expected_snooze = Snooze(QualifiedTargetType.MOBILE, RecipientType.USER, "mobile_app_nophone", "person.bidey_in")
     assert ctx.snoozer.snoozes == {"MOBILE_mobile_app_nophone_person.bidey_in": expected_snooze}
     assert ctx.snoozer.current_snoozes(PRIORITY_MEDIUM, delivery) == [expected_snooze]
+
+
+async def test_action_title_retry_skip() -> None:
+    ctx = TestingContext(transport_types=[MobilePushTransport])
+    await ctx.test_initialize()
+    uut: MobilePushTransport = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    cached_url = "http://example.com/cached"
+    uut.action_titles[cached_url] = "Cached Title"
+    assert await uut.action_title(cached_url) == "Cached Title"
+
+    bad_url = "http://127.0.0.1:1/no/such/page"
+    uut.action_title_failures[bad_url] = time.time()
+    with patch("custom_components.supernotify.transports.mobile_push._LOGGER"):
+        assert await uut.action_title(bad_url) is None
+
+
+async def test_unexpected_priority() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={ATTR_PRIORITY: "unknown_priority"}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    await uut.deliver(e)
+    assert e.calls
+    assert e.calls[0]
+    assert e.calls[0].action_data
+    assert e.calls[0].action_data["data"]["push"]["interruption-level"] == "active"
+
+
+async def test_deliver_with_action_url_title() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(
+            ctx,
+            message="hello there",
+            action_data={
+                "actions": [
+                    {"action": "URI", "title": "My Page", "action_url": "http://my.home/page", "action_url_title": "My Title"}
+                ]
+            },
+        ),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    await uut.deliver(e)
+    assert e.calls
+    assert e.calls[0]
+    assert e.calls[0].action_data
+    action_sent = e.calls[0].action_data["data"]["actions"][0]
+
+    assert action_sent["action_url_title"] == "My Title"
 
 
 async def test_parallel_push() -> None:

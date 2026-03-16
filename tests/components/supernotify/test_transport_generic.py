@@ -389,3 +389,338 @@ async def test_script_turn_on() -> None:
         context=None,
         return_response=False,
     )
+
+
+def test_validate_action_invalid() -> None:
+    from unittest.mock import Mock
+
+    uut = GenericTransport(Mock())
+    assert uut.validate_action(None) is False
+    assert uut.validate_action("no_dot") is False
+    assert uut.validate_action("valid.action") is True
+
+
+async def test_notify_send_message() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            notifier:
+                transport: generic
+                action: notify.send_message
+                target:
+                    - notify.my_entity
+            """,
+        services={"notify": ["send_message"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test message", action_data={"delivery": "notifier"})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "notify",
+        "send_message",
+        service_data={"message": "test message", "entity_id": ["notify.my_entity"]},
+        blocking=False,
+        target={"entity_id": ["notify.my_entity"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_input_text_with_value() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            display:
+                transport: generic
+                action: input_text.set_value
+                target: input_text.motd
+            """,
+        services={"input_text": ["set_value"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="ignored", action_data={"delivery": "display", "data": {"value": "explicit value"}})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "input_text",
+        "set_value",
+        service_data={"value": "explicit value", "entity_id": ["input_text.motd"]},
+        blocking=False,
+        target={"entity_id": ["input_text.motd"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_switch_delivery() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            lights_off:
+                transport: generic
+                action: switch.turn_off
+                target: switch.porch
+            """,
+        services={"switch": ["turn_off"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test", action_data={"delivery": "lights_off"})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "switch",
+        "turn_off",
+        service_data={},
+        blocking=False,
+        target={"entity_id": ["switch.porch"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_mqtt_without_payload() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            broker:
+                transport: generic
+                action: mqtt.publish
+                data:
+                    topic: test/topic
+            """,
+        services={"mqtt": ["publish"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="hello mqtt", action_data={"delivery": "broker"})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "mqtt",
+        "publish",
+        service_data={"topic": "test/topic", "payload": "hello mqtt"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_tts_delivery() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            tts_announce:
+                transport: generic
+                action: tts.speak
+            """,
+        services={"tts": ["speak"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="hello tts", action_data={"delivery": "tts_announce"})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "tts",
+        "speak",
+        service_data={"message": "hello tts"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_siren_delivery() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            alarm:
+                transport: generic
+                action: siren.turn_on
+                target: siren.front_door
+            """,
+        services={"siren": ["turn_on"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test", action_data={"delivery": "alarm", "data": {"tone": "fire"}})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "siren",
+        "turn_on",
+        service_data={"tone": "fire", "entity_id": ["siren.front_door"]},
+        blocking=False,
+        target={"entity_id": ["siren.front_door"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_rest_command_delivery() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            webhook:
+                transport: generic
+                action: rest_command.my_api
+            """,
+        services={"rest_command": ["my_api"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test", action_data={"delivery": "webhook", "data": {"param": "value"}})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "rest_command",
+        "my_api",
+        service_data={"param": "value"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_script_direct_call() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            run:
+                transport: generic
+                action: script.my_script
+            """,
+        services={"script": ["my_script"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test message", action_data={"delivery": "run"})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_once_with(  # type:ignore [union-attr]
+        "script",
+        "my_script",
+        service_data={"message": "test message"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_ntfy_with_priority() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            ntfy:
+                transport: generic
+                action: ntfy.publish
+            """,
+        services={"ntfy": ["publish"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx,
+        message="test message",
+        action_data={
+            "delivery": "ntfy",
+            "data": {"priority": "high", "snapshot_url": "http://img.url", "action_url": "http://click.url"},
+        },
+    )
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
+        "ntfy",
+        "publish",
+        service_data={
+            "message": "test message",
+            "priority": 4,
+            "snapshot_url": "http://img.url",
+            "action_url": "http://click.url",
+            "attach": "http://img.url",
+            "click": "http://click.url",
+            "entity_id": [],
+        },
+        blocking=False,
+        target={"entity_id": []},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_ntfy_single_email_single_entity() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            ntfy:
+                transport: generic
+                action: ntfy.publish
+                target:
+                    - notify.topic_1
+                    - joe@test.org
+            """,
+        services={"ntfy": ["publish"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test message", action_data={"delivery": {"ntfy": {"enabled": True}}})
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
+        "ntfy",
+        "publish",
+        service_data={"message": "test message", "email": "joe@test.org", "entity_id": ["notify.topic_1"]},
+        blocking=False,
+        target={"entity_id": ["notify.topic_1"]},
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_ntfy_with_phone() -> None:
+    ctx = TestingContext(
+        deliveries="""
+            ntfy:
+                transport: generic
+                action: ntfy.publish
+            """,
+        recipients="""
+            - person: person.bob
+              phone_number: "+447979123456"
+        """,
+        services={"ntfy": ["publish"]},
+        transport_types=[GenericTransport],
+    )
+
+    await ctx.test_initialize()
+    uut = Notification(ctx, message="test message", action_data={"delivery": {"ntfy": {"enabled": True}}}, target="person.bob")
+    await uut.initialize()
+    await uut.deliver()
+
+    uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
+        "ntfy",
+        "publish",
+        service_data={"message": "test message", "call": "+447979123456"},
+        blocking=False,
+        target=None,
+        context=None,
+        return_response=False,
+    )

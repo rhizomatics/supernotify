@@ -3,8 +3,12 @@ from homeassistant.const import (
 )
 
 from custom_components.supernotify.const import CONF_DATA, CONF_TRANSPORT, TRANSPORT_MQTT
+from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.mqtt import MQTTTransport
+
+from .hass_setup_lib import TestingContext
 
 
 async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked_config) -> None:  # type: ignore
@@ -44,3 +48,30 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
         },
         debug=False,
     )
+
+
+def test_recipient_target_returns_none(mock_hass, uninitialized_unmocked_config) -> None:  # type: ignore
+    uut = MQTTTransport(uninitialized_unmocked_config)
+    result = uut.recipient_target({"person": "person.test"})
+    assert result is None
+
+
+async def test_deliver_warns_on_missing_topic() -> None:
+    ctx = TestingContext(
+        deliveries={
+            "broker": {
+                CONF_TRANSPORT: TRANSPORT_MQTT,
+                CONF_DATA: {"payload": "hello"},
+            }
+        }
+    )
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_MQTT)
+    n = Notification(ctx, message="ignored")
+    await n.initialize()
+    envelope = Envelope(
+        Delivery("broker", ctx.delivery_config("broker"), uut),
+        n,
+        data={"payload": "hello"},
+    )
+    await uut.deliver(envelope)

@@ -1,7 +1,11 @@
+from typing import cast
+
+import pytest
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEBUG,
 )
+from homeassistant.exceptions import NoEntitySpecifiedError
 
 from custom_components.supernotify.const import (
     CONF_DATA,
@@ -15,7 +19,13 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transports.chime import ChimeTransport
+from custom_components.supernotify.transports.chime import (
+    ChimeTargetConfig,
+    ChimeTransport,
+    MediaPlayerChimeTransport,
+    RestCommandChimeTransport,
+    ScriptChimeTransport,
+)
 
 from .doubles_lib import service_call
 from .hass_setup_lib import TestingContext
@@ -454,7 +464,7 @@ async def test_documentation_example() -> None:
     assert doorbell["script"]["data"] == {"duration": 25}
     assert doorbell["siren_bedroom"]["alias"] == "Short and quiet burst for just the bedroom siren"
     assert doorbell["siren_bedroom"]["target"].entity_ids == ["siren.bedroom"]
-    assert doorbell["siren_bedroom"]["volume"] == 0.1
+    assert doorbell["siren_bedroom"]["volume"] == pytest.approx(0.1)
     assert doorbell["siren_bedroom"]["domain"] == "siren"
 
     red_alert = uut.transport_data["chime_aliases"]["red_alert"]
@@ -463,3 +473,167 @@ async def test_documentation_example() -> None:
     assert red_alert["media_player"] == {"tune": "red_alert", "domain": "media_player"}
     assert red_alert["siren"] == {"tune": "emergency", "domain": "siren"}
     assert red_alert["alexa_devices"] == {"tune": "scifi/amzn_sfx_scifi_alarm_04", "domain": "alexa_devices"}
+
+
+def test_chime_target_config_no_entity_or_device() -> None:
+    with pytest.raises(NoEntitySpecifiedError):
+        ChimeTargetConfig()
+
+
+def test_chime_target_config_device_id_only() -> None:
+    cfg = ChimeTargetConfig(device_id="abc123", domain="alexa_devices")
+    assert cfg.device_id == "abc123"
+    assert cfg.domain == "alexa_devices"
+    assert repr(cfg) == "ChimeTargetConfig(device_id=abc123)"
+
+
+def test_chime_target_config_entity_id_repr() -> None:
+    cfg = ChimeTargetConfig(entity_id="switch.bell_1")
+    assert repr(cfg) == "ChimeTargetConfig(entity_id=switch.bell_1)"
+
+
+def test_chime_target_config_unexpected_kwargs() -> None:
+    cfg = ChimeTargetConfig(entity_id="switch.bell_1", unknown_kwarg="whatever")
+    assert cfg.entity_id == "switch.bell_1"
+
+
+def test_rest_command_mini_transport_no_entity_name() -> None:
+    mini = RestCommandChimeTransport()
+    result = mini.build(ChimeTargetConfig(entity_id="rest_command.foo"), entity_name=None)
+    assert result is None
+
+
+def test_script_mini_transport_no_entity_name() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    mini = ScriptChimeTransport()
+    result = mini.build(
+        ChimeTargetConfig(entity_id="script.foo"),
+        entity_name=None,
+        envelope=Envelope(Delivery("chimes", {}, ChimeTransport(ctx)), Notification(ctx, message="test")),
+    )
+    assert result is None
+
+
+def test_media_player_mini_transport_with_enqueue_and_announce() -> None:
+    mini = MediaPlayerChimeTransport()
+    cfg = ChimeTargetConfig(entity_id="media_player.hall", tune="boing")
+    result = mini.build(cfg, action_data={"enqueue": "add", "announce": True})
+    assert result is not None
+    assert result.action_data
+    assert result.action_data["enqueue"] == "add"
+    assert result.action_data["announce"]
+
+
+async def test_analyze_target_no_entity_or_device() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    await ctx.test_initialize()
+    uut = cast("ChimeTransport", ctx.transport(TRANSPORT_CHIME))
+
+    envelope = Envelope(Delivery("chimes", ctx.delivery_config("chimes"), uut), Notification(ctx, message="test"))
+    cfg = ChimeTargetConfig(entity_id="switch.bell_1")
+    cfg.entity_id = None
+    cfg.device_id = None
+    result = uut.analyze_target(cfg, {}, envelope)
+    assert result is None
+
+
+async def test_analyze_target_unknown_domain() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    await ctx.test_initialize()
+    uut = cast("ChimeTransport", ctx.transport(TRANSPORT_CHIME))
+
+    envelope = Envelope(Delivery("chimes", ctx.delivery_config("chimes"), uut), Notification(ctx, message="test"))
+    cfg = ChimeTargetConfig(entity_id="unknown_domain.entity_1")
+    result = uut.analyze_target(cfg, {}, envelope)
+    assert result is None
+
+
+async def test_analyze_target_no_matching_mini_transport() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    await ctx.test_initialize()
+    uut = cast("ChimeTransport", ctx.transport(TRANSPORT_CHIME))
+
+    envelope = Envelope(Delivery("chimes", ctx.delivery_config("chimes"), uut), Notification(ctx, message="test"))
+    cfg = ChimeTargetConfig(entity_id="input_boolean.test")
+    result = uut.analyze_target(cfg, {}, envelope)
+    assert result is None
+
+
+async def test_deliver_exception_in_analyze_target() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_CHIME)
+
+    from unittest.mock import patch
+
+    envelope = Envelope(
+        Delivery("chimes", ctx.delivery_config("chimes"), uut),
+        Notification(ctx, message="test"),
+        target=Target(["switch.bell_1"]),
+        data={"chime_tune": "boing"},
+    )
+    with (
+        patch.object(uut, "analyze_target", side_effect=Exception("boom")),
+        patch("custom_components.supernotify.transports.chime._LOGGER"),
+    ):
+        result = await uut.deliver(envelope)
+    assert result is False
+
+
+def test_chime_supported_features_and_extra_attributes() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    uut = ChimeTransport(ctx)
+    from custom_components.supernotify.model import TransportFeature
+
+    assert uut.supported_features == TransportFeature(0)
+    attrs = uut.extra_attributes()
+    assert "mini_transports" in attrs
+
+
+async def test_deliver_with_unrecognized_domain() -> None:
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_CHIME)
+
+    envelope = Envelope(
+        Delivery("chimes", ctx.delivery_config("chimes"), uut),
+        Notification(ctx, message="test"),
+        target=Target(["input_boolean.my_flag"]),
+        data={"chime_tune": "boing"},
+    )
+    result = await uut.deliver(envelope)
+    assert result is False
+
+
+def test_build_aliases_with_empty_target() -> None:
+    from custom_components.supernotify.transports.chime import build_aliases
+
+    result = build_aliases({"doorbell": {"switch": {"target": []}}})
+    assert isinstance(result, dict)
+
+
+def test_build_aliases_with_exception_in_target() -> None:
+    from unittest.mock import patch
+
+    from custom_components.supernotify.transports.chime import build_aliases
+
+    with patch("custom_components.supernotify.transports.chime.Target", side_effect=Exception("bad target")):
+        result = build_aliases({"doorbell": {"switch": {"target": "switch.foo"}}})
+    assert isinstance(result, dict)
+
+
+def test_build_aliases_invalid_schema() -> None:
+    from custom_components.supernotify.transports.chime import build_aliases
+
+    result = build_aliases({"invalid_alias": {"media_player": {"target": "not_a_valid_target_at_all"}}})
+    assert isinstance(result, dict)
+
+
+def test_build_aliases_generic_exception() -> None:
+    from unittest.mock import patch
+
+    from custom_components.supernotify.transports.chime import build_aliases
+
+    with patch("custom_components.supernotify.transports.chime.CHIME_ALIASES_SCHEMA", side_effect=Exception("unexpected")):
+        result = build_aliases({"alias": {"media_player": "tune"}})
+    assert result == {}

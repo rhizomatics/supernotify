@@ -67,6 +67,30 @@ async def test_empty_deliver() -> None:
     )
 
 
+async def test_deliver_with_data() -> None:
+    ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_SMS)
+
+    assert await uut.deliver(
+        Envelope(
+            Delivery("smsify", ctx.delivery_config("smsify"), uut),
+            Notification(ctx, message="hello there"),
+            target=Target(["+447979123456"]),
+            data={"data": {"custom_field": "custom_value"}},
+        )
+    )
+    ctx.hass.services.async_call.assert_called_with(  # type:ignore
+        "notify",
+        "smsify",
+        service_data={"message": "hello there", "target": ["+447979123456"], "data": {"custom_field": "custom_value"}},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )
+
+
 async def test_deliver_jumbo() -> None:
     ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
     await ctx.test_initialize()

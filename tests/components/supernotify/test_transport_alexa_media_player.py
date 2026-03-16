@@ -51,6 +51,79 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
     )
 
 
+async def test_notify_alexa_media_player_no_targets(uninitialized_unmocked_config: Context) -> None:
+    delivery_config = {
+        "override": {
+            CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER,
+            CONF_ACTION: "notify.alexa_media_player_custom",
+        }
+    }
+    context = uninitialized_unmocked_config
+    context.delivery_registry._config_deliveries = delivery_config
+
+    uut = AlexaMediaPlayerTransport(context)
+    await uut.initialize()
+    context.configure_for_tests(transport_instances=[uut])
+    await context.initialize()
+    notification = Notification(context, message="hello there")
+    await notification.initialize()
+    result = await uut.deliver(
+        Envelope(
+            Delivery("override", delivery_config["override"], uut),
+            notification,
+            target=Target([]),
+        )
+    )
+    assert result is False
+
+
+async def test_notify_alexa_media_player_with_data_override(uninitialized_unmocked_config: Context) -> None:
+    delivery_config = {
+        "override": {
+            CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER,
+            CONF_ACTION: "notify.alexa_media_player_custom",
+        }
+    }
+    context = uninitialized_unmocked_config
+    context.delivery_registry._config_deliveries = delivery_config
+
+    uut = AlexaMediaPlayerTransport(context)
+    await uut.initialize()
+    context.configure_for_tests(transport_instances=[uut])
+    await context.initialize()
+    notification = Notification(context, message="hello there")
+    await notification.initialize()
+    await uut.deliver(
+        Envelope(
+            Delivery("override", delivery_config["override"], uut),
+            notification,
+            target=Target(["media_player.hall"]),
+            data={"data": {"type": "tts"}},
+        )
+    )
+    uninitialized_unmocked_config.hass_api.call_service.assert_called_with(  # type: ignore
+        "notify",
+        "alexa_media_player_custom",
+        service_data={
+            "message": "hello there",
+            "data": {"type": "tts"},
+            "target": ["media_player.hall"],
+        },
+        debug=False,
+    )
+
+
+def test_alexa_media_player_features_and_validate() -> None:
+    context = TestingContext(deliveries={"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}})
+    uut = AlexaMediaPlayerTransport(context, {})
+
+    from custom_components.supernotify.model import TransportFeature
+
+    assert uut.supported_features == TransportFeature.MESSAGE
+    assert uut.validate_action("notify.alexa_media") is True
+    assert uut.validate_action(None) is False
+
+
 def test_alexa_transport_selects_targets() -> None:
     """Test on_notify_alexa."""
     context = TestingContext(deliveries={"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}})
