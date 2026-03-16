@@ -7,8 +7,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.alexa_media_player import AlexaMediaPlayerTransport
-
-from .hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 DELIVERY = {
     "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},

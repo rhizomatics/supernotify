@@ -33,13 +33,11 @@ from custom_components.supernotify.model import QualifiedTargetType, RecipientTy
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
-from tests.components.supernotify.hass_setup_lib import register_mobile_app
-
-from .doubles_lib import service_call
+from tests.components.supernotify.doubles_lib import service_call
+from tests.components.supernotify.hass_setup_lib import TestingContext, register_mobile_app
 
 if TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord
-from .hass_setup_lib import TestingContext
 
 
 async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: Context, mock_hass: HomeAssistant) -> None:

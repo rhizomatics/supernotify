@@ -8,8 +8,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.tts import TTSTransport
-
-from .hass_setup_lib import TestingContext, assert_clean_notification, register_mobile_app
+from tests.components.supernotify.hass_setup_lib import TestingContext, assert_clean_notification, register_mobile_app
 
 if TYPE_CHECKING:
     from custom_components.supernotify.common import CallRecord

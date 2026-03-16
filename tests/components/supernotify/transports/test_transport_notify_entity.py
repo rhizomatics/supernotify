@@ -18,8 +18,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
-
-from .hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
 async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore

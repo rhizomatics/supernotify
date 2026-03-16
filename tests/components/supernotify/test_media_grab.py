@@ -2,7 +2,7 @@ import io
 import time
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
 import anyio
@@ -19,17 +19,25 @@ from PIL import Image, ImageChops
 from pytest_httpserver import HTTPServer
 
 from conftest import IMAGE_PATH, TestImage
-from custom_components.supernotify.const import PTZ_METHOD_FRIGATE
+from custom_components.supernotify.const import (
+    ATTR_MEDIA_SNAPSHOT_PATH,
+    CONF_CAMERA,
+    CONF_PTZ_PRESET_DEFAULT,
+    MEDIA_OPTION_REPROCESS,
+    PTZ_METHOD_FRIGATE,
+)
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
     MediaStorage,
     ReprocessOption,
+    camera_available,
     grab_image,
     move_camera_to_ptz_preset,
     select_avail_camera,
     snap_camera,
     snap_image_entity,
     snapshot_from_url,
+    write_image_from_bitmap,
 )
 from custom_components.supernotify.notification import Notification
 
@@ -362,3 +370,276 @@ async def test_media_storage(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
     first_purge = uut.last_purge
     await uut.cleanup()
     assert first_purge == uut.last_purge
+
+
+# --- snapshot_from_url ---
+
+
+@pytest.mark.enable_socket
+async def test_snapshot_url_with_relative_path(
+    unmocked_hass_api: HomeAssistantAPI, local_server: HTTPServer, sample_image: TestImage, tmp_path: Path
+) -> None:
+    local_server.expect_request("/proxy/cam").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)
+    result = await snapshot_from_url(
+        unmocked_hass_api, "/proxy/cam", "n1", anyio.Path(tmp_path / "media"), local_server.url_for("")
+    )
+    assert result is not None
+
+
+@pytest.mark.enable_socket
+async def test_snapshot_url_with_http_error(
+    unmocked_hass_api: HomeAssistantAPI, local_server: HTTPServer, tmp_path: Path
+) -> None:
+    local_server.expect_request("/bad").respond_with_data("not found", status=404)
+    result = await snapshot_from_url(
+        unmocked_hass_api, local_server.url_for("/bad"), "n1", anyio.Path(tmp_path / "media"), None
+    )
+    assert result is None
+
+
+# --- move_camera_to_ptz_preset ---
+
+
+async def test_move_camera_unknown_ptz_method(mock_hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(mock_hass)
+    await move_camera_to_ptz_preset(hass_api, "camera.x", "Upstairs", method="zigbee")
+    mock_hass.services.async_call.assert_not_called()  # type: ignore
+
+
+# --- snap_image_entity ---
+
+
+async def test_snap_image_entity_no_entity(unmocked_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    result = await snap_image_entity(unmocked_hass_api, "image.nonexistent", anyio.Path(tmp_path), "n1")
+    assert result is None
+
+
+async def test_snap_image_entity_exception(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    mock_entity = AsyncMock()
+    mock_entity.async_image.side_effect = RuntimeError("boom")
+    mock_hass_api.domain_entity.return_value = mock_entity  # type: ignore
+    result = await snap_image_entity(mock_hass_api, "image.broken", anyio.Path(tmp_path), "n1")
+    assert result is None
+
+
+# --- snap_camera ---
+
+
+async def test_snap_camera_empty_entity_id(unmocked_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    result = await snap_camera(unmocked_hass_api, "", "n1", anyio.Path(tmp_path))
+    assert result is None
+
+
+async def test_snap_camera_service_exception(unmocked_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    async def raising_snapshot(call: ServiceCall) -> ServiceResponse | None:
+        raise OSError("camera not responding")
+
+    unmocked_hass_api._hass.services.async_register("camera", "snapshot", raising_snapshot)
+    result = await snap_camera(unmocked_hass_api, "camera.broken", "n1", anyio.Path(tmp_path), max_camera_wait=1)
+    assert result is None
+
+
+# --- camera_available ---
+
+
+def test_camera_available_no_state(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.get_state.return_value = None  # type: ignore
+    assert camera_available(mock_hass_api, {CONF_CAMERA: "camera.nostate"}) is False
+
+
+def test_camera_available_tracker_missing(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.get_state.return_value = None  # type: ignore
+    assert camera_available(mock_hass_api, {CONF_CAMERA: "camera.x", "device_tracker": "device_tracker.gone"}) is False
+
+
+def test_camera_available_exception(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.get_state.side_effect = RuntimeError("unexpected")  # type: ignore
+    assert camera_available(mock_hass_api, {CONF_CAMERA: "camera.x"}) is False
+
+
+# --- select_avail_camera ---
+
+
+def test_select_primary_camera_no_entity_state(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_states(mock_hass_api)  # no entities have known state
+    result = select_avail_camera(mock_hass_api, {"camera.nostate": {CONF_CAMERA: "camera.nostate"}}, "camera.nostate")
+    assert result == "camera.nostate"
+
+
+def test_select_unavail_primary_with_unavail_alts(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_states(mock_hass_api, unavailable_entities=["device_tracker.cam1", "device_tracker.altcam1"])
+    result = select_avail_camera(
+        mock_hass_api,
+        {
+            "camera.primary": {
+                CONF_CAMERA: "camera.primary",
+                "device_tracker": "device_tracker.cam1",
+                "alt_camera": ["camera.alt1"],
+            },
+            "camera.alt1": {CONF_CAMERA: "camera.alt1", "device_tracker": "device_tracker.altcam1"},
+        },
+        "camera.primary",
+    )
+    assert result == "camera.alt1"
+
+
+# --- write_image_from_bitmap ---
+
+
+async def test_write_image_from_bitmap_none_bitmap(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    result = await write_image_from_bitmap(mock_hass_api, None, anyio.Path(tmp_path), "n1")
+    assert result is None
+
+
+async def test_write_image_from_bitmap_type_error(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    image = Image.new("RGB", (10, 10))
+    buf = BytesIO()
+    image.save(buf, "jpeg")
+    bitmap = buf.getvalue()
+    mock_hass_api.create_job.return_value = Image.open(BytesIO(bitmap))  # type: ignore
+    with patch.object(Image.Image, "save", side_effect=TypeError("bad option")):
+        result = await write_image_from_bitmap(mock_hass_api, bitmap, anyio.Path(tmp_path), "n1")
+    assert result is None
+
+
+async def test_write_image_from_bitmap_exception(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    image = Image.new("RGB", (10, 10))
+    buf = BytesIO()
+    image.save(buf, "jpeg")
+    bitmap = buf.getvalue()
+    mock_hass_api.create_job.return_value = Image.open(BytesIO(bitmap))  # type: ignore
+    with patch.object(Image.Image, "save", side_effect=RuntimeError("unexpected")):
+        result = await write_image_from_bitmap(mock_hass_api, bitmap, anyio.Path(tmp_path), "n1")
+    assert result is None
+
+
+# --- grab_image ---
+
+
+async def test_grab_image_no_media_path(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    ctx.media_storage.media_path = None
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://test"}})
+    assert await grab_image(notification, "mail", ctx) is None
+
+
+async def test_grab_image_invalid_reprocess(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
+    notification.media[MEDIA_OPTION_REPROCESS] = "bogus"  # inject directly — not in schema
+    with patch("custom_components.supernotify.media_grab.snapshot_from_url", return_value=anyio.Path("/tmp/img.jpg")):  # noqa: S108
+        result = await grab_image(notification, "mail", ctx)
+    assert result is not None
+
+
+async def test_grab_image_with_existing_snapshot_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    existing = tmp_path / "shot.jpg"
+    existing.touch()
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://cam/snap"}})
+    notification.media[ATTR_MEDIA_SNAPSHOT_PATH] = str(existing)  # inject directly — not in schema
+    result = await grab_image(notification, "mail", ctx)
+    assert str(result) == str(existing)
+
+
+async def test_grab_image_with_image_entity(hass: HomeAssistant, tmp_path: Path) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    expected = anyio.Path(tmp_path / "result.jpg")
+    with patch("custom_components.supernotify.media_grab.snap_image_entity", return_value=expected):
+        notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "image.front_door"}})
+        result = await grab_image(notification, "mail", ctx)
+    assert result == expected
+
+
+async def test_grab_image_with_camera(hass: HomeAssistant, tmp_path: Path) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    expected = anyio.Path(tmp_path / "result.jpg")
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=expected):
+            notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
+            result = await grab_image(notification, "mail", ctx)
+    assert result == expected
+
+
+async def test_grab_image_with_camera_ptz(hass: HomeAssistant, tmp_path: Path) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    ctx.cameras = {"camera.front": {CONF_CAMERA: "camera.front", CONF_PTZ_PRESET_DEFAULT: "Home"}}
+    expected = anyio.Path(tmp_path / "result.jpg")
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=expected):
+            with patch(
+                "custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock
+            ) as mock_ptz:
+                notification = Notification(
+                    ctx,
+                    "Test",
+                    action_data={"media": {"camera_entity_id": "camera.front", "camera_ptz_preset": "Doorway"}},
+                )
+                result = await grab_image(notification, "mail", ctx)
+    assert result == expected
+    assert mock_ptz.call_count == 2  # move to preset before snap, return to default after
+
+
+async def test_grab_image_camera_unavailable(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value=None):
+        notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.unavailable"}})
+        result = await grab_image(notification, "mail", ctx)
+    assert result is None
+
+
+# --- MediaStorage ---
+
+
+async def test_media_storage_initialize_creates_path(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    new_path = tmp_path / "new_media_dir"
+    uut = MediaStorage(str(new_path))
+    await uut.initialize(mock_hass_api)
+    assert uut.media_path is not None
+    assert await anyio.Path(new_path).exists()
+
+
+async def test_media_storage_initialize_mkdir_fails(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    new_path = tmp_path / "new_dir"
+    uut = MediaStorage(str(new_path))
+    with patch.object(anyio.Path, "mkdir", side_effect=PermissionError("no permission")):
+        await uut.initialize(mock_hass_api)
+    assert uut.media_path is None
+    mock_hass_api.raise_issue.assert_called_once()  # type: ignore
+
+
+async def test_media_storage_size_no_path(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = MediaStorage(None)
+    assert await uut.size() == 0
+
+
+async def test_media_storage_cleanup_zero_days(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    uut = MediaStorage(str(tmp_path), 0)
+    assert await uut.cleanup() == 0
+
+
+async def test_media_storage_cleanup_no_path(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = MediaStorage(None)
+    assert await uut.cleanup() == 0
+
+
+async def test_media_storage_cleanup_scandir_exception(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    uut = MediaStorage(str(tmp_path), 7)
+    await uut.initialize(mock_hass_api)
+    with patch("aiofiles.os.scandir", side_effect=OSError("disk error")):
+        count = await uut.cleanup(force=True)
+    assert count == 0
+
+
+async def test_media_storage_cleanup_nonexistent_path(mock_hass_api: HomeAssistantAPI, tmp_path: Path) -> None:
+    nonexistent = tmp_path / "nope"
+    uut = MediaStorage(str(nonexistent), 7)
+    uut.media_path = anyio.Path(nonexistent)  # set without initializing (so path doesn't exist on disk)
+    assert await uut.cleanup(force=True) == 0

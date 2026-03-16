@@ -26,9 +26,8 @@ from custom_components.supernotify.transports.chime import (
     RestCommandChimeTransport,
     ScriptChimeTransport,
 )
-
-from .doubles_lib import service_call
-from .hass_setup_lib import TestingContext
+from tests.components.supernotify.doubles_lib import service_call
+from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
 async def test_deliver() -> None:
