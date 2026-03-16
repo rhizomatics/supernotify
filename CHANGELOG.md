@@ -1,8 +1,11 @@
 # Public releases
 
 ## 1.11.0
+### Dupe Checking
 - `force_resend` can be set in `data` section to override dupe handling ( contribution by [@lollox80](https://github.com/lollox80))
 - `dupe_policy_message_title_same` duplicate detection policy added
+### Internal
+- Added more tests, focusing on transports and media_grab
 ## 1.10.1
 - Lint and type fixes
 ## 1.10.0
