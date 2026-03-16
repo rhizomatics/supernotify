@@ -18,7 +18,7 @@ The hashed message and title is cached, with a limit to both cache size and time
 
 ```yaml title="configuration snippet"
     dupe_check:
-      ttl: 300 # default, 300 seconds == 5 minutes
+      ttl: 120 # default, 120 seconds == 2 minutes
       size: 100 # default 100 entries in cache
       dupe_policy: dupe_policy_message_title_same_or_lower_priority
 ```
@@ -26,3 +26,7 @@ The hashed message and title is cached, with a limit to both cache size and time
 ## Overriding
 
 Set `force_resend: true` on the `data` section of a notification to override any dupe detection, just for that message.
+
+## Internals
+
+The cache is implemented using [cachetools TTLCache](https://cachetools.readthedocs.io/en/stable/#cachetools.TTLCache)

@@ -7,7 +7,7 @@ notify:
     mobile_discovery: true
     dupe_check:
       ttl: 300
-      size: 100
+      size: 50
       dupe_policy: dupe_policy_message_title_same_or_lower_priority
     archive:
       enabled: true

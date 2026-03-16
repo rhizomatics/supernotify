@@ -131,6 +131,8 @@ class DupeCheckable:
 
 
 class DupeChecker:
+    """Apply the duplicate checking policy to duplicate candidates"""
+
     def __init__(self, dupe_check_config: ConfigType) -> None:
         self.policy = dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
         # dupe check cache, key is (priority, message hash)
@@ -142,8 +144,8 @@ class DupeChecker:
         if self.policy == ATTR_DUPE_POLICY_NONE:
             return False
         hashed: int = dupe_candidate.hash()
+        ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
         if self.policy == ATTR_DUPE_POLICY_MTSLP:
-            ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
             dupe: bool = any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in self.cache)
         elif self.policy == ATTR_DUPE_POLICY_MT:
             dupe = any(prev_hash == hashed for prev_hash, _prev_prior in self.cache)

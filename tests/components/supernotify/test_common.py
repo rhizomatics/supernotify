@@ -1,6 +1,7 @@
 from unittest.mock import Mock
 
 from custom_components.supernotify.common import CallRecord, DupeChecker, ensure_dict, ensure_list, safe_extend, safe_get
+from custom_components.supernotify.const import ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE, CONF_DUPE_POLICY
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
 
@@ -61,4 +62,41 @@ def test_dupe_check_allows_higher_priority_and_same_message() -> None:
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
     e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
+    assert uut.check(e2) is False
+
+
+def test_dupe_policy_mt_suppresses_same_message() -> None:
+    delivery = Mock(name="tester")
+    uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
+    e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
+    assert uut.check(e1) is False
+    e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
+    assert uut.check(e2) is True
+
+
+def test_dupe_policy_mt_suppresses_higher_priority_same_message() -> None:
+    """Unlike MTSLP, MT suppresses even when priority escalates."""
+    delivery = Mock(name="tester")
+    uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
+    e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
+    assert uut.check(e1) is False
+    e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
+    assert uut.check(e2) is True
+
+
+def test_dupe_policy_mt_allows_different_message() -> None:
+    delivery = Mock(name="tester")
+    uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
+    e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
+    assert uut.check(e1) is False
+    e2 = Envelope(delivery, Notification(Mock(), "different message", "title here"))
+    assert uut.check(e2) is False
+
+
+def test_dupe_policy_none_never_suppresses() -> None:
+    delivery = Mock(name="tester")
+    uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE})
+    e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
+    assert uut.check(e1) is False
+    e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e2) is False
