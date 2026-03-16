@@ -240,6 +240,10 @@
       "type": "boolean",
       "default": false
     },
+    "force_resend": {
+      "type": "boolean",
+      "default": false
+    },
     "data": {
       "type": "object",
       "additionalProperties": true,

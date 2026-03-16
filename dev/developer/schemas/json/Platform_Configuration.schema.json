@@ -92,7 +92,8 @@
       "properties": {
         "ttl": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "default": 300
         },
         "size": {
           "type": "integer",
@@ -103,6 +104,7 @@
           "type": "string",
           "enum": [
             "dupe_policy_message_title_same_or_lower_priority",
+            "dupe_policy_message_title_same",
             "dupe_policy_none"
           ],
           "default": "dupe_policy_message_title_same_or_lower_priority"
