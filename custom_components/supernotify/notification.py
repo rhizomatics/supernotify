@@ -109,7 +109,9 @@ class Notification(ArchivableObject):
         self.extra_data: dict[str, Any] = {
             k: v for k, v in action_data.items() if k not in STRICT_ACTION_DATA_SCHEMA(action_data)
         }
+
         action_data = {k: v for k, v in action_data.items() if k not in self.extra_data}
+        self.extra_data.update(action_data.get(ATTR_DATA, {}))  # nested `data` could be supernotify or target service
 
         self.priority: str = action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM)
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
@@ -149,7 +151,6 @@ class Notification(ArchivableObject):
 
         self.action_groups: list[str] | None = nullable_ensure_list(action_data.get(ATTR_ACTION_GROUPS))
         self.recipients_override: list[str] | None = nullable_ensure_list(action_data.get(ATTR_RECIPIENTS))
-        self.extra_data.update(action_data.get(ATTR_DATA, {}))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
@@ -766,6 +767,7 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
+                envelope_data.update(self.extra_data)  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
