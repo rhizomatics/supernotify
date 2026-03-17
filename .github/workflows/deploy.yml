@@ -84,20 +84,21 @@ jobs:
         sudo apt-get install pngquant
         uv sync --group docs
         git config push.autoSetupRemote true
+        git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         git fetch origin gh-pages --depth=1
         if [ "${{ github.event_name }}" = "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
           if [[ "${{ github.event.release.prerelease }}" = "true" ]]; then
             echo "Deploying prerelease version: $TAG"
-            uv run mike deploy --push --ignore-remote-status --update-aliases "$TAG" beta
+            uv run mike deploy --push --update-aliases "$TAG" beta
           else
             echo "Deploying stable release: $TAG"
             uv run mike deploy --push --ignore-remote-status --update-aliases "$TAG" latest
-            uv run mike set-default --push --ignore-remote-status latest
+            uv run mike set-default --push latest
           fi
         else
           echo "Deploying development docs"
-          uv run mike deploy --push --ignore-remote-status --update-aliases dev
+          uv run mike deploy --push --update-aliases dev
         fi
 
       env:
