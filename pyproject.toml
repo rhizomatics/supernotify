@@ -9,6 +9,7 @@ dependencies = [
     "cachetools",
     "bs4",
     "aiofiles",
+    "pyopenssl==25.3.0" # HA issue 2026.3
 ]
 
 [tool.poetry]

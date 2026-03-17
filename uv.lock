@@ -3115,6 +3115,7 @@ dependencies = [
     { name = "bs4" },
     { name = "cachetools" },
     { name = "homeassistant" },
+    { name = "pyopenssl" },
 ]
 
 [package.dev-dependencies]
@@ -3170,6 +3171,7 @@ requires-dist = [
     { name = "bs4" },
     { name = "cachetools" },
     { name = "homeassistant", specifier = ">=2026.3.2" },
+    { name = "pyopenssl", specifier = "==25.3.0" },
 ]
 
 [package.metadata.requires-dev]
