@@ -83,6 +83,7 @@ jobs:
       run: |
         sudo apt-get install pngquant
         uv sync --group docs
+        git fetch origin gh-pages --depth=1
         if [ "${{ github.event_name }}" = "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
           if [[ "${{ github.event.release.prerelease }}" = "true" ]]; then
