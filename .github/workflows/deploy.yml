@@ -83,6 +83,7 @@ jobs:
       run: |
         sudo apt-get install pngquant
         uv sync --group docs
+        git config push.autoSetupRemote true
         git fetch origin gh-pages --depth=1
         if [ "${{ github.event_name }}" = "release" ]; then
           TAG="${{ github.event.release.tag_name }}"
