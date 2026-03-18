@@ -200,28 +200,16 @@ class Envelope(DupeCheckable):
         return str(title)
 
     def _resolve_channel_message(self) -> str | None:
-        """Resolve channel-specific message override from extra_data.
-
-        Lookup priority (highest to lowest):
-          1. channel_message.<delivery_name>   e.g. channel_message.alexa_announce
-          2. channel_message.<transport_name>  e.g. channel_message.alexa_media_player
-          3. spoken_message                    backward compat alias for alexa/tts transports
-          4. None (caller falls back to default message)
-        """
+        """Resolve channel-specific message override from extra_data."""
         extra = (self._notification.extra_data if self._notification and hasattr(self._notification, "extra_data") else {})
         if not extra:
             return None
-        channel_messages: dict[str, str] = extra.get("channel_message", {})
-        transport_name: str | None = (
-            self.delivery.transport.name if self.delivery and self.delivery.transport else None
-        )
-        # 1. delivery-specific override (most specific)
+        channel_messages = extra.get("channel_message", {})
+        transport_name = (self.delivery.transport.name if self.delivery and self.delivery.transport else None)
         if self.delivery_name in channel_messages:
             return str(channel_messages[self.delivery_name])
-        # 2. transport-specific override
         if transport_name and transport_name in channel_messages:
             return str(channel_messages[transport_name])
-        # 3. spoken_message backward compat — applies to voice transports only
         if "spoken_message" in extra and transport_name in ("alexa_media_player", "alexa_devices", "tts"):
             return str(extra["spoken_message"])
         return None
@@ -234,16 +222,13 @@ class Envelope(DupeCheckable):
             msg = self._message
         else:
             msg = self.delivery.message if self.delivery.message is not None else self._message
-            # resolve delivery.message template if it contains Jinja2
-            if msg and self.context and "{{" in msg:
+            if msg and self.context and "{{" in str(msg):
                 try:
-                    from homeassistant.exceptions import TemplateError
                     context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
                     template = self.context.hass_api.template(msg)
                     msg = template.async_render(variables=context_vars)
                 except Exception as e:
                     _LOGGER.warning("SUPERNOTIFY Rendering delivery message template for %s failed: %s", self.delivery_name, e)
-            # channel_message override — delivery-level config takes priority
             if self.delivery.message is None:
                 channel_msg = self._resolve_channel_message()
                 if channel_msg is not None:

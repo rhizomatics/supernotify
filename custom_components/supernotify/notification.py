@@ -19,6 +19,7 @@ from .const import (
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
     ATTR_FORCE_RESEND,
+    ATTR_CHANNEL_MESSAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
@@ -768,8 +769,6 @@ class Notification(ArchivableObject):
                 envelope_data = {}
                 envelope_data.update(delivery.data)
                 envelope_data.update({k: v for k, v in self.extra_data.items() if k not in (ATTR_FORCE_RESEND, ATTR_CHANNEL_MESSAGE, "spoken_message")})  # action call data
-                # channel_message tenuto in extra_data dell'envelope per _resolve_channel_message
-                # NON va in envelope_data altrimenti finisce nel payload push/email
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
