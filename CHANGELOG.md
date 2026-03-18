@@ -1,7 +1,7 @@
 # Public releases
 
 ## 1.11.1
-Fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
+Includes fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 -  Icon fixes
 - `notification_id` suppressed in persistent notification if null
 - Archive file names sanitized for Windows/SMB
