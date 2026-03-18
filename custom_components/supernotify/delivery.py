@@ -7,7 +7,6 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ACTION,
     CONF_ALIAS,
-    CONF_CONDITION,
     CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_ENABLED,
@@ -77,8 +76,6 @@ class Delivery(DeliveryConfig):
         self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
         self.occupancy: str = conf.get(CONF_OCCUPANCY, OCCUPANCY_ALL)
         self.conditions_config: list[ConfigType] | None = conf.get(CONF_CONDITIONS)
-        if not conf.get(CONF_CONDITIONS) and conf.get(CONF_CONDITION):
-            self.conditions_config = conf.get(CONF_CONDITION)
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
         if self.options.get(OPTION_TARGET_SELECT):

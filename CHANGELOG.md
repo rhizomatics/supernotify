@@ -8,6 +8,7 @@ Fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 - URLs in action groups allow `homeassistant://` deep links
 - Suppress repeating `condition_variables` from archived envelopes
 - Expand templated values in `data` for archiving
+- Migrate old `condition` to `conditions`
 ## 1.11.0
 ### Dupe Checking
 - `force_resend` can be set in `data` section to override dupe handling ( contribution by [@lollox80](https://github.com/lollox80))

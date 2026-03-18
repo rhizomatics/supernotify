@@ -23,7 +23,7 @@ import voluptuous as vol
 # type: ignore[attr-defined,unused-ignore]
 from homeassistant.components.trace import async_store_trace
 from homeassistant.components.trace.models import ActionTrace
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITION, CONF_CONDITIONS
+from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITIONS
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
@@ -65,8 +65,6 @@ class Scenario:
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.conditions: ConditionsFunc | None = None
         self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
-        if not scenario_definition.get(CONF_CONDITIONS) and scenario_definition.get(CONF_CONDITION):
-            self.conditions_config = scenario_definition.get(CONF_CONDITION)
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
         self._config_delivery: dict[str, DeliveryCustomization]

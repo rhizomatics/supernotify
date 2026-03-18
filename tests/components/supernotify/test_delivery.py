@@ -1,6 +1,6 @@
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.const import CONF_ACTION, CONF_CONDITION
+from homeassistant.const import CONF_ACTION, CONF_CONDITIONS
 
 from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
@@ -73,14 +73,14 @@ async def test_repair_for_bad_conditions(mock_context: Context) -> None:
     mock_context.hass_api.build_conditions = AsyncMock(side_effect=Exception("integrations"))  # type: ignore
     uut = Delivery(
         "generic",
-        {CONF_CONDITION: {"condition": "xor"}},
+        {CONF_CONDITIONS: [{"condition": "xor"}]},
         GenericTransport(mock_context, {CONF_DELIVERY_DEFAULTS: {CONF_ACTION: "notify.notify"}}),
     )
     assert await uut.initialize(mock_context) is False
     mock_context.hass_api.raise_issue.assert_called_with(  # type: ignore
         "delivery_generic_invalid_condition",
         issue_key="delivery_invalid_condition",
-        issue_map={"delivery": "generic", "condition": "{'condition': 'xor'}", "exception": "integrations"},
+        issue_map={"delivery": "generic", "condition": "[{'condition': 'xor'}]", "exception": "integrations"},
         learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
     )
 

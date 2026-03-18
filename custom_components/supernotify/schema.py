@@ -293,8 +293,17 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
 })
 
 
+def _migrate_condition(config: dict) -> dict:
+    """Migrate deprecated 'condition' key to 'conditions'."""
+    if CONF_CONDITION in config:
+        if CONF_CONDITIONS not in config:
+            config = {**config, CONF_CONDITIONS: config[CONF_CONDITION]}
+        config = {k: v for k, v in config.items() if k != CONF_CONDITION}
+    return config
+
+
 DELIVERY_SCHEMA = vol.All(
-    cv.deprecated(key=CONF_CONDITION),
+    _migrate_condition,
     DELIVERY_CONFIG_SCHEMA.extend({
         vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
         vol.Optional(CONF_ALIAS): cv.string,
@@ -303,7 +312,6 @@ DELIVERY_SCHEMA = vol.All(
         vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
         vol.Optional(CONF_ENABLED): cv.boolean,
         vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
-        vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
     }),
 )
@@ -367,12 +375,11 @@ MEDIA_SCHEMA = vol.Schema({
 
 
 SCENARIO_SCHEMA = vol.All(
-    cv.deprecated(key=CONF_CONDITION),
+    _migrate_condition,
     cv.deprecated(key="delivery_selection"),
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_CONDITION): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
         vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
