@@ -591,7 +591,7 @@ class Notification(ArchivableObject):
 
     def base_filename(self) -> str:
         """ArchiveableObject implementation"""
-        return f"{self.created.isoformat()[:16]}_{self.id}"
+        return f"{self.created.isoformat()[:16].replace(':', '-')}_{self.id}"
 
     def delivery_data(self, delivery_name: str) -> dict[str, Any]:
         delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery_name)
