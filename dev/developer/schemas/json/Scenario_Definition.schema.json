@@ -8,13 +8,6 @@
       "default": true,
       "type": "string"
     },
-    "condition": {
-      "type": "array",
-      "items": {
-        "nullable": true,
-        "type": "string"
-      }
-    },
     "conditions": {
       "type": "array",
       "items": {

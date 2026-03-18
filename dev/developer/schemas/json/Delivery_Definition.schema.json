@@ -210,13 +210,6 @@
       ],
       "default": "all"
     },
-    "condition": {
-      "type": "array",
-      "items": {
-        "nullable": true,
-        "type": "string"
-      }
-    },
     "conditions": {
       "type": "array",
       "items": {
