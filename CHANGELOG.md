@@ -1,5 +1,9 @@
 # Public releases
 
+## 1.11.1
+-  Icon fixes
+- `notification_id` suppressed in persistent notification if null
+- Archive file names sanitized for Windows/SMB
 ## 1.11.0
 ### Dupe Checking
 - `force_resend` can be set in `data` section to override dupe handling ( contribution by [@lollox80](https://github.com/lollox80))

@@ -595,7 +595,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=sanitize(delivery.attributes()),
                 original_name=f"{delivery.name} Delivery Configuration",
-                original_icon="mdi:package_variant",
+                original_icon="mdi:package-variant",
                 entity_registry=ent_reg,
             )
 
