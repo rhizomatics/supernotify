@@ -208,7 +208,7 @@ class Envelope(DupeCheckable):
           3. spoken_message                    backward compat alias for alexa/tts transports
           4. None (caller falls back to default message)
         """
-        extra = self.extra_data if hasattr(self, "extra_data") else {}
+        extra = (self._notification.extra_data if self._notification and hasattr(self._notification, "extra_data") else {})
         if not extra:
             return None
         channel_messages: dict[str, str] = extra.get("channel_message", {})
@@ -234,6 +234,15 @@ class Envelope(DupeCheckable):
             msg = self._message
         else:
             msg = self.delivery.message if self.delivery.message is not None else self._message
+            # resolve delivery.message template if it contains Jinja2
+            if msg and self.context and "{{" in msg:
+                try:
+                    from homeassistant.exceptions import TemplateError
+                    context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
+                    template = self.context.hass_api.template(msg)
+                    msg = template.async_render(variables=context_vars)
+                except Exception as e:
+                    _LOGGER.warning("SUPERNOTIFY Rendering delivery message template for %s failed: %s", self.delivery_name, e)
             # channel_message override — delivery-level config takes priority
             if self.delivery.message is None:
                 channel_msg = self._resolve_channel_message()
