@@ -94,7 +94,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
-        service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
+        service_data={"title": "test_title", "message": "testing 123"},
         blocking=False,
         context=None,
         target=None,
@@ -113,7 +113,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
-        service_data={"title": "test_title", "message": "testing 123", "notification_id": None},
+        service_data={"title": "test_title", "message": "testing 123"},
         blocking=False,
         context=None,
         target=None,

@@ -134,7 +134,7 @@ class Envelope(DupeCheckable):
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
-        exclude_attrs: list[str] = ["_notification", "context"]
+        exclude_attrs: list[str] = ["_notification", "context", "condition_variables"]
         if minimal:
             exclude_attrs.append("delivery")
             features: TransportFeature = self.delivery.transport.supported_features
@@ -150,6 +150,7 @@ class Envelope(DupeCheckable):
                 exclude_attrs.append("target")
 
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs and not k.startswith("_")}
+        json_ready["data"] = self._resolve_data_templates(self.data)
         json_ready["calls"] = [call.contents() for call in self.calls]
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
         return json_ready
@@ -261,3 +262,27 @@ class Envelope(DupeCheckable):
             return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
 
         return hash((alphaize(self._message), alphaize(self.delivery.name), self.target.hash_resolved(), alphaize(self._title)))
+
+    def _resolve_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Resolve Jinja2 templates in data dict for archive readability.
+
+        Returns a copy of data with template strings replaced by their
+        resolved values. Raw template string is preserved alongside as
+        <key>_template for debugging. Non-template values are unchanged.
+        """
+        if not data or not self.context:
+            return data
+        resolved: dict[str, Any] = {}
+        context_vars = cast("dict[str, Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
+        for key, value in data.items():
+            if isinstance(value, str) and "{{" in value:
+                try:
+                    rendered = self.context.hass_api.template(value).async_render(variables=context_vars)
+                    resolved[key] = rendered
+                    resolved[f"{key}_template"] = value
+                except Exception as e:
+                    _LOGGER.debug("SUPERNOTIFY Could not resolve template for %s in %s: %s", key, self.delivery_name, e)
+                    resolved[key] = value
+            else:
+                resolved[key] = value
+        return resolved
