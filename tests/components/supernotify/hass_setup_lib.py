@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Any, cast
 from unittest.mock import AsyncMock, Mock
 
+from custom_components.supernotify.archive import NotificationArchive
 from homeassistant import config_entries, setup
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
@@ -30,7 +31,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
-from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.common import DupeChecker
 from custom_components.supernotify.const import (
     ATTR_USER_ID,

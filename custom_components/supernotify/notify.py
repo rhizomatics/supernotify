@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, STATE_UNKNOWN, EntityCategory, Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON, EntityCategory, Platform
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -27,10 +27,7 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, PLATFORMS
-from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker, sanitize
-from .const import (
+from . import (
     ATTR_ACTION,
     ATTR_DATA,
     CONF_ACTION_GROUPS,
@@ -48,11 +45,16 @@ from .const import (
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SCENARIOS,
-    CONF_SNOOZE,
+    CONF_SNOOZE_HOURS,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
+    DOMAIN,
+    PLATFORMS,
     PRIORITY_MEDIUM,
 )
+from . import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
+from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
+from .common import DupeChecker, sanitize
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
@@ -61,7 +63,6 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
-from .schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .snoozer import Snoozer
 from .transport import Transport
 from .transports.alexa_devices import AlexaDevicesTransport
@@ -133,7 +134,6 @@ async def async_get_service(
         transport_configs=config[CONF_TRANSPORTS],
         cameras=config[CONF_CAMERAS],
         dupe_check=config[CONF_DUPE_CHECK],
-        snooze=config[CONF_SNOOZE],
     )
     await service.initialize()
 
@@ -154,7 +154,6 @@ async def async_get_service(
             CONF_TRANSPORTS: config.get(CONF_TRANSPORTS, {}),
             CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
             CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
-            CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
         }
 
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
@@ -342,7 +341,6 @@ class SupernotifyAction(BaseNotificationService):
         transport_configs: dict[str, Any] | None = None,
         cameras: list[dict[str, Any]] | None = None,
         dupe_check: dict[str, Any] | None = None,
-        snooze: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None
@@ -358,7 +356,7 @@ class SupernotifyAction(BaseNotificationService):
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
             MediaStorage(media_path, self.housekeeping.get(CONF_MEDIA_STORAGE_DAYS, 7)),
-            Snoozer(snooze),
+            Snoozer(default_snooze_hours=self.housekeeping.get(CONF_SNOOZE_HOURS, 1)),
             links or [],
             recipients or [],
             mobile_actions,
@@ -573,7 +571,7 @@ class SupernotifyAction(BaseNotificationService):
         for scenario in self.context.scenario_registry.scenarios.values():
             self.expose_entity(
                 f"scenario_{scenario.name}",
-                state=STATE_UNKNOWN,
+                state=STATE_ON if scenario.enabled else STATE_OFF,
                 attributes=sanitize(scenario.attributes(include_condition=False)),
                 original_name=f"{scenario.name} Scenario",
                 original_icon="mdi:clipboard-text",
@@ -595,7 +593,7 @@ class SupernotifyAction(BaseNotificationService):
                 state=STATE_ON if delivery.enabled else STATE_OFF,
                 attributes=sanitize(delivery.attributes()),
                 original_name=f"{delivery.name} Delivery Configuration",
-                original_icon="mdi:package_variant",
+                original_icon="mdi:package-variant",
                 entity_registry=ent_reg,
             )
 

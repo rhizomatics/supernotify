@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiofiles
 import anyio
 import pytest
+from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
 from homeassistant.const import CONF_ENABLED
 from homeassistant.core import HomeAssistant
 
-from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
 from custom_components.supernotify.const import (
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
