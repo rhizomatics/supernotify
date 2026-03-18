@@ -380,11 +380,14 @@ SCENARIO_SCHEMA = vol.All(
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)},
     }),
 )
+
+
 def _mobile_action_uri(value: str) -> str:
     """Validate URI for mobile actions — accepts http/https and homeassistant:// deep links."""
     if value and not (value.startswith(("http://", "https://", "homeassistant://"))):
         raise vol.Invalid(f"Invalid URI {value!r}: must start with http://, https://, or homeassistant://")
     return value
+
 
 MOBILE_ACTION_CALL_SCHEMA = vol.Schema(
     {
