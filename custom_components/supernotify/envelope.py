@@ -199,6 +199,21 @@ class Envelope(DupeCheckable):
             return None
         return str(title)
 
+    def _resolve_channel_message(self) -> str | None:
+        """Resolve channel-specific message override from extra_data."""
+        extra = self._notification.extra_data if self._notification and hasattr(self._notification, "extra_data") else {}
+        if not extra:
+            return None
+        channel_messages = extra.get("channel_message", {})
+        transport_name = self.delivery.transport.name if self.delivery and self.delivery.transport else None
+        if self.delivery_name in channel_messages:
+            return str(channel_messages[self.delivery_name])
+        if transport_name and transport_name in channel_messages:
+            return str(channel_messages[transport_name])
+        if "spoken_message" in extra and transport_name in ("alexa_media_player", "alexa_devices", "tts"):
+            return str(extra["spoken_message"])
+        return None
+
     def _compute_message(self) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
 
@@ -207,6 +222,17 @@ class Envelope(DupeCheckable):
             msg = self._message
         else:
             msg = self.delivery.message if self.delivery.message is not None else self._message
+            if msg and self.context and "{{" in str(msg):
+                try:
+                    context_vars = cast("dict[str,Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
+                    template = self.context.hass_api.template(msg)
+                    msg = template.async_render(variables=context_vars)
+                except Exception as e:
+                    _LOGGER.warning("SUPERNOTIFY Rendering delivery message template for %s failed: %s", self.delivery_name, e)
+            if self.delivery.message is None:
+                channel_msg = self._resolve_channel_message()
+                if channel_msg is not None:
+                    msg = channel_msg
             message_usage: str = str(self.delivery.option_str(OPTION_MESSAGE_USAGE))
             if message_usage.upper() == MessageOnlyPolicy.USE_TITLE:
                 title = self._compute_title(ignore_usage=True)
