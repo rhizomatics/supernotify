@@ -161,16 +161,13 @@ class AlexaMediaPlayerTransport(Transport):
         """Override in subclass if transport has fixed action."""
         return action is not None
 
-    async def _safe_service(
-        self, domain: str, service: str, service_data: dict[str, Any]
-    ) -> None:
+    async def _safe_service(self, domain: str, service: str, service_data: dict[str, Any]) -> None:
         """Call a HA service, swallowing exceptions so one offline device
-        never blocks or fails the overall delivery."""
+        never blocks or fails the overall delivery.
+        """
         try:
-            await self.hass.services.async_call(
-                domain, service, service_data, blocking=False
-            )
-        except Exception:  # noqa: BLE001
+            await self.hass.services.async_call(domain, service, service_data, blocking=False)
+        except Exception:
             _LOGGER.debug(
                 "SUPERNOTIFY alexa_media_player: %s.%s failed for %s",
                 domain,
@@ -178,9 +175,7 @@ class AlexaMediaPlayerTransport(Transport):
                 service_data.get(ATTR_ENTITY_ID, "unknown"),
             )
 
-    async def _snapshot_states(
-        self, media_players: list[str], volume_fallback: float
-    ) -> dict[str, dict[str, Any]]:
+    async def _snapshot_states(self, media_players: list[str], volume_fallback: float) -> dict[str, dict[str, Any]]:
         """Read current volume and playback state for every target device.
 
         If volume_level is None (AMP startup bug, issue #1394) the
@@ -195,8 +190,7 @@ class AlexaMediaPlayerTransport(Transport):
             vol = state.attributes.get("volume_level")
             if vol is None:
                 _LOGGER.debug(
-                    "SUPERNOTIFY alexa_media_player: %s volume_level is None, "
-                    "using fallback %.2f (AMP issue #1394)",
+                    "SUPERNOTIFY alexa_media_player: %s volume_level is None, using fallback %.2f (AMP issue #1394)",
                     mp,
                     volume_fallback,
                 )
@@ -221,15 +215,9 @@ class AlexaMediaPlayerTransport(Transport):
         """
         for mp, prev in states.items():
             if pause_music and prev["playing"]:
-                _LOGGER.debug(
-                    "SUPERNOTIFY alexa_media_player: pausing music on %s", mp
-                )
-                await self._safe_service(
-                    "media_player", "media_pause", {ATTR_ENTITY_ID: mp}
-                )
-            await self._safe_service(
-                "media_player", "media_stop", {ATTR_ENTITY_ID: mp}
-            )
+                _LOGGER.debug("SUPERNOTIFY alexa_media_player: pausing music on %s", mp)
+                await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+            await self._safe_service("media_player", "media_stop", {ATTR_ENTITY_ID: mp})
             _LOGGER.debug(
                 "SUPERNOTIFY alexa_media_player: setting volume %.2f on %s",
                 requested_volume,
@@ -252,13 +240,9 @@ class AlexaMediaPlayerTransport(Transport):
         2-second delay before media_play ensures volume_set has been
         applied before music restarts (ago19800/centralino pattern).
         """
-        music_devices = [
-            mp for mp, s in states.items() if pause_music and s["playing"]
-        ]
+        music_devices = [mp for mp, s in states.items() if pause_music and s["playing"]]
         for mp, prev in states.items():
-            await self._safe_service(
-                "media_player", "media_stop", {ATTR_ENTITY_ID: mp}
-            )
+            await self._safe_service("media_player", "media_stop", {ATTR_ENTITY_ID: mp})
             if restore_volume:
                 _LOGGER.debug(
                     "SUPERNOTIFY alexa_media_player: restoring volume %.2f on %s",
@@ -277,12 +261,8 @@ class AlexaMediaPlayerTransport(Transport):
             )
             await asyncio.sleep(_MUSIC_RESUME_DELAY)
             for mp in music_devices:
-                _LOGGER.debug(
-                    "SUPERNOTIFY alexa_media_player: resuming music on %s", mp
-                )
-                await self._safe_service(
-                    "media_player", "media_play", {ATTR_ENTITY_ID: mp}
-                )
+                _LOGGER.debug("SUPERNOTIFY alexa_media_player: resuming music on %s", mp)
+                await self._safe_service("media_player", "media_play", {ATTR_ENTITY_ID: mp})
 
     async def deliver(
         self,
@@ -319,9 +299,7 @@ class AlexaMediaPlayerTransport(Transport):
         elif pause_music and states:
             for mp, prev in states.items():
                 if prev["playing"]:
-                    await self._safe_service(
-                        "media_player", "media_pause", {ATTR_ENTITY_ID: mp}
-                    )
+                    await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
 
         # Announce
         action_data: dict[str, Any] = {

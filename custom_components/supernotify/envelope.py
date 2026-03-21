@@ -201,11 +201,11 @@ class Envelope(DupeCheckable):
 
     def _resolve_channel_message(self) -> str | None:
         """Resolve channel-specific message override from extra_data."""
-        extra = (self._notification.extra_data if self._notification and hasattr(self._notification, "extra_data") else {})
+        extra = self._notification.extra_data if self._notification and hasattr(self._notification, "extra_data") else {}
         if not extra:
             return None
         channel_messages = extra.get("channel_message", {})
-        transport_name = (self.delivery.transport.name if self.delivery and self.delivery.transport else None)
+        transport_name = self.delivery.transport.name if self.delivery and self.delivery.transport else None
         if self.delivery_name in channel_messages:
             return str(channel_messages[self.delivery_name])
         if transport_name and transport_name in channel_messages:

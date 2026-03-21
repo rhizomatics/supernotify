@@ -15,11 +15,11 @@ from .common import ensure_list, nullable_ensure_list, sanitize
 from .const import (
     ATTR_ACTION_GROUPS,
     ATTR_ACTIONS,
+    ATTR_CHANNEL_MESSAGE,
     ATTR_DEBUG,
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
     ATTR_FORCE_RESEND,
-    ATTR_CHANNEL_MESSAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
@@ -768,7 +768,11 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update({k: v for k, v in self.extra_data.items() if k not in (ATTR_FORCE_RESEND, ATTR_CHANNEL_MESSAGE, "spoken_message")})  # action call data
+                envelope_data.update({
+                    k: v
+                    for k, v in self.extra_data.items()
+                    if k not in (ATTR_FORCE_RESEND, ATTR_CHANNEL_MESSAGE, "spoken_message")
+                })  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios

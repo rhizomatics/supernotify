@@ -1,18 +1,17 @@
 """Tests for the Alexa Media Player transport volume management."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from custom_components.supernotify.transports.alexa_media_player import (
-    AlexaMediaPlayerTransport,
-    _estimate_tts_duration,
     _BASE_DURATION,
     _CHAR_WEIGHT,
-    _PAUSE_WEIGHT,
     _MUSIC_RESUME_DELAY,
+    _PAUSE_WEIGHT,
     PAUSE_CHARS,
+    AlexaMediaPlayerTransport,
+    _estimate_tts_duration,
 )
 
 
