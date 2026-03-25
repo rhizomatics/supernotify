@@ -19,6 +19,7 @@ from .const import (
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
     ATTR_FORCE_RESEND,
+    ATTR_CHANNEL_MESSAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
@@ -29,7 +30,6 @@ from .const import (
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
-    ATTR_SPOKEN_MESSAGE,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
@@ -331,7 +331,12 @@ class Notification(ArchivableObject):
             set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
         )
         all_enabled: list[str] = all_global_enabled + recipients_enable_deliveries
-        all_disabled: list[str] = scenario_disable_deliveries + override_disable_deliveries
+        # override_enable_deliveries takes precedence: if the action call explicitly
+        # re-enables a delivery that a scenario disabled, remove it from all_disabled.
+        all_disabled: list[str] = [
+            d for d in scenario_disable_deliveries + override_disable_deliveries
+            if d not in override_enable_deliveries
+        ]
         override_enabled: list[str] = list(set(scenario_enable_deliveries + override_enable_deliveries))
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
@@ -594,12 +599,8 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         return f"{self.created.isoformat()[:16].replace(':', '-')}_{self.id}"
 
-    def delivery_data(self, delivery: Delivery) -> dict[str, Any]:
-        if delivery is None:
-            return {}
-        delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery.name)
-        if delivery_override is None:
-            delivery_override = self.delivery_overrides.get(delivery.transport.name)
+    def delivery_data(self, delivery_name: str) -> dict[str, Any]:
+        delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery_name)
         return delivery_override.data if delivery_override and delivery_override.data else {}
 
     @property
@@ -705,10 +706,11 @@ class Notification(ArchivableObject):
         # If the action call explicitly specified a target for this delivery, it takes
         # precedence over all resolved/merged targets above.
         delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery.name)
-        if delivery_override is None:
-            delivery_override = self.delivery_overrides.get(delivery.transport.name)
         if delivery_override and delivery_override.target and delivery_override.target.has_targets():
-            computed_target = delivery.select_targets(delivery_override.target)
+            override_target = delivery_override.target
+            for indirect_target in self.resolve_indirect_targets(override_target, delivery):
+                override_target += indirect_target
+            computed_target = delivery.select_targets(override_target)
             self.debug_trace.record_target(delivery.name, "600_delivery_override_target", computed_target)
 
         split_targets: list[Target] = computed_target.split_by_target_data()
@@ -781,9 +783,7 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update({
-                    k: v for k, v in self.extra_data.items() if k not in (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
-                })  # action call data
+                envelope_data.update({k: v for k, v in self.extra_data.items() if k not in (ATTR_FORCE_RESEND, ATTR_CHANNEL_MESSAGE, "spoken_message")})  # action call data
                 if target.target_data:
                     envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
