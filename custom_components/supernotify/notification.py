@@ -29,7 +29,7 @@ from .const import (
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
-    ATTR_SPOKEN_MESSAGE,
+    ATTR_CHANNEL_MESSAGE,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
@@ -72,7 +72,7 @@ KEY_FAILED = "failed"
 KEY_SKIPPED = "skipped"
 
 # supernotify specific data items not to be passed to transports in data
-INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
+INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE, ATTR_CHANNEL_MESSAGE)
 
 type t_delivery_name = str
 type t_outcome = str
@@ -601,12 +601,8 @@ class Notification(ArchivableObject):
         """ArchiveableObject implementation"""
         return f"{self.created.isoformat()[:16].replace(':', '-')}_{self.id}"
 
-    def delivery_data(self, delivery: Delivery) -> dict[str, Any]:
-        if delivery is None:
-            return {}
-        delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery.name)
-        if delivery_override is None:
-            delivery_override = self.delivery_overrides.get(delivery.transport.name)
+    def delivery_data(self, delivery_name: str) -> dict[str, Any]:
+        delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery_name)
         return delivery_override.data if delivery_override and delivery_override.data else {}
 
     @property
@@ -793,16 +789,17 @@ class Notification(ArchivableObject):
             if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
                 envelope_data.update(delivery.data)
-                envelope_data.update({
-                    k: v for k, v in self.extra_data.items() if k not in INTERNAL_DATA_KEYS
-                })  # action call data
-                if target.target_data:
-                    envelope_data.update(target.target_data)
                 # scenario applied at cross-delivery level in apply_enabled_scenarios
                 for scenario in self.enabled_scenarios.values():
                     customization: DeliveryCustomization | None = scenario.delivery_customization(delivery.name)
                     if customization and customization.data:
                         envelope_data.update(customization.data)
+                # action call data overrides scenario data
+                envelope_data.update({
+                    k: v for k, v in self.extra_data.items() if k not in INTERNAL_DATA_KEYS
+                })  # action call data
+                if target.target_data:
+                    envelope_data.update(target.target_data)
                 envelopes.append(Envelope(delivery, self, target, envelope_data, context=self.context))
 
         return envelopes
