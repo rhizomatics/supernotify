@@ -15,6 +15,7 @@ from .common import ensure_list, nullable_ensure_list, sanitize
 from .const import (
     ATTR_ACTION_GROUPS,
     ATTR_ACTIONS,
+    ATTR_CHANNEL_MESSAGE,
     ATTR_DEBUG,
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
@@ -29,7 +30,6 @@ from .const import (
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
-    ATTR_CHANNEL_MESSAGE,
     ATTR_SPOKEN_MESSAGE,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
