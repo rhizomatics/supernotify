@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
@@ -12,7 +12,6 @@ from homeassistant.const import (  # ATTR_VARIABLES from script.const has import
     CONF_TARGET,
 )
 from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.helpers.typing import ConfigType
 from voluptuous.humanize import humanize_error
 
 from custom_components.supernotify.const import (
@@ -31,10 +30,14 @@ from custom_components.supernotify.const import (
     SELECT_EXCLUDE,
     TRANSPORT_CHIME,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.schema import CHIME_ALIASES_SCHEMA
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
+
+    from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
 

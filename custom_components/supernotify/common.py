@@ -9,10 +9,9 @@ from abc import abstractmethod
 from collections.abc import KeysView
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cachetools import TTLCache
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DUPE_POLICY_MT,
@@ -23,6 +22,9 @@ from .const import (
     CONF_TTL,
     PRIORITY_VALUES,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 

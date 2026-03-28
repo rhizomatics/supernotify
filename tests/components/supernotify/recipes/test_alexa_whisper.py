@@ -1,7 +1,10 @@
-from homeassistant.core import HomeAssistant
+from typing import TYPE_CHECKING
 
 from custom_components.supernotify.notification import Notification
 from tests.components.supernotify.hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 async def test_alexa_whispering(hass: HomeAssistant):

@@ -7,7 +7,6 @@ from unittest.mock import patch
 from homeassistant import config as hass_config
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF_PLATFORM, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceResponse, State
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
@@ -18,6 +17,7 @@ from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA as PLATFORM_
 from .hass_setup_lib import assert_clean_notification, assert_json_round_trip
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceResponse, State
     from homeassistant.util.json import JsonObjectType
 
 FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "..", "examples", "maximal.yaml")

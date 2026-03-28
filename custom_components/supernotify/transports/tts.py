@@ -19,7 +19,6 @@ from custom_components.supernotify.const import (
     SELECT_EXCLUDE,
     TRANSPORT_TTS,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
@@ -32,6 +31,7 @@ from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
     from custom_components.supernotify.hass_api import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)

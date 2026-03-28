@@ -1,6 +1,6 @@
 {
     "name": "rhizomatics/dev-supernotify",
-    "image": "mcr.microsoft.com/devcontainers/python:3.13",
+    "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "postCreateCommand": "python3 -m venv .devcontainer/.venv;./refresh-deps.sh",
     "appPort": [
       "9123:8123"

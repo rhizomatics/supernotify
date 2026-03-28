@@ -1,13 +1,15 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.const import (
     ATTR_NOTIFICATION_ID,
     TRANSPORT_PERSISTENT,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 _LOGGER = logging.getLogger(__name__)
 

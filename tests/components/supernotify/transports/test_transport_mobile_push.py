@@ -4,10 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
@@ -25,7 +22,6 @@ from custom_components.supernotify.const import (
     PRIORITY_VALUES,
     TRANSPORT_MOBILE_PUSH,
 )
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -37,7 +33,12 @@ from tests.components.supernotify.doubles_lib import service_call
 from tests.components.supernotify.hass_setup_lib import TestingContext, register_mobile_app
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
+    from pytest_httpserver import HTTPServer
+
     from custom_components.supernotify.common import CallRecord
+    from custom_components.supernotify.context import Context
 
 
 async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: Context, mock_hass: HomeAssistant) -> None:

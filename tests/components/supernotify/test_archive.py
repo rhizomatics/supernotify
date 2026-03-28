@@ -2,14 +2,13 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
 import anyio
 import pytest
 from homeassistant.const import CONF_ENABLED
-from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
 from custom_components.supernotify.const import (
@@ -20,9 +19,13 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
 )
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notify import SupernotifyAction
 from custom_components.supernotify.schema import SCENARIO_SCHEMA, OutcomeSelection
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 
 class ArchiveCrashDummy(ArchivableObject):
@@ -149,3 +152,58 @@ async def test_archive_publish(mock_hass_api: HomeAssistantAPI) -> None:
     msg = ArchiveCrashDummy()
     assert await uut.archive(msg) is False
     mock_hass_api.mqtt_publish.assert_not_called()  # type: ignore
+
+
+def test_event_archiver_specific_diagnostic_flags(mock_hass_api: HomeAssistantAPI) -> None:
+    from custom_components.supernotify.archive import EventArchiver
+
+    # Lines 85, 90, 92, 98: each flag triggers its own log in else branch
+    flags = OutcomeSelection.SUCCESS | OutcomeSelection.FALLBACK_DELIVERY | OutcomeSelection.NO_DELIVERY | OutcomeSelection.DUPE
+    archiver = EventArchiver(mock_hass_api, "test.event", flags)
+    assert archiver.diagnostics == flags
+
+
+async def test_archive_directory_init_path_not_creatable() -> None:
+    from custom_components.supernotify.archive import ArchiveDirectory
+
+    with (
+        patch.object(anyio.Path, "exists", new=AsyncMock(return_value=False)),
+        patch.object(anyio.Path, "mkdir", new=AsyncMock(side_effect=PermissionError("no permission"))),
+    ):
+        uut = ArchiveDirectory("/no/permission/path", 60)
+        await uut.initialize()
+        assert not uut.enabled
+
+
+async def test_archive_directory_cleanup_no_path() -> None:
+    from custom_components.supernotify.archive import ArchiveDirectory
+
+    uut = ArchiveDirectory("/some/path", 60)
+    # skip initialize so archive_path stays None
+    result = await uut.cleanup(1, True)
+    assert result == 0
+
+
+async def test_archive_directory_cleanup_skips_startup(mock_hass_api: HomeAssistantAPI) -> None:
+    import time
+    from pathlib import Path
+    from unittest.mock import MagicMock, patch
+
+    from custom_components.supernotify.archive import ArchiveDirectory
+
+    with tempfile.TemporaryDirectory() as tmp:
+        uut = ArchiveDirectory(tmp, 60)
+        await uut.initialize()
+        old_time = MagicMock(return_value=MagicMock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
+        startup_entry = MagicMock()
+        startup_entry.name = ".startup"
+        startup_entry.stat = old_time
+        old_entry = MagicMock()
+        old_entry.name = "old_file.json"
+        old_entry.path = str(Path(tmp) / "old_file.json")
+        old_entry.stat = old_time
+        with patch("aiofiles.os.scandir", return_value=[startup_entry, old_entry]):
+            with patch("aiofiles.os.unlink") as mock_unlink:
+                purged = await uut.cleanup(1, True)
+        assert purged == 1  # startup skipped, old_file purged
+        mock_unlink.assert_called_once()

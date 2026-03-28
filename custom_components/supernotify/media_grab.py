@@ -39,12 +39,12 @@ from custom_components.supernotify.const import (
     PTZ_METHOD_ONVIF,
 )
 
-from .context import Context
-from .hass_api import HomeAssistantAPI
-
 if TYPE_CHECKING:
     from homeassistant.components.image import ImageEntity
     from homeassistant.core import State
+
+    from .context import Context
+    from .hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -296,7 +296,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
     return None
 
 
-async def grab_image(notification: "Notification", delivery: Delivery, context: Context) -> Path | None:  # type: ignore  # noqa: F821
+async def grab_image(notification: Notification, delivery: Delivery, context: Context) -> Path | None:  # type: ignore  # noqa: F821
     snapshot_url = notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
     camera_entity_id = notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
     delivery_config = notification.delivery_data(delivery)

@@ -1,10 +1,9 @@
 import logging
 import re
-from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import IntFlag, StrEnum, auto
 from traceback import format_exception
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import voluptuous as vol
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
@@ -27,7 +26,6 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.core import valid_entity_id
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .common import ensure_list
 from .const import (
@@ -58,6 +56,11 @@ from .const import (
     TARGET_USE_ON_NO_ACTION_TARGETS,
 )
 from .schema import SelectionRank, phone
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -278,7 +281,7 @@ class Target:
     def direct_categories(self) -> list[str]:
         return self.DIRECT_CATEGORIES + [cat for cat in self.targets if cat not in self.CATEGORIES]
 
-    def direct(self) -> "Target":
+    def direct(self) -> Target:
         t = Target(
             {cat: targets for cat, targets in self.targets.items() if cat in self.direct_categories},
             target_data=self.target_data,
@@ -297,12 +300,12 @@ class Target:
         if category in self.targets:
             self.targets[category] = [t for t in self.targets[category] if t not in targets]
 
-    def safe_copy(self) -> "Target":
+    def safe_copy(self) -> Target:
         t = Target(dict(self.targets), target_data=dict(self.target_data) if self.target_data else None)
         t.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
         return t
 
-    def split_by_target_data(self) -> "list[Target]":
+    def split_by_target_data(self) -> list[Target]:
         if not self.target_specific_data:
             result = self.safe_copy()
             result.target_specific_data = None
@@ -336,7 +339,7 @@ class Target:
         """How many targets, whether direct or indirect"""
         return sum(len(targets) for targets in self.targets.values())
 
-    def __add__(self, other: "Target") -> "Target":
+    def __add__(self, other: Target) -> Target:
         """Create a new target by adding another to this one"""
         new = Target()
         categories = set(list(self.targets.keys()) + list(other.targets.keys()))
@@ -358,7 +361,7 @@ class Target:
                 new.target_specific_data.update(other.target_specific_data)
         return new
 
-    def __sub__(self, other: "Target") -> "Target":
+    def __sub__(self, other: Target) -> Target:
         """Create a new target by removing another from this one, ignoring target_data"""
         new = Target()
         new.target_data = self.target_data
@@ -392,7 +395,7 @@ class Target:
 
 
 class TransportConfig:
-    def __init__(self, conf: ConfigType | None = None, class_config: "TransportConfig|None" = None) -> None:
+    def __init__(self, conf: ConfigType | None = None, class_config: TransportConfig | None = None) -> None:
         conf = conf or {}
         if class_config is not None:
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
@@ -449,7 +452,7 @@ class DeliveryCustomization:
 
 
 class SelectionRule:
-    def __init__(self, config: "str | list[str] | dict | SelectionRule | None") -> None:
+    def __init__(self, config: str | list[str] | dict | SelectionRule | None) -> None:
         self.include: list[str] | None = None
         self.exclude: list[str] | None = None
         if config is None:
@@ -488,7 +491,7 @@ class SelectionRule:
 class DeliveryConfig:
     """Shared config for transport defaults and Delivery definitions"""
 
-    def __init__(self, conf: ConfigType, delivery_defaults: "DeliveryConfig|None" = None) -> None:
+    def __init__(self, conf: ConfigType, delivery_defaults: DeliveryConfig | None = None) -> None:
 
         if delivery_defaults is not None:
             # use transport defaults where no delivery level override
@@ -625,7 +628,7 @@ class TargetRequired(StrEnum):
     OPTIONAL = auto()
 
     @classmethod
-    def _missing_(cls, value: Any) -> "TargetRequired|None":
+    def _missing_(cls, value: Any) -> TargetRequired | None:
         """Backward compatibility for binary values"""
         if value is True or (isinstance(value, str) and value.lower() in ("true", "on")):
             return cls.ALWAYS

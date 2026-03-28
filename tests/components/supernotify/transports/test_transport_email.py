@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock, patch
 
 import anyio
 from homeassistant.const import CONF_ACTION, CONF_EMAIL
-from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify.const import (
@@ -22,6 +21,9 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.email import OPTION_PREHEADER_BLANK, OPTION_PREHEADER_LENGTH, EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 
 async def test_deliver() -> None:

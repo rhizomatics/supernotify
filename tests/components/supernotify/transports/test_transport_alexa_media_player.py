@@ -1,13 +1,17 @@
+from typing import TYPE_CHECKING
+
 from homeassistant.const import CONF_ACTION
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_ALEXA_MEDIA_PLAYER
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.alexa_media_player import AlexaMediaPlayerTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.context import Context
 
 DELIVERY = {
     "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},

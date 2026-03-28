@@ -1,6 +1,6 @@
+from typing import TYPE_CHECKING
+
 from homeassistant.components import person
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry, entity_registry
 from pytest_unordered import unordered
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -9,6 +9,10 @@ from custom_components.supernotify.people import PeopleRegistry, Recipient
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 
 from .hass_setup_lib import TestingContext, register_mobile_app
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers import device_registry, entity_registry
 
 
 async def test_people_registry_finds_people(hass: HomeAssistant) -> None:

@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
@@ -24,8 +24,6 @@ from custom_components.supernotify.const import (
     SELECT_INCLUDE,
     TRANSPORT_GENERIC,
 )
-from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
@@ -38,6 +36,10 @@ from custom_components.supernotify.model import (
 from custom_components.supernotify.transport import (
     Transport,
 )
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.delivery import Delivery
+    from custom_components.supernotify.envelope import Envelope
 
 _LOGGER = logging.getLogger(__name__)
 DATA_FIELDS_ALLOWED = {

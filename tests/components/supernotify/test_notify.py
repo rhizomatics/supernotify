@@ -422,3 +422,64 @@ async def test_send_message_with_conditions(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert calls_service_data == [{"test": "unit", "message": "for real", "title": "test_title"}]
+
+
+async def test_async_nightly_tasks(mock_hass: Mock) -> None:
+    # Lines 692-696: nightly housekeeping runs archive cleanup, snooze purge, media cleanup
+    import datetime
+
+    uut = SupernotifyAction(mock_hass)
+    await uut.initialize()
+    await uut.async_nightly_tasks(datetime.datetime.now(tz=datetime.UTC))
+
+
+async def test_enquire_occupancy(mock_hass: Mock) -> None:
+    # Lines 633-634: returns dict from people_registry.determine_occupancy
+    uut = SupernotifyAction(mock_hass, recipients=RECIPIENTS)
+    await uut.initialize()
+    result = await uut.enquire_occupancy()
+    assert isinstance(result, dict)
+
+
+async def test_enquire_scenarios(mock_hass: Mock) -> None:
+    # Line 659: returns dict of scenario attributes
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
+    await uut.initialize()
+    result = uut.enquire_scenarios()
+    assert "scenario1" in result
+    assert "scenario2" in result
+
+
+async def test_on_mobile_action_ignores_non_supernotify(mock_hass: Mock) -> None:
+    # Line 687: early return when action doesn't start with SUPERNOTIFY_
+    from homeassistant.core import Event as HassEvent
+
+    uut = SupernotifyAction(mock_hass)
+    await uut.initialize()
+    event: HassEvent = HassEvent("mobile_app_notification_action", data={"action": "OTHER_APP_ACTION"})
+    uut.on_mobile_action(event)  # should return without doing anything
+    assert uut.context.snoozer.snoozes == {}
+
+
+async def test_send_message_exception_handling(mock_hass: Mock) -> None:
+    # Lines 439-445: exception in notification processing is caught
+    from unittest.mock import patch
+
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY)
+    await uut.initialize()
+    with patch("custom_components.supernotify.notify.Notification", side_effect=RuntimeError("boom")):
+        await uut.async_send_message("test message")
+    assert uut.failures == 1
+
+
+async def test_entity_state_change_unknown_scenario(mock_hass: Mock) -> None:
+    # Line 470: warning when state change is for unknown scenario
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
+    await uut.initialize()
+    event = Mock()
+    event.event_type = "state_changed"
+    event.data = {
+        "entity_id": "binary_sensor.supernotify_scenario_nonexistent_xyz",
+        "new_state": Mock(state="on"),
+    }
+    await uut._entity_state_change_listener(event)  # should warn but not raise

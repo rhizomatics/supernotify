@@ -6,7 +6,6 @@ import typing
 import uuid
 from typing import Any, cast
 
-from anyio import Path
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.helpers.template import is_template_string
 from jinja2 import TemplateError
@@ -23,7 +22,6 @@ from .const import (
     OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
 )
-from .context import Context
 from .media_grab import grab_image
 from .model import (
     ConditionVariables,
@@ -36,8 +34,11 @@ from .model import (
 )
 
 if typing.TYPE_CHECKING:
+    from anyio import Path
+
     from custom_components.supernotify.common import CallRecord
 
+    from .context import Context
     from .delivery import Delivery
     from .notification import Notification
     from .scenario import Scenario
@@ -52,8 +53,8 @@ class Envelope(DupeCheckable):
 
     def __init__(
         self,
-        delivery: "Delivery",
-        notification: "Notification | None" = None,
+        delivery: Delivery,
+        notification: Notification | None = None,
         target: Target | None = None,  # targets only for this delivery
         data: dict[str, Any] | None = None,
         context: Context | None = None,  # notification data customized for this delivery

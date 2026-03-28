@@ -1,6 +1,6 @@
 import logging
 import urllib.parse
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,9 +13,11 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_SELECT,
     TRANSPORT_MEDIA,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 

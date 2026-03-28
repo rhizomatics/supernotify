@@ -1,5 +1,7 @@
 # Public releases
 
+## 1.12.2
+- Minor test and lint fixes for 3.14, and improved test coverage
 ## 1.12.1
 - Translations for Dutch, French, German, Hindi, Italian, Japanese, Polish, Portuguese, Simplified Chinese and Spanish
 - Vertalingen voor Nederlands, Traductions en français, Übersetzungen auf Deutsch, हिंदी में अनुवाद, Traduzioni in italiano, 日本語の翻訳, Tłumaczenia po polsku, Traduções em português, 简体中文翻译 en traducciones al español

@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
@@ -13,7 +13,6 @@ from custom_components.supernotify.const import (
     OPTION_UNIQUE_TARGETS,
     TRANSPORT_ALEXA,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
@@ -23,6 +22,9 @@ from custom_components.supernotify.model import (
 )
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 _LOGGER = logging.getLogger(__name__)
 

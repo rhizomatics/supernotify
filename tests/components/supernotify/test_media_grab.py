@@ -2,6 +2,7 @@ import io
 import time
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
@@ -16,7 +17,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from PIL import Image, ImageChops
-from pytest_httpserver import HTTPServer
 
 from conftest import IMAGE_PATH, TestImage
 from custom_components.supernotify.const import (
@@ -42,6 +42,9 @@ from custom_components.supernotify.media_grab import (
 from custom_components.supernotify.notification import Notification
 
 from .hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from pytest_httpserver import HTTPServer
 
 LOSSY_FORMATS = ["jpeg"]
 UNLOSSY_FORMATS = ["png", "gif"]

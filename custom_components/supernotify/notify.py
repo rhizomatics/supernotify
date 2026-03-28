@@ -1,6 +1,5 @@
 """Supernotify service, extending BaseNotificationService"""
 
-import datetime as dt
 import json
 import logging
 from dataclasses import asdict
@@ -22,10 +21,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
@@ -63,7 +60,6 @@ from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
 from .schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .snoozer import Snoozer
-from .transport import Transport
 from .transports.alexa_devices import AlexaDevicesTransport
 from .transports.alexa_media_player import AlexaMediaPlayerTransport
 from .transports.chime import ChimeTransport
@@ -78,7 +74,13 @@ from .transports.sms import SMSTransport
 from .transports.tts import TTSTransport
 
 if TYPE_CHECKING:
+    import datetime as dt
+
+    from homeassistant.helpers import entity_registry as er
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
     from .scenario import Scenario
+    from .transport import Transport
 
 PARALLEL_UPDATES = 0
 
@@ -104,7 +106,7 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> "SupernotifyAction":
+) -> SupernotifyAction:
     """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
     _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
     _ = discovery_info
@@ -308,7 +310,7 @@ class SupernotifyEntity(NotifyEntity):
     def __init__(
         self,
         unique_id: str,
-        platform: "SupernotifyAction",
+        platform: SupernotifyAction,
     ) -> None:
         """Initialize the SuperNotify entity."""
         self._attr_unique_id = unique_id

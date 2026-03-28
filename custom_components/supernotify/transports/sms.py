@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
@@ -11,11 +11,13 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 

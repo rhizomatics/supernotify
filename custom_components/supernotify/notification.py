@@ -43,8 +43,6 @@ from .const import (
     TARGET_USE_ON_NO_ACTION_TARGETS,
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
 )
-from .context import Context
-from .delivery import Delivery, DeliveryRegistry
 from .envelope import Envelope
 from .model import (
     ConditionVariables,
@@ -54,11 +52,12 @@ from .model import (
     Target,
     TargetRequired,
 )
-from .people import Recipient
 from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, Outcome
 
 if TYPE_CHECKING:
-    from .people import PeopleRegistry
+    from .context import Context
+    from .delivery import Delivery, DeliveryRegistry
+    from .people import PeopleRegistry, Recipient
     from .scenario import Scenario
     from .transport import (
         Transport,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import re
 from typing import TYPE_CHECKING, Any
@@ -6,16 +8,18 @@ from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import issue_registry as ir
 
 from .const import ATTR_MEDIA
-from .hass_api import HomeAssistantAPI
 from .model import DeliveryCustomization
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
 
+    from .delivery import Delivery, DeliveryRegistry
+    from .hass_api import HomeAssistantAPI
     from .schema import ConditionsFunc
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 
 import voluptuous as vol
@@ -25,10 +29,8 @@ from homeassistant.components.trace import async_store_trace
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITIONS
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
-from .delivery import Delivery, DeliveryRegistry
 from .model import ConditionVariables
 
 _LOGGER = logging.getLogger(__name__)

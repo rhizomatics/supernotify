@@ -4,9 +4,8 @@ import json
 import logging
 import uuid
 from dataclasses import dataclass
-from pathlib import Path
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, Mock
 
 from homeassistant import config_entries, setup
@@ -26,7 +25,6 @@ from homeassistant.core import (
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
@@ -52,7 +50,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery, DeliveryRegistry
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import ATTR_OS_NAME, HomeAssistantAPI
 from custom_components.supernotify.media_grab import MediaStorage
 from custom_components.supernotify.notification import Notification
@@ -61,9 +58,16 @@ from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
 from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA
 from custom_components.supernotify.snoozer import Snoozer
-from custom_components.supernotify.transport import Transport
 
 from .doubles_lib import DummyService
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from homeassistant.helpers.typing import ConfigType
+
+    from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 

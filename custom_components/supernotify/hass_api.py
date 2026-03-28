@@ -73,7 +73,7 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass
 class DeviceInfo:
     device_id: str
-    device_labels: list[str]
+    device_labels: list[str] | None = None
     mobile_app_id: str | None = None
     device_name: str | None = None
     device_tracker: str | None = None

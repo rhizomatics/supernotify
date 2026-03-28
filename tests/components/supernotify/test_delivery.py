@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_ACTION, CONF_CONDITIONS
@@ -10,7 +11,6 @@ from custom_components.supernotify.const import (
     PRIORITY_VALUES,
     SELECTION_DEFAULT,
 )
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import DeviceInfo
 from custom_components.supernotify.model import Target
@@ -18,6 +18,9 @@ from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
 from .hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.context import Context
 
 
 async def test_target_selection() -> None:

@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING, cast
 
-from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify.notification import Notification
@@ -8,6 +7,8 @@ from tests.components.supernotify.doubles_lib import DummyTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from custom_components.supernotify.envelope import Envelope
 
 

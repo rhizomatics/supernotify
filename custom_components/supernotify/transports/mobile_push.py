@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
@@ -25,8 +25,6 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_MOBILE_PUSH,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
@@ -42,6 +40,10 @@ from custom_components.supernotify.model import (
 from custom_components.supernotify.transport import (
     Transport,
 )
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 

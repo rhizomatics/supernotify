@@ -1,9 +1,13 @@
+from typing import TYPE_CHECKING
+
 import pytest
-from homeassistant.core import HomeAssistant
 from pytest_unordered import unordered
 
 from custom_components.supernotify.notification import Notification
 from tests.components.supernotify.hass_setup_lib import TestingContext, register_mobile_app
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

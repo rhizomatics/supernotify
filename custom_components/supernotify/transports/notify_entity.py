@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 from homeassistant.exceptions import ServiceValidationError
@@ -13,8 +13,6 @@ from custom_components.supernotify.const import (
     OPTION_UNIQUE_TARGETS,
     TRANSPORT_NOTIFY_ENTITY,
 )
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
@@ -26,6 +24,10 @@ from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import (
     Transport,
 )
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 

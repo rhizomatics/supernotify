@@ -9,8 +9,9 @@ dependencies = [
     "cachetools",
     "bs4",
     "aiofiles",
-    "pyopenssl==25.3.0", # HA issue 2026.3
-    "requests==2.32.5" # force hass compat
+    #"pyopenssl==25.3.0", # HA issue 2026.3
+    #"requests==2.32.5" # force hass compat
+    "cryptography==46.0.5"
 ]
 
 [tool.poetry]
@@ -49,7 +50,7 @@ dev=[
     "types-aiofiles",
     "types-cachetools",
     "pre-commit",
-    "pytest-httpserver>=1.0.10",
+    "pytest-httpserver",
     "ruff",
     "mypy",
     "genbadge[all]",
@@ -59,7 +60,7 @@ dev=[
     "ha-ffmpeg",
 
     # home assistant mobile push testing
-    "PyTurboJPEG==1.8.0"
+    # "PyTurboJPEG==1.8.0"
 ]
 docs=[
     "mkdocs-material[imaging]",
@@ -87,15 +88,14 @@ docs=[
 
 [tool.uv]
 override-dependencies = [
-    "voluptuous-openapi==0.2.0",
-    "aiohttp==3.13.3",
-    "urllib==2.6.3"
+    #"voluptuous-openapi==0.2.0"
 ]
+exclude-newer = "5 days"
 
 [tool.ruff]
 line-length = 128
 indent-width = 4
-target-version = "py313"
+target-version = "py314"
 exclude = [
     ".bzr",
     ".direnv",
@@ -247,6 +247,7 @@ norecursedirs = [".git", "templates"]
 addopts = [
     "-n 4",
     "--timeout=30",
+    "-cov=custom_components/supernotify",
     "--cov-report=xml:cov.xml",
     "--cov-report=html",
     "--cov-report=term-missing",

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -14,10 +16,8 @@ from homeassistant.const import (
     CONF_OPTIONS,
     CONF_TARGET,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
-from custom_components.supernotify.transport import Transport
 
 from .const import (
     ATTR_ENABLED,
@@ -52,18 +52,21 @@ from .const import (
     SELECTION_FALLBACK,
     SELECTION_FALLBACK_ON_ERROR,
 )
-from .context import Context
 
 if TYPE_CHECKING:
-    from custom_components.supernotify.hass_api import DeviceInfo
+    from homeassistant.helpers.typing import ConfigType
 
+    from custom_components.supernotify.hass_api import DeviceInfo
+    from custom_components.supernotify.transport import Transport
+
+    from .context import Context
     from .schema import ConditionsFunc
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class Delivery(DeliveryConfig):
-    def __init__(self, name: str, conf: ConfigType, transport: "Transport") -> None:
+    def __init__(self, name: str, conf: ConfigType, transport: Transport) -> None:
         conf = conf or {}
         self.name: str = name
         self.alias: str | None = conf.get(CONF_ALIAS)
@@ -84,7 +87,7 @@ class Delivery(DeliveryConfig):
             self.target_selector = None
         self.upgrade_deprecations()
 
-    async def initialize(self, context: "Context") -> bool:
+    async def initialize(self, context: Context) -> bool:
         errors = 0
         if self.name in RESERVED_DELIVERY_NAMES:
             _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", self.name)
@@ -146,7 +149,7 @@ class Delivery(DeliveryConfig):
             _LOGGER.warning("SUPERNOTIFY Deprecated use of target_include_re option - use target_select")
             self.options[OPTION_TARGET_SELECT] = {SELECT_INCLUDE: self.options.get(OPTION_TARGET_INCLUDE_RE)}
 
-    def discover_devices(self, context: "Context") -> None:
+    def discover_devices(self, context: Context) -> None:
         if self.options.get(OPTION_DEVICE_DISCOVERY, False):
             for domain in self.options.get(OPTION_DEVICE_DOMAIN, []):
                 discovered: int = 0
@@ -287,7 +290,7 @@ class DeliveryRegistry:
             self._transport_types = transport_types or {}
         self._transport_instances: list[Transport] | None = transport_instances
 
-    async def initialize(self, context: "Context") -> None:
+    async def initialize(self, context: Context) -> None:
         await self.initialize_transports(context)
         await self.autogenerate_deliveries(context)
         self.initialize_deliveries()
@@ -343,7 +346,7 @@ class DeliveryRegistry:
         """Deliveries switched on all the time for implicit selection"""
         return [d for d in self._implicit_deliveries if d.enabled]
 
-    async def initialize_transports(self, context: "Context") -> None:
+    async def initialize_transports(self, context: Context) -> None:
         """Use configure_for_tests() to set transports to mocks or manually created fixtures"""
         if self._transport_instances:
             for transport in self._transport_instances:
@@ -393,7 +396,7 @@ class DeliveryRegistry:
             [d for d in self._deliveries.values() if d.enabled and d.transport == transport],
         )
 
-    async def autogenerate_deliveries(self, context: "Context") -> None:
+    async def autogenerate_deliveries(self, context: Context) -> None:
         # If the config has no deliveries, check if a default delivery should be auto-generated
         # where there is a empty config, supernotify can at least handle NotifyEntities sensibly
 

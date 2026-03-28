@@ -1,9 +1,9 @@
 import logging
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 from homeassistant.components.profiler import CONF_ENABLED
 from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity
 from pytest_unordered import unordered
 
@@ -28,6 +28,9 @@ from custom_components.supernotify.schema import SCENARIO_SCHEMA
 
 from .doubles_lib import DummyTransport
 from .hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -681,3 +684,33 @@ async def test_scenario_wildcard_and_literal_apply(hass: HomeAssistant) -> None:
     await uut.initialize()
     assert list(uut.enabled_scenarios.keys()) == ["Suppress"]
     assert list(uut.selected_deliveries) == ["plain_email"]
+
+
+async def test_scenario_delivery_as_list(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
+    # Lines 79-80: delivery specified as a list → each entry enabled by default
+    from custom_components.supernotify.const import CONF_DELIVERY
+
+    mock_delivery_registry.deliveries = {
+        "chime": Mock(),
+        "email": Mock(),
+    }
+    uut = Scenario("test_list", {CONF_DELIVERY: ["chime", "email"]}, mock_delivery_registry, mock_hass_api)
+    assert "chime" in uut._config_delivery
+    assert "email" in uut._config_delivery
+
+
+async def test_scenario_delivery_as_string(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
+    # Lines 83-84: delivery specified as a single string → that delivery enabled
+    from custom_components.supernotify.const import CONF_DELIVERY
+
+    mock_delivery_registry.deliveries = {"chime": Mock()}
+    uut = Scenario("test_str", {CONF_DELIVERY: "chime"}, mock_delivery_registry, mock_hass_api)
+    assert "chime" in uut._config_delivery
+
+
+async def test_scenario_delivery_invalid_type(mock_hass_api: HomeAssistantAPI, mock_delivery_registry) -> None:
+    # Lines 90-91: delivery data is truthy but not list/str/dict → warning, empty config
+    from custom_components.supernotify.const import CONF_DELIVERY
+
+    uut = Scenario("test_invalid", {CONF_DELIVERY: 123}, mock_delivery_registry, mock_hass_api)
+    assert uut._config_delivery == {}

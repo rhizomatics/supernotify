@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
 import pytest
@@ -7,15 +8,17 @@ from homeassistant.core import HomeAssistant, SupportsResponse
 from custom_components.supernotify.const import CONF_DELIVERY_DEFAULTS, TRANSPORT_GENERIC
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import DeliveryConfig, Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
-from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .doubles_lib import DummyService
 from .hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+    from custom_components.supernotify.transport import Transport
 
 
 def test_simplify_text() -> None:
@@ -123,3 +126,72 @@ async def test_common_features(mock_hass: HomeAssistant, mock_hass_api: HomeAssi
     assert isinstance(attrs[CONF_ENABLED], bool)
     assert attrs[CONF_DELIVERY_DEFAULTS] == transport.delivery_defaults
     assert isinstance(transport.auto_configure(mock_hass_api), (DeliveryConfig, type(None)))
+
+
+async def test_transport_base_supported_features_and_default_config(mock_hass: HomeAssistant) -> None:
+    # DummyTransport doesn't override supported_features or default_config - covers base class lines 73-74, 81-82
+    from tests.components.supernotify.doubles_lib import DummyTransport
+
+    ctx = TestingContext(homeassistant=mock_hass)
+    await ctx.test_initialize()
+    t = DummyTransport(ctx)
+    assert TransportFeature.MESSAGE in t.supported_features
+    assert isinstance(t.default_config, TransportConfig)
+
+
+async def test_transport_attributes_with_error(mock_hass: HomeAssistant) -> None:
+    # Lines 100-102: attributes includes error info after record_error
+    ctx = TestingContext(homeassistant=mock_hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut.record_error("test error msg", "test_method")
+    attrs = uut.attributes()
+    assert attrs["last_error_message"] == "test error msg"
+    assert attrs["last_error_in"] == "test_method"
+    assert attrs["error_count"] == 1
+
+
+async def test_set_action_data(mock_hass: HomeAssistant) -> None:
+    # Lines 122-124: set_action_data adds key when data is not None
+    ctx = TestingContext(homeassistant=mock_hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_GENERIC)
+    action_data: dict = {}
+    uut.set_action_data(action_data, "message", "hello")
+    assert action_data["message"] == "hello"
+    uut.set_action_data(action_data, "skipped", None)
+    assert "skipped" not in action_data
+
+
+async def test_call_action_no_action(hass: HomeAssistant) -> None:
+    # Lines 141-148: skips when no action configured
+    from custom_components.supernotify.model import SuppressionReason
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_GENERIC)
+    envelope = Envelope(
+        Delivery("testing", {}, uut),  # no action in config or transport defaults
+        Notification(ctx),
+    )
+    result = await uut.call_action(envelope)  # no qualified_action arg
+    assert result is False
+    assert envelope.skipped == 1
+    assert envelope.skip_reason == SuppressionReason.NO_ACTION
+
+
+async def test_call_action_missing_required_target(hass: HomeAssistant) -> None:
+    # Lines 156-163: skips when target required but missing
+    from custom_components.supernotify.model import SuppressionReason, TargetRequired
+    from custom_components.supernotify.transports.email import EmailTransport
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    email_transport = EmailTransport(ctx)
+    delivery = Delivery("email_test", {}, email_transport)
+    assert delivery.target_required == TargetRequired.ALWAYS
+    envelope = Envelope(delivery, Notification(ctx))
+    result = await email_transport.call_action(envelope, "notify.smtp", {})
+    assert result is False
+    assert envelope.skipped == 1
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET

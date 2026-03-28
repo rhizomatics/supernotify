@@ -165,7 +165,7 @@ class OutcomeSelection(IntFlag):
     ALL = 65536
 
 
-def parse_event_policy(value: object) -> "OutcomeSelection":
+def parse_event_policy(value: object) -> OutcomeSelection:
     if isinstance(value, OutcomeSelection):
         return value
     if isinstance(value, int):

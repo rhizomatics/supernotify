@@ -1,7 +1,6 @@
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_ACTION, CONF_ENABLED, CONF_TARGET
-from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
@@ -17,11 +16,15 @@ from custom_components.supernotify.const import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
 from .hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
+    from custom_components.supernotify.context import Context
 
 DELIVERY: dict[str, Any] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},

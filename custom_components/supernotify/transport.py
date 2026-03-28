@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import time
 import unicodedata
@@ -13,7 +15,6 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 from homeassistant.exceptions import IntegrationError
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .common import CallRecord
@@ -21,14 +22,16 @@ from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
 )
-from .context import Context
-from .hass_api import HomeAssistantAPI
 from .model import DebugTrace, DeliveryConfig, SuppressionReason, Target, TargetRequired, TransportConfig, TransportFeature
 
 if TYPE_CHECKING:
     import datetime as dt
 
+    from homeassistant.helpers.typing import ConfigType
+
+    from .context import Context
     from .delivery import Delivery, DeliveryRegistry
+    from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,7 +111,7 @@ class Transport:
         return {}
 
     @abstractmethod
-    async def deliver(self, envelope: "Envelope", debug_trace: DebugTrace | None = None) -> bool:  # type: ignore # noqa: F821
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # type: ignore # noqa: F821
         """Delivery implementation
 
         Args:
@@ -125,7 +128,7 @@ class Transport:
 
     async def call_action(
         self,
-        envelope: "Envelope",  # type: ignore # noqa: F821
+        envelope: Envelope,  # type: ignore # noqa: F821
         qualified_action: str | None = None,
         action_data: dict[str, Any] | None = None,
         target_data: dict[str, Any] | None = None,

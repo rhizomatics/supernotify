@@ -1,15 +1,17 @@
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.mqtt.const import ATTR_TOPIC
 
 from custom_components.supernotify.const import TRANSPORT_MQTT
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 

@@ -2,7 +2,6 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 from homeassistant.const import CONF_ALIAS, CONF_CONDITIONS
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from custom_components.supernotify.const import PRIORITY_CRITICAL, PRIORITY_LOW, PRIORITY_MEDIUM
@@ -10,6 +9,7 @@ from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import ConditionVariables
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.schema import ConditionsFunc

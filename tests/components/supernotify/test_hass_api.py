@@ -2,7 +2,6 @@ import socket
 from typing import TYPE_CHECKING
 
 import pytest
-from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
@@ -12,6 +11,8 @@ from custom_components.supernotify.model import ConditionVariables, SelectionRul
 from .hass_setup_lib import register_device
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+
     from custom_components.supernotify.schema import ConditionsFunc
 
 
@@ -266,3 +267,56 @@ async def test_subscribe_and_unsubscribe(hass: HomeAssistant) -> None:
     hass.bus.async_fire("wonders_of_core", {})
     await hass.async_block_till_done()
     assert calls == 1
+
+
+def test_device_info_equality() -> None:
+    from custom_components.supernotify.hass_api import DeviceInfo
+
+    d1 = DeviceInfo(device_id="abc", device_name="My Device")
+    d2 = DeviceInfo(device_id="abc", device_name="My Device")
+    d3 = DeviceInfo(device_id="xyz", device_name="Other")
+    assert d1 == d2
+    assert d1 != d3
+    assert d1 != None  # noqa: E711 - line 108: return other is not None and ...
+
+
+def test_disconnect_handles_unsubscribe_error(hass: HomeAssistant) -> None:
+    # Lines 159-160: error during unsubscribe is caught and logged
+    hass_api = HomeAssistantAPI(hass)
+
+    def bad_unsub() -> None:
+        raise RuntimeError("unsub failed")
+
+    hass_api.unsubscribes.append(bad_unsub)  # type: ignore[arg-type]
+    hass_api.disconnect()  # should not raise
+    assert hass_api.unsubscribes == []
+
+
+def test_raise_issue(mock_hass: HomeAssistant) -> None:
+    # Line 392: raise_issue calls ir.async_create_issue
+    hass_api = HomeAssistantAPI(mock_hass)
+    hass_api.initialize()
+    # Should not raise even with mock hass
+    hass_api.raise_issue("test_issue", "test_key", {"key": "value"})
+
+
+def test_build_mobile_app_cache_no_entity_registry(mock_hass: HomeAssistant) -> None:
+    # Lines 407-408: logs warning when entity registry unavailable
+    from unittest.mock import patch
+
+    hass_api = HomeAssistantAPI(mock_hass)
+    with patch.object(hass_api, "entity_registry", return_value=None):
+        hass_api.build_mobile_app_cache()  # should not raise
+
+
+def test_discover_devices_skips_disabled(hass: HomeAssistant) -> None:
+    # Line 477: disabled devices are skipped
+    from homeassistant.helpers.device_registry import DeviceEntryDisabler
+
+    hass_api = HomeAssistantAPI(hass)
+    dev_entry = register_device(hass_api, domain="test_disabled", domain_id="dd_01")
+    dev_reg = hass_api.device_registry()
+    if dev_entry and dev_reg:
+        dev_reg.async_update_device(dev_entry.id, disabled_by=DeviceEntryDisabler.USER)
+    devices = hass_api.discover_devices("test_disabled")
+    assert len(devices) == 0

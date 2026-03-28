@@ -1,9 +1,7 @@
 import io
-from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import Path
-from ssl import SSLContext
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
@@ -41,6 +39,10 @@ from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import MockImageEntity
 from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+    from ssl import SSLContext
 
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 

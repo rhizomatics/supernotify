@@ -1,13 +1,12 @@
 import logging
 import os
 import os.path
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import aiofiles
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.helpers.template import Template, TemplateError
-from homeassistant.helpers.typing import ConfigType
 
 import custom_components.supernotify
 from custom_components.supernotify.const import (
@@ -26,11 +25,15 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_EMAIL,
 )
-from custom_components.supernotify.context import Context
-from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import DebugTrace, DeliveryConfig, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
+
+    from custom_components.supernotify.context import Context
+    from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 RE_VALID_EMAIL = (
     r"^[a-zA-Z0-9.+/=?^_-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"

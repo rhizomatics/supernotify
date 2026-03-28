@@ -58,7 +58,7 @@ References:
 import asyncio
 import logging
 import re
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import ATTR_ENTITY_ID
@@ -73,7 +73,6 @@ from custom_components.supernotify.const import (
     OPTION_UNIQUE_TARGETS,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
@@ -82,6 +81,9 @@ from custom_components.supernotify.model import (
     TransportFeature,
 )
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
 
@@ -280,7 +282,7 @@ class AlexaMediaPlayerTransport(Transport):
         elif volume_raw is not None:
             try:
                 requested_volume = float(volume_raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning("SUPERNOTIFY alexa_media_player: invalid volume value %r, ignoring", volume_raw)
 
         # Pre-announce

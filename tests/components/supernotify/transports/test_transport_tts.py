@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_ACTION, CONF_OPTIONS, CONF_TARGET
-from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.const import ATTR_SPOKEN_MESSAGE, CONF_DATA, CONF_DELIVERY, CONF_TRANSPORT, TRANSPORT_TTS
 from custom_components.supernotify.delivery import Delivery
@@ -11,6 +10,8 @@ from custom_components.supernotify.transports.tts import TTSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, assert_clean_notification, register_mobile_app
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from custom_components.supernotify.common import CallRecord
 
 

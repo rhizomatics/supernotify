@@ -1,5 +1,4 @@
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call
 
 from homeassistant.components import image
@@ -9,17 +8,22 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.const import CONF_TRANSPORT
-from custom_components.supernotify.context import Context
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TargetRequired, TransportConfig
-from custom_components.supernotify.notification import DebugTrace
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from homeassistant.helpers.typing import ConfigType
+
+    from custom_components.supernotify.context import Context
+    from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.notification import DebugTrace
 
 
 def service_call(

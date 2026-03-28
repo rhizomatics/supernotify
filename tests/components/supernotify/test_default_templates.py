@@ -1,9 +1,9 @@
 import pathlib
+from typing import TYPE_CHECKING
 
 from anyio import Path
 from bs4 import BeautifulSoup
 from homeassistant.const import CONF_ACTION, CONF_OPTIONS
-from homeassistant.core import HomeAssistant, ServiceCall
 
 from custom_components.supernotify.const import (
     CONF_TEMPLATE,
@@ -17,6 +17,9 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 
 from .hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall
 
 
 async def test_example_template_strict_parsed(hass: HomeAssistant) -> None:

@@ -3,7 +3,7 @@ import json
 import logging
 from abc import abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiofiles.os
 import anyio
@@ -13,9 +13,6 @@ from homeassistant.const import (
     CONF_ENABLED,
 )
 from homeassistant.helpers import condition as condition
-from homeassistant.helpers.typing import ConfigType
-
-from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 from .const import (
     CONF_ARCHIVE_DAYS,
@@ -29,6 +26,11 @@ from .const import (
     CONF_ARCHIVE_PURGE_INTERVAL,
 )
 from .schema import Outcome, OutcomeSelection
+
+if TYPE_CHECKING:
+    from homeassistant.helpers.typing import ConfigType
+
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 

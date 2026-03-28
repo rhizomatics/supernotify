@@ -1,14 +1,17 @@
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
-from homeassistant.core import (
-    HomeAssistant,
-)
-from pytest_httpserver import BlockingHTTPServer
-
-from conftest import TestImage
 from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL
 from custom_components.supernotify.notification import Notification
 from tests.components.supernotify.hass_setup_lib import TestingContext
+
+if TYPE_CHECKING:
+    from homeassistant.core import (
+        HomeAssistant,
+    )
+    from pytest_httpserver import BlockingHTTPServer
+
+    from conftest import TestImage
 
 
 async def test_frigate_blueprint_notification(hass: HomeAssistant, local_server: BlockingHTTPServer, sample_jpeg: TestImage):

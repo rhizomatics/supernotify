@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -43,11 +45,13 @@ from .const import (
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
 )
-from .hass_api import DeviceInfo, HomeAssistantAPI
 from .model import DeliveryCustomization, Target
 
 if TYPE_CHECKING:
     from homeassistant.core import State
+
+    from .hass_api import DeviceInfo, HomeAssistantAPI
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +87,7 @@ class Recipient:
         self.disabled_mobile_app_ids: list[str] = [k for k, v in self.mobile_devices.items() if not v.get(CONF_ENABLED, True)]
         _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict())
 
-    def initialize(self, people_registry: "PeopleRegistry") -> None:
+    def initialize(self, people_registry: PeopleRegistry) -> None:
 
         self._target.extend(ATTR_PERSON_ID, [self.entity_id])
         if self.email:

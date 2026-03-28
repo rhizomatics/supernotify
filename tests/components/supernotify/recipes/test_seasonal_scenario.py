@@ -1,11 +1,14 @@
 import datetime as dt
+from typing import TYPE_CHECKING
 
 import pytest
-from homeassistant.core import HomeAssistant
 
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.chime import ChimeTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, register_device
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

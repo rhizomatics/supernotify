@@ -1,4 +1,5 @@
 import pathlib
+from typing import TYPE_CHECKING
 
 import pytest
 from anyio import Path
@@ -7,7 +8,6 @@ from homeassistant.config import (
     load_yaml_config_file,
 )
 from homeassistant.const import CONF_ENABLED, CONF_NAME, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify.const import (
@@ -19,6 +19,9 @@ from custom_components.supernotify.const import (
     TRANSPORT_MOBILE_PUSH,
     TRANSPORT_NOTIFY_ENTITY,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 EXAMPLES_ROOT = "examples"
 
