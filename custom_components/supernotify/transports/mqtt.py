@@ -48,7 +48,9 @@ class MQTTTransport(Transport):
 
         if not envelope.data or ATTR_TOPIC not in envelope.data:
             _LOGGER.warning("SUPERNOTIFY notify_mqtt: No topic for publication")
-        action_data: dict[str, Any] = envelope.data
-        if isinstance(action_data["payload"], dict):
+            return False
+
+        action_data: dict[str, Any] = dict(envelope.data)
+        if isinstance(action_data.get("payload"), dict):
             action_data["payload"] = json.dumps(action_data["payload"])
         return await self.call_action(envelope, action_data=action_data)
