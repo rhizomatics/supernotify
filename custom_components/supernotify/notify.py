@@ -68,6 +68,7 @@ from .transports.generic import GenericTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
 from .transports.mqtt import MQTTTransport
+from .transports.gotify import GotifyTransport
 from .transports.notify_entity import NotifyEntityTransport
 from .transports.persistent import PersistentTransport
 from .transports.sms import SMSTransport
@@ -99,6 +100,7 @@ TRANSPORTS: list[type[Transport]] = [
     GenericTransport,
     TTSTransport,
     NotifyEntityTransport,
+    GotifyTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 
