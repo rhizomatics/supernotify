@@ -128,9 +128,7 @@ class RestCommandChimeTransport(MiniChimeTransport):
         if entity_name is None:
             _LOGGER.warning("SUPERNOTIFY rest_command chime target requires entity")
             return None
-        output_data = target_config.data or {}
-        if target_config.data:
-            output_data.update(target_config.data)
+        output_data = dict(target_config.data) if target_config.data else {}
         return ActionCall(self.domain, entity_name, action_data=output_data)
 
 
@@ -331,9 +329,13 @@ class ChimeTransport(Transport):
                 else:
                     _LOGGER.debug("SUPERNOTIFY Chime skipping incomplete service for %s", chime_entity_config.entity_id)
             except Exception as e:
-                _LOGGER.error("SUPERNOTIFY Failed to chime %s: %s [%s]", chime_entity_config.entity_id, action_data)
+                _LOGGER.error(
+                    "SUPERNOTIFY Failed to chime %s: %s",
+                    chime_entity_config.entity_id,
+                    e,
+                )
                 if debug_trace:
-                    debug_trace.record_delivery_exception(envelope.delivery.name, "analyze_target", e)
+                    debug_trace.record_delivery_exception(envelope.delivery.name, "chime_target", e)
         return chimes > 0
 
     def analyze_target(self, target_config: ChimeTargetConfig, data: dict[str, Any], envelope: Envelope) -> ActionCall | None:

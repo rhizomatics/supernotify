@@ -116,7 +116,7 @@ class MobilePushTransport(Transport):
         if not envelope.target.mobile_app_ids:
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False
-        data: dict[str, Any] = envelope.data or {}
+        data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
         category = data.get(ATTR_ACTION_CATEGORY, "general")
         action_groups = envelope.action_groups
 
@@ -168,7 +168,7 @@ class MobilePushTransport(Transport):
         for action in envelope.actions:
             app_url: str | None = self.hass_api.abs_url(action.get(ATTR_ACTION_URL))
             if app_url:
-                app_url_title = action.get(ATTR_ACTION_URL_TITLE) or self.action_title(app_url) or "Click for Action"
+                app_url_title = action.get(ATTR_ACTION_URL_TITLE) or await self.action_title(app_url) or "Click for Action"
                 action[ATTR_ACTION_URL_TITLE] = app_url_title
             data["actions"].append(action)
         if camera_entity_id:

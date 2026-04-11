@@ -282,7 +282,7 @@ class AlexaMediaPlayerTransport(Transport):
         elif volume_raw is not None:
             try:
                 requested_volume = float(volume_raw)
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 _LOGGER.warning("SUPERNOTIFY alexa_media_player: invalid volume value %r, ignoring", volume_raw)
 
         # Pre-announce
@@ -301,7 +301,7 @@ class AlexaMediaPlayerTransport(Transport):
                     await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
 
         # Announce
-        call_type: str = raw_data.get(ATTR_DATA, {}).get("type", "announce")
+        call_type: str = raw_data.pop("type", "announce")
         action_data: dict[str, Any] = {
             "message": envelope.message,
             ATTR_DATA: {"type": call_type},

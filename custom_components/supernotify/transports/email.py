@@ -154,7 +154,12 @@ class EmailTransport(Transport):
             snapshot_url = data.get(ATTR_MEDIA_SNAPSHOT_URL)
         # TODO: centralize in config
         footer_template = data.get("footer")
-        footer = footer_template.format(e=envelope) if footer_template else None
+        footer = None
+        if footer_template:
+            try:
+                footer = footer_template.format(e=envelope)
+            except (KeyError, ValueError, AttributeError) as ex:
+                _LOGGER.warning("SUPERNOTIFY email: failed to render footer template: %s", ex)
 
         action_data: dict[str, Any] = envelope.core_action_data()
         extra_data: dict[str, Any] = {k: v for k, v in data.items() if k not in action_data}
@@ -180,7 +185,7 @@ class EmailTransport(Transport):
                 html = envelope.message_html
                 if image_path:
                     image_name = image_path.name
-                    if html and "cid:%s" not in html and not html.endswith("</html"):
+                    if html and not html.rstrip().endswith("</html>"):
                         if snapshot_url:
                             html += f'<div><p><a href="{snapshot_url}">'
                             html += f'<img src="cid:{image_name}"/></a>'

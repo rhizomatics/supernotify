@@ -369,7 +369,7 @@ class Notification(ArchivableObject):
         self._suppression_reason = reason
         if reason not in self._skip_reasons:
             self._skip_reasons.append(reason)
-        _LOGGER.info(f"SUPERNOTIFY Suppressing notification, reason:{reason}, id:{self.id}")
+        _LOGGER.info("SUPERNOTIFY Suppressing notification, reason:%s, id:%s", reason, self.id)
 
     async def deliver(self) -> bool:
         _LOGGER.debug(
