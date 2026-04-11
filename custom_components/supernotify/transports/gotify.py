@@ -1,4 +1,4 @@
-﻿"""Gotify transport for SuperNotify.
+"""Gotify transport for SuperNotify.
 
 Sends push notifications via Gotify (self-hosted, privacy-first push server).
 Requires the HACS custom integration 1RandomDev/homeassistant-gotify installed
@@ -61,10 +61,10 @@ _LOGGER = logging.getLogger(__name__)
 
 _PRIORITY_MAP: dict[str, int] = {
     "critical": 10,
-    "high":      7,
-    "medium":    5,
-    "low":       2,
-    "minimum":   0,
+    "high": 7,
+    "medium": 5,
+    "low": 2,
+    "minimum": 0,
 }
 
 _SNAPSHOT_PATH = "/config/www/supernotify_gotify_snapshot.jpg"
@@ -96,6 +96,7 @@ def _build_extras(
 
     return extras if extras else None
 
+
 class GotifyTransport(Transport):
     """Notify via Gotify self-hosted push notification server."""
 
@@ -121,18 +122,18 @@ class GotifyTransport(Transport):
         )
         return False
 
-    async def deliver(self, envelope: "Envelope", debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY gotify %s", envelope.message)
 
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
 
         # --- Extract gotify_* keys (must not reach the notify service) ---
         priority_ovr_raw = raw_data.pop("gotify_priority", None)
-        click_url        = raw_data.pop("gotify_click", None)
-        image_url        = raw_data.pop("gotify_image_url", None)
-        attach_image     = boolify(raw_data.pop("gotify_attach_image", False), default=False)
-        markdown         = boolify(raw_data.pop("gotify_markdown", False), default=False)
-        intent_url       = raw_data.pop("gotify_intent_url", None)
+        click_url = raw_data.pop("gotify_click", None)
+        image_url = raw_data.pop("gotify_image_url", None)
+        attach_image = boolify(raw_data.pop("gotify_attach_image", False), default=False)
+        markdown = boolify(raw_data.pop("gotify_markdown", False), default=False)
+        intent_url = raw_data.pop("gotify_intent_url", None)
 
         # --- Priority: validate override or use auto-mapping ---
         priority_ovr: int | None = None
@@ -145,17 +146,14 @@ class GotifyTransport(Transport):
                         priority_ovr,
                     )
                     priority_ovr = max(0, min(10, priority_ovr))
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning(
                     "SUPERNOTIFY gotify: invalid gotify_priority %r, using auto mapping",
                     priority_ovr_raw,
                 )
                 priority_ovr = None
 
-        gotify_priority: int = (
-            priority_ovr if priority_ovr is not None
-            else _PRIORITY_MAP.get(envelope.priority or "medium", 5)
-        )
+        gotify_priority: int = priority_ovr if priority_ovr is not None else _PRIORITY_MAP.get(envelope.priority or "medium", 5)
 
         # --- Base action data ---
         action_data = envelope.core_action_data()
@@ -167,7 +165,8 @@ class GotifyTransport(Transport):
             if camera_entity_id:
                 try:
                     await self.hass_api.call_service(
-                        "camera", "snapshot",
+                        "camera",
+                        "snapshot",
                         service_data={
                             ATTR_ENTITY_ID: camera_entity_id,
                             "filename": _SNAPSHOT_PATH,
@@ -176,12 +175,14 @@ class GotifyTransport(Transport):
                     image_url = self.hass_api.abs_url(_SNAPSHOT_URL_PATH)
                     _LOGGER.debug(
                         "SUPERNOTIFY gotify snapshot from %s -> %s",
-                        camera_entity_id, _SNAPSHOT_PATH,
+                        camera_entity_id,
+                        _SNAPSHOT_PATH,
                     )
                 except Exception as e:
                     _LOGGER.warning(
                         "SUPERNOTIFY gotify: failed to snap camera %s: %s",
-                        camera_entity_id, e,
+                        camera_entity_id,
+                        e,
                     )
             elif snapshot_url:
                 image_url = self.hass_api.abs_url(snapshot_url)

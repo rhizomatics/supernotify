@@ -65,10 +65,10 @@ from .transports.alexa_media_player import AlexaMediaPlayerTransport
 from .transports.chime import ChimeTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
+from .transports.gotify import GotifyTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
 from .transports.mqtt import MQTTTransport
-from .transports.gotify import GotifyTransport
 from .transports.notify_entity import NotifyEntityTransport
 from .transports.persistent import PersistentTransport
 from .transports.sms import SMSTransport
