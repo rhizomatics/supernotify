@@ -282,7 +282,7 @@ class AlexaMediaPlayerTransport(Transport):
         elif volume_raw is not None:
             try:
                 requested_volume = float(volume_raw)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 _LOGGER.warning("SUPERNOTIFY alexa_media_player: invalid volume value %r, ignoring", volume_raw)
 
         # Pre-announce
