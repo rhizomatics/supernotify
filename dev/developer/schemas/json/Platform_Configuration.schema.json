@@ -294,6 +294,7 @@
               "tts",
               "generic",
               "notify_entity",
+              "ntfy",
               "gotify"
             ]
           },
