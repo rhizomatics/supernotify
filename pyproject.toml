@@ -5,13 +5,13 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.14.2"
 dependencies = [
-    "homeassistant>=2026.3.2",
+    "homeassistant>=2026.4.2",
     "cachetools",
     "bs4",
     "aiofiles",
     #"pyopenssl==25.3.0", # HA issue 2026.3
     #"requests==2.32.5" # force hass compat
-    "cryptography==46.0.5"
+    "cryptography==46.0.7"
 ]
 
 [tool.poetry]
@@ -36,11 +36,11 @@ namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 
 [dependency-groups]
 dev=[
-    "homeassistant-stubs >= 2026.3.2",
+    "homeassistant-stubs >= 2026.4.2",
     "pytest",
     "pytest-cov",
     "pytest-socket",
-    "pytest-homeassistant-custom-component>=0.13.318",
+    "pytest-homeassistant-custom-component>=0.13.323",
     "pytest-asyncio",
     "pytest-aiohttp",
     "pytest-unordered",
@@ -56,7 +56,7 @@ dev=[
     "genbadge[all]",
     # generic transport testing
     "notify-events",
-    "aiontfy==0.8.1",
+    "aiontfy==0.8.4",
 
 
     # home assistant tts testing
@@ -64,7 +64,7 @@ dev=[
     "ha-ffmpeg",
 
     # home assistant mobile push testing, and ntfy
-    "PyTurboJPEG==1.8.0"
+    "PyTurboJPEG==2.2.0"
 ]
 docs=[
     "mkdocs-material[imaging]",
@@ -79,7 +79,7 @@ docs=[
     "mkdocs<2.0.0",
     "json-schema-for-humans",
     "mkdocs-gen-files",
-    "voluptuous-openapi>=0.2.0",
+    "voluptuous-openapi>=0.3.0",
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-minify-html-plugin",
     "mkdocs-meta-descriptions-plugin",
