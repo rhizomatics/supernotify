@@ -176,7 +176,8 @@
         "persistent",
         "tts",
         "generic",
-        "notify_entity"
+        "notify_entity",
+        "gotify"
       ]
     },
     "alias": {
