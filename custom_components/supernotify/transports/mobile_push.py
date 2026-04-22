@@ -89,10 +89,10 @@ _LOGGER = logging.getLogger(__name__)
 # iOS interruption_level mapping from SuperNotify priority
 IOS_INTERRUPTION_MAP: dict[str, str] = {
     const.PRIORITY_CRITICAL: "critical",
-    const.PRIORITY_HIGH:     "time-sensitive",
-    const.PRIORITY_MEDIUM:   "active",
-    const.PRIORITY_LOW:      "passive",
-    const.PRIORITY_MINIMUM:  "passive",
+    const.PRIORITY_HIGH: "time-sensitive",
+    const.PRIORITY_MEDIUM: "active",
+    const.PRIORITY_LOW: "passive",
+    const.PRIORITY_MINIMUM: "passive",
 }
 
 # Android FCM TTL auto-set for critical priority (0 = instant, no FCM caching)
@@ -151,25 +151,25 @@ class MobilePushTransport(Transport):
         """
         return {
             # iOS
-            "critical_level_ios":        raw_data.pop("push_critical_level_ios", None),
-            "subtitle":                  raw_data.pop("push_subtitle", None),
+            "critical_level_ios": raw_data.pop("push_critical_level_ios", None),
+            "subtitle": raw_data.pop("push_subtitle", None),
             # Android critical
-            "critical_ttl":              raw_data.pop("push_critical_ttl", None),
+            "critical_ttl": raw_data.pop("push_critical_ttl", None),
             "critical_android_priority": raw_data.pop("push_critical_android_priority", None),
-            "channel_override":          raw_data.pop("push_channel_override", None),
-            "alarm_stream":              raw_data.pop("push_alarm_stream", False),
-            "alarm_stream_max":          raw_data.pop("push_alarm_stream_max", False),
+            "channel_override": raw_data.pop("push_channel_override", None),
+            "alarm_stream": raw_data.pop("push_alarm_stream", False),
+            "alarm_stream_max": raw_data.pop("push_alarm_stream_max", False),
             # Android TTS
-            "tts_text":                  raw_data.pop("push_tts_text", None),
-            "tts_locale":                raw_data.pop("push_tts_locale", None),
-            "tts_engine":                raw_data.pop("push_tts_engine", None),
+            "tts_text": raw_data.pop("push_tts_text", None),
+            "tts_locale": raw_data.pop("push_tts_locale", None),
+            "tts_engine": raw_data.pop("push_tts_engine", None),
             # Android Notification Commands
-            "command_screen_on":         raw_data.pop("push_command_screen_on", None),
-            "command_dnd":               raw_data.pop("push_command_dnd", None),
-            "command_ringer_mode":       raw_data.pop("push_command_ringer_mode", None),
+            "command_screen_on": raw_data.pop("push_command_screen_on", None),
+            "command_dnd": raw_data.pop("push_command_dnd", None),
+            "command_ringer_mode": raw_data.pop("push_command_ringer_mode", None),
             # Cross-platform
-            "notification_tag":          raw_data.pop("push_notification_tag", None),
-            "clear_notification":        raw_data.pop("push_clear_notification", False),
+            "notification_tag": raw_data.pop("push_notification_tag", None),
+            "clear_notification": raw_data.pop("push_clear_notification", False),
         }
 
     def _apply_android_payload(
