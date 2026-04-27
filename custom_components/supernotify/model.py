@@ -77,7 +77,7 @@ class TransportFeature(IntFlag):
     VIDEO = 8
     ACTIONS = 16
     TEMPLATE_FILE = 32
-    SNAPSHOT_IMAGE = 64
+    SNAPSHOT_IMAGE = 64  # transports will be deferred if a camera PTZ is defined
     SPOKEN = 128
 
 
