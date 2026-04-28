@@ -65,7 +65,6 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_MOBILE_PUSH,
 )
-from custom_components.supernotify.media_grab import grab_image
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
@@ -299,8 +298,11 @@ class MobilePushTransport(Transport):
 
         if camera_entity_id:
             data["entity_id"] = camera_entity_id
-            # Retrieve processed camera image via grab_image() pipeline (v1.14.0+)
-            image_path = await grab_image(envelope.notification, envelope.delivery, self.context)
+            # Retrieve processed camera image via envelope.grab_image() helper
+            # (v1.14.0+). Direct call to grab_image(envelope.notification, ...)
+            # would AttributeError because the attribute is private (_notification);
+            # the envelope helper accesses it correctly.
+            image_path = await envelope.grab_image()
             if image_path:
                 data["image"] = str(image_path)
         if clip_url:
