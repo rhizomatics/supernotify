@@ -23,10 +23,8 @@ from custom_components.supernotify.const import (
     PRIORITY_MEDIUM,
     PRIORITY_MINIMUM,
 )
-from custom_components.supernotify.model import (
-    Envelope,
-    TransportFeature,
-)
+from custom_components.supernotify.envelope import Envelope
+from custom_components.supernotify.model import TransportFeature
 
 # Relative imports from the supernotify codebase
 from custom_components.supernotify.transports.telegram import TelegramTransport
