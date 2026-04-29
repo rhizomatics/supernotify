@@ -15,7 +15,8 @@
       "default": "supernotify/media",
       "type": "string"
     },
-    "media_web_path": {
+    "media_url_prefix": {
+      "default": "/supernotify/media",
       "type": "string"
     },
     "archive": {
