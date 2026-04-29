@@ -178,7 +178,8 @@
         "generic",
         "notify_entity",
         "ntfy",
-        "gotify"
+        "gotify",
+        "pushover"
       ]
     },
     "alias": {
