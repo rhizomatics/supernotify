@@ -43,6 +43,7 @@ from custom_components.supernotify.const import (
     CONF_LINKS,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
+    CONF_MEDIA_URL_PREFIX,
     CONF_PERSON,
     CONF_RECIPIENTS,
     CONF_SCENARIOS,
@@ -239,6 +240,7 @@ class TestingContext(Context):
             self.entity_registry = AsyncMock(spec=EntityRegistry)
 
             self.hass.data["entity_registry"] = self.entity_registry
+            self.hass.http = AsyncMock()
             self.issue_registry = AsyncMock(spec=IssueRegistry)
             self.hass.data["issue_registry"] = self.issue_registry
             self.hass.data[DATA_MQTT] = Mock(spec=MqttData)
@@ -278,7 +280,11 @@ class TestingContext(Context):
         people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
         scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {})
         archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)
-        media_storage = MediaStorage(self.config.get(CONF_MEDIA_PATH), self.config.get(CONF_MEDIA_STORAGE_DAYS, 7))
+        media_storage = MediaStorage(
+            self.config.get(CONF_MEDIA_PATH),
+            self.config.get(CONF_MEDIA_URL_PREFIX),
+            days=self.config.get(CONF_MEDIA_STORAGE_DAYS, 7),
+        )
         dupe_checker = DupeChecker(self.config.get(CONF_DUPE_CHECK, {}))
         if not transport_instances:
             transport_types = transport_types or TRANSPORTS

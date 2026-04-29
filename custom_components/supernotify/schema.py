@@ -97,6 +97,7 @@ from .const import (
     CONF_MEDIA,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
+    CONF_MEDIA_URL_PREFIX,
     CONF_MESSAGE,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
@@ -442,6 +443,7 @@ HOUSEKEEPING_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TEMPLATE_PATH, default=TEMPLATE_DIR): cv.path,
     vol.Optional(CONF_MEDIA_PATH, default=MEDIA_DIR): cv.path,
+    vol.Optional(CONF_MEDIA_URL_PREFIX, default="/supernotify/media"): cv.path,
     vol.Optional(CONF_ARCHIVE, default={CONF_ENABLED: False}): ARCHIVE_SCHEMA,
     vol.Optional(CONF_HOUSEKEEPING, default={}): HOUSEKEEPING_SCHEMA,
     vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,

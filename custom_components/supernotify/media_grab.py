@@ -446,13 +446,18 @@ async def write_image_from_bitmap(
 
 
 class MediaStorage:
-    def __init__(self, media_path: str | None, days: int = 7) -> None:
+    def __init__(self, media_path: str | None, media_url_prefix: str | None = None, days: int = 7) -> None:
         self.media_path: Path | None = Path(media_path) if media_path else None
         self.last_purge: dt.datetime | None = None
+        self.media_url_prefix = media_url_prefix
         self.purge_minute_interval = 60 * 6
         self.days = days
 
     async def initialize(self, hass_api: HomeAssistantAPI) -> None:
+        self.hass_api = hass_api  # TODO: should not be set on initialize
+        if self.media_path is not None and not self.media_path.is_absolute():
+            self.media_path = await self.media_path.absolute()
+            _LOGGER.info("SUPERNOTIFY media path updated to %s", self.media_path)
         if self.media_path and not await self.media_path.exists():
             _LOGGER.info("SUPERNOTIFY media path not found at %s", self.media_path)
             try:
@@ -468,6 +473,20 @@ class MediaStorage:
                 self.media_path = None
         if self.media_path is not None:
             _LOGGER.info("SUPERNOTIFY abs media path: %s", await self.media_path.absolute())
+
+        if self.media_url_prefix is not None:
+            await hass_api.register_web_path(self.media_path, self.media_url_prefix)
+
+    async def object_url(self, relative_path: Path) -> str | None:
+        """Convert a local image path to an externally accessible URL via the registered static path."""
+        if not self.media_url_prefix or self.media_path is None:
+            return None
+        try:
+            relative = relative_path.relative_to(await self.media_path.absolute())
+            return self.hass_api.abs_url(f"{self.media_url_prefix}/{relative}")
+        except ValueError as e:
+            _LOGGER.warning("SUPERNOTIFY Invalid media path for URL %s: %s", relative_path, e)
+            return None
 
     async def size(self) -> int:
         path: Path | None = self.media_path

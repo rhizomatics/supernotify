@@ -14,6 +14,7 @@ CONF_RECIPIENTS: Final[str] = "recipients"
 CONF_RECIPIENTS_DISCOVERY: Final[str] = "recipients_discovery"
 CONF_TEMPLATE_PATH: Final[str] = "template_path"
 CONF_MEDIA_PATH: Final[str] = "media_path"
+CONF_MEDIA_URL_PREFIX: Final[str] = "media_url_prefix"
 CONF_HOUSEKEEPING: Final[str] = "housekeeping"
 CONF_HOUSEKEEPING_TIME: Final[str] = "housekeeping_time"
 CONF_ARCHIVE_PATH: Final[str] = "file_path"
@@ -246,6 +247,9 @@ TRANSPORT_NOTIFY_ENTITY = "notify_entity"
 TRANSPORT_PERSISTENT = "persistent"
 TRANSPORT_NTFY = "ntfy"
 TRANSPORT_GOTIFY = "gotify"
+TRANSPORT_TELEGRAM = "telegram"
+TRANSPORT_LAMETRIC = "lametric"
+TRANSPORT_PUSHOVER = "pushover"
 TRANSPORT_VALUES = [
     TRANSPORT_SMS,
     TRANSPORT_MQTT,
@@ -261,6 +265,9 @@ TRANSPORT_VALUES = [
     TRANSPORT_NOTIFY_ENTITY,
     TRANSPORT_NTFY,
     TRANSPORT_GOTIFY,
+    TRANSPORT_TELEGRAM,
+    TRANSPORT_LAMETRIC,
+    TRANSPORT_PUSHOVER,
 ]
 
 

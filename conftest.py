@@ -281,7 +281,7 @@ def uninitialized_unmocked_config(mock_hass_api: HomeAssistantAPI, tmp_path) -> 
     scenario_registry = ScenarioRegistry({})
     delivery_registry = DeliveryRegistry({})
     dupe_checker = DupeChecker({})
-    media_storage = MediaStorage(tmp_path / "media", 1)
+    media_storage = MediaStorage(tmp_path / "media", None, 1)
     archive = NotificationArchive({}, mock_hass_api)
     return Context(
         mock_hass_api, people_registry, scenario_registry, delivery_registry, dupe_checker, archive, media_storage, Snoozer()

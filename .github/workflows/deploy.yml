@@ -10,6 +10,17 @@ on:
     branches: [ "main" ]
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag to deploy (e.g. v1.14.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Is this a prerelease?'
+        required: true
+        type: boolean
+        default: false
 
 concurrency:
   group: gh-pages-deploy
@@ -31,6 +42,7 @@ jobs:
     - uses: actions/checkout@v6.0.2
       with:
         fetch-depth: 0
+        ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
     - name: HACS Action
       uses: "hacs/action@dcb30e72781db3f207d5236b861172774ab0b485"
       with:
@@ -90,9 +102,15 @@ jobs:
         git config push.autoSetupRemote true
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         git fetch origin gh-pages
-        if [ "${{ github.event_name }}" = "release" ]; then
-          TAG="${{ github.event.release.tag_name }}"
-          if [[ "${{ github.event.release.prerelease }}" = "true" ]]; then
+        if [ "${{ github.event_name }}" = "release" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag_name }}"
+            IS_PRERELEASE="${{ inputs.prerelease }}"
+          else
+            TAG="${{ github.event.release.tag_name }}"
+            IS_PRERELEASE="${{ github.event.release.prerelease }}"
+          fi
+          if [[ "$IS_PRERELEASE" = "true" ]]; then
             echo "Deploying prerelease version: $TAG"
             uv run mike deploy --update-aliases "$TAG" beta
           else

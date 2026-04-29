@@ -63,7 +63,7 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
     * Mobile Apps automatically discovered, including Manufacturer and Model of the phone, which can be used to customize delivery
     * Alexa Devices for sending chime noises automatically discovered from Home Assistant
 * Go beyond `notify` integrations
-    * Chimes, sirens, SMS, TTS, Alexa Announcements and Sounds, API calls, MQTT devices, Gotify, ntfy
+    * Chimes, sirens, SMS, TTS, Alexa Announcements and Sounds, API calls, MQTT devices, Gotify, ntfy, LaMetric, Pushover, Telegram
     * All the standard `notify` and  `notify.group` implementations available, including the modern `NotifyEntity` based ones
     * Greatly simplified use of Mobile Push notifications, e.g. for iPhone
     * Standard HomeAssistant behaviour, including data templating and `notify.group`

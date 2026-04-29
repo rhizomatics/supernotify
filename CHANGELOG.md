@@ -1,5 +1,13 @@
 # Public releases
 
+## 1.15.0
+### New transports
+- Pushover, Telegram and LaMetric, contributed by [@lollox80](https://github.com/lollox80)
+### Multimedia
+- New `media_url_prefix` in platform settings to control the URL path which Home Assistant uses to expose the media directory. Make this empty to stop the directory being available via HA web UI
+## 1.14.1
+### PTZ
+- Mobile Push deliveries will defer until a PTZ operation complete
 ## 1.14.0
 ### Delivery Sequencing
 - Delivieries now use asyncio.gather to maximize parallelism

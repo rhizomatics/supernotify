@@ -64,6 +64,12 @@ or in the notify `action` call.
 
 A PTZ delay can be set to wait for camera movement before snapshot taken, and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an additional PTZ movement will be commanded to return to the `ptz_default_preset` defined for the camera.
 
+### Accessing Media via Web
+
+By default the media storage is made available via the Home Assistant web interface with the prefix `/supernotify/media/`
+
+This prefix can be changed using the `media_url_prefix` setting in the main configuration block (where `media_path` is also configured). If you don't want this to be available, define this with an empty value ( which may stop some integrations being able to access images if they're expecting to get camera snaps via a URL).
+
 ### Automatically Fixing Camera Issues
 
 Some cameras, like Hikvision, add JPEG comment blocks which confuse the very simplistic media detection in the SMTP integration, and leads to spurious log entries. Supernotify will automatically rewrite and optimize JPEGs, stripping out comments, to avoid this.

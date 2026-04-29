@@ -396,7 +396,7 @@ def test_select_untracked_alt_camera(mock_hass_api) -> None:
 
 async def test_media_storage(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
 
-    uut = MediaStorage(tmp_path, 7)
+    uut = MediaStorage(tmp_path, None, 7)
     await uut.initialize(mock_hass_api)
     old_time = Mock(return_value=Mock(st_ctime=time.time() - (8 * 24 * 60 * 60)))
     new_time = Mock(return_value=Mock(st_ctime=time.time() - (5 * 24 * 60 * 60)))
@@ -662,7 +662,7 @@ async def test_media_storage_size_no_path(mock_hass_api: HomeAssistantAPI) -> No
 
 
 async def test_media_storage_cleanup_zero_days(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    uut = MediaStorage(str(tmp_aiopath), 0)
+    uut = MediaStorage(str(tmp_aiopath), None, 0)
     assert await uut.cleanup() == 0
 
 
@@ -672,7 +672,7 @@ async def test_media_storage_cleanup_no_path(mock_hass_api: HomeAssistantAPI) ->
 
 
 async def test_media_storage_cleanup_scandir_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    uut = MediaStorage(str(tmp_aiopath), 7)
+    uut = MediaStorage(str(tmp_aiopath), None, 7)
     await uut.initialize(mock_hass_api)
     with patch("aiofiles.os.scandir", side_effect=OSError("disk error")):
         count = await uut.cleanup(force=True)
@@ -681,6 +681,24 @@ async def test_media_storage_cleanup_scandir_exception(mock_hass_api: HomeAssist
 
 async def test_media_storage_cleanup_nonexistent_path(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
     nonexistent = tmp_aiopath / "nope"
-    uut = MediaStorage(str(nonexistent), 7)
+    uut = MediaStorage(str(nonexistent), None, 7)
     uut.media_path = anyio.Path(nonexistent)  # set without initializing (so path doesn't exist on disk)
     assert await uut.cleanup(force=True) == 0
+
+
+async def test_media_storage_initialize_null_url_prefix_skips_http_registration(
+    mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path
+) -> None:
+    """media_url_prefix=None: hass_api.register_web_path must not be called."""
+    uut = MediaStorage(str(tmp_aiopath), None, 7)
+    await uut.initialize(mock_hass_api)
+    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]
+
+
+async def test_media_storage_initialize_with_url_prefix_registers_http_path(
+    mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path
+) -> None:
+    """media_url_prefix set: hass_api.register_web_path is called once with correct args."""
+    uut = MediaStorage(str(tmp_aiopath), "/supernotify-media", 7)
+    await uut.initialize(mock_hass_api)
+    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]

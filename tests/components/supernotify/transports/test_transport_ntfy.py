@@ -20,7 +20,6 @@ Path in upstream repo: tests/components/supernotify/test_transport_ntfy.py
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from anyio import Path
 
 from custom_components.supernotify.const import (
     ATTR_PRIORITY,
@@ -457,14 +456,16 @@ async def test_attach_image_with_camera_entity_calls_grab_image() -> None:
         data={"ntfy_device_id": "dev1", "ntfy_attach_image": True},
         media={"camera_entity_id": "camera.ingresso"},
     )
-    fake_path = Path("/config/www/supernotify/image/test.jpg")
+
+    assert ctx.media_storage.media_path is not None
+    fake_path = ctx.media_storage.media_path / "image/test.jpg"
     with patch.object(e, "grab_image", new_callable=AsyncMock, return_value=fake_path) as mock_grab:
         await uut.deliver(e)
         mock_grab.assert_called_once()
 
     assert e.calls[0].action_data
     assert "attach" in e.calls[0].action_data
-    assert e.calls[0].action_data["attach"].endswith("/local/supernotify/image/test.jpg")
+    assert e.calls[0].action_data["attach"].endswith("/supernotify/media/image/test.jpg")
 
 
 async def test_attach_image_camera_snapshot_failure_delivery_continues() -> None:

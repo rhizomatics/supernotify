@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator
 
     import aiohttp
+    from anyio import Path
     from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service, ServiceResponse, State
     from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_registry import EntityRegistry
@@ -331,6 +332,20 @@ class HomeAssistantAPI:
 
     def template(self, template_format: str) -> Template:
         return Template(template_format, self._hass)
+
+    async def register_web_path(self, media_web_path: Path | None, url_prefix: str) -> bool:
+        if media_web_path is None:
+            return False
+        try:
+            from homeassistant.components.http import StaticPathConfig
+
+            await self._hass.http.async_register_static_paths([
+                StaticPathConfig(url_prefix, str(media_web_path), cache_headers=False)
+            ])
+            return True
+        except Exception as e:
+            _LOGGER.error("SUPERNOTIFY Unable to register media web exposed path for %s: %s", media_web_path, e)
+        return False
 
     async def trace_conditions(
         self,

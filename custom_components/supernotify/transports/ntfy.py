@@ -11,7 +11,7 @@ Supported data: keys (all optional except ntfy_device_id):
     ntfy_click       str         URL opened on notification tap
     ntfy_attach_image bool       grab image via shared pipeline and attach to ntfy.
                                  Used only when no snapshot_url is already in media.
-                                 Requires media_path under /config/www/ to be URL-accessible.
+                                 Requires media_web_path configured and image saved within it.
     ntfy_filename    str         attachment filename (default: snapshot.jpg)
     ntfy_icon        str         JPEG/PNG icon URL
     ntfy_markdown    bool        enable Markdown rendering (default: false)
@@ -44,8 +44,6 @@ from custom_components.supernotify.model import DebugTrace, TargetRequired, Tran
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
-    from anyio import Path
-
     from custom_components.supernotify.envelope import Envelope
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,13 +122,6 @@ class NtfyTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
-    def _path_to_url(self, image_path: Path) -> str | None:
-        path_str = str(image_path)
-        idx = path_str.find("/config/www/")
-        if idx != -1:
-            return self.hass_api.abs_url("/local/" + path_str[idx + len("/config/www/") :])
-        return None
-
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY ntfy %s", envelope.message)
 
@@ -198,7 +189,7 @@ class NtfyTransport(Transport):
             elif attach_image:
                 image_path = await envelope.grab_image()
                 if image_path:
-                    image_url = self._path_to_url(image_path)
+                    image_url = await self.context.media_storage.object_url(image_path)
                     if image_url:
                         action_data["attach"] = image_url
                         action_data["filename"] = filename

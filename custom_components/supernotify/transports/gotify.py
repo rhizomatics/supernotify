@@ -13,8 +13,8 @@ Prerequisites:
     - `action: notify.<name>` set in delivery.yaml (REQUIRED)
 
 For snapshot camera / bigImageUrl:
-    - `external_url` must be configured in HA for the URL to be reachable outside
-      the local network. `hass_api.abs_url()` uses external_url if available.
+    - `media_web_path` must be configured (PLATFORM_SCHEMA) for grab_image to produce a URL.
+    - `external_url` must be configured in HA for the URL to be reachable outside the local network.
 
 Supported data: keys (all optional):
     gotify_priority     int (0-10)  Override priority (0=silent ... 10=max).
@@ -25,7 +25,7 @@ Supported data: keys (all optional):
                                     Takes precedence over gotify_attach_image.
     gotify_attach_image bool        Grab image via shared pipeline and use as bigImageUrl.
                                     Used only when no snapshot_url is already in media.
-                                    Requires media_path under /config/www/ to be URL-accessible.
+                                    Requires media_web_path configured and image saved within it.
     gotify_markdown     bool        Enable Markdown rendering (text/markdown).
                                     Accepts "true"/"false" YAML strings safely.
     gotify_intent_url   str (URL)   Android intent URL on message receive.
@@ -56,8 +56,6 @@ from custom_components.supernotify.model import (
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
-    from anyio import Path
-
     from custom_components.supernotify.envelope import Envelope
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,13 +123,6 @@ class GotifyTransport(Transport):
         )
         return False
 
-    def _path_to_url(self, image_path: Path) -> str | None:
-        path_str = str(image_path)
-        idx = path_str.find("/config/www/")
-        if idx != -1:
-            return self.hass_api.abs_url("/local/" + path_str[idx + len("/config/www/") :])
-        return None
-
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
         _LOGGER.debug("SUPERNOTIFY gotify %s", envelope.message)
 
@@ -140,7 +131,7 @@ class GotifyTransport(Transport):
         # --- Extract gotify_* keys (must not reach the notify service) ---
         priority_ovr_raw = raw_data.pop("gotify_priority", None)
         click_url = raw_data.pop("gotify_click", None)
-        image_url = raw_data.pop("gotify_image_url", None)
+        image_url: str | None = raw_data.pop("gotify_image_url", None)
         attach_image = boolify(raw_data.pop("gotify_attach_image", False), default=False)
         markdown = boolify(raw_data.pop("gotify_markdown", False), default=False)
         intent_url = raw_data.pop("gotify_intent_url", None)
@@ -173,7 +164,7 @@ class GotifyTransport(Transport):
             elif attach_image:
                 image_path = await envelope.grab_image()
                 if image_path:
-                    image_url = self._path_to_url(image_path)
+                    image_url = await self.context.media_storage.object_url(image_path)
 
         # --- Build nested payload_data ---
         payload_data: dict[str, Any] = {"priority": gotify_priority}

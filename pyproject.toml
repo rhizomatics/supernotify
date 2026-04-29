@@ -101,7 +101,7 @@ exclude-newer = "5 days"
 [tool.ruff]
 line-length = 128
 indent-width = 4
-target-version = "py314"
+target-version = "py313"
 exclude = [
     ".bzr",
     ".direnv",
