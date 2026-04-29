@@ -15,6 +15,9 @@
       "default": "supernotify/media",
       "type": "string"
     },
+    "media_web_path": {
+      "type": "string"
+    },
     "archive": {
       "type": "object",
       "properties": {
@@ -296,6 +299,8 @@
               "notify_entity",
               "ntfy",
               "gotify",
+              "telegram",
+              "lametric",
               "pushover"
             ]
           },

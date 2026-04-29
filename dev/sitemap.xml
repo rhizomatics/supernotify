@@ -337,7 +337,15 @@
          <lastmod>2026-04-29</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/transports/pushover/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/transports/sms/</loc>
+         <lastmod>2026-04-29</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/transports/telegram/</loc>
          <lastmod>2026-04-29</lastmod>
     </url>
     <url>

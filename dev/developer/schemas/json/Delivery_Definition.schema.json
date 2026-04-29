@@ -179,6 +179,8 @@
         "notify_entity",
         "ntfy",
         "gotify",
+        "telegram",
+        "lametric",
         "pushover"
       ]
     },
