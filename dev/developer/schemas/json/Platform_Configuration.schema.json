@@ -15,6 +15,10 @@
       "default": "supernotify/media",
       "type": "string"
     },
+    "media_path_share": {
+      "default": "supernotify/media",
+      "type": "string"
+    },
     "media_url_prefix": {
       "type": "string",
       "default": "/supernotify/media"
