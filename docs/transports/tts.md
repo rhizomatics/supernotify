@@ -52,8 +52,7 @@ delivery:
 The Home Assistant [TTS Integration](https://www.home-assistant.io/integrations/tts/) calls
 the `tts_entity_id` to generate an audio file from the text, and then uses the `media_player`
 virtual integration to play this audio file. The Entity Platform (see [Entity Architecture](https://developers.home-assistant.io/docs/architecture/devices-and-services)) creates jobs per entity for this - not
-per platform, so there can be a delay between each device making its announcement. It does however try
-to preserve the order in which the `media_player` entities were listed.
+per platform, so there can be a delay between each device making its announcement. It does however try to preserve the order in which the `media_player` entities were listed.
 
 ## Android Companion App
 
@@ -68,12 +67,8 @@ action: notify.mobile_app_my_pixel
       tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on in the delivery configuration, in which
-case every notification will be announced on every Android companion app unless overridden. This example
-uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts`
-adaptor always filters out Apple devices, and further filtering can be made in the `options` for model,
-manufacturer, label and area (see [Table of Options](./index.md#table-of-options) for the list of options
-and the include/exclude syntax).
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts`
+adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](./index.md#table-of-options) for the list of options and the include/exclude syntax).
 
 ```yaml title="Configuration Snippet"
 transports:
@@ -85,10 +80,31 @@ transports:
 
 Media Player and Android targets can be combined in one call - the `tts` transport will work out which calls to make.
 
+## Being Pickier
+
+Use the device `select` controls to narrow down the targets ( you can also select by manufacturer, operating system, label, area or a combination):
+
+```yaml
+deliveries:
+  pixel_push:
+    transport: tts
+    options:
+      device_model_select: .*Pixel.*
+```
+
+```yaml
+deliveries:
+  pixel_push:
+    transport: tts
+    options:
+      device_label_select:
+        - parents
+        - IoT
+```
+
 ## Voice specific message
 
-Use `spoken_message` in the `data` section of a notification call to provide a different message for a voice
-notification than used for other transports like email or mobile push.
+Use `spoken_message` in the `data` section of a notification call to provide a different message for a voice notification than used for other transports like email or mobile push.
 
 ## Alternatives
 
