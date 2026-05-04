@@ -52,3 +52,6 @@ delivery:
               video:
               clickAction: # iOS uses 'url'
 ```
+## Variations and Alternatives
+- Hack the blueprint instead, and re-edit it when updating it
+- Create separate deliveries for Android and Apple devices

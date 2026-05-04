@@ -53,10 +53,12 @@ from custom_components.supernotify.const import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_DEFAULT,
+    ATTR_IMAGE,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MOBILE_APP_ID,
+    ATTR_VIDEO,
     MANUFACTURER_APPLE,
     OPTION_DATA_KEYS_SELECT,
     OPTION_DEVICE_DISCOVERY,
@@ -309,16 +311,16 @@ class MobilePushTransport(Transport):
             image_path = await envelope.grab_image()
             if image_path:
                 image_url = await self.context.media_storage.share_path(image_path)
-                data["image"] = image_url or str(image_path)
+                data[ATTR_IMAGE] = image_url or str(image_path)
             else:
                 # fall back to letting device take the image
                 data["entity_id"] = camera_entity_id
         if clip_url:
-            data["video"] = clip_url
+            data[ATTR_VIDEO] = clip_url
 
-        if snapshot_url and "image" not in data:
+        if snapshot_url and ATTR_IMAGE not in data:
             # Fallback: use pre-computed snapshot URL if grab_image() produced nothing
-            data["image"] = snapshot_url
+            data[ATTR_IMAGE] = snapshot_url
 
         # 8. Actions: URL-title fetching, snooze action, action groups (unchanged)
         data.setdefault("actions", [])

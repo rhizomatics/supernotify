@@ -25,6 +25,7 @@ from .const import (
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
     ATTR_FORCE_RESEND,
+    ATTR_IMAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
@@ -37,6 +38,7 @@ from .const import (
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
     ATTR_SPOKEN_MESSAGE,
+    ATTR_VIDEO,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
@@ -238,10 +240,10 @@ class Notification(ArchivableObject):
         media_dict = {}
         if not data:
             return {}
-        if data.get("image"):
-            media_dict[ATTR_MEDIA_SNAPSHOT_URL] = data.get("image")
-        if data.get("video"):
-            media_dict[ATTR_MEDIA_CLIP_URL] = data.get("video")
+        if data.get(ATTR_IMAGE):
+            media_dict[ATTR_MEDIA_SNAPSHOT_URL] = data.get(ATTR_IMAGE)
+        if data.get(ATTR_VIDEO):
+            media_dict[ATTR_MEDIA_CLIP_URL] = data.get(ATTR_VIDEO)
         if data.get("attachment", {}).get("url"):
             url = data["attachment"]["url"]
             if url and url.endswith(".mp4") and not media_dict.get(ATTR_MEDIA_CLIP_URL):
