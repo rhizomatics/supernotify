@@ -448,3 +448,56 @@ async def test_parallel_push() -> None:
         ],
         any_order=True,
     )
+
+
+async def test_mobile_push_discovery_applies_model_name_filter(hass: HomeAssistant) -> None:
+    """Discovery with device_model_select '.*Pixel.*' notifies only Pixel phones, not iPhone or Galaxy."""
+    hass_api = HomeAssistantAPI(hass)
+
+    # Person 1 (Alice): Pixel 7 (expected) + iPhone 15 Pro (not expected)
+    register_mobile_app(hass_api, person="person.alice", manufacturer="Google", model="Pixel 7", device_name="Alice Pixel")
+    register_mobile_app(
+        hass_api, person="person.alice", manufacturer="Apple", model="iPhone 15 Pro", device_name="Alice iPhone"
+    )
+
+    # Person 2 (Bob): Pixel 8 Pro (expected) + Galaxy S24 (not expected)
+    register_mobile_app(hass_api, person="person.bob", manufacturer="Google", model="Pixel 8 Pro", device_name="Bob Pixel")
+    register_mobile_app(hass_api, person="person.bob", manufacturer="Samsung", model="Galaxy S24", device_name="Bob Galaxy")
+
+    config = {
+        "name": DOMAIN,
+        "platform": DOMAIN,
+        "delivery": {
+            "pixel_push": {
+                CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH,
+                "options": {
+                    "device_discovery": True,
+                    "device_domain": ["mobile_app"],
+                    "device_model_select": ".*Pixel.*",
+                },
+            }
+        },
+    }
+
+    await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
+    assert await async_setup_component(hass, NOTIFY_DOMAIN, config={NOTIFY_DOMAIN: [config]})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"message": "pixel only"}, blocking=True)
+    await hass.async_block_till_done()
+
+    notification: dict[str, Any] = cast(
+        "dict[str, Any]",
+        await hass.services.async_call("supernotify", "enquire_last_notification", None, blocking=True, return_response=True),
+    )
+
+    assert notification is not None
+    assert "pixel_push" in notification["deliveries"]
+    assert "delivered" in notification["deliveries"]["pixel_push"]
+
+    delivered_calls = [
+        call for envelope in notification["deliveries"]["pixel_push"]["delivered"] for call in envelope.get("calls", [])
+    ]
+    notified = {call["action"] for call in delivered_calls}
+
+    assert notified == {"mobile_app_alice_pixel", "mobile_app_bob_pixel"}

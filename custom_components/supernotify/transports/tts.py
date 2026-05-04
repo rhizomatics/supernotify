@@ -25,6 +25,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
+    SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
@@ -121,11 +122,12 @@ class TTSTransport(Transport):
         if "media_stream" in envelope.data:
             action_data["media_stream"] = envelope.data["media_stream"]
 
+        manufacturer_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MANUFACTURER_SELECT))
         at_least_one: bool = False
         for target in targets:
             mobile_info: DeviceInfo | None = self.context.hass_api.mobile_app_by_id(target)
-            if not mobile_info or mobile_info.manufacturer == MANUFACTURER_APPLE:
-                _LOGGER.debug("SUPERNOTIFY Skipping tts target that isn't confirmed as android: %s", mobile_info)
+            if not mobile_info or not manufacturer_filter.match(mobile_info.manufacturer):
+                _LOGGER.debug("SUPERNOTIFY Skipping tts target excluded by manufacturer filter: %s", mobile_info)
             else:
                 full_target = target if Target.is_notify_entity(target) else f"notify.{target}"
                 if await self.call_action(envelope, qualified_action=full_target, action_data=action_data, implied_target=True):

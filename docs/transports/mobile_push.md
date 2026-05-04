@@ -98,6 +98,9 @@ transports:
             - iOS
 ```
 
+You can also use the device `select` options if not using auto-discovery - this will then
+limit that delivery to matching devices when they have been auto-discovered at start-up for all deliveries, or have been manually defined for recipients.
+
 
 ## References
 

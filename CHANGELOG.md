@@ -1,5 +1,12 @@
 # Public releases
 
+## 1.16.1
+### Mobile Push
+- Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time, so the global discovery by person doesn't have to be switch off to create a phone model specific delivery
+### Chime
+- Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time
+### TTS
+- Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time
 ## 1.16.0
 ### Mobile Push
 - Data sections can now be filtered in/out to any level of nesting

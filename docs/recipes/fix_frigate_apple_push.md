@@ -55,3 +55,21 @@ delivery:
 ## Variations and Alternatives
 - Hack the blueprint instead, and re-edit it when updating it
 - Create separate deliveries for Android and Apple devices
+
+### Apple/Android specific deliveries
+
+```yaml
+deliveries:
+  apple_push:
+    transport: mobile_push
+    options:
+    device_manufacturer_select:
+        include:
+        - Apple
+  android_push:
+    transport: mobile_push
+    options:
+    device_manufacturer_select:
+        exclude:
+        - Apple
+```

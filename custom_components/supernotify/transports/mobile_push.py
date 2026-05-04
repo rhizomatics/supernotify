@@ -63,6 +63,7 @@ from custom_components.supernotify.const import (
     OPTION_DATA_KEYS_SELECT,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MODEL_SELECT,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -76,6 +77,7 @@ from custom_components.supernotify.model import (
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
+    SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
@@ -348,11 +350,15 @@ class MobilePushTransport(Transport):
         action_data = envelope.core_action_data()
         action_data[ATTR_DATA] = data
         clear_notification = bool(push_data["clear_notification"] and notification_tag)
+        model_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MODEL_SELECT))
         hits = 0
 
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
             mobile_info: DeviceInfo | None = self.context.hass_api.mobile_app_by_id(mobile_target)
+            if mobile_info is not None and not model_filter.match(mobile_info.model):
+                _LOGGER.debug("SUPERNOTIFY Skipping %s, model %s excluded by delivery filter", mobile_target, mobile_info.model)
+                continue
             if mobile_info is None:
                 action_data[ATTR_DATA].update(android_data)
                 action_data[ATTR_DATA].update(ios_data)

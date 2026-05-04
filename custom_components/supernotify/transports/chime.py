@@ -32,7 +32,14 @@ from custom_components.supernotify.const import (
     SELECT_EXCLUDE,
     TRANSPORT_CHIME,
 )
-from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    SelectionRule,
+    Target,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.schema import CHIME_ALIASES_SCHEMA
 from custom_components.supernotify.transport import Transport
 
@@ -298,9 +305,14 @@ class ChimeTransport(Transport):
             e: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, entity_id=e)
             for e in self.hass_api.expand_group(target.entity_ids)
         }
+        model_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MODEL_SELECT))
+        dev_reg = self.hass_api.device_registry()
         expanded_targets.update({
             d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
             for d in target.device_ids
+            if not dev_reg
+            or not (dev_entry := dev_reg.async_get(d))
+            or model_filter.match(dev_entry.model if isinstance(dev_entry.model, str) else None)
         })
         # resolve and include chime aliases
         expanded_targets.update(
