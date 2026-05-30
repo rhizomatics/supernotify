@@ -5,7 +5,7 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
 dependencies = [
-    "homeassistant>=2026.2.3",
+    "homeassistant>=2026.2.0",
     "cachetools",
     "bs4",
     "aiofiles",
