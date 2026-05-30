@@ -11,7 +11,7 @@ dependencies = [
     "aiofiles",
     #"pyopenssl==25.3.0", # HA issue 2026.3
     #"requests==2.32.5" # force hass compat
-    "cryptography==48.0.0"
+    #"cryptography==48.0.0" # removed: conflicts with HA 2026.5.x which requires 47.0.0
 ]
 
 [tool.poetry]
@@ -80,7 +80,7 @@ docs=[
     "mkdocs<2.0.0",
     "json-schema-for-humans",
     "mkdocs-gen-files",
-    "voluptuous-openapi>=0.3.0",
+    "voluptuous-openapi>=0.2.0",
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-minify-html-plugin",
     "mkdocs-meta-descriptions-plugin",
@@ -93,8 +93,20 @@ docs=[
 
 
 [tool.uv]
+# Skip the 3.14.0-3.14.1 gap: HA 2026.3+ requires >=3.14.2, so those patch
+# versions are unusable regardless.
+environments = [
+    "python_full_version < '3.14'",
+    "python_full_version >= '3.14.2'",
+]
 override-dependencies = [
     #"voluptuous-openapi==0.2.0"
+    "homeassistant==2026.2.3; python_full_version < '3.14.2'",
+    "homeassistant==2026.5.4; python_full_version >= '3.14.2'",
+    "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
+    "homeassistant-stubs==2026.5.4; python_full_version >= '3.14.2'",
+    # aiontfy 0.8.3+ requires orjson>=3.11.7, but HA 2026.2.3 pins orjson==3.11.5
+    "aiontfy==0.8.2; python_full_version < '3.14.2'",
 ]
 exclude-newer = "5 days"
 add-bounds = "major"
