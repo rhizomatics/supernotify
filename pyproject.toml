@@ -57,7 +57,8 @@ dev=[
     "genbadge[all]",
     # generic transport testing
     "notify-events",
-    "aiontfy==0.8.5",
+    "aiontfy==0.8.2; python_full_version < '3.14.2'",
+    "aiontfy==0.8.5; python_full_version >= '3.14.2'",
 
 
     # home assistant tts testing
@@ -105,8 +106,7 @@ override-dependencies = [
     "homeassistant==2026.5.4; python_full_version >= '3.14.2'",
     "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
     "homeassistant-stubs==2026.5.4; python_full_version >= '3.14.2'",
-    # aiontfy 0.8.3+ requires orjson>=3.11.7, but HA 2026.2.3 pins orjson==3.11.5
-    "aiontfy==0.8.2; python_full_version < '3.14.2'",
+
 ]
 exclude-newer = "5 days"
 add-bounds = "major"

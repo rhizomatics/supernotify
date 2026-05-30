@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -m py_compile custom_components/supernotify/*.py custom_components/supernotify/**/*.py)"
+      "Bash(python3 -m py_compile custom_components/supernotify/*.py custom_components/supernotify/**/*.py)",
+      "Bash(.venv/bin/python -c \"from aiontfy.update import UpdateChecker; print\\('OK'\\)\")"
     ]
   }
 }

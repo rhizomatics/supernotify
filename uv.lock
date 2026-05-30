@@ -12,12 +12,11 @@ supported-markers = [
 ]
 
 [options]
-exclude-newer = "2026-05-25T16:38:11.790668Z"
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P5D"
 
 [manifest]
 overrides = [
-    { name = "aiontfy", marker = "python_full_version < '3.14.2'", specifier = "==0.8.2" },
     { name = "homeassistant", marker = "python_full_version < '3.14.2'", specifier = "==2026.2.3" },
     { name = "homeassistant", marker = "python_full_version >= '3.14.2'", specifier = "==2026.5.4" },
     { name = "homeassistant-stubs", marker = "python_full_version < '3.14.2'", specifier = "==2026.2.3" },
@@ -349,6 +348,9 @@ wheels = [
 name = "aiontfy"
 version = "0.8.2"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.14'",
+]
 dependencies = [
     { name = "aiohttp", version = "3.13.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
     { name = "mashumaro", marker = "python_full_version < '3.14'" },
@@ -357,6 +359,24 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d8/24/ef12ee891a2247770860f9a04361922e9171f00a4af830d9bd420a026b39/aiontfy-0.8.2.tar.gz", hash = "sha256:f3a9d4cb75aec994b60b0d4ffe89b715d943468e30838dc8c2e6c1ec4880171c", size = 26562, upload-time = "2026-03-29T01:13:58.694Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/66/f36f84c65db750bcd0d58e111ec74fa78dc9e35c9df1143752e4e7846f4c/aiontfy-0.8.2-py3-none-any.whl", hash = "sha256:27616f9b5f27d48f19dea60c7713de43eae587e7e4ffc5b06bbb143a74562ddf", size = 15413, upload-time = "2026-03-29T01:13:59.646Z" },
+]
+
+[[package]]
+name = "aiontfy"
+version = "0.8.5"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.15'",
+    "python_full_version >= '3.14.2' and python_full_version < '3.15'",
+]
+dependencies = [
+    { name = "aiohttp", version = "3.13.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+    { name = "mashumaro", marker = "python_full_version >= '3.14.2'" },
+    { name = "orjson", version = "3.11.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b2/e3/5f514eb5916c23f217f869a1e459d93563795a14ddacdde0a3a2b0a2661c/aiontfy-0.8.5.tar.gz", hash = "sha256:71e245ea066dc6793f154e5518e2d6754f893ad4604182dfc8b0201d38ad660f", size = 26614, upload-time = "2026-04-27T18:25:53.995Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/7e/a87b74aa0da40b700499679c4536efb524e34d2dc4492ffc86a87c1c05de/aiontfy-0.8.5-py3-none-any.whl", hash = "sha256:f27ffcc56056bfaa2b55c7e997465ea5151016812a843d6eb10c67977f92cf55", size = 15415, upload-time = "2026-04-27T18:25:52.675Z" },
 ]
 
 [[package]]
@@ -4873,7 +4893,8 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "aiontfy", marker = "python_full_version < '3.14'" },
+    { name = "aiontfy", version = "0.8.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14'" },
+    { name = "aiontfy", version = "0.8.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
     { name = "codespell", marker = "python_full_version < '3.14' or python_full_version >= '3.14.2'" },
     { name = "genbadge", extra = ["all"], marker = "python_full_version < '3.14' or python_full_version >= '3.14.2'" },
     { name = "ha-ffmpeg", marker = "python_full_version < '3.14' or python_full_version >= '3.14.2'" },
@@ -4934,7 +4955,8 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "aiontfy", specifier = "==0.8.5" },
+    { name = "aiontfy", marker = "python_full_version < '3.14.2'", specifier = "==0.8.2" },
+    { name = "aiontfy", marker = "python_full_version >= '3.14.2'", specifier = "==0.8.5" },
     { name = "codespell" },
     { name = "genbadge", extras = ["all"] },
     { name = "ha-ffmpeg" },
