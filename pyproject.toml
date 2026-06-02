@@ -5,7 +5,7 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
 dependencies = [
-    "homeassistant>=2026.2.0",
+    "homeassistant>=2026.2.3",
     "cachetools",
     "bs4",
     "aiofiles",
@@ -81,7 +81,7 @@ docs=[
     "mkdocs<2.0.0",
     "json-schema-for-humans",
     "mkdocs-gen-files",
-    "voluptuous-openapi>=0.2.0",
+    "voluptuous-openapi>=0.3.0",
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-minify-html-plugin",
     "mkdocs-meta-descriptions-plugin",
