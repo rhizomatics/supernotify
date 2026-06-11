@@ -1,5 +1,7 @@
 # Public releases
 
+## 1.16.2
+- Dependencies update, incl HA compatibility linked to 2026.6.x ( maintaining 2026.2.x for py3.13 testing )
 ## 1.16.1
 ### Mobile Push
 - Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time, so the global discovery by person doesn't have to be switch off to create a phone model specific delivery
