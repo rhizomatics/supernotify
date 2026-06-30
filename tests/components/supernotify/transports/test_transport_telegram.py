@@ -667,7 +667,7 @@ def test_simplify_preserves_urls_by_default() -> None:
     result = uut.simplify("Visit https://example.com for more info", strip_urls=False)
 
     if result:
-        assert "https://example.com" in result or "example.com" in result
+        assert result.startswith("https://example.com") or "example.com" in result
 
 
 def test_simplify_none_input() -> None:
