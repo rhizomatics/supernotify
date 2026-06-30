@@ -67,7 +67,7 @@ dev=[
     "ha-ffmpeg",
 
     # home assistant mobile push testing, and ntfy
-    "PyTurboJPEG==2.2.0"
+    "PyTurboJPEG==2.4.0"
 ]
 docs=[
     "mkdocs-material[imaging]",
