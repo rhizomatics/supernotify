@@ -5,7 +5,7 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
 dependencies = [
-    "homeassistant>=2026.6.0; python_full_version >= '3.14.2'",
+    "homeassistant>=2026.6.4; python_full_version >= '3.14.2'",
     "homeassistant<2026.3.0; python_full_version < '3.14.2'",
     "cachetools",
     "bs4",
@@ -106,9 +106,9 @@ environments = [
 override-dependencies = [
     #"voluptuous-openapi==0.2.0"
     "homeassistant==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant==2026.5.4; python_full_version >= '3.14.2'",
+    "homeassistant==2026.6.4; python_full_version >= '3.14.2'",
     "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant-stubs==2026.5.4; python_full_version >= '3.14.2'",
+    "homeassistant-stubs==2026.6.4; python_full_version >= '3.14.2'",
 
 ]
 exclude-newer = "5 days"
