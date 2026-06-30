@@ -296,7 +296,10 @@ async def test_mqtt_publish(mock_hass) -> None:
     hass_api = HomeAssistantAPI(mock_hass)
     hass_api.initialize()
     await hass_api.mqtt_publish("test.topic", {"foo": 123})
-    mock_hass.data["mqtt"].client.async_publish.assert_called_once_with("test.topic", '{"foo":123}', 0, False)
+    # older HA versions don't pass message_expiry_interval to client.async_publish at all
+    call = mock_hass.data["mqtt"].client.async_publish.call_args
+    assert call.args == ("test.topic", '{"foo":123}', 0, False)
+    assert call.kwargs.get("message_expiry_interval") is None
 
 
 async def test_subscribe_and_unsubscribe(hass: HomeAssistant) -> None:
