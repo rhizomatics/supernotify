@@ -39,7 +39,7 @@ namespaces = true # to disable scanning PEP 420 namespaces (true by default)
 dev=[
     "homeassistant-stubs",
     "pytest==9.0.3; python_full_version >= '3.14.2'",
-    "pytest; python_full_version < '3.14.2'",
+    "pytest==9.0.0; python_full_version < '3.14.2'",
     "pytest-cov",
     "pytest-socket",
     "pytest-homeassistant-custom-component",
