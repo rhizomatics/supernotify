@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "Environnement",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "Chemin des modèles",
                     "media_path": "Chemin des médias",
-                    "archive_path": "Chemin des archives"
+                    "media_url_prefix": "Préfixe d'URL des médias",
+                    "mobile_discovery": "Détection automatique des applications mobiles",
+                    "recipients_discovery": "Détection automatique des destinataires",
+                    "archive_enabled": "Activer l'archivage des notifications",
+                    "archive_days": "Conservation des archives (jours)",
+                    "dupe_ttl": "Fenêtre anti-doublons (secondes)",
+                    "dupe_size": "Taille du cache des doublons",
+                    "dupe_policy": "Politique des doublons",
+                    "snooze_seconds": "Mise en veille par défaut (secondes)",
+                    "media_storage_days": "Conservation des médias (jours)"
                 },
                 "data_description": {
                     "template_path": "Emplacement optionnel des modèles Jinja2 pour les e-mails HTML",
-                    "media_path": "Chemin de stockage pour les médias créés lors des notifications, par exemple les captures de caméra pour les pièces jointes",
-                    "archive_path": "Chemin de stockage pour les notifications archivées, utile pour déboguer la configuration, les scénarios, etc."
+                    "media_path": "Chemin de stockage pour les médias créés lors des notifications, par exemple les captures de caméra pour les pièces jointes"
+                },
+                "description": "Configurer les paramètres globaux de SuperNotify. Les livraisons et les scénarios restent pour l'instant configurés en YAML et auront leur propre interface dans une phase ultérieure."
+            },
+            "reconfigure": {
+                "title": "Paramètres SuperNotify",
+                "description": "Mettre à jour les paramètres globaux de SuperNotify. Les livraisons et les scénarios se gèrent séparément.",
+                "data": {
+                    "template_path": "Chemin des modèles",
+                    "media_path": "Chemin des médias",
+                    "media_url_prefix": "Préfixe d'URL des médias",
+                    "mobile_discovery": "Détection automatique des applications mobiles",
+                    "recipients_discovery": "Détection automatique des destinataires",
+                    "archive_enabled": "Activer l'archivage des notifications",
+                    "archive_days": "Conservation des archives (jours)",
+                    "dupe_ttl": "Fenêtre anti-doublons (secondes)",
+                    "dupe_size": "Taille du cache des doublons",
+                    "dupe_policy": "Politique des doublons",
+                    "snooze_seconds": "Mise en veille par défaut (secondes)",
+                    "media_storage_days": "Conservation des médias (jours)"
+                },
+                "data_description": {
+                    "template_path": "Emplacement optionnel des modèles Jinja2 pour les e-mails HTML",
+                    "media_path": "Chemin de stockage pour les médias créés lors des notifications, par exemple les captures de caméra pour les pièces jointes"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify est déjà configuré. Une seule instance est prise en charge.",
+            "reconfigure_successful": "Paramètres SuperNotify mis à jour.",
+            "unique_id_mismatch": "Cela ne correspond pas à la configuration SuperNotify existante."
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "La livraison a une condition invalide",
             "description": "La livraison {delivery} a une condition invalide {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Même message et titre, priorité égale ou inférieure",
+                "dupe_policy_message_title_same": "Même message et titre",
+                "dupe_policy_none": "Désactivée"
+            }
         }
     }
 }

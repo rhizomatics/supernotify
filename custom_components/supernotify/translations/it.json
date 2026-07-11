@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "Ambiente",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "Percorso Template",
                     "media_path": "Percorso Media",
-                    "archive_path": "Percorso Archivio"
+                    "media_url_prefix": "Prefisso URL media",
+                    "mobile_discovery": "Rilevamento automatico app mobile",
+                    "recipients_discovery": "Rilevamento automatico destinatari",
+                    "archive_enabled": "Abilita archivio notifiche",
+                    "archive_days": "Conservazione archivio (giorni)",
+                    "dupe_ttl": "Finestra anti-duplicati (secondi)",
+                    "dupe_size": "Dimensione cache duplicati",
+                    "dupe_policy": "Politica duplicati",
+                    "snooze_seconds": "Snooze predefinito (secondi)",
+                    "media_storage_days": "Conservazione media (giorni)"
                 },
                 "data_description": {
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
-                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
-                    "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc."
+                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati"
+                },
+                "description": "Configura le impostazioni globali di SuperNotify. Delivery e scenari restano per ora in YAML e avranno una propria interfaccia in una fase successiva."
+            },
+            "reconfigure": {
+                "title": "Impostazioni SuperNotify",
+                "description": "Aggiorna le impostazioni globali di SuperNotify. Delivery e scenari si gestiscono separatamente.",
+                "data": {
+                    "template_path": "Percorso Template",
+                    "media_path": "Percorso Media",
+                    "media_url_prefix": "Prefisso URL media",
+                    "mobile_discovery": "Rilevamento automatico app mobile",
+                    "recipients_discovery": "Rilevamento automatico destinatari",
+                    "archive_enabled": "Abilita archivio notifiche",
+                    "archive_days": "Conservazione archivio (giorni)",
+                    "dupe_ttl": "Finestra anti-duplicati (secondi)",
+                    "dupe_size": "Dimensione cache duplicati",
+                    "dupe_policy": "Politica duplicati",
+                    "snooze_seconds": "Snooze predefinito (secondi)",
+                    "media_storage_days": "Conservazione media (giorni)"
+                },
+                "data_description": {
+                    "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
+                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify è già configurato. È supportata una sola istanza.",
+            "reconfigure_successful": "Impostazioni SuperNotify aggiornate.",
+            "unique_id_mismatch": "Non corrisponde alla configurazione SuperNotify esistente."
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "La Consegna Ha una Condizione Non Valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Stesso messaggio e titolo, priorità uguale o inferiore",
+                "dupe_policy_message_title_same": "Stesso messaggio e titolo",
+                "dupe_policy_none": "Disattivata"
+            }
         }
     }
 }

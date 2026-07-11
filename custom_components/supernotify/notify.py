@@ -33,7 +33,7 @@ from homeassistant.core import (
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from . import DOMAIN, PLATFORMS
+from . import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, PLATFORMS, TEMPLATE_DIR
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
 from .common import DupeChecker, sanitize
 from .const import (
@@ -122,6 +122,19 @@ TRANSPORTS: list[type[Transport]] = [
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 
+def _with_item_defaults(source: dict[str, Any]) -> dict[str, Any]:
+    """Ensure item collections exist with empty defaults for UI-only entries."""
+    merged = dict(source)
+    merged.setdefault(CONF_DELIVERY, {})
+    merged.setdefault(CONF_SCENARIOS, {})
+    merged.setdefault(CONF_RECIPIENTS, [])
+    merged.setdefault(CONF_CAMERAS, [])
+    merged.setdefault(CONF_LINKS, [])
+    merged.setdefault(CONF_ACTION_GROUPS, {})
+    merged.setdefault(CONF_TRANSPORTS, {})
+    return merged
+
+
 async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
@@ -129,30 +142,47 @@ async def async_get_service(
 ) -> SupernotifyAction:
     """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
     _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
-    _ = discovery_info
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
+    # Phase 1 config flow: config may arrive from the legacy YAML notify platform
+    # (config) or from a config entry via discovery (discovery_info).
+    source = _with_item_defaults(discovery_info) if discovery_info else config
+
     service = SupernotifyAction(
         hass,
-        deliveries=config[CONF_DELIVERY],
-        template_path=config[CONF_TEMPLATE_PATH],
-        media_path=config[CONF_MEDIA_PATH],
-        media_url_prefix=config.get(CONF_MEDIA_URL_PREFIX),
-        archive=config[CONF_ARCHIVE],
-        housekeeping=config[CONF_HOUSEKEEPING],
-        mobile_discovery=config[CONF_MOBILE_DISCOVERY],
-        recipients_discovery=config[CONF_RECIPIENTS_DISCOVERY],
-        recipients=config[CONF_RECIPIENTS],
-        mobile_actions=config[CONF_ACTION_GROUPS],
-        scenarios=config[CONF_SCENARIOS],
-        links=config[CONF_LINKS],
-        transport_configs=config[CONF_TRANSPORTS],
-        cameras=config[CONF_CAMERAS],
-        dupe_check=config[CONF_DUPE_CHECK],
-        snooze=config[CONF_SNOOZE],
+        deliveries=source.get(CONF_DELIVERY, {}),
+        template_path=source.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
+        media_path=source.get(CONF_MEDIA_PATH, MEDIA_DIR),
+        media_url_prefix=source.get(CONF_MEDIA_URL_PREFIX),
+        archive=source.get(CONF_ARCHIVE, {}),
+        housekeeping=source.get(CONF_HOUSEKEEPING, {}),
+        mobile_discovery=source.get(CONF_MOBILE_DISCOVERY, True),
+        recipients_discovery=source.get(CONF_RECIPIENTS_DISCOVERY, True),
+        recipients=source.get(CONF_RECIPIENTS, []),
+        mobile_actions=source.get(CONF_ACTION_GROUPS, {}),
+        scenarios=source.get(CONF_SCENARIOS, {}),
+        links=source.get(CONF_LINKS, []),
+        transport_configs=source.get(CONF_TRANSPORTS, {}),
+        cameras=source.get(CONF_CAMERAS, []),
+        dupe_check=source.get(CONF_DUPE_CHECK, {}),
+        snooze=source.get(CONF_SNOOZE, {}),
     )
     await service.initialize()
+
+    # When started from YAML (no discovery_info), mirror the settings into a
+    # config entry so they appear in the UI. Flag it imported so __init__ does
+    # not reload the service (the legacy platform already provides it).
+    # Guard: only trigger the import when no entry exists yet, otherwise every
+    # YAML reload would start a flow that just aborts as already_configured.
+    if discovery_info is None and not hass.config_entries.async_entries(DOMAIN):
+        from homeassistant.config_entries import SOURCE_IMPORT
+
+        _import_payload = dict(config)
+        _import_payload[ATTR_IMPORTED_FROM_YAML] = True
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=_import_payload)
+        )
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {
