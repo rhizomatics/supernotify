@@ -1,5 +1,5 @@
 {
-    "title":"Supernotify",
+    "title": "Supernotify",
     "services": {
         "reload": {
             "name": "[%key:common::action::reload%]",
@@ -13,52 +13,97 @@
     "config": {
         "step": {
             "user": {
-                "title": "Environment",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "Template Path",
                     "media_path": "Media Path",
-                    "archive_path": "Archive Path"
+                    "media_url_prefix": "Media URL prefix",
+                    "mobile_discovery": "Auto-discover mobile apps",
+                    "recipients_discovery": "Auto-discover recipients",
+                    "archive_enabled": "Enable notification archive",
+                    "archive_days": "Archive retention (days)",
+                    "dupe_ttl": "Duplicate window (seconds)",
+                    "dupe_size": "Duplicate cache size",
+                    "dupe_policy": "Duplicate policy",
+                    "snooze_seconds": "Default snooze (seconds)",
+                    "media_storage_days": "Media retention (days)"
                 },
                 "data_description": {
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
-                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
-                    "archive_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc"
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments"
+                },
+                "description": "Set up SuperNotify global settings. Deliveries and scenarios are still configured in YAML for now and will get their own UI in a later phase."
+            },
+            "reconfigure": {
+                "title": "SuperNotify settings",
+                "description": "Update SuperNotify global settings. Deliveries and scenarios are managed separately.",
+                "data": {
+                    "template_path": "Template Path",
+                    "media_path": "Media Path",
+                    "media_url_prefix": "Media URL prefix",
+                    "mobile_discovery": "Auto-discover mobile apps",
+                    "recipients_discovery": "Auto-discover recipients",
+                    "archive_enabled": "Enable notification archive",
+                    "archive_days": "Archive retention (days)",
+                    "dupe_ttl": "Duplicate window (seconds)",
+                    "dupe_size": "Duplicate cache size",
+                    "dupe_policy": "Duplicate policy",
+                    "snooze_seconds": "Default snooze (seconds)",
+                    "media_storage_days": "Media retention (days)"
+                },
+                "data_description": {
+                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify is already configured. Only one instance is supported.",
+            "reconfigure_successful": "SuperNotify settings updated.",
+            "unique_id_mismatch": "This does not match the existing SuperNotify configuration."
         }
     },
-    "issues":{
-        "scenario_delivery":{
-            "title":"Invalid Delivery for Scenario",
-            "description":"Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration"
+    "issues": {
+        "scenario_delivery": {
+            "title": "Invalid Delivery for Scenario",
+            "description": "Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration"
         },
-         "scenario_action_group":{
-            "title":"Invalid Mobile Action Group for Scenario",
-            "description":"Scenario definition {scenario} refers to a delivery {action_group} that doesn't exist in supernotify configuration"
+        "scenario_action_group": {
+            "title": "Invalid Mobile Action Group for Scenario",
+            "description": "Scenario definition {scenario} refers to a delivery {action_group} that doesn't exist in supernotify configuration"
         },
-        "scenario_condition":{
-            "title":"Invalid Condition for Scenario",
-            "description":"Scenario definition {scenario} contains a condition that cannor be evaluated by Home Assistant"
+        "scenario_condition": {
+            "title": "Invalid Condition for Scenario",
+            "description": "Scenario definition {scenario} contains a condition that cannor be evaluated by Home Assistant"
         },
-        "delivery_unknown_transport":{
-            "title":"Unknown Transport for Delivery",
-            "description":"Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify"
+        "delivery_unknown_transport": {
+            "title": "Unknown Transport for Delivery",
+            "description": "Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify"
         },
-        "media_path":{
-            "title":"Media Path Cannot be Used",
-            "description":"A path ({path}) has been provided for holding media such as camera snapshots during notifications but cannot be used (error: {error})"
+        "media_path": {
+            "title": "Media Path Cannot be Used",
+            "description": "A path ({path}) has been provided for holding media such as camera snapshots during notifications but cannot be used (error: {error})"
         },
-        "delivery_reserved_name":{
-            "title":"Delivery Has Reserved Delivery Name",
-            "description":"The delivery {delivery} name is reserved for Supernotify use"
+        "delivery_reserved_name": {
+            "title": "Delivery Has Reserved Delivery Name",
+            "description": "The delivery {delivery} name is reserved for Supernotify use"
         },
-        "delivery_invalid_action":{
-            "title":"Delivery Has Invalid Action",
-            "description":"The delivery {delivery} has an invalid action {action}"
+        "delivery_invalid_action": {
+            "title": "Delivery Has Invalid Action",
+            "description": "The delivery {delivery} has an invalid action {action}"
         },
-        "delivery_invalid_condition":{
-            "title":"Delivery Has Invalid Condition",
-            "description":"The {delivery} delivery has an invalid condition {condition}"
+        "delivery_invalid_condition": {
+            "title": "Delivery Has Invalid Condition",
+            "description": "The {delivery} delivery has an invalid condition {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Same message & title, same or lower priority",
+                "dupe_policy_message_title_same": "Same message & title",
+                "dupe_policy_none": "Disabled"
+            }
         }
     }
 }

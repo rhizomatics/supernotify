@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "环境",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "模板路径",
                     "media_path": "媒体路径",
-                    "archive_path": "存档路径"
+                    "media_url_prefix": "媒体 URL 前缀",
+                    "mobile_discovery": "自动发现移动应用",
+                    "recipients_discovery": "自动发现收件人",
+                    "archive_enabled": "启用通知归档",
+                    "archive_days": "归档保留（天）",
+                    "dupe_ttl": "去重窗口（秒）",
+                    "dupe_size": "去重缓存大小",
+                    "dupe_policy": "去重策略",
+                    "snooze_seconds": "默认暂停（秒）",
+                    "media_storage_days": "媒体保留（天）"
                 },
                 "data_description": {
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
-                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径",
-                    "archive_path": "已存档通知的存储路径，用于调试配置、场景等"
+                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径"
+                },
+                "description": "配置 SuperNotify 的全局设置。投递和场景目前仍在 YAML 中配置，将在后续阶段拥有各自的界面。"
+            },
+            "reconfigure": {
+                "title": "SuperNotify 设置",
+                "description": "更新 SuperNotify 的全局设置。投递和场景单独管理。",
+                "data": {
+                    "template_path": "模板路径",
+                    "media_path": "媒体路径",
+                    "media_url_prefix": "媒体 URL 前缀",
+                    "mobile_discovery": "自动发现移动应用",
+                    "recipients_discovery": "自动发现收件人",
+                    "archive_enabled": "启用通知归档",
+                    "archive_days": "归档保留（天）",
+                    "dupe_ttl": "去重窗口（秒）",
+                    "dupe_size": "去重缓存大小",
+                    "dupe_policy": "去重策略",
+                    "snooze_seconds": "默认暂停（秒）",
+                    "media_storage_days": "媒体保留（天）"
+                },
+                "data_description": {
+                    "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
+                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify 已配置。仅支持一个实例。",
+            "reconfigure_successful": "SuperNotify 设置已更新。",
+            "unique_id_mismatch": "这与现有的 SuperNotify 配置不匹配。"
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "推送的条件无效",
             "description": "推送 {delivery} 包含无效条件 {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "相同消息和标题，相同或更低优先级",
+                "dupe_policy_message_title_same": "相同消息和标题",
+                "dupe_policy_none": "已禁用"
+            }
         }
     }
 }

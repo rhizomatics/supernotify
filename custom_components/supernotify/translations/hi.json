@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "पर्यावरण",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "टेम्पलेट पथ",
                     "media_path": "मीडिया पथ",
-                    "archive_path": "संग्रह पथ"
+                    "media_url_prefix": "मीडिया URL उपसर्ग",
+                    "mobile_discovery": "मोबाइल ऐप्स स्वतः खोजें",
+                    "recipients_discovery": "प्राप्तकर्ता स्वतः खोजें",
+                    "archive_enabled": "अधिसूचना संग्रह सक्षम करें",
+                    "archive_days": "संग्रह प्रतिधारण (दिन)",
+                    "dupe_ttl": "डुप्लिकेट विंडो (सेकंड)",
+                    "dupe_size": "डुप्लिकेट कैश आकार",
+                    "dupe_policy": "डुप्लिकेट नीति",
+                    "snooze_seconds": "डिफ़ॉल्ट स्नूज़ (सेकंड)",
+                    "media_storage_days": "मीडिया प्रतिधारण (दिन)"
                 },
                 "data_description": {
                     "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान",
-                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट",
-                    "archive_path": "संग्रहीत सूचनाओं के लिए संग्रहण पथ, कॉन्फ़िगरेशन, परिदृश्य आदि डीबग करने के लिए उपयोगी"
+                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट"
+                },
+                "description": "SuperNotify की वैश्विक सेटिंग्स कॉन्फ़िगर करें। डिलीवरी और परिदृश्य फ़िलहाल YAML में ही कॉन्फ़िगर रहते हैं और बाद के चरण में इनका अपना इंटरफ़ेस मिलेगा।"
+            },
+            "reconfigure": {
+                "title": "SuperNotify सेटिंग्स",
+                "description": "SuperNotify की वैश्विक सेटिंग्स अपडेट करें। डिलीवरी और परिदृश्य अलग से प्रबंधित किए जाते हैं।",
+                "data": {
+                    "template_path": "टेम्पलेट पथ",
+                    "media_path": "मीडिया पथ",
+                    "media_url_prefix": "मीडिया URL उपसर्ग",
+                    "mobile_discovery": "मोबाइल ऐप्स स्वतः खोजें",
+                    "recipients_discovery": "प्राप्तकर्ता स्वतः खोजें",
+                    "archive_enabled": "अधिसूचना संग्रह सक्षम करें",
+                    "archive_days": "संग्रह प्रतिधारण (दिन)",
+                    "dupe_ttl": "डुप्लिकेट विंडो (सेकंड)",
+                    "dupe_size": "डुप्लिकेट कैश आकार",
+                    "dupe_policy": "डुप्लिकेट नीति",
+                    "snooze_seconds": "डिफ़ॉल्ट स्नूज़ (सेकंड)",
+                    "media_storage_days": "मीडिया प्रतिधारण (दिन)"
+                },
+                "data_description": {
+                    "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान",
+                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify पहले से कॉन्फ़िगर है। केवल एक इंस्टेंस समर्थित है।",
+            "reconfigure_successful": "SuperNotify सेटिंग्स अपडेट की गईं।",
+            "unique_id_mismatch": "यह मौजूदा SuperNotify कॉन्फ़िगरेशन से मेल नहीं खाता।"
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "डिलीवरी की शर्त अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "समान संदेश और शीर्षक, समान या निम्न प्राथमिकता",
+                "dupe_policy_message_title_same": "समान संदेश और शीर्षक",
+                "dupe_policy_none": "अक्षम"
+            }
         }
     }
 }

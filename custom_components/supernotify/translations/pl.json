@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "Środowisko",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "Ścieżka szablonu",
                     "media_path": "Ścieżka mediów",
-                    "archive_path": "Ścieżka archiwum"
+                    "media_url_prefix": "Prefiks adresu URL multimediów",
+                    "mobile_discovery": "Automatyczne wykrywanie aplikacji mobilnych",
+                    "recipients_discovery": "Automatyczne wykrywanie odbiorców",
+                    "archive_enabled": "Włącz archiwum powiadomień",
+                    "archive_days": "Przechowywanie archiwum (dni)",
+                    "dupe_ttl": "Okno duplikatów (sekundy)",
+                    "dupe_size": "Rozmiar pamięci podręcznej duplikatów",
+                    "dupe_policy": "Zasady duplikatów",
+                    "snooze_seconds": "Domyślna drzemka (sekundy)",
+                    "media_storage_days": "Przechowywanie multimediów (dni)"
                 },
                 "data_description": {
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML",
-                    "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników",
-                    "archive_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp."
+                    "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników"
+                },
+                "description": "Skonfiguruj globalne ustawienia SuperNotify. Dostawy i scenariusze są na razie nadal konfigurowane w YAML i otrzymają własny interfejs w późniejszej fazie."
+            },
+            "reconfigure": {
+                "title": "Ustawienia SuperNotify",
+                "description": "Zaktualizuj globalne ustawienia SuperNotify. Dostawy i scenariusze są zarządzane osobno.",
+                "data": {
+                    "template_path": "Ścieżka szablonu",
+                    "media_path": "Ścieżka mediów",
+                    "media_url_prefix": "Prefiks adresu URL multimediów",
+                    "mobile_discovery": "Automatyczne wykrywanie aplikacji mobilnych",
+                    "recipients_discovery": "Automatyczne wykrywanie odbiorców",
+                    "archive_enabled": "Włącz archiwum powiadomień",
+                    "archive_days": "Przechowywanie archiwum (dni)",
+                    "dupe_ttl": "Okno duplikatów (sekundy)",
+                    "dupe_size": "Rozmiar pamięci podręcznej duplikatów",
+                    "dupe_policy": "Zasady duplikatów",
+                    "snooze_seconds": "Domyślna drzemka (sekundy)",
+                    "media_storage_days": "Przechowywanie multimediów (dni)"
+                },
+                "data_description": {
+                    "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML",
+                    "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify jest już skonfigurowany. Obsługiwana jest tylko jedna instancja.",
+            "reconfigure_successful": "Zaktualizowano ustawienia SuperNotify.",
+            "unique_id_mismatch": "To nie pasuje do istniejącej konfiguracji SuperNotify."
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Ta sama wiadomość i tytuł, taki sam lub niższy priorytet",
+                "dupe_policy_message_title_same": "Ta sama wiadomość i tytuł",
+                "dupe_policy_none": "Wyłączone"
+            }
         }
     }
 }

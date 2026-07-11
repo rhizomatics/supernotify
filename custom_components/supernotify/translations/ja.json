@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "環境",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "テンプレートパス",
                     "media_path": "メディアパス",
-                    "archive_path": "アーカイブパス"
+                    "media_url_prefix": "メディア URL プレフィックス",
+                    "mobile_discovery": "モバイルアプリを自動検出",
+                    "recipients_discovery": "受信者を自動検出",
+                    "archive_enabled": "通知アーカイブを有効化",
+                    "archive_days": "アーカイブ保持日数（日）",
+                    "dupe_ttl": "重複ウィンドウ（秒）",
+                    "dupe_size": "重複キャッシュサイズ",
+                    "dupe_policy": "重複ポリシー",
+                    "snooze_seconds": "既定のスヌーズ（秒）",
+                    "media_storage_days": "メディア保持日数（日）"
                 },
                 "data_description": {
                     "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）",
-                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス",
-                    "archive_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます"
+                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス"
+                },
+                "description": "SuperNotify のグローバル設定を行います。配信とシナリオは当面 YAML で設定し、後のフェーズで専用の UI が用意されます。"
+            },
+            "reconfigure": {
+                "title": "SuperNotify の設定",
+                "description": "SuperNotify のグローバル設定を更新します。配信とシナリオは個別に管理されます。",
+                "data": {
+                    "template_path": "テンプレートパス",
+                    "media_path": "メディアパス",
+                    "media_url_prefix": "メディア URL プレフィックス",
+                    "mobile_discovery": "モバイルアプリを自動検出",
+                    "recipients_discovery": "受信者を自動検出",
+                    "archive_enabled": "通知アーカイブを有効化",
+                    "archive_days": "アーカイブ保持日数（日）",
+                    "dupe_ttl": "重複ウィンドウ（秒）",
+                    "dupe_size": "重複キャッシュサイズ",
+                    "dupe_policy": "重複ポリシー",
+                    "snooze_seconds": "既定のスヌーズ（秒）",
+                    "media_storage_days": "メディア保持日数（日）"
+                },
+                "data_description": {
+                    "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）",
+                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify は既に構成されています。サポートされるインスタンスは 1 つだけです。",
+            "reconfigure_successful": "SuperNotify の設定を更新しました。",
+            "unique_id_mismatch": "既存の SuperNotify 構成と一致しません。"
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "配信の条件が無効です",
             "description": "配信 {delivery} には無効な条件 {condition} があります"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "同じメッセージとタイトル、同等以下の優先度",
+                "dupe_policy_message_title_same": "同じメッセージとタイトル",
+                "dupe_policy_none": "無効"
+            }
         }
     }
 }

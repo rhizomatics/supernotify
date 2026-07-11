@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "Omgeving",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "Sjabloonpad",
                     "media_path": "Mediapad",
-                    "archive_path": "Archiefpad"
+                    "media_url_prefix": "Media-URL-voorvoegsel",
+                    "mobile_discovery": "Mobiele apps automatisch detecteren",
+                    "recipients_discovery": "Ontvangers automatisch detecteren",
+                    "archive_enabled": "Notificatiearchief inschakelen",
+                    "archive_days": "Archiefbewaring (dagen)",
+                    "dupe_ttl": "Duplicaatvenster (seconden)",
+                    "dupe_size": "Grootte duplicaatcache",
+                    "dupe_policy": "Duplicaatbeleid",
+                    "snooze_seconds": "Standaard sluimertijd (seconden)",
+                    "media_storage_days": "Mediabewaring (dagen)"
                 },
                 "data_description": {
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails",
-                    "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen",
-                    "archive_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz."
+                    "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen"
+                },
+                "description": "Globale SuperNotify-instellingen instellen. Bezorgingen en scenario's worden voorlopig nog in YAML geconfigureerd en krijgen in een latere fase een eigen interface."
+            },
+            "reconfigure": {
+                "title": "SuperNotify-instellingen",
+                "description": "Werk de globale SuperNotify-instellingen bij. Bezorgingen en scenario's worden apart beheerd.",
+                "data": {
+                    "template_path": "Sjabloonpad",
+                    "media_path": "Mediapad",
+                    "media_url_prefix": "Media-URL-voorvoegsel",
+                    "mobile_discovery": "Mobiele apps automatisch detecteren",
+                    "recipients_discovery": "Ontvangers automatisch detecteren",
+                    "archive_enabled": "Notificatiearchief inschakelen",
+                    "archive_days": "Archiefbewaring (dagen)",
+                    "dupe_ttl": "Duplicaatvenster (seconden)",
+                    "dupe_size": "Grootte duplicaatcache",
+                    "dupe_policy": "Duplicaatbeleid",
+                    "snooze_seconds": "Standaard sluimertijd (seconden)",
+                    "media_storage_days": "Mediabewaring (dagen)"
+                },
+                "data_description": {
+                    "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails",
+                    "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify is al geconfigureerd. Er wordt slechts één instantie ondersteund.",
+            "reconfigure_successful": "SuperNotify-instellingen bijgewerkt.",
+            "unique_id_mismatch": "Dit komt niet overeen met de bestaande SuperNotify-configuratie."
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "Bezorging heeft een ongeldige voorwaarde",
             "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Zelfde bericht en titel, gelijke of lagere prioriteit",
+                "dupe_policy_message_title_same": "Zelfde bericht en titel",
+                "dupe_policy_none": "Uitgeschakeld"
+            }
         }
     }
 }

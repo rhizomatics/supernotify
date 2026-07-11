@@ -13,18 +13,54 @@
     "config": {
         "step": {
             "user": {
-                "title": "Umgebung",
+                "title": "SuperNotify",
                 "data": {
                     "template_path": "Vorlagenpfad",
                     "media_path": "Medienpfad",
-                    "archive_path": "Archivpfad"
+                    "media_url_prefix": "Medien-URL-Präfix",
+                    "mobile_discovery": "Mobile Apps automatisch erkennen",
+                    "recipients_discovery": "Empfänger automatisch erkennen",
+                    "archive_enabled": "Benachrichtigungsarchiv aktivieren",
+                    "archive_days": "Archivaufbewahrung (Tage)",
+                    "dupe_ttl": "Duplikatfenster (Sekunden)",
+                    "dupe_size": "Duplikat-Cache-Größe",
+                    "dupe_policy": "Duplikatrichtlinie",
+                    "snooze_seconds": "Standard-Schlummerzeit (Sekunden)",
+                    "media_storage_days": "Medienaufbewahrung (Tage)"
                 },
                 "data_description": {
                     "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails",
-                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge",
-                    "archive_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw."
+                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge"
+                },
+                "description": "Globale SuperNotify-Einstellungen einrichten. Zustellungen und Szenarien werden vorerst weiterhin in YAML konfiguriert und erhalten in einer späteren Phase eine eigene Oberfläche."
+            },
+            "reconfigure": {
+                "title": "SuperNotify-Einstellungen",
+                "description": "Globale SuperNotify-Einstellungen aktualisieren. Zustellungen und Szenarien werden separat verwaltet.",
+                "data": {
+                    "template_path": "Vorlagenpfad",
+                    "media_path": "Medienpfad",
+                    "media_url_prefix": "Medien-URL-Präfix",
+                    "mobile_discovery": "Mobile Apps automatisch erkennen",
+                    "recipients_discovery": "Empfänger automatisch erkennen",
+                    "archive_enabled": "Benachrichtigungsarchiv aktivieren",
+                    "archive_days": "Archivaufbewahrung (Tage)",
+                    "dupe_ttl": "Duplikatfenster (Sekunden)",
+                    "dupe_size": "Duplikat-Cache-Größe",
+                    "dupe_policy": "Duplikatrichtlinie",
+                    "snooze_seconds": "Standard-Schlummerzeit (Sekunden)",
+                    "media_storage_days": "Medienaufbewahrung (Tage)"
+                },
+                "data_description": {
+                    "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails",
+                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge"
                 }
             }
+        },
+        "abort": {
+            "already_configured": "SuperNotify ist bereits konfiguriert. Es wird nur eine Instanz unterstützt.",
+            "reconfigure_successful": "SuperNotify-Einstellungen aktualisiert.",
+            "unique_id_mismatch": "Dies stimmt nicht mit der vorhandenen SuperNotify-Konfiguration überein."
         }
     },
     "issues": {
@@ -59,6 +95,15 @@
         "delivery_invalid_condition": {
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
+        }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Gleiche Nachricht und Titel, gleiche oder niedrigere Priorität",
+                "dupe_policy_message_title_same": "Gleiche Nachricht und Titel",
+                "dupe_policy_none": "Deaktiviert"
+            }
         }
     }
 }

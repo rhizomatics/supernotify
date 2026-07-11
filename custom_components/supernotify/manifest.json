@@ -14,7 +14,7 @@
     "codeowners": [
         "@jey"
     ],
-    "config_flow": false,
+    "config_flow": true,
     "dependencies": [
         "person"
     ],
@@ -29,5 +29,6 @@
         "cachetools",
         "httpx"
     ],
-    "version":"1.16.2"
+    "version": "1.16.2",
+    "single_config_entry": true
 }
