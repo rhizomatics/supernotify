@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib.util
+from contextlib import ExitStack
 from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock, patch
 
@@ -191,7 +193,14 @@ async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
     }
     assert await async_setup_component(hass, "notify_events", config)
 
-    with patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"):
+    with ExitStack() as stack:
+        if importlib.util.find_spec("homeassistant.components.smtp.config_flow"):
+            # HA >= 2026.x: smtp notify is set up via a config entry import flow
+            stack.enter_context(patch("homeassistant.components.smtp.config_flow.validate_input", return_value={}))
+            stack.enter_context(patch("homeassistant.components.smtp.helpers.SmtpClient.connect"))
+        else:
+            # older HA: smtp notify is a legacy discovered notify platform
+            stack.enter_context(patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"))
         assert await async_setup_component(hass, "notify", config)
         await hass.async_block_till_done()
 

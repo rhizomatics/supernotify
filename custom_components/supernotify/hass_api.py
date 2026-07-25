@@ -253,9 +253,13 @@ class HomeAssistantAPI:
                 return data
             service_schema = service_info["schema"]
 
-            while service_schema is not None and not isinstance(service_schema, vol.Schema):
-                # e.g. entity services get schema wrapped in an vol.All
-                if hasattr(service_schema, "validators") and hasattr(service_schema.validators, "__iter__"):
+            while service_schema is not None and not (
+                isinstance(service_schema, vol.Schema) and isinstance(service_schema.schema, dict)
+            ):
+                if isinstance(service_schema, vol.Schema):
+                    # e.g. entity services get schema wrapped as vol.Schema(vol.All(...))
+                    service_schema = service_schema.schema
+                elif hasattr(service_schema, "validators") and hasattr(service_schema.validators, "__iter__"):
                     # e.g. vol.All — strip extras using first dict Schema sub-validator only
                     # (don't run the full chain; other validators may require target fields not in data)
                     service_schema = next(
@@ -263,7 +267,7 @@ class HomeAssistantAPI:
                     )
                 else:
                     service_schema = None
-            if not isinstance(service_schema, vol.Schema):
+            if not (isinstance(service_schema, vol.Schema) and isinstance(service_schema.schema, dict)):
                 service_schema = None
                 _LOGGER.info("SUPERNOTIFY Unable to find schema for %s.%s", domain, service)
 
