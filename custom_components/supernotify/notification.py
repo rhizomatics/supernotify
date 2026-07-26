@@ -590,6 +590,7 @@ class Notification(ArchivableObject):
             "suppressed",
             "skipped",
             "error_count",
+            "delivery_exceptions",
             "deliveries",
         ]
         # preferred fields
