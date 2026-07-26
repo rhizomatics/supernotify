@@ -600,6 +600,7 @@ class Notification(ArchivableObject):
                 self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
             )
             for k in preferred_order
+            if k in self.__dict__
         })
         # all the rest not explicitly excluded
         result.update({

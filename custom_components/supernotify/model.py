@@ -790,7 +790,7 @@ class DebugTrace:
         self.resolved: dict[str, dict[str, Any]] = {}
         self.delivery_selection: dict[str, list[str]] = {}
         self.delivery_artefacts: dict[str, Any] = {}
-        self.delivery_exceptions: dict[str, Any] = {}
+        self.delivery_exceptions: dict[str, dict[str, list[list[str]]]] = {}
         self._last_stage: dict[str, str] = {}
         self._last_target: dict[str, Any] = {}
 
@@ -807,7 +807,7 @@ class DebugTrace:
         }
         if self.delivery_artefacts:
             results["delivery_artefacts"] = self.delivery_artefacts
-        if self.delivery_artefacts:
+        if self.delivery_exceptions:
             results["delivery_exceptions"] = self.delivery_exceptions
         return results
 
