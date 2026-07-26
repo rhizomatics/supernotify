@@ -5179,6 +5179,8 @@ dev = [
     { name = "ruff", version = "0.16.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
     { name = "types-aiofiles" },
     { name = "types-cachetools" },
+    { name = "zeroconf", version = "0.148.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
+    { name = "zeroconf", version = "0.150.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
 ]
 docs = [
     { name = "json-schema-for-humans" },
@@ -5240,6 +5242,8 @@ dev = [
     { name = "ruff", marker = "python_full_version >= '3.14.2'", specifier = ">=0.16.0" },
     { name = "types-aiofiles" },
     { name = "types-cachetools" },
+    { name = "zeroconf", marker = "python_full_version < '3.14.2'", specifier = "==0.148.0" },
+    { name = "zeroconf", marker = "python_full_version >= '3.14.2'", specifier = ">0.148.0" },
 ]
 docs = [
     { name = "json-schema-for-humans" },
