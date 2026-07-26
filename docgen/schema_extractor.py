@@ -12,8 +12,9 @@ from voluptuous_openapi import convert  # type: ignore
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # import must come after sys.path append
-import custom_components.supernotify.schema  # noqa: I001
+import custom_components.supernotify.schema
 
+_LOGGER = logging.getLogger(__name__)
 
 ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
 
@@ -47,7 +48,7 @@ def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) ->
             if isinstance(node[key], FunctionType):
                 if node[key].__name__ in ("url", "string"):
                     node[key] = str
-                    logging.info(f"Converted {key} to Required(str)")
+                    _LOGGER.info(f"Converted {key} to Required(str)")
                 elif node[key].__name__ == "boolean":
                     node[key] = bool
 
@@ -73,8 +74,8 @@ def schema_doc() -> None:
     for vol_schema in v_schemas.values():
         try:
             walk_schema(vol_schema.schema)
-        except Exception as e:
-            logging.exception("Failed on %s: %s", vol_schema, e)
+        except Exception:
+            _LOGGER.exception("Failed on %s", vol_schema)
     j_schemas = {s[0]: (TOP_LEVEL_SCHEMAS[s[0]], convert(s[1])) for s in v_schemas.items()}
     config = GenerationConfiguration(
         examples_as_yaml=True,
@@ -89,7 +90,7 @@ def schema_doc() -> None:
     # parser = jsonschema2md.Parser(collapse_children=True)
     for schema_id, (schema_name, schema) in j_schemas.items():
         schema_link_name = schema_name.replace(" ", "_")
-        logging.info(f"Exporting {schema_name}")
+        _LOGGER.info(f"Exporting {schema_name}")
         try:
             schema.setdefault("title", schema_name)
             schema.setdefault("$id", ROOT_URL + schema_link_name + ".json")
@@ -109,7 +110,7 @@ def schema_doc() -> None:
                 f"https://github.com/search?q=repo%3Arhizomatics%2Fsupernotify+path%3Acustom_components%2Fsupernotify%2F__init__.py+{schema_id}&type=code",
             )
         except Exception:
-            logging.exception(f"Error processing schema {schema_name}")
+            _LOGGER.exception(f"Error processing schema {schema_name}")
             continue
 
     with mkdocs_gen_files.open("developer/schemas/index.md", "w") as df:

@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_DEBUG,
     CONF_ENABLED,
 )
-from homeassistant.helpers import condition as condition
 
 from .const import (
     CONF_ARCHIVE_DAYS,
@@ -27,7 +26,7 @@ from .const import (
     CONF_ARCHIVE_PATH,
     CONF_ARCHIVE_PURGE_INTERVAL,
 )
-from .schema import Outcome, OutcomeSelection
+from .schema import DeliveryOutcome, OutcomeSelection
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -50,20 +49,20 @@ class ArchivableObject:
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
         pass
 
-    def outcome(self) -> Outcome:
-        return Outcome.NO_DELIVERY
+    def outcome(self) -> DeliveryOutcome:
+        return DeliveryOutcome.NO_DELIVERY
 
     def selected(self, outcome_policy: OutcomeSelection) -> bool:
         if outcome_policy & OutcomeSelection.NONE:
             return False
         return bool(
             outcome_policy & OutcomeSelection.ALL
-            or (outcome_policy & OutcomeSelection.SUCCESS and self.outcome() == Outcome.SUCCESS)
-            or (outcome_policy & OutcomeSelection.NO_DELIVERY and self.outcome() == Outcome.NO_DELIVERY)
-            or (outcome_policy & OutcomeSelection.PARTIAL_DELIVERY and self.outcome() == Outcome.PARTIAL_DELIVERY)
-            or (outcome_policy & OutcomeSelection.DUPE and self.outcome() == Outcome.DUPE)
-            or (outcome_policy & OutcomeSelection.FALLBACK_DELIVERY and self.outcome() == Outcome.FALLBACK_DELIVERY)
-            or (outcome_policy & OutcomeSelection.ERROR and self.outcome() == Outcome.ERROR)
+            or (outcome_policy & OutcomeSelection.SUCCESS and self.outcome() == DeliveryOutcome.SUCCESS)
+            or (outcome_policy & OutcomeSelection.NO_DELIVERY and self.outcome() == DeliveryOutcome.NO_DELIVERY)
+            or (outcome_policy & OutcomeSelection.PARTIAL_DELIVERY and self.outcome() == DeliveryOutcome.PARTIAL_DELIVERY)
+            or (outcome_policy & OutcomeSelection.DUPE and self.outcome() == DeliveryOutcome.DUPE)
+            or (outcome_policy & OutcomeSelection.FALLBACK_DELIVERY and self.outcome() == DeliveryOutcome.FALLBACK_DELIVERY)
+            or (outcome_policy & OutcomeSelection.ERROR and self.outcome() == DeliveryOutcome.ERROR)
         )
 
 
@@ -202,8 +201,8 @@ class ArchiveDirectory(ArchiveDestination):
                             await file.write(serialized)
                         _LOGGER.warning("SUPERNOTIFY Archived minimal notification %s", await archive_filepath.absolute())
                         archived = True
-                    except Exception as e2:
-                        _LOGGER.exception("SUPERNOTIFY Unable to archive minimal notification: %s", e2)
+                    except Exception:
+                        _LOGGER.exception("SUPERNOTIFY Unable to archive minimal notification")
         return archived
 
     async def size(self) -> int:

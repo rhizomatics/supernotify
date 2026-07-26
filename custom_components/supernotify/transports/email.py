@@ -77,7 +77,7 @@ class EmailTransport(Transport):
 
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
         super().__init__(context, transport_config)
-        self.default_template_path: Path = Path(os.path.join(custom_components.supernotify.__path__[0], "default_templates"))  # noqa: PTH118
+        self.default_template_path: Path = Path(os.path.join(custom_components.supernotify.__path__[0], "default_templates"))
         self.custom_template_path: Path | None = context.custom_template_path
         self.custom_email_template_path: Path | None = None
         self.template_cache: dict[str, str] = {}
@@ -294,11 +294,11 @@ class EmailTransport(Transport):
             else:
                 return html
         except TemplateError as te:
-            _LOGGER.exception("SUPERNOTIFY Failed to render template html mail: %s", te)
+            _LOGGER.exception("SUPERNOTIFY Failed to render template html mail")
             if debug_trace:
                 debug_trace.record_delivery_exception(envelope.delivery.name, "html_template", te)
         except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Failed to generate html mail: %s", e)
+            _LOGGER.exception("SUPERNOTIFY Failed to generate html mail")
             if debug_trace:
                 debug_trace.record_delivery_exception(envelope.delivery.name, "html_template", e)
         return None

@@ -26,7 +26,7 @@ from custom_components.supernotify.model import ConditionVariables, TargetRequir
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.scenario import Scenario
-from custom_components.supernotify.schema import SCENARIO_SCHEMA
+from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome
 
 from .doubles_lib import DummyTransport
 from .hass_setup_lib import TestingContext
@@ -182,7 +182,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
                 "delivery": {
                     "alexa": {
                         "data": {
-                            "message_template": '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'  # noqa: E501
+                            "message_template": '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
                         }
                     }
                 },
@@ -215,7 +215,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     alexa_envelope = Envelope(ctx.delivery("alexa"), notification, context=ctx)
     assert (
         alexa_envelope._compute_message()
-        == '<amazon:emotion name="excited" intensity="medium"><amazon:effect name="whispered">Please Sir</amazon:effect></amazon:emotion>'  # noqa: E501
+        == '<amazon:emotion name="excited" intensity="medium"><amazon:effect name="whispered">Please Sir</amazon:effect></amazon:emotion>'
     )
 
     notification = Notification(ctx, message="Please Sir", action_data={"apply_scenarios": ["emotional", "softly_softly"]})
@@ -223,7 +223,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     alexa_envelope = Envelope(ctx.delivery("alexa"), notification, context=ctx)
     assert (
         alexa_envelope._compute_message()
-        == '<amazon:effect name="whispered"><amazon:emotion name="excited" intensity="medium">Please Sir</amazon:emotion></amazon:effect>'  # noqa: E501
+        == '<amazon:effect name="whispered"><amazon:emotion name="excited" intensity="medium">Please Sir</amazon:emotion></amazon:effect>'
     )
 
 
@@ -394,9 +394,9 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 2
     # type:ignore
-    emailed: Envelope = uut.deliveries["plain_email"]["delivered"][0]  # type: ignore
+    emailed: Envelope = uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     # type:ignore
-    texted: Envelope = uut.deliveries["sms"]["delivered"][0]  # type: ignore
+    texted: Envelope = uut.deliveries["sms"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     assert emailed.priority == "low"
     assert texted.priority == "medium"
 
@@ -422,7 +422,7 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 1
     # type:ignore
-    assert uut.deliveries["text"]["delivered"][0].delivery_name == "text"  # type: ignore
+    assert uut.deliveries["text"][EnvelopeOutcome.SUCCESS][0].delivery_name == "text"  # type: ignore
 
 
 async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
@@ -446,9 +446,9 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
     assert uut.applied_scenario_names == ["Spammy"]
     assert len(uut.delivered_envelopes) == 2
     # type:ignore
-    emailed: Envelope = uut.deliveries["plain_email"]["delivered"][0]  # type: ignore
+    emailed: Envelope = uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     # type:ignore
-    texted: Envelope = uut.deliveries["sms"]["delivered"][0]  # type: ignore
+    texted: Envelope = uut.deliveries["sms"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     assert "spambox@myhome.org" in emailed.target.email
     assert "spambox@myhome.org" not in texted.target.email
 

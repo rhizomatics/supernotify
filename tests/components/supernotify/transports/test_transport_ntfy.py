@@ -477,7 +477,6 @@ async def test_attach_image_camera_snapshot_failure_delivery_continues() -> None
     async def _side_effect(domain: str, service: str, **kwargs):  # type: ignore[return]
         if domain == "camera" and service == "snapshot":
             raise Exception("camera unreachable")
-        return
 
     ctx.hass.services.async_call.side_effect = _side_effect  # type: ignore
 

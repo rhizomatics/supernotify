@@ -144,11 +144,11 @@ class LaMetricTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
-    def validate_action(self, action: str | None) -> bool:  # noqa: ARG002
+    def validate_action(self, action: str | None) -> bool:
         # No external action required - transport uses lametric.message / lametric.chart directly
         return True
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY lametric %s", envelope.message)
 
         # 1. Extract raw data (flat dict — rule #6)

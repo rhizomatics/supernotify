@@ -268,7 +268,7 @@ async def test_deliver_with_attached_image() -> None:
     mock_api = _mock_hass_api()
     uut.hass_api = mock_api
 
-    image_path = "/tmp/snapshot.jpg"  # noqa: S108
+    image_path = "/tmp/snapshot.jpg"
     e = _envelope(ctx, message="Here's the snapshot", title="Test Title", data={"telegram_attach_image": True})
     with __import__("unittest.mock", fromlist=["patch"]).patch.object(
         e, "grab_image", new_callable=AsyncMock, return_value=Path(image_path)
@@ -292,7 +292,7 @@ async def test_deliver_with_image_as_document() -> None:
     mock_api = _mock_hass_api()
     uut.hass_api = mock_api
 
-    image_path = "/tmp/snapshot.jpg"  # noqa: S108
+    image_path = "/tmp/snapshot.jpg"
     e = _envelope(
         ctx,
         message="Document format image",

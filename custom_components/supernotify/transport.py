@@ -76,7 +76,7 @@ class Transport:
         if self.name is None:
             raise IntegrationError("Invalid nameless transport adaptor subclass")
 
-    def setup_delivery_options(self, options: dict[str, Any], delivery_name: str) -> dict[str, Any]:  # noqa: ARG002
+    def setup_delivery_options(self, options: dict[str, Any], delivery_name: str) -> dict[str, Any]:
         return {}
 
     @property
@@ -91,7 +91,7 @@ class Transport:
     def default_config(self) -> TransportConfig:
         return TransportConfig()
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:  # noqa: ARG002
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return None
 
     def validate_action(self, action: str | None) -> bool:

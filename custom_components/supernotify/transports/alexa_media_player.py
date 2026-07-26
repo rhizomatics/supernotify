@@ -247,7 +247,7 @@ class AlexaMediaPlayerTransport(Transport):
     async def deliver(
         self,
         envelope: Envelope,
-        debug_trace: DebugTrace | None = None,  # noqa: ARG002
+        debug_trace: DebugTrace | None = None,
     ) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_media %s", envelope.message)
 

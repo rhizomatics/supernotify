@@ -40,7 +40,7 @@ from homeassistant.components.trace.util import async_store_trace
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.exceptions import ConditionError, ConditionErrorContainer, IntegrationError
-from homeassistant.helpers import condition as condition
+from homeassistant.helpers import condition as condition_helper
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
@@ -55,9 +55,7 @@ from .const import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID
 from .model import ConditionVariables, SelectionRule
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
-    from homeassistant.helpers.typing import ConfigType
 
 # avoid importing from homeassistant.components.mobile_app.const and triggering dependency chain
 
@@ -105,9 +103,9 @@ class DeviceInfo:
             CONF_DEVICE_LABELS: self.device_labels,
         }
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Test support"""
-        return other is not None and other.as_dict() == self.as_dict()
+        return other is not None and hasattr(other, "as_dict") and other.as_dict() == self.as_dict()
 
 
 class HomeAssistantAPI:
@@ -381,26 +379,26 @@ class HomeAssistantAPI:
         try:
             if validate:
                 cond_list = cast(
-                    "list[ConfigType]", await condition.async_validate_conditions_config(self._hass, condition_config)
+                    "list[ConfigType]", await condition_helper.async_validate_conditions_config(self._hass, condition_config)
                 )
             else:
                 cond_list = condition_config
-        except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Conditions validation failed: %s", e)
+        except Exception:
+            _LOGGER.exception("SUPERNOTIFY Conditions validation failed")
             raise
         try:
             if strict:
                 force_strict_template_mode(cond_list, undo=False)
 
-            test: ConditionsFunc = await condition.async_conditions_from_config(
+            test: ConditionsFunc = await condition_helper.async_conditions_from_config(
                 self._hass, cond_list, cast("logging.Logger", capturing_logger), name
             )
             if test is None:
                 raise IntegrationError(f"Invalid condition {condition_config}")
             test(condition_variables.as_dict())
             return test
-        except Exception as e:
-            _LOGGER.exception("SUPERNOTIFY Conditions eval failed: %s", e)
+        except Exception:
+            _LOGGER.exception("SUPERNOTIFY Conditions eval failed")
             raise
         finally:
             if strict:
@@ -516,8 +514,8 @@ class HomeAssistantAPI:
         for config_entry_id in device.config_entries:
             config_entry = self._hass.config_entries.async_get_entry(config_entry_id)
             if config_entry and config_entry.data:
-                for attr in results:
-                    results[attr] = config_entry.data.get(attr) or results[attr]
+                for attr, value in results.items():
+                    results[attr] = config_entry.data.get(attr) or value
         return results
 
     def discover_devices(
@@ -619,7 +617,7 @@ class HomeAssistantAPI:
     def entity_registry(self) -> er.EntityRegistry | None:
         """Hass entity registry is weird, every component ends up creating its own, with a store, subscribing
         to all entities, so do it once here
-        """  # noqa: D205
+        """
         if self._entity_registry is not None:
             return self._entity_registry
         try:
@@ -631,7 +629,7 @@ class HomeAssistantAPI:
     def device_registry(self) -> dr.DeviceRegistry | None:
         """Hass device registry is weird, every component ends up creating its own, with a store, subscribing
         to all devices, so do it once here
-        """  # noqa: D205
+        """
         if self._device_registry is not None:
             return self._device_registry
         try:

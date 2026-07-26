@@ -87,8 +87,8 @@ async def snapshot_from_url(
                 return raw_path
 
         _LOGGER.warning("SUPERNOTIFY Failed to snap image from %s", snapshot_url)
-    except Exception as e:
-        _LOGGER.exception("SUPERNOTIFY Image snap fail: %s", e)
+    except Exception:
+        _LOGGER.exception("SUPERNOTIFY Image snap fail")
 
     return None
 
@@ -222,8 +222,8 @@ def camera_available(hass_api: HomeAssistantAPI, camera_config: dict[str, Any], 
                 )
         return False
 
-    except Exception as e:
-        _LOGGER.exception("SUPERNOTIFY Unable to determine camera state: %s, %s", camera_config, e)
+    except Exception:
+        _LOGGER.exception("SUPERNOTIFY Unable to determine camera state: %s", camera_config)
         return False
 
 

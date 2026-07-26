@@ -33,6 +33,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DataFilter, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import SupernotifyAction
+from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.generic import GenericTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -140,7 +141,7 @@ async def test_e2e_update_input_text(hass) -> None:
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
     assert notification is not None
-    generic_calls = notification["deliveries"]["motd"]["delivered"][0]["calls"]
+    generic_calls = notification["deliveries"]["motd"][EnvelopeOutcome.SUCCESS][0]["calls"]
     assert len(generic_calls) == 1
     assert generic_calls[0]["domain"] == "input_text"
     assert generic_calls[0]["action"] == "set_value"

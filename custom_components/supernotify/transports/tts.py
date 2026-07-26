@@ -84,7 +84,7 @@ class TTSTransport(Transport):
         }
         return config
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY tts: %s", envelope.message)
 
         delivered: bool = False

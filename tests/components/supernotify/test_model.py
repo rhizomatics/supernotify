@@ -143,7 +143,7 @@ def test_equality() -> None:
     uut = Target(
         ["me@mctest.org", "switch.lounge", "person.joe_mctest", "+4350404183736"], target_data={"foo": 123, "bar": True}
     )
-    assert uut == uut
+    assert uut == uut  # noqa: PLR0124
     assert uut != Target()
     assert uut != Target(["me@mctest.org", "switch.lounge", "person.joe_mctest", "+4350404183736"])
     assert uut != Target(

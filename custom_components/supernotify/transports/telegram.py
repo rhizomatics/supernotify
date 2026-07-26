@@ -177,7 +177,7 @@ class TelegramTransport(Transport):
             "telegram_bot.send_document",
         )
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY telegram %s", envelope.message)
 
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}

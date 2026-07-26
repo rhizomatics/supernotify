@@ -47,7 +47,7 @@ from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
 from homeassistant.components.notify.const import ATTR_DATA
 
-import custom_components.supernotify.const as const
+from custom_components.supernotify import const
 from custom_components.supernotify.const import (
     ATTR_ACTION_CATEGORY,
     ATTR_ACTION_URL,
@@ -141,7 +141,7 @@ class MobilePushTransport(Transport):
         }
         return config
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:  # noqa: ARG002
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return self.delivery_defaults
 
     def validate_action(self, action: str | None) -> bool:
@@ -232,7 +232,7 @@ class MobilePushTransport(Transport):
         if url in self.action_title_failures:
             # don't retry too often
             if time.time() - self.action_title_failures[url] < retry_timeout:
-                _LOGGER.debug("SUPERNOTIFY skipping retry after previous failure to retrieve url title for ", url)
+                _LOGGER.debug("SUPERNOTIFY skipping retry after previous failure to retrieve url title for %s", url)
                 return None
         try:
             websession: ClientSession = self.context.hass_api.http_session()
@@ -248,7 +248,7 @@ class MobilePushTransport(Transport):
             self.action_title_failures[url] = time.time()
         return None
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         if not envelope.target.mobile_app_ids:
             _LOGGER.warning("SUPERNOTIFY No targets provided for mobile_push")
             return False

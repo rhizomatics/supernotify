@@ -130,7 +130,7 @@ class GenericTransport(Transport):
         _LOGGER.warning("SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         # inputs
         data: dict[str, Any] = envelope.data or {}
         core_action_data: dict[str, Any] = envelope.core_action_data(force_message=False)
@@ -245,7 +245,7 @@ def script(
     core_action_data: dict[str, Any],
     data: dict[str, Any],
     target: Target,
-    delivery: Delivery,  # noqa: ARG001
+    delivery: Delivery,
     hass_api: HomeAssistantAPI,
 ) -> list[MiniEnvelope]:
     """Customize `data` for script integration"""

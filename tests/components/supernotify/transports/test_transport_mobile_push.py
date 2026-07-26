@@ -29,6 +29,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
 from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import service_call
@@ -257,8 +258,8 @@ async def test_message_override(hass: HomeAssistant) -> None:
         await hass.services.async_call("supernotify", "enquire_last_notification", None, blocking=True, return_response=True),
     )
     assert notification is not None
-    assert "delivered" in notification["deliveries"]["push"]
-    assert notification["deliveries"]["push"]["delivered"][0]["message"] == "FIXED_MESSAGE"
+    assert EnvelopeOutcome.SUCCESS in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"][EnvelopeOutcome.SUCCESS][0]["message"] == "FIXED_MESSAGE"
 
 
 async def test_top_level_data_used(hass: HomeAssistant) -> None:
@@ -282,8 +283,8 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
     )
     assert notification is not None
     # no android integration in test env
-    assert "failed" in notification["deliveries"]["push"]
-    assert notification["deliveries"]["push"]["failed"][0]["data"]["clickAction"] == "android_something"
+    assert EnvelopeOutcome.ERROR in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"][EnvelopeOutcome.ERROR][0]["data"]["clickAction"] == "android_something"
 
 
 async def test_action_title(hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:
@@ -493,10 +494,12 @@ async def test_mobile_push_discovery_applies_model_name_filter(hass: HomeAssista
 
     assert notification is not None
     assert "pixel_push" in notification["deliveries"]
-    assert "delivered" in notification["deliveries"]["pixel_push"]
+    assert EnvelopeOutcome.SUCCESS in notification["deliveries"]["pixel_push"]
 
     delivered_calls = [
-        call for envelope in notification["deliveries"]["pixel_push"]["delivered"] for call in envelope.get("calls", [])
+        call
+        for envelope in notification["deliveries"]["pixel_push"][EnvelopeOutcome.SUCCESS]
+        for call in envelope.get("calls", [])
     ]
     notified = {call["action"] for call in delivered_calls}
 

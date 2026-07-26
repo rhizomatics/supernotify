@@ -332,7 +332,7 @@ def test_device_info_equality() -> None:
     d3 = DeviceInfo(device_id="xyz", device_name="Other")
     assert d1 == d2
     assert d1 != d3
-    assert d1 != None  # noqa: E711 - line 108: return other is not None and ...
+    assert d1 != None
 
 
 def test_disconnect_handles_unsubscribe_error(hass: HomeAssistant) -> None:

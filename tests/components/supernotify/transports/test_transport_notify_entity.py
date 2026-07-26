@@ -15,6 +15,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -103,12 +104,12 @@ async def test_doesnt_double_deliver() -> None:
 
     assert notification.deliveries.keys() == unordered("custom", "DEFAULT_notify_entity", "DEFAULT_mobile_push")
 
-    assert "delivered" not in notification.deliveries["DEFAULT_mobile_push"]
+    assert EnvelopeOutcome.SUCCESS not in notification.deliveries["DEFAULT_mobile_push"]
 
-    custom_envelope = notification.deliveries["custom"]["delivered"][0]  # type: ignore
+    custom_envelope = notification.deliveries["custom"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     assert custom_envelope.delivery_name == "custom"  # type: ignore
     assert custom_envelope.target.entity_ids == ["notify.entity_2", "notify.entity_3"]  # type: ignore
 
-    assert len(notification.deliveries["DEFAULT_notify_entity"]["delivered"]) == 1
-    assert notification.deliveries["DEFAULT_notify_entity"]["delivered"][0].delivery_name == "DEFAULT_notify_entity"  # type: ignore
-    assert notification.deliveries["DEFAULT_notify_entity"]["delivered"][0].target.entity_ids == ["notify.entity_1"]  # type: ignore
+    assert len(notification.deliveries["DEFAULT_notify_entity"][EnvelopeOutcome.SUCCESS]) == 1
+    assert notification.deliveries["DEFAULT_notify_entity"][EnvelopeOutcome.SUCCESS][0].delivery_name == "DEFAULT_notify_entity"  # type: ignore
+    assert notification.deliveries["DEFAULT_notify_entity"][EnvelopeOutcome.SUCCESS][0].target.entity_ids == ["notify.entity_1"]  # type: ignore

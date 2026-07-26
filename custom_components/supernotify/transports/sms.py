@@ -52,7 +52,7 @@ class SMSTransport(Transport):
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action is not None
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_sms: %s", envelope.delivery_name)
 
         data: dict[str, Any] = envelope.data or {}

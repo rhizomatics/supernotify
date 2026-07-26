@@ -33,7 +33,7 @@ class PersistentTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data = envelope.data or {}
 
         notification_id = data.get(ATTR_NOTIFICATION_ID) or envelope.delivery.data.get(ATTR_NOTIFICATION_ID)

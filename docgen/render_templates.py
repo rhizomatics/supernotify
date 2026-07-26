@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 output_root = "developer/HTML Email Renders"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def create_examples() -> None:
     hass = HomeAssistant(config_dir=".")
@@ -33,7 +35,7 @@ async def create_examples() -> None:
     uut: EmailTransport = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
     nav = mkdocs_gen_files.Nav()
 
-    logging.debug("Rendering templates for %s", PRIORITY_VALUES)
+    _LOGGER.debug("Rendering templates for %s", PRIORITY_VALUES)
     try:
         for priority in PRIORITY_VALUES:
             html = await uut.render_template(
@@ -51,23 +53,23 @@ async def create_examples() -> None:
             )
             dest_page: str = f"example-default-{priority}.md"
             if html is None:
-                logging.warning("No html for template")
+                _LOGGER.warning("No html for template")
                 with mkdocs_gen_files.open(f"{output_root}/{dest_page}", "w") as t:
                     t.write("# Example Template Failure\n")
                     t.write("No html generated from examples/templates/default.html.j2")
 
             else:
-                logging.info("Writing %s %s to %s", priority, "default", dest_page)
+                _LOGGER.info("Writing %s %s to %s", priority, "default", dest_page)
                 with mkdocs_gen_files.open(f"{output_root}/{dest_page}", "w") as t:
                     t.write(html)
                     t.write("\n")
 
             nav["configuration", "example", "html_email_template", priority] = f"../developer/html_email_renders/{dest_page}"
 
-        logging.debug("Finished template render")
+        _LOGGER.debug("Finished template render")
     except Exception as e:
-        print(e)  # noqa: T201
-        logging.exception("Failed to render templates")
+        print(e)
+        _LOGGER.exception("Failed to render templates")
 
 
 logging.basicConfig()

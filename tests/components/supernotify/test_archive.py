@@ -22,7 +22,7 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE_PATH,
 )
 from custom_components.supernotify.notify import SupernotifyAction
-from custom_components.supernotify.schema import SCENARIO_SCHEMA, OutcomeSelection
+from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome, OutcomeSelection
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -69,7 +69,8 @@ async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: Outcom
             blob: str = "".join(await stream.readlines())
             reobj = json.loads(blob)
         assert reobj["priority"] == "critical"
-        for outcome in ("delivered", "failed", "skipped", "no_envelopes"):
+        assert reobj["outcome"] == uut.last_notification.outcome()
+        for outcome in EnvelopeOutcome:
             for delivery_name in uut.last_notification.deliveries:
                 assert len(reobj["deliveries"][delivery_name].get(outcome, [])) == len(
                     uut.last_notification.deliveries[delivery_name].get(outcome, [])

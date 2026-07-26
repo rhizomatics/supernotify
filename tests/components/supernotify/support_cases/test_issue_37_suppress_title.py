@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -44,7 +45,7 @@ async def test_title_not_passed_to_action(support_case_fixture, hass: HomeAssist
     await uut.deliver()
 
     assert list(uut.deliveries.keys()) == ["tts"]
-    envelope = uut.deliveries["tts"]["delivered"][0]  # type: ignore
+    envelope = uut.deliveries["tts"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     service_call = envelope.calls[0]  # type: ignore
     assert service_call.action_data == {"message": "testing 123"}
     assert service_call.domain == "tts"

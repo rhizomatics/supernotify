@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.chime import ChimeTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, register_device
 
@@ -77,9 +78,9 @@ async def test_seasonal_scenario_on_xmas_day(recipe_fixture):
     await uut.initialize()
     await uut.deliver()
 
-    assert len(uut.deliveries["doorbell_rang"]["delivered"]) == 1
-    assert len(uut.deliveries["doorbell_rang"]["delivered"][0].calls) == 1  # type:ignore
-    call = uut.deliveries["doorbell_rang"]["delivered"][0].calls[0]  # type:ignore
+    assert len(uut.deliveries["doorbell_rang"][EnvelopeOutcome.SUCCESS]) == 1
+    assert len(uut.deliveries["doorbell_rang"][EnvelopeOutcome.SUCCESS][0].calls) == 1  # type:ignore
+    call = uut.deliveries["doorbell_rang"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type:ignore
     assert call.action == "send_sound"
     assert call.domain == "alexa_devices"
     assert call.action_data["sound"] == "christmas_05"  # type:ignore
@@ -92,9 +93,9 @@ async def test_unseasonal_scenario_on_xmas_day(recipe_fixture):
     await uut.initialize()
     await uut.deliver()
 
-    assert len(uut.deliveries["driveway_alarm"]["delivered"]) == 1
-    assert len(uut.deliveries["driveway_alarm"]["delivered"][0].calls) == 1  # type:ignore
-    call = uut.deliveries["driveway_alarm"]["delivered"][0].calls[0]  # type:ignore
+    assert len(uut.deliveries["driveway_alarm"][EnvelopeOutcome.SUCCESS]) == 1
+    assert len(uut.deliveries["driveway_alarm"][EnvelopeOutcome.SUCCESS][0].calls) == 1  # type:ignore
+    call = uut.deliveries["driveway_alarm"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type:ignore
     assert call.action == "send_sound"
     assert call.domain == "alexa_devices"
     assert call.action_data["sound"] == "amzn_sfx_trumpet_bugle_04"  # type:ignore
@@ -107,9 +108,9 @@ async def test_seasonal_scenario_in_summer(recipe_fixture):
     await uut.initialize()
     await uut.deliver()
 
-    assert len(uut.deliveries["doorbell_rang"]["delivered"]) == 1
-    assert len(uut.deliveries["doorbell_rang"]["delivered"][0].calls) == 1  # type:ignore
-    call = uut.deliveries["doorbell_rang"]["delivered"][0].calls[0]  # type:ignore
+    assert len(uut.deliveries["doorbell_rang"][EnvelopeOutcome.SUCCESS]) == 1
+    assert len(uut.deliveries["doorbell_rang"][EnvelopeOutcome.SUCCESS][0].calls) == 1  # type:ignore
+    call = uut.deliveries["doorbell_rang"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type:ignore
     assert call.action == "send_sound"
     assert call.domain == "alexa_devices"
     assert call.action_data["sound"] == "amzn_sfx_doorbell_chime_02"  # type:ignore

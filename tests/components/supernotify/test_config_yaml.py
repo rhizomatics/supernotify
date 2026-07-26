@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
+from custom_components.supernotify.schema import EnvelopeOutcome
 
 from .hass_setup_lib import assert_clean_notification, assert_json_round_trip
 
@@ -136,7 +137,7 @@ async def test_call_action(hass: HomeAssistant) -> None:
     )
     assert_clean_notification(notification)
 
-    assert notification["deliveries"]["testing"]["delivered"][0]["message"] == "unit test 9484"  # type: ignore
+    assert notification["deliveries"]["testing"][EnvelopeOutcome.SUCCESS][0]["message"] == "unit test 9484"  # type: ignore
     assert notification["priority"] == "medium"  # type: ignore
 
 
@@ -406,7 +407,7 @@ async def test_template_delivery(hass: HomeAssistant) -> None:
     )
     assert_clean_notification(notification, expected_deliveries={"testing": 1})
 
-    assert notification["deliveries"]["testing"]["delivered"][0]["message"] == "unit test 105"  # type: ignore
+    assert notification["deliveries"]["testing"][EnvelopeOutcome.SUCCESS][0]["message"] == "unit test 105"  # type: ignore
     assert notification["priority"] == "high"  # type: ignore
 
 
@@ -431,7 +432,7 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
         e
         # type: ignore
         # type: ignore
-        for e in notification["deliveries"]["chime_person"]["delivered"]  # type: ignore
+        for e in notification["deliveries"]["chime_person"][EnvelopeOutcome.SUCCESS]  # type: ignore
         if e and isinstance(e, dict) and e.get("delivery_name", "") == "chime_person"
     ]
     assert len(delivered_chimes) == 1

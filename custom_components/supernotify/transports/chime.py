@@ -95,7 +95,7 @@ class ChimeTargetConfig:
         self.duration: int | None = duration
         self.data: dict[str, Any] | None = data or {}
 
-    def as_dict(self, **kwargs) -> dict[str, Any]:  # noqa: ARG002
+    def as_dict(self, **kwargs) -> dict[str, Any]:
         return {
             "entity_id": self.entity_id,
             "device_id": self.device_id,
@@ -450,12 +450,12 @@ def build_aliases(src_config: ConfigType) -> ConfigType:
                             _LOGGER.warning("SUPERNOTIFY chime alias %s has unknown targets", alias)
                     dest_config.setdefault(alias, {})
                     dest_config[alias][domain_or_label] = domain_config
-                except Exception as e:
-                    _LOGGER.exception("SUPERNOTIFY chime alias %s has invalid target: %s", alias, e)
+                except Exception:
+                    _LOGGER.exception("SUPERNOTIFY chime alias %s has invalid target", alias)
 
     except vol.Invalid as ve:
         _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)
         _LOGGER.error("SUPERNOTIFY %s", humanize_error(src_config, ve))
-    except Exception as e:
-        _LOGGER.exception("SUPERNOTIFY Chime alias unexpected error: %s", e)
+    except Exception:
+        _LOGGER.exception("SUPERNOTIFY Chime alias unexpected error")
     return dest_config

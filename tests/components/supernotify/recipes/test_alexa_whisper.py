@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -46,10 +47,10 @@ async def test_alexa_whispering(hass: HomeAssistant):
     uut = Notification(ctx, "testing 123", action_data={"priority": "low"}, target="joe@soapy.com")
     await uut.initialize()
     await uut.deliver()
-    assert len(uut.deliveries["alexa_inform"]["delivered"]) == 1
-    assert len(uut.deliveries["plain_email"]["delivered"]) == 1
-    assert uut.deliveries["plain_email"]["delivered"][0].calls[0].action_data["message"] == "testing 123"  # type: ignore
+    assert len(uut.deliveries["alexa_inform"][EnvelopeOutcome.SUCCESS]) == 1
+    assert len(uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS]) == 1
+    assert uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0].calls[0].action_data["message"] == "testing 123"  # type: ignore
     assert (
-        uut.deliveries["alexa_inform"]["delivered"][0].calls[0].action_data["message"]  # type: ignore
+        uut.deliveries["alexa_inform"][EnvelopeOutcome.SUCCESS][0].calls[0].action_data["message"]  # type: ignore
         == '<amazon:effect name="whispered">testing 123</amazon:effect>'
     )

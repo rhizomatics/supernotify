@@ -62,7 +62,7 @@ from .model import (
     TargetRequired,
     TransportFeature,
 )
-from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, Outcome
+from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome
 
 if TYPE_CHECKING:
     from .context import Context
@@ -77,17 +77,10 @@ _LOGGER = logging.getLogger(__name__)
 
 _VERSION: str = json.loads((_Path(__file__).parent / "manifest.json").read_text()).get("version", "unknown")
 
-# Deliveries mapping keys for debug / archive
-KEY_DELIVERED = "delivered"
-KEY_SUPPRESSED = "suppressed"
-KEY_FAILED = "failed"
-KEY_SKIPPED = "skipped"
-
 # supernotify specific data items not to be passed to transports in data
 INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
 
-type t_delivery_name = str
-type t_outcome = str
+type DeliveryName = str
 
 
 class Notification(ArchivableObject):
@@ -117,7 +110,8 @@ class Notification(ArchivableObject):
         self.suppressed: int = 0
         self.fallback: int = 0
         self.dupe: bool = False
-        self.deliveries: dict[t_delivery_name, dict[t_outcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
+        self.deliveries: dict[DeliveryName, dict[EnvelopeOutcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
+        self.delivery_exceptions: dict[DeliveryName, list[str]]
         self._skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
@@ -218,18 +212,18 @@ class Notification(ArchivableObject):
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
 
-    def outcome(self) -> Outcome:
+    def outcome(self) -> DeliveryOutcome:
         if self.error_count > 0:
-            return Outcome.ERROR
+            return DeliveryOutcome.ERROR
         if self.dupe:
-            return Outcome.DUPE
+            return DeliveryOutcome.DUPE
         if not self.delivered:
-            return Outcome.NO_DELIVERY
+            return DeliveryOutcome.NO_DELIVERY
         if self.fallback:
-            return Outcome.FALLBACK_DELIVERY
+            return DeliveryOutcome.FALLBACK_DELIVERY
         if self.skipped:
-            return Outcome.PARTIAL_DELIVERY
-        return Outcome.SUCCESS
+            return DeliveryOutcome.PARTIAL_DELIVERY
+        return DeliveryOutcome.SUCCESS
 
     def media_requirements(self, data: dict[str, Any]) -> dict[str, Any]:
         """If no media defined, look for iOS / Android actions that have media defined
@@ -248,11 +242,7 @@ class Notification(ArchivableObject):
             url = data["attachment"]["url"]
             if url and url.endswith(".mp4") and not media_dict.get(ATTR_MEDIA_CLIP_URL):
                 media_dict[ATTR_MEDIA_CLIP_URL] = url
-            elif (
-                url
-                and (url.endswith(".jpg") or url.endswith(".jpeg") or url.endswith(".png"))
-                and not media_dict.get(ATTR_MEDIA_SNAPSHOT_URL)
-            ):
+            elif url and (url.endswith((".jpg", ".jpeg", ".png"))) and not media_dict.get(ATTR_MEDIA_SNAPSHOT_URL):
                 media_dict[ATTR_MEDIA_SNAPSHOT_URL] = url
         return media_dict
 
@@ -428,8 +418,8 @@ class Notification(ArchivableObject):
                     _LOGGER.debug("SUPERNOTIFY Waiting up to %s for image grab to complete", wait_timeout)
                     async with asyncio.timeout(wait_timeout):  # TODO: configurable time-out
                         await image_task
-                except Exception as e:
-                    _LOGGER.exception("SUPERNOTIFY Failed to pre-grab image: %s", e)
+                except Exception:
+                    _LOGGER.exception("SUPERNOTIFY Failed to pre-grab image")
 
             _LOGGER.debug("SUPERNOTIFY Scheduling %s deferred deliveries", len(deferred_deliveries))
             await self._schedule_deliveries(deferred_deliveries)
@@ -514,7 +504,7 @@ class Notification(ArchivableObject):
                         )
                     self.record_result(delivery, envelope)
                 except Exception as e2:
-                    _LOGGER.exception("SUPERNOTIFY Failed to deliver %s: %s", delivery.name, e2)
+                    _LOGGER.exception("SUPERNOTIFY Failed to deliver %s", delivery.name)
                     envelope.error_count = envelope.error_count + 1
                     transport.record_error(str(e2), method="deliver")
                     envelope.delivery_error = format_exception(e2)
@@ -526,10 +516,8 @@ class Notification(ArchivableObject):
                 delivery.name,
                 type(delivery.transport).__name__,
             )
-            self.deliveries.setdefault(delivery.name, {})
-            self.deliveries[delivery.name].setdefault("errors", [])
-            errors: list[str] = cast("list[str]", self.deliveries[delivery.name]["errors"])
-            errors.append("\n".join(format_exception(e)))
+            self.delivery_exceptions.setdefault(delivery.name, [])
+            self.delivery_exceptions[delivery.name].append("\n".join(format_exception(e)))
 
     def record_result(
         self,
@@ -545,8 +533,8 @@ class Notification(ArchivableObject):
                 self.error_count += envelope.error_count
                 self.deliveries.setdefault(delivery.name, {})
                 if envelope.delivered:
-                    self.deliveries[delivery.name].setdefault(KEY_DELIVERED, [])
-                    self.deliveries[delivery.name][KEY_DELIVERED].append(envelope)  # type: ignore
+                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
+                    self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
                 else:
                     if suppression_reason:
                         envelope.skip_reason = suppression_reason
@@ -555,12 +543,12 @@ class Notification(ArchivableObject):
                         if suppression_reason == SuppressionReason.DUPE:
                             self.dupe = True
                     if envelope.error_count:
-                        self.deliveries[delivery.name].setdefault(KEY_FAILED, [])
-                        self.deliveries[delivery.name][KEY_FAILED].append(envelope)  # type: ignore
+                        self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])
+                        self.deliveries[delivery.name][EnvelopeOutcome.ERROR].append(envelope)  # type: ignore
                         self.failed += 1
                     else:
-                        self.deliveries[delivery.name].setdefault(KEY_SUPPRESSED, [])
-                        self.deliveries[delivery.name][KEY_SUPPRESSED].append(envelope)  # type: ignore
+                        self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])
+                        self.deliveries[delivery.name][EnvelopeOutcome.SUPPRESSED].append(envelope)  # type: ignore
                         self.suppressed += 1
 
         if not envelope:
@@ -572,7 +560,7 @@ class Notification(ArchivableObject):
             self.deliveries.setdefault(delivery_name, {})
             if targets:
                 skip_summary["targets"] = targets
-            self.deliveries[delivery_name][KEY_SKIPPED] = skip_summary
+            self.deliveries[delivery_name][EnvelopeOutcome.SKIPPED] = skip_summary
             self.skipped += 1
 
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
@@ -605,7 +593,7 @@ class Notification(ArchivableObject):
             "deliveries",
         ]
         # preferred fields
-        result: dict[str, Any] = {"version": _VERSION}
+        result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
         result.update({
             k: sanitize(
                 self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
@@ -635,15 +623,15 @@ class Notification(ArchivableObject):
             total_ok = 0
             total_all = 0
             for d_name, outcomes in self.deliveries.items():
-                for envelope in outcomes.get(KEY_DELIVERED, []):
+                for envelope in outcomes.get(EnvelopeOutcome.SUCCESS, []):
                     dur = sum(c.contents().get("elapsed", 0) for c in getattr(envelope, "calls", [])) * 1000
                     all_durations[d_name] = dur
                     total_ok += 1
                     total_all += 1
-                for _envelope in outcomes.get(KEY_FAILED, []):
+                for _envelope in outcomes.get(EnvelopeOutcome.ERROR, []):
                     all_durations.setdefault(d_name, 0)
                     total_all += 1
-                if outcomes.get(KEY_SKIPPED):
+                if outcomes.get(EnvelopeOutcome.SKIPPED):
                     total_all += 1
             if all_durations:
                 result["stats"] = {
@@ -672,15 +660,15 @@ class Notification(ArchivableObject):
     def delivered_envelopes(self) -> list[Envelope]:
         result: list[Envelope] = []
         for delivery_result in self.deliveries.values():
-            result.extend(cast("list[Envelope]", delivery_result.get(KEY_DELIVERED, [])))
+            result.extend(cast("list[Envelope]", delivery_result.get(EnvelopeOutcome.SUCCESS, [])))
         return result
 
     @property
     def undelivered_envelopes(self) -> list[Envelope]:
         result: list[Envelope] = []
         for delivery_result in self.deliveries.values():
-            result.extend(cast("list[Envelope]", delivery_result.get(KEY_SUPPRESSED, [])))
-            result.extend(cast("list[Envelope]", delivery_result.get(KEY_FAILED, [])))
+            result.extend(cast("list[Envelope]", delivery_result.get(EnvelopeOutcome.SUPPRESSED, [])))
+            result.extend(cast("list[Envelope]", delivery_result.get(EnvelopeOutcome.ERROR, [])))
         return result
 
     async def select_scenarios(self) -> list[str]:

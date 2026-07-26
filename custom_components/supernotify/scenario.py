@@ -136,7 +136,7 @@ class Scenario:
                     if re.fullmatch(name_or_pattern, delivery_name):
                         if self._delivery_selector.get(delivery_name) == delivery_name:
                             _LOGGER.info(
-                                f"SUPERNOTIFY Scenario {self.name} ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"  # noqa: E501
+                                f"SUPERNOTIFY Scenario {self.name} ignoring '{name_or_pattern}' shadowing explicit delivery {delivery_name}"
                             )
                         else:
                             _LOGGER.debug(

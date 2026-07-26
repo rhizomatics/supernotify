@@ -59,7 +59,7 @@ from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
-from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA
+from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA, EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snoozer
 
 from .doubles_lib import DummyService
@@ -106,7 +106,7 @@ def assert_clean_notification(
     if expected_delivered is not None:
         assert notobj["delivered"] == expected_delivered
     elif expected_deliveries:
-        assert notobj["delivered"] == sum(len(v.get("delivered", ())) for v in notobj["deliveries"].values())  # type: ignore
+        assert notobj["delivered"] == sum(len(v.get(EnvelopeOutcome.SUCCESS, ())) for v in notobj["deliveries"].values())  # type: ignore
     assert notobj["failed"] == 0
 
     delivered_total: int = 0
@@ -120,10 +120,10 @@ def assert_clean_notification(
                 ignore_skipped += 1
             elif "suppressed" in notdelobj:
                 expected_suppressed += len(notdelobj["suppressed"])
-        elif "delivered" in notdelobj:
-            delivered_total += len(notdelobj["delivered"])
+        elif EnvelopeOutcome.SUCCESS in notdelobj:
+            delivered_total += len(notdelobj[EnvelopeOutcome.SUCCESS])
             if expected_deliveries is not None:
-                assert len(notdelobj["delivered"]) == expected_deliveries.get(delivery, 0)
+                assert len(notdelobj[EnvelopeOutcome.SUCCESS]) == expected_deliveries.get(delivery, 0)
         elif expected_delivered is not None and expected_delivered > 0:
             assert list(notdelobj.keys()) in ([], ["deliveries"])
         elif expected_delivered is not None:
@@ -151,7 +151,7 @@ def load_config(v: str | dict | list | None, return_type: type = dict) -> JSON_T
 
 
 def first_envelope(notification: Notification, delivery: str) -> Envelope:
-    return notification.deliveries[delivery]["delivered"][0]  # type: ignore
+    return notification.deliveries[delivery][EnvelopeOutcome.SUCCESS][0]  # type: ignore
 
 
 class TestingContext(Context):

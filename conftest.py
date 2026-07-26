@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-import pathlib  # noqa: TC003
+import pathlib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch

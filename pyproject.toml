@@ -156,41 +156,9 @@ exclude = [
 
 [tool.ruff.lint]
 preview = false
-select = [
-    "E",
-    "C",
-    "R",
-    "F",
-    "B",
-    "W",
-    "I",
-    "C90",
-    "N",
-    "D",
-    "UP",
-    "YTT",
-    "RUF",
-    "PGH",
-    "PT",
-    "T20",
-    "DTZ",
-    "TD",
-    "PTH",
-    "ARG",
-    "INT",
-    "TCH",
-    "TID",
-    "SIM",
-    "PERF",
-    "ASYNC",
-    "ANN",
-    "S",
-    "A",
-    "COM",
-    "C4",
-]
 ignore = [
     "W191",
+    "BLE001", # catch Exception
     "E111",
     "E114",
     "E117",
@@ -208,6 +176,7 @@ ignore = [
     "TD002",
     "TD003",
     "TD005",
+    "TRY002", # create custom exceptions
     "SIM102",
     "SIM117",
     "ANN002",

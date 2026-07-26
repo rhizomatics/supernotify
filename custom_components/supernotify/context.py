@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from .media_grab import MediaStorage
     from .scenario import ScenarioRegistry
     from .snoozer import Snoozer
-from homeassistant.helpers import condition as condition
 
 from .common import ensure_list
 from .const import (
@@ -20,8 +19,6 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.typing import ConfigType
-
     from .delivery import DeliveryRegistry
     from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry

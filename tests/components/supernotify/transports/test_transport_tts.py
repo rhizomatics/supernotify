@@ -8,6 +8,7 @@ from custom_components.supernotify.const import ATTR_SPOKEN_MESSAGE, CONF_DATA, 
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.tts import TTSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, assert_clean_notification, register_mobile_app
 
@@ -139,9 +140,9 @@ async def test_manual_android_tts_provider(hass: HomeAssistant) -> None:
     await n.deliver()
 
     assert_clean_notification(n, expected_deliveries={"phone_tts": 1})
-    assert len(n.deliveries["phone_tts"]["delivered"][0].calls) == 1  # type: ignore
+    assert len(n.deliveries["phone_tts"][EnvelopeOutcome.SUCCESS][0].calls) == 1  # type: ignore
     # type: ignore
-    call: CallRecord = n.deliveries["phone_tts"]["delivered"][0].calls[0]  # type: ignore
+    call: CallRecord = n.deliveries["phone_tts"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type: ignore
     assert call.domain == "notify"
     assert call.action == "mobile_app_bobs_phone"
     assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}}
@@ -206,7 +207,7 @@ async def test_mobile_tts_with_media_stream(hass: HomeAssistant) -> None:
     await n.deliver()
 
     assert_clean_notification(n, expected_deliveries={"phone_tts": 1})
-    call: CallRecord = n.deliveries["phone_tts"]["delivered"][0].calls[0]  # type: ignore
+    call: CallRecord = n.deliveries["phone_tts"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type: ignore
     assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}, "media_stream": "alarm_stream"}
 
 
@@ -224,9 +225,9 @@ async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
     await n.deliver()
 
     assert_clean_notification(n, expected_deliveries={"phone_tts": 1})
-    assert len(n.deliveries["phone_tts"]["delivered"][0].calls) == 1  # type: ignore
+    assert len(n.deliveries["phone_tts"][EnvelopeOutcome.SUCCESS][0].calls) == 1  # type: ignore
     # type: ignore
-    call: CallRecord = n.deliveries["phone_tts"]["delivered"][0].calls[0]  # type: ignore
+    call: CallRecord = n.deliveries["phone_tts"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type: ignore
     assert call.domain == "notify"
     assert call.action == "mobile_app_bobs_phone"
     assert call.action_data == {"message": "TTS", "data": {"tts_text": "testing 123"}}

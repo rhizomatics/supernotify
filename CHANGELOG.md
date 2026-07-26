@@ -1,5 +1,10 @@
 # Public releases
 
+## 1.16.4
+- Upgraded to Ruff 0.16.0 and enabled full rule set, fixed resulting lint errors
+- Added `EnvelopeOutcome` enum to replace previous `KEY_` constants
+- Archived notification now has a single `outcome` value for overall delivery result
+- Archived notifications have separate `delivery_exceptions` field for transport errors
 ## 1.16.3
 - Dependencies update, incl HA compatibility linked to 2026.7.x ( maintaining 2026.2.x for py3.13 testing )
 - Test fixes for recent HA changes

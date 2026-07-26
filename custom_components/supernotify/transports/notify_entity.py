@@ -63,10 +63,10 @@ class NotifyEntityTransport(Transport):
         }
         return config
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:  # noqa: ARG002
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return self.delivery_defaults
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         targets = envelope.target.entity_ids or []
         if not targets:
             _LOGGER.warning("SUPERNOTIFY notify_entity: no targets")

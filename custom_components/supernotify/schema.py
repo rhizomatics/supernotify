@@ -179,13 +179,20 @@ def parse_event_policy(value: object) -> OutcomeSelection:
     raise vol.Invalid(f"expected OutcomeSelection, got {value!r}")
 
 
-class Outcome(StrEnum):
+class DeliveryOutcome(StrEnum):
     SUCCESS = auto()
     NO_DELIVERY = auto()
     PARTIAL_DELIVERY = auto()
     FALLBACK_DELIVERY = auto()
     ERROR = auto()
     DUPE = auto()
+
+
+class EnvelopeOutcome(StrEnum):
+    SUCCESS = auto()
+    ERROR = auto()
+    SKIPPED = auto()  # envelope not generated
+    SUPPRESSED = auto()  # envelope generated but intentionally not delivered
 
 
 class SelectionRank(StrEnum):

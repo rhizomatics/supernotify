@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import EnvelopeOutcome
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -108,8 +109,8 @@ async def test_frigate_blueprint_notification(hass: HomeAssistant, local_server:
         uut.media["clip_url"]
         == "https://home.43acaciaroad.org/api/frigate/notifications/1766218266.042615-blamq9/driveway/master.m3u8"
     )
-    assert len(uut.deliveries["plain_email"]["delivered"]) == 1
-    call_data = uut.deliveries["plain_email"]["delivered"][0].calls[0]  # type:ignore
+    assert len(uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS]) == 1
+    call_data = uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0].calls[0]  # type:ignore
 
     assert call_data.action == "smtp"
     assert call_data.domain == "notify"
