@@ -48,7 +48,7 @@ jobs:
       with:
         category: "integration"
     - name: HACS Hassfest
-      uses: "home-assistant/actions/hassfest@e3fb68ebda13d88a0d695082f471ba2c83d025fb"
+      uses: "home-assistant/actions/hassfest@ab22029681aa532bfe7de5774a9972d67bfbd2c0"
     - name: Install uv
       uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
     - name: Set up Python ${{ matrix.python-version }}
