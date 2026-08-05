@@ -1,0 +1,239 @@
+{
+  "type": "object",
+  "properties": {
+    "person": {
+      "type": "string"
+    },
+    "alias": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "entity_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "device_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "area_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "floor_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "label_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "email": {
+              "type": "array",
+              "items": {
+                "format": "email",
+                "type": "string"
+              }
+            },
+            "phone": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "mobile_app_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "person_id": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [],
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "phone_number": {
+      "type": "string"
+    },
+    "mobile_discovery": {
+      "type": "boolean",
+      "default": true
+    },
+    "mobile_devices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "manufacturer": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "class": {
+            "type": "string"
+          },
+          "mobile_app_id": {
+            "type": "string"
+          },
+          "device_tracker": {
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "default": []
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "entity_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "device_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "area_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "floor_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "label_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "email": {
+                    "type": "array",
+                    "items": {
+                      "format": "email",
+                      "type": "string"
+                    }
+                  },
+                  "phone": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mobile_app_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "person_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [],
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "enabled": {
+            "nullable": true,
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": []
+      },
+      "default": {}
+    }
+  },
+  "required": [
+    "person"
+  ],
+  "title": "Recipient Definition",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Recipient_Definition.json",
+  "description": "Voluptuous validation schema for Recipient_Definition",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
