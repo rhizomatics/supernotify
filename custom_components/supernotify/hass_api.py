@@ -511,7 +511,13 @@ class HomeAssistantAPI:
 
     def device_config_info(self, device: DeviceEntry) -> dict[str, str | None]:
         results: dict[str, str | None] = {ATTR_OS_NAME: None, ATTR_OS_VERSION: None, CONF_USER_ID: None, ATTR_APP_VERSION: None}
-        for config_entry_id in device.config_entries:
+        try:
+            # HA 2026.8+ restricts devices to a single config entry
+            config_entry_ids: Iterable[str] = (device.config_entry_id,)  # type: ignore[attr-defined]
+        except AttributeError:
+            # pre-2026.8: config_entry_id doesn't exist yet, fall back to deprecated plural set
+            config_entry_ids = device.config_entries
+        for config_entry_id in config_entry_ids:
             config_entry = self._hass.config_entries.async_get_entry(config_entry_id)
             if config_entry and config_entry.data:
                 for attr, value in results.items():
