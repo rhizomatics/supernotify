@@ -432,7 +432,6 @@ class TransportConfig:
 class DeliveryCustomization:
     def __init__(self, config: ConfigType | None, target_specific: bool = False) -> None:
         config = config or {}
-        # perhaps should be false for wildcards
         self.enabled: bool | None = config.get(CONF_ENABLED, True)
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
         # TODO: only works for scenario or recipient, not action call

@@ -87,7 +87,14 @@ class Scenario:
         elif isinstance(delivery_data, dict):
             # whereas a dict may be used to tune or restrict
             _LOGGER.debug("SUPERNOTIFY scenario %s delivery selection %s", self.name, delivery_data)
-            self._config_delivery = {k: DeliveryCustomization(v) for k, v in delivery_data.items()}
+            self._config_delivery = {}
+            for k, v in delivery_data.items():
+                if k not in delivery_registry.deliveries and CONF_ENABLED not in (v or {}):
+                    # a wildcard/regex pattern with no explicit enabled: only apply as an
+                    # override to deliveries already selected elsewhere, don't force-enable
+                    # every delivery it happens to match (e.g. selection: scenario deliveries)
+                    v = {**(v or {}), CONF_ENABLED: None}
+                self._config_delivery[k] = DeliveryCustomization(v)
         elif delivery_data:
             _LOGGER.warning("SUPERNOTIFY Unable to interpret scenario %s delivery data %s", self.name, delivery_data)
             self._config_delivery = {}

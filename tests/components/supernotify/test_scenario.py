@@ -662,6 +662,43 @@ async def test_scenario_wildcard_overrides_deliveries(hass: HomeAssistant) -> No
         assert env.priority == "low"
 
 
+async def test_scenario_wildcard_does_not_force_enable_scenario_selected_delivery(hass: HomeAssistant) -> None:
+    # Regression test: a wildcard delivery override with no `enabled` key (as commonly
+    # written, e.g. `.*: {data: {...}}`) must not force-select a delivery whose own
+    # `selection: scenario` means it should only fire when its own scenario matches.
+    ctx = TestingContext(
+        homeassistant=hass,
+        scenarios={
+            "Deprioritize": {
+                CONF_DELIVERY: {".*": {"data": {"priority": "low"}}},
+                CONF_CONDITIONS: "{{'noisy' in notification_message|lower}}",
+            },
+        },
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
+            "siren": {CONF_TRANSPORT: "dummy", CONF_ENABLED: False},
+            "chime": {CONF_TRANSPORT: "dummy"},
+        },
+        transport_types={DummyTransport: {"target_required": TargetRequired.OPTIONAL}},
+    )
+
+    await ctx.test_initialize()
+
+    scenario: Scenario = ctx.scenario_registry.scenarios["Deprioritize"]
+    assert scenario.enabling_deliveries() == []
+    assert scenario.disabling_deliveries() == []
+    assert scenario.relevant_deliveries() == unordered("plain_email", "chime", "siren", "mobile")
+
+    uut = Notification(ctx, "noisy message")
+    await uut.initialize()
+    await uut.deliver()
+    assert list(uut.enabled_scenarios.keys()) == ["Deprioritize"]
+    assert list(uut.selected_deliveries) == unordered("plain_email", "chime")
+    for env in uut.delivered_envelopes:
+        assert env.priority == "low"
+
+
 async def test_scenario_wildcard_and_literal_apply(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,

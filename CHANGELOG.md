@@ -1,5 +1,9 @@
 # Public releases
 
+## 1.16.5
+- Fix wildcard scenarios selecting other scenarios that wouldn't otherwise be matched
+- Test fixes by pinning `pytest-homeassistant-custom-component`
+
 ## 1.16.4
 - Upgraded to Ruff 0.16.0 and enabled full rule set, fixed resulting lint errors
 - Added `EnvelopeOutcome` enum to replace previous `KEY_` constants
