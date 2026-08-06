@@ -14,7 +14,7 @@ Make sure you have **HACS** installed
 
 If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify is one of the default repositories in HACS so no custom repo configuration required
 
-## Download
+## Installation
 
 From the HACS page on Home Assistant, select **Supernotify** in the list of available integrations
 
@@ -43,6 +43,16 @@ This first notification will go out all mobile devices in the house. To limit it
 
 ![Notify All The Mobile Devices for One Person](assets/images/person_notify.png){width=400}
 
+## Removal
+
+From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
+
+### Cleaning Up Config
+
+1. Any manually created YAML files in the `config` directory will be untouched, remove these manually if confident they won't be needed again.
+2. Any archived notifications will remain, by default in `/config/archive/supernotify` directory unless configured otherwise. Remove this directory if needed.
+3. If using cameras or image attachments, media files may be left, by default in `/config/media/supernotify` directory unless configured otherwise. Remove this directory if needed.
+4. Templates may be left behind, by default in `/config/templates/supernotify` directory unless configured otherwise. Remove this directory if needed.
 
 ## Be Inspired
 

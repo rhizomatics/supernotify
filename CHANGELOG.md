@@ -4,6 +4,8 @@
 - Support for changes to Device Manager
  - Details at https://developers.home-assistant.io/blog/2026/07/21/device-registry-single-config-entry
  - Fallback to previous behaviour for older versions of Home Assistant that don't have the new device API for config entries
+ - Quality Scale re-audited
+ - Roadmap added for migration to ConfigFlow and improved HA quality scale level
 ## 1.16.5
 - Fix wildcard scenarios selecting other scenarios that wouldn't otherwise be matched
 - Test fixes by pinning `pytest-homeassistant-custom-component`

@@ -1,6 +1,13 @@
 ---
 # Quality Scale tracking for Supernotify integration
-# Updated: 2025-12-19
+# Updated: 2026-08-06 (previous update: 2025-12-19)
+# Rule set verified against https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist
+# (HA 2026.7). Since 2025-12-19: test-coverage moved Bronze -> Silver, device-class renamed
+# entity-device-class, disabled-by-default renamed entity-disabled-by-default, stale-device-removal
+# renamed stale-devices, entity-description retired, and Gold gained: discovery, discovery-update-info,
+# docs-data-update, docs-examples, docs-known-limitations, docs-supported-devices, docs-supported-functions,
+# docs-troubleshooting, docs-use-cases, dynamic-devices, reconfiguration-flow, repair-issues.
+# Bronze also gained docs-triggers / docs-conditions.
 
 rules:
   # ==================
@@ -10,14 +17,14 @@ rules:
   action-setup:
     status: todo
     comment: |
-      Services currently registered in async_get_service().
-      Need to move to async_setup() when implementing config entries.
+      Services still registered in async_get_service() (notify.py). No config entry
+      work has started yet - move to async_setup() when config flow lands.
 
   appropriate-polling:
     status: exempt
     comment: |
-      Integration is push-based notification service (iot_class: local_push).
-      No periodic polling required.
+      Integration is a notification orchestration service (iot_class: calculated in
+      manifest.json). No periodic polling of a device/service required.
 
   brands:
     status: exempt
@@ -33,9 +40,10 @@ rules:
   config-flow:
     status: todo
     comment: |
-      CRITICAL BLOCKER: Must implement config flow for UI-based setup.
-      Currently YAML-only (config_flow: false in manifest).
-      Target completion: 4-6 weeks.
+      CRITICAL BLOCKER: still not implemented - manifest.json has
+      "config_flow": false and no config_flow.py exists. Phasing and a draft
+      Phase 1 PR are captured in design/roadmap/configflow_approach.md and
+      design/roadmap/configflow_proposal.md.
 
   config-flow-test-coverage:
     status: todo
@@ -47,12 +55,19 @@ rules:
     status: done
     comment: |
       All dependencies are transparent utility libraries.
-      httpx used for user-controlled outbound notifications.
+      httpx used for user-controlled outbound notifications. bs4 is used for
+      HTML parsing in transports/mobile_push.py.
 
   docs-actions:
     status: done
     comment: |
       Custom services documented at https://supernotify.rhizomatics.org.uk
+
+  docs-conditions:
+    status: exempt
+    comment: |
+      Integration provides no automation condition platform. Scenario conditions
+      are an internal YAML construct, not exposed via HA's condition system.
 
   docs-high-level-description:
     status: done
@@ -62,8 +77,13 @@ rules:
     comment: HACS installation documented.
 
   docs-removal-instructions:
-    status: todo
-    comment: Need to add explicit uninstallation instructions.
+    status: done
+    comment: Getting Started guide now covers removal and cleanup.
+
+  docs-triggers:
+    status: exempt
+    comment: |
+      Integration provides no automation trigger or device trigger platform.
 
   entity-event-setup:
     status: todo
@@ -97,13 +117,6 @@ rules:
     comment: |
       Need to review transport initialization and add explicit validation.
 
-  test-coverage:
-    status: done
-    comment: |
-      208 test functions, 5,333+ lines of test code.
-      Comprehensive coverage of models, transports, delivery, scenarios, etc.
-      Need to verify >95% with coverage report.
-
   unique-config-entry:
     status: todo
     comment: |
@@ -114,10 +127,11 @@ rules:
   # ==================
 
   action-exceptions:
-    status: done
+    status: todo
     comment: |
-      Need to verify all services raise ServiceValidationError for invalid input
-      and HomeAssistantError for failures.
+      No ServiceValidationError or HomeAssistantError usage found anywhere in
+      custom_components/supernotify - services do not yet raise these on bad
+      input/failure.
 
   config-entry-unloading:
     status: todo
@@ -139,11 +153,12 @@ rules:
 
   log-when-unavailable:
     status: todo
-    comment: Need to implement log-once pattern for transport unavailability.
+    comment: |
+      Still no unavailable/log-once pattern in transport.py or transports/*.
 
   parallel-updates:
     status: done
-    comment: PARALLEL_UPDATES constant configured.
+    comment: PARALLEL_UPDATES constant configured (notify.py).
 
   reauthentication-flow:
     status: exempt
@@ -151,13 +166,16 @@ rules:
       Integration orchestrates notifications but doesn't authenticate
       to external services. Individual transports handle their own auth.
 
+  test-coverage:
+    status: done
+    comment: |
+      Moved from Bronze to Silver in the current rule set.
+      625 test functions across 49 files (up from 208/25 files in Dec 2025).
+      Checked-in .coverage report shows 95% total line coverage.
+
   # ==================
   # GOLD TIER
   # ==================
-
-  device-class:
-    status: exempt
-    comment: This integration does not connect to any devices
 
   devices:
     status: exempt
@@ -168,24 +186,83 @@ rules:
     comment: |
       Need to create diagnostics.py module once config_entries introduced
 
-  disabled-by-default:
-    status: done
+  discovery:
+    status: exempt
+    comment: |
+      Service/orchestration integration with no discoverable network devices.
+
+  discovery-update-info:
+    status: exempt
+    comment: Not applicable - integration does not support discovery.
+
+  docs-data-update:
+    status: todo
+    comment: |
+      Need a doc section explaining that diagnostic entities (e.g.
+      sensor.notifier_whisper_attivo) update on notification/scenario events,
+      not on a poll interval.
+
+  docs-examples:
+    status: todo
+    comment: |
+      Rule wants automation blueprints. docs/recipes/ (24 markdown recipes)
+      covers similar ground informally but isn't in blueprint-exchange format.
+
+  docs-known-limitations:
+    status: todo
+    comment: No "## Known limitations" section found under docs/.
+
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      Service-type integration with no physical devices - rule explicitly
+      exempts this case.
+
+  docs-supported-functions:
+    status: todo
+    comment: |
+      Partially covered by docs/usage/actions.md and docs/transports/*, but not
+      organized as a single supported-functionality reference per the rule.
+
+  docs-troubleshooting:
+    status: todo
+    comment: No dedicated troubleshooting doc found under docs/.
+
+  docs-use-cases:
+    status: todo
+    comment: |
+      docs/concepts.md and docs/recipes/ cover this informally; no dedicated
+      use-cases page.
+
+  dynamic-devices:
+    status: exempt
+    comment: No devices are created by this integration (see devices exemption).
 
   entity-category:
     status: todo
     comment: |
-      Need to assign appropriate categories (DIAGNOSTIC, CONFIG) to entities.
+      Partial: EntityCategory.DIAGNOSTIC now set in notify.py:575 and
+      people.py:64. Other entity types not yet reviewed.
 
-  entity-description:
+  entity-device-class:
+    status: done
+    comment: |
+      Renamed from device-class. people.py:63 sets
+      BinarySensorDeviceClass.CONNECTIVITY on the person-availability sensor;
+      no other entity has an applicable standard device_class.
+
+  entity-disabled-by-default:
     status: todo
     comment: |
-      Need code review to verify entity description usage.
+      Renamed from disabled-by-default. No _attr_entity_registry_enabled_default
+      usage found - diagnostic/noisy entities are not currently disabled by
+      default (correcting a previous incorrect "done" status here).
 
   entity-translations:
     status: todo
     comment: |
-      Partial implementation. Need to ensure all entities have translation_key
-      and complete strings.json entries.
+      No "entity" section in strings.json and no _attr_translation_key usage
+      found - not started, not partial as previously noted.
 
   exception-translations:
     status: todo
@@ -195,22 +272,42 @@ rules:
   icon-translations:
     status: todo
     comment: |
-      Evaluate if dynamic icons needed based on state/ranges.
+      No icons.json present. Evaluate if dynamic icons needed based on
+      state/ranges.
 
-  stale-device-removal:
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      New rule. Depends on config-flow landing first; the draft Phase 1 PR
+      (design/roadmap/configflow_proposal.md) already includes a reconfigure
+      step for global settings (paths, archive, dupe check, discovery toggles).
+
+  repair-issues:
+    status: todo
+    comment: |
+      Partial infrastructure exists: hass_api.py creates repair issues (8 issue
+      types registered in strings.json under "issues") but all are currently
+      is_fixable=False, i.e. informational rather than the guided/actionable
+      fix flows this rule expects.
+
+  stale-devices:
     status: exempt
-    comment: This integration does not connect to any devices
+    comment: |
+      Renamed from stale-device-removal. This integration does not connect to
+      any devices.
 
   # ==================
   # PLATINUM TIER
   # ==================
 
   async-dependency:
-    status: done
+    status: todo
     comment: |
-      BLOCKING ISSUE: Pillow (PIL) and BeautifulSoup are synchronous.
-      Need to wrap all Image.open() calls in async_add_executor_job.
-      Estimated 2-4 hours to fix.
+      Partial: media_grab.py:422 wraps Image.open via hass_api.create_job
+      (async_add_executor_job), and transports/mobile_push.py:242 wraps
+      BeautifulSoup the same way. But media_grab.py:270 (_detect_image_ext) and
+      :427 (Image.new) still call Pillow directly, unwrapped - remaining work
+      is just those two Pillow call sites.
 
   inject-websession:
     status: done
@@ -218,8 +315,8 @@ rules:
       Properly uses async_get_clientsession(hass) in media_grab.py.
 
   strict-typing:
-    status: done
+    status: todo
     comment: |
-      Good progress with py.typed and many type hints.
-      Need to remove mypy suppressions (e.g., transport.py line 1)
-      and ensure complete type coverage.
+      py.typed present and type hints extensive, but mypy suppressions remain
+      widespread (# type: ignore in notification.py, media_grab.py, hass_api.py,
+      transport.py, model.py, snoozer.py, scenario.py) - not yet "done".

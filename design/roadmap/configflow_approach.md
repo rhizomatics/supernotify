@@ -1,5 +1,14 @@
 # ConfigFlow Implementation Approach
 
+## Goals
+
+- Make Supernotify more accessible to more users, including non-technical ones who will never use YAML. Supernotify should itself make HomeAssistant more accessible, for example by simplifying mobile push setup.
+- Align with Home Assistant architecture and vision
+- Move towards Platinum quality scale level
+- Remove friction for Supernotify upgrades, especially where YAML is migrated or deprecated
+- Continue to support advanced users who can more efficiently write and edit complex configurations in text
+- Support use of GenAI agents to manage config and notifications
+
 ## Principles
 
 The design decisions, difficulties and work break down into these groups:
@@ -30,7 +39,7 @@ All config is either ConfigEntry based or round-tripped YAML.  No dual config.
 
 Top-level config should be entirely ConfigEntry. The first ConfigFlow version of the plugin should automatically migrate existing YAML, and raise repairs for the old core YAML and any subsequent core YAML. If possible automate the repair, so YAML rewritten to omit the deprecated config, when user decides comfortable to keep with new version (may need ruamel.yaml).
 
-Deliveries, Transports, Scenarios and Recipients should be maintained as YAML, in a similar fashion to how HA treats automations - where UI editing is available, it results in updates to YAML, and YAML changes are exposed via the UI editing.
+Deliveries, Transports, Scenarios and Recipients should be maintained as YAML, in a similar fashion to how HA treats automations - where UI editing is available, it results in updates to YAML, and YAML changes are exposed via the UI editing. Testing needs improved for Scenario before major changes.
 
 Balance moving up the Quality Scale over focusing solely on the purely config flow phases, for example handling of runtime data and async processing. Recent changes to HA, such as Notify Entities, and their extension to SMTP, also need to be addressed.
 
