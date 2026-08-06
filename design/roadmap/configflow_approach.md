@@ -11,9 +11,14 @@ The design decisions, difficulties and work break down into these groups:
 2. More Complex But Necessary
   - Other than the auto generated default deliveries, these are essential to useful notifications
   - Cameras may fall into this
-  - Solution needed for the more loosely defined `options` that isn't just free text
+  - Solution needed in ConfigFlow UI for the more loosely defined delivery `options` that isn't just free text
 3. Advanced and Less Clear HA Construct
-  - Scenarios may work as helpers
+  - Scenarios don't have obvious direct place in HA concepts/UI, complications with use as helpers
+  - Scenarios also may need refactored
+   - Simpler ones that are capable of being moved to UI (like the simple toggle ones)
+   - More complex ones that resist it (or are agent managed in code).
+   - Solve Jinja `Template` objects produced by schema validation artifacts that are not JSON-serializable
+  - Possible half-way house of having UI views of YAML defined scenarios, with some simple UI to enable/disable
   - Condition editing may need work or be hampered by internal HA APIs
   - Advanced concept, and ability to edit multiple as free-form YAML more of a benefit
 4. More obscure, less benefit from being in UI
@@ -21,6 +26,32 @@ The design decisions, difficulties and work break down into these groups:
 
 The approach should enable #1 and #2 without having to solve for #3 or do the work for #4, and keep options open for the latter.
 
-Top-level config should be entirely ConfigEntry, and automatically migrated from existing YAML, with old YAML deprecated
+All config is either ConfigEntry based or round-tripped YAML.  No dual config.
+
+Top-level config should be entirely ConfigEntry. The first ConfigFlow version of the plugin should automatically migrate existing YAML, and raise repairs for the old core YAML and any subsequent core YAML. If possible automate the repair, so YAML rewritten to omit the deprecated config, when user decides comfortable to keep with new version (may need ruamel.yaml).
 
 Deliveries, Transports, Scenarios and Recipients should be maintained as YAML, in a similar fashion to how HA treats automations - where UI editing is available, it results in updates to YAML, and YAML changes are exposed via the UI editing.
+
+Balance moving up the Quality Scale over focusing solely on the purely config flow phases, for example handling of runtime data and async processing. Recent changes to HA, such as Notify Entities, and their extension to SMTP, also need to be addressed.
+
+## Phasing
+
+### Immediate
+
+Implement the 'Straightforward' group, its low risk, has minimal impact on solving the rest of the design and opens up functionality like auto device discovery and delivery generation to users who will never touch YAML.
+
+### Second
+
+Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved. Complete alignment with Notify Entity in existing code, or decide where future ConfigFlow phases will resolve
+
+### Third
+
+Move Delivery, Transport, Recipient and Camera to ConfigFlow.
+
+### Fourth
+
+Implement some UI for Scenarios, at least view/enable/disable
+
+### Later, Maybe Never
+
+Move ActionGroups, Links out of YAML and complete Scenarios
