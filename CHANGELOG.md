@@ -6,6 +6,7 @@
  - Fallback to previous behaviour for older versions of Home Assistant that don't have the new device API for config entries
  - Quality Scale re-audited
  - Roadmap added for migration to ConfigFlow and improved HA quality scale level
+ - Removal and clean up instructions added to 'Getting Started' guide
 ## 1.16.5
 - Fix wildcard scenarios selecting other scenarios that wouldn't otherwise be matched
 - Test fixes by pinning `pytest-homeassistant-custom-component`
