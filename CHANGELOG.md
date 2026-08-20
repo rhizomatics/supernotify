@@ -1,7 +1,13 @@
 # Public releases
 
+## 1.17.0
+- Adds an alternative `smtp` integration which preserves the original Home Assistant behaviour
+  - No need to have the overhead of pre-registering every e-mail address as a 'notify entity'
+  - Attachment, template and HTML behaviour identical to existing email integration
+
 ## 1.16.6
-- Support for changes to Device Manager
+- Upgrade dependencies and tests for HA 2026.8.0
+- Support for changes to Device Manager in HA 2026.8 and later
  - Details at https://developers.home-assistant.io/blog/2026/07/21/device-registry-single-config-entry
  - Fallback to previous behaviour for older versions of Home Assistant that don't have the new device API for config entries
  - Quality Scale re-audited

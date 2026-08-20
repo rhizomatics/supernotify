@@ -240,6 +240,7 @@ TRANSPORT_SMS = "sms"
 TRANSPORT_TTS = "tts"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_EMAIL = "email"
+TRANSPORT_SMTP = "smtp"
 TRANSPORT_ALEXA = "alexa_devices"
 TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
 TRANSPORT_MOBILE_PUSH = "mobile_push"
@@ -271,8 +272,14 @@ TRANSPORT_VALUES = [
     TRANSPORT_TELEGRAM,
     TRANSPORT_LAMETRIC,
     TRANSPORT_PUSHOVER,
+    TRANSPORT_SMTP,
 ]
 
+
+CONF_CONNECTION: Final[str] = "connection"
+CONF_ENCRYPTION: Final[str] = "encryption"
+CONF_SENDER: Final[str] = "sender"
+CONF_SENDER_NAME: Final[str] = "sender_name"
 
 CONF_DEVICE_DISCOVERY: Final[str] = "device_discovery"
 CONF_DEVICE_DOMAIN: Final[str] = OPTION_DEVICE_DOMAIN

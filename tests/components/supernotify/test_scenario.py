@@ -4,8 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
-from homeassistant.components.profiler import CONF_ENABLED
-from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS
+from homeassistant.const import CONF_ACTION, CONF_ALIAS, CONF_CONDITIONS, CONF_ENABLED
 from homeassistant.helpers.issue_registry import IssueSeverity
 from pytest_unordered import unordered
 

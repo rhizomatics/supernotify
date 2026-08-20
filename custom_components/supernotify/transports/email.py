@@ -211,6 +211,10 @@ class EmailTransport(Transport):
             if html:
                 action_data.setdefault("data", {})
                 action_data["data"]["html"] = html
+        return await self._send(envelope, action_data)
+
+    async def _send(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
+        """Send the built action_data. Override in subclasses that don't deliver via an HA action call."""
         return await self.call_action(envelope, action_data=action_data)
 
     async def load_template(self, template_name: str) -> str | None:

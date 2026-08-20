@@ -16,11 +16,17 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_EMAIL,
     CONF_ENABLED,
+    CONF_HOST,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
     CONF_TARGET,
+    CONF_TIMEOUT,
     CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import TemplateVarsType
@@ -79,6 +85,7 @@ from .const import (
     CONF_CAMERA,
     CONF_CAMERAS,
     CONF_CLASS,
+    CONF_CONNECTION,
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DELIVERY_DEFAULTS,
@@ -90,6 +97,7 @@ from .const import (
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
     CONF_DURATION,
+    CONF_ENCRYPTION,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
     CONF_LINKS,
@@ -117,6 +125,8 @@ from .const import (
     CONF_SCENARIOS,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
+    CONF_SENDER,
+    CONF_SENDER_NAME,
     CONF_SIZE,
     CONF_SNOOZE,
     CONF_SNOOZE_TIME,
@@ -324,6 +334,18 @@ DELIVERY_SCHEMA = vol.All(
     }),
 )
 
+SMTP_CONNECTION_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=587): cv.port,
+    vol.Optional(CONF_ENCRYPTION, default="starttls"): vol.In(["tls", "starttls", "none"]),
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_SENDER): vol.Email,
+    vol.Optional(CONF_SENDER_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=5): cv.positive_int,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+})
+
 TRANSPORT_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEVICE_DOMAIN),  # deprecated v1.9.0
     cv.deprecated(key=CONF_DEVICE_DISCOVERY),  # deprecated v1.9.0
@@ -337,6 +359,8 @@ TRANSPORT_SCHEMA = vol.All(
         vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
         vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
+        # only meaningful for the 'smtp' transport, which owns its own SMTP connection
+        vol.Optional(CONF_CONNECTION): SMTP_CONNECTION_SCHEMA,
     }),
 )
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
