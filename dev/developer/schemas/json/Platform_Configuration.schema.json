@@ -302,7 +302,8 @@
               "gotify",
               "telegram",
               "lametric",
-              "pushover"
+              "pushover",
+              "smtp"
             ]
           },
           "alias": {
@@ -1019,6 +1020,55 @@
               }
             },
             "required": []
+          },
+          "connection": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535,
+                "default": 587
+              },
+              "encryption": {
+                "type": "string",
+                "enum": [
+                  "tls",
+                  "starttls",
+                  "none"
+                ],
+                "default": "starttls"
+              },
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "sender": {
+                "format": "email",
+                "type": "string"
+              },
+              "sender_name": {
+                "type": "string"
+              },
+              "timeout": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 5
+              },
+              "verify_ssl": {
+                "default": true,
+                "type": "string"
+              }
+            },
+            "required": [
+              "host",
+              "sender"
+            ]
           }
         },
         "required": []

@@ -181,7 +181,8 @@
         "gotify",
         "telegram",
         "lametric",
-        "pushover"
+        "pushover",
+        "smtp"
       ]
     },
     "alias": {
