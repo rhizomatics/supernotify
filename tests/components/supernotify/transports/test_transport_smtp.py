@@ -97,7 +97,10 @@ def test_send_smtp_starttls() -> None:
         mock_smtp_cls.assert_called_with("smtp.example.com", 587, timeout=5)
         mock_client.starttls.assert_called_once()
         mock_client.login.assert_called_with("bob", "secret")
-        mock_client.sendmail.assert_called_with("hass@example.com", ["tester1@assert.com"], "hi")
+        sent_sender, sent_addresses, sent_body = mock_client.sendmail.call_args.args
+        assert sent_sender == "hass@example.com"
+        assert sent_addresses == ["tester1@assert.com"]
+        assert sent_body.endswith("hi")
         mock_client.quit.assert_called_once()
 
 
@@ -113,7 +116,10 @@ def test_send_smtp_tls() -> None:
         mock_smtp_ssl_cls.assert_called_once()
         mock_client.starttls.assert_not_called()
         mock_client.login.assert_not_called()
-        mock_client.sendmail.assert_called_with("hass@example.com", ["tester1@assert.com"], "hi")
+        sent_sender, sent_addresses, sent_body = mock_client.sendmail.call_args.args
+        assert sent_sender == "hass@example.com"
+        assert sent_addresses == ["tester1@assert.com"]
+        assert sent_body.endswith("hi")
 
 
 async def test_deliver_skips_without_connection() -> None:

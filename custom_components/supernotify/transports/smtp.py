@@ -176,8 +176,7 @@ class SmtpTransport(EmailTransport):
         except TypeError:
             attachment = MIMEApplication(file_bytes, Name=content_id)
             attachment["Content-Disposition"] = f'attachment; filename="{content_id}"'
-        else:
-            attachment.add_header("Content-ID", f"<{content_id}>")
+        attachment.add_header("Content-ID", f"<{content_id}>")
         return attachment
 
     def _send_smtp(self, msg: MIMEMultipart | MIMEText, addresses: list[str]) -> None:
