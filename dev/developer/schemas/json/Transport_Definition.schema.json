@@ -84,7 +84,6 @@
                 "email": {
                   "type": "array",
                   "items": {
-                    "format": "email",
                     "type": "string"
                   }
                 },
@@ -223,13 +222,6 @@
         "password": {
           "type": "string"
         },
-        "sender": {
-          "format": "email",
-          "type": "string"
-        },
-        "sender_name": {
-          "type": "string"
-        },
         "timeout": {
           "type": "integer",
           "minimum": 0,
@@ -241,8 +233,7 @@
         }
       },
       "required": [
-        "host",
-        "sender"
+        "host"
       ]
     }
   },

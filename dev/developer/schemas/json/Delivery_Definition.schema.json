@@ -53,7 +53,6 @@
             "email": {
               "type": "array",
               "items": {
-                "format": "email",
                 "type": "string"
               }
             },
