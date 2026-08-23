@@ -125,8 +125,6 @@ from .const import (
     CONF_SCENARIOS,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
-    CONF_SENDER,
-    CONF_SENDER_NAME,
     CONF_SIZE,
     CONF_SNOOZE,
     CONF_SNOOZE_TIME,
@@ -234,7 +232,7 @@ def validate_scenario_names(scenarios: dict) -> dict:
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
     cv.TARGET_FIELDS
     | {
-        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email]),
+        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),  # type: ignore[call-arg]
         vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
         vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
         vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
@@ -334,14 +332,12 @@ DELIVERY_SCHEMA = vol.All(
     }),
 )
 
-SMTP_CONNECTION_SCHEMA = vol.Schema({
+CONNECTION_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=587): cv.port,
     vol.Optional(CONF_ENCRYPTION, default="starttls"): vol.In(["tls", "starttls", "none"]),
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_SENDER): vol.Email,
-    vol.Optional(CONF_SENDER_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=5): cv.positive_int,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
@@ -359,8 +355,8 @@ TRANSPORT_SCHEMA = vol.All(
         vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
         vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
-        # only meaningful for the 'smtp' transport, which owns its own SMTP connection
-        vol.Optional(CONF_CONNECTION): SMTP_CONNECTION_SCHEMA,
+        # only meaningful for transports (eg smtp) that own their own network connection
+        vol.Optional(CONF_CONNECTION): CONNECTION_SCHEMA,
     }),
 )
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check

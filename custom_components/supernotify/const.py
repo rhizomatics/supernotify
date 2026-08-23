@@ -193,6 +193,9 @@ OPTION_DATA_KEYS_EXCLUDE_RE = "data_keys_exclude_re"  # deprecated v1.9.0
 OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
 OPTION_STRICT_TEMPLATE = "strict_template"
 
+OPTION_SENDER = "sender"
+OPTION_SENDER_NAME = "sender_name"
+
 SELECT_INCLUDE = "include"
 SELECT_EXCLUDE = "exclude"
 
@@ -278,8 +281,6 @@ TRANSPORT_VALUES = [
 
 CONF_CONNECTION: Final[str] = "connection"
 CONF_ENCRYPTION: Final[str] = "encryption"
-CONF_SENDER: Final[str] = "sender"
-CONF_SENDER_NAME: Final[str] = "sender_name"
 
 CONF_DEVICE_DISCOVERY: Final[str] = "device_discovery"
 CONF_DEVICE_DOMAIN: Final[str] = OPTION_DEVICE_DOMAIN

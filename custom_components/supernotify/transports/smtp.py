@@ -22,12 +22,18 @@ from homeassistant.util.ssl import create_client_context
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.const import (
     CONF_CONNECTION,
+    CONF_DELIVERY_DEFAULTS,
     CONF_ENCRYPTION,
-    CONF_SENDER,
-    CONF_SENDER_NAME,
+    CONF_OPTIONS,
+    OPTION_SENDER,
+    OPTION_SENDER_NAME,
     TRANSPORT_SMTP,
 )
-from custom_components.supernotify.model import DeliveryConfig, SuppressionReason
+from custom_components.supernotify.model import (
+    DeliveryConfig,
+    SuppressionReason,
+    TransportConfig,
+)
 from custom_components.supernotify.transports.email import EmailTransport
 
 if TYPE_CHECKING:
@@ -44,6 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 587
 DEFAULT_ENCRYPTION = "starttls"
 DEFAULT_TIMEOUT = 5
+NULL_RETURN_PATH = "<>"
 
 
 class SmtpTransport(EmailTransport):
@@ -67,15 +74,22 @@ class SmtpTransport(EmailTransport):
         self.encryption: str = connection.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION)
         self.username: str | None = connection.get(CONF_USERNAME)
         self.password: str | None = connection.get(CONF_PASSWORD)
-        self.sender: str = connection.get(CONF_SENDER) or "Home Assistant"
-        self.sender_name: str | None = connection.get(CONF_SENDER_NAME)
         self.timeout: int = connection.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
         self.verify_ssl: bool = connection.get(CONF_VERIFY_SSL, True)
+        options: dict[str, Any] = (transport_config or {}).get(CONF_DELIVERY_DEFAULTS, {}).get(CONF_OPTIONS, {})
+        self.sender: str | None = options.get(OPTION_SENDER)
+        self.sender_name: str | None = options.get(OPTION_SENDER_NAME)
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if self.host and self.sender:
             return self.delivery_defaults
         return None
+
+    @property
+    def default_config(self) -> TransportConfig:
+        config = super().default_config
+        config.delivery_defaults.options[OPTION_SENDER_NAME] = "Home Assistant"
+        return config
 
     def validate_action(self, action: str | None) -> bool:
         """No HA action is used; instead require a usable SMTP connection."""
@@ -154,7 +168,11 @@ class SmtpTransport(EmailTransport):
 
         msg["Subject"] = title or ""
         msg["To"] = ", ".join(addresses)
-        sender: str = email.utils.formataddr((self.sender_name, self.sender)) if self.sender_name else self.sender
+        if self.sender_name or self.sender:
+            sender: str = email.utils.formataddr((self.sender_name or "", self.sender or ""))
+        else:
+            sender = NULL_RETURN_PATH
+
         msg["From"] = sender
         msg["X-Mailer"] = "Home Assistant Supernotify"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
@@ -197,7 +215,7 @@ class SmtpTransport(EmailTransport):
                 client.ehlo()
             if self.username and self.password:
                 client.login(self.username, self.password)
-            client.sendmail(self.sender, addresses, msg.as_string())
+            client.sendmail(self.sender or NULL_RETURN_PATH, addresses, msg.as_string())
         finally:
             with suppress(smtplib.SMTPException):
                 client.quit()

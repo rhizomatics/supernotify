@@ -20,6 +20,7 @@ from custom_components.supernotify.const import (
     SELECTION_DEFAULT,
     TRANSPORT_MOBILE_PUSH,
     TRANSPORT_NOTIFY_ENTITY,
+    TRANSPORT_SMTP,
 )
 
 if TYPE_CHECKING:
@@ -48,6 +49,7 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"],
         TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
     }
+    optional_defaults: dict[str, list[str]] = {TRANSPORT_SMTP: ["DEFAULT_smtp"]}
 
     expected: dict[str, list[str]] = {}
     configured: dict[str, list[str]] = {}
@@ -60,6 +62,9 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
                 expected[dc[CONF_TRANSPORT]].append(d)
     for tname, tdef in expected_defaults.items():
         if tname not in configured:
+            expected.setdefault(tname, tdef)
+    for tname, tdef in optional_defaults.items():
+        if tname in deliveries:
             expected.setdefault(tname, tdef)
 
     assert deliveries is not None

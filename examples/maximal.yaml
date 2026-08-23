@@ -175,10 +175,35 @@ notify:
     transports:
       email:
         delivery_defaults:
-          action: notify.smtp
+          action: notify.email
           data:
             footer: Delivered by Supernotify (MsgId:{e.notification_id})
           options:
+            jpeg_opts:
+              progressive: true
+              optimize: true
+              quality: 50
+            png_opts:
+              optimize: true
+            preheader_blank: "&#847;&zwnj;&nbsp;"
+            preheader_length: 100
+            simplify_text: false
+            strip_urls: false
+            target_categories:
+              - email
+      smtp:
+        connection:
+          host: smtp.local.net
+          port: 587
+          username: postie
+          password: blackandwhitecat
+          verify_ssl: false
+        delivery_defaults:
+          data:
+            footer: Delivered by Supernotify (MsgId:{e.notification_id})
+          options:
+            sender: hass@local.net
+            sender_name: Your Friendly Home Assistant
             jpeg_opts:
               progressive: true
               optimize: true

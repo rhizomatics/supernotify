@@ -10,11 +10,13 @@ from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT,
 
 from custom_components.supernotify.const import (
     CONF_CONNECTION,
+    CONF_DELIVERY_DEFAULTS,
     CONF_ENCRYPTION,
+    CONF_OPTIONS,
     CONF_PERSON,
-    CONF_SENDER,
-    CONF_SENDER_NAME,
     CONF_TRANSPORT,
+    OPTION_SENDER,
+    OPTION_SENDER_NAME,
     TRANSPORT_SMTP,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -29,13 +31,20 @@ if TYPE_CHECKING:
 
 CONNECTION = {
     CONF_HOST: "smtp.example.com",
-    CONF_SENDER: "hass@example.com",
+}
+TRANSPORT_CONFIG = {
+    CONF_CONNECTION: CONNECTION,
+    CONF_DELIVERY_DEFAULTS: {
+        CONF_OPTIONS: {
+            OPTION_SENDER: "hass@example.com",
+        }
+    },
 }
 
 
-def _uut(connection: dict | None = None) -> SmtpTransport:
+def _uut(transport_config: dict | None = None) -> SmtpTransport:
     return SmtpTransport(
-        Mock(custom_template_path=None), {CONF_CONNECTION: connection if connection is not None else CONNECTION}
+        Mock(custom_template_path=None), transport_config if transport_config is not None else TRANSPORT_CONFIG
     )
 
 
@@ -52,12 +61,19 @@ def test_auto_configure_with_connection() -> None:
 
 
 def test_build_message_plain() -> None:
-    uut = _uut({**CONNECTION, CONF_SENDER_NAME: "Home Assistant"})
+    uut = _uut({
+        **TRANSPORT_CONFIG,
+        CONF_DELIVERY_DEFAULTS: {
+            CONF_OPTIONS: {
+                OPTION_SENDER_NAME: "Home Assistant",
+            }
+        },
+    })
     msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"])
     assert isinstance(msg, MIMEText)
     assert msg["Subject"] == "testing"
     assert msg["To"] == "tester1@assert.com"
-    assert msg["From"] == "Home Assistant <hass@example.com>"
+    assert msg["From"] == "Home Assistant <>"
 
 
 def test_build_message_html() -> None:
@@ -67,7 +83,7 @@ def test_build_message_html() -> None:
         ["tester1@assert.com"],
     )
     assert isinstance(msg, MIMEMultipart)
-    assert msg["From"] == "hass@example.com"
+    assert msg["From"] == "Home Assistant <hass@example.com>"
 
 
 def test_build_message_with_image_attachment(tmp_path: object) -> None:
@@ -86,7 +102,10 @@ def test_build_message_with_image_attachment(tmp_path: object) -> None:
 
 
 def test_send_smtp_starttls() -> None:
-    uut = _uut({**CONNECTION, CONF_USERNAME: "bob", CONF_PASSWORD: "secret", CONF_ENCRYPTION: "starttls"})
+    uut = _uut({
+        **TRANSPORT_CONFIG,
+        CONF_CONNECTION: {**CONNECTION, CONF_USERNAME: "bob", CONF_PASSWORD: "secret", CONF_ENCRYPTION: "starttls"},
+    })
     with (
         patch("custom_components.supernotify.transports.smtp.smtplib.SMTP") as mock_smtp_cls,
         patch("custom_components.supernotify.transports.smtp.create_client_context"),
@@ -105,7 +124,7 @@ def test_send_smtp_starttls() -> None:
 
 
 def test_send_smtp_tls() -> None:
-    uut = _uut({**CONNECTION, CONF_ENCRYPTION: "tls", CONF_PORT: 465})
+    uut = _uut({**TRANSPORT_CONFIG, CONF_CONNECTION: {**CONNECTION, CONF_ENCRYPTION: "tls", CONF_PORT: 465}})
     with (
         patch("custom_components.supernotify.transports.smtp.smtplib.SMTP_SSL") as mock_smtp_ssl_cls,
         patch("custom_components.supernotify.transports.smtp.create_client_context"),
@@ -148,7 +167,7 @@ async def test_deliver_skips_without_target() -> None:
     context = TestingContext(
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
         deliveries={"plain_smtp": {CONF_TRANSPORT: TRANSPORT_SMTP}},
-        transports={TRANSPORT_SMTP: {CONF_CONNECTION: CONNECTION}},
+        transports={TRANSPORT_SMTP: TRANSPORT_CONFIG},
     )
     await context.test_initialize()
     uut = context.transport(TRANSPORT_SMTP)
@@ -171,7 +190,7 @@ async def test_deliver(hass: HomeAssistant) -> None:
         homeassistant=hass,
         recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
         deliveries={"plain_smtp": {CONF_TRANSPORT: TRANSPORT_SMTP}},
-        transports={TRANSPORT_SMTP: {CONF_CONNECTION: CONNECTION}},
+        transports={TRANSPORT_SMTP: TRANSPORT_CONFIG},
     )
     await context.test_initialize()
     uut = context.transport(TRANSPORT_SMTP)

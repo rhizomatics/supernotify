@@ -118,7 +118,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    assert len(uut.context.delivery_registry.deliveries) == 14
+    assert len(uut.context.delivery_registry.deliveries) == 15
 
 
 async def test_call_action(hass: HomeAssistant) -> None:
