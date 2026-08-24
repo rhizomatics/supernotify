@@ -17,6 +17,9 @@ from custom_components.supernotify.const import (
     CONF_TRANSPORT,
     OPTION_SENDER,
     OPTION_SENDER_NAME,
+    PRIORITY_HIGH,
+    PRIORITY_LOW,
+    PRIORITY_MEDIUM,
     TRANSPORT_SMTP,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -69,11 +72,15 @@ def test_build_message_plain() -> None:
             }
         },
     })
-    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"])
+    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None)
     assert isinstance(msg, MIMEText)
     assert msg["Subject"] == "testing"
     assert msg["To"] == "tester1@assert.com"
     assert msg["From"] == "Home Assistant <>"
+    assert msg["Importance"] is None
+    assert msg["Priority"] is None
+    assert msg["X-Priority"] is None
+    assert msg["X-MSMail-Priority"] is None
 
 
 def test_build_message_html() -> None:
@@ -81,6 +88,7 @@ def test_build_message_html() -> None:
     msg = uut._build_message(
         {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_DATA: {"html": "<h1>hi</h1>"}},
         ["tester1@assert.com"],
+        None,
     )
     assert isinstance(msg, MIMEMultipart)
     assert msg["From"] == "Home Assistant <hass@example.com>"
@@ -94,11 +102,39 @@ def test_build_message_with_image_attachment(tmp_path: object) -> None:
     msg = uut._build_message(
         {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_DATA: {"images": [str(image_path)]}},
         ["tester1@assert.com"],
+        None,
     )
     assert isinstance(msg, MIMEMultipart)
     attachments = [part for part in msg.walk() if part.get("Content-ID")]
     assert len(attachments) == 1
     assert attachments[0]["Content-ID"] == "<picture.jpg>"
+
+
+def test_build_message_importance_high() -> None:
+    uut = _uut()
+    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_HIGH)
+    assert msg["Importance"] == "High"
+    assert msg["Priority"] == "urgent"
+    assert msg["X-Priority"] == "2"
+    assert msg["X-MSMail-Priority"] == "High"
+
+
+def test_build_message_importance_normal() -> None:
+    uut = _uut()
+    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_MEDIUM)
+    assert msg["Importance"] == "Normal"
+    assert msg["Priority"] == "normal"
+    assert msg["X-Priority"] == "3"
+    assert msg["X-MSMail-Priority"] == "Normal"
+
+
+def test_build_message_importance_low() -> None:
+    uut = _uut()
+    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_LOW)
+    assert msg["Importance"] == "Low"
+    assert msg["Priority"] == "non-urgent"
+    assert msg["X-Priority"] == "4"
+    assert msg["X-MSMail-Priority"] == "Low"
 
 
 def test_send_smtp_starttls() -> None:

@@ -72,6 +72,28 @@ is most convenient
               - mobile_app.john_ipad
 ```
 
+## Notification Priority
+
+Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or scenarios ( for example a siren to accompany 'critical' notifications).
+
+It will also be mapped to delivery priority flags where the underlying transport allows, for example Mobile Push, Gotify, Ntfy, SMTP, Telegram.
+
+Valid Priorities:
+
+- critical
+- high
+- medium
+- minimum
+
+Example Message
+
+```yaml
+  - action: notify.supernotify
+    data:
+        message: Something boring happened
+        priority: low
+```
+
 ## Duplicate Notifications
 
 Notifications are checked for duplicates based on a selected policy. This

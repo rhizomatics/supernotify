@@ -19,6 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_TIMEOU
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
 
+from custom_components.supernotify import const
 from custom_components.supernotify.common import CallRecord
 from custom_components.supernotify.const import (
     CONF_CONNECTION,
@@ -51,6 +52,35 @@ DEFAULT_PORT = 587
 DEFAULT_ENCRYPTION = "starttls"
 DEFAULT_TIMEOUT = 5
 NULL_RETURN_PATH = "<>"
+
+IMPORTANCE_HEADER_MAP: dict[str, str] = {
+    const.PRIORITY_CRITICAL: "High",
+    const.PRIORITY_HIGH: "High",
+    const.PRIORITY_MEDIUM: "Normal",
+    const.PRIORITY_LOW: "Low",
+    const.PRIORITY_MINIMUM: "Low",
+}
+PRIORITY_HEADER_MAP: dict[str, str] = {
+    const.PRIORITY_CRITICAL: "urgent",
+    const.PRIORITY_HIGH: "urgent",
+    const.PRIORITY_MEDIUM: "normal",
+    const.PRIORITY_LOW: "non-urgent",
+    const.PRIORITY_MINIMUM: "non-urgent",
+}
+X_MSMAIL_PRIORITY_HEADER_MAP: dict[str, str] = {
+    const.PRIORITY_CRITICAL: "High",
+    const.PRIORITY_HIGH: "High",
+    const.PRIORITY_MEDIUM: "Normal",
+    const.PRIORITY_LOW: "Low",
+    const.PRIORITY_MINIMUM: "Low",
+}
+X_PRIORITY_HEADER_MAP: dict[str, str] = {
+    const.PRIORITY_CRITICAL: "1",
+    const.PRIORITY_HIGH: "2",
+    const.PRIORITY_MEDIUM: "3",
+    const.PRIORITY_LOW: "4",
+    const.PRIORITY_MINIMUM: "5",
+}
 
 
 class SmtpTransport(EmailTransport):
@@ -111,7 +141,7 @@ class SmtpTransport(EmailTransport):
             return False
 
         try:
-            msg = self._build_message(action_data, addresses)
+            msg = self._build_message(action_data, addresses, envelope.priority)
             await self.hass_api.create_job(self._send_smtp, msg, addresses)
             envelope.calls.append(
                 CallRecord(
@@ -144,7 +174,9 @@ class SmtpTransport(EmailTransport):
             envelope.delivery_error = format_exception(e)
             return False
 
-    def _build_message(self, action_data: dict[str, Any], addresses: list[str]) -> MIMEMultipart | MIMEText:
+    def _build_message(
+        self, action_data: dict[str, Any], addresses: list[str], priority: str | None
+    ) -> MIMEMultipart | MIMEText:
         title: str | None = action_data.get(ATTR_TITLE)
         message: str = action_data.get(ATTR_MESSAGE) or ""
         data: dict[str, Any] = action_data.get(ATTR_DATA) or {}
@@ -177,6 +209,11 @@ class SmtpTransport(EmailTransport):
         msg["X-Mailer"] = "Home Assistant Supernotify"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
         msg["Message-Id"] = email.utils.make_msgid()
+        if priority:
+            msg["Importance"] = IMPORTANCE_HEADER_MAP.get(priority, "Normal")
+            msg["Priority"] = PRIORITY_HEADER_MAP.get(priority, "normal")
+            msg["X-Priority"] = X_PRIORITY_HEADER_MAP.get(priority, "3")
+            msg["X-MSMail-Priority"] = X_MSMAIL_PRIORITY_HEADER_MAP.get(priority, "Normal")
         return msg
 
     def _attach_file(self, image_path: str) -> MIMEImage | MIMEApplication | None:

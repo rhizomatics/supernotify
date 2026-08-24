@@ -13,6 +13,13 @@ tags:
 
 Alternative to the `email` integration which avoids using the built in Home Assistant, with the same functionality except no overhead of pre-registering email addresses, introduced in mid-2026 Home Assistant as part of the Notify Entity integration.
 
+It also maps envelope priority to common header fields used for internet mail:
+
+- Priority
+- Importance
+- X-Priority
+- X-MSMail-Priority
+
 See [email](email.md) for more details, for example use of HTML or templates.
 
 ## Example Config
@@ -40,6 +47,6 @@ In addition, all of the options from `email` integration are available, such as 
 
 ## Roadmap
 
-Initially this only preserves the original easier to use functionality of Home Assistant SMTP prior to the enforcement of pre-registering every e-mail address as an `entity`.
+Initially this only preserves the original easier to use functionality of Home Assistant SMTP prior to the enforcement of pre-registering every e-mail address as an `entity`, and mapping envelope priority to common headers.
 
-It is anticipated that this will also open up more features, such as use of importance or priority, and supporting modern email features like DKIM.
+It is anticipated that this will also open up more features, such as modern email features like DKIM.

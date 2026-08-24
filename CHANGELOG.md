@@ -4,6 +4,7 @@
 - Adds an alternative `smtp` integration which preserves the original Home Assistant behaviour
   - No need to have the overhead of pre-registering every e-mail address as a 'notify entity'
   - Attachment, template and HTML behaviour identical to existing email integration
+  - Emails using `smtp` support `Importance`,`Priority`,`X-Priority` and `X-MSMail-Priority` headers. Values are mapped automatically from the Supernotify priority.
 
 ## 1.16.6
 - Upgrade dependencies and tests for HA 2026.8.0
