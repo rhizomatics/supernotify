@@ -11,16 +11,26 @@ tags:
 |--------------|---------------------------------------------------------------------------------------------------------------------------------------|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `smtp`      | :material-github:[`smtp.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/smtp.py) | -            |  |
 
+## Features
+
 Alternative to the `email` integration which avoids using the built in Home Assistant, with the same functionality except no overhead of pre-registering email addresses, introduced in mid-2026 Home Assistant as part of the Notify Entity integration.
 
-It also maps envelope priority to common header fields used for internet mail:
+See [email](email.md) for more details, for example use of HTML or templates.
+
+In addition to reverting to the previous simpler Home Assistant usage, it also offers:
+
+### Priority
+
+Envelope priority is mapped to common header fields used for internet mail:
 
 - Priority
 - Importance
 - X-Priority
 - X-MSMail-Priority
 
-See [email](email.md) for more details, for example use of HTML or templates.
+### Message-ID
+
+`Message-Id` in email header ties back to notification ID and delivery name
 
 ## Example Config
 

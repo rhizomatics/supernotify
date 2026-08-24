@@ -141,7 +141,7 @@ class SmtpTransport(EmailTransport):
             return False
 
         try:
-            msg = self._build_message(action_data, addresses, envelope.priority)
+            msg = self._build_message(action_data, addresses, envelope.priority, envelope.id)
             await self.hass_api.create_job(self._send_smtp, msg, addresses)
             envelope.calls.append(
                 CallRecord(
@@ -175,7 +175,7 @@ class SmtpTransport(EmailTransport):
             return False
 
     def _build_message(
-        self, action_data: dict[str, Any], addresses: list[str], priority: str | None
+        self, action_data: dict[str, Any], addresses: list[str], priority: str | None, id: str | None
     ) -> MIMEMultipart | MIMEText:
         title: str | None = action_data.get(ATTR_TITLE)
         message: str = action_data.get(ATTR_MESSAGE) or ""
@@ -208,7 +208,7 @@ class SmtpTransport(EmailTransport):
         msg["From"] = sender
         msg["X-Mailer"] = "Home Assistant Supernotify"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
-        msg["Message-Id"] = email.utils.make_msgid()
+        msg["Message-Id"] = email.utils.make_msgid(idstring=id)
         if priority:
             msg["Importance"] = IMPORTANCE_HEADER_MAP.get(priority, "Normal")
             msg["Priority"] = PRIORITY_HEADER_MAP.get(priority, "normal")
