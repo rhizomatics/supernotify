@@ -88,14 +88,13 @@ See [Duplicate Configuration](../configuration/dupe_detection.md) for more infor
 
 ## Controlling Delivery Selection
 
-Delivery selection can be passed in the `data` of an action call, or implied from the
-style in which the data presented. `delivery_selection` can be set to one of three values:
+Delivery selection can be passed in the `data` of an action call using the `delivery_selection` key, or implied from the style in which the data presented. It can be set to one of three values:
 
 * `implicit` - The default
     - All deliveries are enabled plus scenario selected
     - This is implied if a dictionary mapping of deliveries is included
 * `explicit` - Switch off delivery defaulting
-    - Only deliveries listed on the action call are enabled, plus ones switched on by a scenario
+    - Only deliveries listed on the action call are enabled, *plus* ones switched on by a scenario
     - This is switched on automatically if a list or single delivery is given.
 * `fixed` - Switch off delivery defaulting and scenario delivery selection
     - Only the list of deliveries in the action call will be used, even if a scenario condition were to select another one
