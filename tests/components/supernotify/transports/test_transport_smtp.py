@@ -113,7 +113,7 @@ def test_build_message_with_image_attachment(tmp_path: object) -> None:
 def test_build_message_importance_high() -> None:
     uut = _uut()
     msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_HIGH)
-    assert msg["Importance"] == "High"
+    assert msg["Importance"] == "high"
     assert msg["Priority"] == "urgent"
     assert msg["X-Priority"] == "2"
     assert msg["X-MSMail-Priority"] == "High"
@@ -122,7 +122,7 @@ def test_build_message_importance_high() -> None:
 def test_build_message_importance_normal() -> None:
     uut = _uut()
     msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_MEDIUM)
-    assert msg["Importance"] == "Normal"
+    assert msg["Importance"] == "normal"
     assert msg["Priority"] == "normal"
     assert msg["X-Priority"] == "3"
     assert msg["X-MSMail-Priority"] == "Normal"
@@ -131,7 +131,7 @@ def test_build_message_importance_normal() -> None:
 def test_build_message_importance_low() -> None:
     uut = _uut()
     msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_LOW)
-    assert msg["Importance"] == "Low"
+    assert msg["Importance"] == "low"
     assert msg["Priority"] == "non-urgent"
     assert msg["X-Priority"] == "4"
     assert msg["X-MSMail-Priority"] == "Low"

@@ -54,11 +54,11 @@ DEFAULT_TIMEOUT = 5
 NULL_RETURN_PATH = "<>"
 
 IMPORTANCE_HEADER_MAP: dict[str, str] = {
-    const.PRIORITY_CRITICAL: "High",
-    const.PRIORITY_HIGH: "High",
-    const.PRIORITY_MEDIUM: "Normal",
-    const.PRIORITY_LOW: "Low",
-    const.PRIORITY_MINIMUM: "Low",
+    const.PRIORITY_CRITICAL: "high",
+    const.PRIORITY_HIGH: "high",
+    const.PRIORITY_MEDIUM: "normal",
+    const.PRIORITY_LOW: "low",
+    const.PRIORITY_MINIMUM: "low",
 }
 PRIORITY_HEADER_MAP: dict[str, str] = {
     const.PRIORITY_CRITICAL: "urgent",

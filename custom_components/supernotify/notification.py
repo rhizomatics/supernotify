@@ -470,14 +470,15 @@ class Notification(ArchivableObject):
                 return
 
             delivery_priorities: list[str] = delivery.priority
-            if self.priority and delivery_priorities and self.priority not in delivery_priorities:
-                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
-                self.record_result(delivery, suppression_reason=SuppressionReason.PRIORITY)
-                return
-            if not delivery.evaluate_conditions(self.condition_variables):
-                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
-                self.record_result(delivery, suppression_reason=SuppressionReason.DELIVERY_CONDITION)
-                return
+            if self.delivery_selection != DELIVERY_SELECTION_FIXED:
+                if self.priority and delivery_priorities and self.priority not in delivery_priorities:
+                    _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
+                    self.record_result(delivery, suppression_reason=SuppressionReason.PRIORITY)
+                    return
+                if not delivery.evaluate_conditions(self.condition_variables):
+                    _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
+                    self.record_result(delivery, suppression_reason=SuppressionReason.DELIVERY_CONDITION)
+                    return
 
             targets: list[Target] = self.generate_targets(delivery, recipients=recipients)
             envelopes: list[Envelope] = self.generate_envelopes(delivery, targets)

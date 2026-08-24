@@ -120,6 +120,7 @@ Delivery selection can be passed in the `data` of an action call using the `deli
     - This is switched on automatically if a list or single delivery is given.
 * `fixed` - Switch off delivery defaulting and scenario delivery selection
     - Only the list of deliveries in the action call will be used, even if a scenario condition were to select another one
+    - Deliveries with `priority` or `condition` filtering will have this overridden, only `enabled` stops a fixed selection
     - This is never implied or defaulted
 
 ## Using from an Automation
