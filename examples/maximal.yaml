@@ -204,6 +204,7 @@ notify:
           options:
             sender: hass@local.net
             sender_name: Your Friendly Home Assistant
+            default_title: Home Assistant Notification
             jpeg_opts:
               progressive: true
               optimize: true

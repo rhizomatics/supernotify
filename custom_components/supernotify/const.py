@@ -195,6 +195,7 @@ OPTION_STRICT_TEMPLATE = "strict_template"
 
 OPTION_SENDER = "sender"
 OPTION_SENDER_NAME = "sender_name"
+OPTION_DEFAULT_TITLE = "default_title"
 
 SELECT_INCLUDE = "include"
 SELECT_EXCLUDE = "exclude"

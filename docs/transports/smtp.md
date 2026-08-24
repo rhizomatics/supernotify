@@ -50,6 +50,7 @@ transports:
           options:
             sender: hass@local.net
             sender_name: Your Friendly Home Assistant
+            default_title: Home Assistant Notification
 ```
 
 In addition, all of the options from `email` integration are available, such as for tuning PNG attachments or preheaders for message previews.

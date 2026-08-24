@@ -26,6 +26,7 @@ from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
     CONF_ENCRYPTION,
     CONF_OPTIONS,
+    OPTION_DEFAULT_TITLE,
     OPTION_SENDER,
     OPTION_SENDER_NAME,
     TRANSPORT_SMTP,
@@ -109,6 +110,7 @@ class SmtpTransport(EmailTransport):
         options: dict[str, Any] = (transport_config or {}).get(CONF_DELIVERY_DEFAULTS, {}).get(CONF_OPTIONS, {})
         self.sender: str | None = options.get(OPTION_SENDER)
         self.sender_name: str | None = options.get(OPTION_SENDER_NAME)
+        self.default_title: str | None = options.get(OPTION_DEFAULT_TITLE)
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if self.host and self.sender:
@@ -119,6 +121,7 @@ class SmtpTransport(EmailTransport):
     def default_config(self) -> TransportConfig:
         config = super().default_config
         config.delivery_defaults.options[OPTION_SENDER_NAME] = "Home Assistant"
+        config.delivery_defaults.options[OPTION_DEFAULT_TITLE] = "Home Assistant Notification"
         return config
 
     def validate_action(self, action: str | None) -> bool:
@@ -198,7 +201,7 @@ class SmtpTransport(EmailTransport):
         else:
             msg = MIMEText(message)
 
-        msg["Subject"] = title or ""
+        msg["Subject"] = title or self.default_title or ""
         msg["To"] = ", ".join(addresses)
         if self.sender_name or self.sender:
             sender: str = email.utils.formataddr((self.sender_name or "", self.sender or ""))

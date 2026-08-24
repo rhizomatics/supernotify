@@ -83,6 +83,18 @@ def test_build_message_plain() -> None:
     assert msg["X-MSMail-Priority"] is None
 
 
+def test_build_message_default_title() -> None:
+    uut = _uut()
+    msg = uut._build_message({ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "003")
+    assert msg["Subject"] == "Home Assistant Notification"
+
+
+def test_build_message_explicit_title_overrides_default() -> None:
+    uut = _uut()
+    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "004")
+    assert msg["Subject"] == "testing"
+
+
 def test_build_message_html() -> None:
     uut = _uut()
     msg = uut._build_message(
