@@ -22,6 +22,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+)
+from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -30,6 +33,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -164,6 +168,31 @@ async def async_get_service(
 
     service = build_supernotify_action(hass, config)
     await service.initialize()
+
+    # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
+    # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
+    # "deprecated_yaml" is a shared translation key owned by the homeassistant domain.
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "Supernotify"},
+    )
+
+    # One-shot mirror of this YAML config into a config entry, so YAML-only users
+    # get an Integrations-page presence. Only when no entry exists yet - once one
+    # does (imported or UI-created), every subsequent YAML reload would otherwise
+    # start a flow that just aborts as already_configured.
+    if not hass.config_entries.async_entries(DOMAIN):
+        from homeassistant.config_entries import SOURCE_IMPORT
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config))
+        )
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {

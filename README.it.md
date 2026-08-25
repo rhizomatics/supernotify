@@ -27,7 +27,7 @@ Supernotify ha un solo obiettivo: **fare in modo che la notifica più semplice p
 
 Questo mantiene le automazioni, gli script e le app AppDaemon semplici e facili da mantenere, con tutti i dettagli e le regole gestiti in un unico posto. La notifica più piccola possibile — solo un messaggio — può essere sufficiente per attivare tutto. Cambia gli indirizzi e-mail in un unico posto e lascia che Supernotify determini quali app mobili utilizzare.
 
-Con sole due righe di YAML molto semplice, inizia le notifiche push mobili a tutti i registrati in casa, senza configurare i nomi delle app mobili nelle notifiche.
+Con la sola configurazione dell'interfaccia, avvia le notifiche push mobili a tutti i registrati in casa, senza configurare i nomi delle app mobili nelle notifiche.
 
 
 ## Distribuzione
@@ -84,11 +84,13 @@ Ci sono molte [ricette](https://supernotify.rhizomatics.org.uk/recipes/) con ese
     * Consegne, trasporti, destinatari e scenari esposti come entità nell'interfaccia di Home Assistant
 
 
-## Un po' di YAML necessario
+## YAML solo per uso avanzato
 
-Supernotify supporta attualmente solo la [configurazione basata su YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Con sole 2 righe di configurazione copia-incolla puoi già fare molto:
+Supernotify supporta attualmente la configurazione standard tramite l'interfaccia di Home Assistant per l'impostazione di base, e la [configurazione YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) per le funzionalità avanzate. Lo YAML sarà mantenuto per facilitare il lavoro con set di regole più ampi.
 
-```yaml title="Con le 2 righe YAML predefinite"
+Molto può essere fatto con la semplice configurazione non-YAML, inclusa l'automazione della configurazione del push mobile. Consulta le [ricette](recipes/index.md) nella documentazione, e questo esempio di push mobile:
+
+```yaml title="Con zero YAML, tutto configurato dall'interfaccia"
   - action: notify.supernotify
     data:
         message: Ciao! Test di Supernotify che invia alle app mobili di tutti

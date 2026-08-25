@@ -27,7 +27,7 @@ Supernotify tiene un único objetivo: **hacer que la notificación más simple p
 
 Esto mantiene las automatizaciones, scripts y aplicaciones AppDaemon simples y fáciles de mantener, con todos los detalles y reglas gestionados en un solo lugar. La notificación más pequeña posible — solo un mensaje — puede ser suficiente para desencadenar todo lo necesario. Cambia las direcciones de correo electrónico en un solo lugar y deja que Supernotify determine qué aplicaciones móviles usar.
 
-Con solo dos líneas de YAML muy simple, comienza las notificaciones push móviles a todos los registrados en casa, sin configurar los nombres de las aplicaciones móviles en las notificaciones.
+Con solo la configuración de la interfaz, comienza las notificaciones push móviles a todos los registrados en casa, sin configurar los nombres de las aplicaciones móviles en las notificaciones.
 
 
 ## Distribución
@@ -84,11 +84,13 @@ Hay muchas [recetas](https://supernotify.rhizomatics.org.uk/recipes/) con fragme
     * Entregas, transportes, destinatarios y escenarios expuestos como entidades en la interfaz de Home Assistant
 
 
-## Se necesita algo de YAML
+## YAML solo para uso avanzado
 
-Supernotify actualmente solo admite [configuración basada en YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Con solo 2 líneas de configuración de copiar y pegar ya puedes hacer mucho:
+Actualmente, Supernotify admite la configuración estándar mediante la interfaz de Home Assistant para la configuración básica, y [configuración YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) para funciones avanzadas. YAML se mantendrá para facilitar el trabajo con bases de reglas más grandes.
 
-```yaml title="Con las 2 líneas de YAML predeterminadas"
+Se puede hacer mucho con la sencilla configuración sin YAML, incluida la automatización de la configuración de push móvil. Consulta las [recetas](recipes/index.md) en la documentación, y este ejemplo de push móvil:
+
+```yaml title="Con cero YAML, todo configurado por la interfaz"
   - action: notify.supernotify
     data:
         message: ¡Hola! Probando Supernotify enviando a las aplicaciones móviles de todos

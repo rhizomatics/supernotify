@@ -1,5 +1,2 @@
- notify:
-  - name: minimal
-    platform: supernotify
-    # notify entity, smtp and mobile push automatically configured
-    # recipients and mobile devices automatically pulled in from Home Assistant
+ # There is no longer any minimal YAML since the core configuration
+ # can all be set up from the Home Assistant Integrations screen

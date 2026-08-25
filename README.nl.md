@@ -27,7 +27,7 @@ Supernotify heeft één doel: **de eenvoudigst mogelijke melding zo veel melding
 
 Dit houdt automatiseringen, scripts en AppDaemon-apps eenvoudig en onderhoudsvriendelijk, waarbij alle details en regels op één plek worden beheerd. De kleinste mogelijke melding — alleen een bericht — kan genoeg zijn om alles in gang te zetten. Wijzig e-mailadressen op één plek en laat Supernotify bepalen welke mobiele apps gebruikt worden.
 
-Met slechts twee regels eenvoudige YAML start u direct met mobiele pushmeldingen naar iedereen in huis, zonder dat u de namen van mobiele apps in meldingen hoeft te configureren.
+Met alleen de UI-configuratie start u direct met mobiele pushmeldingen naar iedereen in huis, zonder dat u de namen van mobiele apps in meldingen hoeft te configureren.
 
 
 ## Distributie
@@ -84,11 +84,13 @@ Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voo
     * Bezorgingen, transporten, ontvangers en scenario's zichtbaar als entiteiten in de Home Assistant UI
 
 
-## Enige YAML vereist
+## YAML alleen voor geavanceerd gebruik
 
-Supernotify ondersteunt momenteel alleen [op YAML gebaseerde configuratie](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Met slechts 2 regels copy-paste configuratie kunt u al veel bereiken:
+Supernotify ondersteunt momenteel standaard Home Assistant UI-configuratie voor de basisinstelling, en [YAML-configuratie](https://supernotify.rhizomatics.org.uk/configuration/yaml/) voor geavanceerde functies. YAML blijft behouden om het werken met grotere regelsets te vergemakkelijken.
 
-```yaml title="Met de standaard 2 regels YAML"
+Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief automatisering van de mobiele push-instelling. Zie de [recepten](recipes/index.md) in de documentatie, en dit mobiele push-voorbeeld:
+
+```yaml title="Met nul YAML, alles via de UI geconfigureerd"
   - action: notify.supernotify
     data:
         message: Hallo! Dit is een test van Supernotify die naar ieders mobiele apps stuurt

@@ -27,7 +27,7 @@ Supernotify ma jeden cel — **sprawić, by najprostsze możliwe powiadomienie w
 
 Dzięki temu automatyzacje, skrypty i aplikacje AppDaemon pozostają proste i łatwe w utrzymaniu, a wszystkie szczegóły i reguły są zarządzane w jednym miejscu. Najmniejsze możliwe powiadomienie — zawierające tylko wiadomość — może wystarczyć do uruchomienia wszystkiego. Zmień adresy e-mail w jednym miejscu, a Supernotify zadba o resztę.
 
-Zaledwie dwie linie prostego YAML wystarczą, by rozpocząć wysyłanie powiadomień push do wszystkich zarejestrowanych w domu, bez konfigurowania nazw aplikacji mobilnych.
+Wystarczy sama konfiguracja z poziomu interfejsu, aby rozpocząć wysyłanie powiadomień push do wszystkich zarejestrowanych w domu, bez konfigurowania nazw aplikacji mobilnych.
 
 
 ## Dystrybucja
@@ -84,11 +84,13 @@ Dostępnych jest wiele [przepisów](https://supernotify.rhizomatics.org.uk/recip
     * Dostarczenia, transporty, odbiorcy i scenariusze eksponowane jako encje w interfejsie Home Assistant
 
 
-## Trochę YAML wymagane
+## YAML tylko do zaawansowanego użytku
 
-Supernotify obsługuje obecnie tylko [konfigurację opartą na YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Zaledwie 2 linie konfiguracji kopiuj-wklej wystarczają do wielu zastosowań:
+Supernotify obsługuje obecnie standardową konfigurację z poziomu interfejsu Home Assistant dla podstawowej konfiguracji oraz [konfigurację YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) dla zaawansowanych funkcji. YAML pozostanie zachowany, aby ułatwić pracę z większymi zestawami reguł.
 
-```yaml title="Z domyślnymi 2 liniami YAML"
+Wiele można osiągnąć dzięki prostej konfiguracji bez YAML, w tym automatyzacji konfiguracji powiadomień push. Zobacz [przepisy](recipes/index.md) w dokumentacji oraz ten przykład powiadomień push:
+
+```yaml title="Z zerem YAML, wszystko skonfigurowane przez interfejs"
   - action: notify.supernotify
     data:
         message: Cześć! Test Supernotify wysyłający do aplikacji mobilnych wszystkich

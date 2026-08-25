@@ -27,7 +27,7 @@ Supernotify 只有一个目标——**用最简单的通知触发尽可能多的
 
 这让自动化、脚本和 AppDaemon 应用保持简洁易维护，所有细节和规则集中在一处管理。最简单的通知——只有一条消息——就足以触发所需的一切。在一处修改邮件地址，Supernotify 自动判断使用哪些移动应用。
 
-只需两行简单的 YAML，无需配置移动应用名称，即可向家中所有人发送移动推送通知。
+仅通过 UI 配置，即可向家中所有人发送移动推送通知，无需配置移动应用名称。
 
 
 ## 分发方式
@@ -84,11 +84,13 @@ Supernotify 是通过 [Home Assistant 社区商店](https://hacs.xyz)（**HACS**
     * 推送、传输、收件人和场景在 Home Assistant 界面中作为实体公开
 
 
-## 需要少量 YAML
+## 仅高级用途需要 YAML
 
-Supernotify 目前仅支持[基于 YAML 的配置](https://supernotify.rhizomatics.org.uk/configuration/yaml/)。只需 2 行复制粘贴配置即可实现很多功能：
+Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置，并支持[基于 YAML 的配置](https://supernotify.rhizomatics.org.uk/configuration/yaml/)以实现高级功能。保留 YAML 是为了便于处理更大的规则集。
 
-```yaml title="使用默认的 2 行 YAML"
+使用简单的非 YAML 配置即可完成很多操作，包括移动推送设置的自动化。请参阅文档中的[使用示例](recipes/index.md)，以及以下移动推送示例：
+
+```yaml title="零 YAML，全部通过 UI 配置"
   - action: notify.supernotify
     data:
         message: 你好！这是 Supernotify 的测试，正在向所有人的移动应用发送通知

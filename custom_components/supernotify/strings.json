@@ -1,5 +1,5 @@
 {
-    "title":"Supernotify",
+    "title": "Supernotify",
     "services": {
         "reload": {
             "name": "[%key:common::action::reload%]",
@@ -30,10 +30,30 @@
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities",
                     "archive_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc"
                 }
+            },
+            "reconfigure": {
+                "title": "Environment",
+                "data": {
+                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
+                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
+                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
+                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
+                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
+                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                },
+                "data_description": {
+                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
+                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
+                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
+                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
+                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
+                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
         }
     },
     "options": {
@@ -93,40 +113,38 @@
             }
         }
     },
-    "issues":{
-        "scenario_delivery":{
-            "title":"Invalid Delivery for Scenario",
-            "description":"Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration"
+    "issues": {
+        "scenario_delivery": {
+            "title": "Invalid Delivery for Scenario",
+            "description": "Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration"
         },
-         "scenario_action_group":{
-            "title":"Invalid Mobile Action Group for Scenario",
-            "description":"Scenario definition {scenario} refers to a delivery {action_group} that doesn't exist in supernotify configuration"
+        "scenario_action_group": {
+            "title": "Invalid Mobile Action Group for Scenario",
+            "description": "Scenario definition {scenario} refers to a delivery {action_group} that doesn't exist in supernotify configuration"
         },
-        "scenario_condition":{
-            "title":"Invalid Condition for Scenario",
-            "description":"Scenario definition {scenario} contains a condition that cannor be evaluated by Home Assistant"
+        "scenario_condition": {
+            "title": "Invalid Condition for Scenario",
+            "description": "Scenario definition {scenario} contains a condition that cannor be evaluated by Home Assistant"
         },
-        "delivery_unknown_transport":{
-            "title":"Unknown Transport for Delivery",
-            "description":"Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify"
+        "delivery_unknown_transport": {
+            "title": "Unknown Transport for Delivery",
+            "description": "Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify"
         },
-        "media_path":{
-            "title":"Media Path Cannot be Used",
-            "description":"A path ({path}) has been provided for holding media such as camera snapshots during notifications but cannot be used (error: {error})"
+        "media_path": {
+            "title": "Media Path Cannot be Used",
+            "description": "A path ({path}) has been provided for holding media such as camera snapshots during notifications but cannot be used (error: {error})"
         },
-        "delivery_reserved_name":{
-            "title":"Delivery Has Reserved Delivery Name",
-            "description":"The delivery {delivery} name is reserved for Supernotify use"
+        "delivery_reserved_name": {
+            "title": "Delivery Has Reserved Delivery Name",
+            "description": "The delivery {delivery} name is reserved for Supernotify use"
         },
-        "delivery_invalid_action":{
-             "title":"Delivery Has Invalid Action",
-            "description":"The delivery {delivery} has an invalid action {action}"
+        "delivery_invalid_action": {
+            "title": "Delivery Has Invalid Action",
+            "description": "The delivery {delivery} has an invalid action {action}"
         },
-        "delivery_invalid_condition":{
-            "title":"Delivery Has Invalid Condition",
-            "description":"The {delivery} delivery has an invalid condition {condition}"
-
+        "delivery_invalid_condition": {
+            "title": "Delivery Has Invalid Condition",
+            "description": "The {delivery} delivery has an invalid condition {condition}"
         }
-
     }
 }
