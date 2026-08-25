@@ -6,7 +6,7 @@ import json
 import logging
 from dataclasses import asdict
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.components.notify import (
     NotifyEntity,
@@ -155,63 +155,41 @@ def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> Superno
     )
 
 
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> SupernotifyAction:
-    """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
-    _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
-    _ = discovery_info
+SUPPLEMENTAL_SERVICE_NAMES: Final[tuple[str, ...]] = (
+    "enquire_configuration",
+    "enquire_implicit_deliveries",
+    "enquire_deliveries_by_scenario",
+    "enquire_last_notification",
+    "enquire_active_scenarios",
+    "enquire_scenarios",
+    "enquire_occupancy",
+    "enquire_recipients",
+    "enquire_snoozes",
+    "clear_snoozes",
+    "purge_archive",
+    "purge_media",
+    "refresh_entities",
+)
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    service = build_supernotify_action(hass, config)
-    await service.initialize()
+@callback
+def async_register_supplemental_services(hass: HomeAssistant, service: SupernotifyAction, config: ConfigType) -> None:
+    """Register the domain-scoped supplemental/debugging/admin services.
 
-    # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
-    # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
-    # "deprecated_yaml" is a shared translation key owned by the homeassistant domain.
-    # But only if the YAML is actually fully replaceable by the config entry: deliveries,
-    # transports, scenarios, recipients, cameras, action groups and links aren't
-    # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are
-    # defined, this YAML still has to stay - nagging to remove it would be wrong.
-    yaml_still_required = any(
-        config.get(key)
-        for key in (
-            CONF_DELIVERY,
-            CONF_TRANSPORTS,
-            CONF_SCENARIOS,
-            CONF_RECIPIENTS,
-            CONF_CAMERAS,
-            CONF_ACTION_GROUPS,
-            CONF_LINKS,
-        )
-    )
-    if yaml_still_required:
-        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
-    else:
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={"domain": DOMAIN, "integration_title": "Supernotify"},
-        )
+    Shared by the legacy YAML platform (async_get_service, below) and the config-entry setup
+    (async_setup_entry in __init__.py), so both setup paths expose the same services. These
+    are DOMAIN-scoped, not per config entry, so registration is guarded against being run
+    twice - see SUPPLEMENTAL_SERVICE_NAMES/async_unregister_supplemental_services for the
+    matching teardown.
 
-    # One-shot mirror of this YAML config into a config entry, so YAML-only users
-    # get an Integrations-page presence. Only when no entry exists yet - once one
-    # does (imported or UI-created), every subsequent YAML reload would otherwise
-    # start a flow that just aborts as already_configured.
-    if not hass.config_entries.async_entries(DOMAIN):
-        from homeassistant.config_entries import SOURCE_IMPORT
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config))
-        )
+    enquire_configuration closes over the raw config dict rather than `service`, because
+    several of the fields it reports (delivery/transport/archive/dupe_check config, the full
+    set of configured scenarios/recipients) are either private on the registries after
+    initialize() or lossily reduced to derived values there - so `service` alone can't
+    reconstruct them.
+    """
+    if hass.services.has_service(DOMAIN, "enquire_configuration"):
+        return
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {
@@ -371,6 +349,75 @@ async def async_get_service(
         supplemental_action_refresh_entities,
         supports_response=SupportsResponse.NONE,
     )
+
+
+@callback
+def async_unregister_supplemental_services(hass: HomeAssistant) -> None:
+    """Undo async_register_supplemental_services."""
+    for name in SUPPLEMENTAL_SERVICE_NAMES:
+        if hass.services.has_service(DOMAIN, name):
+            hass.services.async_remove(DOMAIN, name)
+
+
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SupernotifyAction:
+    """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
+    _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
+    _ = discovery_info
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    service = build_supernotify_action(hass, config)
+    await service.initialize()
+
+    # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
+    # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
+    # "deprecated_yaml" is a shared translation key owned by the homeassistant domain.
+    # But only if the YAML is actually fully replaceable by the config entry: deliveries,
+    # transports, scenarios, recipients, cameras, action groups and links aren't
+    # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are
+    # defined, this YAML still has to stay - nagging to remove it would be wrong.
+    yaml_still_required = any(
+        config.get(key)
+        for key in (
+            CONF_DELIVERY,
+            CONF_TRANSPORTS,
+            CONF_SCENARIOS,
+            CONF_RECIPIENTS,
+            CONF_CAMERAS,
+            CONF_ACTION_GROUPS,
+            CONF_LINKS,
+        )
+    )
+    if yaml_still_required:
+        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+    else:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={"domain": DOMAIN, "integration_title": "Supernotify"},
+        )
+
+    # One-shot mirror of this YAML config into a config entry, so YAML-only users
+    # get an Integrations-page presence. Only when no entry exists yet - once one
+    # does (imported or UI-created), every subsequent YAML reload would otherwise
+    # start a flow that just aborts as already_configured.
+    if not hass.config_entries.async_entries(DOMAIN):
+        from homeassistant.config_entries import SOURCE_IMPORT
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config))
+        )
+
+    async_register_supplemental_services(hass, service, config)
 
     return service
 

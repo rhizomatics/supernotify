@@ -96,10 +96,16 @@ rules:
       Integration provides no automation trigger or device trigger platform.
 
   entity-event-setup:
-    status: todo
+    status: exempt
     comment: |
-      Event subscriptions currently at service level.
-      Need to review if entity lifecycle methods should be used.
+      Reviewed: the four subscriptions (mobile_app_notification_action, exposed_entities
+      state tracking, nightly housekeeping timer, EVENT_HOMEASSISTANT_STOP - all wired in
+      SupernotifyAction.initialize(), notify.py) are inherently orchestration-level, not
+      scoped to any single entity - they act across all recipients/deliveries. The only
+      entity in the component, SupernotifyEntity (NotifyEntity), owns none of them. The one
+      plausible future owner, a per-person Recipient entity (people.py's _attr_device_class/
+      _attr_entity_category comment "for future native entity use"), doesn't exist as a real
+      Entity yet - revisit if that's ever built.
 
   entity-unique-id:
     status: done
@@ -128,9 +134,12 @@ rules:
       Need to review transport initialization and add explicit validation.
 
   unique-config-entry:
-    status: todo
+    status: done
     comment: |
-      Will implement duplicate prevention in config flow using unique_id.
+      manifest.json:33 sets single_config_entry: true, HA's sanctioned alternative to
+      per-entry unique_id when only one entry is ever meaningful (see config_flow.py's
+      own docstring at lines 137-138, which documents the same rationale for the import
+      step's duplicate-entry protection).
 
   # ==================
   # SILVER TIER

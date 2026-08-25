@@ -72,6 +72,9 @@ Breakdown:
 
 * Upgrade to Gold level quality.
 * Move Delivery, Transport, Recipient and Camera to ConfigFlow.
+  - This may mean that the UI supports only a simplified version of these, if for example Condition editing is not viable, and the YAML remains. Preferably every one of these can be edited in either the UI or YAML, and round-tripped between them.
+* Extend auto discovery to other viable transports
+  - ntfy, gotify, telegram, pushover, lametric, alexa devices, SMS (if mikrotik_sms, twilio, clicksend etc installed)
 
 ### Fourth
 
@@ -83,3 +86,4 @@ Breakdown:
 * Upgrade to Platinum level quality.
 * Review and implement alignment with Notify Entity architecture.
 * Review Recipient as a HA entity
+* Complete implementation of Actions, Action Groups and Links

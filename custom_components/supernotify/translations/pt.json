@@ -50,6 +50,10 @@
         "abort": {
             "single_instance_allowed": "Já configurado. Apenas uma única configuração é possível.",
             "reconfigure_successful": "Reconfiguração concluída com sucesso"
+        },
+        "error": {
+            "template_path_invalid": "O caminho do modelo não é utilizável - verifique se existe e é legível",
+            "media_path_invalid": "Não foi possível criar ou aceder ao caminho de multimédia - verifique a localização e as permissões"
         }
     },
     "issues": {

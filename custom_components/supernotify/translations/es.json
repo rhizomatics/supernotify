@@ -50,6 +50,10 @@
         "abort": {
             "single_instance_allowed": "Ya configurado. Solo es posible una única configuración.",
             "reconfigure_successful": "La reconfiguración se realizó correctamente"
+        },
+        "error": {
+            "template_path_invalid": "La ruta de plantillas no se puede usar - compruebe que existe y es legible",
+            "media_path_invalid": "No se pudo crear o acceder a la ruta de medios - compruebe la ubicación y los permisos"
         }
     },
     "issues": {

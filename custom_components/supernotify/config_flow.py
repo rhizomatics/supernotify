@@ -8,9 +8,11 @@ scenarios, recipients and cameras stay YAML-only for now (see the roadmap doc's 
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
+from anyio import Path
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import config_validation as cv
@@ -45,6 +47,8 @@ from .const import (
     CONF_TTL,
 )
 from .schema import OutcomeSelection
+
+_LOGGER = logging.getLogger(__name__)
 
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
 
@@ -99,15 +103,52 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     })
 
 
+async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
+    """Validate template_path/media_path at config-flow submission time.
+
+    Mirrors the tolerant runtime behavior already in Context.initialize() (template_path:
+    a path that doesn't exist yet just degrades with a warning) and MediaStorage.initialize()
+    (media_path: created on demand if missing) - this only catches a genuine failure to
+    create or access the path early, in the wizard, instead of leaving the user to discover
+    it later via a repair issue.
+    """
+    errors: dict[str, str] = {}
+
+    template_path = user_input.get(CONF_TEMPLATE_PATH)
+    if template_path:
+        try:
+            await Path(template_path).exists()
+        except (OSError, ValueError) as err:
+            errors[CONF_TEMPLATE_PATH] = "template_path_invalid"
+            _LOGGER.debug("SUPERNOTIFY invalid template_path %s: %s", template_path, err)
+
+    media_path = user_input.get(CONF_MEDIA_PATH)
+    if media_path:
+        try:
+            path = Path(media_path)
+            if not path.is_absolute():
+                path = await path.absolute()
+            if not await path.exists():
+                await path.mkdir(parents=True, exist_ok=True)
+        except (OSError, ValueError) as err:
+            errors[CONF_MEDIA_PATH] = "media_path_invalid"
+            _LOGGER.debug("SUPERNOTIFY invalid media_path %s: %s", media_path, err)
+
+    return errors
+
+
 class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Supernotify config flow."""
 
     VERSION = 1
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="Supernotify", data=user_input)
-        return self.async_show_form(step_id="user", data_schema=_user_schema())
+            errors = await _validate_user_input(user_input)
+            if not errors:
+                return self.async_create_entry(title="Supernotify", data=user_input)
+        return self.async_show_form(step_id="user", data_schema=_user_schema(user_input), errors=errors)
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Let the user change the global settings of an existing entry.
@@ -117,9 +158,13 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         archive/dupe_check/housekeeping, genuine runtime preferences.
         """
         entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_update_reload_and_abort(entry, data_updates=user_input)
-        return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(dict(entry.data)))
+            errors = await _validate_user_input(user_input)
+            if not errors:
+                return self.async_update_reload_and_abort(entry, data_updates=user_input)
+        defaults = user_input if user_input is not None else dict(entry.data)
+        return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(defaults), errors=errors)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """One-shot mirror of an existing YAML configuration into a config entry.
