@@ -80,6 +80,7 @@ from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
 from .transports.lametric import LaMetricTransport
+from .transports.matrix import MatrixTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
 from .transports.mqtt import MQTTTransport
@@ -91,7 +92,6 @@ from .transports.sms import SMSTransport
 from .transports.smtp import SmtpTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
-from .transports.matrix import MatrixTransport
 
 if TYPE_CHECKING:
     import datetime as dt

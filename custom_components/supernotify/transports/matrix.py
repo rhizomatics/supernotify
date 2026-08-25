@@ -107,7 +107,7 @@ class MatrixTransport(Transport):
                 _LOGGER.debug("SUPERNOTIFY matrix: skipping invalid room target %r", target)
         return rooms
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY matrix %s", envelope.message)
 
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
