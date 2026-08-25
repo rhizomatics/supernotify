@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
+from homeassistant.exceptions import ConfigEntryNotReady
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -13,6 +14,8 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
     from .notify import SupernotifyAction
+
+    type SupernotifyConfigEntry = ConfigEntry[SupernotifyAction]
 
 DOMAIN = "supernotify"
 
@@ -31,7 +34,7 @@ NOTIFY_SERVICE_NAME = "supernotify"
 ATTR_IMPORTED_FROM_YAML = "imported_from_yaml"
 
 
-def _entry_full_config(entry: ConfigEntry) -> ConfigType:
+def _entry_full_config(entry: SupernotifyConfigEntry) -> ConfigType:
     """Fold a config entry's data/options into a full SUPERNOTIFY_SCHEMA config dict.
 
     entry.data holds the flat "user" step fields; entry.options holds the nested
@@ -47,8 +50,8 @@ def _entry_full_config(entry: ConfigEntry) -> ConfigType:
     return SUPERNOTIFY_SCHEMA({CONF_PLATFORM: DOMAIN, **entry.data, **entry.options})
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    from .notify import build_supernotify_action
+async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
+    from .notify import async_register_supplemental_services, build_supernotify_action
 
     if entry.data.get(ATTR_IMPORTED_FROM_YAML):
         # This entry only mirrors an existing YAML config into the UI - the legacy
@@ -67,17 +70,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     full_config = _entry_full_config(entry)
     service: SupernotifyAction = build_supernotify_action(hass, full_config)
-    await service.initialize()
+    try:
+        await service.initialize()
+    except Exception as err:
+        _LOGGER.exception("SUPERNOTIFY failed to initialize, will retry")
+        raise ConfigEntryNotReady(f"SUPERNOTIFY failed to initialize: {err}") from err
     await service.async_setup(hass, NOTIFY_SERVICE_NAME, NOTIFY_SERVICE_NAME)
     await service.async_register_services()
+    async_register_supplemental_services(hass, service, full_config)
     entry.runtime_data = service
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
+    from .notify import async_unregister_supplemental_services
+
     # runtime_data is only set if async_setup_entry actually registered the service (it's
     # skipped when a legacy YAML platform got there first).
     service: SupernotifyAction | None = getattr(entry, "runtime_data", None)
     if service is not None:
         await service.async_unregister_services()
+        async_unregister_supplemental_services(hass)
     return True

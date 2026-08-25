@@ -50,6 +50,10 @@
         "abort": {
             "single_instance_allowed": "Al geconfigureerd. Er is slechts één configuratie mogelijk.",
             "reconfigure_successful": "Herconfiguratie is gelukt"
+        },
+        "error": {
+            "template_path_invalid": "Sjabloonpad is niet bruikbaar - controleer of het bestaat en leesbaar is",
+            "media_path_invalid": "Mediapad kon niet worden aangemaakt of benaderd - controleer de locatie en machtigingen"
         }
     },
     "issues": {

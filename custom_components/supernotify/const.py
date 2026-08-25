@@ -7,7 +7,7 @@ from homeassistant.const import (
     ATTR_SERVICE,
 )
 
-CONF_ACTIONS: Final[str] = "actions"
+CONF_ACTIONS: Final[str] = "actions"  # not fully implemented
 CONF_TITLE: Final[str] = "title"
 CONF_URI: Final[str] = "uri"
 CONF_RECIPIENTS: Final[str] = "recipients"
