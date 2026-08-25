@@ -136,7 +136,10 @@ async def test_options_flow_archive(hass: HomeAssistant) -> None:
         menu_result["flow_id"],
         {
             CONF_ENABLED: True,
+            # a real submission always includes every section, even untouched/collapsed ones -
+            # the section wrapper keys are vol.Required with no default (see async_step_archive)
             "file": {CONF_ARCHIVE_DAYS: 5},
+            "mqtt": {},
             "event": {
                 CONF_ARCHIVE_EVENT_SELECTION: ["error", "dupe"],
                 CONF_ARCHIVE_DIAGNOSTICS: [],
