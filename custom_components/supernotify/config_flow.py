@@ -165,7 +165,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         if housekeeping:
             options[CONF_HOUSEKEEPING] = housekeeping
 
-        return self.async_create_entry(title="Supernotify (imported)", data=data, options=options)
+        return self.async_create_entry(title="Supernotify (imported from YAML)", data=data, options=options)
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> SupernotifyOptionsFlow:
