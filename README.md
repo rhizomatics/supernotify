@@ -26,6 +26,8 @@ A **unified notification interface** on top of HomeAssistant's built in `notify`
 
 Supernotify has one goal - to make the **simplest possible notification do as many notifications as you need with no code and minimal configuration**.
 
+Start off with zero YAML configuration and easily do mobile push notifications to all Home Assistant users, or redirect Frigate blueprint notifications to email, or automatically cut down on repeated duplicate notifications. Or with advanced YAML configuration, the possibilities are endless.
+
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
      * [Make Alexa whisper low priority notifications](./recipes/alexa_whisper.md)
@@ -35,6 +37,7 @@ Supernotify has one goal - to make the **simplest possible notification do as ma
      * [Move and zoom a camera to take a snapshot](./recipes/move_a_camera_for_snapshot.md)
      * [Suppress or escalate notifications based on content](./recipes/content_escalation.md)
      * [Halloween and Christmas themed chimes and voices](./recipes/seasonal_greetings.md)
+
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
 With only the UI configuration, start mobile push notifications to everyone registered in the house, without configuring mobile app names in notifications.
