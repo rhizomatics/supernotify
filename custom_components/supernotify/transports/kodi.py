@@ -111,6 +111,9 @@ def _coerce_int(value: Any) -> int | None:
 class KodiTransport(Transport):
     """Notify via Kodi on-screen overlay using the kodi integration."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     name = TRANSPORT_KODI
 
     @property
