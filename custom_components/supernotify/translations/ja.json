@@ -146,5 +146,14 @@
                 }
             }
         }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "同じメッセージとタイトル、同じまたはそれ以下の優先度",
+                "dupe_policy_message_title_same": "同じメッセージとタイトル",
+                "dupe_policy_none": "無効"
+            }
+        }
     }
 }

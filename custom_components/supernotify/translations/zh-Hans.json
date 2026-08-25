@@ -146,5 +146,14 @@
                 }
             }
         }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "相同的消息和标题，优先级相同或更低",
+                "dupe_policy_message_title_same": "相同的消息和标题",
+                "dupe_policy_none": "已禁用"
+            }
+        }
     }
 }

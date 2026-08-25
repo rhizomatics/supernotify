@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_ENABLED
@@ -10,6 +11,8 @@ from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_MT,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
+    CONF_ARCHIVE_DIAGNOSTICS,
+    CONF_ARCHIVE_EVENT_SELECTION,
     CONF_ARCHIVE_PATH,
     CONF_DELIVERY,
     CONF_DUPE_CHECK,
@@ -25,6 +28,7 @@ from custom_components.supernotify.const import (
     CONF_TEMPLATE_PATH,
     CONF_TTL,
 )
+from custom_components.supernotify.schema import OutcomeSelection
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -196,6 +200,54 @@ async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
     # deliveries/transports/scenarios etc are not mirrored - YAML-only for this phase
     assert CONF_DELIVERY not in entry.data
     assert CONF_DELIVERY not in entry.options
+
+
+async def test_import_normalizes_event_selection_and_time(hass: HomeAssistant) -> None:
+    """Regression test: a YAML-imported archive config carries real OutcomeSelection/time
+    objects (already coerced by SUPERNOTIFY_SCHEMA), which must be stored as the plain
+    "NAME|NAME" strings and ISO time string the options form expects - not the raw
+    IntFlag/datetime.time values, which would render as a bare, meaningless number in the UI."""
+    import_data = {
+        CONF_ARCHIVE: {
+            CONF_ENABLED: True,
+            CONF_ARCHIVE_EVENT_SELECTION: OutcomeSelection.NO_DELIVERY | OutcomeSelection.ERROR,
+            CONF_ARCHIVE_DIAGNOSTICS: OutcomeSelection.ERROR,
+        },
+        CONF_HOUSEKEEPING: {CONF_HOUSEKEEPING_TIME: dt.time(0, 0, 1)},
+    }
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data=import_data)
+    entry = result["result"]
+
+    assert entry.options[CONF_ARCHIVE][CONF_ARCHIVE_EVENT_SELECTION] == "NO_DELIVERY|ERROR"
+    assert entry.options[CONF_ARCHIVE][CONF_ARCHIVE_DIAGNOSTICS] == "ERROR"
+    assert entry.options[CONF_HOUSEKEEPING][CONF_HOUSEKEEPING_TIME] == "00:00:01"
+
+
+async def test_archive_options_form_normalizes_stale_raw_values(hass: HomeAssistant) -> None:
+    """Defensive path: an entry already holding raw int/time values (e.g. imported before
+    the fix above existed) must still render sensible text in the options form, not numbers."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    entry_result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    entry = entry_result["result"]
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            CONF_ARCHIVE: {CONF_ARCHIVE_EVENT_SELECTION: 30, CONF_ARCHIVE_DIAGNOSTICS: 16},
+            CONF_HOUSEKEEPING: {CONF_HOUSEKEEPING_TIME: dt.time(1, 2, 3)},
+        },
+    )
+
+    options_init = await hass.config_entries.options.async_init(entry.entry_id)
+    menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "archive"})
+    prefilled = menu_result["data_schema"]({})
+    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == "NO_DELIVERY|PARTIAL_DELIVERY|FALLBACK_DELIVERY|ERROR"
+    assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == "ERROR"
+
+    options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
+    menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "housekeeping"})
+    prefilled2 = menu_result2["data_schema"]({})
+    assert prefilled2[CONF_HOUSEKEEPING_TIME] == "01:02:03"
 
 
 async def test_import_without_archive_path(hass: HomeAssistant) -> None:
