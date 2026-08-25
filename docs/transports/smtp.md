@@ -30,7 +30,7 @@ Envelope priority is mapped to common header fields used for internet mail:
 
 ### Message-ID
 
-`Message-Id` in email header ties back to notification ID and delivery name
+`Message-Id` in email header ties back to notification ID and delivery name. (Your mail relay may override this).
 
 ## Example Config
 
