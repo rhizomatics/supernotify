@@ -13,7 +13,7 @@
 
 The design decisions, difficulties and work break down into these groups:
 
-1. Straightforward
+1. Straightforward **Completed in v2.0.0**
   - Set up a working Supernotify purely from UI
   - `minimal.yaml` setup is almost there
   - Extra config pages for more advanced options like `archive`,`dupe_check`,`housekeeping`
@@ -51,20 +51,35 @@ Balance moving up the Quality Scale over focusing solely on the purely config fl
 
 ### Immediate
 
-Implement the 'Straightforward' group, its low risk, has minimal impact on solving the rest of the design and opens up functionality like auto device discovery and delivery generation to users who will never touch YAML. Ended up covering more than the original one-liner: a `user` step (zero required fields, matches `minimal.yaml`), a `reconfigure` step for editing those same global settings post-setup, an options flow for `archive`/`dupe_check`/`housekeeping`, and the YAML mirror-import + `deprecated_yaml` repair described above - all landed together since reconfigure and import both fell naturally out of building the `user` step's data schema, rather than because the scope was deliberately widened up front.
+**Completed in v2.0.0**
+
+Implement the 'Straightforward' group, its low risk, has minimal impact on solving the rest of the design and opens up functionality like auto device discovery and delivery generation to users who will never touch YAML.
+
+Breakdown:
+
+* `user` step (zero required fields, matches `minimal.yaml`)
+* `reconfigure` step for editing those same global settings post-setup
+* Options flow for `archive`/`dupe_check`/`housekeeping`
+* YAML mirror-import
+* `deprecated_yaml` repair
 
 ### Second
 
-Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved. The Notify Entity question from the Principles section above is resolved (staying on `BaseNotificationService`) - remaining Second-phase work is entity/service lifecycle quality-scale items (see `quality_scale.yaml`'s `action-setup` for the still-YAML-only supplemental `supernotify.*` debugging services), not an architecture decision.
+* Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved.   - The Notify Entity question from the Principles section above is resolved (staying on `BaseNotificationService`)
+- Remaining Second-phase work is entity/service lifecycle quality-scale items (see `quality_scale.yaml`'s `action-setup` for the still-YAML-only supplemental `supernotify.*` debugging services), not an architecture decision.
 
 ### Third
 
-Move Delivery, Transport, Recipient and Camera to ConfigFlow.
+* Upgrade to Gold level quality.
+* Move Delivery, Transport, Recipient and Camera to ConfigFlow.
 
 ### Fourth
 
-Implement some UI for Scenarios, at least view/enable/disable
+* Implement some UI for Scenarios, at least view/enable/disable
 
 ### Later, Maybe Never
 
-Move ActionGroups, Links out of YAML and complete Scenarios
+* Move ActionGroups, Links out of YAML and complete Scenarios.
+* Upgrade to Platinum level quality.
+* Review and implement alignment with Notify Entity architecture.
+* Review Recipient as a HA entity
