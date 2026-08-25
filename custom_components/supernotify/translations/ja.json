@@ -93,7 +93,8 @@
                     "archive": "アーカイブ設定",
                     "dupe_check": "重複検出",
                     "housekeeping": "ハウスキーピング"
-                }
+                },
+                "title": "Supernotify オプション"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "アーカイブされた通知に対して発行されるHome Assistantイベント名",
                     "event_selection": "どの通知結果がイベントを発行するかを選択します",
                     "diagnostics": "どの通知結果が完全な診断詳細とともに記録されるかを選択します"
-                }
+                },
+                "title": "アーカイブオプション"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "重複検出のために通知が記憶される期間",
                     "size": "重複検出のために記憶される最近の通知の最大数",
                     "dupe_policy": "重複を検出するために通知をどの程度厳密に比較するか"
-                }
+                },
+                "title": "重複検出オプション"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "メディアパージなどの定期ハウスキーピングが実行される時刻（HH:MM:SS）",
                     "media_storage_days": "スナップショットや添付ファイルなどの保存メディアを保持する日数"
-                }
+                },
+                "title": "ハウスキーピングオプション"
             }
         }
     },

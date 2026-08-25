@@ -59,7 +59,8 @@
                     "archive": "Archive Settings",
                     "dupe_check": "Duplicate Detection",
                     "housekeeping": "Housekeeping"
-                }
+                },
+                "title": "Supernotify Options"
             },
             "archive": {
                 "data": {
@@ -85,7 +86,8 @@
                     "event_name": "Home Assistant event name fired for archived notifications",
                     "event_selection": "Which notification outcomes fire an event",
                     "diagnostics": "Which notification outcomes are recorded with full diagnostic detail"
-                }
+                },
+                "title": "Archive Options"
             },
             "dupe_check": {
                 "data": {
@@ -97,7 +99,8 @@
                     "ttl": "How long a notification is remembered for duplicate detection",
                     "size": "Maximum number of recent notifications remembered for duplicate detection",
                     "dupe_policy": "How strictly notifications are compared to detect duplicates"
-                }
+                },
+                "title": "Duplicate Detection Options"
             },
             "housekeeping": {
                 "data": {
@@ -107,7 +110,8 @@
                 "data_description": {
                     "housekeeping_time": "Time of day (HH:MM:SS) that scheduled housekeeping, such as media purge, runs",
                     "media_storage_days": "How many days of stored media, such as snapshots and attachments, to keep"
-                }
+                },
+                "title": "Housekeeping Options"
             }
         }
     },

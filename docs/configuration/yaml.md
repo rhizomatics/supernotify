@@ -5,7 +5,7 @@ tags:
 ---
 # YAML
 
-By default, configuration lives in `config.yaml`, under a `notify` section.
+By default, advanced configuration lives in `config.yaml`, under a `notify` section ( the basic configuration is all managed entirely by Home Assistant and configured from the Integrations web page ).
 
 ## Naming the Integration
 

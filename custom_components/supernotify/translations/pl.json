@@ -93,7 +93,8 @@
                     "archive": "Ustawienia archiwum",
                     "dupe_check": "Wykrywanie duplikatów",
                     "housekeeping": "Konserwacja"
-                }
+                },
+                "title": "Opcje Supernotify"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "Nazwa zdarzenia Home Assistant wyzwalanego dla zarchiwizowanych powiadomień",
                     "event_selection": "Które wyniki powiadomień wyzwalają zdarzenie",
                     "diagnostics": "Które wyniki powiadomień są rejestrowane z pełnymi szczegółami diagnostycznymi"
-                }
+                },
+                "title": "Opcje archiwum"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "Jak długo powiadomienie jest zapamiętywane na potrzeby wykrywania duplikatów",
                     "size": "Maksymalna liczba ostatnich powiadomień zapamiętywanych na potrzeby wykrywania duplikatów",
                     "dupe_policy": "Jak rygorystycznie porównywane są powiadomienia w celu wykrycia duplikatów"
-                }
+                },
+                "title": "Opcje wykrywania duplikatów"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "Pora dnia (GG:MM:SS), o której uruchamiana jest zaplanowana konserwacja, np. czyszczenie mediów",
                     "media_storage_days": "Przez ile dni przechowywane są media, np. zrzuty i załączniki"
-                }
+                },
+                "title": "Opcje konserwacji"
             }
         }
     },
