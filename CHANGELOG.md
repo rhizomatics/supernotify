@@ -28,6 +28,9 @@
   - Better testing of user supplied values in config
   - Additional services moved to shared yaml/ui config code
   - Improved exception handling
+- Template Path
+  - Directory now created if specified and doesn't exist
+  - Default is relative to config home rather than hard-coded to `/config`
 
 # Public releases
 

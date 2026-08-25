@@ -52,7 +52,7 @@
             "reconfigure_successful": "Neukonfiguration war erfolgreich"
         },
         "error": {
-            "template_path_invalid": "Vorlagenpfad ist nicht nutzbar - prüfen Sie, ob er existiert und lesbar ist",
+            "template_path_invalid": "Vorlagenpfad konnte nicht erstellt oder erreicht werden - prüfen Sie den Speicherort und die Berechtigungen",
             "media_path_invalid": "Medienpfad konnte nicht erstellt oder erreicht werden - prüfen Sie den Speicherort und die Berechtigungen"
         }
     },

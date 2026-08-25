@@ -103,36 +103,42 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     })
 
 
-async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
-    """Validate template_path/media_path at config-flow submission time.
+async def _ensure_directory_exists(path_str: str) -> str | None:
+    """Create a directory if it doesn't exist yet, mirroring MediaStorage.initialize()'s own
+    tolerant runtime behavior (media_grab.py). Returns an error description on a genuine
+    failure to create/access it, None on success."""
+    try:
+        path = Path(path_str)
+        if not path.is_absolute():
+            path = await path.absolute()
+        if not await path.exists():
+            await path.mkdir(parents=True, exist_ok=True)
+    except (OSError, ValueError) as err:
+        return str(err)
+    return None
 
-    Mirrors the tolerant runtime behavior already in Context.initialize() (template_path:
-    a path that doesn't exist yet just degrades with a warning) and MediaStorage.initialize()
-    (media_path: created on demand if missing) - this only catches a genuine failure to
-    create or access the path early, in the wizard, instead of leaving the user to discover
-    it later via a repair issue.
+
+async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
+    """Validate template_path/media_path at config-flow submission time, creating each
+    directory if it doesn't exist yet. Catching a genuine failure here surfaces a typo'd or
+    unwritable path immediately in the wizard, instead of leaving the user to discover it
+    later via a repair issue. A blank value is left untouched - both fields are optional.
     """
     errors: dict[str, str] = {}
 
     template_path = user_input.get(CONF_TEMPLATE_PATH)
     if template_path:
-        try:
-            await Path(template_path).exists()
-        except (OSError, ValueError) as err:
+        error = await _ensure_directory_exists(template_path)
+        if error:
             errors[CONF_TEMPLATE_PATH] = "template_path_invalid"
-            _LOGGER.debug("SUPERNOTIFY invalid template_path %s: %s", template_path, err)
+            _LOGGER.debug("SUPERNOTIFY invalid template_path %s: %s", template_path, error)
 
     media_path = user_input.get(CONF_MEDIA_PATH)
     if media_path:
-        try:
-            path = Path(media_path)
-            if not path.is_absolute():
-                path = await path.absolute()
-            if not await path.exists():
-                await path.mkdir(parents=True, exist_ok=True)
-        except (OSError, ValueError) as err:
+        error = await _ensure_directory_exists(media_path)
+        if error:
             errors[CONF_MEDIA_PATH] = "media_path_invalid"
-            _LOGGER.debug("SUPERNOTIFY invalid media_path %s: %s", media_path, err)
+            _LOGGER.debug("SUPERNOTIFY invalid media_path %s: %s", media_path, error)
 
     return errors
 

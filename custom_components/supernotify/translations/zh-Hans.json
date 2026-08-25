@@ -52,7 +52,7 @@
             "reconfigure_successful": "重新配置成功"
         },
         "error": {
-            "template_path_invalid": "模板路径不可用 - 请检查它是否存在且可读",
+            "template_path_invalid": "无法创建或访问模板路径 - 请检查位置和权限",
             "media_path_invalid": "无法创建或访问媒体路径 - 请检查位置和权限"
         }
     },

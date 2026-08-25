@@ -52,7 +52,7 @@
             "reconfigure_successful": "La reconfiguration a réussi"
         },
         "error": {
-            "template_path_invalid": "Le chemin des modèles n'est pas utilisable - vérifiez qu'il existe et qu'il est lisible",
+            "template_path_invalid": "Impossible de créer ou d'accéder au chemin des modèles - vérifiez l'emplacement et les autorisations",
             "media_path_invalid": "Impossible de créer ou d'accéder au chemin des médias - vérifiez l'emplacement et les autorisations"
         }
     },

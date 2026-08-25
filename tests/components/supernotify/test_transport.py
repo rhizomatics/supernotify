@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
@@ -110,6 +111,40 @@ async def test_call_action_debug_failing_service(hass: HomeAssistant) -> None:
     )
     response: bool = await uut.call_action(envelope, "notify.custom_test", {"message": "hello"}, None, False)
     assert response is False
+
+
+async def test_call_action_logs_once_while_unavailable(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """The first failure logs at ERROR; consecutive failures while still unavailable are
+    downgraded to DEBUG (no log spam); a subsequent success logs a recovery message once and
+    a later failure goes back to ERROR."""
+    caplog.set_level(logging.DEBUG, logger="custom_components.supernotify.transport")
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_GENERIC)
+    dummy_service = DummyService(hass, exception=NotImplementedError("not available"))
+
+    def make_envelope() -> Envelope:
+        return Envelope(Delivery("testing", {CONF_DEBUG: True}, uut), Notification(ctx))
+
+    caplog.clear()
+    assert await uut.call_action(make_envelope(), "notify.custom_test", {"message": "hello"}, None, False) is False
+    assert uut._unavailable is True
+    assert [r.levelname for r in caplog.records if "Failed to notify" in r.message] == ["ERROR"]
+
+    caplog.clear()
+    assert await uut.call_action(make_envelope(), "notify.custom_test", {"message": "hello"}, None, False) is False
+    assert [r.levelname for r in caplog.records if "Failed to notify" in r.message] == ["DEBUG"]
+
+    caplog.clear()
+    dummy_service.exception = None
+    assert await uut.call_action(make_envelope(), "notify.custom_test", {"message": "hello"}, None, False) is True
+    assert uut._unavailable is False
+    assert any("recovered" in r.message for r in caplog.records if r.levelname == "INFO")
+
+    caplog.clear()
+    dummy_service.exception = NotImplementedError("not available")
+    assert await uut.call_action(make_envelope(), "notify.custom_test", {"message": "hello"}, None, False) is False
+    assert [r.levelname for r in caplog.records if "Failed to notify" in r.message] == ["ERROR"]
 
 
 @pytest.mark.parametrize("transport_type", TRANSPORTS)

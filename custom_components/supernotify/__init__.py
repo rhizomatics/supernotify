@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 DOMAIN = "supernotify"
 
 PLATFORMS = [Platform.NOTIFY]
-TEMPLATE_DIR: str = "/config/templates/supernotify"
+TEMPLATE_DIR: str = "supernotify/templates"
 MEDIA_DIR: str = "supernotify/media"
 
 _LOGGER = logging.getLogger(__name__)

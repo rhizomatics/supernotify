@@ -52,7 +52,7 @@
             "reconfigure_successful": "Reconfiguration was successful"
         },
         "error": {
-            "template_path_invalid": "Template path is not usable - check it exists and is readable",
+            "template_path_invalid": "Template path could not be created or accessed - check the location and permissions",
             "media_path_invalid": "Media path could not be created or accessed - check the location and permissions"
         }
     },

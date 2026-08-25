@@ -52,7 +52,7 @@
             "reconfigure_successful": "Ponowna konfiguracja zakończona powodzeniem"
         },
         "error": {
-            "template_path_invalid": "Ścieżka szablonu jest nieużywalna - sprawdź, czy istnieje i jest czytelna",
+            "template_path_invalid": "Nie można utworzyć ani uzyskać dostępu do ścieżki szablonów - sprawdź lokalizację i uprawnienia",
             "media_path_invalid": "Nie można utworzyć ani uzyskać dostępu do ścieżki multimediów - sprawdź lokalizację i uprawnienia"
         }
     },

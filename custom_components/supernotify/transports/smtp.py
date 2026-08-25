@@ -188,6 +188,7 @@ class SmtpTransport(EmailTransport):
                 )
             )
             envelope.delivered = 1
+            self.log_delivery_recovered()
             return True
         except Exception as e:
             self.record_error(str(e), method="_send")
@@ -202,7 +203,7 @@ class SmtpTransport(EmailTransport):
                     exception=str(e),
                 )
             )
-            _LOGGER.exception("SUPERNOTIFY Failed to send smtp email for %s", envelope.delivery.name)
+            self.log_delivery_failure(e, "SUPERNOTIFY Failed to send smtp email for %s", envelope.delivery.name)
             envelope.error_count += 1
             envelope.delivery_error = format_exception(e)
             return False
