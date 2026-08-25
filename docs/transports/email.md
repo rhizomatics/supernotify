@@ -33,11 +33,7 @@ Jinja2 template validation.
 Supernotify ships with a built in template, `default.html.j2` which can be used by using `template: default.html.j2` in the `data` section. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
 it into a custom template directory, usually inside Home Assistant's `\config` directory. Templates can live in this directory, or in an `email` subdirectory ( the top-level is for templates that could be used with any transport, and `email` only for this one).
 
-```yaml title="Example Supernotify Configuration"
-- name: SuperNotify
-  platform: supernotify
-  template_path: /config/templates/supernotify
-```
+![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png)
 
 ### Template Variables
 

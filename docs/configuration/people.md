@@ -39,16 +39,11 @@ The registry is automatically populated from all *Person* entities defined in Ho
 
 By default, all the mobile devices registered in Home Assistant are discovered and associated with the recipient.
 
-This can be switched off by default for everyone:
+This can be switched off by default for everyone from the UI config:
 
-```yaml
- notify:
-  - name: minimal
-    platform: supernotify
-    mobile_discovery: false
-```
+![Configure or Reconfigure in Integrations Page](../assets/images/configure_ui.png)
 
-or per recipient:
+or using, the advanced YAML config, per recipient:
 
 ```yaml
  recipients:

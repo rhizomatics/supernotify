@@ -30,19 +30,11 @@ logger:
 
 ## Implementation - Archiving
 
-Switch on debug mode for archiving, so a `debug_trace` is preserved with each notification.
+Switch on debug mode for a delivery in the YAML configuration, so a `debug_trace` is preserved with each notification, and ensure that archiving to one or more of file / event / MQTT is enabled in the UI configuration.
 
 ## Example Configuration - Archiving
 
-```yaml
- notify:
-  - name: minimal
-    platform: supernotify
-    archive:
-      file_path: /config/archive/supernotify
-      file_retention_days: 3
-      diagnostics: ERROR | PARTIAL_DELIVERY
-```
+![Archive Config from Integrations Page](../assets/images/archive_config.png)
 
 ## Implementation - Debug Service Calls
 

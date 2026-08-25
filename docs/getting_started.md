@@ -31,15 +31,8 @@ duplicate detection and housekeeping settings can be adjusted afterwards from th
 **Configure** option.
 
 Deliveries, transports, scenarios, recipients and cameras are still configured via YAML for
-now - see the [Configuration](configuration/index.md) pages, including a
-[minimal](configuration/examples/minimal.md) example that is only two lines of YAML and is
-just as capable as the UI setup above:
+now - see the [Configuration](configuration/index.md) pages.
 
-```yaml title="All the YAML needed to get started"
-notify:
-- name: minimal
-  platform: supernotify
-```
 
 ## Send
 

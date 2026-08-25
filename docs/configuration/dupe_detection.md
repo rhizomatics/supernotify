@@ -16,12 +16,7 @@ Messages and titles are stripped of digits and punctuation before being compared
 
 The hashed message and title is cached, with a limit to both cache size and time the data is held. The `ttl` not only affects how much data is held in memory, it also controls after how long the same message can be repeated without being suppressed as a duplicate.
 
-```yaml title="configuration snippet"
-    dupe_check:
-      ttl: 120 # default, 120 seconds == 2 minutes
-      size: 100 # default 100 entries in cache
-      dupe_policy: dupe_policy_message_title_same_or_lower_priority
-```
+![Dupe Detect Config in Integration Page](../assets/images/dupe_detect_config.png)
 
 ## Overriding
 
