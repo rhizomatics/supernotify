@@ -1,0 +1,57 @@
+{
+  "type": "object",
+  "properties": {
+    "camera": {
+      "type": "string"
+    },
+    "alt_camera": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alias": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "device_tracker": {
+      "type": "string"
+    },
+    "ptz_camera": {
+      "type": "string"
+    },
+    "ptz_default_preset": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "string"
+        }
+      ],
+      "default": 1
+    },
+    "ptz_delay": {
+      "type": "integer",
+      "default": 0
+    },
+    "ptz_method": {
+      "type": "string",
+      "enum": [
+        "onvif",
+        "frigate"
+      ],
+      "default": "onvif"
+    }
+  },
+  "required": [
+    "camera"
+  ],
+  "title": "Camera Definition",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Camera_Definition.json",
+  "description": "Voluptuous validation schema for Camera_Definition",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
