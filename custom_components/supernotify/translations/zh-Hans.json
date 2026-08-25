@@ -57,6 +57,14 @@
         }
     },
     "issues": {
+        "deprecated_yaml_full": {
+            "title": "Supernotify 的 YAML 配置可以移除",
+            "description": "您的 Supernotify YAML 配置已导入到界面中，不再需要。请从 `configuration.yaml` 文件中删除 `{domain}` 平台条目，并重启 Home Assistant。"
+        },
+        "deprecated_yaml_partial": {
+            "title": "部分 Supernotify YAML 配置可以移除",
+            "description": "投递、传输方式、场景、收件人、摄像头、操作组和链接目前还无法通过界面配置，因此该集成仍需要一个 `{domain}` YAML 条目来定义它们。不过，`archive`、`housekeeping` 和 `dupe_check` 现在已由配置条目管理 - 请从 `configuration.yaml` 中的 `{domain}` 条目中删除这些键，并重启 Home Assistant。"
+        },
         "scenario_delivery": {
             "title": "场景的推送无效",
             "description": "场景定义 {scenario} 引用了 Supernotify 配置中不存在的推送 {delivery}"

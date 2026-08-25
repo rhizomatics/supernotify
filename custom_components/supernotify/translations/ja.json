@@ -57,6 +57,14 @@
         }
     },
     "issues": {
+        "deprecated_yaml_full": {
+            "title": "Supernotify の YAML 設定を削除できます",
+            "description": "Supernotify の YAML 設定は UI にインポートされたため、もう必要ありません。`configuration.yaml` ファイルから `{domain}` プラットフォームのエントリを削除し、Home Assistant を再起動してください。"
+        },
+        "deprecated_yaml_partial": {
+            "title": "一部の Supernotify YAML 設定を削除できます",
+            "description": "配信、転送、シナリオ、受信者、カメラ、アクショングループ、リンクはまだ UI から設定できないため、この統合にはそれらを定義する `{domain}` の YAML エントリが引き続き必要です。ただし、`archive`、`housekeeping`、`dupe_check` は現在コンフィグエントリから管理されています。`configuration.yaml` の `{domain}` エントリからこれらのキーを削除し、Home Assistant を再起動してください。"
+        },
         "scenario_delivery": {
             "title": "シナリオの配信が無効です",
             "description": "シナリオ定義 {scenario} は、Supernotify設定に存在しない配信 {delivery} を参照しています"

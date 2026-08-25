@@ -57,6 +57,14 @@
         }
     },
     "issues": {
+        "deprecated_yaml_full": {
+            "title": "La configurazione YAML di Supernotify può essere rimossa",
+            "description": "La configurazione YAML di Supernotify è stata importata nell'interfaccia utente e non è più necessaria. Rimuovi la voce della piattaforma `{domain}` dal file `configuration.yaml` e riavvia Home Assistant."
+        },
+        "deprecated_yaml_partial": {
+            "title": "Parte della configurazione YAML di Supernotify può essere rimossa",
+            "description": "Consegne, trasporti, scenari, destinatari, telecamere, gruppi di azioni e link non sono ancora configurabili dall'interfaccia utente, quindi questa integrazione richiede ancora una voce YAML `{domain}` che li definisca. Tuttavia, `archive`, `housekeeping` e `dupe_check` sono ora gestiti dalla voce di configurazione - rimuovi queste chiavi dalla voce `{domain}` nel tuo `configuration.yaml` e riavvia Home Assistant."
+        },
         "scenario_delivery": {
             "title": "Consegna Non Valida per Scenario",
             "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di supernotify"

@@ -57,6 +57,14 @@
         }
     },
     "issues": {
+        "deprecated_yaml_full": {
+            "title": "La configuration YAML de Supernotify peut être supprimée",
+            "description": "Votre configuration YAML de Supernotify a été importée dans l'interface utilisateur et n'est plus nécessaire. Supprimez l'entrée de plateforme `{domain}` de votre fichier `configuration.yaml` et redémarrez Home Assistant."
+        },
+        "deprecated_yaml_partial": {
+            "title": "Une partie de la configuration YAML de Supernotify peut être supprimée",
+            "description": "Les livraisons, transports, scénarios, destinataires, caméras, groupes d'actions et liens ne sont pas encore configurables depuis l'interface utilisateur, cette intégration a donc toujours besoin d'une entrée YAML `{domain}` les définissant. Cependant, `archive`, `housekeeping` et `dupe_check` sont désormais gérés depuis l'entrée de configuration - supprimez ces clés de l'entrée `{domain}` de votre `configuration.yaml` et redémarrez Home Assistant."
+        },
         "scenario_delivery": {
             "title": "Livraison invalide pour le scénario",
             "description": "La définition du scénario {scenario} fait référence à une livraison {delivery} qui n'existe pas dans la configuration de supernotify"

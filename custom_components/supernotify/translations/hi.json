@@ -57,6 +57,14 @@
         }
     },
     "issues": {
+        "deprecated_yaml_full": {
+            "title": "Supernotify YAML कॉन्फ़िगरेशन हटाया जा सकता है",
+            "description": "आपका Supernotify YAML कॉन्फ़िगरेशन UI में आयात कर दिया गया है और अब इसकी आवश्यकता नहीं है। अपनी `configuration.yaml` फ़ाइल से `{domain}` प्लेटफ़ॉर्म प्रविष्टि हटाएं और Home Assistant को पुनः आरंभ करें।"
+        },
+        "deprecated_yaml_partial": {
+            "title": "कुछ Supernotify YAML कॉन्फ़िगरेशन हटाया जा सकता है",
+            "description": "डिलीवरी, ट्रांसपोर्ट, परिदृश्य, प्राप्तकर्ता, कैमरे, एक्शन ग्रुप और लिंक अभी तक UI से कॉन्फ़िगर करने योग्य नहीं हैं, इसलिए इस इंटीग्रेशन को अभी भी उन्हें परिभाषित करने वाली `{domain}` YAML प्रविष्टि की आवश्यकता है। हालांकि, `archive`, `housekeeping` और `dupe_check` अब कॉन्फ़िग एंट्री से प्रबंधित होते हैं - अपनी `configuration.yaml` की `{domain}` प्रविष्टि से उन कुंजियों को हटाएं और Home Assistant को पुनः आरंभ करें।"
+        },
         "scenario_delivery": {
             "title": "परिदृश्य के लिए अमान्य डिलीवरी",
             "description": "परिदृश्य परिभाषा {scenario} एक डिलीवरी {delivery} को संदर्भित करती है जो सुपरनोटिफाई कॉन्फ़िगरेशन में मौजूद नहीं है"

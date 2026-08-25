@@ -89,7 +89,8 @@ async def test_yaml_setup_mirrors_into_import_entry(hass: HomeAssistant) -> None
     assert hass.data["notify_services"][DOMAIN][0] is legacy_service
 
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is not None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_full") is not None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_partial") is None
 
 
 async def test_yaml_with_deliveries_does_not_raise_deprecated_yaml(hass: HomeAssistant) -> None:
@@ -114,7 +115,8 @@ async def test_yaml_with_deliveries_does_not_raise_deprecated_yaml(hass: HomeAss
     assert len(entries) == 1
 
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_full") is None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_partial") is None
 
 
 async def test_yaml_with_deliveries_and_archive_raises_deprecated_yaml(hass: HomeAssistant) -> None:
@@ -135,7 +137,8 @@ async def test_yaml_with_deliveries_and_archive_raises_deprecated_yaml(hass: Hom
     await hass.async_block_till_done()
 
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is not None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_full") is None
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_partial") is not None
 
 
 async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:

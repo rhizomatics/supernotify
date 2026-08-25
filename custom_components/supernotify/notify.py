@@ -22,9 +22,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-)
-from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -384,8 +381,9 @@ async def async_get_service(
 
     # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
     # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
-    # "deprecated_yaml" is a shared translation key owned by the homeassistant domain, so there's
-    # only ever one issue - it can't say "full" vs "partial" itself, hence the log message below.
+    # The shared "deprecated_yaml" translation key owned by the homeassistant domain can't say
+    # "full" vs "partial" - and its "your YAML has been imported, remove it" wording is wrong
+    # for the partial case - so these two issues use supernotify-owned wording instead.
     #
     # Deliveries, transports, scenarios, recipients, cameras, action groups and links aren't
     # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are defined,
@@ -417,6 +415,16 @@ async def async_get_service(
             "SUPERNOTIFY YAML configuration is no longer required and can be fully removed; "
             "manage this integration from the UI instead"
         )
+        async_delete_issue(hass, DOMAIN, "deprecated_yaml_partial")
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_full",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_full",
+            translation_placeholders={"domain": DOMAIN},
+        )
     elif dead_keys_present:
         _LOGGER.warning(
             "SUPERNOTIFY YAML configuration still defines deliveries/transports/scenarios/"
@@ -424,20 +432,19 @@ async def async_get_service(
             "part must stay. But archive/housekeeping/dupe_check are now UI-configurable via "
             "the mirrored config entry, so those keys can be removed from YAML"
         )
-    else:
-        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
-
-    if not unmigrated_keys_present or dead_keys_present:
+        async_delete_issue(hass, DOMAIN, "deprecated_yaml_full")
         async_create_issue(
             hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
+            DOMAIN,
+            "deprecated_yaml_partial",
             is_fixable=False,
-            issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={"domain": DOMAIN, "integration_title": "Supernotify"},
+            translation_key="deprecated_yaml_partial",
+            translation_placeholders={"domain": DOMAIN},
         )
+    else:
+        async_delete_issue(hass, DOMAIN, "deprecated_yaml_full")
+        async_delete_issue(hass, DOMAIN, "deprecated_yaml_partial")
 
     # One-shot mirror of this YAML config into a config entry, so YAML-only users
     # get an Integrations-page presence. Only when no entry exists yet - once one
