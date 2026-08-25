@@ -49,7 +49,6 @@ async def test_user_step_defaults_create_entry(hass: HomeAssistant) -> None:
         CONF_MEDIA_URL_PREFIX: "/supernotify/media",
         CONF_MOBILE_DISCOVERY: True,
         CONF_RECIPIENTS_DISCOVERY: True,
-        CONF_ARCHIVE_PATH: "",
     }
     await hass.async_block_till_done()
 
@@ -86,7 +85,6 @@ async def test_reconfigure_updates_global_settings(hass: HomeAssistant) -> None:
             CONF_MEDIA_URL_PREFIX: "/supernotify/media",
             CONF_MOBILE_DISCOVERY: False,
             CONF_RECIPIENTS_DISCOVERY: True,
-            CONF_ARCHIVE_PATH: "",
         },
     )
     assert result2["type"] == FlowResultType.ABORT
@@ -120,17 +118,29 @@ async def test_options_flow_archive(hass: HomeAssistant) -> None:
     assert menu_result["step_id"] == "archive"
 
     result = await hass.config_entries.options.async_configure(
-        menu_result["flow_id"], {CONF_ENABLED: True, CONF_ARCHIVE_DAYS: 5}
+        menu_result["flow_id"],
+        {
+            CONF_ENABLED: True,
+            CONF_ARCHIVE_DAYS: 5,
+            CONF_ARCHIVE_EVENT_SELECTION: ["ERROR", "DUPE"],
+            CONF_ARCHIVE_DIAGNOSTICS: [],
+        },
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert entry.options[CONF_ARCHIVE][CONF_ENABLED] is True
     assert entry.options[CONF_ARCHIVE][CONF_ARCHIVE_DAYS] == 5
+    # the ticked checkboxes are stored as the pipe-separated string parse_event_policy expects
+    assert entry.options[CONF_ARCHIVE][CONF_ARCHIVE_EVENT_SELECTION] == "ERROR|DUPE"
+    assert entry.options[CONF_ARCHIVE][CONF_ARCHIVE_DIAGNOSTICS] == "NONE"
 
-    # re-opening the step is pre-filled with the values just saved
+    # re-opening the step is pre-filled with the values just saved, as a checkbox list again
     options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "archive"})
-    assert menu_result2["data_schema"]({})[CONF_ARCHIVE_DAYS] == 5
+    prefilled = menu_result2["data_schema"]({})
+    assert prefilled[CONF_ARCHIVE_DAYS] == 5
+    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == ["ERROR", "DUPE"]
+    assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == []
 
 
 async def test_options_flow_dupe_check(hass: HomeAssistant) -> None:
@@ -190,11 +200,15 @@ async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
 
     assert entry.data[CONF_TEMPLATE_PATH] == "/config/templates/supernotify"
     assert entry.data[CONF_RECIPIENTS_DISCOVERY] is False
-    assert entry.data[CONF_ARCHIVE_PATH] == "/config/archive/supernotify"
+    assert CONF_ARCHIVE_PATH not in entry.data
     assert entry.data[ATTR_IMPORTED_FROM_YAML] is True
 
-    # archive_path is split out of the mirrored archive options, the rest stays
-    assert entry.options[CONF_ARCHIVE] == {CONF_ENABLED: True, CONF_ARCHIVE_DAYS: 5}
+    # archive_path lives in the mirrored archive options, alongside the rest of archive
+    assert entry.options[CONF_ARCHIVE] == {
+        CONF_ENABLED: True,
+        CONF_ARCHIVE_PATH: "/config/archive/supernotify",
+        CONF_ARCHIVE_DAYS: 5,
+    }
     assert entry.options[CONF_DUPE_CHECK] == {CONF_TTL: 30}
     assert entry.options[CONF_HOUSEKEEPING] == {CONF_HOUSEKEEPING_TIME: "00:00:01"}
     # deliveries/transports/scenarios etc are not mirrored - YAML-only for this phase
@@ -241,8 +255,8 @@ async def test_archive_options_form_normalizes_stale_raw_values(hass: HomeAssist
     options_init = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "archive"})
     prefilled = menu_result["data_schema"]({})
-    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == "NO_DELIVERY|PARTIAL_DELIVERY|FALLBACK_DELIVERY|ERROR"
-    assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == "ERROR"
+    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == ["NO_DELIVERY", "PARTIAL_DELIVERY", "FALLBACK_DELIVERY", "ERROR"]
+    assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == ["ERROR"]
 
     options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "housekeeping"})
@@ -253,7 +267,7 @@ async def test_archive_options_form_normalizes_stale_raw_values(hass: HomeAssist
 async def test_import_without_archive_path(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={})
     entry = result["result"]
-    assert entry.data[CONF_ARCHIVE_PATH] == ""
+    assert CONF_ARCHIVE_PATH not in entry.data
     assert CONF_ARCHIVE not in entry.options
 
 

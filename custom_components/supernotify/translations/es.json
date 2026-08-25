@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "Recargar",
             "description": "Recarga los servicios de Supernotify."
         },
         "enquire_deliveries_by_scenario": {
@@ -17,7 +17,6 @@
                 "data": {
                     "template_path": "Ruta de plantillas",
                     "media_path": "Ruta de medios",
-                    "archive_path": "Ruta de archivos",
                     "media_url_prefix": "Prefijo de URL de medios",
                     "mobile_discovery": "Descubrimiento de dispositivos móviles",
                     "recipients_discovery": "Descubrimiento de destinatarios"
@@ -25,7 +24,6 @@
                 "data_description": {
                     "template_path": "Ubicación opcional de las plantillas Jinja2 para correos electrónicos HTML",
                     "media_path": "Ruta de almacenamiento para los medios creados durante las notificaciones, por ejemplo capturas de cámara para adjuntos",
-                    "archive_path": "Ruta de almacenamiento para las notificaciones archivadas, útil para depurar configuración, escenarios, etc.",
                     "media_url_prefix": "Prefijo de ruta URL bajo el cual se sirven los medios almacenados, como capturas de cámara",
                     "mobile_discovery": "Descubre automáticamente los dispositivos de la app móvil registrados en Home Assistant para notificaciones push",
                     "recipients_discovery": "Descubre automáticamente destinatarios a partir de las entidades de persona de Home Assistant"
@@ -34,26 +32,24 @@
             "reconfigure": {
                 "title": "Entorno",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "Ruta de plantillas",
+                    "media_path": "Ruta de medios",
+                    "media_url_prefix": "Prefijo de URL de medios",
+                    "mobile_discovery": "Descubrimiento de dispositivos móviles",
+                    "recipients_discovery": "Descubrimiento de destinatarios"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "Ubicación opcional de las plantillas Jinja2 para correos electrónicos HTML",
+                    "media_path": "Ruta de almacenamiento para los medios creados durante las notificaciones, por ejemplo capturas de cámara para adjuntos",
+                    "media_url_prefix": "Prefijo de ruta URL bajo el cual se sirven los medios almacenados, como capturas de cámara",
+                    "mobile_discovery": "Descubre automáticamente los dispositivos de la app móvil registrados en Home Assistant para notificaciones push",
+                    "recipients_discovery": "Descubre automáticamente destinatarios a partir de las entidades de persona de Home Assistant"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "Ya configurado. Solo es posible una única configuración.",
+            "reconfigure_successful": "La reconfiguración se realizó correctamente"
         }
     },
     "issues": {
@@ -101,6 +97,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "Ruta de archivos",
                     "enabled": "Habilitado",
                     "file_retention_days": "Días de retención",
                     "mqtt_topic": "Tema MQTT",
@@ -112,6 +109,7 @@
                     "diagnostics": "Selección de diagnóstico"
                 },
                 "data_description": {
+                    "file_path": "Ruta de almacenamiento para las notificaciones archivadas, útil para depurar configuración, escenarios, etc.",
                     "enabled": "Activa el archivo de notificaciones",
                     "file_retention_days": "Cuántos días se conservan las notificaciones archivadas",
                     "mqtt_topic": "Tema MQTT opcional al que se publican las notificaciones archivadas",
@@ -119,8 +117,8 @@
                     "mqtt_retain": "Si las notificaciones archivadas publicadas en MQTT se retienen",
                     "purge_interval": "Intervalo mínimo en minutos entre purgas automáticas del archivo",
                     "event_name": "Nombre del evento de Home Assistant emitido para las notificaciones archivadas",
-                    "event_selection": "Qué resultados de notificación disparan un evento, como nombres separados por barra vertical, por ejemplo ERROR|DUPE",
-                    "diagnostics": "Qué resultados de notificación se registran con detalle de diagnóstico completo, como nombres separados por barra vertical"
+                    "event_selection": "Qué resultados de notificación disparan un evento",
+                    "diagnostics": "Qué resultados de notificación se registran con detalle de diagnóstico completo"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "Mismo mensaje y título, con prioridad igual o menor",
                 "dupe_policy_message_title_same": "Mismo mensaje y título",
                 "dupe_policy_none": "Desactivada"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "Éxito",
+                "NO_DELIVERY": "Sin entrega",
+                "PARTIAL_DELIVERY": "Entrega parcial",
+                "FALLBACK_DELIVERY": "Entrega de respaldo",
+                "ERROR": "Error",
+                "DUPE": "Duplicado",
+                "ALL": "Todos los resultados"
             }
         }
     }

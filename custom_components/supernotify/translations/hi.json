@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "पुनः लोड करें",
             "description": "सुपरनोटिफाई सेवाएं पुनः लोड करता है।"
         },
         "enquire_deliveries_by_scenario": {
@@ -17,7 +17,6 @@
                 "data": {
                     "template_path": "टेम्पलेट पथ",
                     "media_path": "मीडिया पथ",
-                    "archive_path": "संग्रह पथ",
                     "media_url_prefix": "मीडिया URL प्रीफ़िक्स",
                     "mobile_discovery": "मोबाइल डिवाइस खोज",
                     "recipients_discovery": "प्राप्तकर्ता खोज"
@@ -25,7 +24,6 @@
                 "data_description": {
                     "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान",
                     "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट",
-                    "archive_path": "संग्रहीत सूचनाओं के लिए संग्रहण पथ, कॉन्फ़िगरेशन, परिदृश्य आदि डीबग करने के लिए उपयोगी",
                     "media_url_prefix": "URL पथ प्रीफ़िक्स जिसके अंतर्गत संग्रहीत मीडिया, जैसे कैमरा स्नैपशॉट, परोसा जाता है",
                     "mobile_discovery": "पुश सूचनाओं के लिए Home Assistant में पंजीकृत मोबाइल ऐप डिवाइस को स्वचालित रूप से खोजें",
                     "recipients_discovery": "Home Assistant व्यक्ति entities से प्राप्तकर्ताओं को स्वचालित रूप से खोजें"
@@ -34,26 +32,24 @@
             "reconfigure": {
                 "title": "पर्यावरण",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "टेम्पलेट पथ",
+                    "media_path": "मीडिया पथ",
+                    "media_url_prefix": "मीडिया URL प्रीफ़िक्स",
+                    "mobile_discovery": "मोबाइल डिवाइस खोज",
+                    "recipients_discovery": "प्राप्तकर्ता खोज"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान",
+                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट",
+                    "media_url_prefix": "URL पथ प्रीफ़िक्स जिसके अंतर्गत संग्रहीत मीडिया, जैसे कैमरा स्नैपशॉट, परोसा जाता है",
+                    "mobile_discovery": "पुश सूचनाओं के लिए Home Assistant में पंजीकृत मोबाइल ऐप डिवाइस को स्वचालित रूप से खोजें",
+                    "recipients_discovery": "Home Assistant व्यक्ति entities से प्राप्तकर्ताओं को स्वचालित रूप से खोजें"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "पहले से कॉन्फ़िगर किया गया है। केवल एक ही कॉन्फ़िगरेशन संभव है।",
+            "reconfigure_successful": "पुनः कॉन्फ़िगरेशन सफल रहा"
         }
     },
     "issues": {
@@ -101,6 +97,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "संग्रह पथ",
                     "enabled": "सक्षम",
                     "file_retention_days": "प्रतिधारण दिन",
                     "mqtt_topic": "MQTT विषय",
@@ -112,6 +109,7 @@
                     "diagnostics": "डायग्नोस्टिक्स चयन"
                 },
                 "data_description": {
+                    "file_path": "संग्रहीत सूचनाओं के लिए संग्रहण पथ, कॉन्फ़िगरेशन, परिदृश्य आदि डीबग करने के लिए उपयोगी",
                     "enabled": "सूचना संग्रह चालू करें",
                     "file_retention_days": "संग्रहीत सूचनाएं कितने दिनों तक रखी जाती हैं",
                     "mqtt_topic": "वैकल्पिक MQTT विषय जिस पर संग्रहीत सूचनाएं प्रकाशित की जाती हैं",
@@ -119,8 +117,8 @@
                     "mqtt_retain": "क्या MQTT पर प्रकाशित संग्रहीत सूचनाएं रिटेन की जाती हैं",
                     "purge_interval": "स्वचालित संग्रह पर्ज के बीच न्यूनतम अंतराल, मिनटों में",
                     "event_name": "संग्रहीत सूचनाओं के लिए फायर किया गया Home Assistant इवेंट नाम",
-                    "event_selection": "कौन से सूचना परिणाम एक इवेंट फायर करते हैं, पाइप से अलग किए गए नामों के रूप में, उदाहरण के लिए ERROR|DUPE",
-                    "diagnostics": "कौन से सूचना परिणाम पूर्ण डायग्नोस्टिक विवरण के साथ दर्ज किए जाते हैं, पाइप से अलग किए गए नामों के रूप में"
+                    "event_selection": "कौन से सूचना परिणाम एक इवेंट फायर करते हैं",
+                    "diagnostics": "कौन से सूचना परिणाम पूर्ण डायग्नोस्टिक विवरण के साथ दर्ज किए जाते हैं"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "समान संदेश और शीर्षक, समान या निम्न प्राथमिकता पर",
                 "dupe_policy_message_title_same": "समान संदेश और शीर्षक",
                 "dupe_policy_none": "अक्षम"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "सफल",
+                "NO_DELIVERY": "कोई डिलीवरी नहीं",
+                "PARTIAL_DELIVERY": "आंशिक डिलीवरी",
+                "FALLBACK_DELIVERY": "फ़ॉलबैक डिलीवरी",
+                "ERROR": "त्रुटि",
+                "DUPE": "डुप्लिकेट",
+                "ALL": "सभी परिणाम"
             }
         }
     }

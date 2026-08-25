@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "Przeładuj",
             "description": "Ponownie ładuje usługi Supernotify."
         },
         "enquire_deliveries_by_scenario": {
@@ -17,7 +17,6 @@
                 "data": {
                     "template_path": "Ścieżka szablonu",
                     "media_path": "Ścieżka mediów",
-                    "archive_path": "Ścieżka archiwum",
                     "media_url_prefix": "Prefiks URL mediów",
                     "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                     "recipients_discovery": "Wykrywanie odbiorców"
@@ -25,7 +24,6 @@
                 "data_description": {
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML",
                     "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników",
-                    "archive_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp.",
                     "media_url_prefix": "Prefiks ścieżki URL, pod którym udostępniane są przechowywane media, np. zrzuty z kamery",
                     "mobile_discovery": "Automatycznie wykrywa urządzenia aplikacji mobilnej zarejestrowane w Home Assistant do powiadomień push",
                     "recipients_discovery": "Automatycznie wykrywa odbiorców na podstawie encji osób Home Assistant"
@@ -34,26 +32,24 @@
             "reconfigure": {
                 "title": "Środowisko",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "Ścieżka szablonu",
+                    "media_path": "Ścieżka mediów",
+                    "media_url_prefix": "Prefiks URL mediów",
+                    "mobile_discovery": "Wykrywanie urządzeń mobilnych",
+                    "recipients_discovery": "Wykrywanie odbiorców"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML",
+                    "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników",
+                    "media_url_prefix": "Prefiks ścieżki URL, pod którym udostępniane są przechowywane media, np. zrzuty z kamery",
+                    "mobile_discovery": "Automatycznie wykrywa urządzenia aplikacji mobilnej zarejestrowane w Home Assistant do powiadomień push",
+                    "recipients_discovery": "Automatycznie wykrywa odbiorców na podstawie encji osób Home Assistant"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "Już skonfigurowano. Możliwa jest tylko jedna konfiguracja.",
+            "reconfigure_successful": "Ponowna konfiguracja zakończona powodzeniem"
         }
     },
     "issues": {
@@ -101,6 +97,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "Ścieżka archiwum",
                     "enabled": "Włączone",
                     "file_retention_days": "Dni przechowywania",
                     "mqtt_topic": "Temat MQTT",
@@ -112,6 +109,7 @@
                     "diagnostics": "Wybór diagnostyki"
                 },
                 "data_description": {
+                    "file_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp.",
                     "enabled": "Włącza archiwum powiadomień",
                     "file_retention_days": "Przez ile dni przechowywane są zarchiwizowane powiadomienia",
                     "mqtt_topic": "Opcjonalny temat MQTT, na który publikowane są zarchiwizowane powiadomienia",
@@ -119,8 +117,8 @@
                     "mqtt_retain": "Czy zarchiwizowane powiadomienia publikowane w MQTT są zachowywane (retain)",
                     "purge_interval": "Minimalny odstęp w minutach między automatycznymi czyszczeniami archiwum",
                     "event_name": "Nazwa zdarzenia Home Assistant wyzwalanego dla zarchiwizowanych powiadomień",
-                    "event_selection": "Które wyniki powiadomień wyzwalają zdarzenie, jako nazwy rozdzielone znakiem „|”, np. ERROR|DUPE",
-                    "diagnostics": "Które wyniki powiadomień są rejestrowane z pełnymi szczegółami diagnostycznymi, jako nazwy rozdzielone znakiem „|”"
+                    "event_selection": "Które wyniki powiadomień wyzwalają zdarzenie",
+                    "diagnostics": "Które wyniki powiadomień są rejestrowane z pełnymi szczegółami diagnostycznymi"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "Taka sama wiadomość i tytuł, przy takim samym lub niższym priorytecie",
                 "dupe_policy_message_title_same": "Taka sama wiadomość i tytuł",
                 "dupe_policy_none": "Wyłączone"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "Sukces",
+                "NO_DELIVERY": "Brak dostawy",
+                "PARTIAL_DELIVERY": "Częściowa dostawa",
+                "FALLBACK_DELIVERY": "Dostawa zapasowa",
+                "ERROR": "Błąd",
+                "DUPE": "Duplikat",
+                "ALL": "Wszystkie wyniki"
             }
         }
     }

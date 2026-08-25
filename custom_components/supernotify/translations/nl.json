@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "Herladen",
             "description": "Herlaadt Supernotify-diensten."
         },
         "enquire_deliveries_by_scenario": {
@@ -17,7 +17,6 @@
                 "data": {
                     "template_path": "Sjabloonpad",
                     "media_path": "Mediapad",
-                    "archive_path": "Archiefpad",
                     "media_url_prefix": "Media-URL-voorvoegsel",
                     "mobile_discovery": "Detectie van mobiele apparaten",
                     "recipients_discovery": "Detectie van ontvangers"
@@ -25,7 +24,6 @@
                 "data_description": {
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails",
                     "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen",
-                    "archive_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz.",
                     "media_url_prefix": "URL-padvoorvoegsel waaronder opgeslagen media, zoals camera-snapshots, wordt aangeboden",
                     "mobile_discovery": "Detecteert automatisch mobiele-app-apparaten die in Home Assistant zijn geregistreerd voor pushmeldingen",
                     "recipients_discovery": "Detecteert automatisch ontvangers op basis van Home Assistant person-entiteiten"
@@ -34,26 +32,24 @@
             "reconfigure": {
                 "title": "Omgeving",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "Sjabloonpad",
+                    "media_path": "Mediapad",
+                    "media_url_prefix": "Media-URL-voorvoegsel",
+                    "mobile_discovery": "Detectie van mobiele apparaten",
+                    "recipients_discovery": "Detectie van ontvangers"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails",
+                    "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen",
+                    "media_url_prefix": "URL-padvoorvoegsel waaronder opgeslagen media, zoals camera-snapshots, wordt aangeboden",
+                    "mobile_discovery": "Detecteert automatisch mobiele-app-apparaten die in Home Assistant zijn geregistreerd voor pushmeldingen",
+                    "recipients_discovery": "Detecteert automatisch ontvangers op basis van Home Assistant person-entiteiten"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "Al geconfigureerd. Er is slechts één configuratie mogelijk.",
+            "reconfigure_successful": "Herconfiguratie is gelukt"
         }
     },
     "issues": {
@@ -101,6 +97,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "Archiefpad",
                     "enabled": "Ingeschakeld",
                     "file_retention_days": "Bewaardagen",
                     "mqtt_topic": "MQTT-topic",
@@ -112,6 +109,7 @@
                     "diagnostics": "Diagnostiekselectie"
                 },
                 "data_description": {
+                    "file_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz.",
                     "enabled": "Schakelt het meldingsarchief in",
                     "file_retention_days": "Hoeveel dagen gearchiveerde meldingen worden bewaard",
                     "mqtt_topic": "Optioneel MQTT-topic waarnaar gearchiveerde meldingen worden gepubliceerd",
@@ -119,8 +117,8 @@
                     "mqtt_retain": "Of gearchiveerde meldingen die naar MQTT zijn gepubliceerd, worden vastgehouden (retain)",
                     "purge_interval": "Minimale interval in minuten tussen automatische archiefopschoningen",
                     "event_name": "Naam van de Home Assistant-gebeurtenis die wordt geactiveerd voor gearchiveerde meldingen",
-                    "event_selection": "Welke meldingsresultaten een gebeurtenis activeren, als door pipes gescheiden namen, bijvoorbeeld ERROR|DUPE",
-                    "diagnostics": "Welke meldingsresultaten worden vastgelegd met volledige diagnostische details, als door pipes gescheiden namen"
+                    "event_selection": "Welke meldingsresultaten een gebeurtenis activeren",
+                    "diagnostics": "Welke meldingsresultaten worden vastgelegd met volledige diagnostische details"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "Zelfde bericht en titel, bij gelijke of lagere prioriteit",
                 "dupe_policy_message_title_same": "Zelfde bericht en titel",
                 "dupe_policy_none": "Uitgeschakeld"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "Succes",
+                "NO_DELIVERY": "Geen bezorging",
+                "PARTIAL_DELIVERY": "Gedeeltelijke bezorging",
+                "FALLBACK_DELIVERY": "Fallback-bezorging",
+                "ERROR": "Fout",
+                "DUPE": "Duplicaat",
+                "ALL": "Alle uitkomsten"
             }
         }
     }

@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "Reload",
             "description": "Reloads supernotify services."
         },
         "enquire_deliveries_by_scenario": {
@@ -19,41 +19,37 @@
                     "media_path": "Media Path",
                     "media_url_prefix": "Media URL Prefix",
                     "mobile_discovery": "Mobile Device Discovery",
-                    "recipients_discovery": "Recipient Discovery",
-                    "archive_path": "Archive Path"
+                    "recipients_discovery": "Recipient Discovery"
                 },
                 "data_description": {
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
                     "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
-                    "recipients_discovery": "Automatically discover recipients from Home Assistant person entities",
-                    "archive_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc"
+                    "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
                 }
             },
             "reconfigure": {
                 "title": "Environment",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "Template Path",
+                    "media_path": "Media Path",
+                    "media_url_prefix": "Media URL Prefix",
+                    "mobile_discovery": "Mobile Device Discovery",
+                    "recipients_discovery": "Recipient Discovery"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
+                    "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
+                    "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
+                    "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "Already configured. Only a single configuration is possible.",
+            "reconfigure_successful": "Reconfiguration was successful"
         }
     },
     "options": {
@@ -67,6 +63,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "Archive Path",
                     "enabled": "Enabled",
                     "file_retention_days": "Retention Days",
                     "mqtt_topic": "MQTT Topic",
@@ -78,6 +75,7 @@
                     "diagnostics": "Diagnostics Selection"
                 },
                 "data_description": {
+                    "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc",
                     "enabled": "Turn on the notification archive",
                     "file_retention_days": "How many days of archived notifications to keep",
                     "mqtt_topic": "Optional MQTT topic to publish archived notifications to",
@@ -85,8 +83,8 @@
                     "mqtt_retain": "Whether archived notifications published to MQTT are retained",
                     "purge_interval": "Minimum interval in minutes between automatic archive purges",
                     "event_name": "Home Assistant event name fired for archived notifications",
-                    "event_selection": "Which notification outcomes fire an event, as pipe-separated names, for example ERROR|DUPE",
-                    "diagnostics": "Which notification outcomes are recorded with full diagnostic detail, as pipe-separated names"
+                    "event_selection": "Which notification outcomes fire an event",
+                    "diagnostics": "Which notification outcomes are recorded with full diagnostic detail"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "Same message and title, at same or lower priority",
                 "dupe_policy_message_title_same": "Same message and title",
                 "dupe_policy_none": "Disabled"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "Success",
+                "NO_DELIVERY": "No Delivery",
+                "PARTIAL_DELIVERY": "Partial Delivery",
+                "FALLBACK_DELIVERY": "Fallback Delivery",
+                "ERROR": "Error",
+                "DUPE": "Duplicate",
+                "ALL": "All Outcomes"
             }
         }
     }
