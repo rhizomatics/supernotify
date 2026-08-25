@@ -55,6 +55,10 @@ transports:
 
 In addition, all of the options from `email` integration are available, such as for tuning PNG attachments or preheaders for message previews.
 
+### Reusing the Home Assistant SMTP Integration Configuration
+
+If no `connection` block is configured, this transport falls back to the connection details (server, port, encryption, username, password, `verify_ssl`, sender, sender name) from a configured [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) config entry, so you don't have to duplicate credentials. This only applies to ConfigFlow (UI) based SMTP integration setups, not the legacy YAML `platform: smtp` style. Omit `connection` entirely to use this.
+
 
 ## Roadmap
 

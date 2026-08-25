@@ -1,5 +1,10 @@
 # Public releases
 
+## 1.17.1
+- New standalone `smtp` integration will reuse connection details from an existing Home Assistant SMTP integration
+  - Only for the new UI based SMTP configuration, not the original yaml configuration
+  - This can be used to avoid defining the same information twice
+
 ## 1.17.0
 - Adds an alternative `smtp` integration which preserves the original Home Assistant behaviour
   - No need to have the overhead of pre-registering every e-mail address as a 'notify entity'

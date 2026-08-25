@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_USERNAME, CONF_VERIFY_SSL
 
 from custom_components.supernotify.const import (
     CONF_CONNECTION,
@@ -52,7 +52,9 @@ def _uut(transport_config: dict | None = None) -> SmtpTransport:
 
 
 def test_auto_configure_without_connection() -> None:
-    uut = SmtpTransport(Mock(custom_template_path=None), {})
+    context = Mock(custom_template_path=None)
+    context.hass_api.find_config_entry_data.return_value = None
+    uut = SmtpTransport(context, {})
     assert uut.auto_configure(Mock()) is None
     assert uut.validate_action(None) is False
 
@@ -61,6 +63,40 @@ def test_auto_configure_with_connection() -> None:
     uut = _uut()
     assert uut.auto_configure(Mock()) is uut.delivery_defaults
     assert uut.validate_action(None) is True
+
+
+def test_reuses_ha_smtp_connection_when_not_configured() -> None:
+    context = Mock(custom_template_path=None)
+    context.hass_api.find_config_entry_data.return_value = {
+        "server": "ha-smtp.example.com",
+        CONF_PORT: 465,
+        CONF_ENCRYPTION: "tls",
+        CONF_USERNAME: "ha_user",
+        CONF_PASSWORD: "ha_pass",
+        CONF_VERIFY_SSL: False,
+        CONF_SENDER: "ha@example.com",
+        OPTION_SENDER_NAME: "HA Notifier",
+    }
+    uut = SmtpTransport(context, {})
+
+    context.hass_api.find_config_entry_data.assert_called_once_with("smtp")
+    assert uut.host == "ha-smtp.example.com"
+    assert uut.port == 465
+    assert uut.encryption == "tls"
+    assert uut.username == "ha_user"
+    assert uut.password == "ha_pass"
+    assert uut.verify_ssl is False
+    assert uut.sender == "ha@example.com"
+    assert uut.sender_name == "HA Notifier"
+    assert uut.auto_configure(Mock()) is uut.delivery_defaults
+    assert uut.validate_action(None) is True
+
+
+def test_existing_connection_not_overridden_by_ha_smtp() -> None:
+    context = Mock(custom_template_path=None)
+    uut = SmtpTransport(context, TRANSPORT_CONFIG)
+    assert uut.host == "smtp.example.com"
+    context.hass_api.find_config_entry_data.assert_not_called()
 
 
 def test_build_message_plain() -> None:

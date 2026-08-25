@@ -14,7 +14,7 @@ from homeassistant.util import slugify
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable, Iterable, Iterator
+    from collections.abc import Callable, Iterable, Iterator, Mapping
 
     import aiohttp
     from anyio import Path
@@ -323,6 +323,16 @@ class HomeAssistantAPI:
             _LOGGER.debug("SUPERNOTIFY Unable to find service for %s", domain)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to find service for %s: %s", domain, e)
+        return None
+
+    def find_config_entry_data(self, domain: str) -> Mapping[str, Any] | None:
+        """Return the data of the first enabled, non-ignored config entry for domain, if any."""
+        try:
+            entries = self._hass.config_entries.async_entries(domain, include_ignore=False, include_disabled=False)
+            if entries:
+                return entries[0].data
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to find config entry for %s: %s", domain, e)
         return None
 
     def http_session(self) -> aiohttp.ClientSession:

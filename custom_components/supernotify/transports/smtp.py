@@ -15,7 +15,8 @@ from traceback import format_exception
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_TIMEOUT, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
 
@@ -53,6 +54,11 @@ DEFAULT_PORT = 587
 DEFAULT_ENCRYPTION = "starttls"
 DEFAULT_TIMEOUT = 5
 NULL_RETURN_PATH = "<>"
+
+# Keys used in the HA core smtp integration's config entry data, for reuse when no
+# connection is configured here. "server" is smtp-specific; the rest match generic
+# homeassistant.const keys already imported above.
+HA_SMTP_DOMAIN = "smtp"
 
 IMPORTANCE_HEADER_MAP: dict[str, str] = {
     const.PRIORITY_CRITICAL: "high",
@@ -93,6 +99,9 @@ class SmtpTransport(EmailTransport):
     requires), and so it isn't limited to whatever a given HA notify action exposes.
     Reuses EmailTransport's template rendering/image handling and only replaces the
     final delivery step.
+
+    If no `connection` is configured, falls back to reusing the host/port/encryption/
+    credentials/sender from HA's own smtp integration config entry, if one exists.
     """
 
     name = TRANSPORT_SMTP
@@ -111,6 +120,27 @@ class SmtpTransport(EmailTransport):
         self.sender: str | None = options.get(OPTION_SENDER)
         self.sender_name: str | None = options.get(OPTION_SENDER_NAME)
         self.default_title: str | None = options.get(OPTION_DEFAULT_TITLE)
+
+        if not self.host:
+            self._reuse_ha_smtp_connection()
+
+    def _reuse_ha_smtp_connection(self) -> None:
+        """No connection configured here; fall back to a configured HA smtp integration entry, if any."""
+        entry_data = self.hass_api.find_config_entry_data(HA_SMTP_DOMAIN)
+        if not entry_data:
+            _LOGGER.debug("SUPERNOTIFY no home assistant official smtp configuration to reuse")
+            return
+        _LOGGER.info("SUPERNOTIFY smtp transport reusing connection from HA smtp integration")
+        self.host = entry_data.get(CONF_SERVER)
+        self.port = entry_data.get(CONF_PORT, self.port)
+        self.encryption = entry_data.get(CONF_ENCRYPTION, self.encryption)
+        self.username = entry_data.get(CONF_USERNAME, self.username)
+        self.password = entry_data.get(CONF_PASSWORD, self.password)
+        self.verify_ssl = entry_data.get(CONF_VERIFY_SSL, self.verify_ssl)
+        if not self.sender:
+            self.sender = entry_data.get(CONF_SENDER)
+        if not self.sender_name:
+            self.sender_name = entry_data.get(CONF_SENDER_NAME)
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if self.host and self.sender:
