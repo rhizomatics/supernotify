@@ -23,7 +23,7 @@
   - Tests: `test_config_flow.py` (6 tests) + `test_init.py` (4 tests)
   - YAML import (mirror entry): `notify.async_get_service` now raises a deprecated_yaml repair (same idiom the core smtp integration uses) on every YAML load, and one-shot mirrors the config into a config entry when none exists yet. The legacy YAML platform keeps owning `notify.supernotify` — the mirrored entry is visible/editable in the UI but doesn't change runtime behavior yet (documented as a known limitation, since deliveries/transports still come from YAML only).
   - Reconfigure flow: `async_step_reconfigure` lets you edit template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery/archive_path on an existing entry (UI-created or imported) without deleting and re-adding it — reuses the same schema as the user step, pre-filled from entry.data.
-- Bronze level HA Quality Level Checks
+- Silver level HA Quality Level Checks
   - Stage 2 of the roadmap partially implemented, 'Bronze' level only
   - Better testing of user supplied values in config
   - Additional services moved to shared yaml/ui config code
