@@ -270,7 +270,8 @@ async def _detect_image_ext(hass_api: HomeAssistantAPI, bitmap: bytes) -> str:
         img = await hass_api.create_job(Image.open, io.BytesIO(bitmap))
         fmt = (img.format or "").lower()
         return "jpg" if fmt in ("jpg", "jpeg") else fmt or "img"
-    except Exception:
+    except Exception as e:
+        _LOGGER.warning("SUPERNOTIFY unable to detect image, defaulting to 'img': %s", e)
         return "img"
 
 
