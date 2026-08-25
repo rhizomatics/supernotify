@@ -76,6 +76,7 @@ from .snoozer import Snoozer
 from .transports.alexa_devices import AlexaDevicesTransport
 from .transports.alexa_media_player import AlexaMediaPlayerTransport
 from .transports.chime import ChimeTransport
+from .transports.discord import DiscordTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
@@ -131,6 +132,7 @@ TRANSPORTS: list[type[Transport]] = [
     LaMetricTransport,
     PushoverTransport,
     SmtpTransport,
+    DiscordTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 
