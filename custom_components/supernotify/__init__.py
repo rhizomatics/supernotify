@@ -24,6 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 
 NOTIFY_SERVICE_NAME = "supernotify"
 
+# Marker stored in entry.data for entries created by mirroring an existing YAML
+# config into the UI (see notify.async_get_service and config_flow.async_step_import).
+# The legacy YAML notify platform keeps owning notify.supernotify for these entries -
+# async_setup_entry must not also register it, which would duplicate the service.
+ATTR_IMPORTED_FROM_YAML = "imported_from_yaml"
+
 
 def _entry_full_config(entry: ConfigEntry) -> ConfigType:
     """Fold a config entry's data/options into a full SUPERNOTIFY_SCHEMA config dict.
@@ -50,6 +56,12 @@ def _entry_full_config(entry: ConfigEntry) -> ConfigType:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .notify import build_supernotify_action
+
+    if entry.data.get(ATTR_IMPORTED_FROM_YAML):
+        # This entry only mirrors an existing YAML config into the UI - the legacy
+        # YAML notify platform already provides notify.supernotify for it.
+        _LOGGER.debug("SUPERNOTIFY entry imported from YAML; legacy notify platform owns the service")
+        return True
 
     if hass.services.has_service("notify", NOTIFY_SERVICE_NAME):
         _LOGGER.warning(

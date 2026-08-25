@@ -7,6 +7,8 @@
 - SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
   - This covers basic use cases using default deliveries, like mobile push and email
   - More advanced configuration - like scenarios, cameras, transport, action configs etc - continue to require yaml configuration for now
+  - Existing core yaml config imported and converted if present, and a repair raised to remove dead yaml
+  - Core config is reconfigurable via UI
 
 
 ### Technical Changes
@@ -17,8 +19,10 @@
   - `__init__.py` — `async_setup_entry`/`async_unload_entry`, registering `notify.supernotify` directly via `BaseNotificationService` primitives (no legacy discovery), with a guard against double-registering if a legacy YAML platform is already using that name.
   - `notify.py` — `build_supernotify_action()` extracted so the YAML and config-entry paths share construction logic; YAML path (`async_get_service`) is otherwise untouched.
   - `manifest.json` — `config_flow: true`, `single_config_entry: true`, notify added to dependencies.
-  - `strings.json` + all 11 translations/*.json — new fields and options pages, properly translated (not left as English placeholders) after you flagged that.
-  - Tests: `test_config_flow.py` (6 tests) + `test_init.py` (4 tests), 100% coverage on both new files.
+  - `strings.json` + all 11 translations/*.json — new fields and options pages.
+  - Tests: `test_config_flow.py` (6 tests) + `test_init.py` (4 tests)
+  - YAML import (mirror entry): `notify.async_get_service` now raises a deprecated_yaml repair (same idiom the core smtp integration uses) on every YAML load, and one-shot mirrors the config into a config entry when none exists yet. The legacy YAML platform keeps owning `notify.supernotify` — the mirrored entry is visible/editable in the UI but doesn't change runtime behavior yet (documented as a known limitation, since deliveries/transports still come from YAML only).
+  - Reconfigure flow: `async_step_reconfigure` lets you edit template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery/archive_path on an existing entry (UI-created or imported) without deleting and re-adding it — reuses the same schema as the user step, pre-filled from entry.data.
 
 # Public releases
 

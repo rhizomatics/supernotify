@@ -27,7 +27,7 @@ Supernotifyの目標はひとつ——**コードなし、最小限の設定で�
 
 これにより、オートメーション、スクリプト、AppDaemonアプリがシンプルで保守しやすくなります。最小の通知——メッセージだけ——で必要なすべてを動かすことができます。メールアドレスを一箇所で変更するだけで、Supernotifyがどのモバイルアプリを使うか判断します。
 
-たった2行のシンプルなYAMLで、モバイルアプリ名を設定することなく、家全員へのモバイルプッシュ通知を開始できます。
+UI設定だけで、モバイルアプリ名を設定することなく、家全員へのモバイルプッシュ通知を開始できます。
 
 
 ## 配布
@@ -84,11 +84,13 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
     * 配信、トランスポート、受信者、シナリオをHome Assistant UIのエンティティとして公開
 
 
-## YAMLが少し必要
+## 高度な用途のみYAMLが必要
 
-Supernotifyは現在[YAMLベースの設定](https://supernotify.rhizomatics.org.uk/configuration/yaml/)のみをサポートしています。コピー＆ペーストの2行の設定だけで多くのことができます：
+Supernotifyは現在、基本設定には標準のHome Assistant UI設定、高度な機能には[YAML設定](https://supernotify.rhizomatics.org.uk/configuration/yaml/)をサポートしています。大規模なルールベースを扱いやすくするため、YAMLは今後も維持されます。
 
-```yaml title="デフォルトの2行のYAML"
+モバイルプッシュ設定の自動化を含め、シンプルな非YAML設定だけで多くのことができます。ドキュメント内の[レシピ](recipes/index.md)と、このモバイルプッシュの例をご覧ください：
+
+```yaml title="YAMLゼロ、すべてUI設定"
   - action: notify.supernotify
     data:
         message: こんにちは！全員のモバイルアプリに送信するSupernotifyのテストです

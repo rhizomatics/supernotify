@@ -33,6 +33,9 @@ examples = [str(p.name) for p in pathlib.Path(EXAMPLES_ROOT).iterdir() if p.name
 
 @pytest.mark.parametrize("config_name", examples)
 async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> None:
+    if config_name == "minimal.yaml":
+        # no longer any minimal necessary config with UI ConfigFlow
+        return
     config_path: Path = Path(EXAMPLES_ROOT) / config_name
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
     config = await hass.async_add_executor_job(load_yaml_config_file, str(config_path))

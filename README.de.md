@@ -27,7 +27,7 @@ Supernotify hat ein einziges Ziel: **mit der einfachstmöglichen Benachrichtigun
 
 Dies hält Automatisierungen, Skripte und AppDaemon-Apps einfach und wartungsfreundlich, wobei alle Details und Regeln an einem Ort verwaltet werden. Die kleinstmögliche Benachrichtigung — nur eine Nachricht — kann ausreichen, um alles auszulösen. Ändern Sie E-Mail-Adressen an einer Stelle und lassen Sie Supernotify herausfinden, welche mobilen Apps verwendet werden sollen.
 
-Mit nur zwei Zeilen einfachem YAML beginnen Sie sofort mit mobilen Push-Benachrichtigungen an alle im Haus registrierten Personen, ohne die Namen der mobilen Apps in Benachrichtigungen zu konfigurieren.
+Nur mit der UI-Konfiguration beginnen Sie sofort mit mobilen Push-Benachrichtigungen an alle im Haus registrierten Personen, ohne die Namen der mobilen Apps in Benachrichtigungen zu konfigurieren.
 
 
 ## Verteilung
@@ -84,11 +84,13 @@ Es gibt viele [Rezepte](https://supernotify.rhizomatics.org.uk/recipes/) mit Bei
     * Lieferungen, Transporte, Empfänger und Szenarien als Entitäten in der Home Assistant-Oberfläche
 
 
-## Etwas YAML erforderlich
+## YAML nur für erweiterte Nutzung
 
-Supernotify unterstützt derzeit nur die [YAML-basierte Konfiguration](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Mit nur 2 Zeilen Kopier-Einfüge-Konfiguration können Sie bereits viel erreichen:
+Supernotify unterstützt derzeit die standardmäßige Home Assistant UI-Konfiguration für die Basiseinrichtung sowie [YAML-Konfiguration](https://supernotify.rhizomatics.org.uk/configuration/yaml/) für erweiterte Funktionen. YAML bleibt erhalten, um die Arbeit mit größeren Regelwerken zu erleichtern.
 
-```yaml title="Mit den Standard-2-Zeilen YAML"
+Mit der einfachen Nicht-YAML-Konfiguration lässt sich bereits viel erreichen, einschließlich der automatischen Einrichtung von Mobile Push. Siehe die [Rezepte](recipes/index.md) in der Dokumentation, sowie dieses Mobile-Push-Beispiel:
+
+```yaml title="Mit null YAML, alles per UI konfiguriert"
   - action: notify.supernotify
     data:
         message: Hallo! Test von Supernotify, das an alle mobilen Apps sendet

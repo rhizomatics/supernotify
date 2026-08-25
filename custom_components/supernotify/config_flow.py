@@ -16,7 +16,7 @@ from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector, SelectSelectorConfig
 
-from . import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from . import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
@@ -48,16 +48,17 @@ from .const import (
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
 
 
-def _user_schema() -> vol.Schema:
+def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion used by
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
+    defaults = defaults or {}
     return vol.Schema({
-        vol.Optional(CONF_TEMPLATE_PATH, default=TEMPLATE_DIR): cv.string,
-        vol.Optional(CONF_MEDIA_PATH, default=MEDIA_DIR): cv.string,
-        vol.Optional(CONF_MEDIA_URL_PREFIX, default="/supernotify/media"): cv.string,
-        vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
-        vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
-        vol.Optional(CONF_ARCHIVE_PATH): cv.string,
+        vol.Optional(CONF_TEMPLATE_PATH, default=defaults.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR)): cv.string,
+        vol.Optional(CONF_MEDIA_PATH, default=defaults.get(CONF_MEDIA_PATH, MEDIA_DIR)): cv.string,
+        vol.Optional(CONF_MEDIA_URL_PREFIX, default=defaults.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media")): cv.string,
+        vol.Optional(CONF_MOBILE_DISCOVERY, default=defaults.get(CONF_MOBILE_DISCOVERY, True)): cv.boolean,
+        vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=defaults.get(CONF_RECIPIENTS_DISCOVERY, True)): cv.boolean,
+        vol.Optional(CONF_ARCHIVE_PATH, default=defaults.get(CONF_ARCHIVE_PATH, "")): cv.string,
     })
 
 
@@ -70,6 +71,56 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(title="Supernotify", data=user_input)
         return self.async_show_form(step_id="user", data_schema=_user_schema())
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Let the user change the global settings of an existing entry.
+
+        These fields are config-entry *data* (set at initial setup), not options, so HA's
+        guidance is a reconfigure step rather than the options flow - which instead covers
+        archive/dupe_check/housekeeping, genuine runtime preferences.
+        """
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            return self.async_update_reload_and_abort(entry, data_updates=user_input)
+        return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(dict(entry.data)))
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """One-shot mirror of an existing YAML configuration into a config entry.
+
+        `import_data` is the YAML config already validated by SUPERNOTIFY_SCHEMA. The legacy
+        YAML notify platform keeps owning notify.supernotify (see notify.async_get_service) -
+        this entry only mirrors the global settings into the UI, so YAML-only users get an
+        Integrations-page presence. async_setup_entry sees ATTR_IMPORTED_FROM_YAML and skips
+        registering a second notify.supernotify service.
+
+        Editing an imported entry's settings here does not change the running service, which
+        is still governed by the YAML file - that's the actual config to edit until deliveries/
+        transports/scenarios/recipients move off YAML in a later phase.
+
+        Duplicate-entry protection is the same single_config_entry manifest flag used by the
+        user step (it covers SOURCE_IMPORT too), so no unique_id bookkeeping is needed here.
+        """
+        archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
+        archive_path = archive.pop(CONF_ARCHIVE_PATH, None)
+
+        data: dict[str, Any] = {
+            CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
+            CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
+            CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
+            CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
+            CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
+            CONF_ARCHIVE_PATH: archive_path or "",
+            ATTR_IMPORTED_FROM_YAML: True,
+        }
+        options: dict[str, Any] = {}
+        if archive:
+            options[CONF_ARCHIVE] = archive
+        if import_data.get(CONF_DUPE_CHECK):
+            options[CONF_DUPE_CHECK] = import_data[CONF_DUPE_CHECK]
+        if import_data.get(CONF_HOUSEKEEPING):
+            options[CONF_HOUSEKEEPING] = import_data[CONF_HOUSEKEEPING]
+
+        return self.async_create_entry(title="Supernotify (imported)", data=data, options=options)
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> SupernotifyOptionsFlow:

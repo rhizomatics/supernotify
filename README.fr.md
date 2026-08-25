@@ -27,7 +27,7 @@ Supernotify a un seul objectif : **permettre à la notification la plus simple p
 
 Cela permet de garder les automatisations, scripts et applications AppDaemon simples et faciles à maintenir, avec tous les détails et règles gérés en un seul endroit. La notification la plus petite possible — uniquement un message — peut suffire à tout déclencher. Modifiez les adresses e-mail en un seul endroit et laissez Supernotify déterminer quelles applications mobiles utiliser.
 
-Avec seulement deux lignes de YAML très simple, commencez à envoyer des notifications push mobiles à tous les membres de la maison, sans configurer les noms des applications mobiles dans les notifications.
+Avec seulement la configuration via l'interface, commencez à envoyer des notifications push mobiles à tous les membres de la maison, sans configurer les noms des applications mobiles dans les notifications.
 
 
 ## Distribution
@@ -84,11 +84,13 @@ Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) a
     * Livraisons, transports, destinataires et scénarios exposés comme entités dans l'interface Home Assistant
 
 
-## Du YAML nécessaire
+## YAML uniquement pour un usage avancé
 
-Supernotify prend actuellement en charge uniquement la [configuration basée sur YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Avec seulement 2 lignes de configuration copier-coller, vous pouvez déjà faire beaucoup :
+Supernotify prend actuellement en charge la configuration standard via l'interface Home Assistant pour la configuration de base, et la [configuration YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) pour les fonctionnalités avancées. YAML sera conservé pour faciliter le travail avec des ensembles de règles plus importants.
 
-```yaml title="Avec les 2 lignes YAML par défaut"
+Beaucoup de choses peuvent être faites avec la configuration simple sans YAML, y compris l'automatisation de la configuration des notifications push mobiles. Consultez les [recettes](recipes/index.md) dans la documentation, ainsi que cet exemple de notification push mobile :
+
+```yaml title="Avec zéro YAML, tout configuré via l'interface"
   - action: notify.supernotify
     data:
         message: Bonjour ! Test de Supernotify envoyant vers les applications mobiles de tout le monde

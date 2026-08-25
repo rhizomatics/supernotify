@@ -37,7 +37,7 @@ Supernotify has one goal - to make the **simplest possible notification do as ma
      * [Halloween and Christmas themed chimes and voices](./recipes/seasonal_greetings.md)
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
-With two lines of very simple yaml, start mobile push notifications to everyone registered in the house, without configuring mobile app names in notifications.
+With only the UI configuration, start mobile push notifications to everyone registered in the house, without configuring mobile app names in notifications.
 
 
 ## Distribution
@@ -105,13 +105,13 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
     * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](usage/actions.md)
     * Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
-## Some YAML Needed
+## YAML Only for Advanced Use
 
-Presently Supernotify supports only [YAML based configuration](https://supernotify.rhizomatics.org.uk/configuration/yaml/). UI based config will be added, though YAML will be preserved for ease of working with larger rule bases.
+Presently Supernotify supports standard Home Assistant UI based config for the basic setup, and [YAML configuration](https://supernotify.rhizomatics.org.uk/configuration/yaml/) for advanced features. YAML will be preserved for ease of working with larger rule bases.
 
-You can however do a lot with only 2 lines of copy-paste config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation - that's enough to do this:
+A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](recipes/index.md) in the documentation, and this mobile push example:
 
-```yaml title="With the default 2 lines of YAML"
+```yaml title="With zero YAML all UI config"
   - action: notify.supernotify
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps

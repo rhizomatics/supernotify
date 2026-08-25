@@ -39,19 +39,23 @@ All config is either ConfigEntry based or round-tripped YAML.  No dual config.
 
 Top-level config should be entirely ConfigEntry. The first ConfigFlow version of the plugin should automatically migrate existing YAML, and raise repairs for the old core YAML and any subsequent core YAML. If possible automate the repair, so YAML rewritten to omit the deprecated config, when user decides comfortable to keep with new version (may need ruamel.yaml).
 
+Landed for the Immediate phase as a *mirror*, not a full cutover: an existing YAML config gets a one-shot import into a ConfigEntry (visible in the UI, editable via the same reconfigure/options flows a UI-only install gets), and a `deprecated_yaml` repair nags on every YAML load until it's removed - but the legacy YAML platform keeps owning `notify.supernotify` for these entries, so editing the mirrored entry does not yet change runtime behaviour. Full cutover (the entry becoming authoritative, editing it actually doing something) waits until Delivery/Transport/Scenario/Recipient/Camera also move off YAML in the Third phase - doing it earlier would mean deliveries silently stop working the moment someone touches the UI, which is worse than the mirror being cosmetic-only in the meantime. YAML-rewrite automation (ruamel.yaml) is not implemented - still deferred.
+
 Deliveries, Transports, Scenarios and Recipients should be maintained as YAML, in a similar fashion to how HA treats automations - where UI editing is available, it results in updates to YAML, and YAML changes are exposed via the UI editing. Testing needs improved for Scenario before major changes.
 
-Balance moving up the Quality Scale over focusing solely on the purely config flow phases, for example handling of runtime data and async processing. Recent changes to HA, such as Notify Entities, and their extension to SMTP, also need to be addressed.
+Balance moving up the Quality Scale over focusing solely on the purely config flow phases, for example handling of runtime data and async processing.
+
+**Notify Entity decision:** recent changes to HA (Notify Entities, and their extension to SMTP) raised the question of whether Supernotify should migrate off `BaseNotificationService` entirely. Decided not to, for now - a full NotifyEntity rewrite isn't trusted yet and is a bigger, separate piece of work. Instead the Immediate phase moves *off* the legacy notify-platform discovery/`config_per_platform` machinery (the actual "legacy" part) while keeping `BaseNotificationService` itself: `async_setup_entry` calls `BaseNotificationService.async_setup`/`async_register_services` directly, with no `discovery.async_load_platform` indirection. `notify.supernotify` stays a `BaseNotificationService`-registered action. Revisit NotifyEntity as its own phase if ever pursued.
 
 ## Phasing
 
 ### Immediate
 
-Implement the 'Straightforward' group, its low risk, has minimal impact on solving the rest of the design and opens up functionality like auto device discovery and delivery generation to users who will never touch YAML.
+Implement the 'Straightforward' group, its low risk, has minimal impact on solving the rest of the design and opens up functionality like auto device discovery and delivery generation to users who will never touch YAML. Ended up covering more than the original one-liner: a `user` step (zero required fields, matches `minimal.yaml`), a `reconfigure` step for editing those same global settings post-setup, an options flow for `archive`/`dupe_check`/`housekeeping`, and the YAML mirror-import + `deprecated_yaml` repair described above - all landed together since reconfigure and import both fell naturally out of building the `user` step's data schema, rather than because the scope was deliberately widened up front.
 
 ### Second
 
-Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved. Complete alignment with Notify Entity in existing code, or decide where future ConfigFlow phases will resolve
+Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved. The Notify Entity question from the Principles section above is resolved (staying on `BaseNotificationService`) - remaining Second-phase work is entity/service lifecycle quality-scale items (see `quality_scale.yaml`'s `action-setup` for the still-YAML-only supplemental `supernotify.*` debugging services), not an architecture decision.
 
 ### Third
 

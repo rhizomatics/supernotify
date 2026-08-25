@@ -5,11 +5,13 @@ from typing import TYPE_CHECKING
 from homeassistant.const import CONF_ENABLED
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.supernotify import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from custom_components.supernotify import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_MT,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
+    CONF_ARCHIVE_PATH,
+    CONF_DELIVERY,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
     CONF_HOUSEKEEPING,
@@ -43,6 +45,7 @@ async def test_user_step_defaults_create_entry(hass: HomeAssistant) -> None:
         CONF_MEDIA_URL_PREFIX: "/supernotify/media",
         CONF_MOBILE_DISCOVERY: True,
         CONF_RECIPIENTS_DISCOVERY: True,
+        CONF_ARCHIVE_PATH: "",
     }
     await hass.async_block_till_done()
 
@@ -55,6 +58,39 @@ async def test_single_instance_only(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "single_instance_allowed"
+
+
+async def test_reconfigure_updates_global_settings(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    entry_result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    entry = entry_result["result"]
+
+    reconfigure = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+    )
+    assert reconfigure["type"] == FlowResultType.FORM
+    assert reconfigure["step_id"] == "reconfigure"
+    # pre-filled from the entry's current data
+    assert reconfigure["data_schema"]({})[CONF_TEMPLATE_PATH] == TEMPLATE_DIR
+
+    result2 = await hass.config_entries.flow.async_configure(
+        reconfigure["flow_id"],
+        {
+            CONF_TEMPLATE_PATH: "/config/templates/custom",
+            CONF_MEDIA_PATH: MEDIA_DIR,
+            CONF_MEDIA_URL_PREFIX: "/supernotify/media",
+            CONF_MOBILE_DISCOVERY: False,
+            CONF_RECIPIENTS_DISCOVERY: True,
+            CONF_ARCHIVE_PATH: "",
+        },
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_TEMPLATE_PATH] == "/config/templates/custom"
+    assert entry.data[CONF_MOBILE_DISCOVERY] is False
 
 
 async def test_options_flow_menu(hass: HomeAssistant) -> None:
@@ -129,3 +165,51 @@ async def test_options_flow_housekeeping(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert entry.options[CONF_HOUSEKEEPING][CONF_HOUSEKEEPING_TIME] == "01:02:03"
     assert entry.options[CONF_HOUSEKEEPING][CONF_MEDIA_STORAGE_DAYS] == 14
+
+
+async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
+    import_data = {
+        CONF_TEMPLATE_PATH: "/config/templates/supernotify",
+        CONF_MEDIA_PATH: "supernotify/media",
+        CONF_MEDIA_URL_PREFIX: "/supernotify/media",
+        CONF_MOBILE_DISCOVERY: True,
+        CONF_RECIPIENTS_DISCOVERY: False,
+        CONF_ARCHIVE: {CONF_ENABLED: True, CONF_ARCHIVE_PATH: "/config/archive/supernotify", CONF_ARCHIVE_DAYS: 5},
+        CONF_DUPE_CHECK: {CONF_TTL: 30},
+        CONF_HOUSEKEEPING: {CONF_HOUSEKEEPING_TIME: "00:00:01"},
+        CONF_DELIVERY: {"some_delivery": {}},
+    }
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data=import_data)
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Supernotify (imported)"
+    entry = result["result"]
+
+    assert entry.data[CONF_TEMPLATE_PATH] == "/config/templates/supernotify"
+    assert entry.data[CONF_RECIPIENTS_DISCOVERY] is False
+    assert entry.data[CONF_ARCHIVE_PATH] == "/config/archive/supernotify"
+    assert entry.data[ATTR_IMPORTED_FROM_YAML] is True
+
+    # archive_path is split out of the mirrored archive options, the rest stays
+    assert entry.options[CONF_ARCHIVE] == {CONF_ENABLED: True, CONF_ARCHIVE_DAYS: 5}
+    assert entry.options[CONF_DUPE_CHECK] == {CONF_TTL: 30}
+    assert entry.options[CONF_HOUSEKEEPING] == {CONF_HOUSEKEEPING_TIME: "00:00:01"}
+    # deliveries/transports/scenarios etc are not mirrored - YAML-only for this phase
+    assert CONF_DELIVERY not in entry.data
+    assert CONF_DELIVERY not in entry.options
+
+
+async def test_import_without_archive_path(hass: HomeAssistant) -> None:
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={})
+    entry = result["result"]
+    assert entry.data[CONF_ARCHIVE_PATH] == ""
+    assert CONF_ARCHIVE not in entry.options
+
+
+async def test_import_declines_second_entry(hass: HomeAssistant) -> None:
+    first = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={})
+    await hass.async_block_till_done()
+    assert first["type"] == FlowResultType.CREATE_ENTRY
+
+    second = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={})
+    assert second["type"] == FlowResultType.ABORT
+    assert second["reason"] == "single_instance_allowed"

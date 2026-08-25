@@ -27,7 +27,7 @@ Supernotify tem um único objetivo — **fazer com que a notificação mais simp
 
 Isso mantém as automações, scripts e aplicativos AppDaemon simples e fáceis de manter, com todos os detalhes e regras gerenciados em um único lugar. A menor notificação possível — apenas uma mensagem — pode ser suficiente para acionar tudo. Altere endereços de e-mail em um único lugar e deixe o Supernotify determinar quais aplicativos móveis usar.
 
-Com apenas duas linhas de YAML muito simples, comece as notificações push móveis para todos os registrados em casa, sem configurar os nomes dos aplicativos móveis nas notificações.
+Apenas com a configuração da interface, comece as notificações push móveis para todos os registrados em casa, sem configurar os nomes dos aplicativos móveis nas notificações.
 
 
 ## Distribuição
@@ -84,11 +84,13 @@ Há muitas [receitas](https://supernotify.rhizomatics.org.uk/recipes/) com exemp
     * Entregas, transportes, destinatários e cenários expostos como entidades na interface do Home Assistant
 
 
-## Um pouco de YAML necessário
+## YAML apenas para uso avançado
 
-Supernotify atualmente suporta apenas [configuração baseada em YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Com apenas 2 linhas de configuração copiar-colar você já pode fazer muito:
+Atualmente, o Supernotify suporta a configuração padrão pela interface do Home Assistant para a configuração básica, e [configuração YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) para recursos avançados. O YAML será mantido para facilitar o trabalho com bases de regras maiores.
 
-```yaml title="Com as 2 linhas de YAML padrão"
+Muito pode ser feito com a simples configuração sem YAML, incluindo a automação da configuração de push móvel. Veja as [receitas](recipes/index.md) na documentação, e este exemplo de push móvel:
+
+```yaml title="Com zero YAML, tudo configurado pela interface"
   - action: notify.supernotify
     data:
         message: Olá! Testando o Supernotify enviando para os aplicativos móveis de todos
