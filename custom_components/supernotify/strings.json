@@ -17,12 +17,78 @@
                 "data": {
                     "template_path": "Template Path",
                     "media_path": "Media Path",
+                    "media_url_prefix": "Media URL Prefix",
+                    "mobile_discovery": "Mobile Device Discovery",
+                    "recipients_discovery": "Recipient Discovery",
                     "archive_path": "Archive Path"
                 },
                 "data_description": {
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
                     "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
+                    "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
+                    "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
+                    "recipients_discovery": "Automatically discover recipients from Home Assistant person entities",
                     "archive_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc"
+                }
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "Archive Settings",
+                    "dupe_check": "Duplicate Detection",
+                    "housekeeping": "Housekeeping"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "Enabled",
+                    "file_retention_days": "Retention Days",
+                    "mqtt_topic": "MQTT Topic",
+                    "mqtt_qos": "MQTT QoS",
+                    "mqtt_retain": "MQTT Retain",
+                    "purge_interval": "Purge Interval (minutes)",
+                    "event_name": "Event Name",
+                    "event_selection": "Event Selection",
+                    "diagnostics": "Diagnostics Selection"
+                },
+                "data_description": {
+                    "enabled": "Turn on the notification archive",
+                    "file_retention_days": "How many days of archived notifications to keep",
+                    "mqtt_topic": "Optional MQTT topic to publish archived notifications to",
+                    "mqtt_qos": "MQTT quality of service level used when publishing archived notifications",
+                    "mqtt_retain": "Whether archived notifications published to MQTT are retained",
+                    "purge_interval": "Minimum interval in minutes between automatic archive purges",
+                    "event_name": "Home Assistant event name fired for archived notifications",
+                    "event_selection": "Which notification outcomes fire an event, as pipe-separated names, for example ERROR|DUPE",
+                    "diagnostics": "Which notification outcomes are recorded with full diagnostic detail, as pipe-separated names"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "Time To Live (seconds)",
+                    "size": "Cache Size",
+                    "dupe_policy": "Duplicate Policy"
+                },
+                "data_description": {
+                    "ttl": "How long a notification is remembered for duplicate detection",
+                    "size": "Maximum number of recent notifications remembered for duplicate detection",
+                    "dupe_policy": "How strictly notifications are compared to detect duplicates"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "Housekeeping Time",
+                    "media_storage_days": "Media Storage Days"
+                },
+                "data_description": {
+                    "housekeeping_time": "Time of day (HH:MM:SS) that scheduled housekeeping, such as media purge, runs",
+                    "media_storage_days": "How many days of stored media, such as snapshots and attachments, to keep"
                 }
             }
         }

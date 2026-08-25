@@ -36,7 +36,7 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
 
 ## ドキュメント
 
-[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](usage/notifying.md)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
+[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
 
 サンプル設定を含む多くの[レシピ](https://supernotify.rhizomatics.org.uk/recipes/)もあります。[タグ](https://supernotify.rhizomatics.org.uk/tags/)で絞り込むこともできます。
 
@@ -86,7 +86,7 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
 
 ## YAMLが少し必要
 
-Supernotifyは現在[YAMLベースの設定](configuration/yaml.md)のみをサポートしています。コピー＆ペーストの2行の設定だけで多くのことができます：
+Supernotifyは現在[YAMLベースの設定](https://supernotify.rhizomatics.org.uk/configuration/yaml/)のみをサポートしています。コピー＆ペーストの2行の設定だけで多くのことができます：
 
 ```yaml title="デフォルトの2行のYAML"
   - action: notify.supernotify

@@ -17,14 +17,23 @@
                 "data": {
                     "template_path": "Caminho do modelo",
                     "media_path": "Caminho de mídia",
-                    "archive_path": "Caminho do arquivo"
+                    "archive_path": "Caminho do arquivo",
+                    "media_url_prefix": "Prefixo de URL de mídia",
+                    "mobile_discovery": "Descoberta de dispositivos móveis",
+                    "recipients_discovery": "Descoberta de destinatários"
                 },
                 "data_description": {
                     "template_path": "Localização opcional dos modelos Jinja2 para e-mails HTML",
                     "media_path": "Caminho de armazenamento para mídia criada durante notificações, por exemplo capturas de câmera para anexos",
-                    "archive_path": "Caminho de armazenamento para notificações arquivadas, útil para depurar configuração, cenários etc."
+                    "archive_path": "Caminho de armazenamento para notificações arquivadas, útil para depurar configuração, cenários etc.",
+                    "media_url_prefix": "Prefixo do caminho de URL sob o qual a mídia armazenada, como capturas de câmera, é servida",
+                    "mobile_discovery": "Descobre automaticamente dispositivos do aplicativo móvel registrados no Home Assistant para notificações push",
+                    "recipients_discovery": "Descobre automaticamente destinatários a partir das entidades de pessoa do Home Assistant"
                 }
             }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         }
     },
     "issues": {
@@ -59,6 +68,63 @@
         "delivery_invalid_condition": {
             "title": "A entrega tem uma condição inválida",
             "description": "A entrega {delivery} tem uma condição inválida {condition}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "Configurações de arquivo",
+                    "dupe_check": "Detecção de duplicados",
+                    "housekeeping": "Manutenção"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "Ativado",
+                    "file_retention_days": "Dias de retenção",
+                    "mqtt_topic": "Tópico MQTT",
+                    "mqtt_qos": "QoS do MQTT",
+                    "mqtt_retain": "Retain do MQTT",
+                    "purge_interval": "Intervalo de limpeza (minutos)",
+                    "event_name": "Nome do evento",
+                    "event_selection": "Seleção de eventos",
+                    "diagnostics": "Seleção de diagnóstico"
+                },
+                "data_description": {
+                    "enabled": "Ativa o arquivo de notificações",
+                    "file_retention_days": "Por quantos dias as notificações arquivadas são mantidas",
+                    "mqtt_topic": "Tópico MQTT opcional no qual as notificações arquivadas são publicadas",
+                    "mqtt_qos": "Nível de qualidade de serviço (QoS) do MQTT usado ao publicar notificações arquivadas",
+                    "mqtt_retain": "Se as notificações arquivadas publicadas no MQTT são retidas",
+                    "purge_interval": "Intervalo mínimo em minutos entre limpezas automáticas do arquivo",
+                    "event_name": "Nome do evento do Home Assistant disparado para notificações arquivadas",
+                    "event_selection": "Quais resultados de notificação disparam um evento, como nomes separados por barra vertical, por exemplo ERROR|DUPE",
+                    "diagnostics": "Quais resultados de notificação são registrados com detalhe diagnóstico completo, como nomes separados por barra vertical"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "Tempo de vida (segundos)",
+                    "size": "Tamanho do cache",
+                    "dupe_policy": "Política de duplicados"
+                },
+                "data_description": {
+                    "ttl": "Por quanto tempo uma notificação é lembrada para detecção de duplicados",
+                    "size": "Número máximo de notificações recentes lembradas para detecção de duplicados",
+                    "dupe_policy": "Com que rigor as notificações são comparadas para detectar duplicados"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "Horário de manutenção",
+                    "media_storage_days": "Dias de armazenamento de mídia"
+                },
+                "data_description": {
+                    "housekeeping_time": "Horário do dia (HH:MM:SS) em que a manutenção agendada, como limpeza de mídia, é executada",
+                    "media_storage_days": "Por quantos dias a mídia armazenada, como capturas e anexos, é mantida"
+                }
+            }
         }
     }
 }

@@ -1,3 +1,25 @@
+# Beta releases
+
+## 2.0.0
+
+### ConfigFlow
+
+- SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
+  - This covers basic use cases using default deliveries, like mobile push and email
+  - More advanced configuration - like scenarios, cameras, transport, action configs etc - continue to require yaml configuration for now
+
+
+### Technical Changes
+
+- Step 1 of the [roadmap](docs/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integratio style
+- Details
+  - `config_flow.py` (new) — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced.
+  - `__init__.py` — `async_setup_entry`/`async_unload_entry`, registering `notify.supernotify` directly via `BaseNotificationService` primitives (no legacy discovery), with a guard against double-registering if a legacy YAML platform is already using that name.
+  - `notify.py` — `build_supernotify_action()` extracted so the YAML and config-entry paths share construction logic; YAML path (`async_get_service`) is otherwise untouched.
+  - `manifest.json` — `config_flow: true`, `single_config_entry: true`, notify added to dependencies.
+  - `strings.json` + all 11 translations/*.json — new fields and options pages, properly translated (not left as English placeholders) after you flagged that.
+  - Tests: `test_config_flow.py` (6 tests) + `test_init.py` (4 tests), 100% coverage on both new files.
+
 # Public releases
 
 ## 1.17.1

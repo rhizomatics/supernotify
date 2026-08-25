@@ -46,7 +46,7 @@ Supernotify is a custom component available via the [Home Assistant Community Sh
 
 ## Documentation
 
-Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do. [Notifying](usage/notifying.md) shows how to call Supernotify from automations or the Developer Tools action page.
+Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do. [Notifying](https://supernotify.rhizomatics.org.uk/usage/notifying/) shows how to call Supernotify from automations or the Developer Tools action page.
 
 There are lots of [recipes](https://supernotify.rhizomatics.org.uk/recipes/) with sample config snippers to give you some more ideas, or browse by [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -107,7 +107,7 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
 
 ## Some YAML Needed
 
-Presently Supernotify supports only [YAML based configuration](configuration/yaml.md). UI based config will be added, though YAML will be preserved for ease of working with larger rule bases.
+Presently Supernotify supports only [YAML based configuration](https://supernotify.rhizomatics.org.uk/configuration/yaml/). UI based config will be added, though YAML will be preserved for ease of working with larger rule bases.
 
 You can however do a lot with only 2 lines of copy-paste config, using the [example configurations](configuration/examples/minimal.md) and [recipes](recipes/index.md) in the documentation - that's enough to do this:
 

@@ -17,8 +17,12 @@ rules:
   action-setup:
     status: todo
     comment: |
-      Services still registered in async_get_service() (notify.py). No config entry
-      work has started yet - move to async_setup() when config flow lands.
+      notify.supernotify is now also registered directly from async_setup_entry()
+      (__init__.py), bypassing legacy platform discovery - see build_supernotify_action()
+      in notify.py, shared with the still-supported YAML async_get_service() path. The
+      dozen supplemental supernotify.* debugging/admin services are still registered
+      inside async_get_service() only (YAML path); moving those to async_setup() and
+      making them available for config-entry setups too is follow-up work.
 
   appropriate-polling:
     status: exempt
@@ -38,18 +42,24 @@ rules:
       and registry patterns. Coordinator not needed for notification service.
 
   config-flow:
-    status: todo
+    status: done
     comment: |
-      CRITICAL BLOCKER: still not implemented - manifest.json has
-      "config_flow": false and no config_flow.py exists. Phasing and a draft
-      Phase 1 PR are captured in design/roadmap/configflow_approach.md and
-      design/roadmap/configflow_proposal.md.
+      Immediate phase of docs/roadmap/configflow_approach.md implemented: config_flow.py's
+      user step reproduces examples/minimal.yaml (all fields optional, everything else
+      auto-discovered/auto-generated), with an options flow for archive/dupe_check/
+      housekeeping. single_config_entry enforced via manifest.json. Deliveries, transports,
+      scenarios, recipients and cameras remain YAML-only - tracked as the Third phase in
+      the roadmap doc. The legacy YAML notify platform (async_get_service) keeps working
+      unchanged for existing users; a config entry declines to set up if a legacy YAML
+      platform already registered notify.supernotify, rather than silently double-registering.
 
   config-flow-test-coverage:
-    status: todo
+    status: done
     comment: |
-      Will be implemented after config flow is created.
-      Requires 100% coverage of config flow paths.
+      tests/components/supernotify/test_config_flow.py and test_init.py cover the user
+      step, single-instance abort, all three options-flow pages, config-entry setup/unload,
+      and the legacy-YAML-coexistence guard - 100% line coverage of config_flow.py and
+      __init__.py.
 
   dependency-transparency:
     status: done

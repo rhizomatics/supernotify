@@ -1,9 +1,78 @@
 """The Supernotify integration"""
 
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Any
+
 from homeassistant.const import Platform
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
+
+    from .notify import SupernotifyAction
 
 DOMAIN = "supernotify"
 
 PLATFORMS = [Platform.NOTIFY]
 TEMPLATE_DIR: str = "/config/templates/supernotify"
 MEDIA_DIR: str = "supernotify/media"
+
+_LOGGER = logging.getLogger(__name__)
+
+NOTIFY_SERVICE_NAME = "supernotify"
+
+
+def _entry_full_config(entry: ConfigEntry) -> ConfigType:
+    """Fold a config entry's data/options into a full SUPERNOTIFY_SCHEMA config dict.
+
+    entry.data holds the flat "user" step fields; entry.options holds the nested
+    archive/dupe_check/housekeeping sections from the options flow, already shaped to match
+    the schema. archive_path is the one flat field that needs folding into the nested
+    "archive" section before validation.
+    """
+    from homeassistant.const import CONF_PLATFORM
+
+    from .const import CONF_ARCHIVE, CONF_ARCHIVE_PATH
+    from .schema import SUPERNOTIFY_SCHEMA
+
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+    archive_path = data.pop(CONF_ARCHIVE_PATH, None)
+    if archive_path:
+        options[CONF_ARCHIVE] = {**options.get(CONF_ARCHIVE, {}), CONF_ARCHIVE_PATH: archive_path}
+    # SUPERNOTIFY_SCHEMA extends HA's generic notify PLATFORM_SCHEMA, which requires a
+    # "platform" key - meaningless for a config-entry setup, but needed to satisfy validation.
+    return SUPERNOTIFY_SCHEMA({CONF_PLATFORM: DOMAIN, **data, **options})
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    from .notify import build_supernotify_action
+
+    if hass.services.has_service("notify", NOTIFY_SERVICE_NAME):
+        _LOGGER.warning(
+            "SUPERNOTIFY notify.%s is already registered, probably from a legacy YAML "
+            "'notify: - platform: supernotify' block. Not registering it again from this "
+            "config entry - remove one of the two configurations",
+            NOTIFY_SERVICE_NAME,
+        )
+        return True
+
+    full_config = _entry_full_config(entry)
+    service: SupernotifyAction = build_supernotify_action(hass, full_config)
+    await service.initialize()
+    await service.async_setup(hass, NOTIFY_SERVICE_NAME, NOTIFY_SERVICE_NAME)
+    await service.async_register_services()
+    entry.runtime_data = service
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    # runtime_data is only set if async_setup_entry actually registered the service (it's
+    # skipped when a legacy YAML platform got there first).
+    service: SupernotifyAction | None = getattr(entry, "runtime_data", None)
+    if service is not None:
+        await service.async_unregister_services()
+    return True

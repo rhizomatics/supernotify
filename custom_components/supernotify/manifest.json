@@ -14,8 +14,9 @@
     "codeowners": [
         "@jey"
     ],
-    "config_flow": false,
+    "config_flow": true,
     "dependencies": [
+        "notify",
         "person"
     ],
     "documentation": "https://supernotify.rhizomatics.org.uk",
@@ -29,5 +30,6 @@
         "cachetools",
         "httpx"
     ],
-    "version":"1.17.0"
+    "single_config_entry": true,
+    "version":"2.0.0"
 }

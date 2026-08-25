@@ -36,7 +36,7 @@ Supernotify es un componente personalizado disponible a través del [Home Assist
 
 ## Documentación
 
-Prueba el [inicio rápido](https://supernotify.rhizomatics.org.uk/getting_started/), la explicación de los [conceptos fundamentales](https://supernotify.rhizomatics.org.uk/concepts/) y los [adaptadores de transporte](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notificando](usage/notifying.md) muestra cómo llamar a Supernotify desde automatizaciones o la página de herramientas para desarrolladores.
+Prueba el [inicio rápido](https://supernotify.rhizomatics.org.uk/getting_started/), la explicación de los [conceptos fundamentales](https://supernotify.rhizomatics.org.uk/concepts/) y los [adaptadores de transporte](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notificando](https://supernotify.rhizomatics.org.uk/usage/notifying/) muestra cómo llamar a Supernotify desde automatizaciones o la página de herramientas para desarrolladores.
 
 Hay muchas [recetas](https://supernotify.rhizomatics.org.uk/recipes/) con fragmentos de configuración de ejemplo, o navega por [etiquetas](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -86,7 +86,7 @@ Hay muchas [recetas](https://supernotify.rhizomatics.org.uk/recipes/) con fragme
 
 ## Se necesita algo de YAML
 
-Supernotify actualmente solo admite [configuración basada en YAML](configuration/yaml.md). Con solo 2 líneas de configuración de copiar y pegar ya puedes hacer mucho:
+Supernotify actualmente solo admite [configuración basada en YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Con solo 2 líneas de configuración de copiar y pegar ya puedes hacer mucho:
 
 ```yaml title="Con las 2 líneas de YAML predeterminadas"
   - action: notify.supernotify

@@ -17,14 +17,23 @@
                 "data": {
                     "template_path": "Sjabloonpad",
                     "media_path": "Mediapad",
-                    "archive_path": "Archiefpad"
+                    "archive_path": "Archiefpad",
+                    "media_url_prefix": "Media-URL-voorvoegsel",
+                    "mobile_discovery": "Detectie van mobiele apparaten",
+                    "recipients_discovery": "Detectie van ontvangers"
                 },
                 "data_description": {
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails",
                     "media_path": "Opslagpad voor media die tijdens meldingen zijn aangemaakt, zoals camera-snapshots voor bijlagen",
-                    "archive_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz."
+                    "archive_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz.",
+                    "media_url_prefix": "URL-padvoorvoegsel waaronder opgeslagen media, zoals camera-snapshots, wordt aangeboden",
+                    "mobile_discovery": "Detecteert automatisch mobiele-app-apparaten die in Home Assistant zijn geregistreerd voor pushmeldingen",
+                    "recipients_discovery": "Detecteert automatisch ontvangers op basis van Home Assistant person-entiteiten"
                 }
             }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         }
     },
     "issues": {
@@ -59,6 +68,63 @@
         "delivery_invalid_condition": {
             "title": "Bezorging heeft een ongeldige voorwaarde",
             "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "Archiefinstellingen",
+                    "dupe_check": "Duplicaatdetectie",
+                    "housekeeping": "Onderhoud"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "Ingeschakeld",
+                    "file_retention_days": "Bewaardagen",
+                    "mqtt_topic": "MQTT-topic",
+                    "mqtt_qos": "MQTT QoS",
+                    "mqtt_retain": "MQTT Retain",
+                    "purge_interval": "Opschoningsinterval (minuten)",
+                    "event_name": "Gebeurtenisnaam",
+                    "event_selection": "Gebeurtenisselectie",
+                    "diagnostics": "Diagnostiekselectie"
+                },
+                "data_description": {
+                    "enabled": "Schakelt het meldingsarchief in",
+                    "file_retention_days": "Hoeveel dagen gearchiveerde meldingen worden bewaard",
+                    "mqtt_topic": "Optioneel MQTT-topic waarnaar gearchiveerde meldingen worden gepubliceerd",
+                    "mqtt_qos": "MQTT-kwaliteitsniveau (QoS) gebruikt bij het publiceren van gearchiveerde meldingen",
+                    "mqtt_retain": "Of gearchiveerde meldingen die naar MQTT zijn gepubliceerd, worden vastgehouden (retain)",
+                    "purge_interval": "Minimale interval in minuten tussen automatische archiefopschoningen",
+                    "event_name": "Naam van de Home Assistant-gebeurtenis die wordt geactiveerd voor gearchiveerde meldingen",
+                    "event_selection": "Welke meldingsresultaten een gebeurtenis activeren, als door pipes gescheiden namen, bijvoorbeeld ERROR|DUPE",
+                    "diagnostics": "Welke meldingsresultaten worden vastgelegd met volledige diagnostische details, als door pipes gescheiden namen"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "Levensduur (seconden)",
+                    "size": "Cachegrootte",
+                    "dupe_policy": "Duplicaatbeleid"
+                },
+                "data_description": {
+                    "ttl": "Hoe lang een melding wordt onthouden voor duplicaatdetectie",
+                    "size": "Maximaal aantal recente meldingen dat wordt onthouden voor duplicaatdetectie",
+                    "dupe_policy": "Hoe strikt meldingen worden vergeleken om duplicaten te detecteren"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "Onderhoudstijd",
+                    "media_storage_days": "Mediaopslagdagen"
+                },
+                "data_description": {
+                    "housekeeping_time": "Tijdstip (UU:MM:SS) waarop gepland onderhoud, zoals media-opschoning, wordt uitgevoerd",
+                    "media_storage_days": "Hoeveel dagen opgeslagen media, zoals snapshots en bijlagen, wordt bewaard"
+                }
+            }
         }
     }
 }

@@ -22,10 +22,18 @@ From the HACS page on Home Assistant, select **Supernotify** in the list of avai
 
 ## Configure
 
-Add Supernotify to the Home Assistant YAML configuration ([YAML Configuration](configuration/yaml.md)).
+Supernotify can be set up either from the UI or from YAML.
 
-The [Configuration](configuration/index.md) pages have instructions and examples, including a [minimal](configuration/examples/minimal.md) one that is only two lines of YAML and is good enough to get mobile push notifications working, plus use an
-existing SMTP integration if you have it or any notify entities.
+For a zero-configuration setup with everything auto-discovered (mobile push, an existing SMTP
+integration or any notify entities, recipients from Home Assistant persons), go to
+**Settings → Devices & Services → Add Integration** and search for **Supernotify**. Archive,
+duplicate detection and housekeeping settings can be adjusted afterwards from the integration's
+**Configure** option.
+
+Deliveries, transports, scenarios, recipients and cameras are still configured via YAML for
+now - see the [Configuration](configuration/index.md) pages, including a
+[minimal](configuration/examples/minimal.md) example that is only two lines of YAML and is
+just as capable as the UI setup above:
 
 ```yaml title="All the YAML needed to get started"
 notify:

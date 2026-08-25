@@ -4,7 +4,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 
 try:
-    from homeassistant.components.ntfy.notify import SERVICE_PUBLISH_SCHEMA  # type: ignore[import-not-found]
+    from homeassistant.components.ntfy.notify import SERVICE_PUBLISH_SCHEMA  # type: ignore[import-not-found,attr-defined]
 except ImportError:
     from homeassistant.components.ntfy.services import SERVICE_PUBLISH_SCHEMA  # type: ignore[no-redef,import-not-found]
 from homeassistant.components.script import SCRIPT_TURN_ONOFF_SCHEMA

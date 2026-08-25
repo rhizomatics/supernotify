@@ -36,7 +36,7 @@ Supernotify est un composant personnalisé disponible via le [Home Assistant Com
 
 ## Documentation
 
-Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](usage/notifying.md) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
+Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
 
 Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) avec des exemples de configuration, ou parcourez par [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -86,7 +86,7 @@ Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) a
 
 ## Du YAML nécessaire
 
-Supernotify prend actuellement en charge uniquement la [configuration basée sur YAML](configuration/yaml.md). Avec seulement 2 lignes de configuration copier-coller, vous pouvez déjà faire beaucoup :
+Supernotify prend actuellement en charge uniquement la [configuration basée sur YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Avec seulement 2 lignes de configuration copier-coller, vous pouvez déjà faire beaucoup :
 
 ```yaml title="Avec les 2 lignes YAML par défaut"
   - action: notify.supernotify
