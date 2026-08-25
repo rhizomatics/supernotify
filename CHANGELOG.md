@@ -2,6 +2,10 @@
 
 ## 2.0.0
 
+### Matrix transport
+
+- New native `matrix` transport using `matrix.send_message`: html/text format, threads, camera snapshot attachment, optional priority emoji prefix, room target validation. See `docs/transports/matrix.md`.
+
 ### ConfigFlow
 
 - SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
