@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import CONF_ACTION, CONF_DEVICE_ID
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 import socket
 import threading
+from datetime import timedelta
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, cast
 
@@ -168,6 +169,9 @@ class HomeAssistantAPI:
 
     def subscribe_time(self, hour: int, minute: int, second: int, callback: Callable) -> None:
         self.unsubscribes.append(async_track_time_change(self._hass, callback, hour=hour, minute=minute, second=second))
+
+    def subscribe_interval(self, seconds: int, callback: Callable) -> None:
+        self.unsubscribes.append(async_track_time_interval(self._hass, callback, timedelta(seconds=seconds)))
 
     def in_hass_loop(self) -> bool:
         return self._hass is not None and self._hass.loop_thread_id == threading.get_ident()

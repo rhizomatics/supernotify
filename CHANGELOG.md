@@ -2,6 +2,10 @@
 
 ## 2.0.0
 
+### Scenario state entities
+
+- `binary_sensor.supernotify_scenario_<name>` now reports the evaluated state of the scenario (`on`/`off`) instead of a hard-coded `unknown`, refreshed every minute and on state changes of the entities referenced by its conditions. Scenarios whose conditions reference no entity (priority-only or manually applied) stay `unknown`.
+
 ### ConfigFlow
 
 - SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
