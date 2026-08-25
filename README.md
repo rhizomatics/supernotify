@@ -30,13 +30,7 @@ Start off with zero YAML configuration and easily do [mobile push notifications 
 
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
-     * [Make Alexa whisper low priority notifications](./recipes/alexa_whisper.md)
-     * [Set off sirens for critical alerts](./recipes/all_sirens_go.md)
-     * [Send HomeAssistant themed HTML e-mail](./recipes/basic_html_email.md)
-     * [Use the Frigate blueprint to send emails with attached images](./recipes/frigate_emails.md)
-     * [Move and zoom a camera to take a snapshot](./recipes/move_a_camera_for_snapshot.md)
-     * [Suppress or escalate notifications based on content](./recipes/content_escalation.md)
-     * [Halloween and Christmas themed chimes and voices](./recipes/seasonal_greetings.md)
+    [Make Alexa whisper low priority notifications](./recipes/alexa_whisper.md), [Set off sirens for critical alerts](./recipes/all_sirens_go.md), [Send HomeAssistant themed HTML e-mail](./recipes/basic_html_email.md), [Use the Frigate blueprint to send emails with attached images](./recipes/frigate_emails.md), [Move and zoom a camera to take a snapshot](./recipes/move_a_camera_for_snapshot.md),  [Suppress or escalate notifications based on content](./recipes/content_escalation.md) and [Halloween and Christmas themed chimes and voices](./recipes/seasonal_greetings.md)
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
