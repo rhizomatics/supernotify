@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import logging
 import time
 from contextlib import chdir
 from io import BytesIO
@@ -34,6 +35,7 @@ from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
     MediaStorage,
     ReprocessOption,
+    _detect_image_ext,
     camera_available,
     grab_image,
     move_camera_to_ptz_preset,
@@ -555,6 +557,32 @@ async def test_write_image_from_bitmap_exception(mock_hass_api: HomeAssistantAPI
     with patch.object(Image.Image, "save", side_effect=RuntimeError("unexpected")):
         result = await write_image_from_bitmap(mock_hass_api, bitmap, tmp_aiopath, ReprocessOption.ALWAYS)
     assert result is None
+
+
+async def test_write_image_from_bitmap_falls_back_to_get_flattened_data(
+    mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """When Image.getdata is unavailable (removed in a future Pillow release), reprocessing
+    falls back to get_flattened_data instead of failing the whole snapshot."""
+    caplog.set_level(logging.INFO, logger="custom_components.supernotify.media_grab")
+    image = Image.new("RGB", (10, 10))
+    buf = BytesIO()
+    image.save(buf, "jpeg")
+    bitmap = buf.getvalue()
+    mock_hass_api.create_job.return_value = Image.open(BytesIO(bitmap))  # type: ignore
+    output_path = tmp_aiopath / "image" / "out.jpg"
+    with patch.object(Image.Image, "getdata", side_effect=AttributeError("getdata removed")):
+        result = await write_image_from_bitmap(mock_hass_api, bitmap, output_path, ReprocessOption.ALWAYS)
+    assert result is not None
+    assert any("get_flattened_data" in r.message for r in caplog.records)
+
+
+async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistantAPI) -> None:
+    """Image.open failing on corrupt/non-image bytes falls back to a generic "img"
+    extension rather than propagating the exception."""
+    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]
+    result = await _detect_image_ext(mock_hass_api, b"not an image")
+    assert result == "img"
 
 
 # --- grab_image ---
