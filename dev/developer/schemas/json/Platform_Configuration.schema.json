@@ -8,7 +8,7 @@
       "type": "string"
     },
     "template_path": {
-      "default": "/config/templates/supernotify",
+      "default": "supernotify/templates",
       "type": "string"
     },
     "media_path": {

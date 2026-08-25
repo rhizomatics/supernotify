@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for custom_components/supernotify/archive.py: 88%</title>
+    <title>Coverage for custom_components/supernotify/archive.py: 86%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>custom_components<span class="sep">/</span>supernotify<span class="sep">/</span>archive.py</b>:
-            <span class="pc_cov">88%</span>
+            <span class="pc_cov">86%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">206 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">182<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">24<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">177<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">29<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">3<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_common_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-25 11:44 +0000
+            created at 2026-08-25 18:58 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -169,7 +169,7 @@
     <p class="run"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">            <span class="key">if</span> <span class="nam">diagnostics</span> <span class="op">&amp;</span> <span class="nam">OutcomeSelection</span><span class="op">.</span><span class="nam">SUCCESS</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"SUPERNOTIFY archiving successful notifications as %s events"</span><span class="op">,</span> <span class="nam">event_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">            <span class="key">if</span> <span class="nam">diagnostics</span> <span class="op">&amp;</span> <span class="nam">OutcomeSelection</span><span class="op">.</span><span class="nam">PARTIAL_DELIVERY</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"SUPERNOTIFY archiving partial delivery notifications as %s events"</span><span class="op">,</span> <span class="nam">event_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"SUPERNOTIFY archiving partial delivery notifications as %s events"</span><span class="op">,</span> <span class="nam">event_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">            <span class="key">if</span> <span class="nam">diagnostics</span> <span class="op">&amp;</span> <span class="nam">OutcomeSelection</span><span class="op">.</span><span class="nam">FALLBACK_DELIVERY</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"SUPERNOTIFY archiving fallback notifications as %s events"</span><span class="op">,</span> <span class="nam">event_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -183,9 +183,9 @@
     <p class="run"><span class="n"><a id="t101" href="#t101">101</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">"SUPERNOTIFY archiving dupe notifications as %s events"</span><span class="op">,</span> <span class="nam">event_name</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t102" href="#t102">102</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t103" href="#t103">103</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">archive</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">archive_object</span><span class="op">:</span> <span class="nam">ArchivableObject</span><span class="op">)</span> <span class="op">-></span> <span class="nam">bool</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">payload</span> <span class="op">=</span> <span class="nam">archive_object</span><span class="op">.</span><span class="nam">contents</span><span class="op">(</span><span class="nam">diagnostics</span><span class="op">=</span><span class="nam">archive_object</span><span class="op">.</span><span class="nam">selected</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">diagnostics</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">hass_api</span><span class="op">.</span><span class="nam">fire_event</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">event_name</span><span class="op">,</span> <span class="nam">payload</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="key">return</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t104" href="#t104">104</a></span><span class="t">        <span class="nam">payload</span> <span class="op">=</span> <span class="nam">archive_object</span><span class="op">.</span><span class="nam">contents</span><span class="op">(</span><span class="nam">diagnostics</span><span class="op">=</span><span class="nam">archive_object</span><span class="op">.</span><span class="nam">selected</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">diagnostics</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t105" href="#t105">105</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">hass_api</span><span class="op">.</span><span class="nam">fire_event</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">event_name</span><span class="op">,</span> <span class="nam">payload</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="key">return</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t"><span class="key">class</span> <span class="nam">ArchiveTopic</span><span class="op">(</span><span class="nam">ArchiveDestination</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -380,7 +380,7 @@
     <p class="run"><span class="n"><a id="t298" href="#t298">298</a></span><span class="t">            <span class="key">if</span> <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">archive_directory</span><span class="op">.</span><span class="nam">archive</span><span class="op">(</span><span class="nam">archive_object</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t299" href="#t299">299</a></span><span class="t">                <span class="nam">archived</span> <span class="op">=</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t300" href="#t300">300</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">event_archiver</span> <span class="key">and</span> <span class="nam">archive_object</span><span class="op">.</span><span class="nam">selected</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">event_selection</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">            <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">event_archiver</span><span class="op">.</span><span class="nam">archive</span><span class="op">(</span><span class="nam">archive_object</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t301" href="#t301">301</a></span><span class="t">            <span class="key">await</span> <span class="nam">self</span><span class="op">.</span><span class="nam">event_archiver</span><span class="op">.</span><span class="nam">archive</span><span class="op">(</span><span class="nam">archive_object</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t302" href="#t302">302</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t303" href="#t303">303</a></span><span class="t">        <span class="key">return</span> <span class="nam">archived</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -392,7 +392,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_common_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-25 11:44 +0000
+            created at 2026-08-25 18:58 +0000
         </p>
     </div>
 </footer>
