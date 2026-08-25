@@ -13,7 +13,7 @@ tags:
 
 ## Features
 
-Alternative to the `email` integration which avoids using the built in Home Assistant, with the same functionality except no overhead of pre-registering email addresses, introduced in mid-2026 Home Assistant as part of the Notify Entity integration.
+Alternative to the `email` integration which avoids using the built in [Home Assistant SMTP Integration](https://www.home-assistant.io/integrations/smtp/), with the same functionality except no overhead of pre-registering email addresses, introduced in mid-2026 Home Assistant as part of the Notify Entity integration.
 
 See [email](email.md) for more details, for example use of HTML or templates.
 
