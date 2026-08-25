@@ -79,6 +79,7 @@ from .transports.chime import ChimeTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
+from .transports.kodi import KodiTransport
 from .transports.lametric import LaMetricTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
@@ -91,7 +92,6 @@ from .transports.sms import SMSTransport
 from .transports.smtp import SmtpTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
-from .transports.kodi import KodiTransport
 
 if TYPE_CHECKING:
     import datetime as dt
