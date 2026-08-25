@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import SelectOptionDict, SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from .const import (
@@ -44,8 +44,28 @@ from .const import (
     CONF_TEMPLATE_PATH,
     CONF_TTL,
 )
+from .schema import OutcomeSelection
 
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
+
+
+def _event_policy_str(value: Any) -> str:
+    """Render an OutcomeSelection as the pipe-separated name string parse_event_policy
+    expects (e.g. "ERROR|DUPE"), whatever form it currently happens to be in.
+
+    A YAML-imported archive config already went through SUPERNOTIFY_SCHEMA, which turns
+    event_selection/diagnostics into OutcomeSelection (IntFlag) instances - stored as a raw
+    int once round-tripped through config-entry storage. Left unconverted, that raw int would
+    show up as a bare number in this form instead of the "ERROR"-style text it's meant to be.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, int):
+        try:
+            return OutcomeSelection(value).name or "NONE"
+        except ValueError:
+            return "NONE"
+    return str(value)
 
 
 def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
@@ -102,6 +122,10 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
         archive_path = archive.pop(CONF_ARCHIVE_PATH, None)
+        if CONF_ARCHIVE_EVENT_SELECTION in archive:
+            archive[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_str(archive[CONF_ARCHIVE_EVENT_SELECTION])
+        if CONF_ARCHIVE_DIAGNOSTICS in archive:
+            archive[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_str(archive[CONF_ARCHIVE_DIAGNOSTICS])
 
         data: dict[str, Any] = {
             CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
@@ -112,13 +136,19 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_ARCHIVE_PATH: archive_path or "",
             ATTR_IMPORTED_FROM_YAML: True,
         }
+        housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
+        housekeeping_time = housekeeping.get(CONF_HOUSEKEEPING_TIME)
+        if housekeeping_time is not None and not isinstance(housekeeping_time, str):
+            # cv.time on the YAML side already coerced this into a datetime.time
+            housekeeping[CONF_HOUSEKEEPING_TIME] = housekeeping_time.isoformat()
+
         options: dict[str, Any] = {}
         if archive:
             options[CONF_ARCHIVE] = archive
         if import_data.get(CONF_DUPE_CHECK):
             options[CONF_DUPE_CHECK] = import_data[CONF_DUPE_CHECK]
-        if import_data.get(CONF_HOUSEKEEPING):
-            options[CONF_HOUSEKEEPING] = import_data[CONF_HOUSEKEEPING]
+        if housekeeping:
+            options[CONF_HOUSEKEEPING] = housekeeping
 
         return self.async_create_entry(title="Supernotify (imported)", data=data, options=options)
 
@@ -145,8 +175,12 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=current.get(CONF_ARCHIVE_MQTT_RETAIN, True)): cv.boolean,
             vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60)): cv.positive_int,
             vol.Optional(CONF_ARCHIVE_EVENT_NAME, default=current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")): cv.string,
-            vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE")): cv.string,
-            vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR")): cv.string,
+            vol.Optional(
+                CONF_ARCHIVE_EVENT_SELECTION, default=_event_policy_str(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE"))
+            ): cv.string,
+            vol.Optional(
+                CONF_ARCHIVE_DIAGNOSTICS, default=_event_policy_str(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR"))
+            ): cv.string,
         })
         return self.async_show_form(step_id="archive", data_schema=schema)
 
@@ -158,7 +192,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_TTL, default=current.get(CONF_TTL, 120)): cv.positive_int,
             vol.Optional(CONF_SIZE, default=current.get(CONF_SIZE, 100)): cv.positive_int,
             vol.Optional(CONF_DUPE_POLICY, default=current.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)): SelectSelector(
-                SelectSelectorConfig(options=[SelectOptionDict(value=p, label=p) for p in _DUPE_POLICIES])
+                SelectSelectorConfig(options=_DUPE_POLICIES, translation_key="dupe_policy")
             ),
         })
         return self.async_show_form(step_id="dupe_check", data_schema=schema)
@@ -167,8 +201,12 @@ class SupernotifyOptionsFlow(OptionsFlow):
         current: dict[str, Any] = self.config_entry.options.get(CONF_HOUSEKEEPING, {})
         if user_input is not None:
             return self.async_create_entry(title="", data={**self.config_entry.options, CONF_HOUSEKEEPING: user_input})
+        housekeeping_time = current.get(CONF_HOUSEKEEPING_TIME, "00:00:01")
+        if not isinstance(housekeeping_time, str):
+            # a YAML-imported entry may still have a raw datetime.time from before this was fixed
+            housekeeping_time = housekeeping_time.isoformat()
         schema = vol.Schema({
-            vol.Optional(CONF_HOUSEKEEPING_TIME, default=current.get(CONF_HOUSEKEEPING_TIME, "00:00:01")): cv.string,
+            vol.Optional(CONF_HOUSEKEEPING_TIME, default=housekeeping_time): cv.string,
             vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=current.get(CONF_MEDIA_STORAGE_DAYS, 7)): cv.positive_int,
         })
         return self.async_show_form(step_id="housekeeping", data_schema=schema)

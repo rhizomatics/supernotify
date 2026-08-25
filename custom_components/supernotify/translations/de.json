@@ -146,5 +146,14 @@
                 }
             }
         }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Gleiche Nachricht und gleicher Titel, bei gleicher oder niedrigerer Priorität",
+                "dupe_policy_message_title_same": "Gleiche Nachricht und gleicher Titel",
+                "dupe_policy_none": "Deaktiviert"
+            }
+        }
     }
 }

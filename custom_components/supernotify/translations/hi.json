@@ -146,5 +146,14 @@
                 }
             }
         }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "समान संदेश और शीर्षक, समान या निम्न प्राथमिकता पर",
+                "dupe_policy_message_title_same": "समान संदेश और शीर्षक",
+                "dupe_policy_none": "अक्षम"
+            }
+        }
     }
 }

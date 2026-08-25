@@ -146,5 +146,14 @@
             "title": "Delivery Has Invalid Condition",
             "description": "The {delivery} delivery has an invalid condition {condition}"
         }
+    },
+    "selector": {
+        "dupe_policy": {
+            "options": {
+                "dupe_policy_message_title_same_or_lower_priority": "Same message and title, at same or lower priority",
+                "dupe_policy_message_title_same": "Same message and title",
+                "dupe_policy_none": "Disabled"
+            }
+        }
     }
 }
