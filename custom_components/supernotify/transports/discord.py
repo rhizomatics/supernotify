@@ -132,7 +132,7 @@ class DiscordTransport(Transport):
                 channels.append(candidate)
         return channels
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY discord %s", envelope.message)
 
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
