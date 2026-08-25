@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "Caminho do arquivo",
-                    "enabled": "Ativado",
-                    "file_retention_days": "Dias de retenção",
-                    "mqtt_topic": "Tópico MQTT",
-                    "mqtt_qos": "QoS do MQTT",
-                    "mqtt_retain": "Retain do MQTT",
-                    "purge_interval": "Intervalo de limpeza (minutos)",
-                    "event_name": "Nome do evento",
-                    "event_selection": "Seleção de eventos",
-                    "diagnostics": "Seleção de diagnóstico"
+                    "enabled": "Ativado"
                 },
                 "data_description": {
-                    "file_path": "Caminho de armazenamento para notificações arquivadas, útil para depurar configuração, cenários etc.",
-                    "enabled": "Ativa o arquivo de notificações",
-                    "file_retention_days": "Por quantos dias as notificações arquivadas são mantidas",
-                    "mqtt_topic": "Tópico MQTT opcional no qual as notificações arquivadas são publicadas",
-                    "mqtt_qos": "Nível de qualidade de serviço (QoS) do MQTT usado ao publicar notificações arquivadas",
-                    "mqtt_retain": "Se as notificações arquivadas publicadas no MQTT são retidas",
-                    "purge_interval": "Intervalo mínimo em minutos entre limpezas automáticas do arquivo",
-                    "event_name": "Nome do evento do Home Assistant disparado para notificações arquivadas",
-                    "event_selection": "Quais resultados de notificação disparam um evento",
-                    "diagnostics": "Quais resultados de notificação são registrados com detalhe diagnóstico completo"
+                    "enabled": "Ativa o arquivo de notificações"
+                },
+                "sections": {
+                    "file": {
+                        "name": "Arquivo",
+                        "data": {
+                            "file_path": "Caminho do arquivo",
+                            "file_retention_days": "Dias de retenção",
+                            "purge_interval": "Intervalo de limpeza (minutos)"
+                        },
+                        "data_description": {
+                            "file_path": "Caminho de armazenamento para notificações arquivadas, útil para depurar configuração, cenários etc.",
+                            "file_retention_days": "Por quantos dias as notificações arquivadas são mantidas",
+                            "purge_interval": "Intervalo mínimo em minutos entre limpezas automáticas do arquivo"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "Tópico MQTT",
+                            "mqtt_qos": "QoS do MQTT",
+                            "mqtt_retain": "Retain do MQTT"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "Tópico MQTT opcional no qual as notificações arquivadas são publicadas",
+                            "mqtt_qos": "Nível de qualidade de serviço (QoS) do MQTT usado ao publicar notificações arquivadas",
+                            "mqtt_retain": "Se as notificações arquivadas publicadas no MQTT são retidas"
+                        }
+                    },
+                    "event": {
+                        "name": "Evento",
+                        "data": {
+                            "event_name": "Nome do evento",
+                            "event_selection": "Seleção de eventos",
+                            "diagnostics": "Seleção de diagnóstico"
+                        },
+                        "data_description": {
+                            "event_name": "Nome do evento do Home Assistant disparado para notificações arquivadas",
+                            "event_selection": "Quais resultados de notificação disparam um evento",
+                            "diagnostics": "Quais resultados de notificação são registrados com detalhe diagnóstico completo"
+                        }
+                    }
                 },
                 "title": "Opções de arquivo"
             },

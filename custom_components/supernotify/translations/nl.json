@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "Archiefpad",
-                    "enabled": "Ingeschakeld",
-                    "file_retention_days": "Bewaardagen",
-                    "mqtt_topic": "MQTT-topic",
-                    "mqtt_qos": "MQTT QoS",
-                    "mqtt_retain": "MQTT Retain",
-                    "purge_interval": "Opschoningsinterval (minuten)",
-                    "event_name": "Gebeurtenisnaam",
-                    "event_selection": "Gebeurtenisselectie",
-                    "diagnostics": "Diagnostiekselectie"
+                    "enabled": "Ingeschakeld"
                 },
                 "data_description": {
-                    "file_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz.",
-                    "enabled": "Schakelt het meldingsarchief in",
-                    "file_retention_days": "Hoeveel dagen gearchiveerde meldingen worden bewaard",
-                    "mqtt_topic": "Optioneel MQTT-topic waarnaar gearchiveerde meldingen worden gepubliceerd",
-                    "mqtt_qos": "MQTT-kwaliteitsniveau (QoS) gebruikt bij het publiceren van gearchiveerde meldingen",
-                    "mqtt_retain": "Of gearchiveerde meldingen die naar MQTT zijn gepubliceerd, worden vastgehouden (retain)",
-                    "purge_interval": "Minimale interval in minuten tussen automatische archiefopschoningen",
-                    "event_name": "Naam van de Home Assistant-gebeurtenis die wordt geactiveerd voor gearchiveerde meldingen",
-                    "event_selection": "Welke meldingsresultaten een gebeurtenis activeren",
-                    "diagnostics": "Welke meldingsresultaten worden vastgelegd met volledige diagnostische details"
+                    "enabled": "Schakelt het meldingsarchief in"
+                },
+                "sections": {
+                    "file": {
+                        "name": "Bestand",
+                        "data": {
+                            "file_path": "Archiefpad",
+                            "file_retention_days": "Bewaardagen",
+                            "purge_interval": "Opschoningsinterval (minuten)"
+                        },
+                        "data_description": {
+                            "file_path": "Opslagpad voor gearchiveerde meldingen, handig voor het debuggen van configuratie, scenario's enz.",
+                            "file_retention_days": "Hoeveel dagen gearchiveerde meldingen worden bewaard",
+                            "purge_interval": "Minimale interval in minuten tussen automatische archiefopschoningen"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "MQTT-topic",
+                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_retain": "MQTT Retain"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "Optioneel MQTT-topic waarnaar gearchiveerde meldingen worden gepubliceerd",
+                            "mqtt_qos": "MQTT-kwaliteitsniveau (QoS) gebruikt bij het publiceren van gearchiveerde meldingen",
+                            "mqtt_retain": "Of gearchiveerde meldingen die naar MQTT zijn gepubliceerd, worden vastgehouden (retain)"
+                        }
+                    },
+                    "event": {
+                        "name": "Gebeurtenis",
+                        "data": {
+                            "event_name": "Gebeurtenisnaam",
+                            "event_selection": "Gebeurtenisselectie",
+                            "diagnostics": "Diagnostiekselectie"
+                        },
+                        "data_description": {
+                            "event_name": "Naam van de Home Assistant-gebeurtenis die wordt geactiveerd voor gearchiveerde meldingen",
+                            "event_selection": "Welke meldingsresultaten een gebeurtenis activeren",
+                            "diagnostics": "Welke meldingsresultaten worden vastgelegd met volledige diagnostische details"
+                        }
+                    }
                 },
                 "title": "Archiefopties"
             },

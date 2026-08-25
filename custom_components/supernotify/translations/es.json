@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "Ruta de archivos",
-                    "enabled": "Habilitado",
-                    "file_retention_days": "Días de retención",
-                    "mqtt_topic": "Tema MQTT",
-                    "mqtt_qos": "QoS de MQTT",
-                    "mqtt_retain": "Retener en MQTT",
-                    "purge_interval": "Intervalo de purga (minutos)",
-                    "event_name": "Nombre del evento",
-                    "event_selection": "Selección de eventos",
-                    "diagnostics": "Selección de diagnóstico"
+                    "enabled": "Habilitado"
                 },
                 "data_description": {
-                    "file_path": "Ruta de almacenamiento para las notificaciones archivadas, útil para depurar configuración, escenarios, etc.",
-                    "enabled": "Activa el archivo de notificaciones",
-                    "file_retention_days": "Cuántos días se conservan las notificaciones archivadas",
-                    "mqtt_topic": "Tema MQTT opcional al que se publican las notificaciones archivadas",
-                    "mqtt_qos": "Nivel de calidad de servicio (QoS) de MQTT usado al publicar notificaciones archivadas",
-                    "mqtt_retain": "Si las notificaciones archivadas publicadas en MQTT se retienen",
-                    "purge_interval": "Intervalo mínimo en minutos entre purgas automáticas del archivo",
-                    "event_name": "Nombre del evento de Home Assistant emitido para las notificaciones archivadas",
-                    "event_selection": "Qué resultados de notificación disparan un evento",
-                    "diagnostics": "Qué resultados de notificación se registran con detalle de diagnóstico completo"
+                    "enabled": "Activa el archivo de notificaciones"
+                },
+                "sections": {
+                    "file": {
+                        "name": "Archivo",
+                        "data": {
+                            "file_path": "Ruta de archivos",
+                            "file_retention_days": "Días de retención",
+                            "purge_interval": "Intervalo de purga (minutos)"
+                        },
+                        "data_description": {
+                            "file_path": "Ruta de almacenamiento para las notificaciones archivadas, útil para depurar configuración, escenarios, etc.",
+                            "file_retention_days": "Cuántos días se conservan las notificaciones archivadas",
+                            "purge_interval": "Intervalo mínimo en minutos entre purgas automáticas del archivo"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "Tema MQTT",
+                            "mqtt_qos": "QoS de MQTT",
+                            "mqtt_retain": "Retener en MQTT"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "Tema MQTT opcional al que se publican las notificaciones archivadas",
+                            "mqtt_qos": "Nivel de calidad de servicio (QoS) de MQTT usado al publicar notificaciones archivadas",
+                            "mqtt_retain": "Si las notificaciones archivadas publicadas en MQTT se retienen"
+                        }
+                    },
+                    "event": {
+                        "name": "Evento",
+                        "data": {
+                            "event_name": "Nombre del evento",
+                            "event_selection": "Selección de eventos",
+                            "diagnostics": "Selección de diagnóstico"
+                        },
+                        "data_description": {
+                            "event_name": "Nombre del evento de Home Assistant emitido para las notificaciones archivadas",
+                            "event_selection": "Qué resultados de notificación disparan un evento",
+                            "diagnostics": "Qué resultados de notificación se registran con detalle de diagnóstico completo"
+                        }
+                    }
                 },
                 "title": "Opciones de archivo"
             },

@@ -15,6 +15,7 @@ import voluptuous as vol
 from anyio import Path
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ENABLED
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
@@ -234,31 +235,64 @@ class SupernotifyOptionsFlow(OptionsFlow):
     async def async_step_archive(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         current: dict[str, Any] = self.config_entry.options.get(CONF_ARCHIVE, {})
         if user_input is not None:
-            processed = dict(user_input)
-            processed[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_from_list(user_input[CONF_ARCHIVE_EVENT_SELECTION])
-            processed[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_from_list(user_input[CONF_ARCHIVE_DIAGNOSTICS])
+            file_section = user_input["file"]
+            mqtt_section = user_input["mqtt"]
+            event_section = user_input["event"]
+            processed = {
+                CONF_ENABLED: user_input[CONF_ENABLED],
+                CONF_ARCHIVE_PATH: file_section[CONF_ARCHIVE_PATH],
+                CONF_ARCHIVE_DAYS: file_section[CONF_ARCHIVE_DAYS],
+                CONF_ARCHIVE_PURGE_INTERVAL: file_section[CONF_ARCHIVE_PURGE_INTERVAL],
+                CONF_ARCHIVE_MQTT_TOPIC: mqtt_section[CONF_ARCHIVE_MQTT_TOPIC],
+                CONF_ARCHIVE_MQTT_QOS: mqtt_section[CONF_ARCHIVE_MQTT_QOS],
+                CONF_ARCHIVE_MQTT_RETAIN: mqtt_section[CONF_ARCHIVE_MQTT_RETAIN],
+                CONF_ARCHIVE_EVENT_NAME: event_section[CONF_ARCHIVE_EVENT_NAME],
+                CONF_ARCHIVE_EVENT_SELECTION: _event_policy_from_list(event_section[CONF_ARCHIVE_EVENT_SELECTION]),
+                CONF_ARCHIVE_DIAGNOSTICS: _event_policy_from_list(event_section[CONF_ARCHIVE_DIAGNOSTICS]),
+            }
             return self.async_create_entry(title="", data={**self.config_entry.options, CONF_ARCHIVE: processed})
         outcome_selector = SelectSelector(
             SelectSelectorConfig(options=_OUTCOME_OPTIONS, multiple=True, translation_key="outcome_selection")
         )
         schema = vol.Schema({
             vol.Optional(CONF_ENABLED, default=current.get(CONF_ENABLED, False)): cv.boolean,
-            # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion
-            # used by the config flow frontend ("Unable to convert schema" / HTTP 500).
-            vol.Optional(CONF_ARCHIVE_PATH, default=current.get(CONF_ARCHIVE_PATH, "")): cv.string,
-            vol.Optional(CONF_ARCHIVE_DAYS, default=current.get(CONF_ARCHIVE_DAYS, 3)): cv.positive_int,
-            vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=current.get(CONF_ARCHIVE_MQTT_TOPIC, "")): cv.string,
-            vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=current.get(CONF_ARCHIVE_MQTT_QOS, 0)): cv.positive_int,
-            vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=current.get(CONF_ARCHIVE_MQTT_RETAIN, True)): cv.boolean,
-            vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60)): cv.positive_int,
-            vol.Optional(CONF_ARCHIVE_EVENT_NAME, default=current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")): cv.string,
-            vol.Optional(
-                CONF_ARCHIVE_EVENT_SELECTION,
-                default=_event_policy_to_list(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE")),
-            ): outcome_selector,
-            vol.Optional(
-                CONF_ARCHIVE_DIAGNOSTICS, default=_event_policy_to_list(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR"))
-            ): outcome_selector,
+            vol.Optional("file", default={}): section(
+                vol.Schema({
+                    # cv.string, not cv.path: cv.path fails voluptuous-serialize schema
+                    # conversion used by the config flow frontend ("Unable to convert
+                    # schema" / HTTP 500).
+                    vol.Optional(CONF_ARCHIVE_PATH, default=current.get(CONF_ARCHIVE_PATH, "")): cv.string,
+                    vol.Optional(CONF_ARCHIVE_DAYS, default=current.get(CONF_ARCHIVE_DAYS, 3)): cv.positive_int,
+                    vol.Optional(
+                        CONF_ARCHIVE_PURGE_INTERVAL, default=current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60)
+                    ): cv.positive_int,
+                }),
+                {"collapsed": False},
+            ),
+            vol.Optional("mqtt", default={}): section(
+                vol.Schema({
+                    vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=current.get(CONF_ARCHIVE_MQTT_TOPIC, "")): cv.string,
+                    vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=current.get(CONF_ARCHIVE_MQTT_QOS, 0)): cv.positive_int,
+                    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=current.get(CONF_ARCHIVE_MQTT_RETAIN, True)): cv.boolean,
+                }),
+                {"collapsed": True},
+            ),
+            vol.Optional("event", default={}): section(
+                vol.Schema({
+                    vol.Optional(
+                        CONF_ARCHIVE_EVENT_NAME, default=current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_ARCHIVE_EVENT_SELECTION,
+                        default=_event_policy_to_list(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE")),
+                    ): outcome_selector,
+                    vol.Optional(
+                        CONF_ARCHIVE_DIAGNOSTICS,
+                        default=_event_policy_to_list(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR")),
+                    ): outcome_selector,
+                }),
+                {"collapsed": True},
+            ),
         })
         return self.async_show_form(step_id="archive", data_schema=schema)
 

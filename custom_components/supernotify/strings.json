@@ -68,28 +68,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "Archive Path",
-                    "enabled": "Enabled",
-                    "file_retention_days": "Retention Days",
-                    "mqtt_topic": "MQTT Topic",
-                    "mqtt_qos": "MQTT QoS",
-                    "mqtt_retain": "MQTT Retain",
-                    "purge_interval": "Purge Interval (minutes)",
-                    "event_name": "Event Name",
-                    "event_selection": "Event Selection",
-                    "diagnostics": "Diagnostics Selection"
+                    "enabled": "Enabled"
                 },
                 "data_description": {
-                    "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc",
-                    "enabled": "Turn on the notification archive",
-                    "file_retention_days": "How many days of archived notifications to keep",
-                    "mqtt_topic": "Optional MQTT topic to publish archived notifications to",
-                    "mqtt_qos": "MQTT quality of service level used when publishing archived notifications",
-                    "mqtt_retain": "Whether archived notifications published to MQTT are retained",
-                    "purge_interval": "Minimum interval in minutes between automatic archive purges",
-                    "event_name": "Home Assistant event name fired for archived notifications",
-                    "event_selection": "Which notification outcomes fire an event",
-                    "diagnostics": "Which notification outcomes are recorded with full diagnostic detail"
+                    "enabled": "Turn on the notification archive"
+                },
+                "sections": {
+                    "file": {
+                        "name": "File",
+                        "data": {
+                            "file_path": "Archive Path",
+                            "file_retention_days": "Retention Days",
+                            "purge_interval": "Purge Interval (minutes)"
+                        },
+                        "data_description": {
+                            "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc",
+                            "file_retention_days": "How many days of archived notifications to keep",
+                            "purge_interval": "Minimum interval in minutes between automatic archive purges"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "MQTT Topic",
+                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_retain": "MQTT Retain"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "Optional MQTT topic to publish archived notifications to",
+                            "mqtt_qos": "MQTT quality of service level used when publishing archived notifications",
+                            "mqtt_retain": "Whether archived notifications published to MQTT are retained"
+                        }
+                    },
+                    "event": {
+                        "name": "Event",
+                        "data": {
+                            "event_name": "Event Name",
+                            "event_selection": "Event Selection",
+                            "diagnostics": "Diagnostics Selection"
+                        },
+                        "data_description": {
+                            "event_name": "Home Assistant event name fired for archived notifications",
+                            "event_selection": "Which notification outcomes fire an event",
+                            "diagnostics": "Which notification outcomes are recorded with full diagnostic detail"
+                        }
+                    }
                 },
                 "title": "Archive Options"
             },

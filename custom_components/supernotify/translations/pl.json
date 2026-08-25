@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "Ścieżka archiwum",
-                    "enabled": "Włączone",
-                    "file_retention_days": "Dni przechowywania",
-                    "mqtt_topic": "Temat MQTT",
-                    "mqtt_qos": "MQTT QoS",
-                    "mqtt_retain": "MQTT Retain",
-                    "purge_interval": "Interwał czyszczenia (minuty)",
-                    "event_name": "Nazwa zdarzenia",
-                    "event_selection": "Wybór zdarzeń",
-                    "diagnostics": "Wybór diagnostyki"
+                    "enabled": "Włączone"
                 },
                 "data_description": {
-                    "file_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp.",
-                    "enabled": "Włącza archiwum powiadomień",
-                    "file_retention_days": "Przez ile dni przechowywane są zarchiwizowane powiadomienia",
-                    "mqtt_topic": "Opcjonalny temat MQTT, na który publikowane są zarchiwizowane powiadomienia",
-                    "mqtt_qos": "Poziom jakości usługi (QoS) MQTT używany podczas publikowania zarchiwizowanych powiadomień",
-                    "mqtt_retain": "Czy zarchiwizowane powiadomienia publikowane w MQTT są zachowywane (retain)",
-                    "purge_interval": "Minimalny odstęp w minutach między automatycznymi czyszczeniami archiwum",
-                    "event_name": "Nazwa zdarzenia Home Assistant wyzwalanego dla zarchiwizowanych powiadomień",
-                    "event_selection": "Które wyniki powiadomień wyzwalają zdarzenie",
-                    "diagnostics": "Które wyniki powiadomień są rejestrowane z pełnymi szczegółami diagnostycznymi"
+                    "enabled": "Włącza archiwum powiadomień"
+                },
+                "sections": {
+                    "file": {
+                        "name": "Plik",
+                        "data": {
+                            "file_path": "Ścieżka archiwum",
+                            "file_retention_days": "Dni przechowywania",
+                            "purge_interval": "Interwał czyszczenia (minuty)"
+                        },
+                        "data_description": {
+                            "file_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp.",
+                            "file_retention_days": "Przez ile dni przechowywane są zarchiwizowane powiadomienia",
+                            "purge_interval": "Minimalny odstęp w minutach między automatycznymi czyszczeniami archiwum"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "Temat MQTT",
+                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_retain": "MQTT Retain"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "Opcjonalny temat MQTT, na który publikowane są zarchiwizowane powiadomienia",
+                            "mqtt_qos": "Poziom jakości usługi (QoS) MQTT używany podczas publikowania zarchiwizowanych powiadomień",
+                            "mqtt_retain": "Czy zarchiwizowane powiadomienia publikowane w MQTT są zachowywane (retain)"
+                        }
+                    },
+                    "event": {
+                        "name": "Zdarzenie",
+                        "data": {
+                            "event_name": "Nazwa zdarzenia",
+                            "event_selection": "Wybór zdarzeń",
+                            "diagnostics": "Wybór diagnostyki"
+                        },
+                        "data_description": {
+                            "event_name": "Nazwa zdarzenia Home Assistant wyzwalanego dla zarchiwizowanych powiadomień",
+                            "event_selection": "Które wyniki powiadomień wyzwalają zdarzenie",
+                            "diagnostics": "Które wyniki powiadomień są rejestrowane z pełnymi szczegółami diagnostycznymi"
+                        }
+                    }
                 },
                 "title": "Opcje archiwum"
             },

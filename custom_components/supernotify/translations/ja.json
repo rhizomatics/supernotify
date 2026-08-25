@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "アーカイブパス",
-                    "enabled": "有効",
-                    "file_retention_days": "保持日数",
-                    "mqtt_topic": "MQTTトピック",
-                    "mqtt_qos": "MQTT QoS",
-                    "mqtt_retain": "MQTT Retain",
-                    "purge_interval": "パージ間隔（分）",
-                    "event_name": "イベント名",
-                    "event_selection": "イベント選択",
-                    "diagnostics": "診断選択"
+                    "enabled": "有効"
                 },
                 "data_description": {
-                    "file_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます",
-                    "enabled": "通知アーカイブを有効にします",
-                    "file_retention_days": "アーカイブされた通知を保持する日数",
-                    "mqtt_topic": "アーカイブされた通知を発行するオプションのMQTTトピック",
-                    "mqtt_qos": "アーカイブされた通知を発行する際に使用するMQTTのサービス品質（QoS）レベル",
-                    "mqtt_retain": "MQTTに発行されたアーカイブ通知を保持（retain）するかどうか",
-                    "purge_interval": "自動アーカイブパージの間隔（分単位の最小値）",
-                    "event_name": "アーカイブされた通知に対して発行されるHome Assistantイベント名",
-                    "event_selection": "どの通知結果がイベントを発行するかを選択します",
-                    "diagnostics": "どの通知結果が完全な診断詳細とともに記録されるかを選択します"
+                    "enabled": "通知アーカイブを有効にします"
+                },
+                "sections": {
+                    "file": {
+                        "name": "ファイル",
+                        "data": {
+                            "file_path": "アーカイブパス",
+                            "file_retention_days": "保持日数",
+                            "purge_interval": "パージ間隔（分）"
+                        },
+                        "data_description": {
+                            "file_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます",
+                            "file_retention_days": "アーカイブされた通知を保持する日数",
+                            "purge_interval": "自動アーカイブパージの間隔（分単位の最小値）"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "MQTTトピック",
+                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_retain": "MQTT Retain"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "アーカイブされた通知を発行するオプションのMQTTトピック",
+                            "mqtt_qos": "アーカイブされた通知を発行する際に使用するMQTTのサービス品質（QoS）レベル",
+                            "mqtt_retain": "MQTTに発行されたアーカイブ通知を保持（retain）するかどうか"
+                        }
+                    },
+                    "event": {
+                        "name": "イベント",
+                        "data": {
+                            "event_name": "イベント名",
+                            "event_selection": "イベント選択",
+                            "diagnostics": "診断選択"
+                        },
+                        "data_description": {
+                            "event_name": "アーカイブされた通知に対して発行されるHome Assistantイベント名",
+                            "event_selection": "どの通知結果がイベントを発行するかを選択します",
+                            "diagnostics": "どの通知結果が完全な診断詳細とともに記録されるかを選択します"
+                        }
+                    }
                 },
                 "title": "アーカイブオプション"
             },

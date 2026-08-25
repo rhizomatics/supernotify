@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "Archivpfad",
-                    "enabled": "Aktiviert",
-                    "file_retention_days": "Aufbewahrungstage",
-                    "mqtt_topic": "MQTT-Thema",
-                    "mqtt_qos": "MQTT-QoS",
-                    "mqtt_retain": "MQTT Retain",
-                    "purge_interval": "Bereinigungsintervall (Minuten)",
-                    "event_name": "Ereignisname",
-                    "event_selection": "Ereignisauswahl",
-                    "diagnostics": "Diagnoseauswahl"
+                    "enabled": "Aktiviert"
                 },
                 "data_description": {
-                    "file_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw.",
-                    "enabled": "Aktiviert das Benachrichtigungsarchiv",
-                    "file_retention_days": "Wie viele Tage archivierte Benachrichtigungen aufbewahrt werden",
-                    "mqtt_topic": "Optionales MQTT-Thema, an das archivierte Benachrichtigungen veröffentlicht werden",
-                    "mqtt_qos": "MQTT-Dienstgütestufe (QoS) beim Veröffentlichen archivierter Benachrichtigungen",
-                    "mqtt_retain": "Ob über MQTT veröffentlichte archivierte Benachrichtigungen beibehalten werden (Retain)",
-                    "purge_interval": "Mindestintervall in Minuten zwischen automatischen Archivbereinigungen",
-                    "event_name": "Name des Home Assistant-Ereignisses für archivierte Benachrichtigungen",
-                    "event_selection": "Welche Benachrichtigungsergebnisse ein Ereignis auslösen",
-                    "diagnostics": "Welche Benachrichtigungsergebnisse mit vollständigen Diagnosedetails erfasst werden"
+                    "enabled": "Aktiviert das Benachrichtigungsarchiv"
+                },
+                "sections": {
+                    "file": {
+                        "name": "Datei",
+                        "data": {
+                            "file_path": "Archivpfad",
+                            "file_retention_days": "Aufbewahrungstage",
+                            "purge_interval": "Bereinigungsintervall (Minuten)"
+                        },
+                        "data_description": {
+                            "file_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw.",
+                            "file_retention_days": "Wie viele Tage archivierte Benachrichtigungen aufbewahrt werden",
+                            "purge_interval": "Mindestintervall in Minuten zwischen automatischen Archivbereinigungen"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "MQTT-Thema",
+                            "mqtt_qos": "MQTT-QoS",
+                            "mqtt_retain": "MQTT Retain"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "Optionales MQTT-Thema, an das archivierte Benachrichtigungen veröffentlicht werden",
+                            "mqtt_qos": "MQTT-Dienstgütestufe (QoS) beim Veröffentlichen archivierter Benachrichtigungen",
+                            "mqtt_retain": "Ob über MQTT veröffentlichte archivierte Benachrichtigungen beibehalten werden (Retain)"
+                        }
+                    },
+                    "event": {
+                        "name": "Ereignis",
+                        "data": {
+                            "event_name": "Ereignisname",
+                            "event_selection": "Ereignisauswahl",
+                            "diagnostics": "Diagnoseauswahl"
+                        },
+                        "data_description": {
+                            "event_name": "Name des Home Assistant-Ereignisses für archivierte Benachrichtigungen",
+                            "event_selection": "Welche Benachrichtigungsergebnisse ein Ereignis auslösen",
+                            "diagnostics": "Welche Benachrichtigungsergebnisse mit vollständigen Diagnosedetails erfasst werden"
+                        }
+                    }
                 },
                 "title": "Archivoptionen"
             },

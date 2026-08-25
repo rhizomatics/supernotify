@@ -102,28 +102,51 @@
             },
             "archive": {
                 "data": {
-                    "file_path": "存档路径",
-                    "enabled": "已启用",
-                    "file_retention_days": "保留天数",
-                    "mqtt_topic": "MQTT 主题",
-                    "mqtt_qos": "MQTT QoS",
-                    "mqtt_retain": "MQTT 保留（Retain）",
-                    "purge_interval": "清理间隔（分钟）",
-                    "event_name": "事件名称",
-                    "event_selection": "事件选择",
-                    "diagnostics": "诊断选择"
+                    "enabled": "已启用"
                 },
                 "data_description": {
-                    "file_path": "已存档通知的存储路径，用于调试配置、场景等",
-                    "enabled": "启用通知存档",
-                    "file_retention_days": "已存档通知保留的天数",
-                    "mqtt_topic": "发布已存档通知的可选 MQTT 主题",
-                    "mqtt_qos": "发布已存档通知时使用的 MQTT 服务质量（QoS）级别",
-                    "mqtt_retain": "发布到 MQTT 的已存档通知是否保留（retain）",
-                    "purge_interval": "自动存档清理之间的最小间隔（分钟）",
-                    "event_name": "为已存档通知触发的 Home Assistant 事件名称",
-                    "event_selection": "哪些通知结果会触发事件",
-                    "diagnostics": "哪些通知结果会记录完整的诊断详情"
+                    "enabled": "启用通知存档"
+                },
+                "sections": {
+                    "file": {
+                        "name": "文件",
+                        "data": {
+                            "file_path": "存档路径",
+                            "file_retention_days": "保留天数",
+                            "purge_interval": "清理间隔（分钟）"
+                        },
+                        "data_description": {
+                            "file_path": "已存档通知的存储路径，用于调试配置、场景等",
+                            "file_retention_days": "已存档通知保留的天数",
+                            "purge_interval": "自动存档清理之间的最小间隔（分钟）"
+                        }
+                    },
+                    "mqtt": {
+                        "name": "MQTT",
+                        "data": {
+                            "mqtt_topic": "MQTT 主题",
+                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_retain": "MQTT 保留（Retain）"
+                        },
+                        "data_description": {
+                            "mqtt_topic": "发布已存档通知的可选 MQTT 主题",
+                            "mqtt_qos": "发布已存档通知时使用的 MQTT 服务质量（QoS）级别",
+                            "mqtt_retain": "发布到 MQTT 的已存档通知是否保留（retain）"
+                        }
+                    },
+                    "event": {
+                        "name": "事件",
+                        "data": {
+                            "event_name": "事件名称",
+                            "event_selection": "事件选择",
+                            "diagnostics": "诊断选择"
+                        },
+                        "data_description": {
+                            "event_name": "为已存档通知触发的 Home Assistant 事件名称",
+                            "event_selection": "哪些通知结果会触发事件",
+                            "diagnostics": "哪些通知结果会记录完整的诊断详情"
+                        }
+                    }
                 },
                 "title": "存档选项"
             },
