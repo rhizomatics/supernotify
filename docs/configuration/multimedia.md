@@ -64,7 +64,7 @@ A PTZ delay can be set to wait for camera movement before snapshot taken, and a 
 
 By default the media storage is made available via the Home Assistant web interface with the prefix `/supernotify/media/`
 
-This prefix can be changed using the `media_url_prefix` setting in the main configuration block (where `media_path` is also configured). If you don't want this to be available, define this with an empty value ( which may stop some integrations being able to access images if they're expecting to get camera snaps via a URL).
+This prefix can be changed using the `media_url_prefix` setting, from the UI config shown above (where `media_path` is also configured) or the equivalent YAML. If you don't want this to be available, define this with an empty value ( which may stop some integrations being able to access images if they're expecting to get camera snaps via a URL).
 
 ### Automatically Fixing Camera Issues
 

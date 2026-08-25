@@ -1,8 +1,12 @@
-# Quality Scale Audit Report
+# Quality Scale Audit Report - Q4 2025
 
 **Date:** 2025-12-19
 **Auditor:** Claude Code Quality Scale Verifier
 **Home Assistant Version:** 2025.11.2
+
+## NOTICE
+
+This is the last static audit, quality scale is now tracked at [quality_scale.yaml](../../custom_components/supernotify/quality_scale.yaml)
 
 ---
 
