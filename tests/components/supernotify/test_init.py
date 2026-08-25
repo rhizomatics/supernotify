@@ -80,7 +80,7 @@ async def test_yaml_setup_mirrors_into_import_entry(hass: HomeAssistant) -> None
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data[ATTR_IMPORTED_FROM_YAML] is True
-    assert entries[0].title == "Supernotify (imported)"
+    assert entries[0].title == "Supernotify (imported from YAML)"
     # the legacy YAML platform still owns the service, untouched by the mirrored entry
     assert hass.data["notify_services"][DOMAIN][0] is legacy_service
 
