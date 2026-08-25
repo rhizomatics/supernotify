@@ -195,7 +195,7 @@ async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
     }
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data=import_data)
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Supernotify (imported)"
+    assert result["title"] == "Supernotify (imported from YAML)"
     entry = result["result"]
 
     assert entry.data[CONF_TEMPLATE_PATH] == "/config/templates/supernotify"
