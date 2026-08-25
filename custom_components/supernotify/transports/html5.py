@@ -187,7 +187,7 @@ class HTML5Transport(Transport):
                 _LOGGER.debug("SUPERNOTIFY html5: object_url failed for %s: %s", image_path, e)
         return None
 
-    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:  # noqa: ARG002
+    async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY html5 %s", envelope.message)
 
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
