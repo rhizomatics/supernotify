@@ -310,7 +310,13 @@ async def test_email_notify_entity_selected_by_email_and_smtp_transports(hass: H
     both the 'email' transport (which calls its legacy notify action) and the 'smtp'
     transport (which reuses its connection details for a direct SMTP send), and both
     should correctly deliver a notification addressed to its recipient.
+
+    The notify entity and the reusable config entry only exist on HA >= 2026.x, where smtp
+    notify is set up via a config entry import flow; older HA sets up smtp notify as a
+    legacy discovered platform with no config entry to reuse, so only the 'email' transport
+    (via its legacy notify.mailservice action) is available there.
     """
+    has_smtp_config_entry = importlib.util.find_spec("homeassistant.components.smtp.config_flow") is not None
     config = {
         "notify": [
             {
@@ -325,14 +331,12 @@ async def test_email_notify_entity_selected_by_email_and_smtp_transports(hass: H
     }
 
     with ExitStack() as stack:
-        if importlib.util.find_spec("homeassistant.components.smtp.config_flow"):
-            # HA >= 2026.x: smtp notify is set up via a config entry import flow and exposes
-            # a notify entity, e.g. notify.mailservice_tester_localhost_org
+        if has_smtp_config_entry:
             stack.enter_context(patch("homeassistant.components.smtp.config_flow.validate_input", return_value={}))
             stack.enter_context(patch("homeassistant.components.smtp.helpers.SmtpClient.connect"))
         else:
-            # older HA: smtp notify is a legacy discovered notify platform
             stack.enter_context(patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"))
+            stack.enter_context(patch("homeassistant.components.smtp.notify.MailNotificationService.connect"))
         assert await async_setup_component(hass, "notify", config)
         await hass.async_block_till_done()
 
@@ -345,25 +349,35 @@ async def test_email_notify_entity_selected_by_email_and_smtp_transports(hass: H
         assert "DEFAULT_email" in ctx.delivery_registry.deliveries
         assert ctx.delivery_registry.deliveries["DEFAULT_email"].action == "notify.mailservice"
 
-        assert "DEFAULT_smtp" in ctx.delivery_registry.deliveries
         smtp_transport = cast("SmtpTransport", ctx.transport(TRANSPORT_SMTP))
-        assert smtp_transport.host == "localhost"
-        assert smtp_transport.sender == "hass@localhost.org"
+        if has_smtp_config_entry:
+            assert "notify.mailservice_tester_localhost_org" in hass.states.async_entity_ids("notify")
+            assert "DEFAULT_smtp" in ctx.delivery_registry.deliveries
+            assert smtp_transport.host == "localhost"
+            assert smtp_transport.sender == "hass@localhost.org"
+        else:
+            # no config entry for older, legacy-platform-only smtp notify to reuse
+            assert "DEFAULT_smtp" not in ctx.delivery_registry.deliveries
+            assert smtp_transport.host is None
 
         notification = Notification(ctx, message="hello there", title="testing", target=["tester@localhost.org"])
         await notification.initialize()
         assert "DEFAULT_email" in notification.selected_deliveries
-        assert "DEFAULT_smtp" in notification.selected_deliveries
+        assert ("DEFAULT_smtp" in notification.selected_deliveries) == has_smtp_config_entry
 
         with patch.object(SmtpTransport, "_send_smtp") as mock_send_smtp:
             await notification.deliver()
+            await hass.async_block_till_done()
 
         assert notification.deliveries["DEFAULT_email"][EnvelopeOutcome.SUCCESS]  # type: ignore
         email_envelope = notification.deliveries["DEFAULT_email"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
         assert email_envelope.target.email == ["tester@localhost.org"]  # type: ignore
 
-        assert notification.deliveries["DEFAULT_smtp"][EnvelopeOutcome.SUCCESS]  # type: ignore
-        mock_send_smtp.assert_called_once()
-        sent_msg, sent_addresses = mock_send_smtp.call_args.args
-        assert sent_addresses == ["tester@localhost.org"]
-        assert sent_msg["To"] == "tester@localhost.org"
+        if has_smtp_config_entry:
+            assert notification.deliveries["DEFAULT_smtp"][EnvelopeOutcome.SUCCESS]  # type: ignore
+            mock_send_smtp.assert_called_once()
+            sent_msg, sent_addresses = mock_send_smtp.call_args.args
+            assert sent_addresses == ["tester@localhost.org"]
+            assert sent_msg["To"] == "tester@localhost.org"
+        else:
+            mock_send_smtp.assert_not_called()
