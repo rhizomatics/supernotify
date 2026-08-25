@@ -91,6 +91,7 @@ from .transports.sms import SMSTransport
 from .transports.smtp import SmtpTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
+from .transports.html5 import HTML5Transport
 
 if TYPE_CHECKING:
     import datetime as dt
@@ -131,6 +132,7 @@ TRANSPORTS: list[type[Transport]] = [
     LaMetricTransport,
     PushoverTransport,
     SmtpTransport,
+    HTML5Transport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 
