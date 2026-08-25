@@ -8,6 +8,7 @@ from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import ATTR_IMPORTED_FROM_YAML, DOMAIN
+from custom_components.supernotify.const import CONF_DELIVERY, CONF_TRANSPORT
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -85,6 +86,31 @@ async def test_yaml_setup_mirrors_into_import_entry(hass: HomeAssistant) -> None
 
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is not None
+
+
+async def test_yaml_with_deliveries_does_not_raise_deprecated_yaml(hass: HomeAssistant) -> None:
+    """If the YAML defines deliveries/transports/scenarios/recipients/cameras/action_groups/
+    links - none of which are UI-configurable yet - it can't actually be removed, so nagging
+    to remove it would be wrong. The mirrored entry (for the global settings that ARE
+    UI-configurable) still gets created."""
+    config = {
+        "notify": [
+            {
+                CONF_NAME: "supernotify",
+                CONF_PLATFORM: DOMAIN,
+                CONF_DELIVERY: {"persistent": {CONF_TRANSPORT: "persistent"}},
+            }
+        ]
+    }
+    assert await async_setup_component(hass, "notify", config)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service("notify", "supernotify")
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is None
 
 
 async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:

@@ -33,7 +33,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -172,16 +172,35 @@ async def async_get_service(
     # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
     # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
     # "deprecated_yaml" is a shared translation key owned by the homeassistant domain.
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={"domain": DOMAIN, "integration_title": "Supernotify"},
+    # But only if the YAML is actually fully replaceable by the config entry: deliveries,
+    # transports, scenarios, recipients, cameras, action groups and links aren't
+    # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are
+    # defined, this YAML still has to stay - nagging to remove it would be wrong.
+    yaml_still_required = any(
+        config.get(key)
+        for key in (
+            CONF_DELIVERY,
+            CONF_TRANSPORTS,
+            CONF_SCENARIOS,
+            CONF_RECIPIENTS,
+            CONF_CAMERAS,
+            CONF_ACTION_GROUPS,
+            CONF_LINKS,
+        )
     )
+    if yaml_still_required:
+        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+    else:
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={"domain": DOMAIN, "integration_title": "Supernotify"},
+        )
 
     # One-shot mirror of this YAML config into a config entry, so YAML-only users
     # get an Integrations-page presence. Only when no entry exists yet - once one
