@@ -255,45 +255,58 @@ class SupernotifyOptionsFlow(OptionsFlow):
             SelectSelectorConfig(options=_OUTCOME_OPTIONS, multiple=True, translation_key="outcome_selection")
         )
         schema = vol.Schema({
-            vol.Optional(CONF_ENABLED, default=current.get(CONF_ENABLED, False)): cv.boolean,
+            vol.Optional(CONF_ENABLED, default=False): cv.boolean,
             vol.Optional("file", default={}): section(
                 vol.Schema({
                     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema
                     # conversion used by the config flow frontend ("Unable to convert
                     # schema" / HTTP 500).
-                    vol.Optional(CONF_ARCHIVE_PATH, default=current.get(CONF_ARCHIVE_PATH, "")): cv.string,
-                    vol.Optional(CONF_ARCHIVE_DAYS, default=current.get(CONF_ARCHIVE_DAYS, 3)): cv.positive_int,
-                    vol.Optional(
-                        CONF_ARCHIVE_PURGE_INTERVAL, default=current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60)
-                    ): cv.positive_int,
+                    vol.Optional(CONF_ARCHIVE_PATH, default=""): cv.string,
+                    vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
+                    vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
                 }),
                 {"collapsed": False},
             ),
             vol.Optional("mqtt", default={}): section(
                 vol.Schema({
-                    vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=current.get(CONF_ARCHIVE_MQTT_TOPIC, "")): cv.string,
-                    vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=current.get(CONF_ARCHIVE_MQTT_QOS, 0)): cv.positive_int,
-                    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=current.get(CONF_ARCHIVE_MQTT_RETAIN, True)): cv.boolean,
+                    vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=""): cv.string,
+                    vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
+                    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
                 }),
                 {"collapsed": True},
             ),
             vol.Optional("event", default={}): section(
                 vol.Schema({
-                    vol.Optional(
-                        CONF_ARCHIVE_EVENT_NAME, default=current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_ARCHIVE_EVENT_SELECTION,
-                        default=_event_policy_to_list(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE")),
-                    ): outcome_selector,
-                    vol.Optional(
-                        CONF_ARCHIVE_DIAGNOSTICS,
-                        default=_event_policy_to_list(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR")),
-                    ): outcome_selector,
+                    vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
+                    vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=[]): outcome_selector,
+                    vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=[]): outcome_selector,
                 }),
                 {"collapsed": True},
             ),
         })
+        # A plain vol.Optional(default=...) only sets the server-side validation fallback -
+        # once a section is present, the frontend needs description.suggested_value (for
+        # every field, not just the section-nested ones) to pre-fill an existing entry's
+        # current values.
+        suggested_values = {
+            CONF_ENABLED: current.get(CONF_ENABLED, False),
+            "file": {
+                CONF_ARCHIVE_PATH: current.get(CONF_ARCHIVE_PATH, ""),
+                CONF_ARCHIVE_DAYS: current.get(CONF_ARCHIVE_DAYS, 3),
+                CONF_ARCHIVE_PURGE_INTERVAL: current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60),
+            },
+            "mqtt": {
+                CONF_ARCHIVE_MQTT_TOPIC: current.get(CONF_ARCHIVE_MQTT_TOPIC, ""),
+                CONF_ARCHIVE_MQTT_QOS: current.get(CONF_ARCHIVE_MQTT_QOS, 0),
+                CONF_ARCHIVE_MQTT_RETAIN: current.get(CONF_ARCHIVE_MQTT_RETAIN, True),
+            },
+            "event": {
+                CONF_ARCHIVE_EVENT_NAME: current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification"),
+                CONF_ARCHIVE_EVENT_SELECTION: _event_policy_to_list(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE")),
+                CONF_ARCHIVE_DIAGNOSTICS: _event_policy_to_list(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR")),
+            },
+        }
+        schema = self.add_suggested_values_to_schema(schema, suggested_values)
         return self.async_show_form(step_id="archive", data_schema=schema)
 
     async def async_step_dupe_check(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

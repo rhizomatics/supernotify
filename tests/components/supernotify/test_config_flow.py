@@ -13,7 +13,9 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
+    CONF_ARCHIVE_EVENT_NAME,
     CONF_ARCHIVE_EVENT_SELECTION,
+    CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
     CONF_DELIVERY,
     CONF_DUPE_CHECK,
@@ -33,6 +35,17 @@ from custom_components.supernotify.schema import OutcomeSelection
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+
+
+def _suggested_value(schema, *path: str):
+    """Walk a vol.Schema, recursing through section markers, and return the
+    description.suggested_value the frontend uses to pre-fill the field at `path`."""
+    current_schema = schema
+    for key in path[:-1]:
+        marker = next(m for m in current_schema.schema if m == key)
+        current_schema = current_schema.schema[marker].schema
+    marker = next(m for m in current_schema.schema if m == path[-1])
+    return marker.description["suggested_value"]
 
 
 async def test_user_step_defaults_create_entry(hass: HomeAssistant) -> None:
@@ -141,10 +154,10 @@ async def test_options_flow_archive(hass: HomeAssistant) -> None:
     # re-opening the step is pre-filled with the values just saved, as a checkbox list again
     options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "archive"})
-    prefilled = menu_result2["data_schema"]({})
-    assert prefilled["file"][CONF_ARCHIVE_DAYS] == 5
-    assert prefilled["event"][CONF_ARCHIVE_EVENT_SELECTION] == ["error", "dupe"]
-    assert prefilled["event"][CONF_ARCHIVE_DIAGNOSTICS] == []
+    schema = menu_result2["data_schema"]
+    assert _suggested_value(schema, "file", CONF_ARCHIVE_DAYS) == 5
+    assert _suggested_value(schema, "event", CONF_ARCHIVE_EVENT_SELECTION) == ["error", "dupe"]
+    assert _suggested_value(schema, "event", CONF_ARCHIVE_DIAGNOSTICS) == []
 
 
 async def test_options_flow_dupe_check(hass: HomeAssistant) -> None:
@@ -258,14 +271,44 @@ async def test_archive_options_form_normalizes_stale_raw_values(hass: HomeAssist
 
     options_init = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "archive"})
-    prefilled = menu_result["data_schema"]({})
-    assert prefilled["event"][CONF_ARCHIVE_EVENT_SELECTION] == ["no_delivery", "partial_delivery", "fallback_delivery", "error"]
-    assert prefilled["event"][CONF_ARCHIVE_DIAGNOSTICS] == ["error"]
+    schema = menu_result["data_schema"]
+    assert _suggested_value(schema, "event", CONF_ARCHIVE_EVENT_SELECTION) == [
+        "no_delivery",
+        "partial_delivery",
+        "fallback_delivery",
+        "error",
+    ]
+    assert _suggested_value(schema, "event", CONF_ARCHIVE_DIAGNOSTICS) == ["error"]
 
     options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "housekeeping"})
     prefilled2 = menu_result2["data_schema"]({})
     assert prefilled2[CONF_HOUSEKEEPING_TIME] == "01:02:03"
+
+
+async def test_archive_options_form_prefills_from_yaml_import(hass: HomeAssistant) -> None:
+    """Regression test: opening the archive options form on an entry freshly imported from
+    YAML (never touched via the UI before) must pre-fill from the imported values, not blanks."""
+    import_data = {
+        CONF_ARCHIVE: {
+            CONF_ENABLED: True,
+            CONF_ARCHIVE_PATH: "/config/archive/supernotify",
+            CONF_ARCHIVE_DAYS: 9,
+            CONF_ARCHIVE_MQTT_TOPIC: "supernotify/archive",
+            CONF_ARCHIVE_EVENT_NAME: "my_archive_event",
+        },
+    }
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data=import_data)
+    entry = result["result"]
+
+    options_init = await hass.config_entries.options.async_init(entry.entry_id)
+    menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "archive"})
+    schema = menu_result["data_schema"]
+    assert _suggested_value(schema, CONF_ENABLED) is True
+    assert _suggested_value(schema, "file", CONF_ARCHIVE_PATH) == "/config/archive/supernotify"
+    assert _suggested_value(schema, "file", CONF_ARCHIVE_DAYS) == 9
+    assert _suggested_value(schema, "mqtt", CONF_ARCHIVE_MQTT_TOPIC) == "supernotify/archive"
+    assert _suggested_value(schema, "event", CONF_ARCHIVE_EVENT_NAME) == "my_archive_event"
 
 
 async def test_import_without_archive_path(hass: HomeAssistant) -> None:
