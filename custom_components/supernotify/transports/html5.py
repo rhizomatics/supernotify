@@ -118,6 +118,9 @@ _URGENCY_BY_PRIORITY = {
 class HTML5Transport(Transport):
     """Notify browsers via the Home Assistant html5 web push integration."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     name = TRANSPORT_HTML5
 
     @property
