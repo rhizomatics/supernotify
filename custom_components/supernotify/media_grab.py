@@ -79,7 +79,7 @@ async def snapshot_from_url(
         else:
             bitmap: bytes | None = await r.content.read()
             if bitmap:
-                ext = _detect_image_ext(bitmap)
+                ext = await _detect_image_ext(hass_api, bitmap)
                 raw_path: Path = raw_dir / f"{notification_id}.{ext}"
                 async with aiofiles.open(raw_path, "wb") as f:
                     await f.write(bitmap)
@@ -138,7 +138,7 @@ async def snap_image_entity(
             if bitmap:
                 raw_dir: Path = Path(media_path) / "raw"
                 await raw_dir.mkdir(parents=True, exist_ok=True)
-                ext = _detect_image_ext(bitmap)
+                ext = await _detect_image_ext(hass_api, bitmap)
                 raw_path = raw_dir / f"{notification_id}.{ext}"
                 async with aiofiles.open(raw_path, "wb") as f:
                     await f.write(bitmap)
@@ -264,10 +264,10 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
     return None
 
 
-def _detect_image_ext(bitmap: bytes) -> str:
+async def _detect_image_ext(hass_api: HomeAssistantAPI, bitmap: bytes) -> str:
     """Detect image format from raw bytes, returning a file extension."""
     try:
-        img = Image.open(io.BytesIO(bitmap))
+        img = await hass_api.create_job(Image.open, io.BytesIO(bitmap))
         fmt = (img.format or "").lower()
         return "jpg" if fmt in ("jpg", "jpeg") else fmt or "img"
     except Exception:
@@ -424,9 +424,12 @@ async def write_image_from_bitmap(
         input_format = image.format.lower() if image.format else "img"
         if reprocess == ReprocessOption.ALWAYS:
             # rewrite to remove metadata, incl custom CCTV comments that confuse python MIMEImage
-            clean_image: Image.Image = Image.new(image.mode, image.size)
-            clean_image.putdata(image.getdata())  # being removed in 2027
-            # clean_image.putdata(image.get_flattened_data()) # added in jan 2026
+            clean_image: Image.Image = await hass_api.create_job(Image.new, image.mode, image.size)
+            try:
+                clean_image.putdata(image.getdata())  # being removed in 2027
+            except Exception:
+                _LOGGER.info("SUPERNOTIFY Pillow image.getdata not available, trying get_flattened_data")
+                clean_image.putdata(image.get_flattened_data())  # added in jan 2026
             image = clean_image
 
         buffer = BytesIO()

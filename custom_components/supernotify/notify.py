@@ -33,6 +33,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -248,7 +249,7 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
         if not service.context.archive.enabled:
-            return {"error": "No archive configured"}
+            raise ServiceValidationError("No archive configured")
         purged = await service.context.archive.cleanup(days=days, force=True)
         arch_size = await service.context.archive.size()
         return {
@@ -261,7 +262,7 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
     async def supplemental_action_purge_media(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
         if not service.context.media_storage.media_path:
-            return {"error": "No media storage configured"}
+            raise ServiceValidationError("No media storage configured")
         purged = await service.context.media_storage.cleanup(days=days, force=True)
         size = await service.context.media_storage.size()
         return {

@@ -15,14 +15,15 @@ rules:
   # ==================
 
   action-setup:
-    status: todo
+    status: done
     comment: |
-      notify.supernotify is now also registered directly from async_setup_entry()
-      (__init__.py), bypassing legacy platform discovery - see build_supernotify_action()
-      in notify.py, shared with the still-supported YAML async_get_service() path. The
-      dozen supplemental supernotify.* debugging/admin services are still registered
-      inside async_get_service() only (YAML path); moving those to async_setup() and
-      making them available for config-entry setups too is follow-up work.
+      notify.supernotify is registered directly from async_setup_entry() (__init__.py),
+      bypassing legacy platform discovery - see build_supernotify_action() in notify.py,
+      shared with the still-supported YAML async_get_service() path. The dozen supplemental
+      supernotify.* debugging/admin services are now also shared: extracted into
+      async_register_supplemental_services()/async_unregister_supplemental_services()
+      (notify.py), called from both async_get_service() (YAML) and async_setup_entry/
+      async_unload_entry (__init__.py), guarded against double registration.
 
   appropriate-polling:
     status: exempt
@@ -118,20 +119,27 @@ rules:
       SupernotifyEntity sets _attr_has_entity_name = True.
 
   runtime-data:
-    status: todo
+    status: done
     comment: |
-      Will be implemented with config entries.
-      Plan to store Context, registries, and transports in entry.runtime_data.
+      __init__.py:73 sets entry.runtime_data = service (the SupernotifyAction, which owns
+      the Context/registries/transports). async_setup_entry/async_unload_entry are typed
+      against a SupernotifyConfigEntry = ConfigEntry[SupernotifyAction] alias.
 
   test-before-configure:
-    status: todo
+    status: done
     comment: |
-      Will validate paths and permissions in config flow when implemented.
+      config_flow.py's _validate_user_input() validates template_path and media_path at
+      submission time, mirroring MediaStorage.initialize()'s own tolerant runtime behavior
+      (media_grab.py): each directory is created on demand if missing, and only a genuine
+      OSError/ValueError creating or accessing it is a form error. A blank value is left
+      untouched, since both fields are optional.
 
   test-before-setup:
-    status: todo
+    status: done
     comment: |
-      Need to review transport initialization and add explicit validation.
+      async_setup_entry (__init__.py) wraps service.initialize() in try/except, raising
+      ConfigEntryNotReady on any failure so HA retries with backoff instead of leaving the
+      entry in an unhandled-exception state.
 
   unique-config-entry:
     status: done
@@ -146,16 +154,23 @@ rules:
   # ==================
 
   action-exceptions:
-    status: todo
+    status: done
     comment: |
-      No ServiceValidationError or HomeAssistantError usage found anywhere in
-      custom_components/supernotify - services do not yet raise these on bad
-      input/failure.
+      supplemental_action_purge_archive/supplemental_action_purge_media (notify.py) raise
+      ServiceValidationError when archive/media storage isn't configured, instead of
+      returning a soft {"error": ...} dict a caller might not check. notify.supernotify
+      itself (async_send_message) deliberately keeps its existing fault-barrier-of-last-
+      resort behavior - it's a notify action invoked from automations, where one failed
+      delivery raising and halting the calling automation would be worse than the existing
+      failure-counter/log approach; not treated as an action-exceptions gap.
 
   config-entry-unloading:
-    status: todo
+    status: done
     comment: |
-      Will implement async_unload_entry with config flow.
+      async_unload_entry (__init__.py) unregisters notify.supernotify (via
+      service.async_unregister_services()) and the supplemental supernotify.* services
+      (via async_unregister_supplemental_services()), gated on runtime_data having been
+      set - i.e. only for entries that actually registered anything themselves.
 
   docs-configuration-parameters:
     status: done
@@ -171,9 +186,16 @@ rules:
     status: done
 
   log-when-unavailable:
-    status: todo
+    status: done
     comment: |
-      Still no unavailable/log-once pattern in transport.py or transports/*.
+      Transport.log_delivery_failure()/log_delivery_recovered() (transport.py) log the first
+      delivery failure at ERROR and flag the transport unavailable; consecutive failures
+      while still unavailable are downgraded to DEBUG instead of repeating at ERROR, and a
+      later successful delivery logs one INFO recovery message and clears the flag. Wired
+      into transport.py's call_action (used by 16 of 17 transports), transports/smtp.py's
+      direct-SMTP _send (the one transport that bypasses call_action), and notification.py's
+      outer per-delivery fallback catch. The lifetime error_count/last_error_* attributes
+      are untouched - only log level/frequency changed.
 
   parallel-updates:
     status: done
@@ -320,13 +342,10 @@ rules:
   # ==================
 
   async-dependency:
-    status: todo
+    status: done
     comment: |
-      Partial: media_grab.py:422 wraps Image.open via hass_api.create_job
-      (async_add_executor_job), and transports/mobile_push.py:242 wraps
-      BeautifulSoup the same way. But media_grab.py:270 (_detect_image_ext) and
-      :427 (Image.new) still call Pillow directly, unwrapped - remaining work
-      is just those two Pillow call sites.
+      Pillow and file system actions using either asyncio directly or
+      wrapped in HomeAssistant async jobs
 
   inject-websession:
     status: done

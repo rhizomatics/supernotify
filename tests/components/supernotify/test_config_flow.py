@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_ENABLED
@@ -63,7 +64,7 @@ async def test_single_instance_only(hass: HomeAssistant) -> None:
     assert result2["reason"] == "single_instance_allowed"
 
 
-async def test_reconfigure_updates_global_settings(hass: HomeAssistant) -> None:
+async def test_reconfigure_updates_global_settings(hass: HomeAssistant, tmp_path: Path) -> None:
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
     entry_result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
@@ -77,10 +78,11 @@ async def test_reconfigure_updates_global_settings(hass: HomeAssistant) -> None:
     # pre-filled from the entry's current data
     assert reconfigure["data_schema"]({})[CONF_TEMPLATE_PATH] == TEMPLATE_DIR
 
+    custom_template_path = str(tmp_path / "templates" / "custom")
     result2 = await hass.config_entries.flow.async_configure(
         reconfigure["flow_id"],
         {
-            CONF_TEMPLATE_PATH: "/config/templates/custom",
+            CONF_TEMPLATE_PATH: custom_template_path,
             CONF_MEDIA_PATH: MEDIA_DIR,
             CONF_MEDIA_URL_PREFIX: "/supernotify/media",
             CONF_MOBILE_DISCOVERY: False,
@@ -91,7 +93,7 @@ async def test_reconfigure_updates_global_settings(hass: HomeAssistant) -> None:
     assert result2["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
-    assert entry.data[CONF_TEMPLATE_PATH] == "/config/templates/custom"
+    assert entry.data[CONF_TEMPLATE_PATH] == custom_template_path
     assert entry.data[CONF_MOBILE_DISCOVERY] is False
 
 
@@ -279,3 +281,92 @@ async def test_import_declines_second_entry(hass: HomeAssistant) -> None:
     second = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={})
     assert second["type"] == FlowResultType.ABORT
     assert second["reason"] == "single_instance_allowed"
+
+
+async def test_user_step_creates_missing_template_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    """A template_path that doesn't exist yet is created on submit, not rejected - matching
+    media_path's own tolerant behavior."""
+    new_template_path = tmp_path / "templates" / "subdir"
+    assert not new_template_path.exists()
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_TEMPLATE_PATH: str(new_template_path)})
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert new_template_path.exists()
+
+
+async def test_user_step_rejects_unusable_template_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    """A template_path that can never be created (blocked by a plain file in the way) is a
+    form error, not silently accepted."""
+    blocking_file = tmp_path / "not_a_directory"
+    blocking_file.write_text("")
+    unusable_path = str(blocking_file / "templates")
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_TEMPLATE_PATH: unusable_path})
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {CONF_TEMPLATE_PATH: "template_path_invalid"}
+
+
+async def test_user_step_creates_missing_media_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    """A media_path that doesn't exist yet is created on submit, not rejected - matching
+    MediaStorage.initialize()'s own tolerant runtime behavior (media_grab.py)."""
+    new_media_path = tmp_path / "media" / "subdir"
+    assert not new_media_path.exists()
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_MEDIA_PATH: str(new_media_path)})
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert new_media_path.exists()
+
+
+async def test_user_step_rejects_unusable_media_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    """A media_path that can never be created (blocked by a plain file in the way) is a form
+    error, not silently accepted."""
+    blocking_file = tmp_path / "not_a_directory"
+    blocking_file.write_text("")
+    unusable_path = str(blocking_file / "media")
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_MEDIA_PATH: unusable_path})
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {CONF_MEDIA_PATH: "media_path_invalid"}
+
+
+async def test_reconfigure_step_rejects_unusable_media_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    """The reconfigure step validates the same way as the user step, re-showing the
+    just-submitted (invalid) values rather than reverting to the entry's prior data."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    entry_result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    entry = entry_result["result"]
+
+    blocking_file = tmp_path / "not_a_directory"
+    blocking_file.write_text("")
+    unusable_path = str(blocking_file / "media")
+
+    reconfigure = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        reconfigure["flow_id"],
+        {
+            CONF_TEMPLATE_PATH: TEMPLATE_DIR,
+            CONF_MEDIA_PATH: unusable_path,
+            CONF_MEDIA_URL_PREFIX: "/supernotify/media",
+            CONF_MOBILE_DISCOVERY: True,
+            CONF_RECIPIENTS_DISCOVERY: True,
+        },
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {CONF_MEDIA_PATH: "media_path_invalid"}
+    # entry untouched - the invalid submission was never applied
+    assert entry.data[CONF_MEDIA_PATH] == MEDIA_DIR

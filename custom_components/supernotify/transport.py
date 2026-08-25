@@ -70,6 +70,7 @@ class Transport:
         self.last_error_in: str | None = None
         self.last_error_message: str | None = None
         self.error_count: int = 0
+        self._unavailable: bool = False
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
@@ -213,6 +214,7 @@ class Transport:
                 )
 
             envelope.delivered = 1
+            self.log_delivery_recovered()
             return True
         except Exception as e:
             self.record_error(str(e), method="call_action")
@@ -227,7 +229,9 @@ class Transport:
                     exception=str(e),
                 )
             )
-            _LOGGER.exception("SUPERNOTIFY Failed to notify %s via %s, data=%s", self.name, qualified_action, action_data)
+            self.log_delivery_failure(
+                e, "SUPERNOTIFY Failed to notify %s via %s, data=%s", self.name, qualified_action, action_data
+            )
             envelope.error_count += 1
             envelope.delivery_error = format_exception(e)
             return False
@@ -237,6 +241,28 @@ class Transport:
         self.last_error_message = message
         self.last_error_in = method
         self.error_count += 1
+
+    def log_delivery_failure(self, err: BaseException, message: str, *args: Any) -> None:
+        """Log a delivery failure, passing the exception caught in the caller's except block.
+
+        Logged at ERROR (with traceback) the first time this transport becomes unavailable,
+        then downgraded to DEBUG for consecutive failures until it recovers - avoids
+        spamming the log every notification while an external service/device stays down.
+        Call alongside record_error(), which keeps tracking the lifetime error count
+        regardless of log level.
+        """
+        if self._unavailable:
+            _LOGGER.debug(message, *args, exc_info=err)
+        else:
+            _LOGGER.error(message, *args, exc_info=err)
+            self._unavailable = True
+
+    def log_delivery_recovered(self) -> None:
+        """Call on a successful delivery - logs once if this transport was previously
+        flagged unavailable, then clears the flag."""
+        if self._unavailable:
+            _LOGGER.info("SUPERNOTIFY %s transport recovered after prior delivery failures", self.name)
+            self._unavailable = False
 
     def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
         """Simplify text for delivery transports with speaking or plain text interfaces"""

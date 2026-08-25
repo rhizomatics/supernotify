@@ -52,7 +52,7 @@
             "reconfigure_successful": "Riconfigurazione riuscita"
         },
         "error": {
-            "template_path_invalid": "Il percorso del modello non è utilizzabile - verifica che esista e sia leggibile",
+            "template_path_invalid": "Impossibile creare o accedere al percorso dei modelli - verifica la posizione e i permessi",
             "media_path_invalid": "Impossibile creare o accedere al percorso dei media - verifica la posizione e i permessi"
         }
     },

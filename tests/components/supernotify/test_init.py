@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import ATTR_IMPORTED_FROM_YAML, DOMAIN
-from custom_components.supernotify.const import CONF_DELIVERY, CONF_TRANSPORT
+from custom_components.supernotify.const import CONF_DELIVERY, CONF_MEDIA_PATH, CONF_TRANSPORT
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -150,3 +154,84 @@ async def test_setup_entry_does_not_clobber_legacy_yaml_platform(hass: HomeAssis
     # still the legacy-registered service, config entry setup declined to re-register
     assert hass.data["notify_services"][DOMAIN][0] is legacy_service
     assert getattr(entry, "runtime_data", None) is None
+
+
+async def test_setup_entry_registers_supplemental_services(hass: HomeAssistant) -> None:
+    """Config-entry setup exposes the same supernotify.* debug/admin services the legacy
+    YAML platform has always registered - previously only the YAML path got them."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, "enquire_configuration")
+    assert hass.services.has_service(DOMAIN, "enquire_scenarios")
+    assert hass.services.has_service(DOMAIN, "purge_media")
+
+
+async def test_purge_archive_raises_when_archive_not_configured(hass: HomeAssistant) -> None:
+    """A zero-config entry (minimal.yaml-equivalent) has no archive configured - calling
+    purge_archive should raise a ServiceValidationError, not silently return an error dict
+    a caller might not check."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError, match="No archive configured"):
+        await hass.services.async_call(DOMAIN, "purge_archive", blocking=True, return_response=True)
+
+
+async def test_purge_media_raises_when_media_not_configured(hass: HomeAssistant) -> None:
+    """An entry with media_path explicitly cleared has no media storage configured -
+    calling purge_media should raise a ServiceValidationError."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_MEDIA_PATH: ""}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError, match="No media storage configured"):
+        await hass.services.async_call(DOMAIN, "purge_media", blocking=True, return_response=True)
+
+
+async def test_unload_entry_removes_supplemental_services(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "enquire_configuration")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+
+
+async def test_setup_entry_imported_from_yaml_does_not_register_supplemental_services(hass: HomeAssistant) -> None:
+    """An entry mirroring a YAML config skips its own setup entirely (see
+    test_setup_entry_imported_from_yaml_skips_registration above) - so it must not register
+    the supplemental services either, only whatever the legacy YAML platform itself set up."""
+    entry = MockConfigEntry(domain=DOMAIN, data={ATTR_IMPORTED_FROM_YAML: True}, options={})
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+
+
+async def test_setup_entry_raises_config_entry_not_ready_on_initialize_failure(hass: HomeAssistant) -> None:
+    """A failure during SupernotifyAction.initialize() should leave HA free to retry setup
+    (ConfigEntryState.SETUP_RETRY), not propagate as a raw unhandled exception."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.supernotify.notify.SupernotifyAction.initialize",
+        AsyncMock(side_effect=RuntimeError("boom")),
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

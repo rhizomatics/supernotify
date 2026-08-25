@@ -52,7 +52,7 @@
             "reconfigure_successful": "Herconfiguratie is gelukt"
         },
         "error": {
-            "template_path_invalid": "Sjabloonpad is niet bruikbaar - controleer of het bestaat en leesbaar is",
+            "template_path_invalid": "Sjabloonpad kon niet worden aangemaakt of benaderd - controleer de locatie en machtigingen",
             "media_path_invalid": "Mediapad kon niet worden aangemaakt of benaderd - controleer de locatie en machtigingen"
         }
     },

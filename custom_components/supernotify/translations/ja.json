@@ -52,7 +52,7 @@
             "reconfigure_successful": "再設定が完了しました"
         },
         "error": {
-            "template_path_invalid": "テンプレートパスが使用できません - 存在し読み取り可能か確認してください",
+            "template_path_invalid": "テンプレートパスを作成またはアクセスできませんでした - 場所と権限を確認してください",
             "media_path_invalid": "メディアパスを作成またはアクセスできませんでした - 場所と権限を確認してください"
         }
     },

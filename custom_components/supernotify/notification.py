@@ -505,9 +505,9 @@ class Notification(ArchivableObject):
                         )
                     self.record_result(delivery, envelope)
                 except Exception as e2:
-                    _LOGGER.exception("SUPERNOTIFY Failed to deliver %s", delivery.name)
                     envelope.error_count = envelope.error_count + 1
                     transport.record_error(str(e2), method="deliver")
+                    transport.log_delivery_failure(e2, "SUPERNOTIFY Failed to deliver %s", delivery.name)
                     envelope.delivery_error = format_exception(e2)
                     self.record_result(delivery, envelope)
 
