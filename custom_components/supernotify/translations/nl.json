@@ -163,13 +163,13 @@
         },
         "outcome_selection": {
             "options": {
-                "SUCCESS": "Succes",
-                "NO_DELIVERY": "Geen bezorging",
-                "PARTIAL_DELIVERY": "Gedeeltelijke bezorging",
-                "FALLBACK_DELIVERY": "Fallback-bezorging",
-                "ERROR": "Fout",
-                "DUPE": "Duplicaat",
-                "ALL": "Alle uitkomsten"
+                "success": "Succes",
+                "no_delivery": "Geen bezorging",
+                "partial_delivery": "Gedeeltelijke bezorging",
+                "fallback_delivery": "Fallback-bezorging",
+                "error": "Fout",
+                "dupe": "Duplicaat",
+                "all": "Alle uitkomsten"
             }
         }
     }

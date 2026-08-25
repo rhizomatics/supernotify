@@ -23,6 +23,7 @@
     "integration_type": "service",
     "iot_class": "calculated",
     "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",
+    "quality_scale": "silver",
     "requirements": [
         "Pillow",
         "bs4",
@@ -31,6 +32,5 @@
         "httpx"
     ],
     "single_config_entry": true,
-    "version":"2.0.0",
-    "quality_scale": "silver"
+    "version":"2.0.0"
 }

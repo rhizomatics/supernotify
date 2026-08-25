@@ -163,13 +163,13 @@
         },
         "outcome_selection": {
             "options": {
-                "SUCCESS": "Success",
-                "NO_DELIVERY": "No Delivery",
-                "PARTIAL_DELIVERY": "Partial Delivery",
-                "FALLBACK_DELIVERY": "Fallback Delivery",
-                "ERROR": "Error",
-                "DUPE": "Duplicate",
-                "ALL": "All Outcomes"
+                "success": "Success",
+                "no_delivery": "No Delivery",
+                "partial_delivery": "Partial Delivery",
+                "fallback_delivery": "Fallback Delivery",
+                "error": "Error",
+                "dupe": "Duplicate",
+                "all": "All Outcomes"
             }
         }
     }
