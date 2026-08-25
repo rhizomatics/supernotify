@@ -163,13 +163,13 @@
         },
         "outcome_selection": {
             "options": {
-                "SUCCESS": "Succès",
-                "NO_DELIVERY": "Aucune livraison",
-                "PARTIAL_DELIVERY": "Livraison partielle",
-                "FALLBACK_DELIVERY": "Livraison de secours",
-                "ERROR": "Erreur",
-                "DUPE": "Doublon",
-                "ALL": "Tous les résultats"
+                "success": "Succès",
+                "no_delivery": "Aucune livraison",
+                "partial_delivery": "Livraison partielle",
+                "fallback_delivery": "Livraison de secours",
+                "error": "Erreur",
+                "dupe": "Doublon",
+                "all": "Tous les résultats"
             }
         }
     }

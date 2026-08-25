@@ -426,11 +426,13 @@ async def write_image_from_bitmap(
         if reprocess == ReprocessOption.ALWAYS:
             # rewrite to remove metadata, incl custom CCTV comments that confuse python MIMEImage
             clean_image: Image.Image = await hass_api.create_job(Image.new, image.mode, image.size)
-            try:
-                clean_image.putdata(image.getdata())  # being removed in 2027
-            except Exception:
-                _LOGGER.info("SUPERNOTIFY Pillow image.getdata not available, trying get_flattened_data")
+            # Pillow API changed in 12.1.0 and the original call will be removed in 2027
+            # https://pillow.readthedocs.io/en/stable/releasenotes/12.1.0.html#image-getdata
+            if hasattr(image, "get_flattened_data"):
                 clean_image.putdata(image.get_flattened_data())  # added in jan 2026
+            else:
+                clean_image.putdata(image.getdata())  # being removed in 2027
+
             image = clean_image
 
         buffer = BytesIO()

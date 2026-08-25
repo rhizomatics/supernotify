@@ -75,19 +75,21 @@ def _event_policy_str(value: Any) -> str:
 # NONE isn't a real, independently selectable outcome - it's the empty bitmask, and an
 # always-false no-op check in archive.py (outcome_policy & OutcomeSelection.NONE is always
 # 0). "No outcomes ticked" already means NONE, so it's excluded from the checkbox list.
-_OUTCOME_OPTIONS = [flag.name for flag in OutcomeSelection if flag != OutcomeSelection.NONE and flag.name]
+# Option values are lowercased since HA selector translation keys must match [a-z0-9-_]+ -
+# the stored/parsed policy strings stay uppercase (OutcomeSelection member names).
+_OUTCOME_OPTIONS = [flag.name.lower() for flag in OutcomeSelection if flag != OutcomeSelection.NONE and flag.name]
 
 
 def _event_policy_to_list(value: Any) -> list[str]:
     """Turn a stored OutcomeSelection value into the list of names a multi-select needs."""
     policy_str = _event_policy_str(value)
-    return [] if policy_str in ("", "NONE") else policy_str.split("|")
+    return [] if policy_str in ("", "NONE") else [part.lower() for part in policy_str.split("|")]
 
 
 def _event_policy_from_list(values: list[str]) -> str:
     """Turn a submitted multi-select list back into the pipe-separated string
     SUPERNOTIFY_SCHEMA's parse_event_policy expects."""
-    return "|".join(values) if values else "NONE"
+    return "|".join(value.upper() for value in values) if values else "NONE"
 
 
 def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:

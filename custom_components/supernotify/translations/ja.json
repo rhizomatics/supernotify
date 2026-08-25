@@ -163,13 +163,13 @@
         },
         "outcome_selection": {
             "options": {
-                "SUCCESS": "成功",
-                "NO_DELIVERY": "配信なし",
-                "PARTIAL_DELIVERY": "部分配信",
-                "FALLBACK_DELIVERY": "フォールバック配信",
-                "ERROR": "エラー",
-                "DUPE": "重複",
-                "ALL": "すべての結果"
+                "success": "成功",
+                "no_delivery": "配信なし",
+                "partial_delivery": "部分配信",
+                "fallback_delivery": "フォールバック配信",
+                "error": "エラー",
+                "dupe": "重複",
+                "all": "すべての結果"
             }
         }
     }

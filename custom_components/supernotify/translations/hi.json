@@ -163,13 +163,13 @@
         },
         "outcome_selection": {
             "options": {
-                "SUCCESS": "सफल",
-                "NO_DELIVERY": "कोई डिलीवरी नहीं",
-                "PARTIAL_DELIVERY": "आंशिक डिलीवरी",
-                "FALLBACK_DELIVERY": "फ़ॉलबैक डिलीवरी",
-                "ERROR": "त्रुटि",
-                "DUPE": "डुप्लिकेट",
-                "ALL": "सभी परिणाम"
+                "success": "सफल",
+                "no_delivery": "कोई डिलीवरी नहीं",
+                "partial_delivery": "आंशिक डिलीवरी",
+                "fallback_delivery": "फ़ॉलबैक डिलीवरी",
+                "error": "त्रुटि",
+                "dupe": "डुप्लिकेट",
+                "all": "सभी परिणाम"
             }
         }
     }

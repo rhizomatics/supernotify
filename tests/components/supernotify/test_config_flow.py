@@ -124,7 +124,7 @@ async def test_options_flow_archive(hass: HomeAssistant) -> None:
         {
             CONF_ENABLED: True,
             CONF_ARCHIVE_DAYS: 5,
-            CONF_ARCHIVE_EVENT_SELECTION: ["ERROR", "DUPE"],
+            CONF_ARCHIVE_EVENT_SELECTION: ["error", "dupe"],
             CONF_ARCHIVE_DIAGNOSTICS: [],
         },
     )
@@ -141,7 +141,7 @@ async def test_options_flow_archive(hass: HomeAssistant) -> None:
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "archive"})
     prefilled = menu_result2["data_schema"]({})
     assert prefilled[CONF_ARCHIVE_DAYS] == 5
-    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == ["ERROR", "DUPE"]
+    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == ["error", "dupe"]
     assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == []
 
 
@@ -257,8 +257,8 @@ async def test_archive_options_form_normalizes_stale_raw_values(hass: HomeAssist
     options_init = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "archive"})
     prefilled = menu_result["data_schema"]({})
-    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == ["NO_DELIVERY", "PARTIAL_DELIVERY", "FALLBACK_DELIVERY", "ERROR"]
-    assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == ["ERROR"]
+    assert prefilled[CONF_ARCHIVE_EVENT_SELECTION] == ["no_delivery", "partial_delivery", "fallback_delivery", "error"]
+    assert prefilled[CONF_ARCHIVE_DIAGNOSTICS] == ["error"]
 
     options_init2 = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result2 = await hass.config_entries.options.async_configure(options_init2["flow_id"], {"next_step_id": "housekeeping"})

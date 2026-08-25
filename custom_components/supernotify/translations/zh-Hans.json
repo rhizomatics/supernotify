@@ -163,13 +163,13 @@
         },
         "outcome_selection": {
             "options": {
-                "SUCCESS": "成功",
-                "NO_DELIVERY": "未送达",
-                "PARTIAL_DELIVERY": "部分送达",
-                "FALLBACK_DELIVERY": "备用送达",
-                "ERROR": "错误",
-                "DUPE": "重复",
-                "ALL": "所有结果"
+                "success": "成功",
+                "no_delivery": "未送达",
+                "partial_delivery": "部分送达",
+                "fallback_delivery": "备用送达",
+                "error": "错误",
+                "dupe": "重复",
+                "all": "所有结果"
             }
         }
     }
