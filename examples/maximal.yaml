@@ -1,29 +1,31 @@
 notify:
   - name: maximal
     platform: supernotify
-    template_path: config/templates/supernotify
-    media_path: /config/media/supernotify
-    media_url_prefix: /supernotify/media
-    recipients_discovery: true
-    mobile_discovery: true
-    dupe_check:
-      ttl: 300
-      size: 50
-      dupe_policy: dupe_policy_message_title_same_or_lower_priority
-    archive:
-      enabled: true
-      file_retention_days: 4
-      file_path: config/archive/supernotify
-      mqtt_topic: notifications/supernotify
-      mqtt_qos: 1
-      mqtt_retain: False
-      purge_interval: 60
-      diagnostics: ERROR | PARTIAL_DELIVERY
-      event_name: supernotification
-      event_selection: NO_DELIVERY | FALLBACK_DELIVERY | PARTIAL_DELIVERY | ERROR
-    housekeeping:
-      media_storage_days: 7
-      housekeeping_time: 00:00:00
+    # entries now replaced by ConfigFlow UI entries - start
+    #template_path: config/templates/supernotify
+    #media_path: /config/media/supernotify
+    #media_url_prefix: /supernotify/media
+    #recipients_discovery: true
+    #mobile_discovery: true
+    #dupe_check:
+    #  ttl: 300
+    #  size: 50
+    #  dupe_policy: dupe_policy_message_title_same_or_lower_priority
+    #archive:
+    #  enabled: true
+    #  file_retention_days: 4
+    #  file_path: config/archive/supernotify
+    #  mqtt_topic: notifications/supernotify
+    #  mqtt_qos: 1
+    #  mqtt_retain: False
+    #  purge_interval: 60
+    #  diagnostics: ERROR | PARTIAL_DELIVERY
+    #  event_name: supernotification
+    #  event_selection: NO_DELIVERY | FALLBACK_DELIVERY | PARTIAL_DELIVERY | ERROR
+    #housekeeping:
+    #  media_storage_days: 7
+    #  housekeeping_time: 00:00:00
+    # entries now replaced by ConfigFlow UI entries - end
     delivery:
       html_email:
         transport: email

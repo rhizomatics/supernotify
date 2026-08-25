@@ -68,6 +68,24 @@ def _event_policy_str(value: Any) -> str:
     return str(value)
 
 
+# NONE isn't a real, independently selectable outcome - it's the empty bitmask, and an
+# always-false no-op check in archive.py (outcome_policy & OutcomeSelection.NONE is always
+# 0). "No outcomes ticked" already means NONE, so it's excluded from the checkbox list.
+_OUTCOME_OPTIONS = [flag.name for flag in OutcomeSelection if flag != OutcomeSelection.NONE and flag.name]
+
+
+def _event_policy_to_list(value: Any) -> list[str]:
+    """Turn a stored OutcomeSelection value into the list of names a multi-select needs."""
+    policy_str = _event_policy_str(value)
+    return [] if policy_str in ("", "NONE") else policy_str.split("|")
+
+
+def _event_policy_from_list(values: list[str]) -> str:
+    """Turn a submitted multi-select list back into the pipe-separated string
+    SUPERNOTIFY_SCHEMA's parse_event_policy expects."""
+    return "|".join(values) if values else "NONE"
+
+
 def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion used by
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
@@ -78,7 +96,6 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
         vol.Optional(CONF_MEDIA_URL_PREFIX, default=defaults.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media")): cv.string,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=defaults.get(CONF_MOBILE_DISCOVERY, True)): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=defaults.get(CONF_RECIPIENTS_DISCOVERY, True)): cv.boolean,
-        vol.Optional(CONF_ARCHIVE_PATH, default=defaults.get(CONF_ARCHIVE_PATH, "")): cv.string,
     })
 
 
@@ -121,7 +138,6 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         user step (it covers SOURCE_IMPORT too), so no unique_id bookkeeping is needed here.
         """
         archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
-        archive_path = archive.pop(CONF_ARCHIVE_PATH, None)
         if CONF_ARCHIVE_EVENT_SELECTION in archive:
             archive[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_str(archive[CONF_ARCHIVE_EVENT_SELECTION])
         if CONF_ARCHIVE_DIAGNOSTICS in archive:
@@ -133,7 +149,6 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
             CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
             CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
-            CONF_ARCHIVE_PATH: archive_path or "",
             ATTR_IMPORTED_FROM_YAML: True,
         }
         housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
@@ -166,9 +181,18 @@ class SupernotifyOptionsFlow(OptionsFlow):
     async def async_step_archive(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         current: dict[str, Any] = self.config_entry.options.get(CONF_ARCHIVE, {})
         if user_input is not None:
-            return self.async_create_entry(title="", data={**self.config_entry.options, CONF_ARCHIVE: user_input})
+            processed = dict(user_input)
+            processed[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_from_list(user_input[CONF_ARCHIVE_EVENT_SELECTION])
+            processed[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_from_list(user_input[CONF_ARCHIVE_DIAGNOSTICS])
+            return self.async_create_entry(title="", data={**self.config_entry.options, CONF_ARCHIVE: processed})
+        outcome_selector = SelectSelector(
+            SelectSelectorConfig(options=_OUTCOME_OPTIONS, multiple=True, translation_key="outcome_selection")
+        )
         schema = vol.Schema({
             vol.Optional(CONF_ENABLED, default=current.get(CONF_ENABLED, False)): cv.boolean,
+            # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion
+            # used by the config flow frontend ("Unable to convert schema" / HTTP 500).
+            vol.Optional(CONF_ARCHIVE_PATH, default=current.get(CONF_ARCHIVE_PATH, "")): cv.string,
             vol.Optional(CONF_ARCHIVE_DAYS, default=current.get(CONF_ARCHIVE_DAYS, 3)): cv.positive_int,
             vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=current.get(CONF_ARCHIVE_MQTT_TOPIC, "")): cv.string,
             vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=current.get(CONF_ARCHIVE_MQTT_QOS, 0)): cv.positive_int,
@@ -176,11 +200,12 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60)): cv.positive_int,
             vol.Optional(CONF_ARCHIVE_EVENT_NAME, default=current.get(CONF_ARCHIVE_EVENT_NAME, "supernotification")): cv.string,
             vol.Optional(
-                CONF_ARCHIVE_EVENT_SELECTION, default=_event_policy_str(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE"))
-            ): cv.string,
+                CONF_ARCHIVE_EVENT_SELECTION,
+                default=_event_policy_to_list(current.get(CONF_ARCHIVE_EVENT_SELECTION, "NONE")),
+            ): outcome_selector,
             vol.Optional(
-                CONF_ARCHIVE_DIAGNOSTICS, default=_event_policy_str(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR"))
-            ): cv.string,
+                CONF_ARCHIVE_DIAGNOSTICS, default=_event_policy_to_list(current.get(CONF_ARCHIVE_DIAGNOSTICS, "ERROR"))
+            ): outcome_selector,
         })
         return self.async_show_form(step_id="archive", data_schema=schema)
 

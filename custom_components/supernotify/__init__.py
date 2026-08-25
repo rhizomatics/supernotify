@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 
@@ -36,22 +36,15 @@ def _entry_full_config(entry: ConfigEntry) -> ConfigType:
 
     entry.data holds the flat "user" step fields; entry.options holds the nested
     archive/dupe_check/housekeeping sections from the options flow, already shaped to match
-    the schema. archive_path is the one flat field that needs folding into the nested
-    "archive" section before validation.
+    the schema.
     """
     from homeassistant.const import CONF_PLATFORM
 
-    from .const import CONF_ARCHIVE, CONF_ARCHIVE_PATH
     from .schema import SUPERNOTIFY_SCHEMA
 
-    data: dict[str, Any] = dict(entry.data)
-    options: dict[str, Any] = dict(entry.options)
-    archive_path = data.pop(CONF_ARCHIVE_PATH, None)
-    if archive_path:
-        options[CONF_ARCHIVE] = {**options.get(CONF_ARCHIVE, {}), CONF_ARCHIVE_PATH: archive_path}
     # SUPERNOTIFY_SCHEMA extends HA's generic notify PLATFORM_SCHEMA, which requires a
     # "platform" key - meaningless for a config-entry setup, but needed to satisfy validation.
-    return SUPERNOTIFY_SCHEMA({CONF_PLATFORM: DOMAIN, **data, **options})
+    return SUPERNOTIFY_SCHEMA({CONF_PLATFORM: DOMAIN, **entry.data, **entry.options})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

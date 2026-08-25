@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "リロード",
             "description": "Supernotifyサービスを再読み込みします。"
         },
         "enquire_deliveries_by_scenario": {
@@ -17,7 +17,6 @@
                 "data": {
                     "template_path": "テンプレートパス",
                     "media_path": "メディアパス",
-                    "archive_path": "アーカイブパス",
                     "media_url_prefix": "メディアURLプレフィックス",
                     "mobile_discovery": "モバイルデバイス検出",
                     "recipients_discovery": "受信者検出"
@@ -25,7 +24,6 @@
                 "data_description": {
                     "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）",
                     "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス",
-                    "archive_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます",
                     "media_url_prefix": "保存されたメディア（カメラのスナップショットなど）が配信されるURLパスのプレフィックス",
                     "mobile_discovery": "プッシュ通知のためにHome Assistantに登録されたモバイルアプリデバイスを自動検出します",
                     "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します"
@@ -34,26 +32,24 @@
             "reconfigure": {
                 "title": "環境",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "テンプレートパス",
+                    "media_path": "メディアパス",
+                    "media_url_prefix": "メディアURLプレフィックス",
+                    "mobile_discovery": "モバイルデバイス検出",
+                    "recipients_discovery": "受信者検出"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）",
+                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス",
+                    "media_url_prefix": "保存されたメディア（カメラのスナップショットなど）が配信されるURLパスのプレフィックス",
+                    "mobile_discovery": "プッシュ通知のためにHome Assistantに登録されたモバイルアプリデバイスを自動検出します",
+                    "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "既に設定されています。設定は1つのみ可能です。",
+            "reconfigure_successful": "再設定が完了しました"
         }
     },
     "issues": {
@@ -101,6 +97,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "アーカイブパス",
                     "enabled": "有効",
                     "file_retention_days": "保持日数",
                     "mqtt_topic": "MQTTトピック",
@@ -112,6 +109,7 @@
                     "diagnostics": "診断選択"
                 },
                 "data_description": {
+                    "file_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます",
                     "enabled": "通知アーカイブを有効にします",
                     "file_retention_days": "アーカイブされた通知を保持する日数",
                     "mqtt_topic": "アーカイブされた通知を発行するオプションのMQTTトピック",
@@ -119,8 +117,8 @@
                     "mqtt_retain": "MQTTに発行されたアーカイブ通知を保持（retain）するかどうか",
                     "purge_interval": "自動アーカイブパージの間隔（分単位の最小値）",
                     "event_name": "アーカイブされた通知に対して発行されるHome Assistantイベント名",
-                    "event_selection": "どの通知結果がイベントを発行するか。パイプ区切りの名前で指定します（例：ERROR|DUPE）",
-                    "diagnostics": "どの通知結果が完全な診断詳細とともに記録されるか。パイプ区切りの名前で指定します"
+                    "event_selection": "どの通知結果がイベントを発行するかを選択します",
+                    "diagnostics": "どの通知結果が完全な診断詳細とともに記録されるかを選択します"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "同じメッセージとタイトル、同じまたはそれ以下の優先度",
                 "dupe_policy_message_title_same": "同じメッセージとタイトル",
                 "dupe_policy_none": "無効"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "成功",
+                "NO_DELIVERY": "配信なし",
+                "PARTIAL_DELIVERY": "部分配信",
+                "FALLBACK_DELIVERY": "フォールバック配信",
+                "ERROR": "エラー",
+                "DUPE": "重複",
+                "ALL": "すべての結果"
             }
         }
     }

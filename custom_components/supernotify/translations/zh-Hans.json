@@ -2,7 +2,7 @@
     "title": "Supernotify",
     "services": {
         "reload": {
-            "name": "[%key:common::action::reload%]",
+            "name": "重新加载",
             "description": "重新加载 Supernotify 服务。"
         },
         "enquire_deliveries_by_scenario": {
@@ -17,7 +17,6 @@
                 "data": {
                     "template_path": "模板路径",
                     "media_path": "媒体路径",
-                    "archive_path": "存档路径",
                     "media_url_prefix": "媒体 URL 前缀",
                     "mobile_discovery": "移动设备发现",
                     "recipients_discovery": "收件人发现"
@@ -25,7 +24,6 @@
                 "data_description": {
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
                     "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径",
-                    "archive_path": "已存档通知的存储路径，用于调试配置、场景等",
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人"
@@ -34,26 +32,24 @@
             "reconfigure": {
                 "title": "环境",
                 "data": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data::archive_path%]"
+                    "template_path": "模板路径",
+                    "media_path": "媒体路径",
+                    "media_url_prefix": "媒体 URL 前缀",
+                    "mobile_discovery": "移动设备发现",
+                    "recipients_discovery": "收件人发现"
                 },
                 "data_description": {
-                    "template_path": "[%key:component::supernotify::config::step::user::data_description::template_path%]",
-                    "media_path": "[%key:component::supernotify::config::step::user::data_description::media_path%]",
-                    "media_url_prefix": "[%key:component::supernotify::config::step::user::data_description::media_url_prefix%]",
-                    "mobile_discovery": "[%key:component::supernotify::config::step::user::data_description::mobile_discovery%]",
-                    "recipients_discovery": "[%key:component::supernotify::config::step::user::data_description::recipients_discovery%]",
-                    "archive_path": "[%key:component::supernotify::config::step::user::data_description::archive_path%]"
+                    "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
+                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径",
+                    "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
+                    "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
+                    "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人"
                 }
             }
         },
         "abort": {
-            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+            "single_instance_allowed": "已配置。仅支持一个配置。",
+            "reconfigure_successful": "重新配置成功"
         }
     },
     "issues": {
@@ -101,6 +97,7 @@
             },
             "archive": {
                 "data": {
+                    "file_path": "存档路径",
                     "enabled": "已启用",
                     "file_retention_days": "保留天数",
                     "mqtt_topic": "MQTT 主题",
@@ -112,6 +109,7 @@
                     "diagnostics": "诊断选择"
                 },
                 "data_description": {
+                    "file_path": "已存档通知的存储路径，用于调试配置、场景等",
                     "enabled": "启用通知存档",
                     "file_retention_days": "已存档通知保留的天数",
                     "mqtt_topic": "发布已存档通知的可选 MQTT 主题",
@@ -119,8 +117,8 @@
                     "mqtt_retain": "发布到 MQTT 的已存档通知是否保留（retain）",
                     "purge_interval": "自动存档清理之间的最小间隔（分钟）",
                     "event_name": "为已存档通知触发的 Home Assistant 事件名称",
-                    "event_selection": "哪些通知结果会触发事件，以竖线分隔的名称表示，例如 ERROR|DUPE",
-                    "diagnostics": "哪些通知结果会记录完整的诊断详情，以竖线分隔的名称表示"
+                    "event_selection": "哪些通知结果会触发事件",
+                    "diagnostics": "哪些通知结果会记录完整的诊断详情"
                 }
             },
             "dupe_check": {
@@ -153,6 +151,17 @@
                 "dupe_policy_message_title_same_or_lower_priority": "相同的消息和标题，优先级相同或更低",
                 "dupe_policy_message_title_same": "相同的消息和标题",
                 "dupe_policy_none": "已禁用"
+            }
+        },
+        "outcome_selection": {
+            "options": {
+                "SUCCESS": "成功",
+                "NO_DELIVERY": "未送达",
+                "PARTIAL_DELIVERY": "部分送达",
+                "FALLBACK_DELIVERY": "备用送达",
+                "ERROR": "错误",
+                "DUPE": "重复",
+                "ALL": "所有结果"
             }
         }
     }

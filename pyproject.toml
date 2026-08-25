@@ -103,6 +103,7 @@ docs=[
 [tool.uv]
 # Skip the 3.14.0-3.14.1 gap: HA 2026.3+ requires >=3.14.2, so those patch
 # versions are unusable regardless.
+prerelease = "if-necessary"
 environments = [
     "python_full_version < '3.14'",
     "python_full_version >= '3.14.2'",

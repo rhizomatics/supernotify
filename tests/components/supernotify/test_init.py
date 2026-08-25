@@ -34,10 +34,10 @@ async def test_setup_entry_registers_notify_service(hass: HomeAssistant) -> None
     assert entry.runtime_data.failures == 0
 
 
-async def test_setup_entry_folds_archive_path_into_archive_section(hass: HomeAssistant) -> None:
-    """archive_path is the one flat "user" step field that needs nesting under CONF_ARCHIVE
-    before it matches SUPERNOTIFY_SCHEMA's shape."""
-    entry = MockConfigEntry(domain=DOMAIN, data={"file_path": "/config/supernotify_archive"}, options={})
+async def test_setup_entry_uses_archive_path_from_options(hass: HomeAssistant) -> None:
+    """archive_path lives in the archive options section, matching SUPERNOTIFY_SCHEMA's
+    nested shape directly - no folding needed between entry.data and entry.options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={"archive": {"file_path": "/config/supernotify_archive"}})
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
