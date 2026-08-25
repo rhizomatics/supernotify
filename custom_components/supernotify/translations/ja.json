@@ -32,7 +32,7 @@
                 }
             },
             "reconfigure": {
-                "title": "Environment",
+                "title": "環境",
                 "data": {
                     "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
                     "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
