@@ -256,7 +256,10 @@ class SupernotifyOptionsFlow(OptionsFlow):
         )
         schema = vol.Schema({
             vol.Optional(CONF_ENABLED, default=False): cv.boolean,
-            vol.Optional("file", default={}): section(
+            # section wrapper keys must be vol.Required, not vol.Optional: with Optional, the
+            # frontend silently ignores both default and suggested_value for everything inside
+            # (and for the rest of the form too) - https://github.com/home-assistant/frontend/issues/22419
+            vol.Required("file", default={}): section(
                 vol.Schema({
                     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema
                     # conversion used by the config flow frontend ("Unable to convert
@@ -267,7 +270,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
                 }),
                 {"collapsed": False},
             ),
-            vol.Optional("mqtt", default={}): section(
+            vol.Required("mqtt", default={}): section(
                 vol.Schema({
                     vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=""): cv.string,
                     vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
@@ -275,7 +278,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
                 }),
                 {"collapsed": True},
             ),
-            vol.Optional("event", default={}): section(
+            vol.Required("event", default={}): section(
                 vol.Schema({
                     vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
                     vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=[]): outcome_selector,
