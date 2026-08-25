@@ -73,6 +73,7 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
+from .schema import ARCHIVE_SCHEMA, HOUSEKEEPING_SCHEMA, NOTIFICATION_DUPE_SCHEMA
 from .schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .snoozer import Snoozer
 from .transports.alexa_devices import AlexaDevicesTransport
@@ -106,6 +107,13 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+# What archive/housekeeping/dupe_check resolve to when the user hasn't configured them at all -
+# PLATFORM_SCHEMA always fills these sections in with defaults, so config.get(key) alone can't
+# tell "left at default" from "explicitly configured"; comparing against these sentinels can.
+_ARCHIVE_DEFAULT = ARCHIVE_SCHEMA({})
+_HOUSEKEEPING_DEFAULT = HOUSEKEEPING_SCHEMA({})
+_DUPE_CHECK_DEFAULT = NOTIFICATION_DUPE_SCHEMA({})
 
 TRANSPORTS: list[type[Transport]] = [
     EmailTransport,
@@ -398,7 +406,11 @@ async def async_get_service(
             CONF_LINKS,
         )
     )
-    dead_keys_present = any(config.get(key) for key in (CONF_ARCHIVE, CONF_HOUSEKEEPING, CONF_DUPE_CHECK))
+    dead_keys_present = (
+        config.get(CONF_ARCHIVE) != _ARCHIVE_DEFAULT
+        or config.get(CONF_HOUSEKEEPING) != _HOUSEKEEPING_DEFAULT
+        or config.get(CONF_DUPE_CHECK) != _DUPE_CHECK_DEFAULT
+    )
 
     if not unmigrated_keys_present:
         _LOGGER.warning(

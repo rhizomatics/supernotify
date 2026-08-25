@@ -5,14 +5,14 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_ENABLED, CONF_NAME, CONF_PLATFORM
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import ATTR_IMPORTED_FROM_YAML, DOMAIN
-from custom_components.supernotify.const import CONF_DELIVERY, CONF_MEDIA_PATH, CONF_TRANSPORT
+from custom_components.supernotify.const import CONF_ARCHIVE, CONF_DELIVERY, CONF_MEDIA_PATH, CONF_TRANSPORT
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -115,6 +115,27 @@ async def test_yaml_with_deliveries_does_not_raise_deprecated_yaml(hass: HomeAss
 
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is None
+
+
+async def test_yaml_with_deliveries_and_archive_raises_deprecated_yaml(hass: HomeAssistant) -> None:
+    """Deliveries force the YAML block to stay, but archive is also configured - and archive
+    IS UI-configurable via the mirrored config entry, so it's dead config. The issue should
+    still be raised, nagging to drop just the dead keys rather than the whole YAML block."""
+    config = {
+        "notify": [
+            {
+                CONF_NAME: "supernotify",
+                CONF_PLATFORM: DOMAIN,
+                CONF_DELIVERY: {"persistent": {CONF_TRANSPORT: "persistent"}},
+                CONF_ARCHIVE: {CONF_ENABLED: True},
+            }
+        ]
+    }
+    assert await async_setup_component(hass, "notify", config)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}") is not None
 
 
 async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:
