@@ -44,6 +44,13 @@ This first notification will go out all mobile devices in the house. To limit it
 
 ![Notify All The Mobile Devices for One Person](assets/images/person_notify.png){width=400}
 
+### Add a Notification Action to an Automation
+
+![Select Action](./assets/images/add_action_automation.png){width=400}
+
+![Configure Action](./assets/images/automation_action_simple.png){width=400}
+
+
 ## Removal
 
 From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.

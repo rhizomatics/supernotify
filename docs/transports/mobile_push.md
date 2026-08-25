@@ -106,5 +106,5 @@ limit that delivery to matching devices when they have been auto-discovered at s
 
 ### Home Assistant Core
 - [Mobile App Integration](https://www.home-assistant.io/integrations/mobile_app/)
-  - [Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic)
+  - [Companion App Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic)
   - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20mobile_app%22%20state%3Aopen)
