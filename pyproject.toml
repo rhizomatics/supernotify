@@ -1,6 +1,6 @@
 [project]
 name = "supernotify"
-description = "Home Assistant custom component for advanced notifications"
+description = "Home Assistant custom component for unified, simplified and powerful notifications"
 readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
