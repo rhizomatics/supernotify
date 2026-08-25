@@ -264,25 +264,25 @@ class SupernotifyOptionsFlow(OptionsFlow):
                     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema
                     # conversion used by the config flow frontend ("Unable to convert
                     # schema" / HTTP 500).
-                    vol.Optional(CONF_ARCHIVE_PATH, default=""): cv.string,
-                    vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
-                    vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
+                    vol.Required(CONF_ARCHIVE_PATH, default=""): cv.string,
+                    vol.Required(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
+                    vol.Required(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
                 }),
                 {"collapsed": False},
             ),
             vol.Required("mqtt", default={}): section(
                 vol.Schema({
-                    vol.Optional(CONF_ARCHIVE_MQTT_TOPIC, default=""): cv.string,
-                    vol.Optional(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
-                    vol.Optional(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
+                    vol.Required(CONF_ARCHIVE_MQTT_TOPIC, default=""): cv.string,
+                    vol.Required(CONF_ARCHIVE_MQTT_QOS, default=0): cv.positive_int,
+                    vol.Required(CONF_ARCHIVE_MQTT_RETAIN, default=True): cv.boolean,
                 }),
                 {"collapsed": True},
             ),
             vol.Required("event", default={}): section(
                 vol.Schema({
-                    vol.Optional(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
-                    vol.Optional(CONF_ARCHIVE_EVENT_SELECTION, default=[]): outcome_selector,
-                    vol.Optional(CONF_ARCHIVE_DIAGNOSTICS, default=[]): outcome_selector,
+                    vol.Required(CONF_ARCHIVE_EVENT_NAME, default="supernotification"): cv.string,
+                    vol.Required(CONF_ARCHIVE_EVENT_SELECTION, default=[]): outcome_selector,
+                    vol.Required(CONF_ARCHIVE_DIAGNOSTICS, default=[]): outcome_selector,
                 }),
                 {"collapsed": True},
             ),
