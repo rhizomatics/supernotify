@@ -187,6 +187,7 @@ class SupernotifyRuntimeData:
     scenario_registry: ScenarioRegistry
     archive: Archive
 
+
 type SupernotifyConfigEntry = ConfigEntry[SupernotifyRuntimeData]
 ```
 
@@ -303,9 +304,7 @@ pytest ./tests/components/supernotify \
 **Evidence:**
 - `notify.py` lines 390-393:
   ```python
-  self.unsubscribes.append(
-      self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action)
-  )
+  self.unsubscribes.append(self.hass.bus.async_listen("mobile_app_notification_action", self.on_mobile_action))
   ```
 
 **Concern:** Event subscriptions are registered during service initialization rather than in entity lifecycle methods.
@@ -412,14 +411,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 **Recommendation:** Implement when adding config flow:
 ```python
-async def async_unload_entry(
-    hass: HomeAssistant,
-    entry: SupernotifyConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        entry, [Platform.NOTIFY]
-    ):
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY]):
         # Clean up runtime data
         entry.runtime_data.cleanup()
     return unload_ok
@@ -528,10 +522,7 @@ _attr_device_info = DeviceInfo(
 
 **Recommendation:** Create `diagnostics.py`:
 ```python
-async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant,
-    entry: SupernotifyConfigEntry
-) -> dict[str, Any]:
+async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return {
         "transports": [t.name for t in entry.runtime_data.transports.values()],
@@ -649,10 +640,7 @@ raise ServiceValidationError(
 image = Image.open(io.BytesIO(bitmap))
 
 # After (async):
-image = await hass.async_add_executor_job(
-    Image.open,
-    io.BytesIO(bitmap)
-)
+image = await hass.async_add_executor_job(Image.open, io.BytesIO(bitmap))
 ```
 
 **Estimated Effort:** 2-4 hours to audit and fix all blocking calls

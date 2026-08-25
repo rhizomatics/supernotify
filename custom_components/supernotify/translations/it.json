@@ -17,14 +17,23 @@
                 "data": {
                     "template_path": "Percorso Template",
                     "media_path": "Percorso Media",
-                    "archive_path": "Percorso Archivio"
+                    "archive_path": "Percorso Archivio",
+                    "media_url_prefix": "Prefisso URL media",
+                    "mobile_discovery": "Rilevamento dispositivi mobili",
+                    "recipients_discovery": "Rilevamento destinatari"
                 },
                 "data_description": {
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
                     "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
-                    "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc."
+                    "archive_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc.",
+                    "media_url_prefix": "Prefisso del percorso URL con cui vengono serviti i media archiviati, come le istantanee della fotocamera",
+                    "mobile_discovery": "Rileva automaticamente i dispositivi dell'app mobile registrati in Home Assistant per le notifiche push",
+                    "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant"
                 }
             }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         }
     },
     "issues": {
@@ -59,6 +68,63 @@
         "delivery_invalid_condition": {
             "title": "La Consegna Ha una Condizione Non Valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "Impostazioni archivio",
+                    "dupe_check": "Rilevamento duplicati",
+                    "housekeeping": "Manutenzione"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "Abilitato",
+                    "file_retention_days": "Giorni di conservazione",
+                    "mqtt_topic": "Argomento MQTT",
+                    "mqtt_qos": "QoS MQTT",
+                    "mqtt_retain": "Retain MQTT",
+                    "purge_interval": "Intervallo di pulizia (minuti)",
+                    "event_name": "Nome evento",
+                    "event_selection": "Selezione eventi",
+                    "diagnostics": "Selezione diagnostica"
+                },
+                "data_description": {
+                    "enabled": "Attiva l'archivio delle notifiche",
+                    "file_retention_days": "Per quanti giorni vengono conservate le notifiche archiviate",
+                    "mqtt_topic": "Argomento MQTT opzionale su cui pubblicare le notifiche archiviate",
+                    "mqtt_qos": "Livello di qualità del servizio (QoS) MQTT usato per pubblicare le notifiche archiviate",
+                    "mqtt_retain": "Se le notifiche archiviate pubblicate su MQTT vengono mantenute (retain)",
+                    "purge_interval": "Intervallo minimo in minuti tra le pulizie automatiche dell'archivio",
+                    "event_name": "Nome dell'evento Home Assistant generato per le notifiche archiviate",
+                    "event_selection": "Quali esiti delle notifiche generano un evento, come nomi separati da pipe, ad esempio ERROR|DUPE",
+                    "diagnostics": "Quali esiti delle notifiche vengono registrati con dettagli diagnostici completi, come nomi separati da pipe"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "Tempo di vita (secondi)",
+                    "size": "Dimensione cache",
+                    "dupe_policy": "Politica duplicati"
+                },
+                "data_description": {
+                    "ttl": "Per quanto tempo una notifica viene ricordata ai fini del rilevamento dei duplicati",
+                    "size": "Numero massimo di notifiche recenti ricordate ai fini del rilevamento dei duplicati",
+                    "dupe_policy": "Con quale rigore le notifiche vengono confrontate per rilevare i duplicati"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "Orario di manutenzione",
+                    "media_storage_days": "Giorni di archiviazione media"
+                },
+                "data_description": {
+                    "housekeeping_time": "Ora del giorno (HH:MM:SS) in cui viene eseguita la manutenzione pianificata, come la pulizia dei media",
+                    "media_storage_days": "Per quanti giorni vengono conservati i media archiviati, come istantanee e allegati"
+                }
+            }
         }
     }
 }

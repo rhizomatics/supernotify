@@ -17,14 +17,23 @@
                 "data": {
                     "template_path": "模板路径",
                     "media_path": "媒体路径",
-                    "archive_path": "存档路径"
+                    "archive_path": "存档路径",
+                    "media_url_prefix": "媒体 URL 前缀",
+                    "mobile_discovery": "移动设备发现",
+                    "recipients_discovery": "收件人发现"
                 },
                 "data_description": {
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
                     "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径",
-                    "archive_path": "已存档通知的存储路径，用于调试配置、场景等"
+                    "archive_path": "已存档通知的存储路径，用于调试配置、场景等",
+                    "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
+                    "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
+                    "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人"
                 }
             }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         }
     },
     "issues": {
@@ -59,6 +68,63 @@
         "delivery_invalid_condition": {
             "title": "推送的条件无效",
             "description": "推送 {delivery} 包含无效条件 {condition}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "存档设置",
+                    "dupe_check": "重复检测",
+                    "housekeeping": "维护"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "已启用",
+                    "file_retention_days": "保留天数",
+                    "mqtt_topic": "MQTT 主题",
+                    "mqtt_qos": "MQTT QoS",
+                    "mqtt_retain": "MQTT 保留（Retain）",
+                    "purge_interval": "清理间隔（分钟）",
+                    "event_name": "事件名称",
+                    "event_selection": "事件选择",
+                    "diagnostics": "诊断选择"
+                },
+                "data_description": {
+                    "enabled": "启用通知存档",
+                    "file_retention_days": "已存档通知保留的天数",
+                    "mqtt_topic": "发布已存档通知的可选 MQTT 主题",
+                    "mqtt_qos": "发布已存档通知时使用的 MQTT 服务质量（QoS）级别",
+                    "mqtt_retain": "发布到 MQTT 的已存档通知是否保留（retain）",
+                    "purge_interval": "自动存档清理之间的最小间隔（分钟）",
+                    "event_name": "为已存档通知触发的 Home Assistant 事件名称",
+                    "event_selection": "哪些通知结果会触发事件，以竖线分隔的名称表示，例如 ERROR|DUPE",
+                    "diagnostics": "哪些通知结果会记录完整的诊断详情，以竖线分隔的名称表示"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "生存时间（秒）",
+                    "size": "缓存大小",
+                    "dupe_policy": "重复策略"
+                },
+                "data_description": {
+                    "ttl": "通知被记住以用于重复检测的时长",
+                    "size": "用于重复检测而记住的最近通知的最大数量",
+                    "dupe_policy": "比较通知以检测重复项的严格程度"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "维护时间",
+                    "media_storage_days": "媒体存储天数"
+                },
+                "data_description": {
+                    "housekeeping_time": "计划维护（例如媒体清理）运行的时间（HH:MM:SS）",
+                    "media_storage_days": "存储的媒体（例如快照和附件）保留的天数"
+                }
+            }
         }
     }
 }

@@ -17,14 +17,23 @@
                 "data": {
                     "template_path": "Vorlagenpfad",
                     "media_path": "Medienpfad",
-                    "archive_path": "Archivpfad"
+                    "archive_path": "Archivpfad",
+                    "media_url_prefix": "Medien-URL-Präfix",
+                    "mobile_discovery": "Mobilgeräteerkennung",
+                    "recipients_discovery": "Empfängererkennung"
                 },
                 "data_description": {
                     "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails",
                     "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge",
-                    "archive_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw."
+                    "archive_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw.",
+                    "media_url_prefix": "URL-Pfadpräfix, unter dem gespeicherte Medien, z. B. Kamera-Snapshots, bereitgestellt werden",
+                    "mobile_discovery": "Automatische Erkennung von in Home Assistant registrierten mobilen App-Geräten für Push-Benachrichtigungen",
+                    "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten"
                 }
             }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         }
     },
     "issues": {
@@ -59,6 +68,63 @@
         "delivery_invalid_condition": {
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "Archiveinstellungen",
+                    "dupe_check": "Duplikaterkennung",
+                    "housekeeping": "Wartung"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "Aktiviert",
+                    "file_retention_days": "Aufbewahrungstage",
+                    "mqtt_topic": "MQTT-Thema",
+                    "mqtt_qos": "MQTT-QoS",
+                    "mqtt_retain": "MQTT Retain",
+                    "purge_interval": "Bereinigungsintervall (Minuten)",
+                    "event_name": "Ereignisname",
+                    "event_selection": "Ereignisauswahl",
+                    "diagnostics": "Diagnoseauswahl"
+                },
+                "data_description": {
+                    "enabled": "Aktiviert das Benachrichtigungsarchiv",
+                    "file_retention_days": "Wie viele Tage archivierte Benachrichtigungen aufbewahrt werden",
+                    "mqtt_topic": "Optionales MQTT-Thema, an das archivierte Benachrichtigungen veröffentlicht werden",
+                    "mqtt_qos": "MQTT-Dienstgütestufe (QoS) beim Veröffentlichen archivierter Benachrichtigungen",
+                    "mqtt_retain": "Ob über MQTT veröffentlichte archivierte Benachrichtigungen beibehalten werden (Retain)",
+                    "purge_interval": "Mindestintervall in Minuten zwischen automatischen Archivbereinigungen",
+                    "event_name": "Name des Home Assistant-Ereignisses für archivierte Benachrichtigungen",
+                    "event_selection": "Welche Benachrichtigungsergebnisse ein Ereignis auslösen, als durch Pipe getrennte Namen, z. B. ERROR|DUPE",
+                    "diagnostics": "Welche Benachrichtigungsergebnisse mit vollständigen Diagnosedetails erfasst werden, als durch Pipe getrennte Namen"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "Lebensdauer (Sekunden)",
+                    "size": "Cache-Größe",
+                    "dupe_policy": "Duplikatrichtlinie"
+                },
+                "data_description": {
+                    "ttl": "Wie lange eine Benachrichtigung zur Duplikaterkennung gespeichert bleibt",
+                    "size": "Maximale Anzahl kürzlich gespeicherter Benachrichtigungen zur Duplikaterkennung",
+                    "dupe_policy": "Wie streng Benachrichtigungen verglichen werden, um Duplikate zu erkennen"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "Wartungszeit",
+                    "media_storage_days": "Medienspeichertage"
+                },
+                "data_description": {
+                    "housekeeping_time": "Tageszeit (HH:MM:SS), zu der die geplante Wartung, z. B. Medienbereinigung, ausgeführt wird",
+                    "media_storage_days": "Wie viele Tage gespeicherte Medien, z. B. Snapshots und Anhänge, aufbewahrt werden"
+                }
+            }
         }
     }
 }

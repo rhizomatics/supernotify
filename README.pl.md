@@ -36,7 +36,7 @@ Supernotify to komponent niestandardowy dostępny przez [Home Assistant Communit
 
 ## Dokumentacja
 
-Zapoznaj się z [Wprowadzeniem](https://supernotify.rhizomatics.org.uk/getting_started/), wyjaśnieniem [podstawowych koncepcji](https://supernotify.rhizomatics.org.uk/concepts/) i dostępnymi [adapterami transportu](https://supernotify.rhizomatics.org.uk/transports/). [Powiadamianie](usage/notifying.md) pokazuje, jak wywoływać Supernotify z automatyzacji lub strony narzędzi dla deweloperów.
+Zapoznaj się z [Wprowadzeniem](https://supernotify.rhizomatics.org.uk/getting_started/), wyjaśnieniem [podstawowych koncepcji](https://supernotify.rhizomatics.org.uk/concepts/) i dostępnymi [adapterami transportu](https://supernotify.rhizomatics.org.uk/transports/). [Powiadamianie](https://supernotify.rhizomatics.org.uk/usage/notifying/) pokazuje, jak wywoływać Supernotify z automatyzacji lub strony narzędzi dla deweloperów.
 
 Dostępnych jest wiele [przepisów](https://supernotify.rhizomatics.org.uk/recipes/) z przykładowymi konfiguracjami lub przeglądaj według [tagów](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -86,7 +86,7 @@ Dostępnych jest wiele [przepisów](https://supernotify.rhizomatics.org.uk/recip
 
 ## Trochę YAML wymagane
 
-Supernotify obsługuje obecnie tylko [konfigurację opartą na YAML](configuration/yaml.md). Zaledwie 2 linie konfiguracji kopiuj-wklej wystarczają do wielu zastosowań:
+Supernotify obsługuje obecnie tylko [konfigurację opartą na YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Zaledwie 2 linie konfiguracji kopiuj-wklej wystarczają do wielu zastosowań:
 
 ```yaml title="Z domyślnymi 2 liniami YAML"
   - action: notify.supernotify

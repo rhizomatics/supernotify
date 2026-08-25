@@ -124,18 +124,13 @@ TRANSPORTS: list[type[Transport]] = [
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> SupernotifyAction:
-    """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
-    _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
-    _ = discovery_info
+def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> SupernotifyAction:
+    """Construct a SupernotifyAction from a fully validated SUPERNOTIFY_SCHEMA config dict.
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
-    service = SupernotifyAction(
+    Shared by the legacy YAML platform setup (async_get_service, below) and the config-entry
+    setup (async_setup_entry in __init__.py) so the two setup paths can't drift apart.
+    """
+    return SupernotifyAction(
         hass,
         deliveries=config[CONF_DELIVERY],
         template_path=config[CONF_TEMPLATE_PATH],
@@ -154,6 +149,20 @@ async def async_get_service(
         dupe_check=config[CONF_DUPE_CHECK],
         snooze=config[CONF_SNOOZE],
     )
+
+
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> SupernotifyAction:
+    """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
+    _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
+    _ = discovery_info
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    service = build_supernotify_action(hass, config)
     await service.initialize()
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:

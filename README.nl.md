@@ -36,7 +36,7 @@ Supernotify is een aangepast component beschikbaar via de [Home Assistant Commun
 
 ## Documentatie
 
-Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](usage/notifying.md) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
+Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
 
 Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voorbeeldconfiguraties, of blader op [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -86,7 +86,7 @@ Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voo
 
 ## Enige YAML vereist
 
-Supernotify ondersteunt momenteel alleen [op YAML gebaseerde configuratie](configuration/yaml.md). Met slechts 2 regels copy-paste configuratie kunt u al veel bereiken:
+Supernotify ondersteunt momenteel alleen [op YAML gebaseerde configuratie](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Met slechts 2 regels copy-paste configuratie kunt u al veel bereiken:
 
 ```yaml title="Met de standaard 2 regels YAML"
   - action: notify.supernotify

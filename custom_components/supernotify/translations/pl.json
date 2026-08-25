@@ -17,14 +17,23 @@
                 "data": {
                     "template_path": "Ścieżka szablonu",
                     "media_path": "Ścieżka mediów",
-                    "archive_path": "Ścieżka archiwum"
+                    "archive_path": "Ścieżka archiwum",
+                    "media_url_prefix": "Prefiks URL mediów",
+                    "mobile_discovery": "Wykrywanie urządzeń mobilnych",
+                    "recipients_discovery": "Wykrywanie odbiorców"
                 },
                 "data_description": {
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML",
                     "media_path": "Ścieżka przechowywania mediów utworzonych podczas powiadomień, na przykład zdjęć z kamer do załączników",
-                    "archive_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp."
+                    "archive_path": "Ścieżka przechowywania zarchiwizowanych powiadomień, przydatna do debugowania konfiguracji, scenariuszy itp.",
+                    "media_url_prefix": "Prefiks ścieżki URL, pod którym udostępniane są przechowywane media, np. zrzuty z kamery",
+                    "mobile_discovery": "Automatycznie wykrywa urządzenia aplikacji mobilnej zarejestrowane w Home Assistant do powiadomień push",
+                    "recipients_discovery": "Automatycznie wykrywa odbiorców na podstawie encji osób Home Assistant"
                 }
             }
+        },
+        "abort": {
+            "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
         }
     },
     "issues": {
@@ -59,6 +68,63 @@
         "delivery_invalid_condition": {
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "menu_options": {
+                    "archive": "Ustawienia archiwum",
+                    "dupe_check": "Wykrywanie duplikatów",
+                    "housekeeping": "Konserwacja"
+                }
+            },
+            "archive": {
+                "data": {
+                    "enabled": "Włączone",
+                    "file_retention_days": "Dni przechowywania",
+                    "mqtt_topic": "Temat MQTT",
+                    "mqtt_qos": "MQTT QoS",
+                    "mqtt_retain": "MQTT Retain",
+                    "purge_interval": "Interwał czyszczenia (minuty)",
+                    "event_name": "Nazwa zdarzenia",
+                    "event_selection": "Wybór zdarzeń",
+                    "diagnostics": "Wybór diagnostyki"
+                },
+                "data_description": {
+                    "enabled": "Włącza archiwum powiadomień",
+                    "file_retention_days": "Przez ile dni przechowywane są zarchiwizowane powiadomienia",
+                    "mqtt_topic": "Opcjonalny temat MQTT, na który publikowane są zarchiwizowane powiadomienia",
+                    "mqtt_qos": "Poziom jakości usługi (QoS) MQTT używany podczas publikowania zarchiwizowanych powiadomień",
+                    "mqtt_retain": "Czy zarchiwizowane powiadomienia publikowane w MQTT są zachowywane (retain)",
+                    "purge_interval": "Minimalny odstęp w minutach między automatycznymi czyszczeniami archiwum",
+                    "event_name": "Nazwa zdarzenia Home Assistant wyzwalanego dla zarchiwizowanych powiadomień",
+                    "event_selection": "Które wyniki powiadomień wyzwalają zdarzenie, jako nazwy rozdzielone znakiem „|”, np. ERROR|DUPE",
+                    "diagnostics": "Które wyniki powiadomień są rejestrowane z pełnymi szczegółami diagnostycznymi, jako nazwy rozdzielone znakiem „|”"
+                }
+            },
+            "dupe_check": {
+                "data": {
+                    "ttl": "Czas życia (sekundy)",
+                    "size": "Rozmiar pamięci podręcznej",
+                    "dupe_policy": "Polityka duplikatów"
+                },
+                "data_description": {
+                    "ttl": "Jak długo powiadomienie jest zapamiętywane na potrzeby wykrywania duplikatów",
+                    "size": "Maksymalna liczba ostatnich powiadomień zapamiętywanych na potrzeby wykrywania duplikatów",
+                    "dupe_policy": "Jak rygorystycznie porównywane są powiadomienia w celu wykrycia duplikatów"
+                }
+            },
+            "housekeeping": {
+                "data": {
+                    "housekeeping_time": "Czas konserwacji",
+                    "media_storage_days": "Dni przechowywania mediów"
+                },
+                "data_description": {
+                    "housekeeping_time": "Pora dnia (GG:MM:SS), o której uruchamiana jest zaplanowana konserwacja, np. czyszczenie mediów",
+                    "media_storage_days": "Przez ile dni przechowywane są media, np. zrzuty i załączniki"
+                }
+            }
         }
     }
 }

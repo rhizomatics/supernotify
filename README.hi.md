@@ -86,7 +86,7 @@ Supernotify [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) के 
 
 ## कुछ YAML आवश्यक है
 
-Supernotify वर्तमान में केवल [YAML आधारित कॉन्फ़िगरेशन](configuration/yaml.md) का समर्थन करता है। केवल 2 पंक्तियों के कॉपी-पेस्ट कॉन्फ़िगरेशन से आप बहुत कुछ कर सकते हैं:
+Supernotify वर्तमान में केवल [YAML आधारित कॉन्फ़िगरेशन](https://supernotify.rhizomatics.org.uk/configuration/yaml/) का समर्थन करता है। केवल 2 पंक्तियों के कॉपी-पेस्ट कॉन्फ़िगरेशन से आप बहुत कुछ कर सकते हैं:
 
 ```yaml title="डिफ़ॉल्ट 2 पंक्तियों के YAML के साथ"
   - action: notify.supernotify

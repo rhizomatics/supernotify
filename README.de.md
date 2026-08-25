@@ -36,7 +36,7 @@ Supernotify ist ein benutzerdefiniertes Komponent, das über den [Home Assistant
 
 ## Dokumentation
 
-Starten Sie mit [Erste Schritte](https://supernotify.rhizomatics.org.uk/getting_started/), der Erklärung der [Kernkonzepte](https://supernotify.rhizomatics.org.uk/concepts/) und den verfügbaren [Transport-Adaptern](https://supernotify.rhizomatics.org.uk/transports/). [Benachrichtigen](usage/notifying.md) zeigt, wie Sie Supernotify aus Automatisierungen oder der Entwicklertools-Aktionsseite aufrufen.
+Starten Sie mit [Erste Schritte](https://supernotify.rhizomatics.org.uk/getting_started/), der Erklärung der [Kernkonzepte](https://supernotify.rhizomatics.org.uk/concepts/) und den verfügbaren [Transport-Adaptern](https://supernotify.rhizomatics.org.uk/transports/). [Benachrichtigen](https://supernotify.rhizomatics.org.uk/usage/notifying/) zeigt, wie Sie Supernotify aus Automatisierungen oder der Entwicklertools-Aktionsseite aufrufen.
 
 Es gibt viele [Rezepte](https://supernotify.rhizomatics.org.uk/recipes/) mit Beispielkonfigurationen oder durchsuchen Sie nach [Tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -86,7 +86,7 @@ Es gibt viele [Rezepte](https://supernotify.rhizomatics.org.uk/recipes/) mit Bei
 
 ## Etwas YAML erforderlich
 
-Supernotify unterstützt derzeit nur die [YAML-basierte Konfiguration](configuration/yaml.md). Mit nur 2 Zeilen Kopier-Einfüge-Konfiguration können Sie bereits viel erreichen:
+Supernotify unterstützt derzeit nur die [YAML-basierte Konfiguration](https://supernotify.rhizomatics.org.uk/configuration/yaml/). Mit nur 2 Zeilen Kopier-Einfüge-Konfiguration können Sie bereits viel erreichen:
 
 ```yaml title="Mit den Standard-2-Zeilen YAML"
   - action: notify.supernotify
