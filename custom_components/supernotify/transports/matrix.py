@@ -73,6 +73,9 @@ _PRIORITY_PREFIX = {
 class MatrixTransport(Transport):
     """Notify via Matrix rooms using Home Assistant matrix integration."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     name = TRANSPORT_MATRIX
 
     @property
