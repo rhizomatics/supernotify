@@ -31,10 +31,10 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import condition
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers import condition
 
 from . import DOMAIN, PLATFORMS
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
@@ -726,12 +726,12 @@ class SupernotifyAction(BaseNotificationService):
             for cond in scenario.conditions_config or []:
                 try:
                     ents |= condition.async_extract_entities(cond)
-                except Exception:  # noqa: BLE001 - best-effort extraction
+                except Exception:
                     _LOGGER.debug("SUPERNOTIFY could not extract entities for scenario %s", name)
             mapping[name] = ents
         return mapping
 
-    def _scenario_state(self, scenario: "Scenario", cvars: "ConditionVariables | None" = None) -> str:
+    def _scenario_state(self, scenario: Scenario, cvars: ConditionVariables | None = None) -> str:
         """State to expose for a scenario binary_sensor.
 
         - no conditions, or conditions with no source entity -> transient/manual

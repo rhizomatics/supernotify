@@ -28,8 +28,8 @@ if TYPE_CHECKING:
 
 import socket
 import threading
-from datetime import timedelta
 from contextlib import contextmanager
+from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
 import homeassistant.components.trace
