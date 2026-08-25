@@ -19,8 +19,8 @@
                     "media_path": "Percorso Media",
                     "archive_path": "Percorso Archivio",
                     "media_url_prefix": "Prefisso URL media",
-                    "mobile_discovery": "Rilevamento dispositivi mobili",
-                    "recipients_discovery": "Rilevamento destinatari"
+                    "mobile_discovery": "Rilevamento automatico app mobile",
+                    "recipients_discovery": "Rilevamento automatico destinatari"
                 },
                 "data_description": {
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
@@ -32,7 +32,7 @@
                 }
             },
             "reconfigure": {
-                "title": "Environment",
+                "title": "Ambiente",
                 "data": {
                     "template_path": "[%key:component::supernotify::config::step::user::data::template_path%]",
                     "media_path": "[%key:component::supernotify::config::step::user::data::media_path%]",
@@ -125,8 +125,8 @@
             },
             "dupe_check": {
                 "data": {
-                    "ttl": "Tempo di vita (secondi)",
-                    "size": "Dimensione cache",
+                    "ttl": "Finestra anti-duplicati (secondi)",
+                    "size": "Dimensione cache duplicati",
                     "dupe_policy": "Politica duplicati"
                 },
                 "data_description": {
