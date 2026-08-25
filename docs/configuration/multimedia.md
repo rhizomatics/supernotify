@@ -22,11 +22,7 @@ In order to handle attachments, Supernotify needs to temporarily store images on
 * A valid `media_path` directory, usually somewhere under the main `/config` directory
 * Add this directory to the `allowlist_external_dirs` in the main HomeAssistant config
 
-```yaml title="Supernotify Configuration"
-- name: SuperNotifier
-  platform: supernotify
-  media_path: /config/media/supernotify
-```
+![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png)
 
 ```yaml title="Home Assistant Configuration"
 homeassistant:
@@ -138,13 +134,8 @@ The media storage directory can grow, so a regular job will purge images older t
 
 If you want to change the defaults, do this, or set to `0` to switch off
 
-```yaml
-notify:
-  - name: Supernotify
-    platform: supernotify
-    housekeeping:
-      media_storage_days: 3
-```
+![Housekeeping Config from Integration Page](../assets/images/housekeeping_config.png)
+
 There's also an action, `purge_media`, to run this on demand, with a configurable number of expiry days.
 
 ## Browse Snapshots via Home Assistant

@@ -32,16 +32,7 @@ for this is the same as for selecting [Event Generation](#event-generation).
 
 This example switches on both file system and MQTT topic archiving. Additional options (`mqtt_qos`, `mqtt_retain`) are available if needed to fine tune the MQTT publication.
 
-```yaml
-notify:
-  - name: my_notifications
-    platform: supernotify
-    archive:
-      enabled: true
-      file_retention_days: 4
-      file_path: config/archive/supernotify
-      mqtt_topic: notifications/supernotify
-```
+![Archive Config from Integrations Page](../assets/images/archive_config.png)
 
 ## Event Generation
 
@@ -53,11 +44,8 @@ send them off to an OpenTelemetry or Syslog service.
 Event generation is switched on by setting `event_selection` to the combination of notification outcomes desired, otherwise
 it will default to `NONE`
 
-```yaml
- archive:
-      event_name: supernotification # optional, defaults to `supernotification`
-      event_selection: NO_DELIVERY | BACKUP_DELIVERY | ERROR
-```
+![Archive Event Config from Integrations Page](../assets/images/archive_event_config.png)
+
 
 The options for event policy selection are:
 
