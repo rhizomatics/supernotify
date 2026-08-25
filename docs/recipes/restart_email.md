@@ -4,6 +4,7 @@ tags:
   - email
   - html_email
   - template
+  - no_yaml_config
   - recipe
 title: Send out an HTML Email on Home Assistant Restart
 description: Send an automated HTML formatted email notification whenever Home Assistant restarts using Supernotify

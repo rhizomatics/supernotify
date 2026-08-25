@@ -3,6 +3,7 @@ tags:
   - email
   - scenario
   - html_email
+  - no_yaml_config
   - recipe
 title: Basic HTML Formatted Email Notifications
 description: Send a basic HTML formatted email notification from Home Assistant using Supernotify
