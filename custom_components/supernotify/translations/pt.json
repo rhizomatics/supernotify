@@ -93,7 +93,8 @@
                     "archive": "Configurações de arquivo",
                     "dupe_check": "Detecção de duplicados",
                     "housekeeping": "Manutenção"
-                }
+                },
+                "title": "Opções do Supernotify"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "Nome do evento do Home Assistant disparado para notificações arquivadas",
                     "event_selection": "Quais resultados de notificação disparam um evento",
                     "diagnostics": "Quais resultados de notificação são registrados com detalhe diagnóstico completo"
-                }
+                },
+                "title": "Opções de arquivo"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "Por quanto tempo uma notificação é lembrada para detecção de duplicados",
                     "size": "Número máximo de notificações recentes lembradas para detecção de duplicados",
                     "dupe_policy": "Com que rigor as notificações são comparadas para detectar duplicados"
-                }
+                },
+                "title": "Opções de detecção de duplicados"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "Horário do dia (HH:MM:SS) em que a manutenção agendada, como limpeza de mídia, é executada",
                     "media_storage_days": "Por quantos dias a mídia armazenada, como capturas e anexos, é mantida"
-                }
+                },
+                "title": "Opções de manutenção"
             }
         }
     },

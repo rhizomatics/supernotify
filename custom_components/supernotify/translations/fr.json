@@ -93,7 +93,8 @@
                     "archive": "Paramètres d'archivage",
                     "dupe_check": "Détection des doublons",
                     "housekeeping": "Entretien"
-                }
+                },
+                "title": "Options de Supernotify"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "Nom de l'événement Home Assistant émis pour les notifications archivées",
                     "event_selection": "Quels résultats de notification déclenchent un événement",
                     "diagnostics": "Quels résultats de notification sont enregistrés avec le détail diagnostique complet"
-                }
+                },
+                "title": "Options d'archivage"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "Durée pendant laquelle une notification est mémorisée pour la détection des doublons",
                     "size": "Nombre maximal de notifications récentes mémorisées pour la détection des doublons",
                     "dupe_policy": "Avec quelle rigueur les notifications sont comparées pour détecter les doublons"
-                }
+                },
+                "title": "Options de détection des doublons"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "Heure de la journée (HH:MM:SS) à laquelle l'entretien planifié, comme la purge des médias, s'exécute",
                     "media_storage_days": "Nombre de jours de conservation des médias stockés, comme les captures et pièces jointes"
-                }
+                },
+                "title": "Options d'entretien"
             }
         }
     },

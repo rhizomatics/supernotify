@@ -93,7 +93,8 @@
                     "archive": "存档设置",
                     "dupe_check": "重复检测",
                     "housekeeping": "维护"
-                }
+                },
+                "title": "Supernotify 选项"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "为已存档通知触发的 Home Assistant 事件名称",
                     "event_selection": "哪些通知结果会触发事件",
                     "diagnostics": "哪些通知结果会记录完整的诊断详情"
-                }
+                },
+                "title": "存档选项"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "通知被记住以用于重复检测的时长",
                     "size": "用于重复检测而记住的最近通知的最大数量",
                     "dupe_policy": "比较通知以检测重复项的严格程度"
-                }
+                },
+                "title": "重复检测选项"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "计划维护（例如媒体清理）运行的时间（HH:MM:SS）",
                     "media_storage_days": "存储的媒体（例如快照和附件）保留的天数"
-                }
+                },
+                "title": "维护选项"
             }
         }
     },

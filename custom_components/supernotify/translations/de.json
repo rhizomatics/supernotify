@@ -93,7 +93,8 @@
                     "archive": "Archiveinstellungen",
                     "dupe_check": "Duplikaterkennung",
                     "housekeeping": "Wartung"
-                }
+                },
+                "title": "Supernotify-Optionen"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "Name des Home Assistant-Ereignisses für archivierte Benachrichtigungen",
                     "event_selection": "Welche Benachrichtigungsergebnisse ein Ereignis auslösen",
                     "diagnostics": "Welche Benachrichtigungsergebnisse mit vollständigen Diagnosedetails erfasst werden"
-                }
+                },
+                "title": "Archivoptionen"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "Wie lange eine Benachrichtigung zur Duplikaterkennung gespeichert bleibt",
                     "size": "Maximale Anzahl kürzlich gespeicherter Benachrichtigungen zur Duplikaterkennung",
                     "dupe_policy": "Wie streng Benachrichtigungen verglichen werden, um Duplikate zu erkennen"
-                }
+                },
+                "title": "Optionen für Duplikaterkennung"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "Tageszeit (HH:MM:SS), zu der die geplante Wartung, z. B. Medienbereinigung, ausgeführt wird",
                     "media_storage_days": "Wie viele Tage gespeicherte Medien, z. B. Snapshots und Anhänge, aufbewahrt werden"
-                }
+                },
+                "title": "Wartungsoptionen"
             }
         }
     },

@@ -93,7 +93,8 @@
                     "archive": "Archiefinstellingen",
                     "dupe_check": "Duplicaatdetectie",
                     "housekeeping": "Onderhoud"
-                }
+                },
+                "title": "Supernotify-opties"
             },
             "archive": {
                 "data": {
@@ -119,7 +120,8 @@
                     "event_name": "Naam van de Home Assistant-gebeurtenis die wordt geactiveerd voor gearchiveerde meldingen",
                     "event_selection": "Welke meldingsresultaten een gebeurtenis activeren",
                     "diagnostics": "Welke meldingsresultaten worden vastgelegd met volledige diagnostische details"
-                }
+                },
+                "title": "Archiefopties"
             },
             "dupe_check": {
                 "data": {
@@ -131,7 +133,8 @@
                     "ttl": "Hoe lang een melding wordt onthouden voor duplicaatdetectie",
                     "size": "Maximaal aantal recente meldingen dat wordt onthouden voor duplicaatdetectie",
                     "dupe_policy": "Hoe strikt meldingen worden vergeleken om duplicaten te detecteren"
-                }
+                },
+                "title": "Opties voor duplicaatdetectie"
             },
             "housekeeping": {
                 "data": {
@@ -141,7 +144,8 @@
                 "data_description": {
                     "housekeeping_time": "Tijdstip (UU:MM:SS) waarop gepland onderhoud, zoals media-opschoning, wordt uitgevoerd",
                     "media_storage_days": "Hoeveel dagen opgeslagen media, zoals snapshots en bijlagen, wordt bewaard"
-                }
+                },
+                "title": "Onderhoudsopties"
             }
         }
     },
