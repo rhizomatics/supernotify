@@ -81,6 +81,9 @@ _PRIORITY_PREFIX = {
 class DiscordTransport(Transport):
     """Notify via Discord channels or users using Home Assistant discord integration."""
 
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
     name = TRANSPORT_DISCORD
 
     @property
