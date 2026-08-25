@@ -376,12 +376,17 @@ async def async_get_service(
 
     # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
     # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
-    # "deprecated_yaml" is a shared translation key owned by the homeassistant domain.
-    # But only if the YAML is actually fully replaceable by the config entry: deliveries,
-    # transports, scenarios, recipients, cameras, action groups and links aren't
-    # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are
-    # defined, this YAML still has to stay - nagging to remove it would be wrong.
-    yaml_still_required = any(
+    # "deprecated_yaml" is a shared translation key owned by the homeassistant domain, so there's
+    # only ever one issue - it can't say "full" vs "partial" itself, hence the log message below.
+    #
+    # Deliveries, transports, scenarios, recipients, cameras, action groups and links aren't
+    # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are defined,
+    # this YAML still has to stay in some form.
+    #
+    # Archive, housekeeping and dupe_check ARE mirrored into the config entry (see
+    # async_step_import above), so leaving them in YAML is dead config even when other keys
+    # force the YAML block to stick around - worth nagging about either way.
+    unmigrated_keys_present = any(
         config.get(key)
         for key in (
             CONF_DELIVERY,
@@ -393,9 +398,24 @@ async def async_get_service(
             CONF_LINKS,
         )
     )
-    if yaml_still_required:
-        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+    dead_keys_present = any(config.get(key) for key in (CONF_ARCHIVE, CONF_HOUSEKEEPING, CONF_DUPE_CHECK))
+
+    if not unmigrated_keys_present:
+        _LOGGER.warning(
+            "SUPERNOTIFY YAML configuration is no longer required and can be fully removed; "
+            "manage this integration from the UI instead"
+        )
+    elif dead_keys_present:
+        _LOGGER.warning(
+            "SUPERNOTIFY YAML configuration still defines deliveries/transports/scenarios/"
+            "recipients/cameras/action_groups/links, which aren't UI-configurable yet - that "
+            "part must stay. But archive/housekeeping/dupe_check are now UI-configurable via "
+            "the mirrored config entry, so those keys can be removed from YAML"
+        )
     else:
+        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}")
+
+    if not unmigrated_keys_present or dead_keys_present:
         async_create_issue(
             hass,
             HOMEASSISTANT_DOMAIN,
