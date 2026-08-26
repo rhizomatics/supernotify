@@ -26,6 +26,7 @@ DOMAIN = "supernotify"
 
 TEMPLATE_DIR: str = "supernotify/templates"
 MEDIA_DIR: str = "supernotify/media"
+ARCHIVE_DIR: str = "supernotify/archive"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ NOTIFY_SERVICE_NAME = "supernotify"
 # yet configurable via ConfigFlow). Populated by async_setup, read by _entry_full_config.
 KEY_YAML_CONFIG = "yaml_config"
 
-# Deferred import: schema.py imports MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
+# Deferred import: schema.py imports ARCHIVE_DIR/MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.
 from .schema import SUPERNOTIFY_YAML_SCHEMA  # noqa: E402, RUF100, I001
 
