@@ -155,6 +155,45 @@ async def test_shim_migrates_minimal_config_without_any_repair(hass: HomeAssista
     assert hass.services.has_service("notify", "supernotifier")
 
 
+async def test_shim_sync_reaches_the_live_running_service_not_just_stored_config(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Regression test: entry.data/entry.options getting the right values (what the other
+    shim-backfill tests above check, and what the Reconfigure screen reads) is not the same as
+    the *running* service actually using them. A pre-existing entry starts out on defaults, so
+    the shim's sync is really several fields (name, template_path, archive.enabled, ...) all
+    changing at once - and calling async_update_entry more than once in that single sync used to
+    race: Python's eager task execution can start the first update's reload (which unloads the
+    entry, removing its update listener) before the second update call runs, so the second
+    update's "notify listeners to reload" step finds no listener and silently no-ops. The entry
+    ends up stuck running the FIRST update's (still-blank) config forever, even though
+    entry.data/entry.options themselves end up fully correct - exactly the reported symptom
+    (Reconfigure showed the right template_path, but the live service still logged the default
+    "supernotify/templates" not found, and archive stayed disabled)."""
+    template_dir = tmp_path / "templates" / "supernotify"
+    template_dir.mkdir(parents=True)
+
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_config = {
+        **LEGACY_CONFIG,
+        "template_path": str(template_dir),
+        "archive": {"enabled": True, "file_path": "/config/archive/supernotify"},
+    }
+    service = await async_get_service(hass, legacy_config)
+    assert service is None
+    await hass.async_block_till_done()
+
+    # stored config: already covered above, re-asserted here for context
+    assert entry.data["template_path"] == str(template_dir)
+    assert entry.options["archive"]["enabled"] is True
+
+    # the live running service must reflect the same values, not just entry.data/entry.options
+    assert str(entry.runtime_data.context.custom_template_path) == str(template_dir)
+    assert entry.runtime_data.context.archive.enabled is True
+
+
 async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:
     """Confirming the fix writes supernotify.yaml, appends the include line to
     configuration.yaml, and the migrated config is live without a restart."""
