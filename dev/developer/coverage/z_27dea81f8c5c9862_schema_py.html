@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_snoozer_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-26 22:03 +0000
+            created at 2026-08-26 22:06 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -112,7 +112,7 @@
     <p class="run"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">helpers</span> <span class="key">import</span> <span class="nam">config_validation</span> <span class="key">as</span> <span class="nam">cv</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">helpers</span><span class="op">.</span><span class="nam">typing</span> <span class="key">import</span> <span class="nam">TemplateVarsType</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span> <span class="key">import</span> <span class="nam">MEDIA_DIR</span><span class="op">,</span> <span class="nam">TEMPLATE_DIR</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span> <span class="key">import</span> <span class="nam">ARCHIVE_DIR</span><span class="op">,</span> <span class="nam">MEDIA_DIR</span><span class="op">,</span> <span class="nam">TEMPLATE_DIR</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t"><span class="key">from</span> <span class="op">.</span><span class="nam">const</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">    <span class="nam">ATTR_ACTION</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -529,7 +529,7 @@
     <p class="run"><span class="n"><a id="t447" href="#t447">447</a></span><span class="t"><span class="nam">ARCHIVE_SCHEMA</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">All</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t448" href="#t448">448</a></span><span class="t">    <span class="nam">cv</span><span class="op">.</span><span class="nam">deprecated</span><span class="op">(</span><span class="nam">key</span><span class="op">=</span><span class="nam">CONF_DEBUG</span><span class="op">)</span><span class="op">,</span>  <span class="com"># deprecated v1.10.0</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t449" href="#t449">449</a></span><span class="t">    <span class="nam">vol</span><span class="op">.</span><span class="nam">Schema</span><span class="op">(</span><span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t450" href="#t450">450</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_ARCHIVE_PATH</span><span class="op">)</span><span class="op">:</span> <span class="nam">cv</span><span class="op">.</span><span class="nam">path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t450" href="#t450">450</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_ARCHIVE_PATH</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="nam">ARCHIVE_DIR</span><span class="op">)</span><span class="op">:</span> <span class="nam">cv</span><span class="op">.</span><span class="nam">path</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t451" href="#t451">451</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_ENABLED</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="key">False</span><span class="op">)</span><span class="op">:</span> <span class="nam">cv</span><span class="op">.</span><span class="nam">boolean</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t452" href="#t452">452</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_ARCHIVE_DAYS</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="num">3</span><span class="op">)</span><span class="op">:</span> <span class="nam">cv</span><span class="op">.</span><span class="nam">positive_int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t453" href="#t453">453</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_ARCHIVE_MQTT_TOPIC</span><span class="op">)</span><span class="op">:</span> <span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -656,7 +656,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_snoozer_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-26 22:03 +0000
+            created at 2026-08-26 22:06 +0000
         </p>
     </div>
 </footer>

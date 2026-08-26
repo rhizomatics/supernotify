@@ -1023,6 +1023,7 @@
       "type": "object",
       "properties": {
         "file_path": {
+          "default": "supernotify/archive",
           "type": "string"
         },
         "enabled": {
