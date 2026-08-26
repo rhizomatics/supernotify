@@ -37,7 +37,7 @@ KEY_YAML_CONFIG = "yaml_config"
 
 # Deferred import: schema.py imports MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.
-from .schema import SUPERNOTIFY_YAML_SCHEMA
+from .schema import SUPERNOTIFY_YAML_SCHEMA  # noqa: E402, RUF100, I001
 
 CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(DOMAIN, default=dict): SUPERNOTIFY_YAML_SCHEMA},

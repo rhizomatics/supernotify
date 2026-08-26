@@ -18,7 +18,7 @@ import os
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
-from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import issue_registry as ir
@@ -39,6 +39,12 @@ from .schema import SUPERNOTIFY_YAML_SCHEMA
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+    from homeassistant.data_entry_flow import FlowResult
+
+    # RepairsFlowResult isn't exported on every supported HA version (it's just
+    # FlowResult[FlowContext, str] under the hood) - FlowResult itself is a much older, more
+    # stable export, so use that directly rather than depending on the alias's presence.
+    RepairsFlowResult = FlowResult
 
 _LOGGER = logging.getLogger(__name__)
 
