@@ -123,7 +123,7 @@ Delivery selection can be passed in the `data` of an action call using the `deli
     - Deliveries with `priority` or `condition` filtering will have this overridden - only a disabled `delivery`/`transport` stops a fixed selection
     - This is never implied from `delivery:`'s shape - it must always be set explicitly
 
-An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override.
+An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override. If in doubt, add the `delivery_selection` to make it clear.
 
 ```yaml title="Implicit (default) - implied by a mapping"
   - action: notify.supernotify
@@ -135,6 +135,9 @@ An explicit `delivery_selection` always wins over whatever the shape of `deliver
                 clickAction: https://my.home.net/dashboard
 ```
 
+In this example, `mobile_push` and `plain_email` are selected as deliveries, even if they are not default ones. In addition
+any deliveries selected by conditions or scenarios will be added to the list.
+
 ```yaml title="Explicit - implied by a list"
   - action: notify.supernotify
     data:
@@ -143,6 +146,8 @@ An explicit `delivery_selection` always wins over whatever the shape of `deliver
             - mobile_push
             - plain_email
 ```
+
+In this case `plain_email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
 
 ```yaml title="Fixed - always set explicitly"
   - action: notify.supernotify
@@ -160,15 +165,19 @@ An explicit `delivery_selection` always wins over whatever the shape of `deliver
     see [Delivery Selection](../configuration/deliveries.md#delivery-selection)), which decides
     whether that delivery is a candidate for implicit selection at all. The two happen to share
     the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action
-    call; a delivery's `selection: [explicit]` is a no-op placeholder for readability only.
+    call; a delivery with `selection: [explicit]` is excluded from implicit selection, as does
+    any other value other than `default` (or left unstated, which is equivalent to `default`).
 
 ### When Scenarios Disagree
 
 Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see
 [Overriding Delivery Selection and Configuration](scenarios.md#overriding-delivery-selection-and-configuration).
+
 If more than one scenario is active at once and they disagree on the same delivery, **`false`
 always wins**, regardless of how many other active scenarios enabled it - there's no priority
-or ordering between scenarios. The only way to override a scenario's `false` is for the action
+or ordering between scenarios.
+
+The only way to override a scenario's `false` is for the action
 call itself to explicitly re-enable that delivery in its own `delivery:` data. This is a
 deliberate fail-safe default (a scenario that says "don't send this" is never silently
 overruled by another scenario), but it also means there's currently no way for a scenario
