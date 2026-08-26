@@ -130,7 +130,7 @@ class SmtpTransport(EmailTransport):
         if not entry_data:
             _LOGGER.debug("SUPERNOTIFY no home assistant official smtp configuration to reuse")
             return
-        _LOGGER.info("SUPERNOTIFY smtp transport reusing connection from HA smtp integration")
+        _LOGGER.info("SUPERNOTIFY SMTP transport reusing connection from HA smtp integration")
         self.host = entry_data.get(CONF_SERVER)
         self.port = entry_data.get(CONF_PORT, self.port)
         self.encryption = entry_data.get(CONF_ENCRYPTION, self.encryption)

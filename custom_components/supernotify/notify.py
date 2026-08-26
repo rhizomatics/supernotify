@@ -591,7 +591,7 @@ class SupernotifyAction(BaseNotificationService):
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
-            _LOGGER.info("SUPERNOTIFY setting up housekeeping schedule at: %s", housekeeping_schedule)
+            _LOGGER.info("SUPERNOTIFY Setting up housekeeping schedule at: %s", housekeeping_schedule)
             self.context.hass_api.subscribe_time(
                 housekeeping_schedule.hour, housekeeping_schedule.minute, housekeeping_schedule.second, self.async_nightly_tasks
             )
@@ -603,17 +603,17 @@ class SupernotifyAction(BaseNotificationService):
         self.context.hass_api.subscribe_event(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
 
     async def async_shutdown(self, event: Event) -> None:
-        _LOGGER.info("SUPERNOTIFY shutting down, %s (%s)", event.event_type, event.time_fired)
+        _LOGGER.info("SUPERNOTIFY Shutting down, %s (%s)", event.event_type, event.time_fired)
         self.shutdown()
 
     async def async_unregister_services(self) -> None:
-        _LOGGER.info("SUPERNOTIFY unregistering")
+        _LOGGER.info("SUPERNOTIFY Unregistering")
         self.shutdown()
         return await super().async_unregister_services()
 
     def shutdown(self) -> None:
         self.context.hass_api.disconnect()
-        _LOGGER.info("SUPERNOTIFY shut down")
+        _LOGGER.info("SUPERNOTIFY Shut down")
 
     async def async_send_message(
         self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any

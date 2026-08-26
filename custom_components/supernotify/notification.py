@@ -195,7 +195,7 @@ class Notification(ArchivableObject):
                 s for s in enabled_scenario_names if (s in self.constrain_scenario_names or s in self.applied_scenario_names)
             ]
         if self.required_scenario_names and not any(s in enabled_scenario_names for s in self.required_scenario_names):
-            _LOGGER.info("SUPERNOTIFY suppressing notification, no required scenarios enabled")
+            _LOGGER.info("SUPERNOTIFY Suppressing notification, no required scenarios enabled")
             self.selected_deliveries = {}
             self.suppress(SuppressionReason.NO_SCENARIO)
         else:
@@ -250,7 +250,7 @@ class Notification(ArchivableObject):
         if action_data.get(ATTR_PRIORITY):
             if isinstance(action_data.get(ATTR_PRIORITY), (str, int, float)):
                 if action_data.get(ATTR_PRIORITY) not in PRIORITY_VALUES:
-                    _LOGGER.info("SUPERNOTIFY custom priority %s", action_data.get(ATTR_PRIORITY))
+                    _LOGGER.info("SUPERNOTIFY Custom priority %s", action_data.get(ATTR_PRIORITY))
             else:
                 _LOGGER.info("SUPERNOTIFY Invalid priority %s", action_data.get(ATTR_PRIORITY))
                 self.suppress(SuppressionReason.INVALID_ACTION_DATA)
@@ -258,11 +258,11 @@ class Notification(ArchivableObject):
         try:
             humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)
         except vol.Invalid as e:
-            _LOGGER.warning("SUPERNOTIFY invalid action data %s: %s", action_data, e)
+            _LOGGER.warning("SUPERNOTIFY Invalid action data %s: %s", action_data, e)
             self.suppress(SuppressionReason.INVALID_ACTION_DATA)
             raise
         except vol.error.Error as e2:
-            _LOGGER.warning("SUPERNOTIFY failed to validate action data %s: %s", action_data, e2)
+            _LOGGER.warning("SUPERNOTIFY Failed to validate action data %s: %s", action_data, e2)
             self.suppress(SuppressionReason.INVALID_ACTION_DATA)
             raise vol.Invalid(f"Unable to validate action data - {e2}") from e2
 

@@ -134,14 +134,14 @@ async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
         error = await _ensure_directory_exists(template_path)
         if error:
             errors[CONF_TEMPLATE_PATH] = "template_path_invalid"
-            _LOGGER.debug("SUPERNOTIFY invalid template_path %s: %s", template_path, error)
+            _LOGGER.debug("SUPERNOTIFY Invalid template_path %s: %s", template_path, error)
 
     media_path = user_input.get(CONF_MEDIA_PATH)
     if media_path:
         error = await _ensure_directory_exists(media_path)
         if error:
             errors[CONF_MEDIA_PATH] = "media_path_invalid"
-            _LOGGER.debug("SUPERNOTIFY invalid media_path %s: %s", media_path, error)
+            _LOGGER.debug("SUPERNOTIFY Invalid media_path %s: %s", media_path, error)
 
     return errors
 

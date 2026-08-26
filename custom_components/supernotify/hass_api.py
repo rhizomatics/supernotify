@@ -131,11 +131,11 @@ class HomeAssistantAPI:
             self.internal_url = get_url(self._hass, prefer_external=False)
         except Exception as e:
             self.internal_url = f"http://{socket.gethostname()}"
-            _LOGGER.warning("SUPERNOTIFY could not get internal hass url, defaulting to %s: %s", self.internal_url, e)
+            _LOGGER.warning("SUPERNOTIFY Internal hass url not available, defaulting to %s: %s", self.internal_url, e)
         try:
             self.external_url = get_url(self._hass, prefer_external=True)
         except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY could not get external hass url, defaulting to internal url: %s", e)
+            _LOGGER.warning("SUPERNOTIFY External hass url not available, defaulting to internal url: %s", e)
             self.external_url = self.internal_url
 
         self.build_mobile_app_cache()
@@ -148,17 +148,17 @@ class HomeAssistantAPI:
         )
 
         if not self.internal_url or not self.internal_url.startswith("http"):
-            _LOGGER.warning("SUPERNOTIFY invalid internal hass url %s", self.internal_url)
+            _LOGGER.warning("SUPERNOTIFY Invalid internal hass url %s", self.internal_url)
 
     def disconnect(self) -> None:
         while self.unsubscribes:
             unsub = self.unsubscribes.pop()
             try:
-                _LOGGER.debug("SUPERNOTIFY unsubscribing: %s", unsub)
+                _LOGGER.debug("SUPERNOTIFY Unsubscribing: %s", unsub)
                 unsub()
             except Exception as e:
-                _LOGGER.error("SUPERNOTIFY failed to unsubscribe: %s", e)
-        _LOGGER.debug("SUPERNOTIFY disconnection complete")
+                _LOGGER.error("SUPERNOTIFY Failed to unsubscribe: %s", e)
+        _LOGGER.debug("SUPERNOTIFY Disconnection complete")
 
     def subscribe_event(self, event: EventType | str, callback: Callable) -> None:
         self.unsubscribes.append(self._hass.bus.async_listen(event, callback))
@@ -369,7 +369,7 @@ class HomeAssistantAPI:
         result: bool | None = None
         this_trace: ActionTrace | None = None
         if DATA_TRACE not in self._hass.data:
-            _LOGGER.warning("SUPERNOTIFY tracing not configured, attempting to set up")
+            _LOGGER.warning("SUPERNOTIFY Tracing not configured, attempting to set up")
 
             await homeassistant.components.trace.async_setup(self._hass, {})  # type: ignore
         with trace_action(self._hass, trace_name or "anon_condition") as cond_trace:
@@ -554,12 +554,12 @@ class HomeAssistantAPI:
             all_devs += 1
 
             if dev.disabled:
-                _LOGGER.debug("SUPERNOTIFY excluded disabled device %s", dev.name)
+                _LOGGER.debug("SUPERNOTIFY Excluded disabled device %s", dev.name)
             else:
                 enabled_devs += 1
                 for identifier in dev.identifiers:
                     if identifier and len(identifier) > 1 and identifier[0] == discover_domain:
-                        _LOGGER.debug("SUPERNOTIFY discovered %s device %s for id %s", dev.model, dev.name, identifier)
+                        _LOGGER.debug("SUPERNOTIFY Discovered %s device %s for id %s", dev.model, dev.name, identifier)
                         found_devs += 1
                         if device_model_select is not None and not device_model_select.match(dev.model):
                             _LOGGER.debug("SUPERNOTIFY Skipped dev %s, no model %s match", dev.name, dev.model)

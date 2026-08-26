@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     if entry.data.get(ATTR_IMPORTED_FROM_YAML):
         # This entry only mirrors an existing YAML config into the UI - the legacy
         # YAML notify platform already provides notify.supernotify for it.
-        _LOGGER.debug("SUPERNOTIFY entry imported from YAML; legacy notify platform owns the service")
+        _LOGGER.debug("SUPERNOTIFY Entry imported from YAML; legacy notify platform owns the service")
         return True
 
     if hass.services.has_service("notify", NOTIFY_SERVICE_NAME):
@@ -73,8 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     try:
         await service.initialize()
     except Exception as err:
-        _LOGGER.exception("SUPERNOTIFY failed to initialize, will retry")
-        raise ConfigEntryNotReady(f"SUPERNOTIFY failed to initialize: {err}") from err
+        _LOGGER.exception("SUPERNOTIFY Failed to initialize, will retry")
+        raise ConfigEntryNotReady(f"SUPERNOTIFY Failed to initialize: {err}") from err
     await service.async_setup(hass, NOTIFY_SERVICE_NAME, NOTIFY_SERVICE_NAME)
     await service.async_register_services()
     async_register_supplemental_services(hass, service, full_config)

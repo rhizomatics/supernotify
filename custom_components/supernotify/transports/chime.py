@@ -321,7 +321,7 @@ class ChimeTransport(Transport):
 
         chimes = 0
         if not expanded_targets:
-            _LOGGER.info("SUPERNOTIFY skipping chime, no targets")
+            _LOGGER.info("SUPERNOTIFY Skipping chime, no targets")
             return False
         if debug_trace:
             debug_trace.record_delivery_artefact(envelope.delivery.name, "expanded_targets", expanded_targets)
