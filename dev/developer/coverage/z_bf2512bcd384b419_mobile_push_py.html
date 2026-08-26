@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_bf2512bcd384b419_mqtt_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-26 08:51 +0000
+            created at 2026-08-26 09:11 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -314,7 +314,7 @@
     <p class="run"><span class="n"><a id="t232" href="#t232">232</a></span><span class="t">        <span class="key">if</span> <span class="nam">url</span> <span class="key">in</span> <span class="nam">self</span><span class="op">.</span><span class="nam">action_title_failures</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t233" href="#t233">233</a></span><span class="t">            <span class="com"># don't retry too often</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t234" href="#t234">234</a></span><span class="t">            <span class="key">if</span> <span class="nam">time</span><span class="op">.</span><span class="nam">time</span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="nam">self</span><span class="op">.</span><span class="nam">action_title_failures</span><span class="op">[</span><span class="nam">url</span><span class="op">]</span> <span class="op">&lt;</span> <span class="nam">retry_timeout</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"SUPERNOTIFY skipping retry after previous failure to retrieve url title for %s"</span><span class="op">,</span> <span class="nam">url</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t235" href="#t235">235</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"SUPERNOTIFY Skipping retry after previous failure to retrieve url title for %s"</span><span class="op">,</span> <span class="nam">url</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t236" href="#t236">236</a></span><span class="t">                <span class="key">return</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t237" href="#t237">237</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t238" href="#t238">238</a></span><span class="t">            <span class="nam">websession</span><span class="op">:</span> <span class="nam">ClientSession</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">context</span><span class="op">.</span><span class="nam">hass_api</span><span class="op">.</span><span class="nam">http_session</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -326,7 +326,7 @@
     <p class="run"><span class="n"><a id="t244" href="#t244">244</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">action_titles</span><span class="op">[</span><span class="nam">url</span><span class="op">]</span> <span class="op">=</span> <span class="nam">html</span><span class="op">.</span><span class="nam">title</span><span class="op">.</span><span class="nam">string</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t245" href="#t245">245</a></span><span class="t">                <span class="key">return</span> <span class="nam">html</span><span class="op">.</span><span class="nam">title</span><span class="op">.</span><span class="nam">string</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t">        <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">"SUPERNOTIFY failed to retrieve url title at %s: %s"</span><span class="op">,</span> <span class="nam">url</span><span class="op">,</span> <span class="nam">e</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">"SUPERNOTIFY Failed to retrieve url title at %s: %s"</span><span class="op">,</span> <span class="nam">url</span><span class="op">,</span> <span class="nam">e</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">action_title_failures</span><span class="op">[</span><span class="nam">url</span><span class="op">]</span> <span class="op">=</span> <span class="nam">time</span><span class="op">.</span><span class="nam">time</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">        <span class="key">return</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t250" href="#t250">250</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -494,7 +494,7 @@
             <a class="nav" href="z_bf2512bcd384b419_mqtt_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-26 08:51 +0000
+            created at 2026-08-26 09:11 +0000
         </p>
     </div>
 </footer>
