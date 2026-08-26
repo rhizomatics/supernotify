@@ -23,12 +23,12 @@
                     "name": "Name"
                 },
                 "data_description": {
-                    "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
-                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径",
+                    "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置。相对路径将基于 Home Assistant 配置目录进行解析",
+                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径。相对路径将基于 Home Assistant 配置目录进行解析",
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人",
-                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "决定注册的 notify 操作名称（notify.NAME）——仅在需要使用 notify.supernotify 以外的名称时更改，例如以匹配现有的自动化"
                 }
             },
             "reconfigure": {
@@ -42,12 +42,12 @@
                     "name": "Name"
                 },
                 "data_description": {
-                    "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置",
-                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径",
+                    "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置。相对路径将基于 Home Assistant 配置目录进行解析",
+                    "media_path": "通知期间创建的媒体（例如附件的摄像头快照）的存储路径。相对路径将基于 Home Assistant 配置目录进行解析",
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人",
-                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "决定注册的 notify 操作名称（notify.NAME）——仅在需要使用 notify.supernotify 以外的名称时更改，例如以匹配现有的自动化"
                 }
             }
         },
@@ -94,32 +94,32 @@
             "description": "推送 {delivery} 包含无效条件 {condition}"
         },
         "legacy_yaml_config": {
-            "title": "Supernotify YAML configuration needs to move",
+            "title": "Supernotify 的 YAML 配置需要迁移",
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "title": "Migrate Supernotify YAML configuration",
-                        "description": "Delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings need to move out of the `notify: - platform: supernotify` YAML block into a new top-level `supernotify:` key instead.\n\nSelecting **Submit** automates this: it writes a new `supernotify.yaml` file containing your current settings, and adds a `supernotify: !include supernotify.yaml` line to the end of your `configuration.yaml`. Your configuration is reloaded immediately - no restart needed.\n\n**Prefer to do it by hand instead?** Just move the settings to a top-level `supernotify:` key yourself instead of clicking Submit - either way is fine, and this repair doesn't need you to come back and confirm it.\n\nEither way, this does **not** remove the old `notify: - platform: supernotify` block itself. Once that block is deleted from `configuration.yaml` and Home Assistant is restarted, this repair clears itself automatically - no need to dismiss it manually."
+                        "title": "迁移 Supernotify 的 YAML 配置",
+                        "description": "推送、传输方式、场景、收件人、摄像头、操作组、链接和打盹设置需要从 `notify: - platform: supernotify` YAML 块中迁移到新的顶级 `supernotify:` 键中。\n\n选择**提交**将自动完成此操作：会写入一个包含当前设置的新文件 `supernotify.yaml`，并在 `configuration.yaml` 末尾添加一行 `supernotify: !include supernotify.yaml`。配置会立即重新加载，无需重启。\n\n**更想手动完成？**只需自行将设置移动到顶级 `supernotify:` 键中，而不是点击提交——两种方式都可以，此修复也不需要你返回确认。\n\n无论哪种方式，这都**不会**移除旧的 `notify: - platform: supernotify` 块本身。一旦该块从 `configuration.yaml` 中删除且 Home Assistant 重启后，此修复会自动清除——无需手动关闭。"
                     },
                     "already_migrated": {
-                        "title": "Supernotify YAML configuration already migrated",
-                        "description": "`supernotify.yaml` and the `supernotify:` include already exist - this leftover `notify: - platform: supernotify` block in your YAML is now unused and can be removed. Selecting **Submit** dismisses this reminder."
+                        "title": "Supernotify 的 YAML 配置已迁移",
+                        "description": "`supernotify.yaml` 和 `supernotify:` 引用已经存在——你 YAML 中残留的这个 `notify: - platform: supernotify` 块现已不再使用，可以删除。选择**提交**将关闭此提醒。"
                     }
                 },
                 "error": {
-                    "supernotify_yaml_exists": "A supernotify.yaml file already exists - remove or rename it first, then try again",
-                    "configuration_yaml_unreadable": "configuration.yaml could not be read",
-                    "supernotify_key_exists": "configuration.yaml already has a top-level `supernotify:` key - merge your settings into it by hand instead",
-                    "write_failed": "Writing the new configuration files failed - check the Home Assistant log for details",
-                    "validation_failed": "The updated configuration.yaml failed validation, so nothing was changed - check the Home Assistant log for details",
-                    "baseline_invalid": "configuration.yaml already has an unrelated problem - fix that first, then try again",
-                    "migrated_config_invalid": "The current delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze configuration doesn't pass validation - check the Home Assistant log for details"
+                    "supernotify_yaml_exists": "supernotify.yaml 文件已存在——请先删除或重命名它，然后重试",
+                    "configuration_yaml_unreadable": "无法读取 configuration.yaml",
+                    "supernotify_key_exists": "configuration.yaml 已存在顶级 `supernotify:` 键——请改为手动将你的设置合并到其中",
+                    "write_failed": "写入新的配置文件失败——详情请查看 Home Assistant 日志",
+                    "validation_failed": "更新后的 configuration.yaml 未通过验证，因此未做任何更改——详情请查看 Home Assistant 日志",
+                    "baseline_invalid": "configuration.yaml 已存在一个无关的问题——请先修复该问题，然后重试",
+                    "migrated_config_invalid": "当前的 delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze 配置未通过验证——详情请查看 Home Assistant 日志"
                 }
             }
         },
         "legacy_yaml_manual_migration_required": {
-            "title": "Supernotify YAML configuration must be migrated manually",
-            "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
+            "title": "Supernotify 的 YAML 配置需要手动迁移",
+            "description": "自动迁移到顶级 `supernotify:` YAML 键未能完成：{reason}。请自行将推送、传输方式、场景、收件人、摄像头、操作组、链接和打盹设置从 `notify: - platform: supernotify` 块迁移到顶级 `supernotify:` 键中（例如 `supernotify: !include supernotify.yaml`），然后删除旧块并重启 Home Assistant。"
         }
     },
     "options": {
@@ -148,7 +148,7 @@
                             "purge_interval": "清理间隔（分钟）"
                         },
                         "data_description": {
-                            "file_path": "已存档通知的存储路径，用于调试配置、场景等",
+                            "file_path": "已存档通知的存储路径，用于调试配置、场景等。相对路径将基于 Home Assistant 配置目录进行解析",
                             "file_retention_days": "已存档通知保留的天数",
                             "purge_interval": "自动存档清理之间的最小间隔（分钟）"
                         }

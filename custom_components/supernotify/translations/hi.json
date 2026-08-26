@@ -23,12 +23,12 @@
                     "name": "Name"
                 },
                 "data_description": {
-                    "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान",
-                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट",
+                    "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
+                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
                     "media_url_prefix": "URL पथ प्रीफ़िक्स जिसके अंतर्गत संग्रहीत मीडिया, जैसे कैमरा स्नैपशॉट, परोसा जाता है",
                     "mobile_discovery": "पुश सूचनाओं के लिए Home Assistant में पंजीकृत मोबाइल ऐप डिवाइस को स्वचालित रूप से खोजें",
                     "recipients_discovery": "Home Assistant व्यक्ति entities से प्राप्तकर्ताओं को स्वचालित रूप से खोजें",
-                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "पंजीकृत notify क्रिया नाम (notify.NAME) निर्धारित करता है - केवल तभी बदलें जब आपको notify.supernotify के अलावा किसी अन्य चीज़ की आवश्यकता हो, उदाहरण के लिए किसी मौजूदा ऑटोमेशन से मेल खाने के लिए"
                 }
             },
             "reconfigure": {
@@ -42,12 +42,12 @@
                     "name": "Name"
                 },
                 "data_description": {
-                    "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान",
-                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट",
+                    "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
+                    "media_path": "सूचनाओं के दौरान बनाए गए मीडिया के लिए संग्रहण पथ, उदाहरण के लिए संलग्नक के लिए बनाए गए कैमरा स्नैपशॉट. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
                     "media_url_prefix": "URL पथ प्रीफ़िक्स जिसके अंतर्गत संग्रहीत मीडिया, जैसे कैमरा स्नैपशॉट, परोसा जाता है",
                     "mobile_discovery": "पुश सूचनाओं के लिए Home Assistant में पंजीकृत मोबाइल ऐप डिवाइस को स्वचालित रूप से खोजें",
                     "recipients_discovery": "Home Assistant व्यक्ति entities से प्राप्तकर्ताओं को स्वचालित रूप से खोजें",
-                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "पंजीकृत notify क्रिया नाम (notify.NAME) निर्धारित करता है - केवल तभी बदलें जब आपको notify.supernotify के अलावा किसी अन्य चीज़ की आवश्यकता हो, उदाहरण के लिए किसी मौजूदा ऑटोमेशन से मेल खाने के लिए"
                 }
             }
         },
@@ -94,32 +94,32 @@
             "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है"
         },
         "legacy_yaml_config": {
-            "title": "Supernotify YAML configuration needs to move",
+            "title": "Supernotify YAML कॉन्फ़िगरेशन को स्थानांतरित करना आवश्यक है",
             "fix_flow": {
                 "step": {
                     "confirm": {
-                        "title": "Migrate Supernotify YAML configuration",
-                        "description": "Delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings need to move out of the `notify: - platform: supernotify` YAML block into a new top-level `supernotify:` key instead.\n\nSelecting **Submit** automates this: it writes a new `supernotify.yaml` file containing your current settings, and adds a `supernotify: !include supernotify.yaml` line to the end of your `configuration.yaml`. Your configuration is reloaded immediately - no restart needed.\n\n**Prefer to do it by hand instead?** Just move the settings to a top-level `supernotify:` key yourself instead of clicking Submit - either way is fine, and this repair doesn't need you to come back and confirm it.\n\nEither way, this does **not** remove the old `notify: - platform: supernotify` block itself. Once that block is deleted from `configuration.yaml` and Home Assistant is restarted, this repair clears itself automatically - no need to dismiss it manually."
+                        "title": "Supernotify YAML कॉन्फ़िगरेशन माइग्रेट करें",
+                        "description": "डिलीवरी, परिवहन, परिदृश्य, प्राप्तकर्ता, कैमरा, क्रिया समूह, लिंक और स्नूज़ सेटिंग्स को `notify: - platform: supernotify` YAML ब्लॉक से हटाकर एक नई टॉप-लेवल `supernotify:` कुंजी में ले जाना आवश्यक है।\n\n**सबमिट** चुनने से यह स्वचालित हो जाता है: यह आपकी वर्तमान सेटिंग्स वाली एक नई `supernotify.yaml` फ़ाइल लिखता है, और आपकी `configuration.yaml` के अंत में `supernotify: !include supernotify.yaml` पंक्ति जोड़ता है। आपका कॉन्फ़िगरेशन तुरंत पुनः लोड हो जाता है - रीस्टार्ट की आवश्यकता नहीं।\n\n**इसे स्वयं हाथ से करना पसंद करेंगे?** सबमिट पर क्लिक करने के बजाय सेटिंग्स को स्वयं एक टॉप-लेवल `supernotify:` कुंजी में ले जाएं - दोनों तरीके ठीक हैं, और इस रिपेयर की पुष्टि करने के लिए आपको वापस आने की आवश्यकता नहीं है।\n\nदोनों ही स्थितियों में, यह पुराने `notify: - platform: supernotify` ब्लॉक को **नहीं** हटाता है। एक बार जब वह ब्लॉक `configuration.yaml` से हटा दिया जाता है और Home Assistant को पुनः आरंभ किया जाता है, तो यह रिपेयर अपने आप साफ़ हो जाता है - इसे मैन्युअल रूप से खारिज करने की आवश्यकता नहीं है।"
                     },
                     "already_migrated": {
-                        "title": "Supernotify YAML configuration already migrated",
-                        "description": "`supernotify.yaml` and the `supernotify:` include already exist - this leftover `notify: - platform: supernotify` block in your YAML is now unused and can be removed. Selecting **Submit** dismisses this reminder."
+                        "title": "Supernotify YAML कॉन्फ़िगरेशन पहले से ही माइग्रेट हो चुका है",
+                        "description": "`supernotify.yaml` और `supernotify:` include पहले से मौजूद हैं - आपके YAML में बचा हुआ यह `notify: - platform: supernotify` ब्लॉक अब अप्रयुक्त है और इसे हटाया जा सकता है। **सबमिट** चुनने से यह अनुस्मारक खारिज हो जाता है।"
                     }
                 },
                 "error": {
-                    "supernotify_yaml_exists": "A supernotify.yaml file already exists - remove or rename it first, then try again",
-                    "configuration_yaml_unreadable": "configuration.yaml could not be read",
-                    "supernotify_key_exists": "configuration.yaml already has a top-level `supernotify:` key - merge your settings into it by hand instead",
-                    "write_failed": "Writing the new configuration files failed - check the Home Assistant log for details",
-                    "validation_failed": "The updated configuration.yaml failed validation, so nothing was changed - check the Home Assistant log for details",
-                    "baseline_invalid": "configuration.yaml already has an unrelated problem - fix that first, then try again",
-                    "migrated_config_invalid": "The current delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze configuration doesn't pass validation - check the Home Assistant log for details"
+                    "supernotify_yaml_exists": "एक supernotify.yaml फ़ाइल पहले से मौजूद है - पहले उसे हटाएं या नाम बदलें, फिर पुनः प्रयास करें",
+                    "configuration_yaml_unreadable": "configuration.yaml पढ़ी नहीं जा सकी",
+                    "supernotify_key_exists": "configuration.yaml में पहले से ही एक टॉप-लेवल `supernotify:` कुंजी है - इसके बजाय अपनी सेटिंग्स को हाथ से उसमें मर्ज करें",
+                    "write_failed": "नई कॉन्फ़िगरेशन फ़ाइलें लिखना विफल रहा - विवरण के लिए Home Assistant लॉग देखें",
+                    "validation_failed": "अद्यतन configuration.yaml सत्यापन में विफल रहा, इसलिए कुछ भी नहीं बदला गया - विवरण के लिए Home Assistant लॉग देखें",
+                    "baseline_invalid": "configuration.yaml में पहले से ही एक असंबंधित समस्या है - पहले उसे ठीक करें, फिर पुनः प्रयास करें",
+                    "migrated_config_invalid": "वर्तमान delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze कॉन्फ़िगरेशन सत्यापन में विफल है - विवरण के लिए Home Assistant लॉग देखें"
                 }
             }
         },
         "legacy_yaml_manual_migration_required": {
-            "title": "Supernotify YAML configuration must be migrated manually",
-            "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
+            "title": "Supernotify YAML कॉन्फ़िगरेशन को मैन्युअल रूप से माइग्रेट किया जाना आवश्यक है",
+            "description": "एक टॉप-लेवल `supernotify:` YAML कुंजी में स्वचालित माइग्रेशन पूरा नहीं हो सका: {reason}। डिलीवरी, परिवहन, परिदृश्य, प्राप्तकर्ता, कैमरा, क्रिया समूह, लिंक और स्नूज़ सेटिंग्स को `notify: - platform: supernotify` ब्लॉक से स्वयं एक टॉप-लेवल `supernotify:` कुंजी में ले जाएं (उदाहरण के लिए `supernotify: !include supernotify.yaml`), फिर पुराने ब्लॉक को हटा दें और Home Assistant को पुनः आरंभ करें।"
         }
     },
     "options": {
@@ -148,7 +148,7 @@
                             "purge_interval": "पर्ज अंतराल (मिनट)"
                         },
                         "data_description": {
-                            "file_path": "संग्रहीत सूचनाओं के लिए संग्रहण पथ, कॉन्फ़िगरेशन, परिदृश्य आदि डीबग करने के लिए उपयोगी",
+                            "file_path": "संग्रहीत सूचनाओं के लिए संग्रहण पथ, कॉन्फ़िगरेशन, परिदृश्य आदि डीबग करने के लिए उपयोगी. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
                             "file_retention_days": "संग्रहीत सूचनाएं कितने दिनों तक रखी जाती हैं",
                             "purge_interval": "स्वचालित संग्रह पर्ज के बीच न्यूनतम अंतराल, मिनटों में"
                         }
