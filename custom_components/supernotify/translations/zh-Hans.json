@@ -20,7 +20,7 @@
                     "media_url_prefix": "媒体 URL 前缀",
                     "mobile_discovery": "移动设备发现",
                     "recipients_discovery": "收件人发现",
-                    "name": "Name"
+                    "name": "名称"
                 },
                 "data_description": {
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置。相对路径将基于 Home Assistant 配置目录进行解析",
@@ -39,7 +39,7 @@
                     "media_url_prefix": "媒体 URL 前缀",
                     "mobile_discovery": "移动设备发现",
                     "recipients_discovery": "收件人发现",
-                    "name": "Name"
+                    "name": "名称"
                 },
                 "data_description": {
                     "template_path": "HTML 电子邮件的 Jinja2 模板的可选存储位置。相对路径将基于 Home Assistant 配置目录进行解析",
@@ -157,7 +157,7 @@
                         "name": "MQTT",
                         "data": {
                             "mqtt_topic": "MQTT 主题",
-                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_qos": "MQTT QoS 级别",
                             "mqtt_retain": "MQTT 保留（Retain）"
                         },
                         "data_description": {

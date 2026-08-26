@@ -20,7 +20,7 @@
                     "media_url_prefix": "Prefijo de URL de medios",
                     "mobile_discovery": "Descubrimiento de dispositivos móviles",
                     "recipients_discovery": "Descubrimiento de destinatarios",
-                    "name": "Name"
+                    "name": "Nombre"
                 },
                 "data_description": {
                     "template_path": "Ubicación opcional de las plantillas Jinja2 para correos electrónicos HTML. Las rutas relativas se resuelven dentro del directorio de configuración de Home Assistant",
@@ -39,7 +39,7 @@
                     "media_url_prefix": "Prefijo de URL de medios",
                     "mobile_discovery": "Descubrimiento de dispositivos móviles",
                     "recipients_discovery": "Descubrimiento de destinatarios",
-                    "name": "Name"
+                    "name": "Nombre"
                 },
                 "data_description": {
                     "template_path": "Ubicación opcional de las plantillas Jinja2 para correos electrónicos HTML. Las rutas relativas se resuelven dentro del directorio de configuración de Home Assistant",

@@ -20,7 +20,7 @@
                     "media_url_prefix": "Media-URL-voorvoegsel",
                     "mobile_discovery": "Detectie van mobiele apparaten",
                     "recipients_discovery": "Detectie van ontvangers",
-                    "name": "Name"
+                    "name": "Naam"
                 },
                 "data_description": {
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
@@ -39,7 +39,7 @@
                     "media_url_prefix": "Media-URL-voorvoegsel",
                     "mobile_discovery": "Detectie van mobiele apparaten",
                     "recipients_discovery": "Detectie van ontvangers",
-                    "name": "Name"
+                    "name": "Naam"
                 },
                 "data_description": {
                     "template_path": "Optionele locatie voor Jinja2-sjablonen voor HTML-e-mails. Relatieve paden worden opgelost binnen de Home Assistant-configuratiemap",
@@ -157,8 +157,8 @@
                         "name": "MQTT",
                         "data": {
                             "mqtt_topic": "MQTT-topic",
-                            "mqtt_qos": "MQTT QoS",
-                            "mqtt_retain": "MQTT Retain"
+                            "mqtt_qos": "MQTT-QoS",
+                            "mqtt_retain": "MQTT-retain"
                         },
                         "data_description": {
                             "mqtt_topic": "Optioneel MQTT-topic waarnaar gearchiveerde meldingen worden gepubliceerd",

@@ -20,7 +20,7 @@
                     "media_url_prefix": "Prefisso URL media",
                     "mobile_discovery": "Rilevamento automatico app mobile",
                     "recipients_discovery": "Rilevamento automatico destinatari",
-                    "name": "Name"
+                    "name": "Nome"
                 },
                 "data_description": {
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
@@ -39,7 +39,7 @@
                     "media_url_prefix": "Prefisso URL media",
                     "mobile_discovery": "Rilevamento automatico app mobile",
                     "recipients_discovery": "Rilevamento automatico destinatari",
-                    "name": "Name"
+                    "name": "Nome"
                 },
                 "data_description": {
                     "template_path": "Posizione opzionale dei template Jinja2 per le email HTML. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",

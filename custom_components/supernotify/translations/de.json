@@ -158,7 +158,7 @@
                         "data": {
                             "mqtt_topic": "MQTT-Thema",
                             "mqtt_qos": "MQTT-QoS",
-                            "mqtt_retain": "MQTT Retain"
+                            "mqtt_retain": "MQTT-Retain"
                         },
                         "data_description": {
                             "mqtt_topic": "Optionales MQTT-Thema, an das archivierte Benachrichtigungen veröffentlicht werden",

@@ -20,7 +20,7 @@
                     "media_url_prefix": "मीडिया URL प्रीफ़िक्स",
                     "mobile_discovery": "मोबाइल डिवाइस खोज",
                     "recipients_discovery": "प्राप्तकर्ता खोज",
-                    "name": "Name"
+                    "name": "नाम"
                 },
                 "data_description": {
                     "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
@@ -39,7 +39,7 @@
                     "media_url_prefix": "मीडिया URL प्रीफ़िक्स",
                     "mobile_discovery": "मोबाइल डिवाइस खोज",
                     "recipients_discovery": "प्राप्तकर्ता खोज",
-                    "name": "Name"
+                    "name": "नाम"
                 },
                 "data_description": {
                     "template_path": "HTML ईमेल के लिए Jinja2 टेम्पलेट का वैकल्पिक स्थान. सापेक्ष पथ Home Assistant कॉन्फ़िगरेशन निर्देशिका के भीतर हल किए जाते हैं",
@@ -157,7 +157,7 @@
                         "name": "MQTT",
                         "data": {
                             "mqtt_topic": "MQTT विषय",
-                            "mqtt_qos": "MQTT QoS",
+                            "mqtt_qos": "MQTT QoS स्तर",
                             "mqtt_retain": "MQTT रिटेन"
                         },
                         "data_description": {

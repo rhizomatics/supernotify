@@ -20,7 +20,7 @@
                     "media_url_prefix": "Prefiks URL mediów",
                     "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                     "recipients_discovery": "Wykrywanie odbiorców",
-                    "name": "Name"
+                    "name": "Nazwa"
                 },
                 "data_description": {
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
@@ -39,7 +39,7 @@
                     "media_url_prefix": "Prefiks URL mediów",
                     "mobile_discovery": "Wykrywanie urządzeń mobilnych",
                     "recipients_discovery": "Wykrywanie odbiorców",
-                    "name": "Name"
+                    "name": "Nazwa"
                 },
                 "data_description": {
                     "template_path": "Opcjonalna lokalizacja szablonów Jinja2 dla wiadomości e-mail HTML. Ścieżki względne są rozwiązywane względem katalogu konfiguracyjnego Home Assistant",
@@ -157,8 +157,8 @@
                         "name": "MQTT",
                         "data": {
                             "mqtt_topic": "Temat MQTT",
-                            "mqtt_qos": "MQTT QoS",
-                            "mqtt_retain": "MQTT Retain"
+                            "mqtt_qos": "QoS MQTT",
+                            "mqtt_retain": "Retain MQTT"
                         },
                         "data_description": {
                             "mqtt_topic": "Opcjonalny temat MQTT, na który publikowane są zarchiwizowane powiadomienia",
