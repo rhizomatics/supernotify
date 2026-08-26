@@ -15,8 +15,7 @@ supernotify:
                 - armed_away
                 - armed_home
                 - armed_night
-            - condition: template
-              value_template: "{{ notification_priority in ['critical','high'] }}"
+            - "{{ notification_priority in ['critical','high'] }}"
       priority:
         - critical
         - high
