@@ -135,13 +135,13 @@ class Notification(ArchivableObject):
         delivery_data = action_data.get(ATTR_DELIVERY)
         if isinstance(delivery_data, list):
             # a bare list of deliveries implies intent to restrict
-            _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as explicit for list %s", delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for list %s", delivery_data)
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
             self.delivery_overrides = {k: DeliveryCustomization({}) for k in action_data.get(ATTR_DELIVERY, [])}
         elif isinstance(delivery_data, str) and delivery_data:
             # a bare list of deliveries implies intent to restrict
-            _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as explicit for single %s", delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for single %s", delivery_data)
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
             self.delivery_overrides = {delivery_data: DeliveryCustomization({})}
@@ -149,7 +149,7 @@ class Notification(ArchivableObject):
             # whereas a dict may be used to tune or restrict
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
-            _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as implicit for mapping %s", delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as implicit for mapping %s", delivery_data)
             self.delivery_overrides = {k: DeliveryCustomization(v) for k, v in action_data.get(ATTR_DELIVERY, {}).items()}
         elif delivery_data:
             _LOGGER.warning("SUPERNOTIFY Unable to interpret delivery data %s", delivery_data)
@@ -428,7 +428,7 @@ class Notification(ArchivableObject):
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
                     _LOGGER.info(
-                        "SUPERNOTIFY no delivery succeeded, activating fallback_by_default: %s",
+                        "SUPERNOTIFY No delivery succeeded, activating fallback_by_default: %s",
                         delivery.name,
                     )
                     if delivery.name not in self.selected_deliveries:
@@ -438,7 +438,7 @@ class Notification(ArchivableObject):
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
                     _LOGGER.warning(
-                        "SUPERNOTIFY delivery failed, activating fallback_on_error: %s",
+                        "SUPERNOTIFY Delivery failed, activating fallback_on_error: %s",
                         delivery.name,
                     )
                     if delivery.name not in self.selected_deliveries:

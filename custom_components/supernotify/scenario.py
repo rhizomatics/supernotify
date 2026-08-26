@@ -78,15 +78,15 @@ class Scenario:
         delivery_data = scenario_definition.get(CONF_DELIVERY)
         if isinstance(delivery_data, list):
             # a bare list of deliveries implies enabling
-            _LOGGER.debug("SUPERNOTIFY scenario %s delivery default enabled for list %s", self.name, delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Scenario %s delivery default enabled for list %s", self.name, delivery_data)
             self._config_delivery = {k: DeliveryCustomization({CONF_ENABLED: True}) for k in delivery_data}
         elif isinstance(delivery_data, str) and delivery_data:
             # a bare list of deliveries implies enabled delivery
-            _LOGGER.debug("SUPERNOTIFY scenario %s delivery default enabled for single %s", self.name, delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Scenario %s delivery default enabled for single %s", self.name, delivery_data)
             self._config_delivery = {delivery_data: DeliveryCustomization({CONF_ENABLED: True})}
         elif isinstance(delivery_data, dict):
             # whereas a dict may be used to tune or restrict
-            _LOGGER.debug("SUPERNOTIFY scenario %s delivery selection %s", self.name, delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Scenario %s delivery selection %s", self.name, delivery_data)
             self._config_delivery = {}
             for k, v in delivery_data.items():
                 if k not in delivery_registry.deliveries and CONF_ENABLED not in (v or {}):

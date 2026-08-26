@@ -313,7 +313,7 @@ async def snap_notification_image(notification: Notification, context: Context) 
             camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             _LOGGER.debug(
-                "SUPERNOTIFY snapping camera %s, ptz %s->%s (%s), delay %s secs",
+                "SUPERNOTIFY Snapping camera %s, ptz %s->%s (%s), delay %s secs",
                 active_camera_entity_id,
                 camera_ptz_preset,
                 camera_ptz_preset_default,
