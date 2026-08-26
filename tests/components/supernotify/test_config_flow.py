@@ -106,6 +106,11 @@ async def test_reconfigure_updates_global_settings(hass: HomeAssistant, tmp_path
     assert result2["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
 
+    # reconfigure must apply immediately, without a manual reload/restart - the update
+    # listener registered in async_setup_entry reloads the entry as soon as entry.data changes
+    assert entry.data[CONF_TEMPLATE_PATH] == custom_template_path
+    assert str(entry.runtime_data.context.custom_template_path) == custom_template_path
+
     assert entry.data[CONF_TEMPLATE_PATH] == custom_template_path
     assert entry.data[CONF_MOBILE_DISCOVERY] is False
 

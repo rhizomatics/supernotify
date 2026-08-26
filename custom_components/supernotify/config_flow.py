@@ -171,7 +171,11 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await _validate_user_input(user_input)
             if not errors:
-                return self.async_update_reload_and_abort(entry, data_updates=user_input)
+                # async_update_and_abort, not async_update_reload_and_abort: async_setup_entry
+                # registers an update listener, which async_update_entry already fires (and
+                # reloads via) whenever entry.data changes - calling the "_reload" variant too
+                # would reload twice and log an HA deprecation warning about the redundancy.
+                return self.async_update_and_abort(entry, data_updates=user_input)
         defaults = user_input if user_input is not None else dict(entry.data)
         return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(defaults), errors=errors)
 

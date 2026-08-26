@@ -282,6 +282,22 @@ async def test_setup_entry_imported_from_yaml_does_not_register_supplemental_ser
     assert not hass.services.has_service(DOMAIN, "enquire_configuration")
 
 
+async def test_options_update_reloads_entry_with_new_archive_path(hass: HomeAssistant) -> None:
+    """Archive/dupe_check/housekeeping options must take effect without a manual reload or HA
+    restart - the options flow's async_create_entry only updates entry.options, so an update
+    listener has to reload the entry itself for the new values to reach the running service."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={"archive": {"file_path": "/config/archive_v1"}})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.context.archive.configured_archive_path == "/config/archive_v1"
+
+    hass.config_entries.async_update_entry(entry, options={"archive": {"file_path": "/config/archive_v2"}})
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.context.archive.configured_archive_path == "/config/archive_v2"
+
+
 async def test_setup_entry_raises_config_entry_not_ready_on_initialize_failure(hass: HomeAssistant) -> None:
     """A failure during SupernotifyAction.initialize() should leave HA free to retry setup
     (ConfigEntryState.SETUP_RETRY), not propagate as a raw unhandled exception."""

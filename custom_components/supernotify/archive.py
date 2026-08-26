@@ -277,7 +277,7 @@ class NotificationArchive:
             )
             await self.archive_directory.initialize()
 
-        if self.mqtt_topic is not None:
+        if self.mqtt_topic:
             self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.diagnostics)
             await self.archive_topic.initialize()
 
