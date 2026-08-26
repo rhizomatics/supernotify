@@ -1,122 +1,6 @@
 {
   "type": "object",
   "properties": {
-    "platform": {
-      "type": "string"
-    },
-    "name": {
-      "type": "string"
-    },
-    "template_path": {
-      "default": "supernotify/templates",
-      "type": "string"
-    },
-    "media_path": {
-      "default": "supernotify/media",
-      "type": "string"
-    },
-    "media_url_prefix": {
-      "type": "string",
-      "default": "/supernotify/media"
-    },
-    "archive": {
-      "type": "object",
-      "properties": {
-        "file_path": {
-          "type": "string"
-        },
-        "enabled": {
-          "default": false,
-          "type": "string"
-        },
-        "file_retention_days": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 3
-        },
-        "mqtt_topic": {
-          "type": "string"
-        },
-        "mqtt_qos": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
-        },
-        "mqtt_retain": {
-          "default": true,
-          "type": "string"
-        },
-        "purge_interval": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 60
-        },
-        "event_name": {
-          "default": "supernotification",
-          "type": "string"
-        },
-        "event_selection": {
-          "type": "object",
-          "additionalProperties": true,
-          "default": 0
-        },
-        "diagnostics": {
-          "type": "object",
-          "additionalProperties": true,
-          "default": 16
-        },
-        "debug": {
-          "default": false,
-          "type": "string"
-        }
-      },
-      "required": [],
-      "default": {
-        "enabled": false
-      }
-    },
-    "housekeeping": {
-      "type": "object",
-      "properties": {
-        "housekeeping_time": {
-          "default": "00:00:01",
-          "type": "string"
-        },
-        "media_storage_days": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 7
-        }
-      },
-      "required": [],
-      "default": {}
-    },
-    "dupe_check": {
-      "type": "object",
-      "properties": {
-        "ttl": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 120
-        },
-        "size": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 100
-        },
-        "dupe_policy": {
-          "type": "string",
-          "enum": [
-            "dupe_policy_message_title_same_or_lower_priority",
-            "dupe_policy_message_title_same",
-            "dupe_policy_none"
-          ],
-          "default": "dupe_policy_message_title_same_or_lower_priority"
-        }
-      },
-      "required": [],
-      "default": {}
-    },
     "delivery": {
       "type": "object",
       "additionalProperties": {
@@ -375,14 +259,6 @@
         }
       },
       "default": {}
-    },
-    "mobile_discovery": {
-      "type": "boolean",
-      "default": true
-    },
-    "recipients_discovery": {
-      "type": "boolean",
-      "default": true
     },
     "recipients": {
       "type": "array",
@@ -1130,14 +1006,130 @@
       },
       "required": [],
       "default": {}
+    },
+    "template_path": {
+      "default": "supernotify/templates",
+      "type": "string"
+    },
+    "media_path": {
+      "default": "supernotify/media",
+      "type": "string"
+    },
+    "media_url_prefix": {
+      "type": "string",
+      "default": "/supernotify/media"
+    },
+    "archive": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "type": "string"
+        },
+        "enabled": {
+          "default": false,
+          "type": "string"
+        },
+        "file_retention_days": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        },
+        "mqtt_topic": {
+          "type": "string"
+        },
+        "mqtt_qos": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "mqtt_retain": {
+          "default": true,
+          "type": "string"
+        },
+        "purge_interval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60
+        },
+        "event_name": {
+          "default": "supernotification",
+          "type": "string"
+        },
+        "event_selection": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": 0
+        },
+        "diagnostics": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": 16
+        },
+        "debug": {
+          "default": false,
+          "type": "string"
+        }
+      },
+      "required": [],
+      "default": {
+        "enabled": false
+      }
+    },
+    "housekeeping": {
+      "type": "object",
+      "properties": {
+        "housekeeping_time": {
+          "default": "00:00:01",
+          "type": "string"
+        },
+        "media_storage_days": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 7
+        }
+      },
+      "required": [],
+      "default": {}
+    },
+    "dupe_check": {
+      "type": "object",
+      "properties": {
+        "ttl": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 120
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100
+        },
+        "dupe_policy": {
+          "type": "string",
+          "enum": [
+            "dupe_policy_message_title_same_or_lower_priority",
+            "dupe_policy_message_title_same",
+            "dupe_policy_none"
+          ],
+          "default": "dupe_policy_message_title_same_or_lower_priority"
+        }
+      },
+      "required": [],
+      "default": {}
+    },
+    "mobile_discovery": {
+      "type": "boolean",
+      "default": true
+    },
+    "recipients_discovery": {
+      "type": "boolean",
+      "default": true
     }
   },
-  "required": [
-    "platform"
-  ],
+  "required": [],
   "additionalProperties": true,
-  "title": "Platform Configuration",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Platform_Configuration.json",
-  "description": "Voluptuous validation schema for Platform_Configuration",
+  "title": "Full Configuration",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Full_Configuration.json",
+  "description": "Voluptuous validation schema for Full_Configuration",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }
