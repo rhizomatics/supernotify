@@ -1,9 +1,11 @@
 """Config flow for the Supernotify integration.
 
-Covers the "Immediate" phase of docs/roadmap/configflow_approach.md: a UI setup path that
-reproduces examples/minimal.yaml (everything auto-discovered, no required fields), plus
-options pages for the archive, dupe_check and housekeeping settings. Deliveries, transports,
-scenarios, recipients and cameras stay YAML-only for now (see the roadmap doc's Third phase).
+A UI setup path that reproduces examples/minimal.yaml (everything auto-discovered, no required
+fields), plus options pages for the archive, dupe_check and housekeeping settings. Delivery,
+transports, scenarios, recipients, cameras, action_groups, links and snooze stay YAML-only, now
+under a top-level `supernotify:` key (see CONFIG_SCHEMA/async_setup in __init__.py) rather than
+the legacy `notify: - platform: supernotify` block - this config entry is the sole,
+unconditional owner of registering notify.supernotify in every case.
 """
 
 from __future__ import annotations
@@ -14,12 +16,12 @@ from typing import Any
 import voluptuous as vol
 from anyio import Path
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_ENABLED
+from homeassistant.const import CONF_ENABLED, CONF_NAME
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from . import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from . import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
@@ -58,7 +60,7 @@ def _event_policy_str(value: Any) -> str:
     """Render an OutcomeSelection as the pipe-separated name string parse_event_policy
     expects (e.g. "ERROR|DUPE"), whatever form it currently happens to be in.
 
-    A YAML-imported archive config already went through SUPERNOTIFY_SCHEMA, which turns
+    A YAML-imported archive config already went through ARCHIVE_SCHEMA, which turns
     event_selection/diagnostics into OutcomeSelection (IntFlag) instances - stored as a raw
     int once round-tripped through config-entry storage. Left unconverted, that raw int would
     show up as a bare number in this form instead of the "ERROR"-style text it's meant to be.
@@ -89,8 +91,62 @@ def _event_policy_to_list(value: Any) -> list[str]:
 
 def _event_policy_from_list(values: list[str]) -> str:
     """Turn a submitted multi-select list back into the pipe-separated string
-    SUPERNOTIFY_SCHEMA's parse_event_policy expects."""
+    ARCHIVE_SCHEMA's parse_event_policy expects."""
     return "|".join(value.upper() for value in values) if values else "NONE"
+
+
+def extract_legacy_options(import_data: dict[str, Any]) -> dict[str, Any]:
+    """Pull the archive/dupe_check/housekeeping option blocks out of a legacy YAML config dict,
+    normalizing archive's event_selection/diagnostics the same way a fresh entry would.
+
+    Shared by async_step_import (fresh entry bootstrap) and repairs.py's migration flow, which
+    also needs this when merging legacy config into an entry that already exists - e.g. one
+    auto-bootstrapped blank by async_setup before the interactive repair ever runs (see
+    repairs.py's async_sync_entry_from_legacy_config).
+    """
+    archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
+    if CONF_ARCHIVE_EVENT_SELECTION in archive:
+        archive[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_str(archive[CONF_ARCHIVE_EVENT_SELECTION])
+    if CONF_ARCHIVE_DIAGNOSTICS in archive:
+        archive[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_str(archive[CONF_ARCHIVE_DIAGNOSTICS])
+
+    housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
+    housekeeping_time = housekeeping.get(CONF_HOUSEKEEPING_TIME)
+    if housekeeping_time is not None and not isinstance(housekeeping_time, str):
+        # cv.time on the YAML side already coerced this into a datetime.time
+        housekeeping[CONF_HOUSEKEEPING_TIME] = housekeeping_time.isoformat()
+
+    options: dict[str, Any] = {}
+    if archive:
+        options[CONF_ARCHIVE] = archive
+    if import_data.get(CONF_DUPE_CHECK):
+        options[CONF_DUPE_CHECK] = import_data[CONF_DUPE_CHECK]
+    if housekeeping:
+        options[CONF_HOUSEKEEPING] = housekeeping
+    return options
+
+
+def extract_legacy_data(import_data: dict[str, Any]) -> dict[str, Any]:
+    """Pull the template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery
+    settings out of a legacy YAML config dict, defaulting anything not set - the same defaults a
+    fresh entry would get. Deliberately excludes `name`, which repairs.py's
+    async_sync_entry_from_legacy_config merges in separately (it isn't defaulted the same way).
+
+    Shared by async_step_import (fresh entry bootstrap) and repairs.py's migration flow, which
+    also needs this when merging legacy config into an entry that already exists - e.g. one
+    auto-bootstrapped blank by async_setup before the interactive repair ever runs (see
+    repairs.py's async_sync_entry_from_legacy_config). Without this, a "simple" install with
+    nothing that needs a repair (no delivery/transports/scenarios/etc to move into
+    supernotify.yaml) would silently keep running on defaults forever, ignoring a customized
+    template_path/media_path/etc in the legacy block.
+    """
+    return {
+        CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
+        CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
+        CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
+        CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
+        CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
+    }
 
 
 def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
@@ -98,6 +154,9 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
     defaults = defaults or {}
     return vol.Schema({
+        # Determines the registered notify.<name> action (slugified) - matches the legacy
+        # notify platform's `name:` YAML field, which this replaces as the sole source of truth.
+        vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME, DOMAIN)): cv.string,
         vol.Optional(CONF_TEMPLATE_PATH, default=defaults.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR)): cv.string,
         vol.Optional(CONF_MEDIA_PATH, default=defaults.get(CONF_MEDIA_PATH, MEDIA_DIR)): cv.string,
         vol.Optional(CONF_MEDIA_URL_PREFIX, default=defaults.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media")): cv.string,
@@ -134,14 +193,14 @@ async def _validate_user_input(user_input: dict[str, Any]) -> dict[str, str]:
         error = await _ensure_directory_exists(template_path)
         if error:
             errors[CONF_TEMPLATE_PATH] = "template_path_invalid"
-            _LOGGER.debug("SUPERNOTIFY invalid template_path %s: %s", template_path, error)
+            _LOGGER.debug("SUPERNOTIFY Invalid template_path %s: %s", template_path, error)
 
     media_path = user_input.get(CONF_MEDIA_PATH)
     if media_path:
         error = await _ensure_directory_exists(media_path)
         if error:
             errors[CONF_MEDIA_PATH] = "media_path_invalid"
-            _LOGGER.debug("SUPERNOTIFY invalid media_path %s: %s", media_path, error)
+            _LOGGER.debug("SUPERNOTIFY Invalid media_path %s: %s", media_path, error)
 
     return errors
 
@@ -171,60 +230,41 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             errors = await _validate_user_input(user_input)
             if not errors:
-                return self.async_update_reload_and_abort(entry, data_updates=user_input)
+                # async_update_and_abort, not async_update_reload_and_abort: async_setup_entry
+                # registers an update listener, which async_update_entry already fires (and
+                # reloads via) whenever entry.data changes - calling the "_reload" variant too
+                # would reload twice and log an HA deprecation warning about the redundancy.
+                return self.async_update_and_abort(entry, data_updates=user_input)
         defaults = user_input if user_input is not None else dict(entry.data)
         return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(defaults), errors=errors)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """One-shot mirror of an existing YAML configuration into a config entry.
+        """Bootstrap a config entry, optionally seeded from a legacy YAML config dict.
 
-        `import_data` is the YAML config already validated by SUPERNOTIFY_SCHEMA. The legacy
-        YAML notify platform keeps owning notify.supernotify (see notify.async_get_service) -
-        this entry only mirrors the global settings into the UI, so YAML-only users get an
-        Integrations-page presence. async_setup_entry sees ATTR_IMPORTED_FROM_YAML and skips
-        registering a second notify.supernotify service.
-
-        Editing an imported entry's settings here does not change the running service, which
-        is still governed by the YAML file - that's the actual config to edit until deliveries/
-        transports/scenarios/recipients move off YAML in a later phase.
+        Two callers: __init__.py's async_setup (a from-scratch install with no entry yet) and
+        async_reload_yaml_config_and_entries's bootstrap, and repairs.py's migration flow (a
+        leftover legacy `notify: - platform: supernotify` block, possibly with real
+        archive/housekeeping/dupe_check/name/template_path/etc already set) - both pass
+        `data={}` for a genuinely fresh install, or the raw legacy config dict to preserve an
+        existing installation's settings (notably `name`, which determines the registered
+        notify.<name> action - see __init__.py's async_setup_entry).
 
         Duplicate-entry protection is the same single_config_entry manifest flag used by the
         user step (it covers SOURCE_IMPORT too), so no unique_id bookkeeping is needed here.
         """
-        archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
-        if CONF_ARCHIVE_EVENT_SELECTION in archive:
-            archive[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_str(archive[CONF_ARCHIVE_EVENT_SELECTION])
-        if CONF_ARCHIVE_DIAGNOSTICS in archive:
-            archive[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_str(archive[CONF_ARCHIVE_DIAGNOSTICS])
-
         data: dict[str, Any] = {
-            CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
-            CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
-            CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
-            CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
-            CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
-            ATTR_IMPORTED_FROM_YAML: True,
+            CONF_NAME: import_data.get(CONF_NAME, DOMAIN),
+            **extract_legacy_data(import_data),
         }
-        housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
-        housekeeping_time = housekeeping.get(CONF_HOUSEKEEPING_TIME)
-        if housekeeping_time is not None and not isinstance(housekeeping_time, str):
-            # cv.time on the YAML side already coerced this into a datetime.time
-            housekeeping[CONF_HOUSEKEEPING_TIME] = housekeeping_time.isoformat()
 
-        options: dict[str, Any] = {}
-        if archive:
-            options[CONF_ARCHIVE] = archive
-        if import_data.get(CONF_DUPE_CHECK):
-            options[CONF_DUPE_CHECK] = import_data[CONF_DUPE_CHECK]
-        if housekeeping:
-            options[CONF_HOUSEKEEPING] = housekeeping
+        options = extract_legacy_options(import_data)
 
         _LOGGER.info(
-            "SUPERNOTIFY Existing core YAML config migrated to config entry (data=%s,options=%s)",
+            "SUPERNOTIFY Config entry bootstrapped (data=%s,options=%s)",
             ";".join(data.keys()),
             ";".join(options.keys()),
         )
-        return self.async_create_entry(title="Supernotify (imported from YAML)", data=data, options=options)
+        return self.async_create_entry(title="Supernotify", data=data, options=options)
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> SupernotifyOptionsFlow:

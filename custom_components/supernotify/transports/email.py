@@ -84,15 +84,18 @@ class EmailTransport(Transport):
 
     async def initialize(self) -> None:
         try:
-            if self.custom_template_path is not None and await self.custom_template_path.exists():
-                if await (self.custom_template_path / "email").exists():
-                    _LOGGER.debug("SUPERNOTIFY Using email specific custom templates at %s", self.custom_template_path)
-                    self.custom_email_template_path = Path(self.custom_template_path / "email")
+            if self.custom_template_path is not None:
+                if await self.custom_template_path.exists():
+                    if await (self.custom_template_path / "email").exists():
+                        _LOGGER.debug("SUPERNOTIFY Using email specific custom templates at %s", self.custom_template_path)
+                        self.custom_email_template_path = Path(self.custom_template_path / "email")
+                    else:
+                        _LOGGER.debug("SUPERNOTIFY Email specific custom templates not configured")
                 else:
-                    _LOGGER.debug("SUPERNOTIFY Email specific custom templates not configured")
+                    _LOGGER.info("SUPERNOTIFY Custom email template directory not present at %s", self.custom_template_path)
+                    self.custom_template_path = None
             else:
-                _LOGGER.info("SUPERNOTIFY Custom templates not configured")
-                self.custom_template_path = None
+                _LOGGER.info("SUPERNOTIFY Custom email templates not configured")
         except Exception as e:
             _LOGGER.error("SUPERNOTIFY Failed to verify custom template path %s: %s", self.custom_template_path, e)
 

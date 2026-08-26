@@ -128,9 +128,9 @@ class SmtpTransport(EmailTransport):
         """No connection configured here; fall back to a configured HA smtp integration entry, if any."""
         entry_data = self.hass_api.find_config_entry_data(HA_SMTP_DOMAIN)
         if not entry_data:
-            _LOGGER.debug("SUPERNOTIFY no home assistant official smtp configuration to reuse")
+            _LOGGER.debug("SUPERNOTIFY No home assistant official smtp configuration to reuse")
             return
-        _LOGGER.info("SUPERNOTIFY smtp transport reusing connection from HA smtp integration")
+        _LOGGER.info("SUPERNOTIFY SMTP transport reusing connection from HA smtp integration")
         self.host = entry_data.get(CONF_SERVER)
         self.port = entry_data.get(CONF_PORT, self.port)
         self.encryption = entry_data.get(CONF_ENCRYPTION, self.encryption)
@@ -163,12 +163,12 @@ class SmtpTransport(EmailTransport):
         start_time = time.time()
         timestamp = dt.datetime.now(tz=dt_util.get_default_time_zone())
         if not self.host or not self.sender:
-            _LOGGER.debug("SUPERNOTIFY skipping smtp delivery %s, no connection configured", envelope.delivery.name)
+            _LOGGER.debug("SUPERNOTIFY Skipping smtp delivery %s, no connection configured", envelope.delivery.name)
             envelope.skipped = 1
             envelope.skip_reason = SuppressionReason.NO_ACTION
             return False
         if not addresses:
-            _LOGGER.debug("SUPERNOTIFY skipping smtp delivery %s, no target addresses", envelope.delivery.name)
+            _LOGGER.debug("SUPERNOTIFY Skipping smtp delivery %s, no target addresses", envelope.delivery.name)
             envelope.skipped = 1
             envelope.skip_reason = SuppressionReason.NO_TARGET
             return False
@@ -255,7 +255,7 @@ class SmtpTransport(EmailTransport):
             with open(image_path, "rb") as attachment_file:
                 file_bytes = attachment_file.read()
         except OSError:
-            _LOGGER.warning("SUPERNOTIFY smtp attachment %s not found, skipping", image_path)
+            _LOGGER.warning("SUPERNOTIFY SMTP attachment %s not found, skipping", image_path)
             return None
 
         content_id: str = os.path.basename(image_path)
@@ -270,7 +270,7 @@ class SmtpTransport(EmailTransport):
 
     def _send_smtp(self, msg: MIMEMultipart | MIMEText, addresses: list[str]) -> None:
         if not self.host or not self.port:
-            _LOGGER.warning("SUPERNOTIFY smtp integration not configured")
+            _LOGGER.warning("SUPERNOTIFY SMTP integration not configured")
             return
 
         ssl_context: SSLContext | None = create_client_context() if self.verify_ssl else None

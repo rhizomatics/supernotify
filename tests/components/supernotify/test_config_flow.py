@@ -4,10 +4,10 @@ import datetime as dt
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_ENABLED
+from homeassistant.const import CONF_ENABLED, CONF_NAME
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.supernotify import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from custom_components.supernotify import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_MT,
     CONF_ARCHIVE,
@@ -58,6 +58,7 @@ async def test_user_step_defaults_create_entry(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Supernotify"
     assert result2["data"] == {
+        CONF_NAME: DOMAIN,
         CONF_TEMPLATE_PATH: TEMPLATE_DIR,
         CONF_MEDIA_PATH: MEDIA_DIR,
         CONF_MEDIA_URL_PREFIX: "/supernotify/media",
@@ -105,6 +106,11 @@ async def test_reconfigure_updates_global_settings(hass: HomeAssistant, tmp_path
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     await hass.async_block_till_done()
+
+    # reconfigure must apply immediately, without a manual reload/restart - the update
+    # listener registered in async_setup_entry reloads the entry as soon as entry.data changes
+    assert entry.data[CONF_TEMPLATE_PATH] == custom_template_path
+    assert str(entry.runtime_data.context.custom_template_path) == custom_template_path
 
     assert entry.data[CONF_TEMPLATE_PATH] == custom_template_path
     assert entry.data[CONF_MOBILE_DISCOVERY] is False
@@ -215,13 +221,12 @@ async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
     }
     result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data=import_data)
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Supernotify (imported from YAML)"
+    assert result["title"] == "Supernotify"
     entry = result["result"]
 
     assert entry.data[CONF_TEMPLATE_PATH] == "/config/templates/supernotify"
     assert entry.data[CONF_RECIPIENTS_DISCOVERY] is False
     assert CONF_ARCHIVE_PATH not in entry.data
-    assert entry.data[ATTR_IMPORTED_FROM_YAML] is True
 
     # archive_path lives in the mirrored archive options, alongside the rest of archive
     assert entry.options[CONF_ARCHIVE] == {
@@ -238,7 +243,7 @@ async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
 
 async def test_import_normalizes_event_selection_and_time(hass: HomeAssistant) -> None:
     """Regression test: a YAML-imported archive config carries real OutcomeSelection/time
-    objects (already coerced by SUPERNOTIFY_SCHEMA), which must be stored as the plain
+    objects (already coerced by ARCHIVE_SCHEMA), which must be stored as the plain
     "NAME|NAME" strings and ISO time string the options form expects - not the raw
     IntFlag/datetime.time values, which would render as a bare, meaningless number in the UI."""
     import_data = {
@@ -319,6 +324,15 @@ async def test_import_without_archive_path(hass: HomeAssistant) -> None:
     entry = result["result"]
     assert CONF_ARCHIVE_PATH not in entry.data
     assert CONF_ARCHIVE not in entry.options
+
+
+async def test_import_preserves_legacy_name(hass: HomeAssistant) -> None:
+    """A legacy YAML `name:` (e.g. `name: SuperNotifier`) determines the actual registered
+    notify.<name> action - the bootstrap-a-default-entry import path must carry it across so
+    that name keeps working once the config entry becomes the sole owner of the service."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "import"}, data={CONF_NAME: "SuperNotifier"})
+    entry = result["result"]
+    assert entry.data[CONF_NAME] == "SuperNotifier"
 
 
 async def test_import_declines_second_entry(hass: HomeAssistant) -> None:

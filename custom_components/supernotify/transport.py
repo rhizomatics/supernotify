@@ -150,7 +150,7 @@ class Transport:
             qualified_action = qualified_action or delivery.action
             if not qualified_action:
                 _LOGGER.debug(
-                    "SUPERNOTIFY skipping %s action call with no service, targets %s",
+                    "SUPERNOTIFY Skipping %s action call with no service, targets %s",
                     envelope.delivery.name,
                     action_data.get(ATTR_TARGET),
                 )
@@ -165,7 +165,7 @@ class Transport:
                 and not target_data
             ):
                 _LOGGER.debug(
-                    "SUPERNOTIFY skipping %s action call for service %s, missing targets",
+                    "SUPERNOTIFY Skipping %s action call for service %s, missing targets",
                     envelope.delivery.name,
                     qualified_action,
                 )
