@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-import json
 import logging
 import uuid
-from pathlib import Path as _Path
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any, cast
 
@@ -75,7 +73,17 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_VERSION: str = json.loads((_Path(__file__).parent / "manifest.json").read_text()).get("version", "unknown")
+_VERSION: str = "unknown"
+
+
+def set_version(version: str) -> None:
+    """Called once from async_setup_entry with the integration's manifest version.
+
+    Avoids a blocking manifest.json read on the event loop at import time.
+    """
+    global _VERSION
+    _VERSION = version
+
 
 # supernotify specific data items not to be passed to transports in data
 INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)

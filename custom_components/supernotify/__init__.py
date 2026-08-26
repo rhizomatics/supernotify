@@ -10,6 +10,7 @@ from homeassistant.const import CONF_NAME, SERVICE_RELOAD
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.loader import async_get_integration
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -98,7 +99,11 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
+    from .notification import set_version
     from .notify import async_register_supplemental_services, build_supernotify_action
+
+    integration = await async_get_integration(hass, DOMAIN)
+    set_version(str(integration.version) if integration.version else "unknown")
 
     # Matches the slugify(conf_name or SERVICE_NOTIFY) logic the legacy notify platform loader
     # used to apply to a YAML `name:` field, so an existing custom notify.<name> action (e.g.

@@ -25,6 +25,7 @@
   - `repairs.py` (new) — the `legacy_yaml_config` fixable repair: writes `supernotify.yaml` + appends the include line, validated on the event loop before writing (`cv.template`'s bare-Jinja-string condition shorthand needs the event-loop-bound `hass` context, so this can't happen from the executor thread the file I/O runs in), validates configuration.yaml as a whole before and after via `async_check_ha_config_file`, rolls back and logs the underlying error on any failure, raises a separate persistent `legacy_yaml_manual_migration_required` issue when automation can't proceed, and serializes the whole write-and-reload sequence behind a lock so two concurrent attempts can't interleave.
   - Tests: `test_config_flow.py`, `test_init.py`, `test_repairs.py` (new), `test_config_yaml.py`, `test_example_configs.py` all updated/added for the new architecture.
   - Docs: `docs/configuration/yaml.md`, `email.md` and `docs/recipes/contextual_mobile_actions.md` updated for the top-level `supernotify:` key; `docgen/schema_extractor.py` updated for the renamed schema.
+  - Fix log errors from accessing version in `manifest.json` and eager loading MQTT component
 - Silver level HA Quality Level Checks
   - Stage 2 of the roadmap partially implemented, 'Bronze' level only
   - Better testing of user supplied values in config
