@@ -369,16 +369,28 @@ async def async_get_service(
     a legacy notify platform - a clean one-line log, no exception).
 
     A `name:` in this leftover block still gets synced onto the owning entry every load though
-    (not gated behind that repair) - otherwise an entry created before that field existed would
-    keep registering under the wrong default name, breaking every automation calling the old
-    one, well before anyone gets around to running the migration.
+    (not gated behind that repair), and likewise for its template_path/media_path/etc and
+    archive/dupe_check/housekeeping settings - otherwise an entry auto-bootstrapped blank by
+    async_setup (see __init__.py), which happens before anyone gets around to opening and
+    confirming the migration repair, would keep running on defaults with nothing configured,
+    silently breaking automations, template/media paths and archiving on every restart until the
+    repair is manually confirmed. That repair is only ever needed for delivery/transports/
+    scenarios/etc - a "simple" install with none of that has no reason to see it at all, so this
+    core migration must not depend on it.
     """
     _ = discovery_info
 
-    from .repairs import async_create_legacy_yaml_issue, async_sync_entry_name_from_legacy_config
+    from .repairs import (
+        async_create_legacy_yaml_issue,
+        async_sync_entry_data_from_legacy_config,
+        async_sync_entry_name_from_legacy_config,
+        async_sync_entry_options_from_legacy_config,
+    )
 
     legacy_config = dict(config)
     async_sync_entry_name_from_legacy_config(hass, legacy_config)
+    async_sync_entry_data_from_legacy_config(hass, legacy_config)
+    async_sync_entry_options_from_legacy_config(hass, legacy_config)
     async_create_legacy_yaml_issue(hass, legacy_config)
     return None
 

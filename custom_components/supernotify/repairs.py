@@ -26,7 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.yaml import Secrets, load_yaml_dict, save_yaml
 
 from . import DOMAIN, async_reload_yaml_config_and_entries
-from .config_flow import extract_legacy_options
+from .config_flow import extract_legacy_data, extract_legacy_options
 from .const import (
     CONF_ACTION_GROUPS,
     CONF_CAMERAS,
@@ -124,6 +124,26 @@ def async_sync_entry_options_from_legacy_config(hass: HomeAssistant, legacy_conf
     entry = entries[0]
     if any(entry.options.get(key) != value for key, value in options.items()):
         hass.config_entries.async_update_entry(entry, options={**entry.options, **options})
+
+
+def async_sync_entry_data_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
+    """Merge the template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery
+    settings from a legacy YAML config onto the owning entry's data.
+
+    Needed for the same reason as async_sync_entry_options_from_legacy_config: async_setup
+    already auto-bootstraps a blank config entry (data={}) before this interactive repair ever
+    runs. Without this, a "simple" install with nothing that needs a repair (no
+    delivery/transports/scenarios/etc to move into supernotify.yaml) would keep running on
+    defaults forever, ignoring a customized template_path/media_path/etc in the legacy block -
+    the whole migration would silently depend on a repair the user has no reason to ever see.
+    """
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        return
+    entry = entries[0]
+    data = extract_legacy_data(legacy_config)
+    if any(entry.data.get(key) != value for key, value in data.items()):
+        hass.config_entries.async_update_entry(entry, data={**entry.data, **data})
 
 
 def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
@@ -322,13 +342,15 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         """Reload the migrated YAML immediately (no restart needed), and make sure an entry
         exists to own it - preserving a custom `name:` (-> notify.<name>) from the legacy
         config, since that's what determines the actual registered action name, along with any
-        archive/dupe_check/housekeeping settings the legacy config carried."""
+        template_path/media_path/etc and archive/dupe_check/housekeeping settings the legacy
+        config carried."""
         if not self.hass.config_entries.async_entries(DOMAIN):
             from homeassistant.config_entries import SOURCE_IMPORT
 
             await self.hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=self._legacy_config)
         else:
             async_sync_entry_name_from_legacy_config(self.hass, self._legacy_config)
+            async_sync_entry_data_from_legacy_config(self.hass, self._legacy_config)
             async_sync_entry_options_from_legacy_config(self.hass, self._legacy_config)
 
         await async_reload_yaml_config_and_entries(self.hass)

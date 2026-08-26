@@ -73,6 +73,88 @@ async def test_shim_backfills_name_on_pre_existing_entry_without_waiting_for_rep
     assert not hass.services.has_service("notify", "supernotify")
 
 
+async def test_shim_backfills_archive_options_on_pre_existing_entry_without_waiting_for_repair(
+    hass: HomeAssistant,
+) -> None:
+    """Regression test: on a clean start, async_setup already auto-bootstraps a blank config
+    entry (options={}) before anyone gets around to opening and confirming the migration
+    repair. Until this was fixed, only `name` was synced onto that entry on every load - the
+    archive/dupe_check/housekeeping settings stayed blank (archive disabled, no path) on every
+    restart until the repair was manually confirmed, silently losing them just like the
+    already-fixed name-backfill case above."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_config = {
+        **LEGACY_CONFIG,
+        "archive": {"enabled": True, "file_path": "/config/archive/supernotify", "file_retention_days": 3},
+        "dupe_check": {"ttl": 120},
+    }
+    service = await async_get_service(hass, legacy_config)
+    assert service is None
+    await hass.async_block_till_done()
+
+    assert entry.options["archive"]["enabled"] is True
+    assert entry.options["archive"]["file_path"] == "/config/archive/supernotify"
+    assert entry.options["dupe_check"]["ttl"] == 120
+
+
+async def test_shim_backfills_data_fields_on_pre_existing_entry_without_waiting_for_repair(hass: HomeAssistant) -> None:
+    """Regression test: template_path/media_path/media_url_prefix/mobile_discovery/
+    recipients_discovery from the legacy block were never synced onto a pre-existing entry at
+    all - only `name` and (after the previous fix) archive/dupe_check/housekeeping were. A
+    customized template_path/media_path would silently stay at the auto-bootstrapped defaults
+    forever unless the user manually re-entered them via Reconfigure."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_config = {
+        **LEGACY_CONFIG,
+        "template_path": "/config/templates/supernotify",
+        "media_path": "/config/media/supernotify",
+    }
+    service = await async_get_service(hass, legacy_config)
+    assert service is None
+    await hass.async_block_till_done()
+
+    assert entry.data["template_path"] == "/config/templates/supernotify"
+    assert entry.data["media_path"] == "/config/media/supernotify"
+
+
+async def test_shim_migrates_minimal_config_without_any_repair(hass: HomeAssistant) -> None:
+    """A "simple" legacy config - no delivery/transports/scenarios/recipients/cameras/
+    action_groups/links/snooze, nothing that needs moving into supernotify.yaml - must be fully
+    migrated (name, paths, archive) just by loading, with no need to ever open or confirm the
+    migration repair: per the README, "If you have an existing simple configuration, everything
+    will be migrated for you and there will be no YAML needed.\""""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    minimal_legacy_config = {
+        "name": "SuperNotifier",
+        "platform": "supernotify",
+        "template_path": "/config/templates/supernotify",
+        "media_path": "/config/media/supernotify",
+        "archive": {"enabled": True, "file_path": "/config/archive/supernotify"},
+    }
+    service = await async_get_service(hass, minimal_legacy_config)
+    assert service is None
+    await hass.async_block_till_done()
+
+    assert entry.data["name"] == "SuperNotifier"
+    assert entry.data["template_path"] == "/config/templates/supernotify"
+    assert entry.data["media_path"] == "/config/media/supernotify"
+    assert entry.options["archive"]["enabled"] is True
+    assert entry.options["archive"]["file_path"] == "/config/archive/supernotify"
+    assert hass.services.has_service("notify", "supernotifier")
+
+
 async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:
     """Confirming the fix writes supernotify.yaml, appends the include line to
     configuration.yaml, and the migrated config is live without a restart."""

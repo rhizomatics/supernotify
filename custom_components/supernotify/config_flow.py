@@ -126,6 +126,29 @@ def extract_legacy_options(import_data: dict[str, Any]) -> dict[str, Any]:
     return options
 
 
+def extract_legacy_data(import_data: dict[str, Any]) -> dict[str, Any]:
+    """Pull the template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery
+    settings out of a legacy YAML config dict, defaulting anything not set - the same defaults a
+    fresh entry would get. Deliberately excludes `name`, which has its own dedicated sync
+    (async_sync_entry_name_from_legacy_config in repairs.py).
+
+    Shared by async_step_import (fresh entry bootstrap) and repairs.py's migration flow, which
+    also needs this when merging legacy config into an entry that already exists - e.g. one
+    auto-bootstrapped blank by async_setup before the interactive repair ever runs (see
+    repairs.py's async_sync_entry_data_from_legacy_config). Without this, a "simple" install with
+    nothing that needs a repair (no delivery/transports/scenarios/etc to move into
+    supernotify.yaml) would silently keep running on defaults forever, ignoring a customized
+    template_path/media_path/etc in the legacy block.
+    """
+    return {
+        CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
+        CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
+        CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
+        CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
+        CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
+    }
+
+
 def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion used by
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
@@ -231,11 +254,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         data: dict[str, Any] = {
             CONF_NAME: import_data.get(CONF_NAME, DOMAIN),
-            CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
-            CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
-            CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
-            CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
-            CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
+            **extract_legacy_data(import_data),
         }
 
         options = extract_legacy_options(import_data)
