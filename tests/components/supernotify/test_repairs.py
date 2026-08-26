@@ -304,6 +304,24 @@ async def test_already_migrated_step_only_dismisses_issue(hass: HomeAssistant, t
     assert (tmp_path / "supernotify.yaml").read_text() == "delivery: {}\n"
 
 
+async def test_already_migrated_check_handles_secrets_in_configuration_yaml(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Regression test: a real configuration.yaml with a `!secret` reference anywhere in it
+    (extremely common) must still be recognized as already-migrated - without a Secrets object,
+    load_yaml_dict raises on any `!secret` tag, which was previously swallowed by a broad except
+    and misread as "not migrated", making the repair reappear on every restart even after a
+    successful migration."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / "secrets.yaml").write_text("api_key: hunter2\n")
+    (tmp_path / "configuration.yaml").write_text(
+        "homeassistant:\nsupernotify: !include supernotify.yaml\nsome_other_integration:\n  api_key: !secret api_key\n"
+    )
+    (tmp_path / "supernotify.yaml").write_text("delivery: {}\n")
+
+    flow = _flow(hass)
+    form = await flow.async_step_init()
+    assert form["step_id"] == "already_migrated"
+
+
 async def test_async_create_fix_flow_decodes_legacy_config(hass: HomeAssistant) -> None:
     """The repairs framework's entry point (async_create_fix_flow) decodes the JSON-encoded
     legacy_config issue data back into the dict the flow works with."""

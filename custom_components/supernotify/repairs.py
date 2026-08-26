@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -22,7 +23,7 @@ from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config import async_check_ha_config_file
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.util.yaml import load_yaml_dict, save_yaml
+from homeassistant.util.yaml import Secrets, load_yaml_dict, save_yaml
 
 from . import DOMAIN, async_reload_yaml_config_and_entries
 from .const import (
@@ -132,6 +133,20 @@ def _async_get_migration_lock(hass: HomeAssistant) -> asyncio.Lock:
     return hass.data.setdefault(DOMAIN, {}).setdefault("migration_lock", asyncio.Lock())
 
 
+def _load_configuration_yaml_dict(hass: HomeAssistant) -> dict[str, Any]:
+    """Parse configuration.yaml, resolving !secret references.
+
+    Without a Secrets object, load_yaml_dict raises HomeAssistantError("Secrets not supported
+    in this YAML file") on ANY file containing a `!secret` tag anywhere - extremely common in
+    real configs - which a caller catching that as "parse failed" would otherwise silently
+    misread as e.g. "not migrated yet" on every single load.
+    """
+    return load_yaml_dict(
+        hass.config.path(CONFIGURATION_YAML_FILENAME),
+        Secrets(Path(hass.config.config_dir)),
+    )
+
+
 def _is_already_migrated(hass: HomeAssistant) -> bool:
     """A prior run of this same flow already wrote both files - only remains true until the
     user removes the now-dead legacy notify: block (which stops notify.py from re-raising the
@@ -139,7 +154,7 @@ def _is_already_migrated(hass: HomeAssistant) -> bool:
     if not os.path.exists(hass.config.path(SUPERNOTIFY_YAML_FILENAME)):
         return False
     try:
-        parsed = load_yaml_dict(hass.config.path(CONFIGURATION_YAML_FILENAME))
+        parsed = _load_configuration_yaml_dict(hass)
     except Exception:
         return False
     return DOMAIN in parsed
@@ -248,7 +263,7 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
             return "configuration_yaml_unreadable"
 
         try:
-            parsed = load_yaml_dict(configuration_yaml_path)
+            parsed = _load_configuration_yaml_dict(self.hass)
         except Exception:
             parsed = {}
         if DOMAIN in parsed:

@@ -128,6 +128,12 @@ options selected, though some of them are mutually impossible, like `default` an
 | `fallback`          | N       | Use this delivery only if no other delivery was selected                                     |
 | `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors    |
 
+!!! info
+    This is a config-time property of the delivery itself - whether it's a *candidate* for
+    implicit selection at all. For the separate, per-notification `delivery_selection` choice
+    (`implicit`/`explicit`/`fixed`) made on an action call, see
+    [Controlling Delivery Selection](../usage/notifying.md#controlling-delivery-selection).
+
 ## Entities
 
 Deliveries are exposed as `sensor.supernotify_delivery_XXXX` entities in Home Assistant, with the configuration and
