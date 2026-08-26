@@ -184,7 +184,20 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
                 self._async_raise_manual_migration_issue("baseline_invalid")
                 return self.async_show_form(step_id="confirm", errors={"base": "baseline_invalid"})
 
-            write_error = await self.hass.async_add_executor_job(self._write_files)
+            # Validated here, on the event loop, rather than inside _write_files (which runs in
+            # the executor): cv.template - used by cv.CONDITIONS_SCHEMA to coerce a bare Jinja
+            # string condition (e.g. a scenario's `conditions: ["{{ ... }}"]` shorthand) - needs
+            # the event-loop-bound hass context to do that; off the event loop it can't find it
+            # and rejects an otherwise perfectly valid bare-string condition.
+            migrated = _extract_yaml_only_config(self._legacy_config)
+            try:
+                SUPERNOTIFY_YAML_SCHEMA(migrated)
+            except vol.Invalid as err:
+                _LOGGER.warning("SUPERNOTIFY Legacy config failed validation, not migrating: %s", err)
+                self._async_raise_manual_migration_issue("migrated_config_invalid")
+                return self.async_show_form(step_id="confirm", errors={"base": "migrated_config_invalid"})
+
+            write_error = await self.hass.async_add_executor_job(self._write_files, migrated)
             if write_error is not None:
                 self._async_raise_manual_migration_issue(write_error)
                 return self.async_show_form(step_id="confirm", errors={"base": write_error})
@@ -213,12 +226,14 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
             translation_placeholders={"reason": _MANUAL_MIGRATION_REASONS.get(reason_key, reason_key)},
         )
 
-    def _write_files(self) -> str | None:
+    def _write_files(self, migrated: dict[str, Any]) -> str | None:
         """Write supernotify.yaml and append the include line to configuration.yaml.
 
-        Blocking file I/O - runs in the executor. Returns an error-translation-key string on
-        failure (nothing written), None on success (self._original_configuration_yaml is set,
-        letting _rollback restore it if the post-write config-check fails).
+        `migrated` is already validated (see async_step_confirm - validation needs the event
+        loop, this method doesn't have it). Blocking file I/O - runs in the executor. Returns
+        an error-translation-key string on failure (nothing written), None on success
+        (self._original_configuration_yaml is set, letting _rollback restore it if the
+        post-write config-check fails).
         """
         supernotify_yaml_path = self.hass.config.path(SUPERNOTIFY_YAML_FILENAME)
         if os.path.exists(supernotify_yaml_path):
@@ -239,16 +254,6 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         if DOMAIN in parsed:
             return "supernotify_key_exists"
 
-        migrated = _extract_yaml_only_config(self._legacy_config)
-        # async_check_ha_config_file (called around this method) only treats a schema failure
-        # as blocking for frontend-critical domains - supernotify isn't one, so a bad legacy
-        # config would otherwise only ever log a warning. Validate our own piece directly so
-        # "stop before rewriting if invalid" actually catches it.
-        try:
-            SUPERNOTIFY_YAML_SCHEMA(migrated)
-        except vol.Invalid as err:
-            _LOGGER.warning("SUPERNOTIFY Legacy config failed validation, not migrating: %s", err)
-            return "migrated_config_invalid"
         try:
             save_yaml(supernotify_yaml_path, migrated)
         except OSError as err:
