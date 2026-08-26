@@ -31,6 +31,7 @@
 - Template Path
   - Directory now created if specified and doesn't exist
   - Default is relative to config home rather than hard-coded to `/config`
+  - Better logging for path actions
 - Async I/O
   - Final 2 `media_grab.py` Pillow image I/O wrapped as async
 
