@@ -327,7 +327,7 @@ class HomeAssistantAPI:
 
     def find_config_entry_data(self, domain: str) -> Mapping[str, Any] | None:
         """Return the data of the first enabled, non-ignored config entry for domain, if any."""
-        if not self._hass or not self._hass.config_entries:
+        if not self._hass or not hasattr(self._hass, "config_entries") or not self._hass.config_entries:
             return None
         try:
             entries = self._hass.config_entries.async_entries(domain, include_ignore=False, include_disabled=False)
@@ -348,7 +348,7 @@ class HomeAssistantAPI:
         return Template(template_format, self._hass)
 
     async def register_web_path(self, media_web_path: Path | None, url_prefix: str) -> bool:
-        if media_web_path is None or not self._hass or not self._hass.http:
+        if media_web_path is None or not self._hass or not hasattr(self._hass, "http") or not self._hass.http:
             return False
         try:
             from homeassistant.components.http import StaticPathConfig
