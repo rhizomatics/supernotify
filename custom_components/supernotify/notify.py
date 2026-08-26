@@ -124,10 +124,10 @@ TRANSPORTS: list[type[Transport]] = [
 
 
 def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> SupernotifyAction:
-    """Construct a SupernotifyAction from a fully validated SUPERNOTIFY_SCHEMA config dict.
+    """Construct a SupernotifyAction from a fully validated FULL_CONFIG_SCHEMA config dict.
 
-    Shared by the legacy YAML platform setup (async_get_service, below) and the config-entry
-    setup (async_setup_entry in __init__.py) so the two setup paths can't drift apart.
+    Used by the config-entry setup (async_setup_entry in __init__.py), the sole owner of
+    registering notify.supernotify.
     """
     return SupernotifyAction(
         hass,

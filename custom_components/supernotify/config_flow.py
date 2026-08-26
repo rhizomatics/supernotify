@@ -60,7 +60,7 @@ def _event_policy_str(value: Any) -> str:
     """Render an OutcomeSelection as the pipe-separated name string parse_event_policy
     expects (e.g. "ERROR|DUPE"), whatever form it currently happens to be in.
 
-    A YAML-imported archive config already went through SUPERNOTIFY_SCHEMA, which turns
+    A YAML-imported archive config already went through ARCHIVE_SCHEMA, which turns
     event_selection/diagnostics into OutcomeSelection (IntFlag) instances - stored as a raw
     int once round-tripped through config-entry storage. Left unconverted, that raw int would
     show up as a bare number in this form instead of the "ERROR"-style text it's meant to be.
@@ -91,7 +91,7 @@ def _event_policy_to_list(value: Any) -> list[str]:
 
 def _event_policy_from_list(values: list[str]) -> str:
     """Turn a submitted multi-select list back into the pipe-separated string
-    SUPERNOTIFY_SCHEMA's parse_event_policy expects."""
+    ARCHIVE_SCHEMA's parse_event_policy expects."""
     return "|".join(value.upper() for value in values) if values else "NONE"
 
 

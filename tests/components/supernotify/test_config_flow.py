@@ -243,7 +243,7 @@ async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:
 
 async def test_import_normalizes_event_selection_and_time(hass: HomeAssistant) -> None:
     """Regression test: a YAML-imported archive config carries real OutcomeSelection/time
-    objects (already coerced by SUPERNOTIFY_SCHEMA), which must be stored as the plain
+    objects (already coerced by ARCHIVE_SCHEMA), which must be stored as the plain
     "NAME|NAME" strings and ISO time string the options form expects - not the raw
     IntFlag/datetime.time values, which would render as a bare, meaningless number in the UI."""
     import_data = {
