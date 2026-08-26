@@ -84,66 +84,46 @@ _YAML_ONLY_KEYS = (
 )
 
 
-def async_sync_entry_name_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
-    """As long as the legacy `notify: - platform: supernotify` block exists, its `name:` field
-    stays authoritative for the actual registered notify.<name> action - synced onto the owning
-    entry on every load (not gated behind the interactive migration flow), matching what the
-    legacy platform loader itself always did (slugify(name or "notify") determined the service -
-    see homeassistant.components.notify.legacy.async_setup_legacy).
+def async_sync_entry_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
+    """As long as the legacy `notify: - platform: supernotify` block exists, it stays
+    authoritative for the owning entry's name/template_path/media_path/etc and
+    archive/dupe_check/housekeeping settings - synced onto the entry on every load (not gated
+    behind the interactive migration flow), matching what the legacy platform loader itself
+    always did for `name:` (slugify(name or "notify") determined the service - see
+    homeassistant.components.notify.legacy.async_setup_legacy).
 
-    Without this, an entry that predates this field (any entry mirrored before this version) or
-    is otherwise out of sync registers under the wrong default name the moment it becomes the
-    sole owner of the service, silently breaking every automation calling the old one.
+    Without this, an entry auto-bootstrapped blank by async_setup (see __init__.py) - which
+    happens before anyone gets around to opening and confirming the migration repair, and is the
+    only entry that will ever exist for a "simple" install with nothing that needs that repair -
+    would keep running on defaults forever: wrong service name, ignored template_path/media_path,
+    archive disabled, no dupe_check/housekeeping, silently breaking automations and archiving on
+    every restart.
+
+    Deliberately a single async_update_entry call rather than one per field group: that call
+    notifies the entry's update listener (which reloads it) via a task, and Python's eager task
+    execution can start running that task immediately and synchronously - reaching as far as
+    unloading the entry (which removes its update listener) before a second, separate
+    async_update_entry call made moments later in the same batch gets a chance to run. That
+    second call then finds no listener left to notify and silently no-ops, so only the FIRST of
+    several back-to-back calls ever actually reloads - permanently losing whatever the others
+    carried, even though entry.data/entry.options themselves end up fully correct (e.g. the
+    Reconfigure screen reads right) while the *running* service silently keeps stale defaults.
     """
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        return
+    entry = entries[0]
+
+    data = dict(entry.data)
     legacy_name = legacy_config.get(CONF_NAME)
-    if not legacy_name:
-        return
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        return
-    entry = entries[0]
-    if entry.data.get(CONF_NAME) != legacy_name:
-        hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_NAME: legacy_name})
+    if legacy_name:
+        data[CONF_NAME] = legacy_name
+    data.update(extract_legacy_data(legacy_config))
 
+    options = {**entry.options, **extract_legacy_options(legacy_config)}
 
-def async_sync_entry_options_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
-    """Merge the archive/dupe_check/housekeeping option blocks from a legacy YAML config onto
-    the owning entry's options.
-
-    Needed for the same reason as async_sync_entry_name_from_legacy_config: async_setup already
-    auto-bootstraps a blank config entry (data={}, options={}) before this interactive repair
-    ever runs, so by the time it does, an entry already exists and async_step_import - the only
-    other place that builds options from legacy config - never runs.
-    """
-    options = extract_legacy_options(legacy_config)
-    if not options:
-        return
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        return
-    entry = entries[0]
-    if any(entry.options.get(key) != value for key, value in options.items()):
-        hass.config_entries.async_update_entry(entry, options={**entry.options, **options})
-
-
-def async_sync_entry_data_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
-    """Merge the template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery
-    settings from a legacy YAML config onto the owning entry's data.
-
-    Needed for the same reason as async_sync_entry_options_from_legacy_config: async_setup
-    already auto-bootstraps a blank config entry (data={}) before this interactive repair ever
-    runs. Without this, a "simple" install with nothing that needs a repair (no
-    delivery/transports/scenarios/etc to move into supernotify.yaml) would keep running on
-    defaults forever, ignoring a customized template_path/media_path/etc in the legacy block -
-    the whole migration would silently depend on a repair the user has no reason to ever see.
-    """
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        return
-    entry = entries[0]
-    data = extract_legacy_data(legacy_config)
-    if any(entry.data.get(key) != value for key, value in data.items()):
-        hass.config_entries.async_update_entry(entry, data={**entry.data, **data})
+    if data != entry.data or options != entry.options:
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
 def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
@@ -349,9 +329,7 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
 
             await self.hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=self._legacy_config)
         else:
-            async_sync_entry_name_from_legacy_config(self.hass, self._legacy_config)
-            async_sync_entry_data_from_legacy_config(self.hass, self._legacy_config)
-            async_sync_entry_options_from_legacy_config(self.hass, self._legacy_config)
+            async_sync_entry_from_legacy_config(self.hass, self._legacy_config)
 
         await async_reload_yaml_config_and_entries(self.hass)
 

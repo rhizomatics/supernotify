@@ -102,7 +102,7 @@ def extract_legacy_options(import_data: dict[str, Any]) -> dict[str, Any]:
     Shared by async_step_import (fresh entry bootstrap) and repairs.py's migration flow, which
     also needs this when merging legacy config into an entry that already exists - e.g. one
     auto-bootstrapped blank by async_setup before the interactive repair ever runs (see
-    repairs.py's async_sync_entry_options_from_legacy_config).
+    repairs.py's async_sync_entry_from_legacy_config).
     """
     archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
     if CONF_ARCHIVE_EVENT_SELECTION in archive:
@@ -129,13 +129,13 @@ def extract_legacy_options(import_data: dict[str, Any]) -> dict[str, Any]:
 def extract_legacy_data(import_data: dict[str, Any]) -> dict[str, Any]:
     """Pull the template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery
     settings out of a legacy YAML config dict, defaulting anything not set - the same defaults a
-    fresh entry would get. Deliberately excludes `name`, which has its own dedicated sync
-    (async_sync_entry_name_from_legacy_config in repairs.py).
+    fresh entry would get. Deliberately excludes `name`, which repairs.py's
+    async_sync_entry_from_legacy_config merges in separately (it isn't defaulted the same way).
 
     Shared by async_step_import (fresh entry bootstrap) and repairs.py's migration flow, which
     also needs this when merging legacy config into an entry that already exists - e.g. one
     auto-bootstrapped blank by async_setup before the interactive repair ever runs (see
-    repairs.py's async_sync_entry_data_from_legacy_config). Without this, a "simple" install with
+    repairs.py's async_sync_entry_from_legacy_config). Without this, a "simple" install with
     nothing that needs a repair (no delivery/transports/scenarios/etc to move into
     supernotify.yaml) would silently keep running on defaults forever, ignoring a customized
     template_path/media_path/etc in the legacy block.

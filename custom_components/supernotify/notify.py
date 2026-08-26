@@ -380,17 +380,10 @@ async def async_get_service(
     """
     _ = discovery_info
 
-    from .repairs import (
-        async_create_legacy_yaml_issue,
-        async_sync_entry_data_from_legacy_config,
-        async_sync_entry_name_from_legacy_config,
-        async_sync_entry_options_from_legacy_config,
-    )
+    from .repairs import async_create_legacy_yaml_issue, async_sync_entry_from_legacy_config
 
     legacy_config = dict(config)
-    async_sync_entry_name_from_legacy_config(hass, legacy_config)
-    async_sync_entry_data_from_legacy_config(hass, legacy_config)
-    async_sync_entry_options_from_legacy_config(hass, legacy_config)
+    async_sync_entry_from_legacy_config(hass, legacy_config)
     async_create_legacy_yaml_issue(hass, legacy_config)
     return None
 
