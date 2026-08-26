@@ -367,12 +367,19 @@ async def async_get_service(
     registers a service any more - it only raises a fixable repair pointing at the migration
     (see repairs.py) and declines to set up (returning None is HA's supported "decline" path for
     a legacy notify platform - a clean one-line log, no exception).
+
+    A `name:` in this leftover block still gets synced onto the owning entry every load though
+    (not gated behind that repair) - otherwise an entry created before that field existed would
+    keep registering under the wrong default name, breaking every automation calling the old
+    one, well before anyone gets around to running the migration.
     """
     _ = discovery_info
 
-    from .repairs import async_create_legacy_yaml_issue
+    from .repairs import async_create_legacy_yaml_issue, async_sync_entry_name_from_legacy_config
 
-    async_create_legacy_yaml_issue(hass, dict(config))
+    legacy_config = dict(config)
+    async_sync_entry_name_from_legacy_config(hass, legacy_config)
+    async_create_legacy_yaml_issue(hass, legacy_config)
     return None
 
 

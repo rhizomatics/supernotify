@@ -82,6 +82,28 @@ _YAML_ONLY_KEYS = (
 )
 
 
+def async_sync_entry_name_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
+    """As long as the legacy `notify: - platform: supernotify` block exists, its `name:` field
+    stays authoritative for the actual registered notify.<name> action - synced onto the owning
+    entry on every load (not gated behind the interactive migration flow), matching what the
+    legacy platform loader itself always did (slugify(name or "notify") determined the service -
+    see homeassistant.components.notify.legacy.async_setup_legacy).
+
+    Without this, an entry that predates this field (any entry mirrored before this version) or
+    is otherwise out of sync registers under the wrong default name the moment it becomes the
+    sole owner of the service, silently breaking every automation calling the old one.
+    """
+    legacy_name = legacy_config.get(CONF_NAME)
+    if not legacy_name:
+        return
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        return
+    entry = entries[0]
+    if entry.data.get(CONF_NAME) != legacy_name:
+        hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_NAME: legacy_name})
+
+
 def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
     """Raise (or refresh) the fixable repair for a leftover legacy notify: platform block."""
     ir.async_create_issue(
@@ -251,14 +273,12 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         """Reload the migrated YAML immediately (no restart needed), and make sure an entry
         exists to own it - preserving a custom `name:` (-> notify.<name>) from the legacy
         config, since that's what determines the actual registered action name."""
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        legacy_name = self._legacy_config.get(CONF_NAME)
-        if not entries:
+        if not self.hass.config_entries.async_entries(DOMAIN):
             from homeassistant.config_entries import SOURCE_IMPORT
 
             await self.hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=self._legacy_config)
-        elif legacy_name and legacy_name != entries[0].data.get(CONF_NAME):
-            self.hass.config_entries.async_update_entry(entries[0], data={**entries[0].data, CONF_NAME: legacy_name})
+        else:
+            async_sync_entry_name_from_legacy_config(self.hass, self._legacy_config)
 
         await async_reload_yaml_config_and_entries(self.hass)
 

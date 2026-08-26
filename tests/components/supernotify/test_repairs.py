@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, patch
 import yaml
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
+from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.notify import async_get_service
@@ -47,6 +48,29 @@ async def test_shim_creates_fixable_issue_and_registers_nothing(hass: HomeAssist
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_ID)
     assert issue is not None
     assert issue.is_fixable
+
+
+async def test_shim_backfills_name_on_pre_existing_entry_without_waiting_for_repair(hass: HomeAssistant) -> None:
+    """Regression test: an entry mirrored by a pre-this-session version never had `name` in
+    entry.data at all (that field didn't exist yet). Once the config entry became the sole
+    owner of the service, such an entry would silently register notify.supernotify instead of
+    the real notify.supernotifier from `name: SuperNotifier` in the still-present legacy YAML -
+    breaking every automation calling the old action, and only fixable by actually opening and
+    submitting the migration repair. The name has to sync automatically on every load instead."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service("notify", "supernotify")
+
+    legacy_config = {**LEGACY_CONFIG, "name": "SuperNotifier"}
+    service = await async_get_service(hass, legacy_config)
+    assert service is None
+    await hass.async_block_till_done()
+
+    assert entry.data["name"] == "SuperNotifier"
+    assert hass.services.has_service("notify", "supernotifier")
+    assert not hass.services.has_service("notify", "supernotify")
 
 
 async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:

@@ -92,10 +92,10 @@ class EmailTransport(Transport):
                     else:
                         _LOGGER.debug("SUPERNOTIFY Email specific custom templates not configured")
                 else:
-                    _LOGGER.info("SUPERNOTIFY Custom template directory not present at %s", self.custom_template_path)
+                    _LOGGER.info("SUPERNOTIFY Custom email template directory not present at %s", self.custom_template_path)
                     self.custom_template_path = None
             else:
-                _LOGGER.info("SUPERNOTIFY Custom templates not configured")
+                _LOGGER.info("SUPERNOTIFY Custom email templates not configured")
         except Exception as e:
             _LOGGER.error("SUPERNOTIFY Failed to verify custom template path %s: %s", self.custom_template_path, e)
 
