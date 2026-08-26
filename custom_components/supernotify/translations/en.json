@@ -24,8 +24,8 @@
                 },
                 "data_description": {
                     "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
-                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
-                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
+                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found. Relative paths are resolved within the Home Assistant config directory",
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments. Relative paths are resolved within the Home Assistant config directory",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
@@ -43,8 +43,8 @@
                 },
                 "data_description": {
                     "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
-                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
-                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
+                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found. Relative paths are resolved within the Home Assistant config directory",
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments. Relative paths are resolved within the Home Assistant config directory",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
@@ -86,7 +86,7 @@
                             "purge_interval": "Purge Interval (minutes)"
                         },
                         "data_description": {
-                            "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc",
+                            "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc. Relative paths are resolved within the Home Assistant config directory",
                             "file_retention_days": "How many days of archived notifications to keep",
                             "purge_interval": "Minimum interval in minutes between automatic archive purges"
                         }

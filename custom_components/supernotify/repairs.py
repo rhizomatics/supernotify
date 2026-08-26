@@ -26,6 +26,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.yaml import Secrets, load_yaml_dict, save_yaml
 
 from . import DOMAIN, async_reload_yaml_config_and_entries
+from .config_flow import extract_legacy_options
 from .const import (
     CONF_ACTION_GROUPS,
     CONF_CAMERAS,
@@ -103,6 +104,26 @@ def async_sync_entry_name_from_legacy_config(hass: HomeAssistant, legacy_config:
     entry = entries[0]
     if entry.data.get(CONF_NAME) != legacy_name:
         hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_NAME: legacy_name})
+
+
+def async_sync_entry_options_from_legacy_config(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
+    """Merge the archive/dupe_check/housekeeping option blocks from a legacy YAML config onto
+    the owning entry's options.
+
+    Needed for the same reason as async_sync_entry_name_from_legacy_config: async_setup already
+    auto-bootstraps a blank config entry (data={}, options={}) before this interactive repair
+    ever runs, so by the time it does, an entry already exists and async_step_import - the only
+    other place that builds options from legacy config - never runs.
+    """
+    options = extract_legacy_options(legacy_config)
+    if not options:
+        return
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        return
+    entry = entries[0]
+    if any(entry.options.get(key) != value for key, value in options.items()):
+        hass.config_entries.async_update_entry(entry, options={**entry.options, **options})
 
 
 def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str, Any]) -> None:
@@ -300,13 +321,15 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
     async def _async_finish_migration(self) -> None:
         """Reload the migrated YAML immediately (no restart needed), and make sure an entry
         exists to own it - preserving a custom `name:` (-> notify.<name>) from the legacy
-        config, since that's what determines the actual registered action name."""
+        config, since that's what determines the actual registered action name, along with any
+        archive/dupe_check/housekeeping settings the legacy config carried."""
         if not self.hass.config_entries.async_entries(DOMAIN):
             from homeassistant.config_entries import SOURCE_IMPORT
 
             await self.hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=self._legacy_config)
         else:
             async_sync_entry_name_from_legacy_config(self.hass, self._legacy_config)
+            async_sync_entry_options_from_legacy_config(self.hass, self._legacy_config)
 
         await async_reload_yaml_config_and_entries(self.hass)
 

@@ -95,6 +95,37 @@ def _event_policy_from_list(values: list[str]) -> str:
     return "|".join(value.upper() for value in values) if values else "NONE"
 
 
+def extract_legacy_options(import_data: dict[str, Any]) -> dict[str, Any]:
+    """Pull the archive/dupe_check/housekeeping option blocks out of a legacy YAML config dict,
+    normalizing archive's event_selection/diagnostics the same way a fresh entry would.
+
+    Shared by async_step_import (fresh entry bootstrap) and repairs.py's migration flow, which
+    also needs this when merging legacy config into an entry that already exists - e.g. one
+    auto-bootstrapped blank by async_setup before the interactive repair ever runs (see
+    repairs.py's async_sync_entry_options_from_legacy_config).
+    """
+    archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
+    if CONF_ARCHIVE_EVENT_SELECTION in archive:
+        archive[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_str(archive[CONF_ARCHIVE_EVENT_SELECTION])
+    if CONF_ARCHIVE_DIAGNOSTICS in archive:
+        archive[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_str(archive[CONF_ARCHIVE_DIAGNOSTICS])
+
+    housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
+    housekeeping_time = housekeeping.get(CONF_HOUSEKEEPING_TIME)
+    if housekeeping_time is not None and not isinstance(housekeeping_time, str):
+        # cv.time on the YAML side already coerced this into a datetime.time
+        housekeeping[CONF_HOUSEKEEPING_TIME] = housekeeping_time.isoformat()
+
+    options: dict[str, Any] = {}
+    if archive:
+        options[CONF_ARCHIVE] = archive
+    if import_data.get(CONF_DUPE_CHECK):
+        options[CONF_DUPE_CHECK] = import_data[CONF_DUPE_CHECK]
+    if housekeeping:
+        options[CONF_HOUSEKEEPING] = housekeeping
+    return options
+
+
 def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema conversion used by
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
@@ -198,12 +229,6 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         Duplicate-entry protection is the same single_config_entry manifest flag used by the
         user step (it covers SOURCE_IMPORT too), so no unique_id bookkeeping is needed here.
         """
-        archive: dict[str, Any] = dict(import_data.get(CONF_ARCHIVE) or {})
-        if CONF_ARCHIVE_EVENT_SELECTION in archive:
-            archive[CONF_ARCHIVE_EVENT_SELECTION] = _event_policy_str(archive[CONF_ARCHIVE_EVENT_SELECTION])
-        if CONF_ARCHIVE_DIAGNOSTICS in archive:
-            archive[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_str(archive[CONF_ARCHIVE_DIAGNOSTICS])
-
         data: dict[str, Any] = {
             CONF_NAME: import_data.get(CONF_NAME, DOMAIN),
             CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
@@ -213,19 +238,7 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
         }
 
-        housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
-        housekeeping_time = housekeeping.get(CONF_HOUSEKEEPING_TIME)
-        if housekeeping_time is not None and not isinstance(housekeeping_time, str):
-            # cv.time on the YAML side already coerced this into a datetime.time
-            housekeeping[CONF_HOUSEKEEPING_TIME] = housekeeping_time.isoformat()
-
-        options: dict[str, Any] = {}
-        if archive:
-            options[CONF_ARCHIVE] = archive
-        if import_data.get(CONF_DUPE_CHECK):
-            options[CONF_DUPE_CHECK] = import_data[CONF_DUPE_CHECK]
-        if housekeeping:
-            options[CONF_HOUSEKEEPING] = housekeeping
+        options = extract_legacy_options(import_data)
 
         _LOGGER.info(
             "SUPERNOTIFY Config entry bootstrapped (data=%s,options=%s)",

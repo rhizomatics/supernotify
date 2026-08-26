@@ -352,3 +352,34 @@ async def test_fix_flow_updates_existing_entry_name(hass: HomeAssistant, tmp_pat
     await hass.async_block_till_done()
 
     assert entry.data["name"] == "SuperNotifier"
+
+
+async def test_fix_flow_merges_archive_options_onto_existing_entry(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Regression test: async_setup already auto-bootstraps a blank config entry (options={})
+    before the interactive repair ever runs, so this always hits the pre-existing-entry branch
+    in practice, not the fresh-entry async_step_import path. That branch used to only sync
+    `name`, silently dropping archive/dupe_check/housekeeping (e.g. archive.enabled and
+    archive.file_path) from the legacy YAML config."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / "configuration.yaml").write_text("homeassistant:\n")
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.options == {}
+
+    legacy_config = {
+        **LEGACY_CONFIG,
+        "archive": {"enabled": True, "file_path": "/config/supernotify_archive"},
+        "dupe_check": {"ttl": 120},
+    }
+    flow = _flow(hass, legacy_config)
+    await flow.async_step_init()
+    result2 = await flow.async_step_confirm({})
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    assert entry.options["archive"]["enabled"] is True
+    assert entry.options["archive"]["file_path"] == "/config/supernotify_archive"
+    assert entry.options["dupe_check"]["ttl"] == 120
