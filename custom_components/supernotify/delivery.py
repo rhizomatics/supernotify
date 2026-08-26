@@ -304,6 +304,9 @@ class DeliveryRegistry:
                     self._fallback_by_default.append(delivery)
                 if SELECTION_DEFAULT in delivery.selection:
                     self._implicit_deliveries.append(delivery)
+                # delivery.selection can also be SELECTION_BY_SCENARIO
+                # or SELECTION_EXPLICIT to have it only used where asked for
+                # default is SELECTION_DEFAULT so every delivery used implicitly
 
     def enable(self, delivery_name: str) -> bool:
         delivery = self._deliveries.get(delivery_name)
