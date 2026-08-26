@@ -35,7 +35,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from . import DOMAIN, PLATFORMS
+from . import ATTR_IMPORTED_FROM_YAML, DOMAIN, PLATFORMS
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
 from .common import DupeChecker, sanitize
 from .const import (
@@ -159,6 +159,40 @@ def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> Superno
         dupe_check=config[CONF_DUPE_CHECK],
         snooze=config[CONF_SNOOZE],
     )
+
+
+def _apply_config_entry_overrides(hass: HomeAssistant, config: ConfigType) -> ConfigType:
+    """Overlay a YAML-imported config entry's UI-edited settings onto the YAML config.
+
+    async_step_import (config_flow.py) mirrors template_path/media_path/media_url_prefix/
+    mobile_discovery/recipients_discovery into entry.data, and archive/dupe_check/housekeeping
+    into entry.options, so they're editable from the UI. But the legacy YAML platform (this
+    module's async_get_service, the only setup path that actually runs for a YAML-imported
+    entry - see async_setup_entry in __init__.py) otherwise never reads that entry back, so UI
+    edits are saved but silently have no effect on the running service.
+    """
+    entry = next((e for e in hass.config_entries.async_entries(DOMAIN) if e.data.get(ATTR_IMPORTED_FROM_YAML)), None)
+    if entry is None:
+        return config
+
+    merged = dict(config)
+    for key in (
+        CONF_TEMPLATE_PATH,
+        CONF_MEDIA_PATH,
+        CONF_MEDIA_URL_PREFIX,
+        CONF_MOBILE_DISCOVERY,
+        CONF_RECIPIENTS_DISCOVERY,
+    ):
+        if key in entry.data:
+            merged[key] = entry.data[key]
+
+    if CONF_ARCHIVE in entry.options:
+        merged[CONF_ARCHIVE] = ARCHIVE_SCHEMA(entry.options[CONF_ARCHIVE])
+    if CONF_HOUSEKEEPING in entry.options:
+        merged[CONF_HOUSEKEEPING] = HOUSEKEEPING_SCHEMA(entry.options[CONF_HOUSEKEEPING])
+    if CONF_DUPE_CHECK in entry.options:
+        merged[CONF_DUPE_CHECK] = NOTIFICATION_DUPE_SCHEMA(entry.options[CONF_DUPE_CHECK])
+    return merged
 
 
 SUPPLEMENTAL_SERVICE_NAMES: Final[tuple[str, ...]] = (
@@ -376,7 +410,8 @@ async def async_get_service(
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    service = build_supernotify_action(hass, config)
+    effective_config = _apply_config_entry_overrides(hass, config)
+    service = build_supernotify_action(hass, effective_config)
     await service.initialize()
 
     # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
@@ -457,7 +492,7 @@ async def async_get_service(
             hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config))
         )
 
-    async_register_supplemental_services(hass, service, config)
+    async_register_supplemental_services(hass, service, effective_config)
 
     return service
 

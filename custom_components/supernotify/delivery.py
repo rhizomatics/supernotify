@@ -371,7 +371,7 @@ class DeliveryRegistry:
                 issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
                 learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
-        _LOGGER.info("SUPERNOTIFY configured deliveries %s", "; ".join(self._deliveries.keys()))
+        _LOGGER.info("SUPERNOTIFY Configured deliveries %s", "; ".join(self._deliveries.keys()))
 
     async def initialize_transport_deliveries(self, context: Context, transport: Transport) -> None:
         """Validate and initialize deliveries at startup for this transport"""

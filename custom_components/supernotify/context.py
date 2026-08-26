@@ -66,7 +66,7 @@ class Context:
 
     async def initialize(self) -> None:
         if self.custom_template_path and not await self.custom_template_path.exists():
-            _LOGGER.warning("SUPERNOTIFY custom template path not found at %s", self.custom_template_path)
+            _LOGGER.warning("SUPERNOTIFY Custom template path not found at %s", self.custom_template_path)
             self.custom_template_path = None
 
     def configure_for_tests(self, transport_instances: list[Transport] | None = None) -> None:

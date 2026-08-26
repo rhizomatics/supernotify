@@ -12,9 +12,11 @@ from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import ATTR_IMPORTED_FROM_YAML, DOMAIN
-from custom_components.supernotify.const import CONF_ARCHIVE, CONF_DELIVERY, CONF_MEDIA_PATH, CONF_TRANSPORT
+from custom_components.supernotify.const import CONF_ARCHIVE, CONF_DELIVERY, CONF_MEDIA_PATH, CONF_TEMPLATE_PATH, CONF_TRANSPORT
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from homeassistant.core import HomeAssistant
 
 
@@ -139,6 +141,41 @@ async def test_yaml_with_deliveries_and_archive_raises_deprecated_yaml(hass: Hom
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_full") is None
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_partial") is not None
+
+
+async def test_yaml_setup_honors_mirrored_entry_archive_and_template_path(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Archive/template_path settings edited via the UI options/reconfigure flows are saved
+    onto the mirrored config entry (see test_yaml_setup_mirrors_into_import_entry) - but the
+    legacy YAML platform is what actually owns and runs the service. On a fresh reload it must
+    read those UI-edited values back off the mirrored entry rather than silently only using
+    the (unrelated, default-disabled) YAML config."""
+    archive_path = tmp_path / "archive"
+    template_path = tmp_path / "templates"
+    template_path.mkdir()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={ATTR_IMPORTED_FROM_YAML: True, CONF_TEMPLATE_PATH: str(template_path)},
+        options={CONF_ARCHIVE: {CONF_ENABLED: True, "file_path": str(archive_path)}},
+    )
+    entry.add_to_hass(hass)
+
+    config = {
+        "notify": [
+            {
+                CONF_NAME: "supernotify",
+                CONF_PLATFORM: DOMAIN,
+            }
+        ]
+    }
+    assert await async_setup_component(hass, "notify", config)
+    await hass.async_block_till_done()
+
+    legacy_service = hass.data["notify_services"][DOMAIN][0]
+    assert legacy_service.context.archive.enabled is True
+    assert legacy_service.context.archive.configured_archive_path == str(archive_path)
+    assert legacy_service.context.custom_template_path is not None
+    assert str(legacy_service.context.custom_template_path) == str(template_path)
 
 
 async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:
