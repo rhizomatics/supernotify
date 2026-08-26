@@ -23,7 +23,7 @@
                     "recipients_discovery": "Recipient Discovery"
                 },
                 "data_description": {
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
                     "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
@@ -42,7 +42,7 @@
                     "recipients_discovery": "Recipient Discovery"
                 },
                 "data_description": {
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
                     "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
                     "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",

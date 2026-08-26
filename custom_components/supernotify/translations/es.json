@@ -28,7 +28,7 @@
                     "media_url_prefix": "Prefijo de ruta URL bajo el cual se sirven los medios almacenados, como capturas de cámara",
                     "mobile_discovery": "Descubre automáticamente los dispositivos de la app móvil registrados en Home Assistant para notificaciones push",
                     "recipients_discovery": "Descubre automáticamente destinatarios a partir de las entidades de persona de Home Assistant",
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
                 }
             },
             "reconfigure": {
@@ -47,7 +47,7 @@
                     "media_url_prefix": "Prefijo de ruta URL bajo el cual se sirven los medios almacenados, como capturas de cámara",
                     "mobile_discovery": "Descubre automáticamente los dispositivos de la app móvil registrados en Home Assistant para notificaciones push",
                     "recipients_discovery": "Descubre automáticamente destinatarios a partir de las entidades de persona de Home Assistant",
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
                 }
             }
         },

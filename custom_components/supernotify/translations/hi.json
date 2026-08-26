@@ -28,7 +28,7 @@
                     "media_url_prefix": "URL पथ प्रीफ़िक्स जिसके अंतर्गत संग्रहीत मीडिया, जैसे कैमरा स्नैपशॉट, परोसा जाता है",
                     "mobile_discovery": "पुश सूचनाओं के लिए Home Assistant में पंजीकृत मोबाइल ऐप डिवाइस को स्वचालित रूप से खोजें",
                     "recipients_discovery": "Home Assistant व्यक्ति entities से प्राप्तकर्ताओं को स्वचालित रूप से खोजें",
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
                 }
             },
             "reconfigure": {
@@ -47,7 +47,7 @@
                     "media_url_prefix": "URL पथ प्रीफ़िक्स जिसके अंतर्गत संग्रहीत मीडिया, जैसे कैमरा स्नैपशॉट, परोसा जाता है",
                     "mobile_discovery": "पुश सूचनाओं के लिए Home Assistant में पंजीकृत मोबाइल ऐप डिवाइस को स्वचालित रूप से खोजें",
                     "recipients_discovery": "Home Assistant व्यक्ति entities से प्राप्तकर्ताओं को स्वचालित रूप से खोजें",
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
                 }
             }
         },

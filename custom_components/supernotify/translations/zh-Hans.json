@@ -28,7 +28,7 @@
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人",
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
                 }
             },
             "reconfigure": {
@@ -47,7 +47,7 @@
                     "media_url_prefix": "存储的媒体（例如摄像头快照）提供服务时所使用的 URL 路径前缀",
                     "mobile_discovery": "自动发现在 Home Assistant 中注册的移动应用设备，用于推送通知",
                     "recipients_discovery": "自动从 Home Assistant 的 person 实体中发现收件人",
-                    "name": "Determines the registered notify.<name> action - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation"
                 }
             }
         },
