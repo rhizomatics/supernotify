@@ -107,6 +107,39 @@ async def test_fix_flow_happy_path(hass: HomeAssistant, tmp_path: Path) -> None:
     assert issue_registry.async_get_issue(DOMAIN, MANUAL_MIGRATION_ISSUE_ID) is None
 
 
+async def test_fix_flow_accepts_bare_string_template_condition(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Regression test: a scenario's `conditions:` list may contain a bare Jinja string as
+    shorthand for a template condition (cv.CONDITIONS_SCHEMA coerces it via cv.template) - that
+    coercion needs the event-loop-bound hass context, so validating it from the executor thread
+    (as _write_files used to) rejected perfectly valid config with "Expected a dictionary"."""
+    hass.config.config_dir = str(tmp_path)
+    (tmp_path / "configuration.yaml").write_text("homeassistant:\n")
+
+    legacy_config = {
+        **LEGACY_CONFIG,
+        "scenarios": {
+            "xmas": {
+                "alias": "Christmas season",
+                "conditions": {
+                    "condition": "or",
+                    "conditions": [
+                        "{{ (12,1) <= (now().month, now().day) <= (12,31) }}",
+                        "{{ (1,1) <= (now().month, now().day) <= (1,7) }}",
+                    ],
+                },
+            }
+        },
+    }
+    flow = _flow(hass, legacy_config)
+    await flow.async_step_init()
+    result = await flow.async_step_confirm({})
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    written = yaml.safe_load((tmp_path / "supernotify.yaml").read_text())
+    assert written["scenarios"]["xmas"]["conditions"]["conditions"][0] == "{{ (12,1) <= (now().month, now().day) <= (12,31) }}"
+
+
 async def test_fix_flow_preserves_custom_name(hass: HomeAssistant, tmp_path: Path) -> None:
     """A legacy `name:` (-> notify.<name>) is carried onto the bootstrapped entry, since that's
     what determines the actual registered action once the entry owns it exclusively."""
