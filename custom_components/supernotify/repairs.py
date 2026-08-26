@@ -178,7 +178,9 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         async with _async_get_migration_lock(self.hass):
             # Validate before touching anything - if configuration.yaml is already broken,
             # stop rather than risk compounding an existing problem.
-            if await async_check_ha_config_file(self.hass) is not None:
+            baseline_error = await async_check_ha_config_file(self.hass)
+            if baseline_error is not None:
+                _LOGGER.warning("SUPERNOTIFY Migration aborted, configuration.yaml already invalid: %s", baseline_error)
                 self._async_raise_manual_migration_issue("baseline_invalid")
                 return self.async_show_form(step_id="confirm", errors={"base": "baseline_invalid"})
 
@@ -189,8 +191,10 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
 
             # Validate again post-write - the baseline is known-good, so any failure here was
             # caused by our own edit and gets rolled back.
-            if await async_check_ha_config_file(self.hass) is not None:
+            after_error = await async_check_ha_config_file(self.hass)
+            if after_error is not None:
                 await self.hass.async_add_executor_job(self._rollback)
+                _LOGGER.warning("SUPERNOTIFY Migration rolled back, configuration.yaml became invalid: %s", after_error)
                 self._async_raise_manual_migration_issue("validation_failed")
                 return self.async_show_form(step_id="confirm", errors={"base": "validation_failed"})
 
@@ -224,7 +228,8 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         try:
             with open(configuration_yaml_path, encoding="utf-8") as config_file:
                 original_text = config_file.read()
-        except OSError:
+        except OSError as err:
+            _LOGGER.warning("SUPERNOTIFY Could not read %s: %s", configuration_yaml_path, err)
             return "configuration_yaml_unreadable"
 
         try:
@@ -241,11 +246,13 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         # "stop before rewriting if invalid" actually catches it.
         try:
             SUPERNOTIFY_YAML_SCHEMA(migrated)
-        except vol.Invalid:
+        except vol.Invalid as err:
+            _LOGGER.warning("SUPERNOTIFY Legacy config failed validation, not migrating: %s", err)
             return "migrated_config_invalid"
         try:
             save_yaml(supernotify_yaml_path, migrated)
-        except OSError:
+        except OSError as err:
+            _LOGGER.warning("SUPERNOTIFY Could not write %s: %s", supernotify_yaml_path, err)
             return "write_failed"
 
         new_text = original_text if original_text.endswith("\n") else original_text + "\n"
@@ -253,7 +260,8 @@ class SupernotifyLegacyYamlRepairFlow(RepairsFlow):
         try:
             with open(configuration_yaml_path, "w", encoding="utf-8") as config_file:
                 config_file.write(new_text)
-        except OSError:
+        except OSError as err:
+            _LOGGER.warning("SUPERNOTIFY Could not write %s: %s", configuration_yaml_path, err)
             os.remove(supernotify_yaml_path)
             return "write_failed"
 
