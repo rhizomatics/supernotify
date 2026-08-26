@@ -5,7 +5,7 @@ tags:
 ---
 # YAML
 
-By default, advanced configuration lives in `config.yaml`, under a `notify` section ( the basic configuration is all managed entirely by Home Assistant and configured from the Integrations web page ).
+By default, advanced configuration lives in `configuration.yaml`, under a `supernotify` section ( the basic configuration is all managed entirely by Home Assistant and configured from the Integrations web page ), or split out, see below.
 
 ## Naming the Integration
 
@@ -22,10 +22,10 @@ This is the name used in all the documentation, although you can make it almost 
 
 ## Splitting Out YAML
 
-Many people move chunks of config out of `config.yaml` to make it more manageable, since the main file can get huge.
+Many people move chunks of config out of `configuration.yaml` to make it more manageable, since the main file can get huge.
 
-In this example, all the notify configuration lives in a separate file in the same directory called `notify.yaml`.
+In this example, all the notify configuration lives in a separate file in the same directory called `supernotify.yaml`. Alternatively, create a sub-directory to keep it neater.
 
-```yaml title='config.yaml'
-notify: !include notify.yaml
+```yaml title='configuration.yaml'
+supernotify: !include supernotify.yaml
 ```

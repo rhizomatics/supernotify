@@ -1,9 +1,11 @@
 """Config flow for the Supernotify integration.
 
-Covers the "Immediate" phase of docs/roadmap/configflow_approach.md: a UI setup path that
-reproduces examples/minimal.yaml (everything auto-discovered, no required fields), plus
-options pages for the archive, dupe_check and housekeeping settings. Deliveries, transports,
-scenarios, recipients and cameras stay YAML-only for now (see the roadmap doc's Third phase).
+A UI setup path that reproduces examples/minimal.yaml (everything auto-discovered, no required
+fields), plus options pages for the archive, dupe_check and housekeeping settings. Delivery,
+transports, scenarios, recipients, cameras, action_groups, links and snooze stay YAML-only, now
+under a top-level `supernotify:` key (see CONFIG_SCHEMA/async_setup in __init__.py) rather than
+the legacy `notify: - platform: supernotify` block - this config entry is the sole,
+unconditional owner of registering notify.supernotify in every case.
 """
 
 from __future__ import annotations
@@ -14,12 +16,12 @@ from typing import Any
 import voluptuous as vol
 from anyio import Path
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_ENABLED
+from homeassistant.const import CONF_ENABLED, CONF_NAME
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from . import ATTR_IMPORTED_FROM_YAML, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from . import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
@@ -98,6 +100,9 @@ def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     # the config flow frontend ("Unable to convert schema" / HTTP 500).
     defaults = defaults or {}
     return vol.Schema({
+        # Determines the registered notify.<name> action (slugified) - matches the legacy
+        # notify platform's `name:` YAML field, which this replaces as the sole source of truth.
+        vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME, DOMAIN)): cv.string,
         vol.Optional(CONF_TEMPLATE_PATH, default=defaults.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR)): cv.string,
         vol.Optional(CONF_MEDIA_PATH, default=defaults.get(CONF_MEDIA_PATH, MEDIA_DIR)): cv.string,
         vol.Optional(CONF_MEDIA_URL_PREFIX, default=defaults.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media")): cv.string,
@@ -180,17 +185,15 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="reconfigure", data_schema=_user_schema(defaults), errors=errors)
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """One-shot mirror of an existing YAML configuration into a config entry.
+        """Bootstrap a config entry, optionally seeded from a legacy YAML config dict.
 
-        `import_data` is the YAML config already validated by SUPERNOTIFY_SCHEMA. The legacy
-        YAML notify platform keeps owning notify.supernotify (see notify.async_get_service) -
-        this entry only mirrors the global settings into the UI, so YAML-only users get an
-        Integrations-page presence. async_setup_entry sees ATTR_IMPORTED_FROM_YAML and skips
-        registering a second notify.supernotify service.
-
-        Editing an imported entry's settings here does not change the running service, which
-        is still governed by the YAML file - that's the actual config to edit until deliveries/
-        transports/scenarios/recipients move off YAML in a later phase.
+        Two callers: __init__.py's async_setup (a from-scratch install with no entry yet) and
+        async_reload_yaml_config_and_entries's bootstrap, and repairs.py's migration flow (a
+        leftover legacy `notify: - platform: supernotify` block, possibly with real
+        archive/housekeeping/dupe_check/name/template_path/etc already set) - both pass
+        `data={}` for a genuinely fresh install, or the raw legacy config dict to preserve an
+        existing installation's settings (notably `name`, which determines the registered
+        notify.<name> action - see __init__.py's async_setup_entry).
 
         Duplicate-entry protection is the same single_config_entry manifest flag used by the
         user step (it covers SOURCE_IMPORT too), so no unique_id bookkeeping is needed here.
@@ -202,13 +205,14 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             archive[CONF_ARCHIVE_DIAGNOSTICS] = _event_policy_str(archive[CONF_ARCHIVE_DIAGNOSTICS])
 
         data: dict[str, Any] = {
+            CONF_NAME: import_data.get(CONF_NAME, DOMAIN),
             CONF_TEMPLATE_PATH: import_data.get(CONF_TEMPLATE_PATH, TEMPLATE_DIR),
             CONF_MEDIA_PATH: import_data.get(CONF_MEDIA_PATH, MEDIA_DIR),
             CONF_MEDIA_URL_PREFIX: import_data.get(CONF_MEDIA_URL_PREFIX, "/supernotify/media"),
             CONF_MOBILE_DISCOVERY: import_data.get(CONF_MOBILE_DISCOVERY, True),
             CONF_RECIPIENTS_DISCOVERY: import_data.get(CONF_RECIPIENTS_DISCOVERY, True),
-            ATTR_IMPORTED_FROM_YAML: True,
         }
+
         housekeeping: dict[str, Any] = dict(import_data.get(CONF_HOUSEKEEPING) or {})
         housekeeping_time = housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_time is not None and not isinstance(housekeeping_time, str):
@@ -224,11 +228,11 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
             options[CONF_HOUSEKEEPING] = housekeeping
 
         _LOGGER.info(
-            "SUPERNOTIFY Existing core YAML config migrated to config entry (data=%s,options=%s)",
+            "SUPERNOTIFY Config entry bootstrapped (data=%s,options=%s)",
             ";".join(data.keys()),
             ";".join(options.keys()),
         )
-        return self.async_create_entry(title="Supernotify (imported from YAML)", data=data, options=options)
+        return self.async_create_entry(title="Supernotify", data=data, options=options)
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> SupernotifyOptionsFlow:

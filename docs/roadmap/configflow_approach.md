@@ -35,7 +35,7 @@ The design decisions, difficulties and work break down into these groups:
 
 The approach should enable #1 and #2 without having to solve for #3 or do the work for #4, and keep options open for the latter.
 
-All config is either ConfigEntry based or round-tripped YAML.  No dual config.
+All config is either ConfigEntry based or round-tripped YAML.  No dual config. Additional YAML config should live in the `supernotify` domain, not in the legacy `notify` configuration.
 
 Top-level config should be entirely ConfigEntry. The first ConfigFlow version of the plugin should automatically migrate existing YAML, and raise repairs for the old core YAML and any subsequent core YAML. If possible automate the repair, so YAML rewritten to omit the deprecated config, when user decides comfortable to keep with new version (may need ruamel.yaml).
 

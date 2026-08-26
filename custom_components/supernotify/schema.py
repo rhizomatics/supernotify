@@ -5,7 +5,6 @@ from collections.abc import Callable
 from enum import IntFlag, StrEnum, auto
 
 import voluptuous as vol
-from homeassistant.components.notify import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ACTION,
     CONF_ALIAS,
@@ -467,28 +466,62 @@ HOUSEKEEPING_SCHEMA = vol.Schema({
     vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=7): cv.positive_int,
 })
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+# The 8 keys not yet configurable via ConfigFlow - defined under the top-level `supernotify:`
+# YAML key (see CONFIG_SCHEMA/async_setup in __init__.py), never under the legacy notify platform.
+# extra=ALLOW_EXTRA matches the old PLATFORM_SCHEMA-derived schema's inherited leniency (HA's
+# base notify PLATFORM_SCHEMA itself uses ALLOW_EXTRA) - stray/unrecognized keys pass through
+# rather than failing validation.
+SUPERNOTIFY_YAML_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
+        vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [MOBILE_ACTION_SCHEMA]},
+        vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
+        vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),
+        vol.Optional(CONF_SCENARIOS, default=dict): vol.All(
+            {cv.string: SCENARIO_SCHEMA},
+            validate_scenario_names,
+        ),
+        vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
+        vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
+        vol.Optional(CONF_SNOOZE, default=dict): SNOOZE_SCHEMA,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+# The 8 ConfigEntry-owned keys only (entry.data/entry.options) - deliberately separate from
+# SUPERNOTIFY_YAML_SCHEMA rather than folded into one combined schema: __init__.py's
+# _entry_full_config validates entry.data/entry.options through this schema, then merges in the
+# top-level YAML section's already-validated dict as-is. Re-validating that already-validated
+# dict a second time (as a single combined schema would require) breaks - cv.template/
+# cv.CONDITIONS_SCHEMA coerce string templates into Template objects, and reject a Template
+# object the second time round ("template value should be a string").
+CONFIG_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TEMPLATE_PATH, default=TEMPLATE_DIR): cv.path,
+        vol.Optional(CONF_MEDIA_PATH, default=MEDIA_DIR): cv.path,
+        vol.Optional(CONF_MEDIA_URL_PREFIX, default="/supernotify/media"): cv.string,
+        vol.Optional(CONF_ARCHIVE, default={CONF_ENABLED: False}): ARCHIVE_SCHEMA,
+        vol.Optional(CONF_HOUSEKEEPING, default={}): HOUSEKEEPING_SCHEMA,
+        vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
+        vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
+        vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+# The union of CONFIG_ENTRY_SCHEMA and SUPERNOTIFY_YAML_SCHEMA - for validating a single,
+# never-previously-validated raw config dict in one pass (e.g. hass_setup_lib.py's
+# TestingContext). Do NOT use this in __init__.py's _entry_full_config - see CONFIG_ENTRY_SCHEMA.
+FULL_CONFIG_SCHEMA = SUPERNOTIFY_YAML_SCHEMA.extend({
     vol.Optional(CONF_TEMPLATE_PATH, default=TEMPLATE_DIR): cv.path,
     vol.Optional(CONF_MEDIA_PATH, default=MEDIA_DIR): cv.path,
     vol.Optional(CONF_MEDIA_URL_PREFIX, default="/supernotify/media"): cv.string,
     vol.Optional(CONF_ARCHIVE, default={CONF_ENABLED: False}): ARCHIVE_SCHEMA,
     vol.Optional(CONF_HOUSEKEEPING, default={}): HOUSEKEEPING_SCHEMA,
     vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
-    vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
-    vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [MOBILE_ACTION_SCHEMA]},
     vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
-    vol.Optional(CONF_RECIPIENTS, default=list): vol.All(cv.ensure_list, [RECIPIENT_SCHEMA]),
-    vol.Optional(CONF_LINKS, default=list): vol.All(cv.ensure_list, [LINK_SCHEMA]),
-    vol.Optional(CONF_SCENARIOS, default=dict): vol.All(
-        {cv.string: SCENARIO_SCHEMA},
-        validate_scenario_names,
-    ),
-    vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
-    vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
-    vol.Optional(CONF_SNOOZE, default=dict): SNOOZE_SCHEMA,
 })
-SUPERNOTIFY_SCHEMA = PLATFORM_SCHEMA
 
 CHIME_ALIASES_SCHEMA = vol.Schema({
     vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
