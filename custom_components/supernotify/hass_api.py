@@ -170,7 +170,7 @@ class HomeAssistantAPI:
         self.unsubscribes.append(async_track_time_change(self._hass, callback, hour=hour, minute=minute, second=second))
 
     def in_hass_loop(self) -> bool:
-        return self._hass is not None and self._hass.loop_thread_id == threading.get_ident()
+        return self.hass_avail("loop_thread_id") and self._hass.loop_thread_id == threading.get_ident()
 
     def get_state(self, entity_id: str) -> State | None:
         return self._hass.states.get(entity_id)
@@ -327,7 +327,7 @@ class HomeAssistantAPI:
 
     def find_config_entry_data(self, domain: str) -> Mapping[str, Any] | None:
         """Return the data of the first enabled, non-ignored config entry for domain, if any."""
-        if not self._hass or not hasattr(self._hass, "config_entries") or not self._hass.config_entries:
+        if not self.hass_avail("config_entries"):
             return None
         try:
             entries = self._hass.config_entries.async_entries(domain, include_ignore=False, include_disabled=False)
@@ -347,8 +347,12 @@ class HomeAssistantAPI:
     def template(self, template_format: str) -> Template:
         return Template(template_format, self._hass)
 
+    def hass_avail(self, property: str) -> bool:
+        """Guard for HA functionality, largely for tests or docgen"""
+        return self._hass is not None and getattr(self._hass, property, None) is not None
+
     async def register_web_path(self, media_web_path: Path | None, url_prefix: str) -> bool:
-        if media_web_path is None or not self._hass or not hasattr(self._hass, "http") or not self._hass.http:
+        if media_web_path is None or not self.hass_avail("http"):
             return False
         try:
             from homeassistant.components.http import StaticPathConfig
