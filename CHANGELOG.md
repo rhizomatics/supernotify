@@ -1,3 +1,7 @@
+## 2.1.0
+
+- New *Discord* transport provider, contributed by [@lollox80](https://github.com/lollox80)
+
 ## 2.0.0
 
 ### ConfigFlow
