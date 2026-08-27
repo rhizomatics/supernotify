@@ -32,7 +32,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, cast
 
 import homeassistant.components.trace
-from homeassistant.components import mqtt
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
@@ -661,6 +660,8 @@ class HomeAssistantAPI:
         return self._device_registry
 
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
+        from homeassistant.components import mqtt
+
         try:
             return await mqtt.async_wait_for_mqtt_client(self._hass) is True
         except Exception:
@@ -672,6 +673,8 @@ class HomeAssistantAPI:
     async def mqtt_publish(
         self, topic: str, payload: Any = None, qos: int = 0, retain: bool = False, raise_on_error: bool = True
     ) -> None:
+        from homeassistant.components import mqtt
+
         try:
             await mqtt.async_publish(
                 self._hass,

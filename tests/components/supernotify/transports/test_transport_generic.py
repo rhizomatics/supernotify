@@ -200,12 +200,9 @@ async def test_update_equiv_domain(mock_hass) -> None:
 def test_prune_fields():
     uut = GenericTransport(Mock())
     sample = {"foo": 123, "bar": 789, "enabled": True}
-    delivery = Delivery(
-        "",
-        {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}},
-        uut,
-    )
-    delivery.upgrade_deprecations()
+    conf = {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}}
+    delivery = Delivery("", conf, uut)
+    delivery.upgrade_deprecations(conf)
     rules = delivery.options.get(OPTION_DATA_KEYS_SELECT)
 
     def f(data, config):

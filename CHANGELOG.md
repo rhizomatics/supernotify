@@ -15,6 +15,10 @@
   - A custom `name:` from that old block (which determines the actual `notify.<name>` action, e.g. `name: SuperNotifier` → `notify.supernotifier`) is kept in sync automatically on every load, independent of whether the repair has been run yet - existing installs don't lose their action name mid-upgrade
   - Core config (archive/dupe_check/housekeeping/paths/name) is reconfigurable via UI, and now actually applies immediately via an update listener - no reload/restart needed
 
+### SMTP
+
+- v1.17.0 introduced a separate `smtp` transport to work round problems created by new Home Assistant Notify Entities. To make this less confusing, the new direct SMTP integration is merged back into the `email` transport, switched on by a options keyword
+- Existing deliveries will have a warning in the logs, and will attempt to redirect to the `email` integration in direct mode, although in practice changes will be required to config to remove the `smtp` transport references (which has only been available for 1 week)
 
 ### Technical Changes
 
@@ -29,6 +33,7 @@
   - `repairs.py` (new) — the `legacy_yaml_config` fixable repair: writes `supernotify.yaml` + appends the include line, validated on the event loop before writing (`cv.template`'s bare-Jinja-string condition shorthand needs the event-loop-bound `hass` context, so this can't happen from the executor thread the file I/O runs in), validates configuration.yaml as a whole before and after via `async_check_ha_config_file`, rolls back and logs the underlying error on any failure, raises a separate persistent `legacy_yaml_manual_migration_required` issue when automation can't proceed, and serializes the whole write-and-reload sequence behind a lock so two concurrent attempts can't interleave.
   - Tests: `test_config_flow.py`, `test_init.py`, `test_repairs.py` (new), `test_config_yaml.py`, `test_example_configs.py` all updated/added for the new architecture.
   - Docs: `docs/configuration/yaml.md`, `email.md` and `docs/recipes/contextual_mobile_actions.md` updated for the top-level `supernotify:` key; `docgen/schema_extractor.py` updated for the renamed schema.
+  - Fix log errors from accessing version in `manifest.json` and eager loading MQTT component
 - Silver level HA Quality Level Checks
   - Stage 2 of the roadmap partially implemented, 'Bronze' level only
   - Better testing of user supplied values in config
@@ -40,6 +45,7 @@
   - Better logging for path actions
 - Async I/O
   - Final 2 `media_grab.py` Pillow image I/O wrapped as async
+  - SMTP attach file now uses `aiofiles`
 
 ## 1.17.1
 - New standalone `smtp` integration will reuse connection details from an existing Home Assistant SMTP integration

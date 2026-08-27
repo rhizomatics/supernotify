@@ -21,7 +21,7 @@ from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from . import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from . import ARCHIVE_DIR, DOMAIN, MEDIA_DIR, TEMPLATE_DIR
 from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
@@ -311,7 +311,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
                     # cv.string, not cv.path: cv.path fails voluptuous-serialize schema
                     # conversion used by the config flow frontend ("Unable to convert
                     # schema" / HTTP 500).
-                    vol.Optional(CONF_ARCHIVE_PATH, default=""): cv.string,
+                    vol.Optional(CONF_ARCHIVE_PATH, default=ARCHIVE_DIR): cv.string,
                     vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
                     vol.Optional(CONF_ARCHIVE_PURGE_INTERVAL, default=60): cv.positive_int,
                 }),
@@ -341,7 +341,7 @@ class SupernotifyOptionsFlow(OptionsFlow):
         suggested_values = {
             CONF_ENABLED: current.get(CONF_ENABLED, False),
             "file": {
-                CONF_ARCHIVE_PATH: current.get(CONF_ARCHIVE_PATH, ""),
+                CONF_ARCHIVE_PATH: current.get(CONF_ARCHIVE_PATH, ARCHIVE_DIR),
                 CONF_ARCHIVE_DAYS: current.get(CONF_ARCHIVE_DAYS, 3),
                 CONF_ARCHIVE_PURGE_INTERVAL: current.get(CONF_ARCHIVE_PURGE_INTERVAL, 60),
             },

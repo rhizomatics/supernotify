@@ -85,7 +85,6 @@ from .transports.ntfy import NtfyTransport
 from .transports.persistent import PersistentTransport
 from .transports.pushover import PushoverTransport
 from .transports.sms import SMSTransport
-from .transports.smtp import SmtpTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
 

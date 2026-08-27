@@ -22,7 +22,6 @@ from custom_components.supernotify.const import (
     SELECTION_DEFAULT,
     TRANSPORT_MOBILE_PUSH,
     TRANSPORT_NOTIFY_ENTITY,
-    TRANSPORT_SMTP,
 )
 from custom_components.supernotify.repairs import ISSUE_ID
 
@@ -63,7 +62,7 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"],
         TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
     }
-    optional_defaults: dict[str, list[str]] = {TRANSPORT_SMTP: ["DEFAULT_smtp"]}
+    optional_defaults: dict[str, list[str]] = {}
 
     expected: dict[str, list[str]] = {}
     configured: dict[str, list[str]] = {}

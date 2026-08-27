@@ -10,6 +10,7 @@ from homeassistant.const import CONF_NAME, SERVICE_RELOAD
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.loader import async_get_integration
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -25,6 +26,7 @@ DOMAIN = "supernotify"
 
 TEMPLATE_DIR: str = "supernotify/templates"
 MEDIA_DIR: str = "supernotify/media"
+ARCHIVE_DIR: str = "supernotify/archive"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ NOTIFY_SERVICE_NAME = "supernotify"
 # yet configurable via ConfigFlow). Populated by async_setup, read by _entry_full_config.
 KEY_YAML_CONFIG = "yaml_config"
 
-# Deferred import: schema.py imports MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
+# Deferred import: schema.py imports ARCHIVE_DIR/MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.
 from .schema import SUPERNOTIFY_YAML_SCHEMA  # noqa: E402, RUF100, I001
 
@@ -98,7 +100,11 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
+    from .notification import set_version
     from .notify import async_register_supplemental_services, build_supernotify_action
+
+    integration = await async_get_integration(hass, DOMAIN)
+    set_version(str(integration.version) if integration.version else "unknown")
 
     # Matches the slugify(conf_name or SERVICE_NOTIFY) logic the legacy notify platform loader
     # used to apply to a YAML `name:` field, so an existing custom notify.<name> action (e.g.

@@ -30,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import TemplateVarsType
 
-from custom_components.supernotify import MEDIA_DIR, TEMPLATE_DIR
+from custom_components.supernotify import ARCHIVE_DIR, MEDIA_DIR, TEMPLATE_DIR
 
 from .const import (
     ATTR_ACTION,
@@ -447,7 +447,7 @@ MOBILE_ACTION_SCHEMA = vol.Schema(
 ARCHIVE_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEBUG),  # deprecated v1.10.0
     vol.Schema({
-        vol.Optional(CONF_ARCHIVE_PATH): cv.path,
+        vol.Optional(CONF_ARCHIVE_PATH, default=ARCHIVE_DIR): cv.path,
         vol.Optional(CONF_ENABLED, default=False): cv.boolean,
         vol.Optional(CONF_ARCHIVE_DAYS, default=3): cv.positive_int,
         vol.Optional(CONF_ARCHIVE_MQTT_TOPIC): cv.string,
