@@ -78,6 +78,7 @@ from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
 from .transports.kodi import KodiTransport
 from .transports.lametric import LaMetricTransport
+from .transports.matrix import MatrixTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
 from .transports.mqtt import MQTTTransport
@@ -120,6 +121,8 @@ TRANSPORTS: list[type[Transport]] = [
     TelegramTransport,
     LaMetricTransport,
     PushoverTransport,
+    SmtpTransport,
+    MatrixTransport,
     KodiTransport,
     DiscordTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here

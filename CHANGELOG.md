@@ -4,6 +4,9 @@
 
 ## 2.0.0
 
+### Matrix transport
+
+- New native `matrix` transport using `matrix.send_message`: html/text format, threads, camera snapshot attachment, optional priority emoji prefix, room target validation. See `docs/transports/matrix.md`.
 ### Kodi transport
 
 - New native `kodi` transport: on-screen overlay notifications via `kodi.call_method` / `GUI.ShowNotification` on any `media_player.kodi_*` entity, priority-mapped icon, camera snapshot as overlay icon. See `docs/transports/kodi.md`.
