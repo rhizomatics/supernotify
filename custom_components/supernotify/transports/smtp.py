@@ -14,6 +14,7 @@ from email.mime.text import MIMEText
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any
 
+import aiofiles
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_TIMEOUT, CONF_USERNAME, CONF_VERIFY_SSL
@@ -174,7 +175,7 @@ class SmtpTransport(EmailTransport):
             return False
 
         try:
-            msg = self._build_message(action_data, addresses, envelope.priority, envelope.id)
+            msg = await self._build_message(action_data, addresses, envelope.priority, envelope.id)
             await self.hass_api.create_job(self._send_smtp, msg, addresses)
             envelope.calls.append(
                 CallRecord(
@@ -208,7 +209,7 @@ class SmtpTransport(EmailTransport):
             envelope.delivery_error = format_exception(e)
             return False
 
-    def _build_message(
+    async def _build_message(
         self, action_data: dict[str, Any], addresses: list[str], priority: str | None, id: str | None
     ) -> MIMEMultipart | MIMEText:
         title: str | None = action_data.get(ATTR_TITLE)
@@ -226,7 +227,7 @@ class SmtpTransport(EmailTransport):
                 alternative.attach(MIMEText(html, "html", _charset="utf-8"))
             msg.attach(alternative)
             for image_path in images:
-                attachment = self._attach_file(image_path)
+                attachment = await self._attach_file(image_path)
                 if attachment:
                     msg.attach(attachment)
         else:
@@ -250,10 +251,10 @@ class SmtpTransport(EmailTransport):
             msg["X-MSMail-Priority"] = X_MSMAIL_PRIORITY_HEADER_MAP.get(priority, "Normal")
         return msg
 
-    def _attach_file(self, image_path: str) -> MIMEImage | MIMEApplication | None:
+    async def _attach_file(self, image_path: str) -> MIMEImage | MIMEApplication | None:
         try:
-            with open(image_path, "rb") as attachment_file:
-                file_bytes = attachment_file.read()
+            async with aiofiles.open(image_path, "rb") as attachment_file:
+                file_bytes = await attachment_file.read()
         except OSError:
             _LOGGER.warning("SUPERNOTIFY SMTP attachment %s not found, skipping", image_path)
             return None

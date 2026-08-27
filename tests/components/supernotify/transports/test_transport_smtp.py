@@ -103,7 +103,7 @@ def test_existing_connection_not_overridden_by_ha_smtp() -> None:
     context.hass_api.find_config_entry_data.assert_not_called()
 
 
-def test_build_message_plain() -> None:
+async def test_build_message_plain() -> None:
     uut = _uut({
         **TRANSPORT_CONFIG,
         CONF_DELIVERY_DEFAULTS: {
@@ -112,7 +112,7 @@ def test_build_message_plain() -> None:
             }
         },
     })
-    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "001")
+    msg = await uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "001")
     assert isinstance(msg, MIMEText)
     assert msg["Subject"] == "testing"
     assert msg["To"] == "tester1@assert.com"
@@ -123,21 +123,21 @@ def test_build_message_plain() -> None:
     assert msg["X-MSMail-Priority"] is None
 
 
-def test_build_message_default_title() -> None:
+async def test_build_message_default_title() -> None:
     uut = _uut()
-    msg = uut._build_message({ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "003")
+    msg = await uut._build_message({ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "003")
     assert msg["Subject"] == "Home Assistant Notification"
 
 
-def test_build_message_explicit_title_overrides_default() -> None:
+async def test_build_message_explicit_title_overrides_default() -> None:
     uut = _uut()
-    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "004")
+    msg = await uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "004")
     assert msg["Subject"] == "testing"
 
 
-def test_build_message_html() -> None:
+async def test_build_message_html() -> None:
     uut = _uut()
-    msg = uut._build_message(
+    msg = await uut._build_message(
         {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_DATA: {"html": "<h1>hi</h1>"}},
         ["tester1@assert.com"],
         None,
@@ -147,12 +147,12 @@ def test_build_message_html() -> None:
     assert msg["From"] == "Home Assistant <hass@example.com>"
 
 
-def test_build_message_with_image_attachment(tmp_path: object) -> None:
+async def test_build_message_with_image_attachment(tmp_path: object) -> None:
     image_path = tmp_path / "picture.jpg"  # type: ignore[operator]
     image_path.write_bytes(b"\xff\xd8\xff\xe0notreallyajpegbutclosenough")
 
     uut = _uut()
-    msg = uut._build_message(
+    msg = await uut._build_message(
         {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_DATA: {"images": [str(image_path)]}},
         ["tester1@assert.com"],
         None,
@@ -164,18 +164,20 @@ def test_build_message_with_image_attachment(tmp_path: object) -> None:
     assert attachments[0]["Content-ID"] == "<picture.jpg>"
 
 
-def test_build_message_importance_high() -> None:
+async def test_build_message_importance_high() -> None:
     uut = _uut()
-    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_HIGH, "004")
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_HIGH, "004"
+    )
     assert msg["Importance"] == "high"
     assert msg["Priority"] == "urgent"
     assert msg["X-Priority"] == "2"
     assert msg["X-MSMail-Priority"] == "High"
 
 
-def test_build_message_importance_normal() -> None:
+async def test_build_message_importance_normal() -> None:
     uut = _uut()
-    msg = uut._build_message(
+    msg = await uut._build_message(
         {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_MEDIUM, "005"
     )
     assert msg["Importance"] == "normal"
@@ -184,9 +186,11 @@ def test_build_message_importance_normal() -> None:
     assert msg["X-MSMail-Priority"] == "Normal"
 
 
-def test_build_message_importance_low() -> None:
+async def test_build_message_importance_low() -> None:
     uut = _uut()
-    msg = uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_LOW, "006")
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_LOW, "006"
+    )
     assert msg["Importance"] == "low"
     assert msg["Priority"] == "non-urgent"
     assert msg["X-Priority"] == "4"
