@@ -21,6 +21,14 @@
 
 **Uniforme Meldingen voor Home Assistant**
 
+### GROTE WIJZIGING v2.0.0
+
+>> `2.0.0` van SuperNotify stapt over op een native Home Assistant UI-configuratie ('ConfigFlow'). Als je al een eenvoudige configuratie hebt, wordt alles automatisch voor je gemigreerd en is er geen YAML meer nodig.
+
+>> Als je een geavanceerde configuratie hebt (bezorgingen, scenario's, camera's, personen, acties enz.), wordt er een *reparatie* aangemaakt om deze naar een nieuw bestand `supernotify.yaml` te verplaatsen en een `include`-instructie aan je `configuration.yaml` toe te voegen. Of je kunt ervoor kiezen om de configuratie handmatig uit het `notify`-blok te halen, zoals jij dat wilt.
+
+>> In beide gevallen wordt er niets verwijderd of uitgecommentarieerd, zodat de wijziging eenvoudig terug te draaien is. Verwijder de oude configuratie zodra je er zeker van bent dat de nieuwe versie voor jou werkt.
+
 Een **uniforme meldingsinterface** bovenop het ingebouwde `notify`-platform van Home Assistant, om meerdere meldingskanalen en complexe scenario's sterk te vereenvoudigen, inclusief meerkanaalsmeldingen, voorwaardelijke meldingen, mobiele acties, camera-snapshots, geluidssignalen en op sjablonen gebaseerde HTML-e-mails.
 
 Supernotify heeft één doel: **de eenvoudigst mogelijke melding zo veel meldingen laten versturen als nodig, zonder code en met minimale configuratie**.

@@ -19,14 +19,16 @@
                     "media_path": "Percorso Media",
                     "media_url_prefix": "Prefisso URL media",
                     "mobile_discovery": "Rilevamento automatico app mobile",
-                    "recipients_discovery": "Rilevamento automatico destinatari"
+                    "recipients_discovery": "Rilevamento automatico destinatari",
+                    "name": "Nome"
                 },
                 "data_description": {
-                    "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
-                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
+                    "template_path": "Posizione opzionale dei template Jinja2 per le email HTML. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
+                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                     "media_url_prefix": "Prefisso del percorso URL con cui vengono serviti i media archiviati, come le istantanee della fotocamera",
                     "mobile_discovery": "Rileva automaticamente i dispositivi dell'app mobile registrati in Home Assistant per le notifiche push",
-                    "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant"
+                    "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant",
+                    "name": "Determina il nome dell'azione notify registrata (notify.NAME) - modificalo solo se hai bisogno di qualcosa di diverso da notify.supernotify, ad esempio per adattarlo a un'automazione esistente"
                 }
             },
             "reconfigure": {
@@ -36,14 +38,16 @@
                     "media_path": "Percorso Media",
                     "media_url_prefix": "Prefisso URL media",
                     "mobile_discovery": "Rilevamento automatico app mobile",
-                    "recipients_discovery": "Rilevamento automatico destinatari"
+                    "recipients_discovery": "Rilevamento automatico destinatari",
+                    "name": "Nome"
                 },
                 "data_description": {
-                    "template_path": "Posizione opzionale dei template Jinja2 per le email HTML",
-                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati",
+                    "template_path": "Posizione opzionale dei template Jinja2 per le email HTML. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
+                    "media_path": "Percorso di archiviazione per i file multimediali creati durante le notifiche, ad esempio le istantanee delle telecamere create come allegati. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                     "media_url_prefix": "Prefisso del percorso URL con cui vengono serviti i media archiviati, come le istantanee della fotocamera",
                     "mobile_discovery": "Rileva automaticamente i dispositivi dell'app mobile registrati in Home Assistant per le notifiche push",
-                    "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant"
+                    "recipients_discovery": "Rileva automaticamente i destinatari dalle entità persona di Home Assistant",
+                    "name": "Determina il nome dell'azione notify registrata (notify.NAME) - modificalo solo se hai bisogno di qualcosa di diverso da notify.supernotify, ad esempio per adattarlo a un'automazione esistente"
                 }
             }
         },
@@ -57,14 +61,6 @@
         }
     },
     "issues": {
-        "deprecated_yaml_full": {
-            "title": "La configurazione YAML di Supernotify può essere rimossa",
-            "description": "La configurazione YAML di Supernotify è stata importata nell'interfaccia utente e non è più necessaria. Rimuovi la voce della piattaforma `{domain}` dal file `configuration.yaml` e riavvia Home Assistant."
-        },
-        "deprecated_yaml_partial": {
-            "title": "Parte della configurazione YAML di Supernotify può essere rimossa",
-            "description": "Consegne, trasporti, scenari, destinatari, telecamere, gruppi di azioni e link non sono ancora configurabili dall'interfaccia utente, quindi questa integrazione richiede ancora una voce YAML `{domain}` che li definisca. Tuttavia, `archive`, `housekeeping` e `dupe_check` sono ora gestiti dalla voce di configurazione - rimuovi queste chiavi dalla voce `{domain}` nel tuo `configuration.yaml` e riavvia Home Assistant."
-        },
         "scenario_delivery": {
             "title": "Consegna Non Valida per Scenario",
             "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di supernotify"
@@ -96,6 +92,34 @@
         "delivery_invalid_condition": {
             "title": "La Consegna Ha una Condizione Non Valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}"
+        },
+        "legacy_yaml_config": {
+            "title": "La configurazione YAML di Supernotify deve essere spostata",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Migra la configurazione YAML di Supernotify",
+                        "description": "Le impostazioni di consegna, trasporti, scenari, destinatari, telecamere, gruppi di azione, link e snooze devono essere spostate dal blocco YAML `notify: - platform: supernotify` a una nuova chiave di primo livello `supernotify:`.\n\nSelezionando **Invia** questo viene automatizzato: viene scritto un nuovo file `supernotify.yaml` con le impostazioni attuali e viene aggiunta una riga `supernotify: !include supernotify.yaml` alla fine di `configuration.yaml`. La configurazione viene ricaricata immediatamente - non è necessario riavviare.\n\n**Preferisci farlo manualmente?** Sposta semplicemente le impostazioni tu stesso in una chiave di primo livello `supernotify:` invece di cliccare su Invia - entrambi i modi vanno bene, e questa riparazione non richiede che tu torni a confermarla.\n\nIn entrambi i casi, questo **non** rimuove il vecchio blocco `notify: - platform: supernotify`. Una volta che quel blocco viene eliminato da `configuration.yaml` e Home Assistant viene riavviato, questa riparazione si risolve automaticamente - non è necessario chiuderla manualmente."
+                    },
+                    "already_migrated": {
+                        "title": "Configurazione YAML di Supernotify già migrata",
+                        "description": "`supernotify.yaml` e l'inclusione `supernotify:` esistono già - questo blocco `notify: - platform: supernotify` residuo nel tuo YAML non è più utilizzato e può essere rimosso. Selezionando **Invia** questo promemoria viene chiuso."
+                    }
+                },
+                "error": {
+                    "supernotify_yaml_exists": "Esiste già un file supernotify.yaml - rimuovilo o rinominalo prima e riprova",
+                    "configuration_yaml_unreadable": "Impossibile leggere configuration.yaml",
+                    "supernotify_key_exists": "configuration.yaml ha già una chiave di primo livello `supernotify:` - unisci invece le tue impostazioni manualmente al suo interno",
+                    "write_failed": "La scrittura dei nuovi file di configurazione non è riuscita - controlla il log di Home Assistant per i dettagli",
+                    "validation_failed": "La validazione del file configuration.yaml aggiornato non è riuscita, quindi non è stato modificato nulla - controlla il log di Home Assistant per i dettagli",
+                    "baseline_invalid": "configuration.yaml ha già un problema non correlato - risolvilo prima e riprova",
+                    "migrated_config_invalid": "L'attuale configurazione delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze non supera la validazione - controlla il log di Home Assistant per i dettagli"
+                }
+            }
+        },
+        "legacy_yaml_manual_migration_required": {
+            "title": "La configurazione YAML di Supernotify deve essere migrata manualmente",
+            "description": "La migrazione automatica a una chiave YAML di primo livello `supernotify:` non è riuscita: {reason}. Sposta tu stesso le impostazioni di consegna, trasporti, scenari, destinatari, telecamere, gruppi di azione, link e snooze dal blocco `notify: - platform: supernotify` a una chiave di primo livello `supernotify:` (ad esempio `supernotify: !include supernotify.yaml`), quindi rimuovi il vecchio blocco e riavvia Home Assistant."
         }
     },
     "options": {
@@ -124,7 +148,7 @@
                             "purge_interval": "Intervallo di pulizia (minuti)"
                         },
                         "data_description": {
-                            "file_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc.",
+                            "file_path": "Percorso di archiviazione per le notifiche archiviate, utile per il debug di configurazione, scenari ecc. I percorsi relativi vengono risolti all'interno della directory di configurazione di Home Assistant",
                             "file_retention_days": "Per quanti giorni vengono conservate le notifiche archiviate",
                             "purge_interval": "Intervallo minimo in minuti tra le pulizie automatiche dell'archivio"
                         }

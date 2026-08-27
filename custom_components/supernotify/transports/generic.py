@@ -127,7 +127,7 @@ class GenericTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         if action is not None and "." in action:
             return True
-        _LOGGER.warning("SUPERNOTIFY generic transport must have a qualified action name, e.g. notify.foo")
+        _LOGGER.warning("SUPERNOTIFY Generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

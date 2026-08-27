@@ -110,18 +110,78 @@ See [Duplicate Configuration](../configuration/dupe_detection.md) for more infor
 
 ## Controlling Delivery Selection
 
-Delivery selection can be passed in the `data` of an action call using the `delivery_selection` key, or implied from the style in which the data presented. It can be set to one of three values:
+Delivery selection can be passed in the `data` of an action call using the `delivery_selection` key, or implied from the *shape* of the `delivery:` key itself. It can be set to one of three values:
 
 * `implicit` - The default
-    - All deliveries are enabled plus scenario selected
-    - This is implied if a dictionary mapping of deliveries is included
+    - All deliveries whose own `selection` includes `default` are enabled, plus any switched on by an active scenario
+    - This is implied if `delivery:` is a dictionary mapping, or is left out entirely
 * `explicit` - Switch off delivery defaulting
     - Only deliveries listed on the action call are enabled, *plus* ones switched on by a scenario
-    - This is switched on automatically if a list or single delivery is given.
+    - This is implied automatically if `delivery:` is given as a list or a single value
 * `fixed` - Switch off delivery defaulting and scenario delivery selection
     - Only the list of deliveries in the action call will be used, even if a scenario condition were to select another one
-    - Deliveries with `priority` or `condition` filtering will have this overridden, only `enabled` stops a fixed selection
-    - This is never implied or defaulted
+    - Deliveries with `priority` or `condition` filtering will have this overridden - only a disabled `delivery`/`transport` stops a fixed selection
+    - This is never implied from `delivery:`'s shape - it must always be set explicitly
+
+An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override. If in doubt, add the `delivery_selection` to make it clear.
+
+```yaml title="Implicit (default) - implied by a mapping"
+  - action: notify.supernotify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            mobile_push: # tunes an existing (default or scenario) delivery
+              data:
+                clickAction: https://my.home.net/dashboard
+```
+
+In this example, `mobile_push` and `plain_email` are selected as deliveries, even if they are not default ones. In addition
+any deliveries selected by conditions or scenarios will be added to the list.
+
+```yaml title="Explicit - implied by a list"
+  - action: notify.supernotify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            - mobile_push
+            - plain_email
+```
+
+In this case `plain_email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
+
+```yaml title="Fixed - always set explicitly"
+  - action: notify.supernotify
+    data:
+        message: Garden sensor triggered
+        delivery_selection: fixed
+        delivery:
+            - plain_email
+```
+
+!!! info "Two different things are both called `selection`"
+    `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for
+    this one notification. It's a different mechanism from a delivery's own config-time
+    `selection` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` -
+    see [Delivery Selection](../configuration/deliveries.md#delivery-selection)), which decides
+    whether that delivery is a candidate for implicit selection at all. The two happen to share
+    the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action
+    call; a delivery with `selection: [explicit]` is excluded from implicit selection, as does
+    any other value other than `default` (or left unstated, which is equivalent to `default`).
+
+### When Scenarios Disagree
+
+Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see
+[Overriding Delivery Selection and Configuration](scenarios.md#overriding-delivery-selection-and-configuration).
+
+If more than one scenario is active at once and they disagree on the same delivery, **`false`
+always wins**, regardless of how many other active scenarios enabled it - there's no priority
+or ordering between scenarios.
+
+The only way to override a scenario's `false` is for the action
+call itself to explicitly re-enable that delivery in its own `delivery:` data. This is a
+deliberate fail-safe default (a scenario that says "don't send this" is never silently
+overruled by another scenario), but it also means there's currently no way for a scenario
+author to mark their `enabled: true` as one that should win a conflict.
 
 ## Using from an Automation
 

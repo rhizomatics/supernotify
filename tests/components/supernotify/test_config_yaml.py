@@ -13,8 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
-from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
-from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.schema import FULL_CONFIG_SCHEMA, EnvelopeOutcome
 
 from .hass_setup_lib import assert_clean_notification, assert_json_round_trip
 
@@ -22,12 +21,22 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceResponse, State
     from homeassistant.util.json import JsonObjectType
 
+    from custom_components.supernotify.notify import SupernotifyAction
+
 FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "..", "examples", "maximal.yaml")
 
 
+async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyAction:
+    """Set up supernotify from a top-level `supernotify:` YAML config and return the live
+    service - the config entry (bootstrapped automatically) is the sole owner of it now, so
+    there's no more hass.data["notify_services"][DOMAIN] legacy-platform bucket to read."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    return entry.runtime_data
+
+
 SIMPLE_CONFIG = {
-    "name": DOMAIN,
-    "platform": DOMAIN,
     "delivery": {
         "testing": {"transport": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
         "plain_email": {"transport": "email"},
@@ -62,12 +71,11 @@ SIMPLE_CONFIG = {
 
 
 def test_schema() -> None:
-    assert PLATFORM_SCHEMA(SIMPLE_CONFIG)
+    assert FULL_CONFIG_SCHEMA(SIMPLE_CONFIG)
 
 
 async def test_transport_setup(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     assert hass.states.get("binary_sensor.supernotify_transport_chime").state == "on"  # type: ignore
     assert hass.states.get("binary_sensor.supernotify_transport_generic").state == "on"  # type: ignore
     assert hass.states.get("binary_sensor.supernotify_transport_email").state == "off"  # type: ignore
@@ -78,9 +86,7 @@ async def test_transport_setup(hass: HomeAssistant) -> None:
 async def test_reload(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.home_alarm_control", "")
 
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
 
@@ -93,8 +99,11 @@ async def test_reload(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert not hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
-    uut = hass.data["notify_services"][DOMAIN][0]
+    # supernotify.reload re-reads the top-level `supernotify:` YAML and reloads the config
+    # entry in place - same service name, new delivery/recipient content from FIXTURE.
+    assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    uut = entry.runtime_data
     assert len(uut.context.people_registry.people) == 3
 
     assert "DEFAULT_notify_entity" in uut.context.delivery_registry.deliveries
@@ -122,9 +131,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 
 async def test_call_action(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
@@ -142,17 +149,7 @@ async def test_call_action(hass: HomeAssistant) -> None:
 
 
 async def test_empty_config(hass: HomeAssistant) -> None:
-    assert await async_setup_component(
-        hass,
-        NOTIFY_DOMAIN,
-        {
-            NOTIFY_DOMAIN: [
-                {"name": DOMAIN, "platform": DOMAIN},
-            ]
-        },
-    )
-
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, {})
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
@@ -164,19 +161,10 @@ async def test_empty_config(hass: HomeAssistant) -> None:
 
 
 async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> None:
-    assert await async_setup_component(
-        hass,
-        NOTIFY_DOMAIN,
-        {
-            NOTIFY_DOMAIN: [
-                {"name": DOMAIN, "platform": DOMAIN},
-            ]
-        },
-    )
+    await _setup_supernotify(hass, {})
     assert await async_setup_component(
         hass, "file", {"file": [{"platform": "notify", "name": "notilog", "filepath": "notify.log"}]}
     )
-
     await hass.async_block_till_done()
 
     assert hass.services.has_service(NOTIFY_DOMAIN, DOMAIN)
@@ -201,8 +189,7 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
 
 
 async def test_exposed_states(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     states: list[State] = [state for state in hass.states.async_all() if "supernotify" in state.entity_id]
 
     for state in states:
@@ -211,8 +198,7 @@ async def test_exposed_states(hass: HomeAssistant) -> None:
 
 
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     hass.states.async_set("binary_sensor.supernotify_scenario_simple", "off")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
@@ -233,8 +219,7 @@ async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
 
 
 async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     hass.states.async_set("binary_sensor.supernotify_delivery_testing", "off")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
@@ -256,8 +241,7 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
 
 
 async def test_exposed_recipients(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "off")
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
@@ -297,7 +281,7 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
 
 
 async def test_exposed_transport_events(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     assert await async_setup_component(hass, "media_player", {"media_player": {CONF_PLATFORM: "test"}})
     assert await async_setup_component(hass, "switch", {"switch": {CONF_PLATFORM: "test"}})
     assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
@@ -335,8 +319,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
 
 
 async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     response: ServiceResponse = await hass.services.async_call(
         "supernotify", "enquire_last_notification", None, blocking=True, return_response=True
     )
@@ -386,8 +369,7 @@ async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
 
 
 async def test_template_delivery(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     await async_call_from_config(
         hass,
         {
@@ -412,7 +394,7 @@ async def test_template_delivery(hass: HomeAssistant) -> None:
 
 
 async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     assert await async_setup_component(hass, "media_player", {"media_player": {CONF_PLATFORM: "test"}})
     assert await async_setup_component(hass, "switch", {"switch": {CONF_PLATFORM: "test"}})
     assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
@@ -453,8 +435,7 @@ async def test_delivery_and_scenario(hass: HomeAssistant) -> None:
 
 
 async def test_recipients_configured(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [SIMPLE_CONFIG]})
-    await hass.async_block_till_done()
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
     response: ServiceResponse = await hass.services.async_call(
         "supernotify", "enquire_recipients", None, blocking=True, return_response=True
     )

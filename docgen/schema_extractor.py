@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
 
 TOP_LEVEL_SCHEMAS = {
-    "SUPERNOTIFY_SCHEMA": "Platform Configuration",
+    "FULL_CONFIG_SCHEMA": "Full Configuration",
     "SCENARIO_SCHEMA": "Scenario Definition",
     "STRICT_ACTION_DATA_SCHEMA": "Notify Action Data",
     "DELIVERY_SCHEMA": "Delivery Definition",

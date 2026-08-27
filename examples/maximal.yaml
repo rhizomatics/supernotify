@@ -1,429 +1,397 @@
-notify:
-  - name: maximal
-    platform: supernotify
-    # entries now replaced by ConfigFlow UI entries - start
-    #template_path: config/templates/supernotify
-    #media_path: /config/media/supernotify
-    #media_url_prefix: /supernotify/media
-    #recipients_discovery: true
-    #mobile_discovery: true
-    #dupe_check:
-    #  ttl: 300
-    #  size: 50
-    #  dupe_policy: dupe_policy_message_title_same_or_lower_priority
-    #archive:
-    #  enabled: true
-    #  file_retention_days: 4
-    #  file_path: config/archive/supernotify
-    #  mqtt_topic: notifications/supernotify
-    #  mqtt_qos: 1
-    #  mqtt_retain: False
-    #  purge_interval: 60
-    #  diagnostics: ERROR | PARTIAL_DELIVERY
-    #  event_name: supernotification
-    #  event_selection: NO_DELIVERY | FALLBACK_DELIVERY | PARTIAL_DELIVERY | ERROR
-    #housekeeping:
-    #  media_storage_days: 7
-    #  housekeeping_time: 00:00:00
-    # entries now replaced by ConfigFlow UI entries - end
-    delivery:
-      html_email:
-        transport: email
-        template: default.html.j2
-        title: "Notification: {{notification_title}}"
-        enabled: true
-        debug: false
-        conditions:
-            condition: or
-            conditions:
-              - condition: state
-                entity_id: alarm_control_panel.home_alarm_control
-                state:
-                  - armed_away
-                  - armed_home
-                  - armed_night
-              - "{{ notification_priority in ['critical','high'] }}"
-        priority:
-          - critical
-          - high
-          - medium
-          - low
-        target_usage: merge_delivery
-        target:
-          - mailarchive@mymail.com
+supernotify:
+  delivery:
+    html_email:
+      transport: email
+      template: default.html.j2
+      title: "Notification: {{notification_title}}"
+      enabled: true
+      debug: false
+      conditions:
+          condition: or
+          conditions:
+            - condition: state
+              entity_id: alarm_control_panel.home_alarm_control
+              state:
+                - armed_away
+                - armed_home
+                - armed_night
+            - "{{ notification_priority in ['critical','high'] }}"
+      priority:
+        - critical
+        - high
+        - medium
+        - low
+      target_usage: merge_delivery
+      target:
+        - mailarchive@mymail.com
 
-      backup_mail:
-        transport: email
-        selection:
-          - fallback
-        target: mailarchive@mymail.com
-      text_message:
-        transport: sms
-        action: notify.mikrotik_sms
-        occupancy: only_out
-        priority:
-          - critical
-          - high
-      alexa_announce:
-        transport: alexa_devices
-        occupancy: any_in
-      mobile_push:
-        transport: mobile_push
-      expensive_api_call:
-        transport: generic
-        action: notify.megacorp_api
-        selection:
-          - scenario
-          - fallback_on_error
-        selection_rank: FIRST
-      my_hw_notifiers:
-         transport: generic
-         action: script.hw_alerts
-         target:
-            floor_id: ground
-            label_id: 433sounder
-            area_id: backyard
-         conditions:
-              alias: "Time 15~02"
-              condition: time
-              # At least one of the following is required.
-              after: "15:00:00"
-              before: "02:00:00"
-              weekday:
-                - mon
-                - wed
-                - fri
-      alexa_show:
-        transport: media
-        action: media_player.play_media
-        target_usage: fixed
-        target:
-          - media_player.kitchen_2
-      play_chimes:
-        transport: chime
-        target:
-          - script.chime_ding_dong
-          - switch.chime_sax
-          - media_player.echo_lobby
-        occupancy: any_in
-      alexa_red_alert:
-        transport: generic
-        action: notify.alexa_media_player
-        selection: scenario
-        message: '<audio src="soundbank://soundlibrary/home/scifi/amzn_sfx_scifi_alarm_04"/>'
-        data:
-          media_content_type: tts
-        priority: critical
-        target: group.alexa_devices
+    backup_mail:
+      transport: email
+      selection:
+        - fallback
+      target: mailarchive@mymail.com
+    direct_mail:
+      # sent over a direct SMTP connection (see transports.email.connection below) rather than
+      # via the `action` HA notify action other email deliveries use
+      transport: email
+      options:
+        mode: direct
+      target: mailarchive@mymail.com
+    text_message:
+      transport: sms
+      action: notify.mikrotik_sms
+      occupancy: only_out
+      priority:
+        - critical
+        - high
+    alexa_announce:
+      transport: alexa_devices
+      occupancy: any_in
+    mobile_push:
+      transport: mobile_push
+    expensive_api_call:
+      transport: generic
+      action: notify.megacorp_api
+      selection:
+        - scenario
+        - fallback_on_error
+      selection_rank: FIRST
+    my_hw_notifiers:
+       transport: generic
+       action: script.hw_alerts
+       target:
+          floor_id: ground
+          label_id: 433sounder
+          area_id: backyard
+       conditions:
+            alias: "Time 15~02"
+            condition: time
+            # At least one of the following is required.
+            after: "15:00:00"
+            before: "02:00:00"
+            weekday:
+              - mon
+              - wed
+              - fri
+    alexa_show:
+      transport: media
+      action: media_player.play_media
+      target_usage: fixed
+      target:
+        - media_player.kitchen_2
+    play_chimes:
+      transport: chime
+      target:
+        - script.chime_ding_dong
+        - switch.chime_sax
+        - media_player.echo_lobby
+      occupancy: any_in
+    alexa_red_alert:
+      transport: generic
+      action: notify.alexa_media_player
+      selection: scenario
+      message: '<audio src="soundbank://soundlibrary/home/scifi/amzn_sfx_scifi_alarm_04"/>'
+      data:
+        media_content_type: tts
+      priority: critical
+      target: group.alexa_devices
 
-      doorbell_chime_alexa:
-        transport: chime
-        target:
-          - media_player.echo_lobby
-        data:
-          chime_tune: amzn_sfx_doorbell_chime_01
-      upstairs_siren:
-        transport: generic
-        action: mqtt.publish
-        priority:
-          - critical
-        data:
-          topic: zigbee2mqtt/Upstairs Siren/set
-          payload: '{"warning": {"duration": 30, "mode": "emergency", "strobe": true }}'
-      sleigh_bells:
-        transport: chime
+    doorbell_chime_alexa:
+      transport: chime
+      target:
+        - media_player.echo_lobby
+      data:
+        chime_tune: amzn_sfx_doorbell_chime_01
+    upstairs_siren:
+      transport: generic
+      action: mqtt.publish
+      priority:
+        - critical
+      data:
+        topic: zigbee2mqtt/Upstairs Siren/set
+        payload: '{"warning": {"duration": 30, "mode": "emergency", "strobe": true }}'
+    sleigh_bells:
+      transport: chime
+      alias: Xmas
+      target:
+        - media_player.echo_lobby
+      data:
+        chime_tune: christmas_05
+      conditions:
+        condition: template
         alias: Xmas
-        target:
-          - media_player.echo_lobby
+        value_template: >
+          {% set n = now() %}
+          {{ n.month == 12 and 15 <= n.day }}
+  recipients:
+    - person: person.new_home_owner
+      alias: sysadmin
+      email: jalaboli@myhome.net
+      phone_number: "+430504103451"
+      delivery:
+        mobile_push:
+          target:
+            - mobile_app.new_iphone
+          data:
+            push:
+              sound:
+                name: default
+        alexa_announce:
+          target:
+            - media_player.echo_study
+    - person: person.bidey_in
+      phone_number: "+4287600013834"
+      target:
+        - switch.garden_shed_chime
+      mobile_discovery: false
+      mobile_devices:
+        - manufacturer: nokia
+          model: 6110
+          mobile_app_id: mobile_old
+          device_tracker: device_tracker.nokia_6110
+      delivery:
+        text_message:
+          enabled: false
+    - person: person.kid_3
+      enabled: false
+  transports:
+    email:
+      # connection is only used by deliveries that set the mode option to direct - other email
+      # deliveries go via the `action` below instead
+      connection:
+        host: smtp.local.net
+        port: 587
+        username: postie
+        password: blackandwhitecat
+        verify_ssl: false
+      delivery_defaults:
+        action: notify.email
         data:
-          chime_tune: christmas_05
-        conditions:
-          condition: template
-          alias: Xmas
-          value_template: >
-            {% set n = now() %}
-            {{ n.month == 12 and 15 <= n.day }}
-    recipients:
-      - person: person.new_home_owner
-        alias: sysadmin
-        email: jalaboli@myhome.net
-        phone_number: "+430504103451"
-        delivery:
-          mobile_push:
-            target:
-              - mobile_app.new_iphone
-            data:
-              push:
-                sound:
-                  name: default
-          alexa_announce:
-            target:
-              - media_player.echo_study
-      - person: person.bidey_in
-        phone_number: "+4287600013834"
-        target:
-          - switch.garden_shed_chime
-        mobile_discovery: false
-        mobile_devices:
-          - manufacturer: nokia
-            model: 6110
-            mobile_app_id: mobile_old
-            device_tracker: device_tracker.nokia_6110
-        delivery:
-          text_message:
-            enabled: false
-      - person: person.kid_3
-        enabled: false
-    transports:
-      email:
-        delivery_defaults:
-          action: notify.email
-          data:
-            footer: Delivered by Supernotify (MsgId:{e.notification_id})
-          options:
-            jpeg_opts:
-              progressive: true
-              optimize: true
-              quality: 50
-            png_opts:
-              optimize: true
-            preheader_blank: "&#847;&zwnj;&nbsp;"
-            preheader_length: 100
-            simplify_text: false
-            strip_urls: false
-            target_categories:
-              - email
-      smtp:
-        connection:
-          host: smtp.local.net
-          port: 587
-          username: postie
-          password: blackandwhitecat
-          verify_ssl: false
-        delivery_defaults:
-          data:
-            footer: Delivered by Supernotify (MsgId:{e.notification_id})
-          options:
-            sender: hass@local.net
-            sender_name: Your Friendly Home Assistant
-            default_title: Home Assistant Notification
-            jpeg_opts:
-              progressive: true
-              optimize: true
-              quality: 50
-            png_opts:
-              optimize: true
-            preheader_blank: "&#847;&zwnj;&nbsp;"
-            preheader_length: 100
-            simplify_text: false
-            strip_urls: false
-            target_categories:
-              - email
-      alexa_media_player:
-        delivery_defaults:
-          target:
-            - media_player.kitchen
-            - media_player.bedroom
-            - media_player.hall_flex
-            - media_player.old_kitchen_flex
-            - media_player.studio
-          options:
-            message_usage: combine_title
-            unique_targets: true
-            target_categories:
-              - entity_id
-            target_select:
-              - "media_player\\.echo.*"
-            device_discovery: true
-            device_domain:
-              - media_player
-            device_model_select:
-              include:
-                - "Echo*"
-                - "Fire*"
-              exclude:
-                - "*TV*"
-      alexa_devices:
-        delivery_defaults:
-          target:
-            - notify.kitchen_echo_announce
-            - notify.bedroom_dot_speak
-          options:
-            message_usage: use_title
-      sms:
-        delivery_defaults:
-          action: notify.mikrotik_sms
-          target_required: always
-          options:
-            simplify_text: true
-            strip_urls: true
-            target_categories:
-              - phone
-      mobile_push:
-        delivery_defaults:
-          options:
-            timestamp: '%H:%M'
-            simplify_text: false
-            strip_urls: false
-            target_categories:
-              - mobile_app_id
-      chime:
-        delivery_defaults:
-          target:
-            - media_player.kitchen
-            - media_player.bedroom
-            - media_player.hall_flex
-            - media_player.old_kitchen_flex
-            - media_player.studio
-          options:
-            chime_aliases:
-              doorbell:
-                media_player: amzn_sfx_doorbell_chime_02
-                switch:
-                  target: switch.chime_ding_dong
-              red_alert:
-                media_player: amzn_sfx_scifi_alarm_04
-                siren:
-                  tune: emergency
-              known_vehicle:
-                alexa_devices: amzn_sfx_trumpet_bugle_04
-                switch:
-                  target: switch.chime_sax
-              unknown_vehicle:
-                media_player: amzn_sfx_church_bell_1x_02
-                switch:
-                  target: switch.chime_big_ben
-              generic:
-                media_player: amzn_sfx_doorbell_01
-                switch:
-                  target: switch.chime_scale
-              person:
-                media_player: bell_02
-                switch:
-                  target: switch.chime_ding
-              xmas_person:
-                media_player: christmas_05
-              detailed_chime:
-                media_player:
-                  tune: amzn_sfx_bell_short_chime_02
-                  volume: 0.7
-                switch:
-                  target: switch.chime_ding
-                siren:
-                  tune: burglar
-                  duration: 10
-                  data:
-                    strobe: true
-
-    scenarios:
-      image_tune:
-        delivery:
-          media_image:
-            data:
-              media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
-      doorbell:
-        media:
-          camera_entity_id: camera.doorbell
-          camera_delay: 500
-          camera_ptz_preset: 2
-          clip_url: "http://frigate/api/events/{{frigate_event_id}}/clip.mp4"
-          snapshot_url: "http://frigate/api/events/{{frigate_event_id}}/snapshot.jpg"
+          footer: Delivered by Supernotify (MsgId:{e.notification_id})
+        options:
+          sender: hass@local.net
+          sender_name: Your Friendly Home Assistant
+          default_title: Home Assistant Notification
           jpeg_opts:
             progressive: true
-            quality: 75
+            optimize: true
+            quality: 50
           png_opts:
             optimize: true
-        delivery:
-          doorbell_chime_alexa:
-            data:
-              amazon_magic_id: a77464
-          email:
-      softly_softly:
-        delivery:
-          alexa:
-            data:
-              message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'
-              title_template: ""
-      emotional:
-        delivery:
-          alexa:
-            data:
-              title_template: '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
-      ordinary_day:
-        alias: nothing special
-        conditions:
-            condition: and
-            conditions:
-              - not:
-                  - condition: state
-                    entity_id: alarm_control_panel.home_alarm_control
-                    state: disarmed
-              - condition: time
-                after: "21:30:00"
-                before: "06:30:00"
-      mostly:
-        alias: nothing special
-        conditions:
-            condition: and
-            conditions:
-              - not:
-                  - condition: state
-                    entity_id: alarm_control_panel.home_alarm_control
-                    state: unknown
-              - condition: time
-                after: "06:30:00"
-                before: "21:30:00"
-      bedtime:
-        conditions:
-            condition: time
-            alias: Usual bedtime
-            after: "21:30:00"
-            before: "06:30:00"
+          preheader_blank: "&#847;&zwnj;&nbsp;"
+          preheader_length: 100
+          simplify_text: false
+          strip_urls: false
+          target_categories:
+            - email
+    alexa_media_player:
+      delivery_defaults:
+        target:
+          - media_player.kitchen
+          - media_player.bedroom
+          - media_player.hall_flex
+          - media_player.old_kitchen_flex
+          - media_player.studio
+        options:
+          message_usage: combine_title
+          unique_targets: true
+          target_categories:
+            - entity_id
+          target_select:
+            - "media_player\\.echo.*"
+          device_discovery: true
+          device_domain:
+            - media_player
+          device_model_select:
+            include:
+              - "Echo*"
+              - "Fire*"
+            exclude:
+              - "*TV*"
+    alexa_devices:
+      delivery_defaults:
+        target:
+          - notify.kitchen_echo_announce
+          - notify.bedroom_dot_speak
+        options:
+          message_usage: use_title
+    sms:
+      delivery_defaults:
+        action: notify.mikrotik_sms
+        target_required: always
+        options:
+          simplify_text: true
+          strip_urls: true
+          target_categories:
+            - phone
+    mobile_push:
+      delivery_defaults:
+        options:
+          timestamp: '%H:%M'
+          simplify_text: false
+          strip_urls: false
+          target_categories:
+            - mobile_app_id
+    chime:
+      delivery_defaults:
+        target:
+          - media_player.kitchen
+          - media_player.bedroom
+          - media_player.hall_flex
+          - media_player.old_kitchen_flex
+          - media_player.studio
+        options:
+          chime_aliases:
+            doorbell:
+              media_player: amzn_sfx_doorbell_chime_02
+              switch:
+                target: switch.chime_ding_dong
+            red_alert:
+              media_player: amzn_sfx_scifi_alarm_04
+              siren:
+                tune: emergency
+            known_vehicle:
+              alexa_devices: amzn_sfx_trumpet_bugle_04
+              switch:
+                target: switch.chime_sax
+            unknown_vehicle:
+              media_player: amzn_sfx_church_bell_1x_02
+              switch:
+                target: switch.chime_big_ben
+            generic:
+              media_player: amzn_sfx_doorbell_01
+              switch:
+                target: switch.chime_scale
+            person:
+              media_player: bell_02
+              switch:
+                target: switch.chime_ding
+            xmas_person:
+              media_player: christmas_05
+            detailed_chime:
+              media_player:
+                tune: amzn_sfx_bell_short_chime_02
+                volume: 0.7
+              switch:
+                target: switch.chime_ding
+              siren:
+                tune: burglar
+                duration: 10
+                data:
+                  strobe: true
 
-    cameras:
-      - camera: camera.front_door
-        alias: Front Door
-        device_tracker: device_tracker.cam_axis_door
-        alt_camera: camera.front_garden
-        url: http://192.168.1.100/camera/front_garden/live
-        ptz_default_preset: 1
-        ptz_method: frigate
-        ptz_delay: 5
-      - camera: camera.front_garden
-        alias: Front Garden
-        device_tracker: device_tracker.cam_dah_garden
-        alt_camera: camera.front_door
+  scenarios:
+    image_tune:
+      delivery:
+        media_image:
+          data:
+            media_content_id: https://mycctvserver/doorbell/snapshot.jpeg
+    doorbell:
+      media:
+        camera_entity_id: camera.doorbell
+        camera_delay: 500
+        camera_ptz_preset: 2
+        clip_url: "http://frigate/api/events/{{frigate_event_id}}/clip.mp4"
+        snapshot_url: "http://frigate/api/events/{{frigate_event_id}}/snapshot.jpg"
+        jpeg_opts:
+          progressive: true
+          quality: 75
+        png_opts:
+          optimize: true
+      delivery:
+        doorbell_chime_alexa:
+          data:
+            amazon_magic_id: a77464
+        email:
+    softly_softly:
+      delivery:
+        alexa:
+          data:
+            message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'
+            title_template: ""
+    emotional:
+      delivery:
+        alexa:
+          data:
+            title_template: '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
+    ordinary_day:
+      alias: nothing special
+      conditions:
+          condition: and
+          conditions:
+            - not:
+                - condition: state
+                  entity_id: alarm_control_panel.home_alarm_control
+                  state: disarmed
+            - condition: time
+              after: "21:30:00"
+              before: "06:30:00"
+    mostly:
+      alias: nothing special
+      conditions:
+          condition: and
+          conditions:
+            - not:
+                - condition: state
+                  entity_id: alarm_control_panel.home_alarm_control
+                  state: unknown
+            - condition: time
+              after: "06:30:00"
+              before: "21:30:00"
+    bedtime:
+      conditions:
+          condition: time
+          alias: Usual bedtime
+          after: "21:30:00"
+          before: "06:30:00"
 
-    action_groups:
-      examples:
-        - identifier: action-1
-          title: Example Mobile Action
-          icon: "sfsymbols:bell"
-          uri: http://10.111.10.111:8123
-          activationMode: foreground
-          authenticationRequired: false
-          destructive: false
-          behavior: default
-          textInputButtonTitle: Input Button Title
-          textInputPlaceholder: Input Placeholder Text
-      frigate:
-        - action_template: silence-{{camera.entity_id}}
-          title_template: Silence Notifications for {{camera.entity_id}}
-          icon: "sfsymbols:bell.slash"
-      alarm_panel:
-        - action: "ALARM_PANEL_DISARM"
-          title: "Disarm Alarm Panel"
-          icon: "sfsymbols:bell.slash"
-        - action: "ALARM_PANEL_RESET"
-          title: "Arm Alarm Panel for at Home"
-          icon: "sfsymbols:bell"
-        - action: "ALARM_PANEL_AWAY"
-          title: "Arm Alarm Panel for Going Away"
-          icon: "sfsymbols:airplane"
-    # Links not implemented yet
-    links:
-      - id: frigate_home
-        url: http://frigate
-        icon: "mdi:camera"
-        name: Frigate
-        description: Frigate CCTV
+  cameras:
+    - camera: camera.front_door
+      alias: Front Door
+      device_tracker: device_tracker.cam_axis_door
+      alt_camera: camera.front_garden
+      url: http://192.168.1.100/camera/front_garden/live
+      ptz_default_preset: 1
+      ptz_method: frigate
+      ptz_delay: 5
+    - camera: camera.front_garden
+      alias: Front Garden
+      device_tracker: device_tracker.cam_dah_garden
+      alt_camera: camera.front_door
+
+  action_groups:
+    examples:
+      - identifier: action-1
+        title: Example Mobile Action
+        icon: "sfsymbols:bell"
+        uri: http://10.111.10.111:8123
+        activationMode: foreground
+        authenticationRequired: false
+        destructive: false
+        behavior: default
+        textInputButtonTitle: Input Button Title
+        textInputPlaceholder: Input Placeholder Text
+    frigate:
+      - action_template: silence-{{camera.entity_id}}
+        title_template: Silence Notifications for {{camera.entity_id}}
+        icon: "sfsymbols:bell.slash"
+    alarm_panel:
+      - action: "ALARM_PANEL_DISARM"
+        title: "Disarm Alarm Panel"
+        icon: "sfsymbols:bell.slash"
+      - action: "ALARM_PANEL_RESET"
+        title: "Arm Alarm Panel for at Home"
+        icon: "sfsymbols:bell"
+      - action: "ALARM_PANEL_AWAY"
+        title: "Arm Alarm Panel for Going Away"
+        icon: "sfsymbols:airplane"
+  # Links not implemented yet
+  links:
+    - id: frigate_home
+      url: http://frigate
+      icon: "mdi:camera"
+      name: Frigate
+      description: Frigate CCTV
+
+  snooze:
+    snooze_time: 3600

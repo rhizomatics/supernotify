@@ -224,8 +224,6 @@ async def test_priority_interpretation(mock_hass: HomeAssistant, unmocked_config
 
 
 INTEGRATION_CONFIG: ConfigType = {
-    "name": DOMAIN,
-    "platform": DOMAIN,
     "delivery": {
         "push": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
     },
@@ -239,7 +237,7 @@ async def test_message_override(hass: HomeAssistant) -> None:
     local_config["delivery"]["push"]["message"] = "FIXED_MESSAGE"
     register_mobile_app(HomeAssistantAPI(hass), person="person.bob_mctest", device_name="New iPhone")
     await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, config={NOTIFY_DOMAIN: [local_config]})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: local_config})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -263,7 +261,7 @@ async def test_message_override(hass: HomeAssistant) -> None:
 
 
 async def test_top_level_data_used(hass: HomeAssistant) -> None:
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, config={NOTIFY_DOMAIN: [INTEGRATION_CONFIG]})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: INTEGRATION_CONFIG})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -466,8 +464,6 @@ async def test_mobile_push_discovery_applies_model_name_filter(hass: HomeAssista
     register_mobile_app(hass_api, person="person.bob", manufacturer="Samsung", model="Galaxy S24", device_name="Bob Galaxy")
 
     config = {
-        "name": DOMAIN,
-        "platform": DOMAIN,
         "delivery": {
             "pixel_push": {
                 CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH,
@@ -481,7 +477,7 @@ async def test_mobile_push_discovery_applies_model_name_filter(hass: HomeAssista
     }
 
     await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, config={NOTIFY_DOMAIN: [config]})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     await hass.async_block_till_done()
 
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"message": "pixel only"}, blocking=True)

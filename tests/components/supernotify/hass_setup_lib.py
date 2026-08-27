@@ -59,7 +59,7 @@ from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
-from custom_components.supernotify.schema import SUPERNOTIFY_SCHEMA, EnvelopeOutcome
+from custom_components.supernotify.schema import FULL_CONFIG_SCHEMA, EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snoozer
 
 from .doubles_lib import DummyService
@@ -193,8 +193,11 @@ class TestingContext(Context):
         self.services: dict[str, Any] = {}
 
         raw_config: ConfigType = cast("ConfigType", load_config(yaml))
-        raw_config.setdefault("name", "Supernotify")
-        raw_config.setdefault("platform", "supernotify")
+        # Some fixtures still embed the legacy notify-platform `name`/`platform` keys - neither
+        # is part of FULL_CONFIG_SCHEMA any more (that platform is retired), so drop them here
+        # rather than editing every fixture.
+        raw_config.pop("name", None)
+        raw_config.pop("platform", None)
         if deliveries:
             raw_config[CONF_DELIVERY] = load_config(deliveries)
         if recipients:
@@ -217,7 +220,7 @@ class TestingContext(Context):
         if transport_types:
             TRANSPORT_VALUES.extend([t.name for t in transport_types])
 
-        self.config = SUPERNOTIFY_SCHEMA(raw_config)
+        self.config = FULL_CONFIG_SCHEMA(raw_config)
         self.components = components
 
         if homeassistant is not None:  # real class or own mock

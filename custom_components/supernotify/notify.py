@@ -31,11 +31,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 from homeassistant.helpers.json import ExtendedJSONEncoder
-from homeassistant.helpers.reload import async_setup_reload_service
 
-from . import DOMAIN, PLATFORMS
+from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
 from .common import DupeChecker, sanitize
 from .const import (
@@ -70,17 +68,18 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
-from .schema import ARCHIVE_SCHEMA, HOUSEKEEPING_SCHEMA, NOTIFICATION_DUPE_SCHEMA
-from .schema import SUPERNOTIFY_SCHEMA as PLATFORM_SCHEMA
 from .snoozer import Snoozer
 from .transports.alexa_devices import AlexaDevicesTransport
 from .transports.alexa_media_player import AlexaMediaPlayerTransport
 from .transports.chime import ChimeTransport
+from .transports.discord import DiscordTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
 from .transports.html5 import HTML5Transport
+from .transports.kodi import KodiTransport
 from .transports.lametric import LaMetricTransport
+from .transports.matrix import MatrixTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
 from .transports.mqtt import MQTTTransport
@@ -89,7 +88,6 @@ from .transports.ntfy import NtfyTransport
 from .transports.persistent import PersistentTransport
 from .transports.pushover import PushoverTransport
 from .transports.sms import SMSTransport
-from .transports.smtp import SmtpTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
 
@@ -105,13 +103,6 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
-
-# What archive/housekeeping/dupe_check resolve to when the user hasn't configured them at all -
-# PLATFORM_SCHEMA always fills these sections in with defaults, so config.get(key) alone can't
-# tell "left at default" from "explicitly configured"; comparing against these sentinels can.
-_ARCHIVE_DEFAULT = ARCHIVE_SCHEMA({})
-_HOUSEKEEPING_DEFAULT = HOUSEKEEPING_SCHEMA({})
-_DUPE_CHECK_DEFAULT = NOTIFICATION_DUPE_SCHEMA({})
 
 TRANSPORTS: list[type[Transport]] = [
     EmailTransport,
@@ -133,14 +124,17 @@ TRANSPORTS: list[type[Transport]] = [
     PushoverTransport,
     SmtpTransport,
     HTML5Transport,
+    MatrixTransport,
+    KodiTransport,
+    DiscordTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 
 def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> SupernotifyAction:
-    """Construct a SupernotifyAction from a fully validated SUPERNOTIFY_SCHEMA config dict.
+    """Construct a SupernotifyAction from a fully validated FULL_CONFIG_SCHEMA config dict.
 
-    Shared by the legacy YAML platform setup (async_get_service, below) and the config-entry
-    setup (async_setup_entry in __init__.py) so the two setup paths can't drift apart.
+    Used by the config-entry setup (async_setup_entry in __init__.py), the sole owner of
+    registering notify.supernotify.
     """
     return SupernotifyAction(
         hass,
@@ -371,97 +365,34 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SupernotifyAction:
-    """Notify specific component setup - see async_setup_legacy in legacy BaseNotificationService"""
-    _ = PLATFORM_SCHEMA  # schema must be imported even if not used for HA platform detection
+) -> SupernotifyAction | None:
+    """Legacy `notify: - platform: supernotify` entrypoint - see async_setup_legacy in legacy
+    BaseNotificationService.
+
+    The config entry is now the sole, unconditional owner of notify.supernotify (see
+    async_setup_entry in __init__.py), so this leftover legacy YAML block never builds or
+    registers a service any more - it only raises a fixable repair pointing at the migration
+    (see repairs.py) and declines to set up (returning None is HA's supported "decline" path for
+    a legacy notify platform - a clean one-line log, no exception).
+
+    A `name:` in this leftover block still gets synced onto the owning entry every load though
+    (not gated behind that repair), and likewise for its template_path/media_path/etc and
+    archive/dupe_check/housekeeping settings - otherwise an entry auto-bootstrapped blank by
+    async_setup (see __init__.py), which happens before anyone gets around to opening and
+    confirming the migration repair, would keep running on defaults with nothing configured,
+    silently breaking automations, template/media paths and archiving on every restart until the
+    repair is manually confirmed. That repair is only ever needed for delivery/transports/
+    scenarios/etc - a "simple" install with none of that has no reason to see it at all, so this
+    core migration must not depend on it.
+    """
     _ = discovery_info
 
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    from .repairs import async_create_legacy_yaml_issue, async_sync_entry_from_legacy_config
 
-    service = build_supernotify_action(hass, config)
-    await service.initialize()
-
-    # Nag every time this legacy YAML platform loads, same idiom the built-in smtp
-    # integration uses for its own YAML deprecation (see homeassistant.components.smtp.issue).
-    # The shared "deprecated_yaml" translation key owned by the homeassistant domain can't say
-    # "full" vs "partial" - and its "your YAML has been imported, remove it" wording is wrong
-    # for the partial case - so these two issues use supernotify-owned wording instead.
-    #
-    # Deliveries, transports, scenarios, recipients, cameras, action groups and links aren't
-    # UI-configurable yet (see the roadmap doc's Third phase), so if any of those are defined,
-    # this YAML still has to stay in some form.
-    #
-    # Archive, housekeeping and dupe_check ARE mirrored into the config entry (see
-    # async_step_import above), so leaving them in YAML is dead config even when other keys
-    # force the YAML block to stick around - worth nagging about either way.
-    unmigrated_keys_present = any(
-        config.get(key)
-        for key in (
-            CONF_DELIVERY,
-            CONF_TRANSPORTS,
-            CONF_SCENARIOS,
-            CONF_RECIPIENTS,
-            CONF_CAMERAS,
-            CONF_ACTION_GROUPS,
-            CONF_LINKS,
-        )
-    )
-    dead_keys_present = (
-        config.get(CONF_ARCHIVE) != _ARCHIVE_DEFAULT
-        or config.get(CONF_HOUSEKEEPING) != _HOUSEKEEPING_DEFAULT
-        or config.get(CONF_DUPE_CHECK) != _DUPE_CHECK_DEFAULT
-    )
-
-    if not unmigrated_keys_present:
-        _LOGGER.warning(
-            "SUPERNOTIFY YAML configuration is no longer required and can be fully removed; "
-            "manage this integration from the UI instead"
-        )
-        async_delete_issue(hass, DOMAIN, "deprecated_yaml_partial")
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_full",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_full",
-            translation_placeholders={"domain": DOMAIN},
-        )
-    elif dead_keys_present:
-        _LOGGER.warning(
-            "SUPERNOTIFY YAML configuration still defines deliveries/transports/scenarios/"
-            "recipients/cameras/action_groups/links, which aren't UI-configurable yet - that "
-            "part must stay. But archive/housekeeping/dupe_check are now UI-configurable via "
-            "the mirrored config entry, so those keys can be removed from YAML"
-        )
-        async_delete_issue(hass, DOMAIN, "deprecated_yaml_full")
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_partial",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_partial",
-            translation_placeholders={"domain": DOMAIN},
-        )
-    else:
-        async_delete_issue(hass, DOMAIN, "deprecated_yaml_full")
-        async_delete_issue(hass, DOMAIN, "deprecated_yaml_partial")
-
-    # One-shot mirror of this YAML config into a config entry, so YAML-only users
-    # get an Integrations-page presence. Only when no entry exists yet - once one
-    # does (imported or UI-created), every subsequent YAML reload would otherwise
-    # start a flow that just aborts as already_configured.
-    if not hass.config_entries.async_entries(DOMAIN):
-        from homeassistant.config_entries import SOURCE_IMPORT
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config))
-        )
-
-    async_register_supplemental_services(hass, service, config)
-
-    return service
+    legacy_config = dict(config)
+    async_sync_entry_from_legacy_config(hass, legacy_config)
+    async_create_legacy_yaml_issue(hass, legacy_config)
+    return None
 
 
 class SupernotifyEntity(NotifyEntity):
@@ -558,7 +489,7 @@ class SupernotifyAction(BaseNotificationService):
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
-            _LOGGER.info("SUPERNOTIFY setting up housekeeping schedule at: %s", housekeeping_schedule)
+            _LOGGER.info("SUPERNOTIFY Setting up housekeeping schedule at: %s", housekeeping_schedule)
             self.context.hass_api.subscribe_time(
                 housekeeping_schedule.hour, housekeeping_schedule.minute, housekeeping_schedule.second, self.async_nightly_tasks
             )
@@ -570,17 +501,17 @@ class SupernotifyAction(BaseNotificationService):
         self.context.hass_api.subscribe_event(EVENT_HOMEASSISTANT_STOP, self.async_shutdown)
 
     async def async_shutdown(self, event: Event) -> None:
-        _LOGGER.info("SUPERNOTIFY shutting down, %s (%s)", event.event_type, event.time_fired)
+        _LOGGER.info("SUPERNOTIFY Shutting down, %s (%s)", event.event_type, event.time_fired)
         self.shutdown()
 
     async def async_unregister_services(self) -> None:
-        _LOGGER.info("SUPERNOTIFY unregistering")
+        _LOGGER.info("SUPERNOTIFY Unregistering")
         self.shutdown()
         return await super().async_unregister_services()
 
     def shutdown(self) -> None:
         self.context.hass_api.disconnect()
-        _LOGGER.info("SUPERNOTIFY shut down")
+        _LOGGER.info("SUPERNOTIFY Shut down")
 
     async def async_send_message(
         self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any

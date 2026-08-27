@@ -70,7 +70,7 @@ class AlexaDevicesTransport(Transport):
         targets = envelope.target.entity_ids or []
 
         if not targets:
-            _LOGGER.debug("SUPERNOTIFY skipping alexa devices, no targets")
+            _LOGGER.debug("SUPERNOTIFY Skipping alexa devices, no targets")
             return False
 
         action_data: dict[str, Any] = {ATTR_MESSAGE: envelope.message or ""}
