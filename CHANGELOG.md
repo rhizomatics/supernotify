@@ -1,8 +1,7 @@
+
 ## 2.1.0
 
-- New *Discord* transport provider, contributed by [@lollox80](https://github.com/lollox80)
-
-## 2.0.0
+Gratitude to [@lollox80](https://github.com/lollox80) for contributing 3 new transport integrations
 
 ### Matrix transport
 
@@ -13,6 +12,8 @@
 ### Discord transport
 
 - New native `discord` transport: markdown title, rich embeds, camera snapshot upload, remote image URLs, optional priority emoji prefix, 2000-char truncation. See `docs/transports/discord.md`.
+
+## 2.0.0
 
 ### ConfigFlow
 
