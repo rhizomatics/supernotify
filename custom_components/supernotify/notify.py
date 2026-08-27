@@ -84,7 +84,6 @@ from .transports.ntfy import NtfyTransport
 from .transports.persistent import PersistentTransport
 from .transports.pushover import PushoverTransport
 from .transports.sms import SMSTransport
-from .transports.smtp import SmtpTransport
 from .transports.telegram import TelegramTransport
 from .transports.tts import TTSTransport
 
@@ -119,7 +118,6 @@ TRANSPORTS: list[type[Transport]] = [
     TelegramTransport,
     LaMetricTransport,
     PushoverTransport,
-    SmtpTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
 

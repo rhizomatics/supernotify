@@ -30,6 +30,13 @@ supernotify:
       selection:
         - fallback
       target: mailarchive@mymail.com
+    direct_mail:
+      # sent over a direct SMTP connection (see transports.email.connection below) rather than
+      # via the `action` HA notify action other email deliveries use
+      transport: email
+      options:
+        mode: direct
+      target: mailarchive@mymail.com
     text_message:
       transport: sms
       action: notify.mikrotik_sms
@@ -149,24 +156,8 @@ supernotify:
       enabled: false
   transports:
     email:
-      delivery_defaults:
-        action: notify.email
-        data:
-          footer: Delivered by Supernotify (MsgId:{e.notification_id})
-        options:
-          jpeg_opts:
-            progressive: true
-            optimize: true
-            quality: 50
-          png_opts:
-            optimize: true
-          preheader_blank: "&#847;&zwnj;&nbsp;"
-          preheader_length: 100
-          simplify_text: false
-          strip_urls: false
-          target_categories:
-            - email
-    smtp:
+      # connection is only used by deliveries that set the mode option to direct - other email
+      # deliveries go via the `action` below instead
       connection:
         host: smtp.local.net
         port: 587
@@ -174,6 +165,7 @@ supernotify:
         password: blackandwhitecat
         verify_ssl: false
       delivery_defaults:
+        action: notify.email
         data:
           footer: Delivered by Supernotify (MsgId:{e.notification_id})
         options:

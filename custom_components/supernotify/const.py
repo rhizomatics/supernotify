@@ -197,9 +197,14 @@ OPTION_STRICT_TEMPLATE = "strict_template"
 OPTION_SENDER = "sender"
 OPTION_SENDER_NAME = "sender_name"
 OPTION_DEFAULT_TITLE = "default_title"
+OPTION_MODE = "mode"
 
 SELECT_INCLUDE = "include"
 SELECT_EXCLUDE = "exclude"
+
+EMAIL_OPTION_MODE_DIRECT = "direct"
+EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
+
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
@@ -245,7 +250,7 @@ TRANSPORT_SMS = "sms"
 TRANSPORT_TTS = "tts"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_EMAIL = "email"
-TRANSPORT_SMTP = "smtp"
+TRANSPORT_SMTP = "smtp"  # deprecated, use TRANSPORT_EMAIL - see Delivery.upgrade_deprecations
 TRANSPORT_ALEXA = "alexa_devices"
 TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
 TRANSPORT_MOBILE_PUSH = "mobile_push"

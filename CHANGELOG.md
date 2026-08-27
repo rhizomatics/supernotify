@@ -11,6 +11,9 @@
   - A custom `name:` from that old block (which determines the actual `notify.<name>` action, e.g. `name: SuperNotifier` → `notify.supernotifier`) is kept in sync automatically on every load, independent of whether the repair has been run yet - existing installs don't lose their action name mid-upgrade
   - Core config (archive/dupe_check/housekeeping/paths/name) is reconfigurable via UI, and now actually applies immediately via an update listener - no reload/restart needed
 
+### SMTP
+
+- v1.17.0 introduced a separate `smtp` transport to work round problems created by new Home Assistant Notify Entities. To make this less confusing, the new direct SMTP integration is merged back into the `email` transport, switched on by a options keyword
 
 ### Technical Changes
 
