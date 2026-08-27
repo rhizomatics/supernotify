@@ -11,7 +11,9 @@ from custom_components.supernotify.const import (
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
     CONF_TRANSPORT,
+    EMAIL_OPTION_MODE_DIRECT,
     OCCUPANCY_ALL,
+    OPTION_MODE,
     PRIORITY_VALUES,
     SELECTION_DEFAULT,
     TRANSPORT_EMAIL,
@@ -112,9 +114,14 @@ def test_device_discovery(unmocked_config: Context) -> None:
 
 def test_smtp_transport_deprecation_normalizes_to_email(mock_context: Context, caplog: pytest.LogCaptureFixture) -> None:
     """The old `smtp` transport was folded into `email` - a delivery still configured with
-    `transport: smtp` should be normalized in place to `transport: email`, with a warning."""
+    `transport: smtp` should be normalized in place to `transport: email`, with a warning, and
+    switched to direct-connection mode - even with no `options:` block of its own, which is the
+    common case for a bare `transport: smtp` delivery and previously left self.options untouched
+    (conf.get(CONF_OPTIONS, {}) returns a fresh dict when conf has no options key, so writing to
+    conf[CONF_OPTIONS] afterwards didn't reach the live self.options actually used at send time)."""
     conf = {CONF_TRANSPORT: TRANSPORT_SMTP}
     caplog.clear()
-    Delivery("legacy_smtp", conf, EmailTransport(mock_context, {}))
+    uut = Delivery("legacy_smtp", conf, EmailTransport(mock_context, {}))
     assert conf[CONF_TRANSPORT] == TRANSPORT_EMAIL
+    assert uut.options[OPTION_MODE] == EMAIL_OPTION_MODE_DIRECT
     assert any("smtp transport" in r.message for r in caplog.records if r.levelname == "WARNING")

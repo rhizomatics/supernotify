@@ -158,8 +158,10 @@ class Delivery(DeliveryConfig):
                 "SUPERNOTIFY Deprecated use of smtp transport - use email transport with OPTION_MODE set to `direct`"
             )
             conf[CONF_TRANSPORT] = TRANSPORT_EMAIL
-            conf.setdefault(CONF_OPTIONS, {})
-            conf[CONF_OPTIONS][OPTION_MODE] = EMAIL_OPTION_MODE_DIRECT
+            # mutate self.options (not conf[CONF_OPTIONS]) - conf.get(CONF_OPTIONS, {}) above returned a
+            # fresh dict when conf had no options block of its own, so self.options isn't the same
+            # object as conf[CONF_OPTIONS] in that case and writing there wouldn't take effect
+            self.options[OPTION_MODE] = EMAIL_OPTION_MODE_DIRECT
 
     def discover_devices(self, context: Context) -> None:
         if self.options.get(OPTION_DEVICE_DISCOVERY, False):

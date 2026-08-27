@@ -14,6 +14,7 @@
 ### SMTP
 
 - v1.17.0 introduced a separate `smtp` transport to work round problems created by new Home Assistant Notify Entities. To make this less confusing, the new direct SMTP integration is merged back into the `email` transport, switched on by a options keyword
+- Existing deliveries will have a warning in the logs, and will attempt to redirect to the `email` integration, although in practice changes will be required to config to remove the `smtp` transport references (which has only been available for 1 week)
 
 ### Technical Changes
 
