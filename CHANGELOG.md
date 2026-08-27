@@ -4,6 +4,10 @@
 
 ## 2.0.0
 
+### Discord transport
+
+- New native `discord` transport: markdown title, rich embeds, camera snapshot upload, remote image URLs, optional priority emoji prefix, 2000-char truncation. See `docs/transports/discord.md`.
+
 ### ConfigFlow
 
 - SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
