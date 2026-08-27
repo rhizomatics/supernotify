@@ -122,7 +122,6 @@ TRANSPORTS: list[type[Transport]] = [
     TelegramTransport,
     LaMetricTransport,
     PushoverTransport,
-    SmtpTransport,
     HTML5Transport,
     MatrixTransport,
     KodiTransport,
