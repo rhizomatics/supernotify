@@ -37,6 +37,7 @@
   - Better logging for path actions
 - Async I/O
   - Final 2 `media_grab.py` Pillow image I/O wrapped as async
+  - SMTP attach file now uses `aiofiles`
 
 ## 1.17.1
 - New standalone `smtp` integration will reuse connection details from an existing Home Assistant SMTP integration
