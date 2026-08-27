@@ -38,52 +38,51 @@ integration, which responds to the `ALARM_PANEL_DISARM`, `ALARM_PANEL_RESET` etc
 ## Example Configuration
 
 ```yaml
-name: SuperNotifier
-platform: supernotify
-recipients:
-  - person: person.joe_mcphee
-    mobile_devices:
-        - mobile_app_id: mobile_app_joe_nokia
+supernotify:
+  recipients:
+    - person: person.joe_mcphee
+      mobile_devices:
+          - mobile_app_id: mobile_app_joe_nokia
 
-delivery:
-  apple_push:
-    transport: mobile_push
-scenarios:
-  alarm_disarmed:
-    conditions:
+  delivery:
+    apple_push:
+      transport: mobile_push
+  scenarios:
+    alarm_disarmed:
+      conditions:
+        - condition: state
+          entity_id: alarm_control_panel.home_alarm
+          state:
+            - disarmed
+      action_groups:
+        - alarm_panel_arm
+        - alarm_panel_reset
+
+    alarm_armed:
+      conditions:
       - condition: state
         entity_id: alarm_control_panel.home_alarm
         state:
-          - disarmed
-    action_groups:
-      - alarm_panel_arm
-      - alarm_panel_reset
+          - armed_home
+          - armed_night
+          - armed_away
+      action_groups:
+        - alarm_panel_disarm
+        - alarm_panel_reset
 
-  alarm_armed:
-    conditions:
-    - condition: state
-      entity_id: alarm_control_panel.home_alarm
-      state:
-        - armed_home
-        - armed_night
-        - armed_away
-    action_groups:
-      - alarm_panel_disarm
-      - alarm_panel_reset
-
-action_groups:
-  alarm_panel_disarm:
-    - action: ALARM_PANEL_DISARM
-      title: "Disarm Alarm Panel"
-      icon: "sfsymbols:bell.slash"
-  alarm_panel_reset:
-    - action: ALARM_PANEL_RESET
-      title: "Arm Alarm Panel for at Home"
-      icon: "sfsymbols:bell"
-  alarm_panel_arm:
-    - action: ALARM_PANEL_AWAY
-      title: "Arm Alarm Panel for Going Away"
-      icon: "sfsymbols:airplane"
+  action_groups:
+    alarm_panel_disarm:
+      - action: ALARM_PANEL_DISARM
+        title: "Disarm Alarm Panel"
+        icon: "sfsymbols:bell.slash"
+    alarm_panel_reset:
+      - action: ALARM_PANEL_RESET
+        title: "Arm Alarm Panel for at Home"
+        icon: "sfsymbols:bell"
+    alarm_panel_arm:
+      - action: ALARM_PANEL_AWAY
+        title: "Arm Alarm Panel for Going Away"
+        icon: "sfsymbols:airplane"
 ```
 
 ### Example Notify Action

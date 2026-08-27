@@ -2,31 +2,74 @@ from __future__ import annotations
 
 import importlib.util
 from contextlib import ExitStack
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock, patch
 
 from anyio import Path
-from homeassistant.const import CONF_ACTION, CONF_EMAIL
+from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.const import (
+    CONF_ACTION,
+    CONF_EMAIL,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SENDER,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_DELIVERY,
     ATTR_MEDIA_SNAPSHOT_PATH,
+    ATTR_TITLE,
+    CONF_CONNECTION,
+    CONF_DELIVERY_DEFAULTS,
+    CONF_ENCRYPTION,
+    CONF_OPTIONS,
     CONF_PERSON,
     CONF_TEMPLATE,
     CONF_TRANSPORT,
+    EMAIL_OPTION_MODE_DIRECT,
+    EMAIL_OPTION_MODE_HA_SMTP,
+    OPTION_MODE,
+    OPTION_SENDER,
+    OPTION_SENDER_NAME,
+    PRIORITY_HIGH,
+    PRIORITY_LOW,
+    PRIORITY_MEDIUM,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.email import OPTION_PREHEADER_BLANK, OPTION_PREHEADER_LENGTH, EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
+
+SMTP_CONNECTION = {
+    CONF_HOST: "smtp.example.com",
+}
+SMTP_TRANSPORT_CONFIG = {
+    CONF_CONNECTION: SMTP_CONNECTION,
+    CONF_DELIVERY_DEFAULTS: {
+        CONF_OPTIONS: {
+            OPTION_SENDER: "hass@example.com",
+        }
+    },
+}
+
+
+def _direct_smtp_uut(transport_config: dict | None = None) -> EmailTransport:
+    return EmailTransport(
+        Mock(custom_template_path=None), transport_config if transport_config is not None else SMTP_TRANSPORT_CONFIG
+    )
 
 
 async def test_deliver() -> None:
@@ -511,3 +554,300 @@ async def test_find_default_template(tmp_aiopath: Path) -> None:
     uut = EmailTransport(ctx, {})
     await uut.initialize()
     assert await uut.load_template("default.html.j2") == "{{ 2+2 }}"
+
+
+# Direct SMTP connection handling
+
+
+def test_direct_smtp_validate_action_without_connection() -> None:
+    context = Mock(custom_template_path=None)
+    context.hass_api.find_config_entry_data.return_value = None
+    uut = EmailTransport(context, {})
+    assert uut.validate_action(None) is False
+
+
+def test_direct_smtp_validate_action_with_connection() -> None:
+    uut = _direct_smtp_uut()
+    assert uut.validate_action(None) is True
+
+
+def test_reuses_ha_smtp_connection_when_not_configured() -> None:
+    context = Mock(custom_template_path=None)
+    context.hass_api.find_config_entry_data.return_value = {
+        "server": "ha-smtp.example.com",
+        CONF_PORT: 465,
+        CONF_ENCRYPTION: "tls",
+        CONF_USERNAME: "ha_user",
+        CONF_PASSWORD: "ha_pass",
+        CONF_VERIFY_SSL: False,
+        CONF_SENDER: "ha@example.com",
+        OPTION_SENDER_NAME: "HA Notifier",
+    }
+    uut = EmailTransport(context, {})
+
+    context.hass_api.find_config_entry_data.assert_called_once_with("smtp")
+    assert uut.host == "ha-smtp.example.com"
+    assert uut.port == 465
+    assert uut.encryption == "tls"
+    assert uut.username == "ha_user"
+    assert uut.password == "ha_pass"
+    assert uut.verify_ssl is False
+    assert uut.sender == "ha@example.com"
+    assert uut.sender_name == "HA Notifier"
+    assert uut.validate_action(None) is True
+
+
+def test_existing_connection_not_overridden_by_ha_smtp() -> None:
+    context = Mock(custom_template_path=None)
+    uut = EmailTransport(context, SMTP_TRANSPORT_CONFIG)
+    assert uut.host == "smtp.example.com"
+    context.hass_api.find_config_entry_data.assert_not_called()
+
+
+async def test_build_message_plain() -> None:
+    uut = _direct_smtp_uut({
+        **SMTP_TRANSPORT_CONFIG,
+        CONF_DELIVERY_DEFAULTS: {
+            CONF_OPTIONS: {
+                OPTION_SENDER_NAME: "Home Assistant",
+            }
+        },
+    })
+    msg = await uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "001")
+    assert isinstance(msg, MIMEText)
+    assert msg["Subject"] == "testing"
+    assert msg["To"] == "tester1@assert.com"
+    assert msg["From"] == "Home Assistant <>"
+    assert msg["Importance"] is None
+    assert msg["Priority"] is None
+    assert msg["X-Priority"] is None
+    assert msg["X-MSMail-Priority"] is None
+
+
+async def test_build_message_default_title() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message({ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "003")
+    assert msg["Subject"] == "Home Assistant Notification"
+
+
+async def test_build_message_explicit_title_overrides_default() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message({ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], None, "004")
+    assert msg["Subject"] == "testing"
+
+
+async def test_build_message_html() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_DATA: {"html": "<h1>hi</h1>"}},
+        ["tester1@assert.com"],
+        None,
+        "002",
+    )
+    assert isinstance(msg, MIMEMultipart)
+    assert msg["From"] == "Home Assistant <hass@example.com>"
+
+
+async def test_build_message_with_image_attachment(tmp_path: object) -> None:
+    image_path = tmp_path / "picture.jpg"  # type: ignore[operator]
+    image_path.write_bytes(b"\xff\xd8\xff\xe0notreallyajpegbutclosenough")
+
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there", ATTR_DATA: {"images": [str(image_path)]}},
+        ["tester1@assert.com"],
+        None,
+        "003",
+    )
+    assert isinstance(msg, MIMEMultipart)
+    attachments = [part for part in msg.walk() if part.get("Content-ID")]
+    assert len(attachments) == 1
+    assert attachments[0]["Content-ID"] == "<picture.jpg>"
+
+
+async def test_build_message_importance_high() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_HIGH, "004"
+    )
+    assert msg["Importance"] == "high"
+    assert msg["Priority"] == "urgent"
+    assert msg["X-Priority"] == "2"
+    assert msg["X-MSMail-Priority"] == "High"
+
+
+async def test_build_message_importance_normal() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_MEDIUM, "005"
+    )
+    assert msg["Importance"] == "normal"
+    assert msg["Priority"] == "normal"
+    assert msg["X-Priority"] == "3"
+    assert msg["X-MSMail-Priority"] == "Normal"
+
+
+async def test_build_message_importance_low() -> None:
+    uut = _direct_smtp_uut()
+    msg = await uut._build_message(
+        {ATTR_TITLE: "testing", ATTR_MESSAGE: "hello there"}, ["tester1@assert.com"], PRIORITY_LOW, "006"
+    )
+    assert msg["Importance"] == "low"
+    assert msg["Priority"] == "non-urgent"
+    assert msg["X-Priority"] == "4"
+    assert msg["X-MSMail-Priority"] == "Low"
+
+
+def test_send_smtp_starttls() -> None:
+    uut = _direct_smtp_uut({
+        **SMTP_TRANSPORT_CONFIG,
+        CONF_CONNECTION: {**SMTP_CONNECTION, CONF_USERNAME: "bob", CONF_PASSWORD: "secret", CONF_ENCRYPTION: "starttls"},
+    })
+    with (
+        patch("custom_components.supernotify.transports.email.smtplib.SMTP") as mock_smtp_cls,
+        patch("custom_components.supernotify.transports.email.create_client_context"),
+    ):
+        mock_client = mock_smtp_cls.return_value
+        uut._send_smtp(MIMEText("hi"), ["tester1@assert.com"])
+
+        mock_smtp_cls.assert_called_with("smtp.example.com", 587, timeout=5)
+        mock_client.starttls.assert_called_once()
+        mock_client.login.assert_called_with("bob", "secret")
+        sent_sender, sent_addresses, sent_body = mock_client.sendmail.call_args.args
+        assert sent_sender == "hass@example.com"
+        assert sent_addresses == ["tester1@assert.com"]
+        assert sent_body.endswith("hi")
+        mock_client.quit.assert_called_once()
+
+
+def test_send_smtp_tls() -> None:
+    uut = _direct_smtp_uut({
+        **SMTP_TRANSPORT_CONFIG,
+        CONF_CONNECTION: {**SMTP_CONNECTION, CONF_ENCRYPTION: "tls", CONF_PORT: 465},
+    })
+    with (
+        patch("custom_components.supernotify.transports.email.smtplib.SMTP_SSL") as mock_smtp_ssl_cls,
+        patch("custom_components.supernotify.transports.email.create_client_context"),
+    ):
+        mock_client = mock_smtp_ssl_cls.return_value
+        uut._send_smtp(MIMEText("hi"), ["tester1@assert.com"])
+
+        mock_smtp_ssl_cls.assert_called_once()
+        mock_client.starttls.assert_not_called()
+        mock_client.login.assert_not_called()
+        sent_sender, sent_addresses, sent_body = mock_client.sendmail.call_args.args
+        assert sent_sender == "hass@example.com"
+        assert sent_addresses == ["tester1@assert.com"]
+        assert sent_body.endswith("hi")
+
+
+async def test_deliver_direct_smtp_skips_without_connection() -> None:
+    context = TestingContext(
+        recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
+        deliveries={"direct_smtp": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}},
+        transports={TRANSPORT_EMAIL: {}},
+    )
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+
+    envelope = Envelope(
+        Delivery("direct_smtp", context.delivery_config("direct_smtp"), uut),
+        Notification(context, message="hello there", title="testing"),
+        target=Target(["tester1@assert.com"]),
+    )
+    with patch.object(EmailTransport, "_send_smtp") as mock_send:
+        result = await uut.deliver(envelope)
+    assert result is False
+    assert envelope.skipped == 1
+    assert envelope.skip_reason == SuppressionReason.NO_ACTION
+    mock_send.assert_not_called()
+
+
+async def test_deliver_direct_smtp_skips_without_target() -> None:
+    context = TestingContext(
+        recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
+        deliveries={"direct_smtp": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}},
+        transports={TRANSPORT_EMAIL: SMTP_TRANSPORT_CONFIG},
+    )
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+
+    envelope = Envelope(
+        Delivery("direct_smtp", context.delivery_config("direct_smtp"), uut),
+        Notification(context, message="hello there", title="testing"),
+        target=Target(),
+    )
+    with patch.object(EmailTransport, "_send_smtp") as mock_send:
+        result = await uut.deliver(envelope)
+    assert result is False
+    assert envelope.skipped == 1
+    assert envelope.skip_reason == SuppressionReason.NO_TARGET
+    mock_send.assert_not_called()
+
+
+async def test_deliver_direct_smtp(hass: HomeAssistant) -> None:
+    context = TestingContext(
+        homeassistant=hass,
+        recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
+        deliveries={"direct_smtp": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}},
+        transports={TRANSPORT_EMAIL: SMTP_TRANSPORT_CONFIG},
+    )
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+
+    envelope = Envelope(
+        Delivery("direct_smtp", context.delivery_config("direct_smtp"), uut),
+        Notification(context, message="hello there", title="testing"),
+        target=Target(["tester1@assert.com"]),
+    )
+    with patch.object(EmailTransport, "_send_smtp") as mock_send:
+        result = await uut.deliver(envelope)
+
+    assert result is True
+    assert envelope.delivered == 1
+    assert len(envelope.calls) == 1
+    assert envelope.calls[0].target_data == {ATTR_TARGET: ["tester1@assert.com"]}
+    mock_send.assert_called_once()
+    sent_msg = mock_send.call_args.args[0]
+    assert sent_msg["To"] == "tester1@assert.com"
+    assert sent_msg["Subject"] == "testing"
+
+
+async def test_deliver_ha_smtp_mode_uses_action_call() -> None:
+    """Explicitly setting OPTION_MODE to EMAIL_OPTION_MODE_HA_SMTP uses the HA notify action,
+    even when a direct SMTP connection is configured on the transport - it's not enough for a
+    connection to just be available, the delivery has to opt into direct sending."""
+    context = TestingContext(
+        recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
+        deliveries={
+            "ha_smtp": {
+                CONF_TRANSPORT: TRANSPORT_EMAIL,
+                CONF_ACTION: "notify.smtp",
+                CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_HA_SMTP},
+            }
+        },
+        transports={TRANSPORT_EMAIL: SMTP_TRANSPORT_CONFIG},
+    )
+    await context.test_initialize()
+    uut = context.transport(TRANSPORT_EMAIL)
+
+    with patch.object(EmailTransport, "_send_smtp") as mock_send:
+        result = await uut.deliver(
+            Envelope(
+                Delivery("ha_smtp", context.delivery_config("ha_smtp"), uut),
+                Notification(context, message="hello there", title="testing"),
+                target=Target(["tester1@assert.com"]),
+            )
+        )
+
+    assert result is True
+    mock_send.assert_not_called()
+    context.hass.services.async_call.assert_called_with(  # type: ignore
+        "notify",
+        "smtp",
+        service_data={"target": ["tester1@assert.com"], "title": "testing", "message": "hello there"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )

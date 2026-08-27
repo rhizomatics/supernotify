@@ -253,7 +253,7 @@ class AlexaMediaPlayerTransport(Transport):
 
         media_players = envelope.target.entity_ids or []
         if not media_players:
-            _LOGGER.debug("SUPERNOTIFY skipping alexa media player, no targets")
+            _LOGGER.debug("SUPERNOTIFY Skipping alexa media player, no targets")
             return False
 
         # envelope.data is a flat dict — keys like volume, type, method
