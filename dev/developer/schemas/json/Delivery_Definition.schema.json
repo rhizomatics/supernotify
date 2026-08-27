@@ -181,6 +181,7 @@
         "telegram",
         "lametric",
         "pushover",
+        "kodi",
         "discord"
       ]
     },
