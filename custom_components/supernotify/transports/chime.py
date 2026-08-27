@@ -175,7 +175,7 @@ class ScriptChimeTransport(MiniChimeTransport):
         **_kwargs: Any,
     ) -> ActionCall | None:
         if entity_name is None:
-            _LOGGER.warning("SUPERNOTIFY script chime target requires entity")
+            _LOGGER.warning("SUPERNOTIFY Script chime target requires entity")
             return None
         variables: dict[str, Any] = target_config.data or {}
         variables[ATTR_MESSAGE] = envelope.message
@@ -321,13 +321,13 @@ class ChimeTransport(Transport):
 
         chimes = 0
         if not expanded_targets:
-            _LOGGER.info("SUPERNOTIFY skipping chime, no targets")
+            _LOGGER.info("SUPERNOTIFY Skipping chime, no targets")
             return False
         if debug_trace:
             debug_trace.record_delivery_artefact(envelope.delivery.name, "expanded_targets", expanded_targets)
 
         for chime_entity_config in expanded_targets.values():
-            _LOGGER.debug("SUPERNOTIFY chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
+            _LOGGER.debug("SUPERNOTIFY Chime %s: %s", chime_entity_config.entity_id, chime_entity_config.tune)
             try:
                 action_call: ActionCall | None = self.analyze_target(chime_entity_config, data, envelope)
                 if action_call is not None:
@@ -445,13 +445,13 @@ def build_aliases(src_config: ConfigType) -> ConfigType:
                     if domain_config.get(CONF_TARGET):
                         domain_config[CONF_TARGET] = Target(domain_config[CONF_TARGET])
                         if not domain_config[CONF_TARGET].has_targets():
-                            _LOGGER.warning("SUPERNOTIFY chime alias %s has empty target", alias)
+                            _LOGGER.warning("SUPERNOTIFY Chime alias %s has empty target", alias)
                         elif domain_config[CONF_TARGET].has_unknown_targets():
-                            _LOGGER.warning("SUPERNOTIFY chime alias %s has unknown targets", alias)
+                            _LOGGER.warning("SUPERNOTIFY Chime alias %s has unknown targets", alias)
                     dest_config.setdefault(alias, {})
                     dest_config[alias][domain_or_label] = domain_config
                 except Exception:
-                    _LOGGER.exception("SUPERNOTIFY chime alias %s has invalid target", alias)
+                    _LOGGER.exception("SUPERNOTIFY Chime alias %s has invalid target", alias)
 
     except vol.Invalid as ve:
         _LOGGER.error("SUPERNOTIFY Chime alias configuration error: %s", ve)

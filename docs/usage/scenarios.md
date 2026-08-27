@@ -93,6 +93,10 @@ Each delivery section within scenario has an `enabled` value, which defaults to 
 * `false` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
 * *Empty* - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied. Especially useful with [Wildcard Deliveries].
 
+If two active scenarios disagree on the same delivery, `false` always wins over any number of
+scenarios saying `true` - see [When Scenarios Disagree](../usage/notifying.md#when-scenarios-disagree)
+for the full explanation and the one way to override it.
+
 See the [Seasonal Greetings Recipe](../recipes/seasonal_greetings.md) for an example where the null value of `enabled`
 is useful.
 

@@ -148,7 +148,7 @@ class Snoozer:
                 ]
                 if target_people:
                     recipient = target_people[0]
-                    _LOGGER.debug("SUPERNOTIFY mobile action from %s mapped to %s", event.context.user_id, recipient)
+                    _LOGGER.debug("SUPERNOTIFY Mobile action from %s mapped to %s", event.context.user_id, recipient)
                 else:
                     _LOGGER.warning("SUPERNOTIFY Unable to find person for action from %s", event.context.user_id)
                     return

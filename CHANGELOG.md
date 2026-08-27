@@ -1,32 +1,46 @@
-# Beta releases
+## 2.1.0
+
+- New *Discord* transport provider, contributed by [@lollox80](https://github.com/lollox80)
 
 ## 2.0.0
 
 ### Kodi transport
 
 - New native `kodi` transport: on-screen overlay notifications via `kodi.call_method` / `GUI.ShowNotification` on any `media_player.kodi_*` entity, priority-mapped icon, camera snapshot as overlay icon. See `docs/transports/kodi.md`.
+### Discord transport
+
+- New native `discord` transport: markdown title, rich embeds, camera snapshot upload, remote image URLs, optional priority emoji prefix, 2000-char truncation. See `docs/transports/discord.md`.
 
 ### ConfigFlow
 
 - SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
   - This covers basic use cases using default deliveries, like mobile push and email
-  - More advanced configuration - like scenarios, cameras, transport, action configs etc - continue to require yaml configuration for now
-  - Existing core yaml config imported and converted if present, and a repair raised to remove dead yaml
-  - Core config is reconfigurable via UI
+  - More advanced configuration - like scenarios, cameras, transport, action configs etc - continues to require YAML configuration
+  - That YAML now lives under a top-level `supernotify:` key, not the old `notify: - platform: supernotify` block - typically split out with `supernotify: !include supernotify.yaml`
+  - The config entry is now the sole, unconditional owner of the `notify.supernotify` action - no more dual registration between YAML and the UI
+  - A leftover `notify: - platform: supernotify` block is inert (nothing is registered from it) but raises a fixable repair that automates the move: writes `supernotify.yaml`, adds the include line, reloads immediately - no restart needed. Migrating by hand instead works just as well; either way, deleting the old block afterwards is what makes the repair stop reappearing
+  - A custom `name:` from that old block (which determines the actual `notify.<name>` action, e.g. `name: SuperNotifier` → `notify.supernotifier`) is kept in sync automatically on every load, independent of whether the repair has been run yet - existing installs don't lose their action name mid-upgrade
+  - Core config (archive/dupe_check/housekeeping/paths/name) is reconfigurable via UI, and now actually applies immediately via an update listener - no reload/restart needed
 
+### SMTP
+
+- v1.17.0 introduced a separate `smtp` transport to work round problems created by new Home Assistant Notify Entities. To make this less confusing, the new direct SMTP integration is merged back into the `email` transport, switched on by a options keyword
+- Existing deliveries will have a warning in the logs, and will attempt to redirect to the `email` integration in direct mode, although in practice changes will be required to config to remove the `smtp` transport references (which has only been available for 1 week)
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](docs/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integratio style
+- Step 1 of the [roadmap](docs/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
-  - `config_flow.py` (new) — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced.
-  - `__init__.py` — `async_setup_entry`/`async_unload_entry`, registering `notify.supernotify` directly via `BaseNotificationService` primitives (no legacy discovery), with a guard against double-registering if a legacy YAML platform is already using that name.
-  - `notify.py` — `build_supernotify_action()` extracted so the YAML and config-entry paths share construction logic; YAML path (`async_get_service`) is otherwise untouched.
+  - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
+  - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.
+  - `notify.py` — `async_get_service` (the legacy `notify:` platform entrypoint) reduced to a shim: raises the migration repair and syncs `entry.data[name]` from the legacy config on every load, but registers nothing itself.
   - `manifest.json` — `config_flow: true`, `single_config_entry: true`, notify added to dependencies.
-  - `strings.json` + all 11 translations/*.json — new fields and options pages.
-  - Tests: `test_config_flow.py` (6 tests) + `test_init.py` (4 tests)
-  - YAML import (mirror entry): `notify.async_get_service` now raises a deprecated_yaml repair (same idiom the core smtp integration uses) on every YAML load, and one-shot mirrors the config into a config entry when none exists yet. The legacy YAML platform keeps owning `notify.supernotify` — the mirrored entry is visible/editable in the UI but doesn't change runtime behavior yet (documented as a known limitation, since deliveries/transports still come from YAML only).
-  - Reconfigure flow: `async_step_reconfigure` lets you edit template_path/media_path/media_url_prefix/mobile_discovery/recipients_discovery/archive_path on an existing entry (UI-created or imported) without deleting and re-adding it — reuses the same schema as the user step, pre-filled from entry.data.
+  - `strings.json` + all 11 translations/*.json — new fields, options pages, and the migration repair's fixable flow text.
+  - `schema.py` — split into `SUPERNOTIFY_YAML_SCHEMA` (8 YAML-only keys), `CONFIG_ENTRY_SCHEMA` (8 ConfigEntry-owned keys), `FULL_CONFIG_SCHEMA` (single-pass union, for tests) - `_entry_full_config` validates entry.data/options through `CONFIG_ENTRY_SCHEMA` and merges in the already-validated YAML section as-is, rather than re-validating a combined dict a second time (which would reject values a first pass already coerced, e.g. `cv.template`'s `Template` objects).
+  - `repairs.py` (new) — the `legacy_yaml_config` fixable repair: writes `supernotify.yaml` + appends the include line, validated on the event loop before writing (`cv.template`'s bare-Jinja-string condition shorthand needs the event-loop-bound `hass` context, so this can't happen from the executor thread the file I/O runs in), validates configuration.yaml as a whole before and after via `async_check_ha_config_file`, rolls back and logs the underlying error on any failure, raises a separate persistent `legacy_yaml_manual_migration_required` issue when automation can't proceed, and serializes the whole write-and-reload sequence behind a lock so two concurrent attempts can't interleave.
+  - Tests: `test_config_flow.py`, `test_init.py`, `test_repairs.py` (new), `test_config_yaml.py`, `test_example_configs.py` all updated/added for the new architecture.
+  - Docs: `docs/configuration/yaml.md`, `email.md` and `docs/recipes/contextual_mobile_actions.md` updated for the top-level `supernotify:` key; `docgen/schema_extractor.py` updated for the renamed schema.
+  - Fix log errors from accessing version in `manifest.json` and eager loading MQTT component
 - Silver level HA Quality Level Checks
   - Stage 2 of the roadmap partially implemented, 'Bronze' level only
   - Better testing of user supplied values in config
@@ -35,10 +49,10 @@
 - Template Path
   - Directory now created if specified and doesn't exist
   - Default is relative to config home rather than hard-coded to `/config`
+  - Better logging for path actions
 - Async I/O
   - Final 2 `media_grab.py` Pillow image I/O wrapped as async
-
-# Public releases
+  - SMTP attach file now uses `aiofiles`
 
 ## 1.17.1
 - New standalone `smtp` integration will reuse connection details from an existing Home Assistant SMTP integration

@@ -101,6 +101,7 @@ ATTR_MEDIA_CAMERA_DELAY = "camera_delay"
 ATTR_MEDIA_CAMERA_PTZ_PRESET = "camera_ptz_preset"
 ATTR_MEDIA_CLIP_URL = "clip_url"
 ATTR_MEDIA_SNAPSHOT_PATH = "snapshot_image_path"
+ATTR_TOPIC = "topic"
 ATTR_ACTION_GROUPS = "action_groups"
 CONF_ACTION_GROUP_NAMES = "action_groups"
 ATTR_ACTION_CATEGORY = "action_category"
@@ -196,9 +197,14 @@ OPTION_STRICT_TEMPLATE = "strict_template"
 OPTION_SENDER = "sender"
 OPTION_SENDER_NAME = "sender_name"
 OPTION_DEFAULT_TITLE = "default_title"
+OPTION_MODE = "mode"
 
 SELECT_INCLUDE = "include"
 SELECT_EXCLUDE = "exclude"
+
+EMAIL_OPTION_MODE_DIRECT = "direct"
+EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
+
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
 
@@ -244,7 +250,6 @@ TRANSPORT_SMS = "sms"
 TRANSPORT_TTS = "tts"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_EMAIL = "email"
-TRANSPORT_SMTP = "smtp"
 TRANSPORT_ALEXA = "alexa_devices"
 TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
 TRANSPORT_MOBILE_PUSH = "mobile_push"
@@ -259,6 +264,7 @@ TRANSPORT_TELEGRAM = "telegram"
 TRANSPORT_LAMETRIC = "lametric"
 TRANSPORT_PUSHOVER = "pushover"
 TRANSPORT_KODI = "kodi"
+TRANSPORT_DISCORD = "discord"
 TRANSPORT_VALUES = [
     TRANSPORT_SMS,
     TRANSPORT_MQTT,
@@ -279,6 +285,7 @@ TRANSPORT_VALUES = [
     TRANSPORT_PUSHOVER,
     TRANSPORT_SMTP,
     TRANSPORT_KODI,
+    TRANSPORT_DISCORD,
 ]
 
 

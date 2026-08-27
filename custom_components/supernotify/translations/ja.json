@@ -19,14 +19,16 @@
                     "media_path": "メディアパス",
                     "media_url_prefix": "メディアURLプレフィックス",
                     "mobile_discovery": "モバイルデバイス検出",
-                    "recipients_discovery": "受信者検出"
+                    "recipients_discovery": "受信者検出",
+                    "name": "名前"
                 },
                 "data_description": {
-                    "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）",
-                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス",
+                    "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
+                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                     "media_url_prefix": "保存されたメディア（カメラのスナップショットなど）が配信されるURLパスのプレフィックス",
                     "mobile_discovery": "プッシュ通知のためにHome Assistantに登録されたモバイルアプリデバイスを自動検出します",
-                    "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します"
+                    "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します",
+                    "name": "登録される notify アクション名（notify.NAME）を決定します。notify.supernotify以外が必要な場合のみ変更してください（例: 既存のオートメーションに合わせる場合など）"
                 }
             },
             "reconfigure": {
@@ -36,14 +38,16 @@
                     "media_path": "メディアパス",
                     "media_url_prefix": "メディアURLプレフィックス",
                     "mobile_discovery": "モバイルデバイス検出",
-                    "recipients_discovery": "受信者検出"
+                    "recipients_discovery": "受信者検出",
+                    "name": "名前"
                 },
                 "data_description": {
-                    "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）",
-                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス",
+                    "template_path": "HTMLメール用のJinja2テンプレートの保存場所（オプション）。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
+                    "media_path": "通知中に作成されたメディア（添付ファイル用のカメラスナップショットなど）の保存パス。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                     "media_url_prefix": "保存されたメディア（カメラのスナップショットなど）が配信されるURLパスのプレフィックス",
                     "mobile_discovery": "プッシュ通知のためにHome Assistantに登録されたモバイルアプリデバイスを自動検出します",
-                    "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します"
+                    "recipients_discovery": "Home Assistantのpersonエンティティから受信者を自動検出します",
+                    "name": "登録される notify アクション名（notify.NAME）を決定します。notify.supernotify以外が必要な場合のみ変更してください（例: 既存のオートメーションに合わせる場合など）"
                 }
             }
         },
@@ -57,14 +61,6 @@
         }
     },
     "issues": {
-        "deprecated_yaml_full": {
-            "title": "Supernotify の YAML 設定を削除できます",
-            "description": "Supernotify の YAML 設定は UI にインポートされたため、もう必要ありません。`configuration.yaml` ファイルから `{domain}` プラットフォームのエントリを削除し、Home Assistant を再起動してください。"
-        },
-        "deprecated_yaml_partial": {
-            "title": "一部の Supernotify YAML 設定を削除できます",
-            "description": "配信、転送、シナリオ、受信者、カメラ、アクショングループ、リンクはまだ UI から設定できないため、この統合にはそれらを定義する `{domain}` の YAML エントリが引き続き必要です。ただし、`archive`、`housekeeping`、`dupe_check` は現在コンフィグエントリから管理されています。`configuration.yaml` の `{domain}` エントリからこれらのキーを削除し、Home Assistant を再起動してください。"
-        },
         "scenario_delivery": {
             "title": "シナリオの配信が無効です",
             "description": "シナリオ定義 {scenario} は、Supernotify設定に存在しない配信 {delivery} を参照しています"
@@ -96,6 +92,34 @@
         "delivery_invalid_condition": {
             "title": "配信の条件が無効です",
             "description": "配信 {delivery} には無効な条件 {condition} があります"
+        },
+        "legacy_yaml_config": {
+            "title": "Supernotify の YAML 設定を移動する必要があります",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Supernotify の YAML 設定を移行する",
+                        "description": "配信、トランスポート、シナリオ、受信者、カメラ、アクショングループ、リンク、スヌーズの設定を、`notify: - platform: supernotify` YAML ブロックから、新しいトップレベルの `supernotify:` キーに移動する必要があります。\n\n**送信**を選択すると、これが自動的に行われます。現在の設定を含む新しい `supernotify.yaml` ファイルが書き込まれ、`configuration.yaml` の末尾に `supernotify: !include supernotify.yaml` の行が追加されます。設定はすぐに再読み込みされます。再起動は不要です。\n\n**手動で行いたい場合は？** 送信をクリックする代わりに、設定を自分でトップレベルの `supernotify:` キーに移動するだけで構いません。どちらの方法でも問題なく、この修正を確認するために戻ってくる必要はありません。\n\nいずれの場合も、これによって古い `notify: - platform: supernotify` ブロック自体は削除**されません**。そのブロックが `configuration.yaml` から削除され、Home Assistant が再起動されると、この修正は自動的に解消されます。手動で閉じる必要はありません。"
+                    },
+                    "already_migrated": {
+                        "title": "Supernotify の YAML 設定は移行済みです",
+                        "description": "`supernotify.yaml` と `supernotify:` のインクルードはすでに存在します。YAML に残っているこの `notify: - platform: supernotify` ブロックはもう使用されておらず、削除できます。**送信**を選択すると、このリマインダーは閉じられます。"
+                    }
+                },
+                "error": {
+                    "supernotify_yaml_exists": "supernotify.yaml ファイルはすでに存在します。先に削除するか名前を変更してから、もう一度お試しください",
+                    "configuration_yaml_unreadable": "configuration.yaml を読み込めませんでした",
+                    "supernotify_key_exists": "configuration.yaml にはすでにトップレベルの `supernotify:` キーがあります。代わりに手動で設定をそこにマージしてください",
+                    "write_failed": "新しい設定ファイルの書き込みに失敗しました。詳細は Home Assistant のログを確認してください",
+                    "validation_failed": "更新された configuration.yaml の検証に失敗したため、何も変更されませんでした。詳細は Home Assistant のログを確認してください",
+                    "baseline_invalid": "configuration.yaml にはすでに無関係な問題があります。先にそれを修正してから、もう一度お試しください",
+                    "migrated_config_invalid": "現在の delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze の設定が検証に合格しませんでした。詳細は Home Assistant のログを確認してください"
+                }
+            }
+        },
+        "legacy_yaml_manual_migration_required": {
+            "title": "Supernotify の YAML 設定は手動で移行する必要があります",
+            "description": "トップレベルの `supernotify:` YAML キーへの自動移行が完了できませんでした: {reason}。配信、トランスポート、シナリオ、受信者、カメラ、アクショングループ、リンク、スヌーズの設定を、`notify: - platform: supernotify` ブロックから自分でトップレベルの `supernotify:` キー（例: `supernotify: !include supernotify.yaml`）に移動し、その後古いブロックを削除して Home Assistant を再起動してください。"
         }
     },
     "options": {
@@ -124,7 +148,7 @@
                             "purge_interval": "パージ間隔（分）"
                         },
                         "data_description": {
-                            "file_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます",
+                            "file_path": "アーカイブされた通知の保存パス。設定やシナリオのデバッグに役立ちます。相対パスはHome Assistantの設定ディレクトリを基準に解決されます",
                             "file_retention_days": "アーカイブされた通知を保持する日数",
                             "purge_interval": "自動アーカイブパージの間隔（分単位の最小値）"
                         }
@@ -133,8 +157,8 @@
                         "name": "MQTT",
                         "data": {
                             "mqtt_topic": "MQTTトピック",
-                            "mqtt_qos": "MQTT QoS",
-                            "mqtt_retain": "MQTT Retain"
+                            "mqtt_qos": "MQTT QoS値",
+                            "mqtt_retain": "MQTTリテイン"
                         },
                         "data_description": {
                             "mqtt_topic": "アーカイブされた通知を発行するオプションのMQTTトピック",

@@ -22,6 +22,18 @@
 
 **Unified Notification for Home Assistant**
 
+### MAJOR CHANGE v2.0.0
+
+>> `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
+
+>> If you have an advanced configuration (deliveries, scenarios, cameras, persons, actions etc) then a *Repair* will be raised to move these to a new `supernotify.yaml` file and add an `include` statement to your `configuration.yaml`. Or you can choose to
+manually move the config out of `notify` block however
+you please.
+
+>> In either case, nothing will be deleted or commented out, so it will be easy to revert the change. Remove the
+old config when you are comfortable the new version is working for you. This will also remove the `[homeassistant.components.notify] Failed to initialize notification service supernotify` warning from the log, which
+comes from the old notify implementation.
+
 A **unified notification interface** on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
 Supernotify has one goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
