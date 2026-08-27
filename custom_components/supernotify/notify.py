@@ -120,7 +120,6 @@ TRANSPORTS: list[type[Transport]] = [
     TelegramTransport,
     LaMetricTransport,
     PushoverTransport,
-    SmtpTransport,
     KodiTransport,
     DiscordTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
