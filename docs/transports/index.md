@@ -56,7 +56,7 @@ All of these set by passing an `options` block in Delivery config or Transport d
 | handle_as_domain           | bool      | generic    | Treat the action call in same way as a known domain                          |
 | raw                        | bool      | generic    | Don't apply domain specific `data` handling and pruning rules                |
 | strict_template            | bool      | email      | Fail template if Jinja2 issues found when `true`, render anyway if `false`   |
-| direct_smtp                | bool      | email      | Send over a direct SMTP connection instead of an `action` call               |
+| mode                       | str       | email      | Set to `direct` to send over a direct SMTP connection instead of an `action` call |
 | device_discovery           | bool      | all        | Switch automatic device discovery on or off for delivery configuration       |
 | device_domain              | list      | all        | One or more Home Assistant domains to discover devices, e.g. `alexa_devices` |
 | device_os_select           | Selection | all        | Choose device models in device discovery                                     |

@@ -42,7 +42,6 @@ from custom_components.supernotify.const import (
     PRIORITY_LOW,
     PRIORITY_MEDIUM,
     TRANSPORT_EMAIL,
-    TRANSPORT_SMTP,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
@@ -852,18 +851,3 @@ async def test_deliver_ha_smtp_mode_uses_action_call() -> None:
         target=None,
         return_response=False,
     )
-
-
-async def test_legacy_smtp_transport_resolves_to_email(hass: HomeAssistant) -> None:
-    """A delivery still configured with the deprecated `transport: smtp` is picked up by the
-    email transport at startup, and normalized in the registry's delivery config."""
-    context = TestingContext(
-        homeassistant=hass,
-        recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
-        deliveries={"legacy_smtp": {CONF_TRANSPORT: TRANSPORT_SMTP, CONF_ACTION: "notify.smtp"}},
-    )
-    await context.test_initialize()
-
-    delivery = context.delivery("legacy_smtp")
-    assert delivery.transport is context.transport(TRANSPORT_EMAIL)
-    assert context.delivery_config("legacy_smtp")[CONF_TRANSPORT] == TRANSPORT_EMAIL

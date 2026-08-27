@@ -250,7 +250,6 @@ TRANSPORT_SMS = "sms"
 TRANSPORT_TTS = "tts"
 TRANSPORT_MQTT = "mqtt"
 TRANSPORT_EMAIL = "email"
-TRANSPORT_SMTP = "smtp"  # deprecated, use TRANSPORT_EMAIL - see Delivery.upgrade_deprecations
 TRANSPORT_ALEXA = "alexa_devices"
 TRANSPORT_ALEXA_MEDIA_PLAYER = "alexa_media_player"
 TRANSPORT_MOBILE_PUSH = "mobile_push"
@@ -282,7 +281,6 @@ TRANSPORT_VALUES = [
     TRANSPORT_TELEGRAM,
     TRANSPORT_LAMETRIC,
     TRANSPORT_PUSHOVER,
-    TRANSPORT_SMTP,
 ]
 
 

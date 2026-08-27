@@ -80,6 +80,15 @@ transports:
 
 Setting the `OPTION_MODE` option to `direct` on a delivery switches it from calling an HA notify action to sending over its own SMTP connection instead (the default option is `ha_smtp` for the Home Assistant built-in SMTP integration). This can be set at transport level or at delivery level (if you have multiple email deliveries, such as HTML and plain).
 
+```yaml
+transports:
+    delivery_defaults:
+      options:
+        mode: direct
+        sender: hass@mail.barrsofcloak.org
+        sender_name: Home Assistant
+```
+
 This avoids using the built in [Home Assistant SMTP Integration](https://www.home-assistant.io/integrations/smtp/), with the same functionality except no overhead of pre-registering email addresses, introduced in mid-2026 Home Assistant as part of the Notify Entity integration.
 
 In addition to reverting to the previous simpler Home Assistant usage, it also offers:
