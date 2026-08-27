@@ -186,6 +186,7 @@
               "telegram",
               "lametric",
               "pushover",
+              "matrix",
               "kodi",
               "discord"
             ]
