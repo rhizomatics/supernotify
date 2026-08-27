@@ -76,6 +76,7 @@ from .transports.discord import DiscordTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
+from .transports.kodi import KodiTransport
 from .transports.lametric import LaMetricTransport
 from .transports.media_player import MediaPlayerTransport
 from .transports.mobile_push import MobilePushTransport
@@ -119,6 +120,8 @@ TRANSPORTS: list[type[Transport]] = [
     TelegramTransport,
     LaMetricTransport,
     PushoverTransport,
+    SmtpTransport,
+    KodiTransport,
     DiscordTransport,
 ]  # No auto-discovery of transport plugins so manual class registration required here
 
