@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
-import json
 import logging
 import uuid
-from pathlib import Path as _Path
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any, cast
 
@@ -75,7 +73,17 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-_VERSION: str = json.loads((_Path(__file__).parent / "manifest.json").read_text()).get("version", "unknown")
+_VERSION: str = "unknown"
+
+
+def set_version(version: str) -> None:
+    """Called once from async_setup_entry with the integration's manifest version.
+
+    Avoids a blocking manifest.json read on the event loop at import time.
+    """
+    global _VERSION
+    _VERSION = version
+
 
 # supernotify specific data items not to be passed to transports in data
 INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
@@ -135,13 +143,13 @@ class Notification(ArchivableObject):
         delivery_data = action_data.get(ATTR_DELIVERY)
         if isinstance(delivery_data, list):
             # a bare list of deliveries implies intent to restrict
-            _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as explicit for list %s", delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for list %s", delivery_data)
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
             self.delivery_overrides = {k: DeliveryCustomization({}) for k in action_data.get(ATTR_DELIVERY, [])}
         elif isinstance(delivery_data, str) and delivery_data:
             # a bare list of deliveries implies intent to restrict
-            _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as explicit for single %s", delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for single %s", delivery_data)
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
             self.delivery_overrides = {delivery_data: DeliveryCustomization({})}
@@ -149,7 +157,7 @@ class Notification(ArchivableObject):
             # whereas a dict may be used to tune or restrict
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
-            _LOGGER.debug("SUPERNOTIFY defaulting delivery selection as implicit for mapping %s", delivery_data)
+            _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as implicit for mapping %s", delivery_data)
             self.delivery_overrides = {k: DeliveryCustomization(v) for k, v in action_data.get(ATTR_DELIVERY, {}).items()}
         elif delivery_data:
             _LOGGER.warning("SUPERNOTIFY Unable to interpret delivery data %s", delivery_data)
@@ -195,7 +203,7 @@ class Notification(ArchivableObject):
                 s for s in enabled_scenario_names if (s in self.constrain_scenario_names or s in self.applied_scenario_names)
             ]
         if self.required_scenario_names and not any(s in enabled_scenario_names for s in self.required_scenario_names):
-            _LOGGER.info("SUPERNOTIFY suppressing notification, no required scenarios enabled")
+            _LOGGER.info("SUPERNOTIFY Suppressing notification, no required scenarios enabled")
             self.selected_deliveries = {}
             self.suppress(SuppressionReason.NO_SCENARIO)
         else:
@@ -250,7 +258,7 @@ class Notification(ArchivableObject):
         if action_data.get(ATTR_PRIORITY):
             if isinstance(action_data.get(ATTR_PRIORITY), (str, int, float)):
                 if action_data.get(ATTR_PRIORITY) not in PRIORITY_VALUES:
-                    _LOGGER.info("SUPERNOTIFY custom priority %s", action_data.get(ATTR_PRIORITY))
+                    _LOGGER.info("SUPERNOTIFY Custom priority %s", action_data.get(ATTR_PRIORITY))
             else:
                 _LOGGER.info("SUPERNOTIFY Invalid priority %s", action_data.get(ATTR_PRIORITY))
                 self.suppress(SuppressionReason.INVALID_ACTION_DATA)
@@ -258,11 +266,11 @@ class Notification(ArchivableObject):
         try:
             humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)
         except vol.Invalid as e:
-            _LOGGER.warning("SUPERNOTIFY invalid action data %s: %s", action_data, e)
+            _LOGGER.warning("SUPERNOTIFY Invalid action data %s: %s", action_data, e)
             self.suppress(SuppressionReason.INVALID_ACTION_DATA)
             raise
         except vol.error.Error as e2:
-            _LOGGER.warning("SUPERNOTIFY failed to validate action data %s: %s", action_data, e2)
+            _LOGGER.warning("SUPERNOTIFY Failed to validate action data %s: %s", action_data, e2)
             self.suppress(SuppressionReason.INVALID_ACTION_DATA)
             raise vol.Invalid(f"Unable to validate action data - {e2}") from e2
 
@@ -428,7 +436,7 @@ class Notification(ArchivableObject):
             if self.failed == 0 and not self.dupe:
                 for delivery in self.context.delivery_registry.fallback_by_default_deliveries:
                     _LOGGER.info(
-                        "SUPERNOTIFY no delivery succeeded, activating fallback_by_default: %s",
+                        "SUPERNOTIFY No delivery succeeded, activating fallback_by_default: %s",
                         delivery.name,
                     )
                     if delivery.name not in self.selected_deliveries:
@@ -438,7 +446,7 @@ class Notification(ArchivableObject):
             if self.failed > 0:
                 for delivery in self.context.delivery_registry.fallback_on_error_deliveries:
                     _LOGGER.warning(
-                        "SUPERNOTIFY delivery failed, activating fallback_on_error: %s",
+                        "SUPERNOTIFY Delivery failed, activating fallback_on_error: %s",
                         delivery.name,
                     )
                     if delivery.name not in self.selected_deliveries:

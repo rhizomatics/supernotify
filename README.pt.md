@@ -21,6 +21,14 @@
 
 **Notificações Unificadas para Home Assistant**
 
+### ALTERAÇÃO IMPORTANTE v2.0.0
+
+>> A versão `2.0.0` do SuperNotify passa a usar uma configuração nativa da interface do Home Assistant ('ConfigFlow'). Se já tiver uma configuração simples, tudo será migrado automaticamente por si e não será necessário YAML.
+
+>> Se tiver uma configuração avançada (entregas, cenários, câmeras, pessoas, ações etc.), será gerada uma *reparação* para mover essas definições para um novo ficheiro `supernotify.yaml` e adicionar uma instrução `include` ao seu `configuration.yaml`. Ou pode optar por mover a configuração manualmente para fora do bloco `notify`, da forma que preferir.
+
+>> Em qualquer dos casos, nada será eliminado ou comentado, pelo que será fácil reverter a alteração. Remova a configuração antiga quando tiver a certeza de que a nova versão está a funcionar bem para si.
+
 Uma **interface de notificação unificada** sobre a plataforma `notify` integrada do Home Assistant, para simplificar consideravelmente múltiplos canais de notificação e cenários complexos, incluindo notificações multicanal, notificações condicionais, ações móveis, capturas de câmera, carrilhões e e-mails HTML baseados em modelos.
 
 Supernotify tem um único objetivo — **fazer com que a notificação mais simples possível envie tantas notificações quanto necessário, sem código e com configuração mínima**.

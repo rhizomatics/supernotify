@@ -19,14 +19,16 @@
                     "media_path": "Medienpfad",
                     "media_url_prefix": "Medien-URL-Präfix",
                     "mobile_discovery": "Mobilgeräteerkennung",
-                    "recipients_discovery": "Empfängererkennung"
+                    "recipients_discovery": "Empfängererkennung",
+                    "name": "Name"
                 },
                 "data_description": {
-                    "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails",
-                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge",
+                    "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
+                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                     "media_url_prefix": "URL-Pfadpräfix, unter dem gespeicherte Medien, z. B. Kamera-Snapshots, bereitgestellt werden",
                     "mobile_discovery": "Automatische Erkennung von in Home Assistant registrierten mobilen App-Geräten für Push-Benachrichtigungen",
-                    "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten"
+                    "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten",
+                    "name": "Bestimmt den Namen der registrierten notify-Aktion (notify.NAME) - nur ändern, wenn du etwas anderes als notify.supernotify benötigst, z. B. um eine bestehende Automatisierung anzupassen"
                 }
             },
             "reconfigure": {
@@ -36,14 +38,16 @@
                     "media_path": "Medienpfad",
                     "media_url_prefix": "Medien-URL-Präfix",
                     "mobile_discovery": "Mobilgeräteerkennung",
-                    "recipients_discovery": "Empfängererkennung"
+                    "recipients_discovery": "Empfängererkennung",
+                    "name": "Name"
                 },
                 "data_description": {
-                    "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails",
-                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge",
+                    "template_path": "Optionaler Speicherort für Jinja2-Vorlagen für HTML-E-Mails. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
+                    "media_path": "Speicherpfad für Medien, die während Benachrichtigungen erstellt werden, z. B. Kamera-Snapshots für Anhänge. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                     "media_url_prefix": "URL-Pfadpräfix, unter dem gespeicherte Medien, z. B. Kamera-Snapshots, bereitgestellt werden",
                     "mobile_discovery": "Automatische Erkennung von in Home Assistant registrierten mobilen App-Geräten für Push-Benachrichtigungen",
-                    "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten"
+                    "recipients_discovery": "Automatische Erkennung von Empfängern aus Home Assistant Personen-Entitäten",
+                    "name": "Bestimmt den Namen der registrierten notify-Aktion (notify.NAME) - nur ändern, wenn du etwas anderes als notify.supernotify benötigst, z. B. um eine bestehende Automatisierung anzupassen"
                 }
             }
         },
@@ -57,14 +61,6 @@
         }
     },
     "issues": {
-        "deprecated_yaml_full": {
-            "title": "Die Supernotify-YAML-Konfiguration kann entfernt werden",
-            "description": "Ihre Supernotify-YAML-Konfiguration wurde in die Benutzeroberfläche importiert und wird nicht mehr benötigt. Entfernen Sie den `{domain}`-Plattformeintrag aus Ihrer `configuration.yaml`-Datei und starten Sie Home Assistant neu."
-        },
-        "deprecated_yaml_partial": {
-            "title": "Ein Teil der Supernotify-YAML-Konfiguration kann entfernt werden",
-            "description": "Lieferungen, Transporte, Szenarien, Empfänger, Kameras, Aktionsgruppen und Links sind noch nicht über die Benutzeroberfläche konfigurierbar, daher benötigt diese Integration weiterhin einen `{domain}`-YAML-Eintrag, der sie definiert. `archive`, `housekeeping` und `dupe_check` werden jedoch jetzt über den Config Entry verwaltet - entfernen Sie diese Schlüssel aus dem `{domain}`-Eintrag in Ihrer `configuration.yaml` und starten Sie Home Assistant neu."
-        },
         "scenario_delivery": {
             "title": "Ungültige Lieferung für Szenario",
             "description": "Die Szenariodefinition {scenario} verweist auf eine Lieferung {delivery}, die in der Supernotify-Konfiguration nicht existiert"
@@ -96,6 +92,34 @@
         "delivery_invalid_condition": {
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
+        },
+        "legacy_yaml_config": {
+            "title": "Supernotify-YAML-Konfiguration muss verschoben werden",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Supernotify-YAML-Konfiguration migrieren",
+                        "description": "Lieferungen, Transporte, Szenarien, Empfänger, Kameras, Aktionsgruppen, Links und Snooze-Einstellungen müssen aus dem `notify: - platform: supernotify`-YAML-Block in einen neuen Top-Level-Schlüssel `supernotify:` verschoben werden.\n\nDurch Auswahl von **Absenden** wird dies automatisiert: Es wird eine neue Datei `supernotify.yaml` mit deinen aktuellen Einstellungen geschrieben und eine Zeile `supernotify: !include supernotify.yaml` am Ende deiner `configuration.yaml` hinzugefügt. Deine Konfiguration wird sofort neu geladen - kein Neustart nötig.\n\n**Lieber von Hand erledigen?** Verschiebe die Einstellungen einfach selbst in einen Top-Level-Schlüssel `supernotify:`, anstatt auf Absenden zu klicken - beides ist in Ordnung, und diese Reparatur muss dafür nicht bestätigt werden.\n\nIn beiden Fällen wird der alte `notify: - platform: supernotify`-Block dadurch **nicht** entfernt. Sobald dieser Block aus der `configuration.yaml` gelöscht und Home Assistant neu gestartet wurde, wird diese Reparatur automatisch aufgelöst - ein manuelles Schließen ist nicht nötig."
+                    },
+                    "already_migrated": {
+                        "title": "Supernotify-YAML-Konfiguration bereits migriert",
+                        "description": "`supernotify.yaml` und die `supernotify:`-Einbindung existieren bereits - dieser übrig gebliebene `notify: - platform: supernotify`-Block in deiner YAML wird nicht mehr verwendet und kann entfernt werden. Durch Auswahl von **Absenden** wird diese Erinnerung geschlossen."
+                    }
+                },
+                "error": {
+                    "supernotify_yaml_exists": "Es existiert bereits eine Datei supernotify.yaml - entferne oder benenne sie zuerst um und versuche es erneut",
+                    "configuration_yaml_unreadable": "Die configuration.yaml konnte nicht gelesen werden",
+                    "supernotify_key_exists": "Die configuration.yaml hat bereits einen Top-Level-Schlüssel `supernotify:` - führe deine Einstellungen stattdessen von Hand darin zusammen",
+                    "write_failed": "Das Schreiben der neuen Konfigurationsdateien ist fehlgeschlagen - Details siehe Home Assistant-Protokoll",
+                    "validation_failed": "Die Validierung der aktualisierten configuration.yaml ist fehlgeschlagen, daher wurde nichts geändert - Details siehe Home Assistant-Protokoll",
+                    "baseline_invalid": "Die configuration.yaml hat bereits ein unabhängiges Problem - behebe dieses zuerst und versuche es erneut",
+                    "migrated_config_invalid": "Die aktuelle delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze-Konfiguration besteht die Validierung nicht - Details siehe Home Assistant-Protokoll"
+                }
+            }
+        },
+        "legacy_yaml_manual_migration_required": {
+            "title": "Supernotify-YAML-Konfiguration muss manuell migriert werden",
+            "description": "Die automatische Migration zu einem Top-Level-YAML-Schlüssel `supernotify:` konnte nicht abgeschlossen werden: {reason}. Verschiebe Lieferungen, Transporte, Szenarien, Empfänger, Kameras, Aktionsgruppen, Links und Snooze-Einstellungen selbst aus dem `notify: - platform: supernotify`-Block in einen Top-Level-Schlüssel `supernotify:` (zum Beispiel `supernotify: !include supernotify.yaml`), entferne dann den alten Block und starte Home Assistant neu."
         }
     },
     "options": {
@@ -124,7 +148,7 @@
                             "purge_interval": "Bereinigungsintervall (Minuten)"
                         },
                         "data_description": {
-                            "file_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw.",
+                            "file_path": "Speicherpfad für archivierte Benachrichtigungen, nützlich zum Debuggen von Konfiguration, Szenarien usw. Relative Pfade werden innerhalb des Home Assistant-Konfigurationsverzeichnisses aufgelöst",
                             "file_retention_days": "Wie viele Tage archivierte Benachrichtigungen aufbewahrt werden",
                             "purge_interval": "Mindestintervall in Minuten zwischen automatischen Archivbereinigungen"
                         }
@@ -134,7 +158,7 @@
                         "data": {
                             "mqtt_topic": "MQTT-Thema",
                             "mqtt_qos": "MQTT-QoS",
-                            "mqtt_retain": "MQTT Retain"
+                            "mqtt_retain": "MQTT-Retain"
                         },
                         "data_description": {
                             "mqtt_topic": "Optionales MQTT-Thema, an das archivierte Benachrichtigungen veröffentlicht werden",

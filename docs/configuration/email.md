@@ -13,8 +13,7 @@ tags:
 If you have e-mail configured in Home Assistant, you can include it in Supernotify by setting up an e-mail delivery:
 
 ```yaml title="Supernotify config"
-- name: Supernotify
-  platform: supernotify
+supernotify:
   delivery:
       plain_email:
         transport: email
@@ -39,8 +38,7 @@ The `recipient` field is a mandatory field. Not recommended, other than as a bac
 ### Supernotify Delivery
 
 ```yaml title="Supernotify Config"
-- name: Supernotify
-  platform: supernotify
+supernotify:
   delivery:
       plain_email:
         transport: email
@@ -55,8 +53,7 @@ This has the advantage that e-mail addresses can be defined in one place, and yo
 email notifications in automations by using the `person` entity instead.
 
 ```yaml title="Supernotify Config"
-- name: Supernotify
-  platform: supernotify
+supernotify:
   ...
   recipients:
     - person: person.joe_mcdoe

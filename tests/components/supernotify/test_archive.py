@@ -157,6 +157,20 @@ async def test_archive_publish(mock_hass_api: HomeAssistantAPI) -> None:
     mock_hass_api.mqtt_publish.assert_not_called()  # type: ignore
 
 
+async def test_archive_no_mqtt_publish_when_topic_blank(mock_hass_api: HomeAssistantAPI) -> None:
+    """The options flow always stores mqtt_topic as "" rather than omitting it, so
+    NotificationArchive must treat a blank topic as "not configured", not just a missing key."""
+    uut = NotificationArchive(
+        {CONF_ENABLED: True, CONF_ARCHIVE_MQTT_TOPIC: "", CONF_ARCHIVE_MQTT_QOS: "3", CONF_ARCHIVE_MQTT_RETAIN: True},
+        mock_hass_api,
+    )
+    await uut.initialize()
+    assert uut.archive_topic is None
+    msg = ArchiveCrashDummy()
+    assert await uut.archive(msg) is False
+    mock_hass_api.mqtt_publish.assert_not_called()  # type: ignore
+
+
 def test_event_archiver_specific_diagnostic_flags(mock_hass_api: HomeAssistantAPI) -> None:
     from custom_components.supernotify.archive import EventArchiver
 

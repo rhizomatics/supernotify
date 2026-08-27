@@ -232,7 +232,7 @@ class MobilePushTransport(Transport):
         if url in self.action_title_failures:
             # don't retry too often
             if time.time() - self.action_title_failures[url] < retry_timeout:
-                _LOGGER.debug("SUPERNOTIFY skipping retry after previous failure to retrieve url title for %s", url)
+                _LOGGER.debug("SUPERNOTIFY Skipping retry after previous failure to retrieve url title for %s", url)
                 return None
         try:
             websession: ClientSession = self.context.hass_api.http_session()
@@ -244,7 +244,7 @@ class MobilePushTransport(Transport):
                 self.action_titles[url] = html.title.string
                 return html.title.string
         except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY failed to retrieve url title at %s: %s", url, e)
+            _LOGGER.warning("SUPERNOTIFY Failed to retrieve url title at %s: %s", url, e)
             self.action_title_failures[url] = time.time()
         return None
 

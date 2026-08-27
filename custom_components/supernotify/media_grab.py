@@ -313,7 +313,7 @@ async def snap_notification_image(notification: Notification, context: Context) 
             camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             _LOGGER.debug(
-                "SUPERNOTIFY snapping camera %s, ptz %s->%s (%s), delay %s secs",
+                "SUPERNOTIFY Snapping camera %s, ptz %s->%s (%s), delay %s secs",
                 active_camera_entity_id,
                 camera_ptz_preset,
                 camera_ptz_preset_default,
@@ -474,13 +474,13 @@ class MediaStorage:
         self.hass_api = hass_api  # TODO: should not be set on initialize
         if self.media_path is not None and not self.media_path.is_absolute():
             self.media_path = await self.media_path.absolute()
-            _LOGGER.info("SUPERNOTIFY media path updated to %s", self.media_path)
+            _LOGGER.debug("SUPERNOTIFY Media path updated to %s", self.media_path)
         if self.media_path and not await self.media_path.exists():
-            _LOGGER.info("SUPERNOTIFY media path not found at %s", self.media_path)
+            _LOGGER.info("SUPERNOTIFY Media path not found at %s, attempting to create.", self.media_path)
             try:
                 await self.media_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY media path %s cannot be created: %s", self.media_path, e)
+                _LOGGER.warning("SUPERNOTIFY Media path %s cannot be created: %s", self.media_path, e)
                 hass_api.raise_issue(
                     "media_path",
                     "media_path",
@@ -489,7 +489,7 @@ class MediaStorage:
                 )
                 self.media_path = None
         if self.media_path is not None:
-            _LOGGER.info("SUPERNOTIFY abs media path: %s", await self.media_path.absolute())
+            _LOGGER.debug("SUPERNOTIFY Abs media path: %s", await self.media_path.absolute())
 
         if self.media_url_prefix is not None and self.media_path is not None:
             if await hass_api.register_web_path(self.media_path, self.media_url_prefix):

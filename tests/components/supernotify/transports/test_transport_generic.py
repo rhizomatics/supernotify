@@ -1,7 +1,6 @@
 from unittest.mock import Mock, call
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 
 try:
     from homeassistant.components.ntfy.notify import SERVICE_PUBLISH_SCHEMA  # type: ignore[import-not-found,attr-defined]
@@ -14,6 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 
+from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
@@ -115,12 +115,10 @@ async def test_not_notify_deliver() -> None:
 
 async def test_e2e_update_input_text(hass) -> None:
     config = {
-        "name": "supernotify",
-        "platform": "supernotify",
         "delivery": {"motd": {"transport": "generic", "action": "input_text.set_value"}},
     }
     assert await async_setup_component(hass, "input_text", {"input_text": {"motd": {}}})
-    assert await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: [config]})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     hass.states.async_set("sensor.inside_temperature", "15")
     hass.states.async_set("sensor.outside_temperature", "20")
     await hass.async_block_till_done()
@@ -202,12 +200,9 @@ async def test_update_equiv_domain(mock_hass) -> None:
 def test_prune_fields():
     uut = GenericTransport(Mock())
     sample = {"foo": 123, "bar": 789, "enabled": True}
-    delivery = Delivery(
-        "",
-        {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}},
-        uut,
-    )
-    delivery.upgrade_deprecations()
+    conf = {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}}
+    delivery = Delivery("", conf, uut)
+    delivery.upgrade_deprecations(conf)
     rules = delivery.options.get(OPTION_DATA_KEYS_SELECT)
 
     def f(data, config):

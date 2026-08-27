@@ -21,6 +21,14 @@
 
 **Ujednolicone Powiadomienia dla Home Assistant**
 
+### DUŻA ZMIANA v2.0.0
+
+>> Wersja `2.0.0` SuperNotify przechodzi na natywną konfigurację przez interfejs Home Assistant ('ConfigFlow'). Jeśli masz już prostą konfigurację, wszystko zostanie automatycznie zmigrowane, a YAML nie będzie potrzebny.
+
+>> Jeśli masz zaawansowaną konfigurację (dostarczenia, scenariusze, kamery, osoby, akcje itp.), zostanie zgłoszona *naprawa*, która przeniesie je do nowego pliku `supernotify.yaml` i doda instrukcję `include` do Twojego `configuration.yaml`. Możesz też ręcznie przenieść konfigurację z bloku `notify`, jak Ci wygodnie.
+
+>> W obu przypadkach nic nie zostanie usunięte ani zakomentowane, więc łatwo będzie cofnąć zmianę. Usuń starą konfigurację, gdy upewnisz się, że nowa wersja działa poprawnie.
+
 **Ujednolicony interfejs powiadomień** zbudowany na wbudowanej platformie `notify` Home Assistant, który znacznie upraszcza obsługę wielu kanałów powiadomień i złożonych scenariuszy — w tym powiadomień wielokanałowych, warunkowych, akcji mobilnych, zdjęć z kamer, dzwonków i szablonowych e-maili HTML.
 
 Supernotify ma jeden cel — **sprawić, by najprostsze możliwe powiadomienie wysyłało tyle powiadomień ile potrzeba, bez kodu i z minimalną konfiguracją**.

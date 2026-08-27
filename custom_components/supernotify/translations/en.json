@@ -15,6 +15,7 @@
             "user": {
                 "title": "Environment",
                 "data": {
+                    "name": "Name",
                     "template_path": "Template Path",
                     "media_path": "Media Path",
                     "media_url_prefix": "Media URL Prefix",
@@ -22,8 +23,9 @@
                     "recipients_discovery": "Recipient Discovery"
                 },
                 "data_description": {
-                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
-                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
+                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found. Relative paths are resolved within the Home Assistant config directory",
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments. Relative paths are resolved within the Home Assistant config directory",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
@@ -32,6 +34,7 @@
             "reconfigure": {
                 "title": "Environment",
                 "data": {
+                    "name": "Name",
                     "template_path": "Template Path",
                     "media_path": "Media Path",
                     "media_url_prefix": "Media URL Prefix",
@@ -39,8 +42,9 @@
                     "recipients_discovery": "Recipient Discovery"
                 },
                 "data_description": {
-                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found",
-                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments",
+                    "name": "Determines the registered notify action name (notify.NAME) - change only if you need something other than notify.supernotify, e.g. to match an existing automation",
+                    "template_path": "Optional location where Jinja2 templates for HTML email are to be found. Relative paths are resolved within the Home Assistant config directory",
+                    "media_path": "Storage path for media created during notifications, for example camera snapshots created for attachments. Relative paths are resolved within the Home Assistant config directory",
                     "media_url_prefix": "URL path prefix under which stored media, such as camera snapshots, is served",
                     "mobile_discovery": "Automatically discover mobile app devices registered in Home Assistant for push notifications",
                     "recipients_discovery": "Automatically discover recipients from Home Assistant person entities"
@@ -82,7 +86,7 @@
                             "purge_interval": "Purge Interval (minutes)"
                         },
                         "data_description": {
-                            "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc",
+                            "file_path": "Storage path for archived notifications, useful for debugging configuration, scenarios etc. Relative paths are resolved within the Home Assistant config directory",
                             "file_retention_days": "How many days of archived notifications to keep",
                             "purge_interval": "Minimum interval in minutes between automatic archive purges"
                         }
@@ -143,13 +147,33 @@
         }
     },
     "issues": {
-        "deprecated_yaml_full": {
-            "title": "Supernotify YAML configuration can be removed",
-            "description": "Your Supernotify YAML configuration has been imported into the UI and is no longer needed. Remove the `{domain}` platform entry from your `configuration.yaml` file and restart Home Assistant."
+        "legacy_yaml_config": {
+            "title": "Supernotify YAML configuration needs to move",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Migrate Supernotify YAML configuration",
+                        "description": "Delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings need to move out of the `notify: - platform: supernotify` YAML block into a new top-level `supernotify:` key instead.\n\nSelecting **Submit** automates this: it writes a new `supernotify.yaml` file containing your current settings, and adds a `supernotify: !include supernotify.yaml` line to the end of your `configuration.yaml`. Your configuration is reloaded immediately - no restart needed.\n\n**Prefer to do it by hand instead?** Just move the settings to a top-level `supernotify:` key yourself instead of clicking Submit - either way is fine, and this repair doesn't need you to come back and confirm it.\n\nEither way, this does **not** remove the old `notify: - platform: supernotify` block itself. Once that block is deleted from `configuration.yaml` and Home Assistant is restarted, this repair clears itself automatically - no need to dismiss it manually."
+                    },
+                    "already_migrated": {
+                        "title": "Supernotify YAML configuration already migrated",
+                        "description": "`supernotify.yaml` and the `supernotify:` include already exist - this leftover `notify: - platform: supernotify` block in your YAML is now unused and can be removed. Selecting **Submit** dismisses this reminder."
+                    }
+                },
+                "error": {
+                    "baseline_invalid": "configuration.yaml already has an unrelated problem - fix that first, then try again",
+                    "supernotify_yaml_exists": "A supernotify.yaml file already exists - remove or rename it first, then try again",
+                    "configuration_yaml_unreadable": "configuration.yaml could not be read",
+                    "supernotify_key_exists": "configuration.yaml already has a top-level `supernotify:` key - merge your settings into it by hand instead",
+                    "migrated_config_invalid": "The current delivery/transports/scenarios/recipients/cameras/action_groups/links/snooze configuration doesn't pass validation - check the Home Assistant log for details",
+                    "write_failed": "Writing the new configuration files failed - check the Home Assistant log for details",
+                    "validation_failed": "The updated configuration.yaml failed validation, so nothing was changed - check the Home Assistant log for details"
+                }
+            }
         },
-        "deprecated_yaml_partial": {
-            "title": "Some Supernotify YAML configuration can be removed",
-            "description": "Deliveries, transports, scenarios, recipients, cameras, action groups and links aren't configurable from the UI yet, so this integration still needs a `{domain}` YAML entry defining them. However, `archive`, `housekeeping` and `dupe_check` are now managed from the config entry - remove those keys from your `configuration.yaml` `{domain}` entry and restart Home Assistant."
+        "legacy_yaml_manual_migration_required": {
+            "title": "Supernotify YAML configuration must be migrated manually",
+            "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
         },
         "scenario_delivery": {
             "title": "Invalid Delivery for Scenario",

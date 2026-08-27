@@ -53,7 +53,7 @@ class MediaPlayerTransport(Transport):
         media_players: list[str] = envelope.target.entity_ids or []
         media_type: str = data.get("media_content_type", "image")
         if not media_players:
-            _LOGGER.debug("SUPERNOTIFY skipping media show, no targets")
+            _LOGGER.debug("SUPERNOTIFY Skipping media show, no targets")
             return False
 
         snapshot_url = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
@@ -61,7 +61,7 @@ class MediaPlayerTransport(Transport):
             # fallback to older idiosyncratic way for backward compatibility
             snapshot_url = data.get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is None:
-            _LOGGER.debug("SUPERNOTIFY skipping media player, no snapshot url")
+            _LOGGER.debug("SUPERNOTIFY Skipping media player, no snapshot url")
             return False
         # absolutize relative URL for external URl, probably preferred by Alexa Show etc
         snapshot_url = urllib.parse.urljoin(self.hass_api.external_url, snapshot_url)

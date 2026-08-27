@@ -82,23 +82,23 @@ class EventArchiver(ArchiveDestination):
         if diagnostics & OutcomeSelection.NONE:
             pass
         elif diagnostics & OutcomeSelection.ALL:
-            _LOGGER.info("SUPERNOTIFY archiving all notifications as %s events", event_name)
+            _LOGGER.info("SUPERNOTIFY Archiving all notifications as %s events", event_name)
         else:
             if diagnostics & OutcomeSelection.SUCCESS:
-                _LOGGER.info("SUPERNOTIFY archiving successful notifications as %s events", event_name)
+                _LOGGER.info("SUPERNOTIFY Archiving successful notifications as %s events", event_name)
             if diagnostics & OutcomeSelection.PARTIAL_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY archiving partial delivery notifications as %s events", event_name)
+                _LOGGER.info("SUPERNOTIFY Archiving partial delivery notifications as %s events", event_name)
 
             if diagnostics & OutcomeSelection.FALLBACK_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY archiving fallback notifications as %s events", event_name)
+                _LOGGER.info("SUPERNOTIFY Archiving fallback notifications as %s events", event_name)
             if diagnostics & OutcomeSelection.NO_DELIVERY:
-                _LOGGER.info("SUPERNOTIFY archiving no delivery notifications as %s events", event_name)
+                _LOGGER.info("SUPERNOTIFY Archiving no delivery notifications as %s events", event_name)
 
             if diagnostics & OutcomeSelection.ERROR:
-                _LOGGER.info("SUPERNOTIFY archiving error notifications as %s events", event_name)
+                _LOGGER.info("SUPERNOTIFY Archiving error notifications as %s events", event_name)
 
             if diagnostics & OutcomeSelection.DUPE:
-                _LOGGER.info("SUPERNOTIFY archiving dupe notifications as %s events", event_name)
+                _LOGGER.info("SUPERNOTIFY Archiving dupe notifications as %s events", event_name)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
@@ -123,13 +123,14 @@ class ArchiveTopic(ArchiveDestination):
         self.enabled: bool = False
 
     async def initialize(self) -> None:
-        if await self.hass_api.mqtt_available(raise_on_error=False):
-            _LOGGER.info(f"SUPERNOTIFY Archiving to MQTT topic {self.topic}, qos {self.qos}, retain {self.retain}")
-            self.enabled = True
-        else:
-            _LOGGER.warning(
-                f"SUPERNOTIFY archiving configured for topic {self.topic} but MQTTT not available at startup, disabled"
-            )
+        if self.topic:
+            if await self.hass_api.mqtt_available(raise_on_error=False):
+                _LOGGER.info(f"SUPERNOTIFY Archiving to MQTT topic {self.topic}, qos {self.qos}, retain {self.retain}")
+                self.enabled = True
+            else:
+                _LOGGER.warning(
+                    f"SUPERNOTIFY Archiving configured for topic {self.topic} but MQTT not available at startup, disabled"
+                )
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
@@ -146,7 +147,7 @@ class ArchiveTopic(ArchiveDestination):
             )
             return True
         except Exception:
-            _LOGGER.warning(f"SUPERNOTIFY failed to archive to topic {self.topic}")
+            _LOGGER.warning(f"SUPERNOTIFY Failed to archive to topic {self.topic}")
             return False
 
 
@@ -162,21 +163,21 @@ class ArchiveDirectory(ArchiveDestination):
     async def initialize(self) -> None:
         verify_archive_path: Path = Path(self.configured_path)
         if verify_archive_path and not await verify_archive_path.exists():
-            _LOGGER.info("SUPERNOTIFY archive path not found at %s", verify_archive_path)
+            _LOGGER.info("SUPERNOTIFY Archive path not found at %s", verify_archive_path)
             try:
                 await verify_archive_path.mkdir(parents=True, exist_ok=True)
             except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY archive path %s cannot be created: %s", verify_archive_path, e)
+                _LOGGER.warning("SUPERNOTIFY Archive path %s cannot be created: %s", verify_archive_path, e)
         if verify_archive_path and await verify_archive_path.exists() and await verify_archive_path.is_dir():
             try:
                 await verify_archive_path.joinpath(WRITE_TEST).touch(exist_ok=True)
                 self.archive_path = verify_archive_path
-                _LOGGER.info("SUPERNOTIFY archiving notifications to file system at %s", verify_archive_path)
+                _LOGGER.info("SUPERNOTIFY Archiving notifications to file system at %s", verify_archive_path)
                 self.enabled = True
             except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY archive path %s cannot be written: %s", verify_archive_path, e)
+                _LOGGER.warning("SUPERNOTIFY Archive path %s cannot be written: %s", verify_archive_path, e)
         else:
-            _LOGGER.warning("SUPERNOTIFY archive path %s is not a directory or does not exist", verify_archive_path)
+            _LOGGER.warning("SUPERNOTIFY Archive path %s is not a directory or does not exist", verify_archive_path)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         archived: bool = False
@@ -269,14 +270,14 @@ class NotificationArchive:
             _LOGGER.info("SUPERNOTIFY Archive disabled")
             return
         if not self.configured_archive_path:
-            _LOGGER.warning("SUPERNOTIFY archive path not configured")
+            _LOGGER.warning("SUPERNOTIFY Archive path not configured")
         else:
             self.archive_directory = ArchiveDirectory(
                 self.configured_archive_path, purge_minute_interval=self.purge_minute_interval, diagnostics=self.diagnostics
             )
             await self.archive_directory.initialize()
 
-        if self.mqtt_topic is not None:
+        if self.mqtt_topic:
             self.archive_topic = ArchiveTopic(self.hass_api, self.mqtt_topic, self.mqtt_qos, self.mqtt_retain, self.diagnostics)
             await self.archive_topic.initialize()
 
