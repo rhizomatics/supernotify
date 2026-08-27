@@ -2,7 +2,7 @@
 
 Target file: custom_components/supernotify/transports/discord.py
 
-Coverage (per specs/discord_spec.md):
+Coverage:
 - TransportFeature flags, default_config, validate_action (any notify.*
   slug accepted), transport name
 - Numeric channel/user ID target filtering (select_channels): non-numeric
@@ -45,9 +45,13 @@ CHANNEL_ID = "123456789012345678"
 USER_ID = "987654321098765432"
 
 
-def _make_transport(call_action_result: bool = True) -> DiscordTransport:
-    """Construct a DiscordTransport with hass_api / context / call_action mocked."""
-    transport = DiscordTransport.__new__(DiscordTransport)
+def _make_transport(call_action_result: bool = True) -> Any:
+    """Construct a DiscordTransport with hass_api / context / call_action mocked.
+
+    Returns Any (not DiscordTransport): call_action/record_error below are replaced with
+    Mocks, which mypy rejects as assignments to real bound methods on the concrete type.
+    """
+    transport: Any = DiscordTransport.__new__(DiscordTransport)
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
     transport.context = MagicMock()
@@ -80,7 +84,7 @@ def _make_envelope(
     return envelope
 
 
-def _action_data(transport: DiscordTransport) -> dict[str, Any]:
+def _action_data(transport: Any) -> dict[str, Any]:
     """Return the action_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["action_data"]
 

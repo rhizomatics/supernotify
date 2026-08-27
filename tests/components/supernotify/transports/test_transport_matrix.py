@@ -40,9 +40,13 @@ ROOM_ID = "!abcdef:matrix.org"
 ROOM_ALIAS = "#alerts:matrix.org"
 
 
-def _make_transport(call_action_result: bool = True) -> MatrixTransport:
-    """Construct a MatrixTransport with hass_api / context / call_action mocked."""
-    transport = MatrixTransport.__new__(MatrixTransport)
+def _make_transport(call_action_result: bool = True) -> Any:
+    """Construct a MatrixTransport with hass_api / context / call_action mocked.
+
+    Returns Any (not MatrixTransport): call_action/record_error below are replaced with
+    Mocks, which mypy rejects as assignments to real bound methods on the concrete type.
+    """
+    transport: Any = MatrixTransport.__new__(MatrixTransport)
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
     transport.context = MagicMock()
@@ -55,7 +59,7 @@ def _make_envelope(
     message: str | None = "Test message",
     title: str | None = None,
     data: dict[str, Any] | None = None,
-    targets: list[str] | None = None,
+    targets: list[Any] | None = None,
     priority: str | None = "medium",
     grab_image_value: Any = None,
     grab_image_raises: bool = False,
@@ -75,7 +79,7 @@ def _make_envelope(
     return envelope
 
 
-def _action_data(transport: MatrixTransport) -> dict[str, Any]:
+def _action_data(transport: Any) -> dict[str, Any]:
     """Return the action_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["action_data"]
 

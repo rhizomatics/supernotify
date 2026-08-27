@@ -46,9 +46,13 @@ SNAPSHOT_ABS_URL = "https://ha.example.com/media/supernotify/snapshot.jpg"
 OBJECT_URL = "https://ha.example.com/supernotify/media/processed.jpg"
 
 
-def _make_transport(call_action_result: bool = True) -> HTML5Transport:
-    """Construct an HTML5Transport with hass_api / context / call_action mocked."""
-    transport = HTML5Transport.__new__(HTML5Transport)
+def _make_transport(call_action_result: bool = True) -> Any:
+    """Construct an HTML5Transport with hass_api / context / call_action mocked.
+
+    Returns Any (not HTML5Transport): call_action/record_error below are replaced with
+    Mocks, which mypy rejects as assignments to real bound methods on the concrete type.
+    """
+    transport: Any = HTML5Transport.__new__(HTML5Transport)
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
     transport.hass_api.abs_url = MagicMock(return_value=SNAPSHOT_ABS_URL)
@@ -63,7 +67,7 @@ def _make_envelope(
     message: str | None = "Test message",
     title: str | None = None,
     data: dict[str, Any] | None = None,
-    targets: list[str] | None = None,
+    targets: list[Any] | None = None,
     priority: str | None = "medium",
     media: dict[str, Any] | None = None,
     grab_image_value: Any = None,
@@ -85,12 +89,12 @@ def _make_envelope(
     return envelope
 
 
-def _action_data(transport: HTML5Transport) -> dict[str, Any]:
+def _action_data(transport: Any) -> dict[str, Any]:
     """Return the action_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["action_data"]
 
 
-def _target_data(transport: HTML5Transport) -> dict[str, Any]:
+def _target_data(transport: Any) -> dict[str, Any]:
     """Return the target_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["target_data"]
 

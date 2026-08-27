@@ -63,7 +63,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
-    TRANSPORT_KODI,  # added via const_additions_kodi.py
+    TRANSPORT_KODI,
 )
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport

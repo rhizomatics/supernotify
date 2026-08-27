@@ -87,7 +87,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
-    TRANSPORT_HTML5,  # added via const_additions_html5.py
+    TRANSPORT_HTML5,
 )
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport

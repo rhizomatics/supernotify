@@ -2,7 +2,7 @@
 
 Target file: custom_components/supernotify/transports/kodi.py
 
-Coverage (per specs/kodi_spec.md):
+Coverage:
 - TransportFeature flags, default_config, validate_action, transport name
 - Target entity filtering (media_player.* prefix, dedupe, non-string skip)
 - deliver(): happy path, title fallback "Notification", priority -> icon
@@ -52,9 +52,13 @@ def _make_transport(
     object_url: str | None = OBJECT_URL,
     object_url_raises: bool = False,
     internal_url: str = INTERNAL_URL,
-) -> KodiTransport:
-    """Construct a KodiTransport with hass_api / context / call_action mocked."""
-    transport = KodiTransport.__new__(KodiTransport)
+) -> Any:
+    """Construct a KodiTransport with hass_api / context / call_action mocked.
+
+    Returns Any (not KodiTransport): call_action/record_error below are replaced with
+    Mocks, which mypy rejects as assignments to real bound methods on the concrete type.
+    """
+    transport: Any = KodiTransport.__new__(KodiTransport)
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
     transport.hass_api.internal_url = internal_url
@@ -95,12 +99,12 @@ def _make_envelope(
     return envelope
 
 
-def _action_data(transport: KodiTransport) -> dict[str, Any]:
+def _action_data(transport: Any) -> dict[str, Any]:
     """Return the action_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["action_data"]
 
 
-def _target_data(transport: KodiTransport) -> dict[str, Any]:
+def _target_data(transport: Any) -> dict[str, Any]:
     """Return the target_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["target_data"]
 
