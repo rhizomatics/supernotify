@@ -32,7 +32,6 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import condition
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue, async_delete_issue
 from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import DOMAIN
