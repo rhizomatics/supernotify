@@ -76,6 +76,7 @@ from .transports.discord import DiscordTransport
 from .transports.email import EmailTransport
 from .transports.generic import GenericTransport
 from .transports.gotify import GotifyTransport
+from .transports.html5 import HTML5Transport
 from .transports.kodi import KodiTransport
 from .transports.lametric import LaMetricTransport
 from .transports.matrix import MatrixTransport
@@ -121,6 +122,8 @@ TRANSPORTS: list[type[Transport]] = [
     TelegramTransport,
     LaMetricTransport,
     PushoverTransport,
+    SmtpTransport,
+    HTML5Transport,
     MatrixTransport,
     KodiTransport,
     DiscordTransport,

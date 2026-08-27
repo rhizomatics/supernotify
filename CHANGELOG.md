@@ -15,6 +15,10 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 3 new tra
 
 ## 2.0.0
 
+### HTML5 transport
+
+- New native `html5` browser push transport using the modern `html5.send_message` entity service: priority-mapped urgency, tag/renotify, action buttons, snapshot image URL, `silent`/`vibrate` exclusivity guard. See `docs/transports/html5.md`.
+
 ### ConfigFlow
 
 - SuperNotify is now set up using the standard HomeAssistant UI ('ConfigFlow')
