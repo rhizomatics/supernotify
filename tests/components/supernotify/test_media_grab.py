@@ -29,6 +29,7 @@ from custom_components.supernotify.const import (
     CONF_PTZ_PRESET_DEFAULT,
     MEDIA_OPTION_REPROCESS,
     PTZ_METHOD_FRIGATE,
+    PTZ_METHOD_ONVIF,
 )
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
@@ -37,6 +38,7 @@ from custom_components.supernotify.media_grab import (
     _detect_image_ext,
     camera_available,
     grab_image,
+    infer_ptz_method,
     move_camera_to_ptz_preset,
     select_avail_camera,
     snap_camera,
@@ -451,6 +453,29 @@ async def test_move_camera_unknown_ptz_method(mock_hass: HomeAssistant) -> None:
     mock_hass.services.async_call.assert_not_called()  # type: ignore
 
 
+# --- infer_ptz_method ---
+
+
+def test_infer_ptz_method_frigate_platform(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="frigate")  # type: ignore[attr-defined]
+    assert infer_ptz_method(mock_hass_api, "camera.frigate1") == PTZ_METHOD_FRIGATE
+
+
+def test_infer_ptz_method_defaults_to_onvif_for_other_platforms(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="onvif")  # type: ignore[attr-defined]
+    assert infer_ptz_method(mock_hass_api, "camera.onvif1") == PTZ_METHOD_ONVIF
+
+
+def test_infer_ptz_method_no_registry_entry(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value.async_get.return_value = None  # type: ignore[attr-defined]
+    assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
+
+
+def test_infer_ptz_method_no_entity_registry(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value = None  # type: ignore[attr-defined]
+    assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
+
+
 # --- snap_image_entity ---
 
 
@@ -657,6 +682,46 @@ async def test_grab_image_with_camera_ptz(hass: HomeAssistant, tmp_aiopath: Path
                 )
                 await snap_notification_image(notification, ctx)
     assert mock_ptz.call_count == 2  # move to preset before snap, return to default after
+
+
+async def test_grab_image_with_camera_not_in_config(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A camera_entity_id absent from the cameras: config section, but with a real
+    state in Home Assistant, should still be selected and snapped rather than rejected."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    assert "camera.unregistered" not in ctx.cameras
+    hass.states.async_set("camera.unregistered", "idle")
+
+    with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None) as mock_snap:
+        notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.unregistered"}})
+        await snap_notification_image(notification, ctx)
+    mock_snap.assert_called_once()
+    assert mock_snap.call_args[0][1] == "camera.unregistered"
+
+
+async def test_grab_image_with_camera_not_in_config_infers_frigate_ptz(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A camera absent from cameras: config has no explicit ptz_method to consult. If a ptz
+    preset is requested, the method should be inferred from the integration that registered
+    the entity (frigate here) rather than falling back to the onvif default."""
+    from homeassistant.helpers import entity_registry as er
+
+    ent_reg = er.async_get(hass)
+    ent_reg.async_get_or_create("camera", "frigate", "cam-1", suggested_object_id="frigate_cam")
+    hass.states.async_set("camera.frigate_cam", "idle")
+
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    assert "camera.frigate_cam" not in ctx.cameras
+
+    with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+        with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock) as mock_ptz:
+            notification = Notification(
+                ctx,
+                "Test",
+                action_data={"media": {"camera_entity_id": "camera.frigate_cam", "camera_ptz_preset": "Doorway"}},
+            )
+            await snap_notification_image(notification, ctx)
+    mock_ptz.assert_called_once_with(ctx.hass_api, "camera.frigate_cam", "Doorway", method=PTZ_METHOD_FRIGATE)
 
 
 async def test_grab_image_camera_unavailable(hass: HomeAssistant) -> None:

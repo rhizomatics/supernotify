@@ -95,13 +95,10 @@ These options can be set in the `delivery` or `transport` configuration, or in t
 
 ## Cameras
 
-Use this for additional camera info:
+Additional information can be provided for cameras, such as PTZ control and backup cameras. It is entirely optional, and if omitted sensible defaults will used.
 
-Home Assistant default camera entities have built-in device tracking, so the entity state will be `idle`,
-`recording` or `unavailable` if the camera is not available. Supernotify can use this state to switch
-to an alternative camera if the first choice isn't up. It's also possible to associate a separate
-`device_tracker` to the camera, for example using a Unifi or similar integration to track that the camera
-network device is up.
+Home Assistant default camera entities have built-in device tracking, so the entity state will be `idle`, `recording` or `unavailable` if the camera is not available. Supernotify can use this state to switch to an alternative camera if the first choice isn't up. It's also possible to associate a separate
+`device_tracker` to the camera, for example using a Unifi or similar integration to track that the camera network device is up.
 
 * Link an alternative `device_tracker` to the camera
   * Notifications will first check its online, then use an alternative if primary is down
@@ -109,14 +106,16 @@ network device is up.
 * For ONVIF or Frigate cameras set up for PTZ
   * Home preset can be defined using `ptz_default_preset` so camera can be reset after taking a snapshot
   * Delay between PTZ command and snapshot can be defined using `ptz_delay`
+    - Defaults to `10` if not provided
   * An alternative camera entity can be chosen for the PTZ command using `ptz_camera`
     * This can be helpful if there are multiple Home Assistant entities for the same camera
-  * Choose between ONVIF or Frigate PTZ control using `ptz_transport`
+  * Choose between ONVIF or Frigate PTZ control using `ptz_method`
     * Note that ONVIF may have numeric reference for presets while Frigate uses text labels
     * The camera configuration, or a good ONVIF client like [IP Cams](https://ipcams.app), will show the preset number and description. Its good practice to make preset `1` your default.
+    * This will automatically default if not provided based on the camera's platform
 * Configuration documentation for [Camera Schema](../developer/schemas/Camera_Definition.md).
 
-```yaml title="Example Camera Configuration"
+```yaml title="Example Camera Enhanced Configuration"
  cameras:
     - camera: camera.driveway
       alt_camera:

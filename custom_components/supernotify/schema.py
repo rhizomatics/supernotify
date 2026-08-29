@@ -145,6 +145,7 @@ from .const import (
     OPTION_CHIME_ALIASES,
     OPTIONS_CHIME_DOMAINS,
     PRIORITY_VALUES,
+    PTZ_DELAY_DEFAULT,
     PTZ_METHOD_ONVIF,
     PTZ_METHOD_VALUES,
     RESERVED_DATA_KEYS,
@@ -386,7 +387,7 @@ CAMERA_SCHEMA = vol.Schema({
     vol.Optional(CONF_DEVICE_TRACKER): cv.entity_id,
     vol.Optional(CONF_PTZ_CAMERA): cv.entity_id,
     vol.Optional(CONF_PTZ_PRESET_DEFAULT, default=1): vol.Any(cv.positive_int, cv.string),
-    vol.Optional(CONF_PTZ_DELAY, default=0): int,
+    vol.Optional(CONF_PTZ_DELAY, default=PTZ_DELAY_DEFAULT): int,
     vol.Optional(CONF_PTZ_METHOD, default=PTZ_METHOD_ONVIF): vol.In(PTZ_METHOD_VALUES),
 })
 MEDIA_SCHEMA = vol.Schema({

@@ -41,7 +41,7 @@ KEY_YAML_CONFIG = "yaml_config"
 # only be imported here once those (and DOMAIN) are already defined above.
 from .schema import SUPERNOTIFY_YAML_SCHEMA  # noqa: E402, RUF100, I001
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {vol.Optional(DOMAIN, default=dict): SUPERNOTIFY_YAML_SCHEMA},
     extra=vol.ALLOW_EXTRA,
 )

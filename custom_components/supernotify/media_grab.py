@@ -37,6 +37,8 @@ from custom_components.supernotify.const import (
     MEDIA_OPTION_REPROCESS,
     OPTION_JPEG,
     OPTION_PNG,
+    PLATFORM_FRIGATE,
+    PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
 )
@@ -91,6 +93,19 @@ async def snapshot_from_url(
         _LOGGER.exception("SUPERNOTIFY Image snap fail")
 
     return None
+
+
+def infer_ptz_method(hass_api: HomeAssistantAPI, camera_entity_id: str) -> str:
+    """Guess a PTZ method from the integration that owns the camera entity.
+
+    Used only as a fallback for cameras with no entry in the cameras: config, where
+    there's no explicit ptz_method to consult.
+    """
+    ent_reg = hass_api.entity_registry()
+    reg_entry = ent_reg.async_get(camera_entity_id) if ent_reg else None
+    if reg_entry and reg_entry.platform == PLATFORM_FRIGATE:
+        return PTZ_METHOD_FRIGATE
+    return PTZ_METHOD_ONVIF
 
 
 async def move_camera_to_ptz_preset(
@@ -309,9 +324,13 @@ async def snap_notification_image(notification: Notification, context: Context) 
             camera_config = context.cameras.get(active_camera_entity_id, {})
             camera_ptz_entity_id: str = camera_config.get(CONF_PTZ_CAMERA, active_camera_entity_id)
             camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
+            camera_delay = PTZ_DELAY_DEFAULT if camera_delay is None else camera_delay
             camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
-            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
+            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
+            if camera_ptz_method is None:
+                camera_ptz_method = infer_ptz_method(context.hass_api, camera_ptz_entity_id)
+
             _LOGGER.debug(
                 "SUPERNOTIFY Snapping camera %s, ptz %s->%s (%s), delay %s secs",
                 active_camera_entity_id,

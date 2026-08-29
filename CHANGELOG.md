@@ -1,4 +1,11 @@
 
+
+## 2.2.0
+
+* Cameras
+  * `ptz_method` now defaults to `frigate` if the camera defined by the frigate integration even if no `camera` definition provided in config
+  * `ptz_delay` defaults to `10` if not defined in camera config, or camera not defined at all
+
 ## 2.1.0
 
 Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new transport integrations
