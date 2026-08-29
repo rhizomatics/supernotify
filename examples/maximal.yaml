@@ -346,6 +346,7 @@ supernotify:
           before: "06:30:00"
 
   cameras:
+    # advanced config only needed if backup cameras required, or ptz tuning
     - camera: camera.front_door
       alias: Front Door
       device_tracker: device_tracker.cam_axis_door
