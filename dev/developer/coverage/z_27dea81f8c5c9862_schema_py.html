@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">91 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">86<span class="text"> run</span></button>
+            <span class="text">92 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">87<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">5<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_snoozer_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-30 09:40 +0000
+            created at 2026-08-30 20:27 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -554,7 +554,7 @@
     <p class="pln"><span class="n"><a id="t472" href="#t472">472</a></span><span class="t"><span class="com"># extra=ALLOW_EXTRA matches the old PLATFORM_SCHEMA-derived schema's inherited leniency (HA's</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t473" href="#t473">473</a></span><span class="t"><span class="com"># base notify PLATFORM_SCHEMA itself uses ALLOW_EXTRA) - stray/unrecognized keys pass through</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t474" href="#t474">474</a></span><span class="t"><span class="com"># rather than failing validation.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t475" href="#t475">475</a></span><span class="t"><span class="nam">SUPERNOTIFY_YAML_SCHEMA</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Schema</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t475" href="#t475">475</a></span><span class="t"><span class="nam">SUPERNOTIFY_YAML_SCHEMA</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Schema</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Schema</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t476" href="#t476">476</a></span><span class="t">    <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t477" href="#t477">477</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_DELIVERY</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="nam">dict</span><span class="op">)</span><span class="op">:</span> <span class="op">{</span><span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">:</span> <span class="nam">DELIVERY_SCHEMA</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t478" href="#t478">478</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">CONF_ACTION_GROUPS</span><span class="op">,</span> <span class="nam">default</span><span class="op">=</span><span class="nam">dict</span><span class="op">)</span><span class="op">:</span> <span class="op">{</span><span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">:</span> <span class="op">[</span><span class="nam">MOBILE_ACTION_SCHEMA</span><span class="op">]</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -626,7 +626,7 @@
     <p class="run run2"><span class="n"><a id="t544" href="#t544">544</a></span><span class="t"><span class="op">}</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t545" href="#t545">545</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t546" href="#t546">546</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t547" href="#t547">547</a></span><span class="t"><span class="nam">ACTION_DATA_SCHEMA</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Schema</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t547" href="#t547">547</a></span><span class="t"><span class="nam">_ACTION_DATA_FIELDS_SCHEMA</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Schema</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t548" href="#t548">548</a></span><span class="t">    <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t549" href="#t549">549</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_DELIVERY</span><span class="op">)</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Any</span><span class="op">(</span><span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">,</span> <span class="op">[</span><span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">]</span><span class="op">,</span> <span class="op">{</span><span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Any</span><span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="nam">DELIVERY_CUSTOMIZE_SCHEMA</span><span class="op">)</span><span class="op">}</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t550" href="#t550">550</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_PRIORITY</span><span class="op">)</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Any</span><span class="op">(</span><span class="nam">int</span><span class="op">,</span> <span class="nam">str</span><span class="op">,</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">In</span><span class="op">(</span><span class="nam">list</span><span class="op">(</span><span class="nam">PRIORITY_VALUES</span><span class="op">.</span><span class="nam">keys</span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -647,7 +647,15 @@
     <p class="run run2"><span class="n"><a id="t565" href="#t565">565</a></span><span class="t">    <span class="nam">extra</span><span class="op">=</span><span class="nam">vol</span><span class="op">.</span><span class="nam">ALLOW_EXTRA</span><span class="op">,</span>  <span class="com"># allow other data, e.g. the android/ios mobile push</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t566" href="#t566">566</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t567" href="#t567">567</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t568" href="#t568">568</a></span><span class="t"><span class="nam">STRICT_ACTION_DATA_SCHEMA</span> <span class="op">=</span> <span class="nam">ACTION_DATA_SCHEMA</span><span class="op">.</span><span class="nam">extend</span><span class="op">(</span><span class="op">{</span><span class="op">}</span><span class="op">,</span> <span class="nam">extra</span><span class="op">=</span><span class="nam">vol</span><span class="op">.</span><span class="nam">REMOVE_EXTRA</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t568" href="#t568">568</a></span><span class="t"><span class="nam">ACTION_DATA_SCHEMA</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">All</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t569" href="#t569">569</a></span><span class="t">    <span class="nam">cv</span><span class="op">.</span><span class="nam">deprecated</span><span class="op">(</span><span class="nam">key</span><span class="op">=</span><span class="nam">ATTR_RECIPIENTS</span><span class="op">)</span><span class="op">,</span>  <span class="com"># deprecated v2.20.0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t570" href="#t570">570</a></span><span class="t">    <span class="nam">_ACTION_DATA_FIELDS_SCHEMA</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t571" href="#t571">571</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t572" href="#t572">572</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t573" href="#t573">573</a></span><span class="t"><span class="nam">STRICT_ACTION_DATA_SCHEMA</span> <span class="op">=</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">All</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t574" href="#t574">574</a></span><span class="t">    <span class="nam">cv</span><span class="op">.</span><span class="nam">deprecated</span><span class="op">(</span><span class="nam">key</span><span class="op">=</span><span class="nam">ATTR_RECIPIENTS</span><span class="op">)</span><span class="op">,</span>  <span class="com"># deprecated v2.20.0</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t575" href="#t575">575</a></span><span class="t">    <span class="nam">_ACTION_DATA_FIELDS_SCHEMA</span><span class="op">.</span><span class="nam">extend</span><span class="op">(</span><span class="op">{</span><span class="op">}</span><span class="op">,</span> <span class="nam">extra</span><span class="op">=</span><span class="nam">vol</span><span class="op">.</span><span class="nam">REMOVE_EXTRA</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t576" href="#t576">576</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -657,7 +665,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_snoozer_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-08-30 09:40 +0000
+            created at 2026-08-30 20:27 +0000
         </p>
     </div>
 </footer>

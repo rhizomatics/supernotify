@@ -3,9 +3,7 @@
   "properties": {
     "delivery": {
       "anyOf": [
-        {
-          "type": "string"
-        },
+        {},
         {
           "type": "array",
           "items": {
@@ -236,12 +234,12 @@
       "default": []
     },
     "debug": {
-      "type": "boolean",
-      "default": false
+      "default": false,
+      "type": "string"
     },
     "force_resend": {
-      "type": "boolean",
-      "default": false
+      "default": false,
+      "type": "string"
     },
     "data": {
       "type": "object",
