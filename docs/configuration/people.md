@@ -133,7 +133,9 @@ A recipient's `delivery:` block (also used below for [per-delivery targets](#man
 
 ### Enabling a Delivery Just for One Recipient
 
-A delivery doesn't need to be turned on for everybody to be useful to one person - an explicit `enabled: true` in a recipient's own `delivery:` block switches it on for them alone. A `target:` on its own isn't enough - it only customizes the delivery for when it's otherwise selected (see [Adding a Target for One Recipient](#adding-a-target-for-one-recipient) below), it won't switch on a delivery that's not otherwise enabled. For example, a Slack delivery built with the [Generic Transport](../transports/generic.md#selecting-targets) that only Jane uses:
+A delivery doesn't need to be turned on for everybody to be useful to one person - an explicit `enabled: true` in a recipient's own `delivery:` block switches it on for them alone, or conversely `enabled: false` to switch it off just for those recipients.
+
+A `target:` override can also be used, independently of the enabled status, to override the target only for that recipient on that delivery. For example, a Slack delivery built with the [Generic Transport](../transports/generic.md#selecting-targets) that only Jane uses:
 
 ```yaml
 delivery:
@@ -148,7 +150,7 @@ recipients:
   - person: person.jane
     delivery:
       slack:
-        enabled: true
+        enabled: true # leave this out if the slack delivery is usually enabled for everyone
         target:
           slack_channel: A20H2AN55DX
 ```

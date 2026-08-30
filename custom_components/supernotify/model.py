@@ -428,15 +428,18 @@ class TransportConfig:
 
 
 class DeliveryCustomization:
-    def __init__(self, config: ConfigType | None, target_specific: bool = False) -> None:
+    def __init__(
+        self, config: ConfigType | None = None, target_specific: bool = False, default_enabled: bool | None = None
+    ) -> None:
         config = config or {}
-        # defining a customization doesn't imply that the delivery is always enabled
-        self.enabled: bool | None = config.get(CONF_ENABLED)
-        # Distinguishes an omitted `enabled` key from one explicitly set to `None`/`false` -
-        # e.g. Scenario.enabling_deliveries() treats a directly-named delivery with no
-        # `enabled` key at all as enabling it (matching the list/string delivery config
-        # forms), but not one explicitly set to `enabled: None` just to carry other data.
-        self.enabled_explicit: bool = CONF_ENABLED in config
+        # defining a customization doesn't imply that the delivery is always enabled -
+        # default_enabled only fills in when the `enabled` key is omitted entirely (dict.get
+        # default only applies when the key is absent), never overrides an explicit
+        # `enabled: None`/`false`/`true` - e.g. Scenario.enabling_deliveries() relies on this to
+        # treat a directly-named delivery with no `enabled` key as enabling it (matching the
+        # list/string delivery config forms), but not one explicitly set to `enabled: None`
+        # just to carry other data (e.g. a priority override).
+        self.enabled: bool | None = config.get(CONF_ENABLED, default_enabled)
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
         # TODO: only works for scenario or recipient, not action call
         self.target: Target | None

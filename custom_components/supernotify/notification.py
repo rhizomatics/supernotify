@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, cast
 import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import CONF_ENABLED
 from voluptuous import humanize
 
 from custom_components.supernotify.schema import SelectionRank
@@ -161,21 +160,21 @@ class Notification(ArchivableObject):
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
             self.delivery_overrides = {
-                k: DeliveryCustomization({CONF_ENABLED: True}) for k in action_data.get(ATTR_DELIVERY, [])
+                k: DeliveryCustomization(config=None, default_enabled=True) for k in action_data.get(ATTR_DELIVERY, [])
             }
         elif isinstance(delivery_data, str) and delivery_data:
             # a bare list of deliveries implies intent to restrict
             _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for single %s", delivery_data)
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
-            self.delivery_overrides = {delivery_data: DeliveryCustomization({CONF_ENABLED: True})}
+            self.delivery_overrides = {delivery_data: DeliveryCustomization(config=None, default_enabled=True)}
         elif isinstance(delivery_data, dict):
             # whereas a dict may be used to tune or restrict
             if self.delivery_selection is None:
                 self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
             _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as implicit for mapping %s", delivery_data)
             self.delivery_overrides = {
-                k: DeliveryCustomization({CONF_ENABLED: True, **(v or {})})
+                k: DeliveryCustomization(config={**(v or {})}, default_enabled=True)
                 for k, v in action_data.get(ATTR_DELIVERY, {}).items()
             }
         elif delivery_data:

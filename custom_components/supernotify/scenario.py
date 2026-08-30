@@ -79,22 +79,22 @@ class Scenario:
         if isinstance(delivery_data, list):
             # a bare list of deliveries implies enabling
             _LOGGER.debug("SUPERNOTIFY Scenario %s delivery default enabled for list %s", self.name, delivery_data)
-            self._config_delivery = {k: DeliveryCustomization({CONF_ENABLED: True}) for k in delivery_data}
+            self._config_delivery = {k: DeliveryCustomization(config=None, default_enabled=True) for k in delivery_data}
         elif isinstance(delivery_data, str) and delivery_data:
             # a bare list of deliveries implies enabled delivery
             _LOGGER.debug("SUPERNOTIFY Scenario %s delivery default enabled for single %s", self.name, delivery_data)
-            self._config_delivery = {delivery_data: DeliveryCustomization({CONF_ENABLED: True})}
+            self._config_delivery = {delivery_data: DeliveryCustomization(config=None, default_enabled=True)}
         elif isinstance(delivery_data, dict):
             # whereas a dict may be used to tune or restrict
             _LOGGER.debug("SUPERNOTIFY Scenario %s delivery selection %s", self.name, delivery_data)
             self._config_delivery = {}
             for k, v in delivery_data.items():
-                if k not in delivery_registry.deliveries and CONF_ENABLED not in (v or {}):
-                    # a wildcard/regex pattern with no explicit enabled: only apply as an
-                    # override to deliveries already selected elsewhere, don't force-enable
-                    # every delivery it happens to match (e.g. selection: scenario deliveries)
-                    v = {**(v or {}), CONF_ENABLED: None}
-                self._config_delivery[k] = DeliveryCustomization(v)
+                # a wildcard/regex pattern with no explicit enabled: only apply as an
+                # override to deliveries already selected elsewhere, don't force-enable
+                # every delivery it happens to match (e.g. selection: scenario deliveries)
+                self._config_delivery[k] = DeliveryCustomization(
+                    config=v, default_enabled=True if k in delivery_registry.deliveries else None
+                )
         elif delivery_data:
             _LOGGER.warning("SUPERNOTIFY Unable to interpret scenario %s delivery data %s", self.name, delivery_data)
             self._config_delivery = {}
@@ -185,16 +185,13 @@ class Scenario:
         return self.startup_issue_count == 0
 
     def enabling_deliveries(self) -> list[str]:
-        # A directly-named delivery with no `enabled` key at all still implies enabling it
-        # (matches the list/string delivery config forms). A wildcard/regex match with no
-        # explicit `enabled` (__init__ forces an explicit enabled=None for those) or a
-        # delivery explicitly set to `enabled: None` just to carry other data (e.g. a
-        # priority override) must not force-select every delivery it happens to match.
-        return [
-            del_name
-            for del_name, del_config in self.delivery_overrides.items()
-            if del_config.enabled is True or not del_config.enabled_explicit
-        ]
+        # default_enabled (see __init__/DeliveryCustomization) already resolves whether an
+        # omitted `enabled` key should count as enabling: True for a directly-named delivery
+        # (matching the list/string delivery config forms), None for a wildcard/regex match
+        # so it doesn't force-select every delivery it happens to match. An explicit
+        # `enabled: None` (e.g. just to carry a priority override) is left as None too, not
+        # upgraded to the default - only a real `enabled: true` should land here.
+        return [del_name for del_name, del_config in self.delivery_overrides.items() if del_config.enabled is True]
 
     def relevant_deliveries(self) -> list[str]:
         return [

@@ -78,7 +78,7 @@ class Recipient:
 
         self._target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
         self.delivery_overrides: dict[str, DeliveryCustomization] = {
-            k: DeliveryCustomization(v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
+            k: DeliveryCustomization(config=v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
