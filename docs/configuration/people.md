@@ -9,11 +9,9 @@ tags:
 ---
 # People
 
-While Home Assistant has both a `Person` and `User`, neither are directly useful or extensible for notifications
-and occupancy checks.
+While Home Assistant has both a `Person` and `User`, neither are directly useful or extensible for notifications and occupancy checks.
 
-Supernotify adds a **People Registry** for notifications and occupancy, which builds on top of the Home Assistant
-entities ( and will be retired/adapted when Home Assistant does have this support). The term *Recipient* is used for what Supernotify manages, to distinguish from the Home Assistant terms.
+Supernotify adds a **People Registry** for notifications and occupancy, which builds on top of the Home Assistant entities ( and will be retired/adapted when Home Assistant does have this support). The term *Recipient* is used for what Supernotify manages, to distinguish from the Home Assistant terms.
 
 With the `recipient` definition you can:
 
@@ -24,6 +22,8 @@ With the `recipient` definition you can:
 - Also register custom targets, like Discord, Telegram etc IDs, that could be used in a *Generic* delivery
 - Switch off a recipient, even if they were automatically discovered
 - Set default targets for specific deliveries, so for example, an email address is always copied in on them
+- Create a **Notify Entity** for that person, which will use any or all of the delivery transports enabled for them.
+  - The Notify Entity for Recipient can also be a member of a **Notify Entity Group**
 
 ## Automatic Recipient Discovery
 
