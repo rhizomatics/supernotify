@@ -74,9 +74,7 @@ in a similar way (`enabled` defaults to `True`).
 
 ## Sending Notifications
 
-This means you can do multi-channel notification with a single reference to a `person` entity in a notification,
-and automatically the email, phone number, mobile app notification service, or whatever else is used as appropriate
-in each notification. This is all it takes:
+This means you can do multi-channel notification with a single reference to a `person` entity in a notification, and automatically the email, phone number, mobile app notification service, or whatever else is used as appropriate in each notification. This is all it takes:
 
 ```yaml title="Example Message to All Devices"
   - action: notify.supernotify
@@ -85,8 +83,7 @@ in each notification. This is all it takes:
         message: Something went off in the basement
 ```
 
-Since by default everyone in the people list gets every notification, you don't even need to define targets at all in
-each automation/script/blueprint/appdaemon app.
+Since by default everyone in the people list gets every notification, you don't even need to define targets at all in each automation/script/blueprint/appdaemon app.
 
 If you want to pin it down to specific people, add a list of targets ( you can also mix and match this
 target list with email addresses, notify entities, or direct mobile actions ).
@@ -104,9 +101,7 @@ target list with email addresses, notify entities, or direct mobile actions ).
 ```
 ## Entities
 
-Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is
-the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools,
-automations, API or whatever ) will disable or enable the recipient.
+Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools, automations, API or whatever ) will disable or enable the recipient.
 
 This can be handy if someone should be temporarily switched off for notifications, or you want your own
 automation to determine which people get notified when.
@@ -122,7 +117,7 @@ The entity also exposes the recipient attributes, such as email, mobile devices,
       phone_number: "+430504103451"
       delivery:
         alexa_announce:
-        target:
+          target:
             - media_player.echo_study
 ```
 
@@ -130,13 +125,9 @@ The entity also exposes the recipient attributes, such as email, mobile devices,
 
 ### Simple
 
-One good reason for manual device registration is that adding devices to the Person in Home Assistant affects
-the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you
-would like to have notifications on, but aren't always with you, adding them to Person might make it it look
-as if you're home when its only an iPad sitting on a shelf.
+One good reason for manual device registration is that adding devices to the Person in Home Assistant affects the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you would like to have notifications on, but aren't always with you, adding them to Person might make it it look as if you're home when its only an iPad sitting on a shelf.
 
-So adding these devices to the `recipients` section of Supernotify configuration will mean they get included
-in notifications, but won't be used for occupancy, by Supernotify or other integrations.
+So adding these devices to the `recipients` section of Supernotify configuration will mean they get included in notifications, but won't be used for occupancy, by Supernotify or other integrations.
 
 ```title="Simple Example"
 recipients:

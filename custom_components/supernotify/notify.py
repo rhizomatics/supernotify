@@ -420,12 +420,14 @@ class SupernotifyEntity(NotifyEntity):
 
 
 class RecipientNotifyEntity(NotifyEntity):
-    """Expose a single recipient as its own `notify.<recipient>` entity.
+    """Expose a single recipient as its own `notify.recipient_<name>` entity.
 
-    Sending a message here is equivalent to calling the main supernotify action with
-    `target: <recipient person entity_id>` - it still goes through the full delivery
-    pipeline (scenarios, dedupe, snooze), just pinned to this one recipient. Per HA's
-    notify entity service schema, only message/title are ever passed in - no data/target.
+    Sent as an ordinary `target` on the main supernotify action, just like any other entity -
+    Notification recognizes it as one of supernotify's own published recipient notify entities
+    and resolves it to this recipient, still going through the full default-recipient delivery pipeline
+    (occupancy, scenarios, personal delivery overrides, dedupe, snooze) rather than a literal,
+    unscoped target override. Per HA's notify entity service schema, only message/title are
+    ever passed in here - no data/target.
     """
 
     _attr_has_entity_name = True
@@ -442,10 +444,19 @@ class RecipientNotifyEntity(NotifyEntity):
         self._attr_supported_features = NotifyEntityFeature.TITLE
         self._recipient = recipient
         self._platform = platform
+        self.entity_id = f"notify.recipient_{recipient.name}"
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._recipient.notify_entity_id = self.entity_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._recipient.notify_entity_id = None
+        await super().async_will_remove_from_hass()
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to this recipient."""
-        await self._platform.async_send_message(message, title=title, target=self._recipient.entity_id)
+        await self._platform.async_send_message(message, title=title, target=self.entity_id)
 
 
 async def async_setup_entry(

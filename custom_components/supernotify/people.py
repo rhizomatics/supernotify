@@ -67,7 +67,8 @@ class Recipient:
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
-        self.entity_id = config[CONF_PERSON]
+        self.entity_id: str = config[CONF_PERSON]
+        self.notify_entity_id: str | None = None
         self.name: str = self.entity_id.replace("person.", "")
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)
@@ -138,6 +139,13 @@ class Recipient:
 
     def enabling_delivery_names(self) -> list[str]:
         return [delname for delname, delconf in self.delivery_overrides.items() if delconf.enabled is True]
+
+    def disabling_delivery_names(self) -> list[str]:
+        return [
+            delname
+            for delname, delconf in self.delivery_overrides.items()
+            if delconf.enabled is not None and delconf.enabled is False
+        ]
 
     def target(self, delivery_name: str) -> Target:
         recipient_target: Target = self._target
@@ -233,6 +241,9 @@ class PeopleRegistry:
 
     def find_people(self) -> list[str]:
         return self.hass_api.entity_ids_for_domain(PERSON_DOMAIN)
+
+    def notify_entities(self) -> dict[str, Recipient]:
+        return {p.notify_entity_id: p for p in self.people.values() if p.notify_entity_id}
 
     def enabled_recipients(self) -> list[Recipient]:
         return [p for p in self.people.values() if p.enabled]

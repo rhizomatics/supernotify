@@ -1,6 +1,14 @@
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.const import CONF_ACTION, CONF_CONDITION, CONF_CONDITIONS, CONF_ENTITY_ID, CONF_STATE, CONF_TARGET
+from homeassistant.const import (
+    CONF_ACTION,
+    CONF_CONDITION,
+    CONF_CONDITIONS,
+    CONF_ENABLED,
+    CONF_ENTITY_ID,
+    CONF_STATE,
+    CONF_TARGET,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
@@ -200,6 +208,56 @@ async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> N
     assert dummy.service.calls[1].data["_UNKNOWN_"] == ["abc789"]
     assert dummy.service.calls[1].data["email"] == ["me@tester.net"]
     assert dummy.service.calls[1].data["mobile_app_id"] == ["mobile_app_new_iphone"]
+
+
+async def test_recipient_can_disable_a_globally_enabled_delivery(mock_hass: HomeAssistant) -> None:
+    """A delivery that's enabled for everyone can still be individually opted out of by a
+    single recipient - that recipient is omitted, everyone else still gets it.
+    """
+    recipients = [
+        {"person": "person.stays_in", CONF_DELIVERY: {"dummy": {CONF_TARGET: "in"}}},
+        {"person": "person.explicitly_in", CONF_DELIVERY: {"dummy": {CONF_ENABLED: True, CONF_TARGET: "explicit"}}},
+        {"person": "person.opts_out", CONF_DELIVERY: {"dummy": {CONF_ENABLED: False, CONF_TARGET: "out"}}},
+    ]
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(
+        message="testing 123",
+        data={"delivery": "dummy"},
+    )
+
+    assert len(dummy.service.calls) == 1
+    assert dummy.service.calls[0].data["_UNKNOWN_"] == ["in", "explicit"]
+
+
+async def test_default_person_ids_excludes_recipients_who_disabled_the_delivery(mock_hass: HomeAssistant) -> None:
+    """default_person_ids (notification.py) must exclude a recipient who's personally disabled
+    a delivery from the initial candidate list - otherwise their own base contact info (e.g.
+    email) still leaks through via resolve_indirect_targets/Recipient.target(), since that
+    method's enabled gate only withholds the delivery-specific override, not the recipient's
+    base target. Giving the opted-out recipient a base email (not just a delivery-specific
+    target) means this test only passes because of default_person_ids' own filtering - without
+    it, their base target has nothing else to strip and the email would leak through."""
+    recipients = [
+        {"person": "person.stays_in", CONF_DELIVERY: {"dummy": {CONF_TARGET: ["stays_in_target"]}}},
+        {
+            "person": "person.opts_out",
+            "email": "opts_out@example.com",
+            CONF_DELIVERY: {"dummy": {CONF_ENABLED: False}},
+        },
+    ]
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(message="testing 123", data={"delivery": "dummy"})
+
+    assert len(dummy.service.calls) == 1
+    assert dummy.service.calls[0].data == {"_UNKNOWN_": ["stays_in_target"]}
 
 
 async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:

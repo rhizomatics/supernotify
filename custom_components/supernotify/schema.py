@@ -472,7 +472,7 @@ HOUSEKEEPING_SCHEMA = vol.Schema({
 # extra=ALLOW_EXTRA matches the old PLATFORM_SCHEMA-derived schema's inherited leniency (HA's
 # base notify PLATFORM_SCHEMA itself uses ALLOW_EXTRA) - stray/unrecognized keys pass through
 # rather than failing validation.
-SUPERNOTIFY_YAML_SCHEMA = vol.Schema(
+SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
         vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [MOBILE_ACTION_SCHEMA]},
@@ -544,7 +544,7 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
 })
 
 
-ACTION_DATA_SCHEMA = vol.Schema(
+_ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DELIVERY): vol.Any(cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)}),
         vol.Optional(ATTR_PRIORITY): vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys()))),
@@ -565,4 +565,12 @@ ACTION_DATA_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,  # allow other data, e.g. the android/ios mobile push
 )
 
-STRICT_ACTION_DATA_SCHEMA = ACTION_DATA_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+ACTION_DATA_SCHEMA = vol.All(
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.20.0
+    _ACTION_DATA_FIELDS_SCHEMA,
+)
+
+STRICT_ACTION_DATA_SCHEMA = vol.All(
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.20.0
+    _ACTION_DATA_FIELDS_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
+)

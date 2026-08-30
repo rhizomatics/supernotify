@@ -282,13 +282,13 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
 
 
 async def test_notify_entity_group_including_recipients(hass: HomeAssistant) -> None:
-    """Recipients are exposed as real notify.<recipient> entities, so HA's built-in Notify
-    Group helper can fan a single notify.send_message call out to several of them."""
+    """Recipients are exposed as real notify.recipient_<name> entities, so HA's built-in
+    Notify Group helper can fan a single notify.send_message call out to several of them."""
     service = await _setup_supernotify(hass, {"recipients": [{"person": "person.alice"}, {"person": "person.bob"}]})
 
     group_entry = MockConfigEntry(
         domain="group",
-        options={"group_type": "notify", "entities": ["notify.alice", "notify.bob"]},
+        options={"group_type": "notify", "entities": ["notify.recipient_alice", "notify.recipient_bob"]},
         title="Household",
     )
     group_entry.add_to_hass(hass)
@@ -305,9 +305,9 @@ async def test_notify_entity_group_including_recipients(hass: HomeAssistant) -> 
         await hass.async_block_till_done()
 
     targets = sorted(call.kwargs["target"] for call in spy.call_args_list)
-    assert targets == ["person.alice", "person.bob"]
-    assert hass.states.get("notify.alice").state not in (None, "unknown", "unavailable")  # type: ignore[union-attr]
-    assert hass.states.get("notify.bob").state not in (None, "unknown", "unavailable")  # type: ignore[union-attr]
+    assert targets == ["notify.recipient_alice", "notify.recipient_bob"]
+    assert hass.states.get("notify.recipient_alice").state not in (None, "unknown", "unavailable")  # type: ignore[union-attr]
+    assert hass.states.get("notify.recipient_bob").state not in (None, "unknown", "unavailable")  # type: ignore[union-attr]
 
 
 async def test_exposed_transport_events(hass: HomeAssistant) -> None:

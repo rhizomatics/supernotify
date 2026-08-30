@@ -81,7 +81,6 @@ async def test_simple_create() -> None:
     assert uut.priority == "medium"
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert uut.recipients_override is None
     assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
@@ -454,3 +453,24 @@ async def test_delivery_selection_order() -> None:
     assert next(iter(uut.selected_deliveries)) == "eager"
     assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
     assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
+
+
+async def test_convert_notify_entities() -> None:
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    ctx.people_registry.people["person.alice"].notify_entity_id = "notify.recipient_alice"
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities(["notify.recipient_alice", "media_player.kitchen"])
+
+    assert converted == ["person.alice", "media_player.kitchen"]
+
+
+async def test_convert_notify_entities_ignores_unrecognized_notify_entities() -> None:
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities(["notify.some_other_integration", "media_player.kitchen"])
+
+    assert converted == ["notify.some_other_integration", "media_player.kitchen"]

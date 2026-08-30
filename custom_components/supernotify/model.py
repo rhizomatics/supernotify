@@ -120,23 +120,17 @@ class Target:
             pass  # empty constructor is valid case for target building
         elif isinstance(target, list):
             # simplified and legacy way of assuming list of entities that can be discriminated by validator
-            targets_left = list(target)
+            targets = list(target)
             for category in self.AUTO_CATEGORIES:
-                validator = getattr(self, f"is_{category}", None)
-                if validator is not None:
-                    matched = []
-                    for t in targets_left:
-                        if t not in matched and validator(t):
-                            self.targets.setdefault(category, [])
-                            self.targets[category].append(t)
-                            matched.append(t)
-                    targets_left = [t for t in targets_left if t not in matched]
-                else:
-                    _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
-                if not targets_left:
+                matched = self._filter_by_category(category, targets)
+                if matched:
+                    self.targets.setdefault(category, [])
+                    self.targets[category].extend([t for t in matched if t not in self.targets[category]])
+                    targets = [t for t in targets if t not in matched]
+                if not targets:
                     break
-            if targets_left:
-                self.targets[self.UNKNOWN_CUSTOM_CATEGORY] = targets_left
+            if targets:
+                self.targets[self.UNKNOWN_CUSTOM_CATEGORY] = targets
 
         elif isinstance(target, dict):
             for category in target:
@@ -144,17 +138,10 @@ class Target:
                 if not targets:
                     continue
                 if category in self.AUTO_CATEGORIES:
-                    validator = getattr(self, f"is_{category}", None)
-                    if validator is not None:
-                        for t in targets:
-                            if validator(t):
-                                self.targets.setdefault(category, [])
-                                if t not in self.targets[category]:
-                                    self.targets[category].append(t)
-                            else:
-                                _LOGGER.warning("SUPERNOTIFY Target skipped invalid %s target: %s", category, t)
-                    else:
-                        _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+                    matched = self._filter_by_category(category, targets)
+                    if matched:
+                        self.targets.setdefault(category, [])
+                        self.targets[category].extend([t for t in matched if t not in self.targets[category]])
 
                 elif category in self.CATEGORIES:
                     # categories that can't be automatically detected, like label_id
@@ -172,6 +159,17 @@ class Target:
                     self.target_specific_data[category, t] = target_data
         if target_data and not target_specific_data:
             self.target_data = target_data
+
+    def _filter_by_category(self, category: str, candidates: list[str]) -> list[str]:
+        matched: list[str] = []
+        validator = getattr(self, f"is_{category}", None)
+        if validator is not None:
+            for t in candidates:
+                if t not in matched and validator(t):
+                    matched.append(t)
+        else:
+            _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+        return matched
 
     # Targets by category
 

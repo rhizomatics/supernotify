@@ -72,9 +72,7 @@ delivery:
       target_categories: entity_id
 ```
 
-If it's not a standard target type, then make one up. In this example, for personal Slack channels, which
-in this example is called "slack_channel" but can be anything you like so long as it matches up ( you could
-have separate categories for "slack_group_dm", "slack_user" etc)
+If it's not a standard target type, then make one up. In this example, for personal Slack channels,which in this example is called "slack_channel" but can be anything you like so long as it matches up ( you could have separate categories for "slack_group_dm", "slack_user" etc)
 
 ```yaml title="Config Snippets"
 recipients:

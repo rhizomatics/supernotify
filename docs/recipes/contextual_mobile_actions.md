@@ -25,12 +25,9 @@ selections by the inhabitants.
 
 ## Implementation
 
-Uses a **Scenario**, with conditions to select the alarm control panel states, and `action_groups` to
-pick pre-defined sets of mobile actions. The *Arm* action will only show if alarm panel state is disarmed,
-and the *Reset* action will always be available.
+Uses a **Scenario**, with conditions to select the alarm control panel states, and `action_groups` to pick pre-defined sets of mobile actions. The *Arm* action will only show if alarm panel state is disarmed, and the *Reset* action will always be available.
 
-This scenario contributes only mobile actions, and other scenarios ( or delivery defaults ) could combine
-to contribute other things like sirens, camera snapshots, push noises etc.
+This scenario contributes only mobile actions, and other scenarios ( or delivery defaults ) could combine to contribute other things like sirens, camera snapshots, push noises etc.
 
 The mobile action itself will be handled by the [AutoArm](https://autoarm.rhizomatics.org.uk) custom
 integration, which responds to the `ALARM_PANEL_DISARM`, `ALARM_PANEL_RESET` etc action keys.
