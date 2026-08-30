@@ -138,9 +138,15 @@ class Recipient:
         return {k: v for k, v in self.mobile_devices.items() if v.get(CONF_ENABLED, True)}
 
     def enabling_delivery_names(self) -> list[str]:
-        return [delname for delname, delconf in self.delivery_overrides.items() if delconf.enabled is True]
+        """Explicitly overriding enabled state"""
+        return [
+            delname
+            for delname, delconf in self.delivery_overrides.items()
+            if delconf.enabled is not None and delconf.enabled is True
+        ]
 
     def disabling_delivery_names(self) -> list[str]:
+        """Explicitly overriding enabled state"""
         return [
             delname
             for delname, delconf in self.delivery_overrides.items()

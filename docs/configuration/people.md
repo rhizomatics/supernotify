@@ -108,6 +108,90 @@ automation to determine which people get notified when.
 
 The entity also exposes the recipient attributes, such as email, mobile devices, target, custom data etc.
 
+## Notify Entity
+
+Every recipient is also automatically exposed as its own `notify.recipient_XXXXX` entity - a real, callable [Notify Entity](https://www.home-assistant.io/integrations/notify/), not just the diagnostic sensor above. It can be targeted directly from any automation, script or Lovelace UI that expects a standard Home Assistant notify target:
+
+```yaml title="Example Automation Action"
+    - action: notify.send_message
+      target:
+        entity_id: notify.recipient_new_home_owner
+      data:
+        message: Your bin needs to go out!!!
+```
+
+This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` does, just scoped to that one recipient instead of the whole People Registry.
+
+Because it's an ordinary Home Assistant Notify Entity, it can be added as a member of a Home Assistant **Notify Group** helper ( *Settings → Devices & Services → Helpers → Add Helper → Group → Notify Group* ), to combine several recipients - or a subset of them - under one target, without needing a Supernotify Scenario just for that. These can be a mix of Supernotify provided and other platform Notify Entities.
+
+!!! note
+    Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `notify.supernotify` action with an explicit `target:` if you need any of that for a specific recipient.
+
+## Enabling, Disabling and Overriding Targets per Delivery
+
+A recipient's `delivery:` block (also used below for [per-delivery targets](#manual-configuration)) can switch a delivery on or off just for that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else.
+
+### Enabling a Delivery Just for One Recipient
+
+A delivery doesn't need to be turned on for everybody to be useful to one person - an explicit `enabled: true` in a recipient's own `delivery:` block switches it on for them alone. A `target:` on its own isn't enough - it only customizes the delivery for when it's otherwise selected (see [Adding a Target for One Recipient](#adding-a-target-for-one-recipient) below), it won't switch on a delivery that's not otherwise enabled. For example, a Slack delivery built with the [Generic Transport](../transports/generic.md#selecting-targets) that only Jane uses:
+
+```yaml
+delivery:
+  slack:
+    transport: generic
+    action: notify.my_slack_service
+    enabled: false
+    options:
+      target_categories: slack_channel
+
+recipients:
+  - person: person.jane
+    delivery:
+      slack:
+        enabled: true
+        target:
+          slack_channel: A20H2AN55DX
+```
+
+Nobody else is bothered by Slack messages, since `slack` was never enabled at the delivery level - only for Jane's recipient entry, and only because she explicitly set `enabled: true`.
+
+### Disabling a Delivery for One Recipient
+
+The opposite works too - a delivery that's already enabled for everybody can be switched off for one recipient, without touching the delivery itself:
+
+```yaml
+delivery:
+  html_email:
+    transport: email
+    template: default.html.j2
+
+recipients:
+  - person: person.new_home_owner
+    email: jalaboli@myhome.net
+  - person: person.grumpy_teenager
+    email: leave.me.alone@myhome.net
+    delivery:
+      html_email:
+        enabled: false
+```
+
+Everyone else still gets `html_email`; `person.grumpy_teenager` is left out of just that delivery, while still receiving anything else that applies to them (mobile push, other deliveries, and so on).
+
+### Adding a Target for One Recipient
+
+The same `delivery:` block can add extra targets or data to a delivery that's already firing for everyone, rather than switching it on or off entirely - for example, CC'ing an assistant on the household's `html_email` delivery:
+
+```yaml
+recipients:
+  - person: person.new_home_owner
+    delivery:
+      html_email:
+        target:
+          - assistant@myhome.net
+```
+
+`enabled`, `target` and `data` can be combined in the same block as needed - `enabled: false` always wins over any `target`/`data` set alongside it, since a recipient who's opted out shouldn't still pick up delivery-specific extras.
+
 ## Manual Configuration
 
 ```yaml title="Simple Example"

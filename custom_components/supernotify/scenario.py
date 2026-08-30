@@ -185,7 +185,16 @@ class Scenario:
         return self.startup_issue_count == 0
 
     def enabling_deliveries(self) -> list[str]:
-        return [del_name for del_name, del_config in self.delivery_overrides.items() if del_config.enabled]
+        # A directly-named delivery with no `enabled` key at all still implies enabling it
+        # (matches the list/string delivery config forms). A wildcard/regex match with no
+        # explicit `enabled` (__init__ forces an explicit enabled=None for those) or a
+        # delivery explicitly set to `enabled: None` just to carry other data (e.g. a
+        # priority override) must not force-select every delivery it happens to match.
+        return [
+            del_name
+            for del_name, del_config in self.delivery_overrides.items()
+            if del_config.enabled is True or not del_config.enabled_explicit
+        ]
 
     def relevant_deliveries(self) -> list[str]:
         return [

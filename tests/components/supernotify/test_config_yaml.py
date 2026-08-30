@@ -259,7 +259,7 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
                 "mobile_discovery": True,
                 "mobile_devices": [],
                 "delivery": {
-                    "chime": {"target": {"entity_id": ["switch.office_bell"]}, "enabled": True, "data": {"volume": "whisper"}}
+                    "chime": {"target": {"entity_id": ["switch.office_bell"]}, "enabled": None, "data": {"volume": "whisper"}}
                 },
                 "target": {
                     "discord": ["@mickey"],
@@ -489,7 +489,7 @@ async def test_recipients_configured(hass: HomeAssistant) -> None:
             "chime": {
                 "target": {"entity_id": ["switch.office_bell"]},
                 "data": {"volume": "whisper"},
-                "enabled": True,
+                "enabled": None,
             }
         },
         "target": {

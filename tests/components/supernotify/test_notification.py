@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
-from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
+from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -292,7 +292,7 @@ async def test_select_recipient_deliveries() -> None:
                 CONF_PERSON: "person.new_home_owner",
                 CONF_EMAIL: "owner@mctest.org",
                 CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_joephone"}],
-                CONF_DELIVERY: {"chatty": {}},
+                CONF_DELIVERY: {"chatty": {CONF_ENABLED: True}},
             },
             {
                 CONF_PERSON: "person.kid_no_3",
