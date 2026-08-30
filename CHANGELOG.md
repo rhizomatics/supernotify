@@ -9,6 +9,9 @@
 * Cameras
   * `ptz_method` now defaults to `frigate` if the camera defined by the frigate integration even if no `camera` definition provided in config
   * `ptz_delay` defaults to `10` if not defined in camera config, or camera not defined at all
+* Minor fixes
+  * Conditional error log handler for placeholders
+  * Strict template mode undo
 
 ## 2.1.0
 
