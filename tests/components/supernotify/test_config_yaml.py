@@ -10,6 +10,7 @@ from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF_PLATFORM, SERVICE_RELOAD
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
@@ -278,6 +279,35 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     expected_response["recipients"][0]["enabled"] = True
     assert response == expected_response
+
+
+async def test_notify_entity_group_including_recipients(hass: HomeAssistant) -> None:
+    """Recipients are exposed as real notify.<recipient> entities, so HA's built-in Notify
+    Group helper can fan a single notify.send_message call out to several of them."""
+    service = await _setup_supernotify(hass, {"recipients": [{"person": "person.alice"}, {"person": "person.bob"}]})
+
+    group_entry = MockConfigEntry(
+        domain="group",
+        options={"group_type": "notify", "entities": ["notify.alice", "notify.bob"]},
+        title="Household",
+    )
+    group_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(group_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(service, "async_send_message", wraps=service.async_send_message) as spy:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "send_message",
+            {"entity_id": "notify.household", "message": "unit test", "title": "my title"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    targets = sorted(call.kwargs["target"] for call in spy.call_args_list)
+    assert targets == ["person.alice", "person.bob"]
+    assert hass.states.get("notify.alice").state not in (None, "unknown", "unavailable")  # type: ignore[union-attr]
+    assert hass.states.get("notify.bob").state not in (None, "unknown", "unavailable")  # type: ignore[union-attr]
 
 
 async def test_exposed_transport_events(hass: HomeAssistant) -> None:

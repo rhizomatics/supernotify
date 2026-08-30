@@ -102,11 +102,10 @@ rules:
       Reviewed: the four subscriptions (mobile_app_notification_action, exposed_entities
       state tracking, nightly housekeeping timer, EVENT_HOMEASSISTANT_STOP - all wired in
       SupernotifyAction.initialize(), notify.py) are inherently orchestration-level, not
-      scoped to any single entity - they act across all recipients/deliveries. The only
-      entity in the component, SupernotifyEntity (NotifyEntity), owns none of them. The one
-      plausible future owner, a per-person Recipient entity (people.py's _attr_device_class/
-      _attr_entity_category comment "for future native entity use"), doesn't exist as a real
-      Entity yet - revisit if that's ever built.
+      scoped to any single entity - they act across all recipients/deliveries. Neither
+      SupernotifyEntity nor the per-recipient RecipientNotifyEntity (notify.py, added via the
+      notify platform's async_setup_entry) owns any of them - each just delegates
+      async_send_message back to the shared SupernotifyAction.
 
   entity-unique-id:
     status: done

@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
-from homeassistant.const import CONF_NAME, SERVICE_RELOAD
+from homeassistant.const import CONF_NAME, SERVICE_RELOAD, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
@@ -131,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     async_register_supplemental_services(hass, service, full_config)
     entry.runtime_data = service
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
     return True
 
 
@@ -142,8 +143,9 @@ async def _async_update_listener(hass: HomeAssistant, entry: SupernotifyConfigEn
 async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
     from .notify import async_unregister_supplemental_services
 
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
     service: SupernotifyAction | None = getattr(entry, "runtime_data", None)
     if service is not None:
         await service.async_unregister_services()
         async_unregister_supplemental_services(hass)
-    return True
+    return unload_ok

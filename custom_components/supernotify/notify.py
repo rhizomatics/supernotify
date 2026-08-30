@@ -95,8 +95,10 @@ if TYPE_CHECKING:
     import datetime as dt
 
     from homeassistant.helpers import entity_registry as er
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+    from . import SupernotifyConfigEntry
     from .scenario import Scenario
     from .transport import Transport
 
@@ -415,6 +417,53 @@ class SupernotifyEntity(NotifyEntity):
     ) -> None:
         """Send a message to a user."""
         await self._platform.async_send_message(message, title=title, target=target, data=data)
+
+
+class RecipientNotifyEntity(NotifyEntity):
+    """Expose a single recipient as its own `notify.<recipient>` entity.
+
+    Sending a message here is equivalent to calling the main supernotify action with
+    `target: <recipient person entity_id>` - it still goes through the full delivery
+    pipeline (scenarios, dedupe, snooze), just pinned to this one recipient. Per HA's
+    notify entity service schema, only message/title are ever passed in - no data/target.
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        unique_id: str,
+        recipient: Recipient,
+        platform: SupernotifyAction,
+    ) -> None:
+        """Initialize the recipient notify entity."""
+        self._attr_unique_id = unique_id
+        self._attr_name = recipient.alias or recipient.name
+        self._attr_supported_features = NotifyEntityFeature.TITLE
+        self._recipient = recipient
+        self._platform = platform
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to this recipient."""
+        await self._platform.async_send_message(message, title=title, target=self._recipient.entity_id)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SupernotifyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Expose each configured recipient as its own notify entity.
+
+    Forwarded to from async_setup_entry in __init__.py once the SupernotifyAction (entry.
+    runtime_data) is fully initialized, so people_registry is already populated.
+    """
+    _ = hass
+    service = entry.runtime_data
+    async_add_entities(
+        RecipientNotifyEntity(f"{entry.entry_id}_recipient_{recipient.name}", recipient, service)
+        for recipient in service.context.people_registry.people.values()
+    )
 
 
 class SupernotifyAction(BaseNotificationService):

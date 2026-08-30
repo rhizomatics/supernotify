@@ -143,7 +143,7 @@ supernotify:
       phone_number: "+4287600013834"
       target:
         - switch.garden_shed_chime
-      mobile_discovery: false
+      mobile_discovery: false # manually define mobile devices for this person
       mobile_devices:
         - manufacturer: nokia
           model: 6110
