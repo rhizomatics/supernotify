@@ -98,6 +98,9 @@ class DeliveryTargetOverride:
     include: list[str] | None = None
     exclude: list[str] | None = None
 
+    def as_dict(self) -> dict[str, Any]:
+        return {"fixed": self.fixed, "include": self.include, "exclude": self.exclude}
+
 
 class Notification(ArchivableObject):
     def __init__(
