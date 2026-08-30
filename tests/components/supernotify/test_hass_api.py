@@ -1,20 +1,42 @@
 from __future__ import annotations
 
+import logging
 import socket
 from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+import voluptuous as vol
+from homeassistant.core import SupportsResponse
+from homeassistant.exceptions import (
+    ConditionErrorContainer,
+    ConditionErrorMessage,
+    HomeAssistantError,
+    IntegrationError,
+    ServiceNotFound,
+)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
-from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.hass_api import (
+    ATTR_APP_VERSION,
+    ATTR_OS_NAME,
+    ATTR_OS_VERSION,
+    CONF_USER_ID,
+    ConditionErrorLoggingAdaptor,
+    HomeAssistantAPI,
+    force_strict_template_mode,
+)
 from custom_components.supernotify.model import ConditionVariables, SelectionRule
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
-from .hass_setup_lib import register_device
+from .hass_setup_lib import register_device, register_mobile_app
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from typing import Any
+
     from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 
     from custom_components.supernotify.schema import ConditionsFunc
@@ -375,3 +397,280 @@ def test_discover_devices_skips_disabled(hass: HomeAssistant) -> None:
         dev_reg.async_update_device(dev_entry.id, disabled_by=DeviceEntryDisabler.USER)
     devices = hass_api.discover_devices("test_disabled")
     assert len(devices) == 0
+
+
+def test_is_state(hass: HomeAssistant) -> None:
+    # Line 178
+    hass_api = HomeAssistantAPI(hass)
+    hass_api.set_state("entity.is_state_test", "on")
+    assert hass_api.is_state("entity.is_state_test", "on")
+    assert not hass_api.is_state("entity.is_state_test", "off")
+
+
+async def test_fire_event(hass: HomeAssistant) -> None:
+    # Line 201
+    hass_api = HomeAssistantAPI(hass)
+    calls: list[dict] = []
+    hass.bus.async_listen("supernotify_test_fire_event", lambda event: calls.append(event.data))
+    hass_api.fire_event("supernotify_test_fire_event", {"foo": "bar"})
+    await hass.async_block_till_done()
+    assert calls == [{"foo": "bar"}]
+
+
+def test_mobile_app_by_tracker_unknown(hass: HomeAssistant) -> None:
+    # Line 470
+    hass_api = HomeAssistantAPI(hass)
+    assert hass_api.mobile_app_by_tracker("device_tracker.nope") is None
+
+
+def test_initialize_warns_on_invalid_internal_url(hass: HomeAssistant) -> None:
+    # Line 150
+    hass_api = HomeAssistantAPI(hass)
+    with patch("custom_components.supernotify.hass_api.get_url", side_effect=["ftp://nope", "https://ext.example"]):
+        hass_api.initialize()
+    assert hass_api.internal_url == "ftp://nope"
+    assert hass_api.external_url == "https://ext.example"
+
+
+def test_find_config_entry_data_unavailable() -> None:
+    # Line 330: hass_avail guard returns None when config_entries isn't present
+    fake_hass = Mock()
+    fake_hass.config_entries = None
+    hass_api = HomeAssistantAPI(fake_hass)  # type: ignore[arg-type]
+    assert hass_api.find_config_entry_data("foo") is None
+
+
+async def test_coerce_schema_handles_unexpected_coercion_failure(hass: HomeAssistant) -> None:
+    # Lines 283-285: any exception raised while coercing is caught and original data returned
+    hass_api = HomeAssistantAPI(hass)
+    hass_api._service_info[("foo", "bar")] = {"schema": vol.Schema({vol.Required("num"): int})}
+    data = {"num": "not-an-int"}
+    assert hass_api.coerce_schema("foo", "bar", data) == data
+
+
+def test_service_info_handles_exception(mock_hass: HomeAssistant) -> None:
+    # Lines 303-304
+    hass_api = HomeAssistantAPI(mock_hass)
+    mock_hass.services.async_services_for_domain.side_effect = RuntimeError("boom")
+    assert hass_api.service_info("foo", "bar") == SupportsResponse.NONE
+
+
+async def test_build_conditions_validate_failure_reraises(hass: HomeAssistant) -> None:
+    # Lines 401-403
+    hass_api = HomeAssistantAPI(hass)
+    condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ true }}"})
+    with (
+        patch(
+            "custom_components.supernotify.hass_api.condition_helper.async_validate_conditions_config",
+            AsyncMock(side_effect=RuntimeError("boom")),
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        await hass_api.build_conditions(condition, validate=True)
+
+
+async def test_build_conditions_raises_when_no_test_built(hass: HomeAssistant) -> None:
+    # Line 412
+    hass_api = HomeAssistantAPI(hass)
+    condition = cv.CONDITIONS_SCHEMA({"condition": "template", "value_template": "{{ true }}"})
+    with (
+        patch(
+            "custom_components.supernotify.hass_api.condition_helper.async_conditions_from_config",
+            AsyncMock(return_value=None),
+        ),
+        pytest.raises(IntegrationError),
+    ):
+        await hass_api.build_conditions(condition)
+
+
+def test_evaluate_conditions_warns_on_missing_vars(hass: HomeAssistant) -> None:
+    # Lines 433-434: warns and passes None through when condition_variables is None
+    hass_api = HomeAssistantAPI(hass)
+    assert hass_api.evaluate_conditions(lambda variables: variables is None, None) is True  # type: ignore[arg-type]
+
+
+def test_evaluate_conditions_reraises_exception(hass: HomeAssistant) -> None:
+    # Lines 435-437
+    hass_api = HomeAssistantAPI(hass)
+
+    def bad_conditions(variables: Mapping[str, Any] | None) -> bool:
+        raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        hass_api.evaluate_conditions(bad_conditions, ConditionVariables())
+
+
+async def test_trace_conditions_propagates_exception(hass: HomeAssistant) -> None:
+    # Lines 758-761: trace_action re-raises exceptions from the traced body
+    hass_api = HomeAssistantAPI(hass)
+
+    def bad_conditions(variables: Mapping[str, Any] | None) -> bool:
+        raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        await hass_api.trace_conditions(bad_conditions, ConditionVariables())
+
+
+def test_build_mobile_app_cache_warns_when_no_notify_service(hass: HomeAssistant) -> None:
+    # Line 499: no matching notify.* service found for a discovered mobile_app device
+    hass_api = HomeAssistantAPI(hass)
+    register_device(
+        hass_api,
+        device_id="30001111222233334444555566667777",
+        domain="mobile_app",
+        domain_id="no_notify_service",
+        title="No Notify Phone",
+    )
+    hass_api.build_mobile_app_cache()
+    found = hass_api.mobile_app_by_id("mobile_app_no_notify_phone")
+    assert found is not None
+    assert found.action is None
+
+
+def test_build_mobile_app_cache_handles_device_exception(hass: HomeAssistant) -> None:
+    # Lines 522-523: a failure examining one device is logged, not raised
+    hass_api = HomeAssistantAPI(hass)
+    register_device(hass_api, device_id="40001111222233334444555566667777", domain="mobile_app", domain_id="broken_device")
+    with patch.object(hass_api, "has_service", side_effect=RuntimeError("boom")):
+        hass_api.build_mobile_app_cache()  # should not raise
+    assert hass_api.mobile_app_by_device_id("40001111222233334444555566667777") is None
+
+
+def test_device_config_info_falls_back_to_deprecated_config_entries(hass: HomeAssistant) -> None:
+    # Lines 532-534: pre-2026.8 devices without config_entry_id fall back to config_entries
+    hass_api = HomeAssistantAPI(hass)
+    device = Mock(spec=["config_entries"])
+    device.config_entries = ()
+    result = hass_api.device_config_info(device)  # type: ignore[arg-type]
+    assert result == {ATTR_OS_NAME: None, ATTR_OS_VERSION: None, CONF_USER_ID: None, ATTR_APP_VERSION: None}
+
+
+def test_discover_devices_no_device_registry(hass: HomeAssistant) -> None:
+    # Lines 554-555
+    hass_api = HomeAssistantAPI(hass)
+    with patch.object(hass_api, "device_registry", return_value=None):
+        assert hass_api.discover_devices("mobile_app") == []
+
+
+def test_discover_devices_filters_os_area_and_labels(hass: HomeAssistant) -> None:
+    # Lines 579-583, 585-587, 589-591
+    hass_api = HomeAssistantAPI(hass)
+    register_mobile_app(hass_api, person="person.filter_test", device_name="filterphone", os_name="iOS")
+
+    assert hass_api.discover_devices("mobile_app", device_os_select=SelectionRule(["Android"])) == []
+    assert hass_api.discover_devices("mobile_app", device_area_select=SelectionRule(["kitchen"])) == []
+    assert hass_api.discover_devices("mobile_app", device_label_select=SelectionRule(["urgent"])) == []
+
+
+def test_discover_devices_logs_unexpected_device_without_id(hass: HomeAssistant) -> None:
+    # Line 612
+    hass_api = HomeAssistantAPI(hass)
+    register_device(
+        hass_api,
+        device_id="60001111222233334444555566667777",
+        domain="unit_testing",
+        domain_id="empty_id",
+        identifiers={()},
+    )
+    devices = hass_api.discover_devices("unit_testing")
+    assert devices == []
+
+
+def test_domain_for_device_no_match_returns_none(hass: HomeAssistant) -> None:
+    # Lines 632-636
+    hass_api = HomeAssistantAPI(hass)
+    dev_entry = register_device(
+        hass_api, device_id="50001111222233334444555566667777", domain="unit_testing", domain_id="dfd_01"
+    )
+    assert dev_entry is not None
+    assert hass_api.domain_for_device(dev_entry.id, ["some_other_domain"]) is None
+
+
+def test_entity_registry_handles_exception(hass: HomeAssistant) -> None:
+    # Lines 646-647
+    hass_api = HomeAssistantAPI(hass)
+    with patch("custom_components.supernotify.hass_api.er.async_get", side_effect=RuntimeError("boom")):
+        assert hass_api.entity_registry() is None
+
+
+def test_device_registry_handles_exception(hass: HomeAssistant) -> None:
+    # Lines 658-659
+    hass_api = HomeAssistantAPI(hass)
+    with patch("custom_components.supernotify.hass_api.dr.async_get", side_effect=RuntimeError("boom")):
+        assert hass_api.device_registry() is None
+
+
+async def test_mqtt_available_raises_by_default(mock_hass: HomeAssistant) -> None:
+    # Lines 667-671
+    hass_api = HomeAssistantAPI(mock_hass)
+    with (
+        patch("homeassistant.components.mqtt.async_wait_for_mqtt_client", AsyncMock(side_effect=RuntimeError("boom"))),
+        pytest.raises(RuntimeError),
+    ):
+        await hass_api.mqtt_available()
+
+
+async def test_mqtt_available_swallows_when_not_raising(mock_hass: HomeAssistant) -> None:
+    # Lines 667-671
+    hass_api = HomeAssistantAPI(mock_hass)
+    with patch("homeassistant.components.mqtt.async_wait_for_mqtt_client", AsyncMock(side_effect=RuntimeError("boom"))):
+        assert await hass_api.mqtt_available(raise_on_error=False) is False
+
+
+async def test_mqtt_publish_raises_by_default(mock_hass: HomeAssistant) -> None:
+    # Lines 686-689
+    hass_api = HomeAssistantAPI(mock_hass)
+    with (
+        patch("homeassistant.components.mqtt.async_publish", AsyncMock(side_effect=RuntimeError("boom"))),
+        pytest.raises(RuntimeError),
+    ):
+        await hass_api.mqtt_publish("test.topic", {"a": 1})
+
+
+async def test_mqtt_publish_swallows_when_not_raising(mock_hass: HomeAssistant) -> None:
+    # Lines 686-689
+    hass_api = HomeAssistantAPI(mock_hass)
+    with patch("homeassistant.components.mqtt.async_publish", AsyncMock(side_effect=RuntimeError("boom"))):
+        await hass_api.mqtt_publish("test.topic", {"a": 1}, raise_on_error=False)  # should not raise
+
+
+def test_condition_error_logging_adaptor_captures_errors() -> None:
+    # Lines 703, 706-707: capture() collects ConditionError/ConditionErrorContainer instances
+    # A mock logger is used because ConditionErrorLoggingAdaptor.error()/warning() pass args
+    # as `self.logger.error(msg, args, kwargs)` rather than `self.logger.error(msg, *args, **kwargs)` -
+    # a real logger's message formatting blows up on the resulting mismatched args (see report).
+    mock_logger = Mock(spec=logging.Logger)
+    adaptor = ConditionErrorLoggingAdaptor(mock_logger)
+    err = ConditionErrorMessage(type="test", message="bad condition")
+    adaptor.error("problem: %s", err)
+    assert adaptor.condition_errors == [err]
+    mock_logger.error.assert_called_once()
+
+    container = ConditionErrorContainer("and", errors=[err])
+    adaptor.warning("problem: %s", container)
+    assert adaptor.condition_errors == [err, err]
+    mock_logger.warning.assert_called_once()
+
+
+def test_force_strict_template_mode_wraps_templates(hass: HomeAssistant) -> None:
+    # Lines 722, 737: __getattr__ passthrough and recursion into nested dicts.
+    tmpl = Template("{{ 1 }}", hass)
+    nested_tmpl = Template("{{ 2 }}", hass)
+    cond: dict[str, Any] = {"value_template": tmpl, "nested": {"value_template": nested_tmpl}}
+
+    force_strict_template_mode([cond], undo=False)
+    wrapped = cond["value_template"]
+    assert wrapped.hass is hass  # __getattr__ passthrough, line 722
+    nested_wrapped = cond["nested"]["value_template"]
+    assert nested_wrapped.hass is hass  # recursion into nested dict, line 737
+
+
+def test_force_strict_template_mode_undo_restores_original_template(hass: HomeAssistant) -> None:
+    # Line 735: undo=True on a separate call must restore the original Template objects.
+    tmpl = Template("{{ 1 }}", hass)
+    cond: dict[str, Any] = {"value_template": tmpl}
+
+    force_strict_template_mode([cond], undo=False)
+    force_strict_template_mode([cond], undo=True)
+
+    assert cond["value_template"] is tmpl

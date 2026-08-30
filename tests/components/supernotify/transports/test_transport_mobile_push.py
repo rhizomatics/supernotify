@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, LiteralString, cast
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
@@ -500,3 +501,138 @@ async def test_mobile_push_discovery_applies_model_name_filter(hass: HomeAssista
     notified = {call["action"] for call in delivered_calls}
 
     assert notified == {"mobile_app_alice_pixel", "mobile_app_bob_pixel"}
+
+
+async def test_deliver_android_and_ios_extra_data_keys() -> None:
+    """Exercise the Android-specific payload fields and the iOS subtitle field."""
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", title="testing"),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+        data={
+            "mobile_push_channel_override": "alarm",
+            "mobile_push_alarm_stream": True,
+            "mobile_push_alarm_stream_max": True,
+            "mobile_push_critical_ttl": 30,
+            "mobile_push_critical_priority": 5,
+            "mobile_push_tts_text": "speak this",
+            "mobile_push_tts_locale": "en-US",
+            "mobile_push_tts_engine": "com.google.android.tts",
+            "mobile_push_command_screen_on": True,
+            "mobile_push_command_dnd": "off",
+            "mobile_push_command_ringer_mode": "silent",
+            "mobile_push_subtitle": "a subtitle",
+            "mobile_push_notification_tag": "my-tag",
+        },
+    )
+    result = await uut.deliver(e)
+
+    assert result is True
+    assert e.calls
+    assert e.calls[0].action_data is not None
+    data = e.calls[0].action_data["data"]
+    assert data["channel"] == "alarm"
+    assert data["alarm_stream"] is True
+    assert data["alarm_stream_max"] is True
+    assert data["ttl"] == 30
+    assert data["priority"] == 5
+    assert data["tts_text"] == "speak this"
+    assert data["tts_text_language"] == "en-US"
+    assert data["tts_engine"] == "com.google.android.tts"
+    assert data["command_screen_on"] is True
+    assert data["command_dnd"] == "off"
+    assert data["command_ringer_mode"] == "silent"
+    assert data["subtitle"] == "a subtitle"
+    assert data["tag"] == "my-tag"
+
+
+async def test_deliver_clear_notification_without_tag_warns_and_ignores() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there"),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+        data={"mobile_push_clear_notification": True},
+    )
+    result = await uut.deliver(e)
+
+    assert result is True
+    assert e.calls
+    assert e.calls[0].action_data is not None
+    data = e.calls[0].action_data["data"]
+    assert "tag" not in data
+    assert e.calls[0].action_data["message"] == "hello there"
+
+
+async def test_deliver_clear_notification_with_tag_overrides_message() -> None:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there"),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+        data={"mobile_push_notification_tag": "dismiss-me", "mobile_push_clear_notification": True},
+    )
+    result = await uut.deliver(e)
+
+    assert result is True
+    assert e.calls
+    assert e.calls[0].action_data is not None
+    assert e.calls[0].action_data["message"] == "clear_notification"
+
+
+async def test_deliver_camera_image_grabbed_shares_url() -> None:
+    """When grab_image() finds an image, it is shared and included as data.image."""
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": {"camera_entity_id": "camera.porch"}}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    with (
+        patch.object(e, "grab_image", new_callable=AsyncMock, return_value=Path("/tmp/snap.jpg")),
+        patch.object(ctx.media_storage, "share_path", new_callable=AsyncMock, return_value="http://my.home/media/snap.jpg"),
+    ):
+        result = await uut.deliver(e)
+
+    assert result is True
+    assert e.calls
+    assert e.calls[0].action_data is not None
+    data = e.calls[0].action_data["data"]
+    assert data["image"] == "http://my.home/media/snap.jpg"
+
+
+async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
+    """When grab_image() fails but a snapshot_url is available in media, use that instead."""
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(
+            ctx,
+            message="hello there",
+            action_data={"media": {"snapshot_url": "http://my.home/precomputed.jpg"}},
+        ),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    result = await uut.deliver(e)
+
+    assert result is True
+    assert e.calls
+    assert e.calls[0].action_data is not None
+    data = e.calls[0].action_data["data"]
+    assert data["image"] == "http://my.home/precomputed.jpg"

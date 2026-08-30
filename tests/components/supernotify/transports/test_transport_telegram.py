@@ -1,12 +1,14 @@
 """Tests for Telegram transport in SuperNotify."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.const import CONF_TARGET
 
 from custom_components.supernotify.const import (
     ATTR_ACTIONS,
+    ATTR_PHONE,
     ATTR_PRIORITY,
     CONF_TRANSPORT,
     PRIORITY_CRITICAL,
@@ -20,7 +22,11 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import TransportFeature
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transports.telegram import TelegramTransport
+from custom_components.supernotify.transports.telegram import (
+    TelegramTransport,
+    _build_inline_keyboard,
+    _normalise_inline_keyboard,
+)
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 # ---------------------------------------------------------------------------
@@ -696,3 +702,261 @@ def test_transport_has_deliver_method() -> None:
     uut = TelegramTransport(ctx)
     assert hasattr(uut, "deliver")
     assert callable(uut.deliver)
+
+
+# ---------------------------------------------------------------------------
+# validate_action
+# ---------------------------------------------------------------------------
+
+
+def test_validate_action_none() -> None:
+    ctx = _ctx()
+    uut = TelegramTransport(ctx)
+    assert uut.validate_action(None) is False
+
+
+def test_validate_action_empty_string() -> None:
+    ctx = _ctx()
+    uut = TelegramTransport(ctx)
+    assert uut.validate_action("") is False
+
+
+def test_validate_action_unsupported() -> None:
+    ctx = _ctx()
+    uut = TelegramTransport(ctx)
+    assert uut.validate_action("telegram_bot.delete_message") is False
+
+
+# ---------------------------------------------------------------------------
+# _normalise_inline_keyboard / _build_inline_keyboard helpers
+# ---------------------------------------------------------------------------
+
+
+def test_normalise_inline_keyboard_not_a_list() -> None:
+    assert _normalise_inline_keyboard("not-a-list") == []  # type: ignore[arg-type]
+
+
+def test_normalise_inline_keyboard_ha_native_shape() -> None:
+    keyboard = [[["OK", "/ok"], ["Cancel", "/cancel"]]]
+    assert _normalise_inline_keyboard(keyboard) == [[["OK", "/ok"], ["Cancel", "/cancel"]]]
+
+
+def test_normalise_inline_keyboard_telegram_api_dict_shape() -> None:
+    keyboard = [[{"text": "OK", "callback_data": "/ok"}]]
+    assert _normalise_inline_keyboard(keyboard) == [[["OK", "/ok"]]]
+
+
+def test_normalise_inline_keyboard_skips_malformed_rows_and_buttons() -> None:
+    keyboard = [
+        "not-a-row",
+        [{"text": "Missing callback"}, {"text": "OK", "callback_data": "/ok"}],
+    ]
+    assert _normalise_inline_keyboard(keyboard) == [[["OK", "/ok"]]]
+
+
+async def test_deliver_with_custom_inline_keyboard() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    keyboard = [[{"text": "Yes", "callback_data": "yes"}]]
+    e = _envelope(ctx, message="Custom keyboard", data={"telegram_inline_keyboard": keyboard})
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["inline_keyboard"] == [[["Yes", "yes"]]]
+
+
+def test_build_inline_keyboard_no_actions() -> None:
+    assert _build_inline_keyboard(None) == []  # type: ignore[arg-type]
+    assert _build_inline_keyboard("not-a-list") == []  # type: ignore[arg-type]
+
+
+def test_build_inline_keyboard_truncates_to_five_actions() -> None:
+    actions = [{"title": f"Action {i}", "action": f"a{i}"} for i in range(7)]
+    result = _build_inline_keyboard(actions)
+    assert len(result[0]) == 5
+
+
+def test_build_inline_keyboard_skips_non_dict_action() -> None:
+    actions = ["not-a-dict", {"title": "OK", "action": "ok"}]
+    result = _build_inline_keyboard(actions)
+    assert result == [[["OK", "ok"]]]
+
+
+def test_build_inline_keyboard_skips_action_missing_title_or_action() -> None:
+    actions = [{"title": "No action key"}, {"action": "no_title"}, {"title": "OK", "action": "ok"}]
+    result = _build_inline_keyboard(actions)
+    assert result == [[["OK", "ok"]]]
+
+
+def test_build_inline_keyboard_truncates_long_callback_data() -> None:
+    long_callback = "x" * 100
+    actions = [{"title": "OK", "action": long_callback}]
+    result = _build_inline_keyboard(actions)
+    callback = result[0][0][1]
+    assert len(callback.encode("utf-8")) <= 64
+
+
+# ---------------------------------------------------------------------------
+# Target resolution from envelope.delivery.target
+# ---------------------------------------------------------------------------
+
+
+async def test_deliver_target_from_delivery_target_phone_category() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    delivery = Delivery("telegram_test", {CONF_TARGET: {ATTR_PHONE: ["123456789"]}}, uut)
+    e = Envelope(delivery, Notification(ctx, message="Target from delivery"), data=None)
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["target"] == [123456789]
+
+
+async def test_deliver_target_from_delivery_target_fallback_category() -> None:
+    """When neither phone nor chat_id categories are populated, fall back to any list value."""
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    delivery = Delivery("telegram_test", {CONF_TARGET: {"custom_category": ["555555555"]}}, uut)
+    e = Envelope(delivery, Notification(ctx, message="Fallback target"), data=None)
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["target"] == [555555555]
+
+
+async def test_deliver_target_legacy_dict_shape() -> None:
+    """Pre-Target-object legacy shape: delivery.target as a bare dict of lists."""
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="Legacy dict target", chat_id=None)
+    e.delivery.target = {ATTR_PHONE: ["111222333"]}  # type: ignore[assignment]
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["target"] == [111222333]
+
+
+async def test_deliver_target_legacy_dict_shape_scalar_value() -> None:
+    """Pre-Target-object legacy shape: delivery.target as a bare dict of scalars."""
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="Legacy scalar dict target", chat_id=None)
+    e.delivery.target = {ATTR_PHONE: "777888999"}  # type: ignore[assignment]
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["target"] == [777888999]
+
+
+async def test_deliver_target_legacy_list_shape() -> None:
+    """Pre-Target-object legacy shape: delivery.target as a bare list."""
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="Legacy list target", chat_id=None)
+    e.delivery.target = ["444555666"]  # type: ignore[assignment]
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert service_data["target"] == [444555666]
+
+
+async def test_deliver_non_numeric_chat_id() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="Bad chat id", chat_id="not-a-number")
+    result = await uut.deliver(e)
+
+    assert result is False
+    mock_api.call_service.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Title + parse_mode combinations
+# ---------------------------------------------------------------------------
+
+
+async def test_deliver_html_parse_mode_with_title_escapes_title() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="body", title="<Alert>", data={"telegram_parse_mode": "HTML"})
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert "<b>&lt;Alert&gt;</b>" in service_data["message"]
+
+
+async def test_deliver_markdown_parse_mode_with_title() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="body", title="Alert", data={"telegram_parse_mode": "Markdown"})
+    result = await uut.deliver(e)
+
+    assert result is True
+    service_data = mock_api.call_service.call_args.kwargs["service_data"]
+    assert "*Alert*" in service_data["message"]
+
+
+# ---------------------------------------------------------------------------
+# Image grab failure
+# ---------------------------------------------------------------------------
+
+
+async def test_deliver_grab_image_raises_falls_back_to_text() -> None:
+    ctx = _ctx()
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+    mock_api = _mock_hass_api()
+    uut.hass_api = mock_api
+
+    e = _envelope(ctx, message="Image grab fails", data={"telegram_attach_image": True})
+    with patch.object(e, "grab_image", new_callable=AsyncMock, side_effect=RuntimeError("boom")):
+        result = await uut.deliver(e)
+
+    assert result is True
+    call_args = mock_api.call_service.call_args
+    assert call_args.args[1] == "send_message"
+    service_data = call_args.kwargs["service_data"]
+    assert "file" not in service_data
