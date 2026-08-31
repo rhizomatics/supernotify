@@ -2,11 +2,11 @@
 
 ## 2.2.0
 
-* Recipients
+* Recipients and Notify Entities
   * Recipients are now **Notify Entities**, so can be called with `send_message` directly from automations, and also support being member of a **Notify Entity Group**
   * Undocumented `recipients` key on notify action data now deprecated, specify recipients as regular targets
-  * Improved handling of Recipients specific disablement of deliveries
-* Cameras
+  * Improved handling of enablement or disablement of deliveries per recipient
+* Cameras - more usable without YAML config
   * `ptz_method` now defaults to `frigate` if the camera defined by the frigate integration even if no `camera` definition provided in config
   * `ptz_delay` defaults to `10` if not defined in camera config, or camera not defined at all
 * Minor fixes
