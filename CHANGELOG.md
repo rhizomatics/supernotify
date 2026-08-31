@@ -12,6 +12,7 @@
 * Minor fixes
   * Conditional error log handler for placeholders
   * Strict template mode undo
+  * Better tests
 
 ## 2.1.0
 
