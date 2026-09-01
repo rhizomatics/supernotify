@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_model_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-09-01 16:53 +0000
+            created at 2026-09-01 18:22 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -268,7 +268,7 @@
     <p class="run"><span class="n"><a id="t186" href="#t186">186</a></span><span class="t">        <span class="key">await</span> <span class="nam">hass_api</span><span class="op">.</span><span class="nam">call_service</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t187" href="#t187">187</a></span><span class="t">            <span class="str">"camera"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t188" href="#t188">188</a></span><span class="t">            <span class="str">"snapshot"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t189" href="#t189">189</a></span><span class="t">            <span class="nam">service_data</span><span class="op">=</span><span class="op">{</span><span class="str">"entity_id"</span><span class="op">:</span> <span class="nam">camera_entity_id</span><span class="op">,</span> <span class="str">"filename"</span><span class="op">:</span> <span class="nam">share_path</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t189" href="#t189">189</a></span><span class="t">            <span class="nam">service_data</span><span class="op">=</span><span class="op">{</span><span class="str">"entity_id"</span><span class="op">:</span> <span class="nam">camera_entity_id</span><span class="op">,</span> <span class="str">"filename"</span><span class="op">:</span> <span class="nam">str</span><span class="op">(</span><span class="nam">share_path</span><span class="op">)</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t190" href="#t190">190</a></span><span class="t">            <span class="nam">return_response</span><span class="op">=</span><span class="key">False</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t191" href="#t191">191</a></span><span class="t">            <span class="nam">blocking</span><span class="op">=</span><span class="key">True</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t192" href="#t192">192</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -425,9 +425,9 @@
     <p class="run"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t">                <span class="key">await</span> <span class="nam">move_camera_to_ptz_preset</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t">                    <span class="nam">context</span><span class="op">.</span><span class="nam">hass_api</span><span class="op">,</span> <span class="nam">camera_ptz_entity_id</span><span class="op">,</span> <span class="nam">camera_ptz_preset</span><span class="op">,</span> <span class="nam">method</span><span class="op">=</span><span class="nam">camera_ptz_method</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">            <span class="key">if</span> <span class="nam">camera_delay</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t">                <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"SUPERNOTIFY Waiting %s secs before snapping"</span><span class="op">,</span> <span class="nam">camera_delay</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">                <span class="key">await</span> <span class="nam">asyncio</span><span class="op">.</span><span class="nam">sleep</span><span class="op">(</span><span class="nam">camera_delay</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">                <span class="key">if</span> <span class="nam">camera_delay</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t">                    <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">"SUPERNOTIFY Waiting %s secs before snapping"</span><span class="op">,</span> <span class="nam">camera_delay</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">                    <span class="key">await</span> <span class="nam">asyncio</span><span class="op">.</span><span class="nam">sleep</span><span class="op">(</span><span class="nam">camera_delay</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t349" href="#t349">349</a></span><span class="t">            <span class="nam">raw_path</span> <span class="op">=</span> <span class="key">await</span> <span class="nam">snap_camera</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t350" href="#t350">350</a></span><span class="t">                <span class="nam">context</span><span class="op">.</span><span class="nam">hass_api</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t351" href="#t351">351</a></span><span class="t">                <span class="nam">active_camera_entity_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -686,7 +686,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_model_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-09-01 16:53 +0000
+            created at 2026-09-01 18:22 +0000
         </p>
     </div>
 </footer>
