@@ -566,11 +566,11 @@ _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
 )
 
 ACTION_DATA_SCHEMA = vol.All(
-    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.20.0
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
     _ACTION_DATA_FIELDS_SCHEMA,
 )
 
 STRICT_ACTION_DATA_SCHEMA = vol.All(
-    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.20.0
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
     _ACTION_DATA_FIELDS_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
 )
