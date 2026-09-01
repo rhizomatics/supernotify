@@ -149,7 +149,8 @@ async def test_eq_against_non_envelope_and_none() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(context.delivery("DEFAULT_notify_entity"), Notification(context, message="hello there"))
-    assert uut != None
+    none_value = None
+    assert uut != none_value
     assert uut != "not an envelope"
 
 
