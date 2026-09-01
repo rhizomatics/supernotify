@@ -186,7 +186,7 @@ async def snap_camera(
         await hass_api.call_service(
             "camera",
             "snapshot",
-            service_data={"entity_id": camera_entity_id, "filename": share_path},
+            service_data={"entity_id": camera_entity_id, "filename": str(share_path)},
             return_response=False,
             blocking=True,
         )
@@ -343,9 +343,9 @@ async def snap_notification_image(notification: Notification, context: Context) 
                 await move_camera_to_ptz_preset(
                     context.hass_api, camera_ptz_entity_id, camera_ptz_preset, method=camera_ptz_method
                 )
-            if camera_delay:
-                _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
-                await asyncio.sleep(camera_delay)
+                if camera_delay:
+                    _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
+                    await asyncio.sleep(camera_delay)
             raw_path = await snap_camera(
                 context.hass_api,
                 active_camera_entity_id,

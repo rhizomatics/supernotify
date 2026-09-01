@@ -13,6 +13,8 @@ Covers:
              tts_char_speed, string boolean "false" handling)
 """
 
+import asyncio
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -51,13 +53,16 @@ def _make_transport(states=None):
     return transport
 
 
-def _make_envelope(message, data=None, entity_ids=None, condition_variables=None):
+def _make_envelope(message, data=None, entity_ids=None, condition_variables=None, delivery_options=None):
     envelope = MagicMock()
     envelope.message = message
     envelope.data = data if data is not None else {}
     envelope.target = MagicMock()
     envelope.target.entity_ids = ["media_player.ufficio"] if entity_ids is None else entity_ids
     envelope.condition_variables = condition_variables
+    options = delivery_options or {}
+    envelope.delivery = MagicMock()
+    envelope.delivery.option_bool = MagicMock(side_effect=lambda name, default=False: bool(options.get(name, default)))
     return envelope
 
 
@@ -165,6 +170,23 @@ class TestPreAnnounce:
         for vc in vol_calls:
             assert vc.kwargs["service_data"]["volume_level"] == pytest.approx(0.8)
 
+    @pytest.mark.asyncio
+    async def test_runs_devices_concurrently(self):
+        """Each Alexa cloud call can take seconds; per-device work must overlap rather than
+        stack sequentially, or a handful of targets turns into a multi-second pileup."""
+        t = _make_transport()
+        call_delay = 0.2
+        states = {f"media_player.d{i}": {"volume": 0.5, "playing": True} for i in range(5)}
+
+        async def _delayed_call(*args, **kwargs):
+            await asyncio.sleep(call_delay)
+
+        t.hass_api.call_service = AsyncMock(side_effect=_delayed_call)
+        start = time.perf_counter()
+        await t._pre_announce(states, 0.8, pause_music=True)
+        elapsed = time.perf_counter() - start
+        assert elapsed < call_delay * len(states)
+
 
 class TestPostAnnounce:
     @pytest.mark.asyncio
@@ -212,6 +234,22 @@ class TestPostAnnounce:
         ) as mock_sleep:
             await t._post_announce(states, restore_volume=True, pause_music=True)
             mock_sleep.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_runs_volume_restore_concurrently(self):
+        """Volume restore across devices must overlap, not stack sequential cloud round trips."""
+        t = _make_transport()
+        call_delay = 0.2
+        states = {f"media_player.d{i}": {"volume": 0.5, "playing": False} for i in range(5)}
+
+        async def _delayed_call(*args, **kwargs):
+            await asyncio.sleep(call_delay)
+
+        t.hass_api.call_service = AsyncMock(side_effect=_delayed_call)
+        start = time.perf_counter()
+        await t._post_announce(states, restore_volume=True, pause_music=True)
+        elapsed = time.perf_counter() - start
+        assert elapsed < call_delay * len(states)
         assert "media_play" not in _service_names(t)
 
 
@@ -367,3 +405,19 @@ class TestDeliver:
             duration = mock_sleep.call_args.args[0]
         expected = _BASE_DURATION + 3 * fast_speed
         assert duration == pytest.approx(expected, rel=0.01)
+
+    @pytest.mark.asyncio
+    async def test_announce_only_delivery_default(self):
+        """A delivery config's `options: {announce_only: true}` sets the default for every
+        notification through that delivery, without needing per-call data."""
+        t = _make_transport({"media_player.sala": {"state": "playing", "volume_level": 0.5}})
+        envelope = _make_envelope(
+            "Test",
+            data={},
+            entity_ids=["media_player.sala"],
+            delivery_options={"media_auto_pause": False},
+        )
+        await t.deliver(envelope)
+        names = _service_names(t)
+        assert "media_pause" not in names
+        assert "volume_set" not in names

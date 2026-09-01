@@ -201,6 +201,7 @@ OPTION_SENDER = "sender"
 OPTION_SENDER_NAME = "sender_name"
 OPTION_DEFAULT_TITLE = "default_title"
 OPTION_MODE = "mode"
+OPTION_MEDIA_AUTO_PAUSE = "media_auto_pause"
 
 SELECT_INCLUDE = "include"
 SELECT_EXCLUDE = "exclude"

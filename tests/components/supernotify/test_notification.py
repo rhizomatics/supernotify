@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -413,6 +413,47 @@ async def test_camera_entity() -> None:
         retrieved2 = await snap_notification_image(uut, uut.context)
         assert retrieved2 == original_image_path
         mock_snap_cam.assert_not_called()
+
+
+async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
+    """Capturing an image has real overhead (a service call, then polling for the file
+    to appear) that must not be paid when no selected delivery would even use it — here
+    only chime (no SNAPSHOT_IMAGE feature) is selected, despite camera media being present."""
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx,
+        "testing 123",
+        action_data={
+            CONF_DELIVERY: ["chime"],
+            CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"},
+        },
+    )
+    await uut.initialize()
+    with patch("custom_components.supernotify.notification._snap_notification_image", new_callable=AsyncMock) as mock_snap:
+        await uut.deliver()
+    mock_snap.assert_not_called()
+
+
+async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
+    """mobile (mobile_push) supports SNAPSHOT_IMAGE, so with camera media present the
+    image grab must be kicked off."""
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx,
+        "testing 123",
+        action_data={
+            CONF_DELIVERY: ["mobile"],
+            CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"},
+        },
+    )
+    await uut.initialize()
+    with patch(
+        "custom_components.supernotify.notification._snap_notification_image", new_callable=AsyncMock, return_value=None
+    ) as mock_snap:
+        await uut.deliver()
+    mock_snap.assert_called_once()
 
 
 async def test_delivery_selection_order() -> None:

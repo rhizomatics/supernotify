@@ -1,4 +1,15 @@
+## 2.2.1
 
+### Alexa Media Player
+- Capture of pre-announcement state to minimize impact on audio already playing now more efficient with async rather than loop per Alexa device
+- Improved documentation for volume, pause etc control per notification
+- Added new `media_auto_pause` transport/delivery optionto allow the audio interruption handling to be globally disabled by default
+  - Can still be overridden if needed by a separate `delivery` definition
+  - Saves delay and Amazon API calls on every notification, minimizing chance of rate limiting
+### Fixes
+- Log warning in Home Assistant Recorder when using camera snapshots, and a JSON serialization problem [[#173](https://github.com/rhizomatics/supernotify/issues/173)]
+- Fixed deprecation version comment [[#174](https://github.com/rhizomatics/supernotify/issues/174)]
+- Fixed `ptz_delay` applied when no PTZ preset [[#172](https://github.com/rhizomatics/supernotify/issues/172)]
 
 ## 2.2.0
 

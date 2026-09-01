@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import time
 from contextlib import chdir
 from io import BytesIO
@@ -26,6 +27,7 @@ from conftest import IMAGE_PATH, TestImage
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_PATH,
     CONF_CAMERA,
+    CONF_PTZ_DELAY,
     CONF_PTZ_PRESET_DEFAULT,
     MEDIA_OPTION_REPROCESS,
     PTZ_METHOD_FRIGATE,
@@ -126,6 +128,8 @@ async def test_snap_camera(unmocked_hass_api, tmp_aiopath: Path) -> None:
     async def dummy_snapshot(call: ServiceCall, **kwargs) -> ServiceResponse | None:
         nonlocal called_entity
         called_entity = call.data["entity_id"]
+        # recorder serialises call_service events to JSON; a pathlib.Path filename breaks that silently
+        json.dumps(call.data)
         async with await anyio.Path(fixture_image_path).open("rb") as f:
             image = Image.open(io.BytesIO(await f.read()))
             buffer = BytesIO()
@@ -664,6 +668,37 @@ async def test_grab_image_with_camera(hass: HomeAssistant, tmp_aiopath: Path) ->
             notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
             await snap_notification_image(notification, ctx)
     mock_snap.assert_called_once()
+
+
+async def test_grab_image_with_camera_no_ptz_skips_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A plain (non-PTZ) camera snap must not incur the ptz_delay wait, even though
+    ptz_delay defaults to 10 whether or not a camera is PTZ-capable."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
+                await snap_notification_image(notification, ctx)
+    mock_sleep.assert_not_called()
+
+
+async def test_grab_image_with_camera_ptz_applies_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """The ptz_delay wait should still be applied after an actual PTZ move."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    ctx.cameras = {"camera.front": {CONF_CAMERA: "camera.front", CONF_PTZ_DELAY: 3}}
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
+                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                    notification = Notification(
+                        ctx,
+                        "Test",
+                        action_data={"media": {"camera_entity_id": "camera.front", "camera_ptz_preset": "Doorway"}},
+                    )
+                    await snap_notification_image(notification, ctx)
+    mock_sleep.assert_called_once_with(3)
 
 
 async def test_grab_image_with_camera_ptz(hass: HomeAssistant, tmp_aiopath: Path) -> None:
