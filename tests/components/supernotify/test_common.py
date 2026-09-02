@@ -22,7 +22,7 @@ def test_int_or_none():
     assert int_or_none("23") == 23
     assert int_or_none(23.12) == 23
     assert int_or_none("-23") == -23
-    assert int_or_none("") == None
+    assert int_or_none("") is None
 
 
 def test_safe_get():

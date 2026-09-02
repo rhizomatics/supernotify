@@ -24,9 +24,9 @@ homeassistant-stubs = false
 [manifest]
 overrides = [
     { name = "homeassistant", marker = "python_full_version < '3.14.2'", specifier = "==2026.2.3" },
-    { name = "homeassistant", marker = "python_full_version >= '3.14.2'", specifier = ">=2026.8.0" },
+    { name = "homeassistant", marker = "python_full_version >= '3.14.2'", specifier = "==2026.8.3" },
     { name = "homeassistant-stubs", marker = "python_full_version < '3.14.2'", specifier = "==2026.2.3" },
-    { name = "homeassistant-stubs", marker = "python_full_version >= '3.14.2'", specifier = ">=2026.8.0" },
+    { name = "homeassistant-stubs", marker = "python_full_version >= '3.14.2'", specifier = "==2026.8.3" },
 ]
 
 [[package]]
@@ -2337,7 +2337,7 @@ wheels = [
 
 [[package]]
 name = "homeassistant-stubs"
-version = "2026.9.0"
+version = "2026.8.3"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -2346,9 +2346,9 @@ resolution-markers = [
 dependencies = [
     { name = "homeassistant", version = "2026.8.3", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/23/f0b3651d2ddff06ccb3c5074631e991168795a1b21d1186e53374f2a2eb7/homeassistant_stubs-2026.9.0.tar.gz", hash = "sha256:e9a6fe4e0ff30ca8f0a66587af547b72a6211445acdb7c30db1fd73ce82b848b", size = 1472743, upload-time = "2026-09-02T16:44:15.602Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/75/a75dbe80cb3fd986afe5e599d75549d5c18b3436df0dc1819e2a9f2427d2/homeassistant_stubs-2026.8.3.tar.gz", hash = "sha256:5b8121d764553c3d261e154bea5cbd605d376d57f6661e12f1c655906953ed6c", size = 1436332, upload-time = "2026-08-22T01:53:53.225Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/8a/8f77ca2358f1e9919894753b3c35852088cc041c37db6848af2eeaf42eac/homeassistant_stubs-2026.9.0-py3-none-any.whl", hash = "sha256:66fb929c7ed6b830af5d9bd05f3647a0925cda214b8ae1dcb72eaa25d324cc92", size = 4183024, upload-time = "2026-09-02T16:44:13.951Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/42/69b2fb9da80abae466eeabfd2dbaa2242747f79fb20ca9fc9230a55c5233/homeassistant_stubs-2026.8.3-py3-none-any.whl", hash = "sha256:b2aa5eadd126f7736216b460a9bff8981a819b3a8774d8e4c4e7cb7166527a9c", size = 4081518, upload-time = "2026-08-22T01:53:51.406Z" },
 ]
 
 [[package]]
@@ -5296,7 +5296,7 @@ dev = [
     { name = "genbadge", extra = ["all"] },
     { name = "ha-ffmpeg" },
     { name = "homeassistant-stubs", version = "2026.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
-    { name = "homeassistant-stubs", version = "2026.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+    { name = "homeassistant-stubs", version = "2026.8.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
     { name = "mutagen" },
     { name = "mypy" },
     { name = "notify-events" },
