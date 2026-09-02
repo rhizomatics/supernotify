@@ -5,6 +5,7 @@
   - Fixed `wait_for_tts` if auto_pause switched off
   - Fixed empty message meaning music not unpaused
   - Post announce now also uses async calls for better performance / Home Assistant conformity
+  - Post announce runs if main notification fails if needed for cleanup
 - Cameras
   - Fixed default PTZ delay
 
