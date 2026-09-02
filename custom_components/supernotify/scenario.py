@@ -5,11 +5,9 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_ENABLED
-
-from .const import CONF_EXPOSE_STATE
 from homeassistant.helpers import issue_registry as ir
 
-from .const import ATTR_MEDIA
+from .const import ATTR_MEDIA, CONF_EXPOSE_STATE
 from .model import DeliveryCustomization
 
 if TYPE_CHECKING:

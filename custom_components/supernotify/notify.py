@@ -14,13 +14,13 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
+    CONF_ENABLED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
-    CONF_ENABLED,
 )
 from homeassistant.core import (
     Event,
@@ -39,9 +39,6 @@ from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
 from .common import DupeChecker, sanitize
 from .const import (
-    CONF_REFRESH_INTERVAL,
-    CONF_SCENARIO_STATE,
-    SCENARIO_STATE_REFRESH_DEFAULT,
     ATTR_ACTION,
     ATTR_DATA,
     CONF_ACTION_GROUPS,
@@ -59,11 +56,14 @@ from .const import (
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_REFRESH_INTERVAL,
+    CONF_SCENARIO_STATE,
     CONF_SCENARIOS,
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
     PRIORITY_MEDIUM,
+    SCENARIO_STATE_REFRESH_DEFAULT,
 )
 from .context import Context
 from .delivery import DeliveryRegistry
