@@ -168,8 +168,7 @@
           "type": "string"
         },
         "camera_delay": {
-          "type": "integer",
-          "default": 0
+          "type": "integer"
         },
         "camera_ptz_preset": {
           "anyOf": [
