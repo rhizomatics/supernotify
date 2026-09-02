@@ -234,6 +234,7 @@ class TestPostAnnounce:
         ) as mock_sleep:
             await t._post_announce(states, restore_volume=True, pause_music=True)
             mock_sleep.assert_not_awaited()
+        assert "media_play" not in _service_names(t)
 
     @pytest.mark.asyncio
     async def test_runs_volume_restore_concurrently(self):
@@ -436,3 +437,58 @@ class TestDeliver:
         names = _service_names(t)
         assert "media_pause" not in names
         assert "volume_set" not in names
+
+    @pytest.mark.asyncio
+    async def test_wait_for_tts_honoured_with_auto_pause_disabled(self):
+        """wait_for_tts sequences automation steps after the announcement and is independent of
+        the pause/restore handling, so disabling auto pause must not silently disable it."""
+        t = _make_transport({"media_player.sala": {"state": "idle", "volume_level": 0.5}})
+        envelope = _make_envelope(
+            "Test message",
+            data={"wait_for_tts": True},
+            entity_ids=["media_player.sala"],
+            delivery_options={"media_auto_pause": False},
+        )
+        with patch(
+            "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
+            await t.deliver(envelope)
+        mock_sleep.assert_awaited_once()
+        names = _service_names(t)
+        assert "media_pause" not in names
+        assert "volume_set" not in names
+
+    @pytest.mark.asyncio
+    async def test_restore_runs_even_for_empty_message(self):
+        """An empty message still goes through the pre-announce, so the restore must run too,
+        otherwise the device is left paused at announcement volume indefinitely."""
+        t = _make_transport({"media_player.sala": {"state": "playing", "volume_level": 0.4}})
+        envelope = _make_envelope("", data={"volume": 0.9}, entity_ids=["media_player.sala"])
+        with patch("custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock):
+            await t.deliver(envelope)
+        names = _service_names(t)
+        assert "media_pause" in names
+        assert "media_play" in names, "music was paused but never resumed"
+
+    @pytest.mark.asyncio
+    async def test_pause_only_path_runs_concurrently(self):
+        """The pause-only path (no volume requested) is the common case for plain announcements
+        and must overlap the per-device cloud calls, like the volume path already does."""
+        t = _make_transport({f"media_player.d{i}": {"state": "playing", "volume_level": 0.5} for i in range(5)})
+        envelope = _make_envelope("Test", data={}, entity_ids=[f"media_player.d{i}" for i in range(5)])
+        call_delay = 0.2
+        # captured before the patch below, which replaces asyncio.sleep module-wide
+        real_sleep = asyncio.sleep
+
+        async def _delayed_call(*args, **kwargs):
+            await real_sleep(call_delay)
+
+        t.hass_api.call_service = AsyncMock(side_effect=_delayed_call)
+        with patch("custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock):
+            start = time.perf_counter()
+            await t.deliver(envelope)
+            elapsed = time.perf_counter() - start
+        pause_calls = [c for c in t.hass_api.call_service.call_args_list if c.args[1] == "media_pause"]
+        assert len(pause_calls) == 5
+        # concurrent: one pause round plus one resume round; sequential would be five of each
+        assert elapsed < call_delay * 4
