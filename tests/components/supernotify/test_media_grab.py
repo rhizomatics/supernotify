@@ -683,6 +683,27 @@ async def test_grab_image_with_camera_no_ptz_skips_delay(hass: HomeAssistant, tm
     mock_sleep.assert_not_called()
 
 
+async def test_grab_image_from_scenario_media_keeps_camera_ptz_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A scenario's `media:` block goes through MEDIA_SCHEMA before reaching the notification.
+    The schema must not fill in a camera_delay, or it would silently override the camera's own
+    ptz_delay, which is only reached when no delay was asked for."""
+    from custom_components.supernotify.schema import SCENARIO_SCHEMA
+
+    scenario = SCENARIO_SCHEMA({
+        "media": {"camera_entity_id": "camera.front", "camera_ptz_preset": "Doorway"},
+    })
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    ctx.cameras = {"camera.front": {CONF_CAMERA: "camera.front", CONF_PTZ_DELAY: 3}}
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
+                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                    notification = Notification(ctx, "Test", action_data={"media": scenario["media"]})
+                    await snap_notification_image(notification, ctx)
+    mock_sleep.assert_called_once_with(3)
+
+
 async def test_grab_image_with_camera_ptz_applies_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:
     """The ptz_delay wait should still be applied after an actual PTZ move."""
     ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)

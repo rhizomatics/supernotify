@@ -392,7 +392,10 @@ CAMERA_SCHEMA = vol.Schema({
 })
 MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_MEDIA_CAMERA_DELAY, default=0): int,
+    # No default: media_grab tells "not asked for" from an explicit 0, and a default here
+    # silently overrides the camera's own ptz_delay for any media block that goes through
+    # this schema, such as the ones declared in a scenario.
+    vol.Optional(ATTR_MEDIA_CAMERA_DELAY): int,
     vol.Optional(ATTR_MEDIA_CAMERA_PTZ_PRESET): vol.Any(cv.positive_int, cv.string),
     # URL fragments allowed
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
