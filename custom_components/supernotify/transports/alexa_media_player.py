@@ -302,15 +302,17 @@ class AlexaMediaPlayerTransport(Transport):
             except (TypeError, ValueError) as e:  # py3.13 compat
                 _LOGGER.warning("SUPERNOTIFY alexa_media_player: invalid volume value %r, ignoring: %s", volume_raw, e)
 
+        states: dict[str, dict[str, Any]] = {}
+        needs_restore = False
+        volume_set_failed: set[str] = set()
+
         if auto_pause:
             # Pre-announce
-            states: dict[str, dict[str, Any]] = {}
             needs_restore = requested_volume is not None or pause_music
 
             if needs_restore:
                 states = await self._snapshot_states(media_players, volume_fallback)
 
-            volume_set_failed: set[str] = set()
             if requested_volume is not None and states:
                 volume_set_failed = await self._pre_announce(states, requested_volume, pause_music)
             elif pause_music and states:
@@ -325,7 +327,7 @@ class AlexaMediaPlayerTransport(Transport):
             ATTR_DATA: {"type": call_type},
             ATTR_TARGET: media_players,
         }
-        if requested_volume is not None and volume_set_failed:
+        if requested_volume is not None and auto_pause and volume_set_failed:
             # Fallback path: if pre-announce volume_set fails for one or more
             # players, pass volume through notify.alexa_media too.
             action_data[ATTR_DATA]["volume"] = requested_volume

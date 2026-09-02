@@ -1,9 +1,16 @@
+## 2.2.2
+
+- Explicit `camera_delay` in notification respected even if there's no PTZ requested
+- Improved logging for camera PTZ and snapping
+- `enquire_recipients` now exposed as a Home Assistant action
+- Alexa Media Player transport has fix for [#176](https://github.com/rhizomatics/supernotify/issues/176) error when volume set
+
 ## 2.2.1
 
 ### Alexa Media Player
 - Capture of pre-announcement state to minimize impact on audio already playing now more efficient with async rather than loop per Alexa device
 - Improved documentation for volume, pause etc control per notification
-- Added new `media_auto_pause` transport/delivery optionto allow the audio interruption handling to be globally disabled by default
+- Added new `media_auto_pause` transport/delivery option to allow the audio interruption handling to be globally disabled by default
   - Can still be overridden if needed by a separate `delivery` definition
   - Saves delay and Amazon API calls on every notification, minimizing chance of rate limiting
 ### Fixes

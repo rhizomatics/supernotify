@@ -7,12 +7,22 @@ from custom_components.supernotify.common import (
     boolify,
     ensure_dict,
     ensure_list,
+    int_or_none,
     safe_extend,
     safe_get,
 )
 from custom_components.supernotify.const import ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE, CONF_DUPE_POLICY
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
+
+
+def test_int_or_none():
+    assert int_or_none("cheese!") is None
+    assert int_or_none(23) == 23
+    assert int_or_none("23") == 23
+    assert int_or_none(23.12) == 23
+    assert int_or_none("-23") == -23
+    assert int_or_none("") == None
 
 
 def test_safe_get():

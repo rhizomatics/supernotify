@@ -43,6 +43,8 @@ from custom_components.supernotify.const import (
     PTZ_METHOD_ONVIF,
 )
 
+from .common import int_or_none
+
 if TYPE_CHECKING:
     from homeassistant.components.image import ImageEntity
     from homeassistant.core import State
@@ -323,35 +325,42 @@ async def snap_notification_image(notification: Notification, context: Context) 
         if active_camera_entity_id:
             camera_config = context.cameras.get(active_camera_entity_id, {})
             camera_ptz_entity_id: str = camera_config.get(CONF_PTZ_CAMERA, active_camera_entity_id)
-            camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
-            camera_delay = PTZ_DELAY_DEFAULT if camera_delay is None else camera_delay
+            camera_delay: int | None = int_or_none(notification.media.get(ATTR_MEDIA_CAMERA_DELAY))
             camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
             camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
             if camera_ptz_method is None:
                 camera_ptz_method = infer_ptz_method(context.hass_api, camera_ptz_entity_id)
 
-            _LOGGER.debug(
-                "SUPERNOTIFY Snapping camera %s, ptz %s->%s (%s), delay %s secs",
-                active_camera_entity_id,
-                camera_ptz_preset,
-                camera_ptz_preset_default,
-                camera_ptz_entity_id,
-                camera_delay,
-            )
             if camera_ptz_preset:
+                camera_delay = camera_delay if camera_delay is not None else camera_config.get(CONF_PTZ_DELAY)
+                camera_delay = PTZ_DELAY_DEFAULT if camera_delay is None else camera_delay
+                _LOGGER.debug(
+                    "SUPERNOTIFY Moving camera %s, ptz %s->%s (%s), delay %s secs",
+                    active_camera_entity_id,
+                    camera_ptz_preset,
+                    camera_ptz_preset_default,
+                    camera_ptz_entity_id,
+                    camera_delay,
+                )
                 await move_camera_to_ptz_preset(
                     context.hass_api, camera_ptz_entity_id, camera_ptz_preset, method=camera_ptz_method
                 )
-                if camera_delay:
-                    _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
-                    await asyncio.sleep(camera_delay)
+            if camera_delay:
+                # pause if there's a PTZ movement, or notification explicitly asked for `camera_delay`
+                _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
+                await asyncio.sleep(camera_delay)
+
+            max_camera_wait: int = 15
+            _LOGGER.debug(
+                "SUPERNOTIFY Snapping camera %s, max_wait: %s, to: %s", active_camera_entity_id, max_camera_wait, media_path
+            )
             raw_path = await snap_camera(
                 context.hass_api,
                 active_camera_entity_id,
                 notification.id,
                 media_path=media_path,
-                max_camera_wait=15,
+                max_camera_wait=max_camera_wait,
             )
             if camera_ptz_preset and camera_ptz_preset_default:
                 await move_camera_to_ptz_preset(

@@ -421,3 +421,18 @@ class TestDeliver:
         names = _service_names(t)
         assert "media_pause" not in names
         assert "volume_set" not in names
+
+    @pytest.mark.asyncio
+    async def test_auto_pause_false_with_requested_volume(self):
+        t = _make_transport({"media_player.sala": {"state": "playing", "volume_level": 0.5}})
+        envelope = _make_envelope(
+            "Test",
+            data={"volume": 0.3},
+            entity_ids=["media_player.sala"],
+            delivery_options={"media_auto_pause": False},
+        )
+        result = await t.deliver(envelope)
+        assert result is True
+        names = _service_names(t)
+        assert "media_pause" not in names
+        assert "volume_set" not in names

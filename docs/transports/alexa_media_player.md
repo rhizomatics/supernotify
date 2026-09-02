@@ -44,9 +44,9 @@ All of `data` keys below are optional:
 
 ### Reducing cloud API calls and Notification delay
 
-Each of steps 2, 3, 6 and 7 above is a separate Alexa cloud API call per target device, and step 5's wait only exists to sequence step 6/7 after the announcement. For a pure alert/status announcement where nothing is actually playing music, none of that is needed — it just adds cloud round-trip latency (and can be a real contributor to announcements sounding "late" when there are several target devices, since these calls run per-device).
+Each of steps 2, 3, 6 and 7 above is a separate Alexa cloud API call per target device, with parallelism where Home Assistant permits, and step 5's wait only exists to sequence step 6/7 after the announcement. For a pure alert/status announcement where nothing is actually playing music, none of that is needed — it just adds cloud round-trip latency (and can be a real contributor to announcements sounding "late" when there are several target devices, since these calls run per-device).
 
-If this is unnecessary, for example if at least some of the devices are used mainly for announcement purposes and rarely play music, then this can be switched off at the `delivery` or `transport` level:
+If this is unnecessary, for example if at least some of the devices are used mainly for announcement purposes and rarely play music, then this can be switched off at the `delivery` or the `delivery_defaults` section of the `transport` configuration:
 
 ```yaml
 deliveries:

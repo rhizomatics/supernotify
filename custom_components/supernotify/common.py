@@ -179,3 +179,12 @@ def boolify(value: Any, default: bool) -> bool:
     if isinstance(value, str):
         return value.strip().lower() not in _FALSY_STRINGS
     return bool(value)
+
+
+def int_or_none(v: Any) -> int | None:
+    if v is not None:
+        try:
+            return int(v)
+        except ValueError:
+            _LOGGER.debug("SUPERNOTIFY Invalid int value %s", v)
+    return None
