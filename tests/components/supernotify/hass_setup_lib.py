@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -140,6 +141,9 @@ class MockableHomeAssistant(HomeAssistant):
     config: ConfigEntries = Mock(spec=ConfigEntries)  # type: ignore
     services: ServiceRegistry = AsyncMock(spec=ServiceRegistry)
     bus: EventBus = Mock(spec=EventBus)
+    # async_track_time_interval schedules on hass.loop, an instance attribute
+    # not visible to Mock(spec=...): expose it here so timers can be registered
+    loop: asyncio.AbstractEventLoop = Mock(spec=asyncio.AbstractEventLoop)
 
 
 def load_config(v: str | dict | list | None, return_type: type = dict) -> JSON_TYPE:

@@ -97,6 +97,7 @@ from .const import (
     CONF_DUPE_POLICY,
     CONF_DURATION,
     CONF_ENCRYPTION,
+    CONF_EXPOSE_STATE,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
     CONF_LINKS,
@@ -121,6 +122,8 @@ from .const import (
     CONF_PTZ_PRESET_DEFAULT,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_REFRESH_INTERVAL,
+    CONF_SCENARIO_STATE,
     CONF_SCENARIOS,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
@@ -150,6 +153,7 @@ from .const import (
     PTZ_METHOD_VALUES,
     RESERVED_DATA_KEYS,
     RESERVED_SCENARIO_NAMES,
+    SCENARIO_STATE_REFRESH_DEFAULT,
     SELECTION_VALUES,
     TARGET_REQUIRE_ALWAYS,
     TARGET_REQUIRE_NEVER,
@@ -280,6 +284,16 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
+SCENARIO_STATE_SCHEMA = vol.Schema({
+    # Evaluating scenario conditions to publish binary_sensor state costs whatever the
+    # conditions cost, which for template-heavy scenarios is not free on small hardware.
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    # Sweep every scenario this often, for conditions no entity change can announce (time
+    # windows, sun, templates whose dependencies could not be extracted). 0 disables the
+    # sweep and leaves state entirely event driven.
+    vol.Optional(CONF_REFRESH_INTERVAL, default=SCENARIO_STATE_REFRESH_DEFAULT): cv.positive_int,
+})
+
 SNOOZE_SCHEMA = vol.Schema({vol.Optional(CONF_SNOOZE_TIME, default=60 * 60): cv.positive_int})
 
 DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delivery definitions
@@ -408,6 +422,7 @@ SCENARIO_SCHEMA = vol.All(
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+        vol.Optional(CONF_EXPOSE_STATE, default=True): cv.boolean,
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
         vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
@@ -506,6 +521,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
+        vol.Optional(CONF_SCENARIO_STATE, default=dict): SCENARIO_STATE_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )

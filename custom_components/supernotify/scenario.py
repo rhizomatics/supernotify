@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import CONF_ENABLED
 from homeassistant.helpers import issue_registry as ir
 
-from .const import ATTR_MEDIA
+from .const import ATTR_MEDIA, CONF_EXPOSE_STATE
 from .model import DeliveryCustomization
 
 if TYPE_CHECKING:
@@ -63,6 +63,7 @@ class Scenario:
         self.hass_api: HomeAssistantAPI = hass_api
         self.delivery_registry = delivery_registry
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
+        self.expose_state: bool = scenario_definition.get(CONF_EXPOSE_STATE, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.conditions: ConditionsFunc | None = None

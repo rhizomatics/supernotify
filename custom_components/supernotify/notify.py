@@ -14,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
+    CONF_ENABLED,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
@@ -31,6 +32,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import condition
 from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import DOMAIN
@@ -54,11 +56,14 @@ from .const import (
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_REFRESH_INTERVAL,
+    CONF_SCENARIO_STATE,
     CONF_SCENARIOS,
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
     PRIORITY_MEDIUM,
+    SCENARIO_STATE_REFRESH_DEFAULT,
 )
 from .context import Context
 from .delivery import DeliveryRegistry
@@ -155,6 +160,7 @@ def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> Superno
         cameras=config[CONF_CAMERAS],
         dupe_check=config[CONF_DUPE_CHECK],
         snooze=config[CONF_SNOOZE],
+        scenario_state=config.get(CONF_SCENARIO_STATE),
     )
 
 
@@ -500,11 +506,13 @@ class SupernotifyAction(BaseNotificationService):
         cameras: list[dict[str, Any]] | None = None,
         dupe_check: dict[str, Any] | None = None,
         snooze: dict[str, Any] | None = None,
+        scenario_state: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None
         self.failures: int = 0
         self.housekeeping: dict[str, Any] = housekeeping or {}
+        self.scenario_state_config: dict[str, Any] = scenario_state or {}
         self.sent: int = 0
         hass_api = HomeAssistantAPI(hass)
 
@@ -543,9 +551,24 @@ class SupernotifyAction(BaseNotificationService):
         await self.context.archive.initialize()
         await self.context.media_storage.initialize(self.context.hass_api)
 
+        self._scenario_cond_entities = self._collect_scenario_condition_entities()
+        self._scenario_by_entity = self._index_scenarios_by_entity()
         self.expose_entities()
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
         self.context.hass_api.subscribe_state(self.exposed_entities, self._entity_state_change_listener)
+        # Keep the scenario binary_sensors' state current: react to their condition entities
+        # (immediate, and only for the scenarios that depend on the entity that changed), plus
+        # a periodic sweep for conditions no entity change announces - time windows, sun, and
+        # templates whose dependencies could not be extracted.
+        # Evaluating conditions costs whatever the conditions cost, so the whole mechanism is
+        # switchable: `scenario_state: {enabled: false}` subscribes to nothing and starts no
+        # timer, and `refresh_interval: 0` keeps the reactive path without the sweep.
+        if self.scenario_state_enabled:
+            scenario_watch: set[str] = set(self._scenario_by_entity)
+            if scenario_watch:
+                self.context.hass_api.subscribe_state(sorted(scenario_watch), self.async_refresh_scenario_states)
+            if self.scenario_state_interval:
+                self.context.hass_api.subscribe_interval(self.scenario_state_interval, self.async_refresh_scenario_states)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -693,6 +716,99 @@ class SupernotifyAction(BaseNotificationService):
             else:
                 _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
 
+    def _collect_scenario_condition_entities(self) -> dict[str, set[str]]:
+        """Entities referenced by each scenario's conditions.
+
+        A scenario whose conditions reference no Home Assistant entity depends
+        only on the per-notification variables (notification_priority /
+        applied_scenarios). Such a scenario is 'transient': it has no meaningful
+        state between notifications, so it is left as STATE_UNKNOWN. Extraction is
+        best-effort (templates are opaque); the periodic refresh is the safety net.
+        """
+        mapping: dict[str, set[str]] = {}
+        for name, scenario in self.context.scenario_registry.scenarios.items():
+            ents: set[str] = set()
+            for cond in scenario.conditions_config or []:
+                try:
+                    ents |= condition.async_extract_entities(cond)
+                except Exception:
+                    _LOGGER.debug("SUPERNOTIFY could not extract entities for scenario %s", name)
+            mapping[name] = ents
+        return mapping
+
+    @property
+    def scenario_state_enabled(self) -> bool:
+        return bool(self.scenario_state_config.get(CONF_ENABLED, True))
+
+    @property
+    def scenario_state_interval(self) -> int:
+        return int(self.scenario_state_config.get(CONF_REFRESH_INTERVAL, SCENARIO_STATE_REFRESH_DEFAULT))
+
+    def _index_scenarios_by_entity(self) -> dict[str, set[str]]:
+        """Reverse of _collect_scenario_condition_entities: entity -> scenarios depending on it.
+
+        Used to re-evaluate only the scenarios a state change can actually affect, instead of
+        the whole registry on every event.
+        """
+        index: dict[str, set[str]] = {}
+        for name, entities in self._scenario_cond_entities.items():
+            scenario = self.context.scenario_registry.scenarios.get(name)
+            if scenario is not None and not scenario.expose_state:
+                continue
+            for entity_id in entities:
+                index.setdefault(entity_id, set()).add(name)
+        return index
+
+    def _scenario_state(self, scenario: Scenario, cvars: ConditionVariables | None = None) -> str:
+        """State to expose for a scenario binary_sensor.
+
+        - no conditions, or conditions with no source entity -> transient/manual
+          -> STATE_UNKNOWN (state is undefined outside of a notification);
+        - otherwise ON/OFF from a neutral evaluation (current occupancy, medium
+          priority), the same basis as enquire_active_scenarios().
+        """
+        if not scenario.expose_state:
+            return STATE_UNKNOWN
+        if not scenario.conditions_config:
+            return STATE_UNKNOWN
+        if not getattr(self, "_scenario_cond_entities", {}).get(scenario.name):
+            return STATE_UNKNOWN
+        if cvars is None:
+            occupiers = self.context.people_registry.determine_occupancy()
+            cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        return STATE_ON if scenario.evaluate(cvars) else STATE_OFF
+
+    @callback
+    def async_refresh_scenario_states(self, *args: Any) -> None:
+        """Re-evaluate and re-publish the state of every scenario binary_sensor.
+
+        Triggered by the 1-minute timer (time/date scenarios and any dependency
+        not captured by entity extraction) and by state changes of the scenarios'
+        condition entities (immediate reactivity). Pure in-memory evaluation over
+        cached states; no I/O.
+        """
+        if not self.scenario_state_enabled:
+            return
+        names: set[str] | None = None
+        if args:
+            event = args[0]
+            entity_id = getattr(event, "data", {}).get("entity_id") if hasattr(event, "data") else None
+            if entity_id is not None:
+                names = self._scenario_by_entity.get(entity_id, set())
+                if not names:
+                    return
+
+        occupiers = self.context.people_registry.determine_occupancy()
+        cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        for name, scenario in self.context.scenario_registry.scenarios.items():
+            if names is not None and name not in names:
+                continue
+            self.context.hass_api.set_state(
+                f"binary_sensor.{DOMAIN}_scenario_{name}",
+                self._scenario_state(scenario, cvars),
+                sanitize(scenario.attributes(include_condition=False)),
+            )
+
     def expose_entity(
         self,
         entity_name: str,
@@ -739,7 +855,7 @@ class SupernotifyAction(BaseNotificationService):
         for scenario in self.context.scenario_registry.scenarios.values():
             self.expose_entity(
                 f"scenario_{scenario.name}",
-                state=STATE_UNKNOWN,
+                state=self._scenario_state(scenario),
                 attributes=sanitize(scenario.attributes(include_condition=False)),
                 original_name=f"{scenario.name} Scenario",
                 original_icon="mdi:clipboard-text",

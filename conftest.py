@@ -110,6 +110,7 @@ def mock_hass(
     hass.data[DATA_MQTT].client.connected = True
     hass.config_entries._entries = ConfigEntryItems(hass)
     hass.loop_thread_id = "99999"
+    hass.loop.time.return_value = 0.0  # timers (async_track_time_interval) do arithmetic on loop.time()
     return hass
 
 
