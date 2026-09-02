@@ -30,6 +30,7 @@ from custom_components.supernotify.const import (
     CONF_PTZ_DELAY,
     CONF_PTZ_PRESET_DEFAULT,
     MEDIA_OPTION_REPROCESS,
+    PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
 )
@@ -50,6 +51,7 @@ from custom_components.supernotify.media_grab import (
     write_image_from_bitmap,
 )
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import MEDIA_SCHEMA
 
 from .hass_setup_lib import TestingContext
 
@@ -699,6 +701,31 @@ async def test_grab_image_with_camera_ptz_applies_delay(hass: HomeAssistant, tmp
                     )
                     await snap_notification_image(notification, ctx)
     mock_sleep.assert_called_once_with(3)
+
+
+async def test_grab_image_with_camera_ptz_scenario_media_uses_ptz_delay_default(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """Regression test: a scenario's media: block validates through MEDIA_SCHEMA and is merged
+    into notification.media (see Notification.apply_scenario). MEDIA_SCHEMA previously defaulted
+    camera_delay to 0, so a scenario media block that never set camera_delay still merged in a
+    camera_delay=0 that looked "explicit", skipping PTZ_DELAY_DEFAULT and snapping immediately
+    after the PTZ move instead of waiting for it to settle.
+    """
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
+                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                    notification = Notification(
+                        ctx,
+                        "Test",
+                        action_data={"media": {"camera_entity_id": "camera.front", "camera_ptz_preset": "Doorway"}},
+                    )
+                    # Simulate a scenario's media: {} block, which has no camera_delay set but
+                    # still validates through MEDIA_SCHEMA and is merged into notification.media.
+                    notification.media.update(MEDIA_SCHEMA({}))
+                    await snap_notification_image(notification, ctx)
+    mock_sleep.assert_called_once_with(PTZ_DELAY_DEFAULT)
 
 
 async def test_grab_image_with_camera_ptz(hass: HomeAssistant, tmp_aiopath: Path) -> None:

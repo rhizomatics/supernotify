@@ -1,3 +1,13 @@
+## 2.2.3
+
+- `enquire_last_notification` now has option to return the full notification with diagnostic info
+- Alexa Media Player fixes
+  - Fixed `wait_for_tts` if auto_pause switched off
+  - Fixed empty message meaning music not unpaused
+  - Post announce now also uses async calls for better performance / Home Assistant conformity
+- Cameras
+  - Fixed default PTZ delay
+
 ## 2.2.2
 
 - Explicit `camera_delay` in notification respected even if there's no PTZ requested

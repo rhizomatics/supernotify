@@ -223,8 +223,9 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
     def supplemental_action_enquire_deliveries_by_scenario(_call: ServiceCall) -> dict[str, Any]:
         return service.enquire_deliveries_by_scenario()
 
-    def supplemental_action_enquire_last_notification(_call: ServiceCall) -> dict[str, Any]:
-        return service.last_notification.contents() if service.last_notification else {}
+    def supplemental_action_enquire_last_notification(call: ServiceCall) -> dict[str, Any]:
+        diagnostics = call.data.get("diagnostics", False)
+        return service.last_notification.contents(diagnostics=diagnostics) if service.last_notification else {}
 
     async def supplemental_action_enquire_active_scenarios(call: ServiceCall) -> dict[str, Any]:
         trace = call.data.get("trace", False)

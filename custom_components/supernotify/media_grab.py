@@ -333,8 +333,9 @@ async def snap_notification_image(notification: Notification, context: Context) 
                 camera_ptz_method = infer_ptz_method(context.hass_api, camera_ptz_entity_id)
 
             if camera_ptz_preset:
-                camera_delay = camera_delay if camera_delay is not None else camera_config.get(CONF_PTZ_DELAY)
-                camera_delay = PTZ_DELAY_DEFAULT if camera_delay is None else camera_delay
+                camera_delay = (
+                    camera_delay if camera_delay is not None else camera_config.get(CONF_PTZ_DELAY, PTZ_DELAY_DEFAULT)
+                )
                 _LOGGER.debug(
                     "SUPERNOTIFY Moving camera %s, ptz %s->%s (%s), delay %s secs",
                     active_camera_entity_id,

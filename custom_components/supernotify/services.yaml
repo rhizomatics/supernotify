@@ -3,6 +3,11 @@ enquire_configuration:
 enquire_deliveries_by_scenario:
 enquire_implicit_deliveries:
 enquire_last_notification:
+  fields:
+    diagnostics:
+      required: false
+      selector:
+        boolean:
 enquire_recipients:
 enquire_scenarios:
 enquire_active_scenarios:

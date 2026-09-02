@@ -316,9 +316,13 @@ class AlexaMediaPlayerTransport(Transport):
             if requested_volume is not None and states:
                 volume_set_failed = await self._pre_announce(states, requested_volume, pause_music)
             elif pause_music and states:
-                for mp, prev in states.items():
-                    if prev["playing"]:
-                        await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+                await asyncio.gather(
+                    *(
+                        self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+                        for mp, prev in states.items()
+                        if prev["playing"]
+                    )
+                )
 
         # Announce
         call_type: str = raw_data.pop("type", "announce")
@@ -334,24 +338,26 @@ class AlexaMediaPlayerTransport(Transport):
 
         result = await self.call_action(envelope, action_data=action_data)
 
-        if auto_pause:
-            # Post-announce: optionally wait for TTS, then restore volume / resume music.
-            # needs_post_announce is True whenever there is something to undo (volume change
-            # or music was paused); in that case the TTS wait is always performed so the
-            # restore/resume happens after Alexa finishes speaking.
-            # wait_for_tts additionally blocks even in pure fire-and-forget deliveries,
-            # allowing automation sequences to run only after the announcement ends.
-            needs_post_announce = needs_restore and bool(states)
-            if (needs_post_announce or wait_for_tts) and envelope.message:
-                tts_duration = _estimate_tts_duration(envelope.message, tts_char_speed)
-                _LOGGER.debug(
-                    "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch)",
-                    tts_duration,
-                    len(RE_SSML_TAG.sub("", envelope.message)),
-                    tts_char_speed,
-                )
-                await asyncio.sleep(tts_duration)
-                if needs_post_announce:
-                    await self._post_announce(states, restore_volume and requested_volume is not None, pause_music)
+        # Post-announce: optionally wait for TTS, then restore volume / resume music.
+        # needs_post_announce is True whenever there is something to undo (volume change
+        # or music was paused); in that case the TTS wait is always performed so the
+        # restore/resume happens after Alexa finishes speaking.
+        # wait_for_tts additionally blocks even in pure fire-and-forget deliveries,
+        # allowing automation sequences to run only after the announcement ends, and does
+        # so regardless of auto_pause since it has nothing to do with restoring state.
+        needs_post_announce = needs_restore and bool(states)
+        if (needs_post_announce or wait_for_tts) and envelope.message:
+            tts_duration = _estimate_tts_duration(envelope.message, tts_char_speed)
+            _LOGGER.debug(
+                "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch)",
+                tts_duration,
+                len(RE_SSML_TAG.sub("", envelope.message)),
+                tts_char_speed,
+            )
+            await asyncio.sleep(tts_duration)
+        # Restore/resume must run even when envelope.message is empty, otherwise a pre-announce
+        # pause/volume change is never undone.
+        if needs_post_announce:
+            await self._post_announce(states, restore_volume and requested_volume is not None, pause_music)
 
         return result

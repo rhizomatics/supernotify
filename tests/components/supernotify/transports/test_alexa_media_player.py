@@ -436,3 +436,36 @@ class TestDeliver:
         names = _service_names(t)
         assert "media_pause" not in names
         assert "volume_set" not in names
+
+    @pytest.mark.asyncio
+    async def test_wait_for_tts_honoured_with_auto_pause_disabled(self):
+        t = _make_transport({"media_player.sala": {"state": "idle"}})
+        envelope = _make_envelope(
+            "Ciao",
+            data={"wait_for_tts": True},
+            entity_ids=["media_player.sala"],
+            delivery_options={"media_auto_pause": False},
+        )
+        with patch(
+            "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock
+        ) as mock_sleep:
+            await t.deliver(envelope)
+            mock_sleep.assert_awaited_once()
+            assert mock_sleep.call_args.args[0] >= _BASE_DURATION
+        names = _service_names(t)
+        assert "media_pause" not in names
+        assert "volume_set" not in names
+
+    @pytest.mark.asyncio
+    async def test_music_unpauses_after_empty_message(self):
+        t = _make_transport({"media_player.sala": {"state": "playing", "volume_level": 0.5}})
+        envelope = _make_envelope("", data={"volume": 0.9}, entity_ids=["media_player.sala"])
+        with patch("custom_components.supernotify.transports.alexa_media_player.asyncio.sleep", new_callable=AsyncMock):
+            await t.deliver(envelope)
+        names = _service_names(t)
+        assert "media_pause" in names
+        assert "media_play" in names
+        vol_calls = [c for c in t.hass_api.call_service.call_args_list if c.args[1] == "volume_set"]
+        levels = [c.kwargs["service_data"]["volume_level"] for c in vol_calls]
+        assert pytest.approx(0.9) in levels
+        assert pytest.approx(0.5) in levels

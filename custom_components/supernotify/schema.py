@@ -392,7 +392,7 @@ CAMERA_SCHEMA = vol.Schema({
 })
 MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_MEDIA_CAMERA_DELAY, default=0): int,
+    vol.Optional(ATTR_MEDIA_CAMERA_DELAY): int,
     vol.Optional(ATTR_MEDIA_CAMERA_PTZ_PRESET): vol.Any(cv.positive_int, cv.string),
     # URL fragments allowed
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
