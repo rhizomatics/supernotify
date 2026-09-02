@@ -42,6 +42,10 @@ CONF_NOTIFY: Final[str] = "notify"
 CONF_PRIORITY: Final[str] = "priority"
 CONF_OCCUPANCY: Final[str] = "occupancy"
 CONF_SCENARIOS: Final[str] = "scenarios"
+CONF_SCENARIO_STATE: Final[str] = "scenario_state"
+CONF_REFRESH_INTERVAL: Final[str] = "refresh_interval"
+CONF_EXPOSE_STATE: Final[str] = "expose_state"
+SCENARIO_STATE_REFRESH_DEFAULT: Final[int] = 60
 CONF_MANUFACTURER: Final[str] = "manufacturer"
 CONF_CLASS: Final[str] = "class"
 

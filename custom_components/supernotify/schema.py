@@ -121,7 +121,10 @@ from .const import (
     CONF_PTZ_PRESET_DEFAULT,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_REFRESH_INTERVAL,
+    CONF_SCENARIO_STATE,
     CONF_SCENARIOS,
+    SCENARIO_STATE_REFRESH_DEFAULT,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_SIZE,
@@ -159,6 +162,7 @@ from .const import (
     TARGET_USE_ON_NO_ACTION_TARGETS,
     TARGET_USE_ON_NO_DELIVERY_TARGETS,
     TRANSPORT_VALUES,
+    CONF_EXPOSE_STATE,
 )
 
 
@@ -277,6 +281,16 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_ID): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_NAME): cv.string,
+})
+
+SCENARIO_STATE_SCHEMA = vol.Schema({
+    # Evaluating scenario conditions to publish binary_sensor state costs whatever the
+    # conditions cost, which for template-heavy scenarios is not free on small hardware.
+    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    # Sweep every scenario this often, for conditions no entity change can announce (time
+    # windows, sun, templates whose dependencies could not be extracted). 0 disables the
+    # sweep and leaves state entirely event driven.
+    vol.Optional(CONF_REFRESH_INTERVAL, default=SCENARIO_STATE_REFRESH_DEFAULT): cv.positive_int,
 })
 
 SNOOZE_SCHEMA = vol.Schema({vol.Optional(CONF_SNOOZE_TIME, default=60 * 60): cv.positive_int})
@@ -407,6 +421,7 @@ SCENARIO_SCHEMA = vol.All(
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+        vol.Optional(CONF_EXPOSE_STATE, default=True): cv.boolean,
         vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         vol.Optional(CONF_MEDIA): MEDIA_SCHEMA,
         vol.Optional(CONF_ACTION_GROUP_NAMES, default=[]): vol.All(cv.ensure_list, [cv.string]),
@@ -505,6 +520,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
+        vol.Optional(CONF_SCENARIO_STATE, default=dict): SCENARIO_STATE_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )

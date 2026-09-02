@@ -23,7 +23,11 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Scenario state entities
 
-- `binary_sensor.supernotify_scenario_<name>` now reports the evaluated state of the scenario (`on`/`off`) instead of a hard-coded `unknown`, refreshed every minute and on state changes of the entities referenced by its conditions. Scenarios whose conditions reference no entity (priority-only or manually applied) stay `unknown`.
+- `binary_sensor.supernotify_scenario_<name>` now reports the evaluated state of the scenario (`on`/`off`) instead of a hard-coded `unknown`. A state change of an entity a scenario's conditions reference re-evaluates only the scenarios depending on that entity; a periodic sweep covers conditions no entity change announces, such as time windows. Scenarios whose conditions reference no entity (priority-only or manually applied) stay `unknown`.
+- Evaluating conditions costs whatever the conditions cost, so the whole mechanism is switchable:
+  - `scenario_state: {enabled: false}` subscribes to nothing and starts no timer
+  - `scenario_state: {refresh_interval: <seconds>}` tunes the sweep, or disables it with `0` while keeping the reactive path
+  - `expose_state: false` on an individual scenario keeps an expensive one out of it without turning the feature off
 
 ### ConfigFlow
 
