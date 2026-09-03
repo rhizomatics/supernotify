@@ -13,11 +13,11 @@ if TYPE_CHECKING:
 
 
 async def test_notification_fires_from_event_triggered_automation(
-    hass: HomeAssistant, mock_notify: DummyNotificationService
+    hass: HomeAssistant, dummy_notify: DummyNotificationService
 ) -> None:
     """A real Home Assistant automation, triggered by an event, calling notify.supernotify -
     the actual path used in practice, rather than a test calling notify.supernotify directly."""
-    config = {"delivery": {"mock": {"transport": "generic", "action": "notify.mock"}}}
+    config = {"delivery": {"mock": {"transport": "generic", "action": "notify.dummy"}}}
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     assert await async_setup_component(
         hass,
@@ -45,6 +45,6 @@ async def test_notification_fires_from_event_triggered_automation(
     hass.bus.async_fire("doorbell_pressed")
     await hass.async_block_till_done()
 
-    assert len(mock_notify.calls) == 1
-    message, _title, _target, _kwargs = mock_notify.calls[0]
+    assert len(dummy_notify.calls) == 1
+    message, _title, _target, _kwargs = dummy_notify.calls[0]
     assert message == "Someone is at the door"

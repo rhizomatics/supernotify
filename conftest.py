@@ -242,18 +242,18 @@ def deliveries(mock_context: Context) -> dict[str, Delivery]:
 
 
 @pytest.fixture
-def mock_notify(hass: HomeAssistant) -> DummyNotificationService:
-    mock_action: DummyNotificationService = DummyNotificationService()
+def dummy_notify(hass: HomeAssistant) -> DummyNotificationService:
+    dummy_action: DummyNotificationService = DummyNotificationService()
     # register the bound service handler, like BaseNotificationService.async_register_services()
     # does - registering the DummyNotificationService instance itself isn't a valid service handler
     hass.services.async_register(
         DOMAIN,
-        "mock",
-        mock_action._async_notify_message_service,
+        "dummy",
+        dummy_action._async_notify_message_service,
         schema=NOTIFY_SERVICE_SCHEMA,
         supports_response=SupportsResponse.NONE,
     )
-    return mock_action
+    return dummy_action
 
 
 @pytest.fixture
