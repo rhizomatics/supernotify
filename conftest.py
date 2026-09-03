@@ -11,7 +11,7 @@ import pytest
 from anyio import Path
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
-from homeassistant.components.notify.const import DOMAIN
+from homeassistant.components.notify.const import DOMAIN, NOTIFY_SERVICE_SCHEMA
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.config_entries import ConfigEntryItems
 from homeassistant.const import (
@@ -59,12 +59,15 @@ class TestImage:
     mime_type: str
 
 
-class MockAction(BaseNotificationService):
+class DummyNotificationService(BaseNotificationService):
     """A test class for notification services."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.calls: list[tuple[str, str | None, str | None, dict[str, Any]]] = []
+        # normally set by BaseNotificationService.async_setup(); _async_notify_message_service
+        # reads it directly, so it must exist even though this double skips async_setup
+        self.registered_targets = {}
 
     @callback
     async def async_send_message(
@@ -239,9 +242,17 @@ def deliveries(mock_context: Context) -> dict[str, Delivery]:
 
 
 @pytest.fixture
-def mock_notify(hass: HomeAssistant) -> MockAction:
-    mock_action: MockAction = MockAction()
-    hass.services.async_register(DOMAIN, "mock", mock_action, supports_response=SupportsResponse.NONE)  # type: ignore
+def mock_notify(hass: HomeAssistant) -> DummyNotificationService:
+    mock_action: DummyNotificationService = DummyNotificationService()
+    # register the bound service handler, like BaseNotificationService.async_register_services()
+    # does - registering the DummyNotificationService instance itself isn't a valid service handler
+    hass.services.async_register(
+        DOMAIN,
+        "mock",
+        mock_action._async_notify_message_service,
+        schema=NOTIFY_SERVICE_SCHEMA,
+        supports_response=SupportsResponse.NONE,
+    )
     return mock_action
 
 
