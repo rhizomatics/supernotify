@@ -30,10 +30,7 @@ async def test_notification_fires_from_event_triggered_automation(
                     "action": [
                         {
                             "action": "notify.supernotify",
-                            "data": {
-                                "message": "Someone is at the door",
-                                "data": {"delivery": {"dummy": None}},
-                            },
+                            "data": {"message": "Someone is at the door"},
                         }
                     ],
                 }
