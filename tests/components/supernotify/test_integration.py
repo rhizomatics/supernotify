@@ -17,7 +17,7 @@ async def test_notification_fires_from_event_triggered_automation(
 ) -> None:
     """A real Home Assistant automation, triggered by an event, calling notify.supernotify -
     the actual path used in practice, rather than a test calling notify.supernotify directly."""
-    config = {"delivery": {"mock": {"transport": "generic", "action": "notify.dummy"}}}
+    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy"}}}
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     assert await async_setup_component(
         hass,
@@ -32,7 +32,7 @@ async def test_notification_fires_from_event_triggered_automation(
                             "action": "notify.supernotify",
                             "data": {
                                 "message": "Someone is at the door",
-                                "data": {"delivery": {"mock": None}},
+                                "data": {"delivery": {"dummy": None}},
                             },
                         }
                     ],
