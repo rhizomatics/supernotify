@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_media_grab_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-05 12:57 +0000
+            created at 2026-09-05 13:44 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -643,7 +643,7 @@
     <p class="pln"><span class="n"><a id="t561" href="#t561">561</a></span><span class="t">            <span class="com"># 2026.8 HA and prior</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t562" href="#t562">562</a></span><span class="t">            <span class="nam">all_ha_devices</span><span class="op">:</span> <span class="nam">Iterable</span><span class="op">[</span><span class="nam">DeviceEntry</span><span class="op">]</span> <span class="op">=</span> <span class="nam">dev_reg</span><span class="op">.</span><span class="nam">devices</span><span class="op">.</span><span class="nam">values</span><span class="op">(</span><span class="op">)</span>  <span class="com"># ty: ignore[call-non-callable]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t563" href="#t563">563</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t564" href="#t564">564</a></span><span class="t">            <span class="nam">all_ha_devices</span> <span class="op">=</span> <span class="nam">dev_reg</span><span class="op">.</span><span class="nam">devices</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t564" href="#t564">564</a></span><span class="t">            <span class="nam">all_ha_devices</span> <span class="op">=</span> <span class="nam">dev_reg</span><span class="op">.</span><span class="nam">devices</span>  <span class="com"># type: ignore[assignment]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t565" href="#t565">565</a></span><span class="t">        <span class="key">for</span> <span class="nam">dev</span> <span class="key">in</span> <span class="nam">all_ha_devices</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t566" href="#t566">566</a></span><span class="t">            <span class="nam">all_devs</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t567" href="#t567">567</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -752,8 +752,8 @@
     <p class="run"><span class="n"><a id="t670" href="#t670">670</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_device_registry</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t671" href="#t671">671</a></span><span class="t">            <span class="key">return</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t672" href="#t672">672</a></span><span class="t">        <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t673" href="#t673">673</a></span><span class="t">            <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_device_registry</span><span class="op">.</span><span class="nam">async_get</span><span class="op">(</span><span class="nam">device_id</span><span class="op">,</span> <span class="nam">include_child_devices</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t674" href="#t674">674</a></span><span class="t">        <span class="key">except</span> <span class="nam">AttributeError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t673" href="#t673">673</a></span><span class="t">            <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_device_registry</span><span class="op">.</span><span class="nam">async_get</span><span class="op">(</span><span class="nam">device_id</span><span class="op">,</span> <span class="nam">include_child_devices</span><span class="op">=</span><span class="key">False</span><span class="op">)</span>  <span class="com"># type: ignore[call-arg]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t674" href="#t674">674</a></span><span class="t">        <span class="key">except</span> <span class="nam">TypeError</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t675" href="#t675">675</a></span><span class="t">            <span class="com"># older HA</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t676" href="#t676">676</a></span><span class="t">            <span class="key">return</span> <span class="nam">cast</span><span class="op">(</span><span class="str">&quot;DeviceEntry|None&quot;</span><span class="op">,</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_device_registry</span><span class="op">.</span><span class="nam">async_get</span><span class="op">(</span><span class="nam">device_id</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t677" href="#t677">677</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -870,7 +870,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_media_grab_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-05 12:57 +0000
+            created at 2026-09-05 13:44 +0000
         </p>
     </div>
 </footer>
