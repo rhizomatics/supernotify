@@ -561,7 +561,7 @@ class HomeAssistantAPI:
             # 2026.8 HA and prior
             all_ha_devices: Iterable[DeviceEntry] = dev_reg.devices.values()  # ty: ignore[call-non-callable]
         else:
-            all_ha_devices = dev_reg.devices
+            all_ha_devices = dev_reg.devices  # type: ignore[assignment]
         for dev in all_ha_devices:
             all_devs += 1
 
@@ -670,8 +670,8 @@ class HomeAssistantAPI:
         if self._device_registry is None:
             return None
         try:
-            return self._device_registry.async_get(device_id, include_child_devices=False)
-        except AttributeError:
+            return self._device_registry.async_get(device_id, include_child_devices=False)  # type: ignore[call-arg]
+        except TypeError:
             # older HA
             return cast("DeviceEntry|None", self._device_registry.async_get(device_id))
 

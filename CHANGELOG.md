@@ -1,5 +1,15 @@
 ## 2.3.0
 
+### Dedicated Notify Action
+- The existing `notify` action is offered via the HA `notify` platform, so Supernotify acts as a 'sub-platform'. This has several consequences:
+  - The web page in Tools | Actions or the Automations dialog is unfriendly to use with lots of things to put into `data` section with no help
+  - The context for the notification isn't passed down by Home Assistant, since the notification platform doesn't follow the curretnt guidelines
+  - This usage of the notification platform is `legacy`, replaced by *Notify Entity* which has a very limited action, just title and message
+- A new dedicated `notify` action is now available directly from the Supernotify platform
+  - The action has separate fields, with lookup helpers and validation, to make configuring even sophisticated notifications hugely easier
+  - The original context is preserved, so you can trace from a trigger like motion PIR, all the way thru to an alert call and camera PTZ movement
+  - No change to the original `notify.supernotify` action, so nothing breaks, and there's a choice
+
 ### Tracing Activities
 - Home Assistant `Context` is propagated to all Home Assistant services used
   - For example, if a security camera has a PTZ movement, the Home Assistant *Activity* view can show what triggered this
