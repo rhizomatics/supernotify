@@ -5497,6 +5497,7 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
+    { name = "properdocs" },
     { name = "pymdown-extensions" },
     { name = "voluptuous-openapi", version = "0.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
     { name = "voluptuous-openapi", version = "0.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
@@ -5548,7 +5549,6 @@ dev = [
 docs = [
     { name = "json-schema-for-humans" },
     { name = "mike" },
-    { name = "mkdocs", specifier = "<2.0.0" },
     { name = "mkdocs", extras = ["i18n"] },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-coverage" },
@@ -5563,6 +5563,7 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
+    { name = "properdocs" },
     { name = "pymdown-extensions" },
     { name = "voluptuous-openapi", marker = "python_full_version < '3.14.2'", specifier = "==0.2.0" },
     { name = "voluptuous-openapi", marker = "python_full_version >= '3.14.2'", specifier = ">=0.3.0" },

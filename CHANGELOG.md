@@ -10,6 +10,7 @@
   - Propagates the calling action's `Context`, working around the `notify` platform limitation noted above
 ### Technical
 - `ty` type checker reinstalled, and several type usages tightened up
+- Avoided the mkdocsalypse by switching docs generation to `properdocs`
 
 ## 2.2.3
 

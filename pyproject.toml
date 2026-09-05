@@ -84,7 +84,7 @@ docs=[
     "mkdocs-autorefs",
     "mkdocs-coverage",
     "mkdocs-pagetree-plugin",
-    "mkdocs<2.0.0",
+    "properdocs",
     "json-schema-for-humans",
     "mkdocs-gen-files",
     "voluptuous-openapi==0.2.0; python_full_version < '3.14.2'",
