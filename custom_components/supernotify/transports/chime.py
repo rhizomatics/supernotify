@@ -314,12 +314,11 @@ class ChimeTransport(Transport):
             for e in self.hass_api.expand_group(target.entity_ids)
         }
         model_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MODEL_SELECT))
-        dev_reg = self.hass_api.device_registry()
+
         expanded_targets.update({
             d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
             for d in target.device_ids
-            if not dev_reg
-            or not (dev_entry := dev_reg.async_get(d, include_child_devices=False))
+            if not (dev_entry := self.hass_api.find_device(d))
             or model_filter.match(dev_entry.model if isinstance(dev_entry.model, str) else None)
         })
         # resolve and include chime aliases

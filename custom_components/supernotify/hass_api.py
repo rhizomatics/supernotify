@@ -630,7 +630,7 @@ class HomeAssistantAPI:
         verified_domain: str | None = None
         device_registry = self.device_registry()
         if device_registry:
-            device: DeviceEntry | None = device_registry.async_get(device_id, include_child_devices=False)
+            device: DeviceEntry | None = self.find_device(device_id)
             if device:
                 matching_domains = [d for d, _id in device.identifiers if d in domains]
                 if matching_domains:
@@ -665,6 +665,15 @@ class HomeAssistantAPI:
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry
+
+    def find_device(self, device_id: str) -> DeviceEntry | None:
+        if self._device_registry is None:
+            return None
+        try:
+            return self._device_registry.async_get(device_id, include_child_devices=False)
+        except AttributeError:
+            # older HA
+            return cast("DeviceEntry|None", self._device_registry.async_get(device_id))
 
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
         from homeassistant.components import mqtt
