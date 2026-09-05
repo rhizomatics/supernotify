@@ -237,8 +237,8 @@ class TestingContext(Context):
             self.hass.config.external_url = hass_external_url or "https://my.home"
             self.hass.data = {}
             self.device_registry = AsyncMock(spec=DeviceRegistry)
-            self.device_registry.devices = {did: dev for did, dev in self.devices.items() if dev.discover}
-            self.device_registry.async_get = lambda did: self.devices.get(did)
+            self.device_registry.devices = [dev for dev in self.devices.values() if dev.discover]
+            self.device_registry.async_get = lambda did, **_kwargs: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
 

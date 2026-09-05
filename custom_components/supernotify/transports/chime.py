@@ -311,7 +311,7 @@ class ChimeTransport(Transport):
             d: ChimeTargetConfig(tune=chime_tune, volume=chime_volume, duration=chime_duration, device_id=d)
             for d in target.device_ids
             if not dev_reg
-            or not (dev_entry := dev_reg.async_get(d))
+            or not (dev_entry := dev_reg.async_get(d, include_child_devices=False))
             or model_filter.match(dev_entry.model if isinstance(dev_entry.model, str) else None)
         })
         # resolve and include chime aliases

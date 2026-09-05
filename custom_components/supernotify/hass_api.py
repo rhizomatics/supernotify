@@ -556,7 +556,7 @@ class HomeAssistantAPI:
             return []
 
         all_devs = enabled_devs = found_devs = skipped_devs = 0
-        for dev in dev_reg.devices.values():
+        for dev in dev_reg.devices:
             all_devs += 1
 
             if dev.disabled:
@@ -624,7 +624,7 @@ class HomeAssistantAPI:
         verified_domain: str | None = None
         device_registry = self.device_registry()
         if device_registry:
-            device: DeviceEntry | None = device_registry.async_get(device_id)
+            device: DeviceEntry | None = device_registry.async_get(device_id, include_child_devices=False)
             if device:
                 matching_domains = [d for d, _id in device.identifiers if d in domains]
                 if matching_domains:
