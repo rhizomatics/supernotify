@@ -15,6 +15,7 @@
   - For example, if a security camera has a PTZ movement, the Home Assistant *Activity* view can show what triggered this
   - One important limitation - Home Assistant's own `notify` platform doesn't pass on the `Context` it receives, however the newer *Notify Entity* does.
   - See the [2026.9 Release Blog](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on the new UI support for this
+  - An end to end integration test `test_integration.test_context_propagates_to_camera_ptz_and_mobile_push` demonstrates this working
 - New `supernotify.notify` action, an alternative to `notify.supernotify` for those not needing to fit in with the wider `notify.*` platform
   - Options otherwise buried in `notify.supernotify`'s generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, etc) are promoted to their own typed, selector-driven fields, for a richer Developer Tools/automation editor UI
   - Propagates the calling action's `Context`, working around the `notify` platform limitation noted above
