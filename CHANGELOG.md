@@ -8,7 +8,7 @@
 - A new dedicated `notify` action is now available directly from the Supernotify platform
   - The action has separate fields, with lookup helpers and validation, to make configuring even sophisticated notifications hugely easier
   - The original context is preserved, so you can trace from a trigger like motion PIR, all the way thru to an alert call and camera PTZ movement
-  - No change to the original `notify.supernotify` action, so nothing breaks, and there's a choice
+  - No change to the original `notify.supernotify` action, so nothing breaks, and there's a choice (maximum compatibility with legacy notify, so can easily switch between notify providers, or ease of use and insulated from future deprecations of HA notify)
 
 ### Tracing Activities
 - Home Assistant `Context` is propagated to all Home Assistant services used
