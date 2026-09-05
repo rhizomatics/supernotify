@@ -82,6 +82,7 @@ async def test_notify_alexa_media_player(uninitialized_unmocked_config: Context)
             "target": ["media_player.hall", "media_player.toilet"],
         },
         debug=False,
+        context=None,
     )
 
 
@@ -144,6 +145,7 @@ async def test_notify_alexa_media_player_with_data_override(uninitialized_unmock
             "target": ["media_player.hall"],
         },
         debug=False,
+        context=None,
     )
 
 

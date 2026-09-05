@@ -94,6 +94,7 @@ from .transports.tts import TTSTransport
 if TYPE_CHECKING:
     import datetime as dt
 
+    from homeassistant.core import Context as HAContext
     from homeassistant.helpers import entity_registry as er
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -417,7 +418,7 @@ class SupernotifyEntity(NotifyEntity):
         self, message: str, title: str | None = None, target: str | list[str] | None = None, data: dict[str, Any] | None = None
     ) -> None:
         """Send a message to a user."""
-        await self._platform.async_send_message(message, title=title, target=target, data=data)
+        await self._platform.async_send_message(message, title=title, target=target, data=data, context=self._context)
 
 
 class RecipientNotifyEntity(NotifyEntity):
@@ -457,7 +458,7 @@ class RecipientNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to this recipient."""
-        await self._platform.async_send_message(message, title=title, target=self.entity_id)
+        await self._platform.async_send_message(message, title=title, target=self.entity_id, context=self._context)
 
 
 async def async_setup_entry(
@@ -574,7 +575,12 @@ class SupernotifyAction(BaseNotificationService):
         _LOGGER.info("SUPERNOTIFY Shut down")
 
     async def async_send_message(
-        self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any
+        self,
+        message: str = "",
+        title: str | None = None,
+        target: list[str] | str | None = None,
+        context: HAContext | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a message via chosen transport."""
         data = kwargs.get(ATTR_DATA, {})
@@ -582,7 +588,7 @@ class SupernotifyAction(BaseNotificationService):
         _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
 
         try:
-            notification = Notification(self.context, message, title, target, data)
+            notification = Notification(self.context, message, title, target, data, ha_context=context)
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1

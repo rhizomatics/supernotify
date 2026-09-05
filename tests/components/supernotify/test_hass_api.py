@@ -247,6 +247,25 @@ async def test_hass_calls_service_fire_and_forget(hass: HomeAssistant) -> None:
         assert await hass_api.call_service("nosuchdomain", "nosuchservice") is None
 
 
+async def test_call_service_propagates_context(hass: HomeAssistant) -> None:
+    """The calling HA Context, when supplied, should reach the underlying service call
+    so the logbook/trace can chain the resulting action back to its trigger."""
+    from homeassistant.core import Context
+
+    hass_api = HomeAssistantAPI(hass)
+    seen_contexts: list[Context | None] = []
+
+    async def service_call(call: ServiceCall) -> None:
+        seen_contexts.append(call.context)
+
+    hass.services.async_register("testing", "context_probe", service_call)
+
+    caller_context = Context()
+    await hass_api.call_service("testing", "context_probe", context=caller_context, blocking=True)
+
+    assert seen_contexts == [caller_context]
+
+
 def test_finds_service(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
 

@@ -87,6 +87,8 @@ from custom_components.supernotify.model import (
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
+    from homeassistant.core import Context as HAContext
+
     from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
@@ -161,10 +163,12 @@ class AlexaMediaPlayerTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         return action is not None
 
-    async def _safe_service(self, domain: str, service: str, service_data: dict[str, Any]) -> bool:
+    async def _safe_service(
+        self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None
+    ) -> bool:
         """Call a HA service via hass_api, catching exceptions so offline devices never block overall delivery."""
         try:
-            await self.hass_api.call_service(domain, service, service_data=service_data)
+            await self.hass_api.call_service(domain, service, service_data=service_data, context=context)
             return True
         except Exception as exc:
             _LOGGER.debug(
@@ -203,6 +207,7 @@ class AlexaMediaPlayerTransport(Transport):
         states: dict[str, dict[str, Any]],
         requested_volume: float,
         pause_music: bool,
+        context: HAContext | None = None,
     ) -> set[str]:
         """Pause music, stop beep, set announcement volume. Runs per-device concurrently since
         each Alexa cloud round trip can take seconds, and serializing across targets stacks
@@ -215,15 +220,16 @@ class AlexaMediaPlayerTransport(Transport):
                     # media_stop after media_pause kills streaming sessions
                     # (Spotify, etc.) making them impossible to resume later.
                     # media_pause leaves the session alive for media_play resume.
-                    await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+                    await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp}, context=context)
                 else:
                     # Not pausing: use media_stop to suppress the Alexa
                     # confirmation beep before volume_set (no resume expected).
-                    await self._safe_service("media_player", "media_stop", {ATTR_ENTITY_ID: mp})
+                    await self._safe_service("media_player", "media_stop", {ATTR_ENTITY_ID: mp}, context=context)
             ok = await self._safe_service(
                 "media_player",
                 "volume_set",
                 {ATTR_ENTITY_ID: mp, "volume_level": requested_volume},
+                context=context,
             )
             return mp, ok
 
@@ -235,6 +241,7 @@ class AlexaMediaPlayerTransport(Transport):
         states: dict[str, dict[str, Any]],
         restore_volume: bool,
         pause_music: bool,
+        context: HAContext | None = None,
     ) -> None:
         """Restore volume and resume music after announcement, per-device concurrently."""
         music_devices = [mp for mp, s in states.items() if pause_music and s["playing"]]
@@ -247,6 +254,7 @@ class AlexaMediaPlayerTransport(Transport):
                         "media_player",
                         "volume_set",
                         {ATTR_ENTITY_ID: mp, "volume_level": prev["volume"]},
+                        context=context,
                     )
                     for mp, prev in states.items()
                 )
@@ -254,7 +262,10 @@ class AlexaMediaPlayerTransport(Transport):
         if music_devices:
             await asyncio.sleep(_MUSIC_RESUME_DELAY)
             await asyncio.gather(
-                *(self._safe_service("media_player", "media_play", {ATTR_ENTITY_ID: mp}) for mp in music_devices)
+                *(
+                    self._safe_service("media_player", "media_play", {ATTR_ENTITY_ID: mp}, context=context)
+                    for mp in music_devices
+                )
             )
 
     async def deliver(
@@ -314,11 +325,11 @@ class AlexaMediaPlayerTransport(Transport):
                 states = await self._snapshot_states(media_players, volume_fallback)
 
             if requested_volume is not None and states:
-                volume_set_failed = await self._pre_announce(states, requested_volume, pause_music)
+                volume_set_failed = await self._pre_announce(states, requested_volume, pause_music, context=envelope.ha_context)
             elif pause_music and states:
                 await asyncio.gather(
                     *(
-                        self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+                        self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp}, context=envelope.ha_context)
                         for mp, prev in states.items()
                         if prev["playing"]
                     )
@@ -363,6 +374,8 @@ class AlexaMediaPlayerTransport(Transport):
             # cancelled (e.g. HA shutting down), otherwise a pre-announce pause/volume change
             # made above is never undone and the device is stuck paused/at announce volume.
             if needs_post_announce:
-                await self._post_announce(states, restore_volume and requested_volume is not None, pause_music)
+                await self._post_announce(
+                    states, restore_volume and requested_volume is not None, pause_music, context=envelope.ha_context
+                )
 
         return result

@@ -64,6 +64,8 @@ from .model import (
 from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome
 
 if TYPE_CHECKING:
+    from homeassistant.core import Context as HAContext
+
     from .context import Context
     from .delivery import Delivery, DeliveryRegistry
     from .people import PeopleRegistry, Recipient
@@ -110,11 +112,13 @@ class Notification(ArchivableObject):
         title: str | None = None,
         target: list[str] | str | None = None,
         action_data: dict[str, Any] | None = None,
+        ha_context: HAContext | None = None,
     ) -> None:
         self.created: dt.datetime = dt.datetime.now(tz=dt_util.get_default_time_zone())
         self.debug_trace: DebugTrace = DebugTrace(message=message, title=title, data=action_data, target=target)
         self.message: str | None = message
         self.context: Context = context
+        self.ha_context: HAContext | None = ha_context
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         action_data = action_data or {}
@@ -473,7 +477,7 @@ class Notification(ArchivableObject):
             # Start image grab immediately so PTZ runs while immediate deliveries execute
             image_task: asyncio.Task | None = None
             if deferred_deliveries:
-                image_task = asyncio.create_task(_snap_notification_image(self, self.context))
+                image_task = asyncio.create_task(_snap_notification_image(self, self.context, ha_context=self.ha_context))
 
             _LOGGER.debug("SUPERNOTIFY Scheduling %s immediate deliveries", len(deferred_deliveries))
             await self._schedule_deliveries(immediate_deliveries)
@@ -932,6 +936,8 @@ class Notification(ArchivableObject):
                     k: v for k, v in self.extra_data.items() if k not in INTERNAL_DATA_KEYS
                 })  # action call data
 
-                envelopes.append(Envelope(delivery, self, target, envelope_data, context=self.context))
+                envelopes.append(
+                    Envelope(delivery, self, target, envelope_data, context=self.context, ha_context=self.ha_context)
+                )
 
         return envelopes

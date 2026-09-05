@@ -209,6 +209,7 @@ class HomeAssistantAPI:
         return_response: bool | None = None,
         blocking: bool | None = None,
         debug: bool = False,
+        context: HomeAssistantContext | None = None,
     ) -> ServiceResponse | None:
 
         if return_response is None or blocking is None:
@@ -227,7 +228,7 @@ class HomeAssistantAPI:
             service,
             service_data=service_data,
             blocking=blocking,
-            context=None,
+            context=context,
             target=target,
             return_response=return_response,
         )

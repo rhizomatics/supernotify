@@ -46,6 +46,7 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
             "payload": '{"warning": {"duration": 30, "mode": "emergency", "level": "low", "strobe": "true", "strobe_duty_cycle": 10}}',
         },
         debug=False,
+        context=None,
     )
 
 

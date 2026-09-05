@@ -783,7 +783,7 @@ async def test_grab_image_with_camera_not_in_config_infers_frigate_ptz(hass: Hom
                 action_data={"media": {"camera_entity_id": "camera.frigate_cam", "camera_ptz_preset": "Doorway"}},
             )
             await snap_notification_image(notification, ctx)
-    mock_ptz.assert_called_once_with(ctx.hass_api, "camera.frigate_cam", "Doorway", method=PTZ_METHOD_FRIGATE)
+    mock_ptz.assert_called_once_with(ctx.hass_api, "camera.frigate_cam", "Doorway", method=PTZ_METHOD_FRIGATE, ha_context=None)
 
 
 async def test_grab_image_camera_unavailable(hass: HomeAssistant) -> None:

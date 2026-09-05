@@ -129,6 +129,33 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
     )
 
 
+async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mock) -> None:
+    """A HA Context supplied to async_send_message (e.g. from the calling ServiceCall/entity
+    service) should reach the underlying notify service call, so the logbook/trace can chain
+    the resulting action back to its trigger."""
+    from homeassistant.core import Context
+
+    uut = SupernotifyAction(
+        mock_hass,
+        deliveries=DELIVERY,
+        recipients=RECIPIENTS,
+        transport_configs=TRANSPORT_DEFAULTS,
+        dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
+    )
+    await uut.initialize()
+    caller_context = Context()
+    await uut.async_send_message(message="testing 123", data={"delivery": "text"}, context=caller_context)
+    mock_hass.services.async_call.assert_called_with(
+        "notify",
+        "sms",
+        service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
+        blocking=False,
+        context=caller_context,
+        target=None,
+        return_response=False,
+    )
+
+
 async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     uut = SupernotifyAction(
         mock_hass,
