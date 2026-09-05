@@ -41,9 +41,21 @@
                     "name": "Cenários restritivos",
                     "description": "Permite que apenas estes cenários (mais os em Cenários a aplicar) afetem esta notificação, ignorando qualquer outro cenário ativo."
                 },
+                "camera_entity_id": {
+                    "name": "Câmara",
+                    "description": "Uma câmara para tirar uma captura (e realizar primeiro um movimento PTZ, se configurado) antes da entrega."
+                },
+                "snapshot_url": {
+                    "name": "URL da captura",
+                    "description": "Um URL de imagem já existente para anexar, em vez de acionar uma nova captura da câmara."
+                },
+                "clip_url": {
+                    "name": "URL do clipe",
+                    "description": "Um URL de clipe de vídeo já existente para anexar."
+                },
                 "media": {
-                    "name": "Mídia",
-                    "description": "Uma câmera ou imagem para anexar - pode acionar um movimento PTZ e uma captura antes da entrega."
+                    "name": "Outras opções de multimédia",
+                    "description": "Opções de multimédia avançadas não cobertas pelos campos acima, por exemplo, predefinição PTZ, atraso de captura ou substituições de formato de imagem."
                 },
                 "actions": {
                     "name": "Ações",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Opções de multimédia",
+                    "description": "Anexar uma captura de câmara, uma imagem existente ou um clipe de vídeo a esta notificação."
+                },
                 "advanced": {
                     "name": "Avançado",
                     "description": "Botões de ação para notificações, formatação HTML, rastreamento de depuração e outras opções menos usadas."

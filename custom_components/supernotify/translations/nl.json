@@ -41,9 +41,21 @@
                     "name": "Beperkende scenario's",
                     "description": "Laat alleen deze scenario's (plus die in Toe te passen scenario's) deze melding beïnvloeden, en negeer elk ander actief scenario."
                 },
+                "camera_entity_id": {
+                    "name": "Camera",
+                    "description": "Een camera om een momentopname te maken (en eerst een PTZ-beweging, indien geconfigureerd) vóór bezorging."
+                },
+                "snapshot_url": {
+                    "name": "Momentopname-URL",
+                    "description": "Een reeds bestaande afbeeldings-URL om bij te voegen, in plaats van een nieuwe camera-momentopname te activeren."
+                },
+                "clip_url": {
+                    "name": "Clip-URL",
+                    "description": "Een reeds bestaande video-clip-URL om bij te voegen."
+                },
                 "media": {
-                    "name": "Media",
-                    "description": "Een camera of afbeelding om toe te voegen - kan een PTZ-beweging en momentopname activeren vóór bezorging."
+                    "name": "Overige media-opties",
+                    "description": "Geavanceerde media-opties die niet door de bovenstaande velden worden gedekt, bijv. PTZ-voorinstelling, opnamevertraging of overschrijvingen van het beeldformaat."
                 },
                 "actions": {
                     "name": "Acties",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Multimedia-opties",
+                    "description": "Voeg een camera-momentopname, een bestaande afbeelding of een videoclip toe aan deze melding."
+                },
                 "advanced": {
                     "name": "Geavanceerd",
                     "description": "Actieknoppen voor meldingen, HTML-opmaak, debug-tracering en andere minder gebruikte opties."

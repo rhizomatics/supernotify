@@ -41,9 +41,21 @@
                     "name": "Einschränkende Szenarien",
                     "description": "Nur diese Szenarien (plus alle unter „Anzuwendende Szenarien“) dürfen diese Benachrichtigung beeinflussen; jedes andere aktive Szenario wird ignoriert."
                 },
+                "camera_entity_id": {
+                    "name": "Kamera",
+                    "description": "Eine Kamera für einen Schnappschuss (und optional zuvor eine PTZ-Bewegung), bevor die Zustellung erfolgt."
+                },
+                "snapshot_url": {
+                    "name": "Schnappschuss-URL",
+                    "description": "Eine bereits vorhandene Bild-URL zum Anhängen, anstatt einen neuen Kamera-Schnappschuss auszulösen."
+                },
+                "clip_url": {
+                    "name": "Clip-URL",
+                    "description": "Eine bereits vorhandene Video-Clip-URL zum Anhängen."
+                },
                 "media": {
-                    "name": "Medien",
-                    "description": "Eine Kamera oder ein Bild zum Anhängen – kann vor der Zustellung eine PTZ-Bewegung und einen Schnappschuss auslösen."
+                    "name": "Weitere Medienoptionen",
+                    "description": "Erweiterte Medienoptionen, die nicht durch die obigen Felder abgedeckt sind, z. B. PTZ-Preset, Aufnahmeverzögerung oder Bildformat-Überschreibungen."
                 },
                 "actions": {
                     "name": "Aktionen",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Multimedia-Optionen",
+                    "description": "Einen Kamera-Schnappschuss, ein vorhandenes Bild oder einen Videoclip an diese Benachrichtigung anhängen."
+                },
                 "advanced": {
                     "name": "Erweitert",
                     "description": "Aktionsschaltflächen für Benachrichtigungen, HTML-Formatierung, Debug-Tracing und weitere selten genutzte Optionen."

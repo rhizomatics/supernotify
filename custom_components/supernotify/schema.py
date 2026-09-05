@@ -585,5 +585,10 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Required(CONF_MESSAGE): cv.string,
         vol.Optional(CONF_TITLE): cv.string,
         vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+        # promoted out of media: for their own selectors - notify.py's supplemental_action_notify
+        # merges them back into media before Notification ever sees them
+        vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
+        vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
+        vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
     }),
 )

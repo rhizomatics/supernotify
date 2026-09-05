@@ -51,9 +51,22 @@ notify:
       selector:
         text:
           multiple: true
-    media:
-      selector:
-        object:
+    multimedia:
+      collapsed: false
+      fields:
+        camera_entity_id:
+          selector:
+            entity:
+              domain: camera
+        snapshot_url:
+          selector:
+            text:
+        clip_url:
+          selector:
+            text:
+        media:
+          selector:
+            object:
     advanced:
       collapsed: true
       fields:

@@ -40,6 +40,10 @@ from .common import DupeChecker, sanitize
 from .const import (
     ATTR_ACTION,
     ATTR_DATA,
+    ATTR_MEDIA,
+    ATTR_MEDIA_CAMERA_ENTITY_ID,
+    ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_URL,
     CONF_ACTION_GROUPS,
     CONF_ACTIONS,
     CONF_ARCHIVE,
@@ -211,6 +215,17 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
         message = data.pop(CONF_MESSAGE)
         title = data.pop(CONF_TITLE, None)
         target = data.pop(CONF_TARGET, None)
+        # camera_entity_id/clip_url/snapshot_url are promoted top-level fields for this action's
+        # UI - fold them into media, overriding any same-named key already nested in media: itself
+        promoted_media = {
+            key: data.pop(key)
+            for key in (ATTR_MEDIA_CAMERA_ENTITY_ID, ATTR_MEDIA_CLIP_URL, ATTR_MEDIA_SNAPSHOT_URL)
+            if key in data
+        }
+        if promoted_media:
+            media = dict(data.get(ATTR_MEDIA) or {})
+            media.update(promoted_media)
+            data[ATTR_MEDIA] = media
         await service.async_send_message(message, title=title, target=target, data=data, context=call.context)
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:

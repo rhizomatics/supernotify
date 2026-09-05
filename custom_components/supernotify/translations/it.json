@@ -41,9 +41,21 @@
                     "name": "Scenari vincolanti",
                     "description": "Consenti solo a questi scenari (più quelli in Scenari da applicare) di influenzare questa notifica, ignorando qualsiasi altro scenario attivo."
                 },
+                "camera_entity_id": {
+                    "name": "Videocamera",
+                    "description": "Una videocamera per uno scatto (ed eventualmente un movimento PTZ prima, se configurato) prima della consegna."
+                },
+                "snapshot_url": {
+                    "name": "URL dello scatto",
+                    "description": "Un URL di immagine già esistente da allegare, invece di attivare un nuovo scatto della videocamera."
+                },
+                "clip_url": {
+                    "name": "URL della clip",
+                    "description": "Un URL di clip video già esistente da allegare."
+                },
                 "media": {
-                    "name": "Media",
-                    "description": "Una fotocamera o un'immagine da allegare - può attivare un movimento PTZ e uno snapshot prima della consegna."
+                    "name": "Altre opzioni multimediali",
+                    "description": "Opzioni multimediali avanzate non coperte dai campi sopra, ad esempio preset PTZ, ritardo di acquisizione o sovrascritture del formato immagine."
                 },
                 "actions": {
                     "name": "Azioni",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Opzioni multimediali",
+                    "description": "Allega uno scatto della videocamera, un'immagine esistente o una clip video a questa notifica."
+                },
                 "advanced": {
                     "name": "Avanzate",
                     "description": "Pulsanti di azione per le notifiche, formattazione HTML, tracciamento di debug e altre opzioni meno comuni."

@@ -195,6 +195,64 @@ async def test_notify_action_propagates_calling_context(hass: HomeAssistant) -> 
     assert entry.runtime_data.last_notification.ha_context is call_context
 
 
+async def test_notify_action_promotes_media_fields_into_media_block(hass: HomeAssistant) -> None:
+    """camera_entity_id/snapshot_url/clip_url are top-level fields only on supernotify.notify
+    (for their own selectors in the action UI), but Notification only understands them nested
+    under media: - supplemental_action_notify must fold them in before dispatch."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("camera.front_door", "idle")
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {
+            "message": "hello there",
+            "camera_entity_id": "camera.front_door",
+            "snapshot_url": "http://example.com/snap.jpg",
+            "clip_url": "http://example.com/clip.mp4",
+            "media": {"camera_delay": 3},
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.last_notification is not None
+    assert entry.runtime_data.last_notification.media == {
+        "camera_entity_id": "camera.front_door",
+        "snapshot_url": "http://example.com/snap.jpg",
+        "clip_url": "http://example.com/clip.mp4",
+        "camera_delay": 3,
+    }
+
+
+async def test_notify_action_top_level_media_field_overrides_nested_media_block(hass: HomeAssistant) -> None:
+    """If camera_entity_id is set both as a top-level field and nested inside media: on
+    supernotify.notify, the nested value is ignored - the top-level field is the one with a
+    dedicated selector in the action UI, so it wins."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {
+            "message": "hello there",
+            "camera_entity_id": "camera.front_door",
+            "media": {"camera_entity_id": "camera.back_door", "camera_delay": 3},
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.last_notification is not None
+    assert entry.runtime_data.last_notification.media == {"camera_entity_id": "camera.front_door", "camera_delay": 3}
+
+
 async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)

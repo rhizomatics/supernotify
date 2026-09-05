@@ -41,9 +41,21 @@
                     "name": "Scénarios restrictifs",
                     "description": "Ne laisse que ces scénarios (plus ceux de Scénarios à appliquer) affecter cette notification, en ignorant tout autre scénario actif."
                 },
+                "camera_entity_id": {
+                    "name": "Caméra",
+                    "description": "Une caméra pour prendre un instantané (et effectuer d'abord un mouvement PTZ, si configuré) avant la livraison."
+                },
+                "snapshot_url": {
+                    "name": "URL de l'instantané",
+                    "description": "Une URL d'image déjà existante à joindre, au lieu de déclencher un nouvel instantané de caméra."
+                },
+                "clip_url": {
+                    "name": "URL du clip",
+                    "description": "Une URL de clip vidéo déjà existante à joindre."
+                },
                 "media": {
-                    "name": "Média",
-                    "description": "Une caméra ou une image à joindre - peut déclencher un mouvement PTZ et une capture avant la livraison."
+                    "name": "Autres options multimédias",
+                    "description": "Options multimédias avancées non couvertes par les champs ci-dessus, par exemple le préréglage PTZ, le délai de capture ou les substitutions de format d'image."
                 },
                 "actions": {
                     "name": "Actions",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Options multimédias",
+                    "description": "Joindre un instantané de caméra, une image existante ou un clip vidéo à cette notification."
+                },
                 "advanced": {
                     "name": "Avancé",
                     "description": "Boutons d'action pour notifications, mise en forme HTML, traçage de débogage et autres options moins courantes."

@@ -41,9 +41,21 @@
                     "name": "Escenarios restrictivos",
                     "description": "Solo permite que estos escenarios (más los de Escenarios a aplicar) afecten a esta notificación, ignorando cualquier otro escenario activo."
                 },
+                "camera_entity_id": {
+                    "name": "Cámara",
+                    "description": "Una cámara para capturar una instantánea (y realizar primero un movimiento PTZ, si está configurado) antes de la entrega."
+                },
+                "snapshot_url": {
+                    "name": "URL de la instantánea",
+                    "description": "Una URL de imagen ya existente para adjuntar, en lugar de activar una nueva instantánea de la cámara."
+                },
+                "clip_url": {
+                    "name": "URL del clip",
+                    "description": "Una URL de clip de vídeo ya existente para adjuntar."
+                },
                 "media": {
-                    "name": "Multimedia",
-                    "description": "Una cámara o imagen para adjuntar; puede activar un movimiento PTZ y una instantánea antes de la entrega."
+                    "name": "Otras opciones de medios",
+                    "description": "Opciones de medios avanzadas no cubiertas por los campos anteriores, por ejemplo, preajuste PTZ, retardo de captura o anulaciones de formato de imagen."
                 },
                 "actions": {
                     "name": "Acciones",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Opciones multimedia",
+                    "description": "Adjuntar una instantánea de cámara, una imagen existente o un clip de vídeo a esta notificación."
+                },
                 "advanced": {
                     "name": "Avanzado",
                     "description": "Botones de acción para notificaciones, formato HTML, seguimiento de depuración y otras opciones menos utilizadas."

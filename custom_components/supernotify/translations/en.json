@@ -27,10 +27,10 @@
                 },
                 "delivery": {
                     "name": "Delivery",
-                    "description": "Restrict or tune specific deliveries by name. A list of names restricts to just those; a mapping can also override options per delivery."
+                    "description": "Restrict or tune specific deliveries by name. A single delivery name, or list of names, restricts to just those. A mapping can also be used to override delivery configurations without limiting the deliveries."
                 },
                 "require_scenarios": {
-                    "name": "Require Scenarios",
+                    "name": "Required Scenarios",
                     "description": "Suppress this notification unless at least one of these scenarios is currently active."
                 },
                 "apply_scenarios": {
@@ -38,12 +38,24 @@
                     "description": "Force these scenarios to be treated as active for this notification, regardless of their own conditions."
                 },
                 "constrain_scenarios": {
-                    "name": "Constrain Scenarios",
+                    "name": "Constrained Scenarios",
                     "description": "Only let these scenarios (plus any in Apply Scenarios) affect this notification, ignoring any other active scenario."
                 },
+                "camera_entity_id": {
+                    "name": "Camera",
+                    "description": "A camera to snapshot (and PTZ move first, if configured) before delivery."
+                },
+                "snapshot_url": {
+                    "name": "Snapshot URL",
+                    "description": "A pre-existing image URL to attach, instead of triggering a new camera snapshot."
+                },
+                "clip_url": {
+                    "name": "Clip URL",
+                    "description": "A pre-existing video clip URL to attach."
+                },
                 "media": {
-                    "name": "Media",
-                    "description": "A camera or image to attach - can trigger a PTZ move and snapshot before delivery."
+                    "name": "Other Media Options",
+                    "description": "Advanced media options not covered by the fields above, e.g. PTZ preset, capture delay, or image format overrides."
                 },
                 "actions": {
                     "name": "Actions",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "Multimedia Options",
+                    "description": "Attach a camera snapshot, an existing image, or a video clip to this notification."
+                },
                 "advanced": {
                     "name": "Advanced",
                     "description": "Actionable-notification buttons, HTML formatting, debug tracing, and other less commonly used options."

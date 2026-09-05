@@ -41,9 +41,21 @@
                     "name": "限制场景",
                     "description": "仅允许这些场景（以及应用场景中的任何场景）影响此通知，忽略任何其他活动场景。"
                 },
+                "camera_entity_id": {
+                    "name": "摄像头",
+                    "description": "用于在推送前拍摄快照的摄像头（如已配置，会先执行 PTZ 移动）。"
+                },
+                "snapshot_url": {
+                    "name": "快照 URL",
+                    "description": "要附加的现有图片 URL，而不是触发新的摄像头快照。"
+                },
+                "clip_url": {
+                    "name": "视频片段 URL",
+                    "description": "要附加的现有视频片段 URL。"
+                },
                 "media": {
-                    "name": "媒体",
-                    "description": "要附加的摄像头或图像——可在推送前触发 PTZ 移动和快照。"
+                    "name": "其他媒体选项",
+                    "description": "上述字段未涵盖的高级媒体选项，例如 PTZ 预设、拍摄延迟或图像格式覆盖。"
                 },
                 "actions": {
                     "name": "操作",
@@ -71,6 +83,10 @@
                 }
             },
             "sections": {
+                "multimedia": {
+                    "name": "多媒体选项",
+                    "description": "为此通知附加摄像头快照、现有图片或视频片段。"
+                },
                 "advanced": {
                     "name": "高级",
                     "description": "通知操作按钮、HTML 格式、调试跟踪及其他不常用的选项。"
