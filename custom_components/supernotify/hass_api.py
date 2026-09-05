@@ -557,7 +557,12 @@ class HomeAssistantAPI:
             return []
 
         all_devs = enabled_devs = found_devs = skipped_devs = 0
-        for dev in dev_reg.devices:
+        if hasattr(dev_reg.devices, "values"):
+            # 2026.8 HA and prior
+            all_ha_devices: Iterable[DeviceEntry] = dev_reg.devices.values()  # ty: ignore[call-non-callable]
+        else:
+            all_ha_devices = dev_reg.devices
+        for dev in all_ha_devices:
             all_devs += 1
 
             if dev.disabled:

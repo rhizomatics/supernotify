@@ -5,6 +5,15 @@ import typing
 from pathlib import Path
 from types import FunctionType
 
+# Home Assistant aliases the `voluptuous` module to its `probatio` replacement in
+# sys.modules (see homeassistant/__init__.py's install_as_voluptuous()), but only if
+# that happens before anything else imports the real `voluptuous`. voluptuous_openapi
+# imports the real voluptuous at module load time, so homeassistant has to be imported
+# first here, or its convert() can't recognize schemas built from Home Assistant's
+# cv.* validators (which are probatio's, not real voluptuous's) - it doesn't fail
+# cleanly either, since probatio's Schema is unhashable where convert() expects a
+# hashable type to check against a dict of known validator types.
+import homeassistant  # noqa: F401
 import mkdocs_gen_files
 from json_schema_for_humans.generate import generate_from_schema  # type: ignore
 from json_schema_for_humans.generation_configuration import GenerationConfiguration  # type: ignore
