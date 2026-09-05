@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Melden",
+            "description": "Een alternatief voor notify.supernotify met individueel gevalideerde, door selectors aangestuurde velden in plaats van één algemeen gegevensblok - en in tegenstelling tot notify.supernotify wordt de Context van de aanroepende actie doorgegeven aan elke bezorging.",
+            "fields": {
+                "message": {
+                    "name": "Bericht",
+                    "description": "De berichttekst van de melding."
+                },
+                "title": {
+                    "name": "Titel",
+                    "description": "Een optionele titel voor de melding."
+                },
+                "target": {
+                    "name": "Doel",
+                    "description": "Wie of wat te melden - personen, mobiele apparaten, mediaspelers, zones of andere doelentiteiten. Laat leeg om de standaard/impliciete bezorgingen te gebruiken."
+                },
+                "priority": {
+                    "name": "Prioriteit",
+                    "description": "Gebruikt om bezorgingen en scenario's in/uit te schakelen, en indien ondersteund toegewezen aan de eigen prioriteits-/urgentievlag van het onderliggende transport (bijv. mobiele push, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Bezorgingsselectie",
+                    "description": "Hoe het veld Bezorging (indien ingesteld) wordt geïnterpreteerd - implicit (voegt toe aan de standaardwaarden), explicit (alleen deze, plus door scenario's ingeschakelde) of fixed (alleen deze, scenario's worden genegeerd)."
+                },
+                "delivery": {
+                    "name": "Bezorging",
+                    "description": "Beperk of stem specifieke bezorgingen af op naam. Een lijst met namen beperkt tot alleen die; een mapping kan ook opties per bezorging overschrijven."
+                },
+                "require_scenarios": {
+                    "name": "Vereiste scenario's",
+                    "description": "Onderdruk deze melding tenzij ten minste één van deze scenario's momenteel actief is."
+                },
+                "apply_scenarios": {
+                    "name": "Toe te passen scenario's",
+                    "description": "Forceer dat deze scenario's als actief worden behandeld voor deze melding, ongeacht hun eigen voorwaarden."
+                },
+                "constrain_scenarios": {
+                    "name": "Beperkende scenario's",
+                    "description": "Laat alleen deze scenario's (plus die in Toe te passen scenario's) deze melding beïnvloeden, en negeer elk ander actief scenario."
+                },
+                "action_groups": {
+                    "name": "Actiegroepen",
+                    "description": "Benoemde groepen mobiele actieknoppen voor meldingen om toe te voegen, zoals geconfigureerd onder action_groups:."
+                },
+                "actions": {
+                    "name": "Acties",
+                    "description": "Eenmalige actieknoppen voor meldingen om toe te voegen, zonder dat een vooraf geconfigureerde actiegroep nodig is."
+                },
+                "media": {
+                    "name": "Media",
+                    "description": "Een camera of afbeelding om toe te voegen - kan een PTZ-beweging en momentopname activeren vóór bezorging."
+                },
+                "message_html": {
+                    "name": "HTML-bericht",
+                    "description": "Een HTML-alternatief voor Bericht, gebruikt door transporten die rijke opmaak ondersteunen (bijv. e-mail)."
+                },
+                "debug": {
+                    "name": "Debug",
+                    "description": "Extra diagnostische details voor deze melding opnemen in traces en het archief."
+                },
+                "force_resend": {
+                    "name": "Opnieuw verzenden forceren",
+                    "description": "Verzend zelfs als detectie van duplicaten deze melding anders zou onderdrukken."
+                },
+                "data": {
+                    "name": "Extra gegevens",
+                    "description": "Doorgegeven gegevens voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
+                }
+            }
+        },
         "reload": {
             "name": "Herladen",
             "description": "Herlaadt Supernotify-diensten."

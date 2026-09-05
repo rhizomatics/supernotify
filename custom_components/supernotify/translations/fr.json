@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Notifier",
+            "description": "Une alternative à notify.supernotify avec des champs validés individuellement et pilotés par des sélecteurs, plutôt qu'un seul bloc de données générique - et, contrairement à notify.supernotify, elle propage le Context de l'appel à chaque livraison.",
+            "fields": {
+                "message": {
+                    "name": "Message",
+                    "description": "Le corps du message de la notification."
+                },
+                "title": {
+                    "name": "Titre",
+                    "description": "Un titre facultatif pour la notification."
+                },
+                "target": {
+                    "name": "Cible",
+                    "description": "Qui ou quoi notifier - personnes, appareils mobiles, lecteurs multimédias, zones ou autres entités cibles. Laisser vide pour utiliser les livraisons par défaut/implicites."
+                },
+                "priority": {
+                    "name": "Priorité",
+                    "description": "Utilisée pour activer/désactiver les livraisons et les scénarios, et associée à l'indicateur de priorité/urgence propre au transport sous-jacent lorsqu'il est pris en charge (par ex. notification push mobile, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Sélection de livraison",
+                    "description": "Comment le champ Livraison (s'il est défini) est interprété - implicit (s'ajoute aux valeurs par défaut), explicit (uniquement celles-ci, plus celles activées par un scénario) ou fixed (uniquement celles-ci, en ignorant les scénarios)."
+                },
+                "delivery": {
+                    "name": "Livraison",
+                    "description": "Restreindre ou ajuster des livraisons spécifiques par nom. Une liste de noms restreint à celles-ci uniquement ; une correspondance peut aussi remplacer des options par livraison."
+                },
+                "require_scenarios": {
+                    "name": "Scénarios requis",
+                    "description": "Supprime cette notification à moins qu'au moins un de ces scénarios ne soit actuellement actif."
+                },
+                "apply_scenarios": {
+                    "name": "Scénarios à appliquer",
+                    "description": "Force ces scénarios à être considérés comme actifs pour cette notification, indépendamment de leurs propres conditions."
+                },
+                "constrain_scenarios": {
+                    "name": "Scénarios restrictifs",
+                    "description": "Ne laisse que ces scénarios (plus ceux de Scénarios à appliquer) affecter cette notification, en ignorant tout autre scénario actif."
+                },
+                "action_groups": {
+                    "name": "Groupes d'actions",
+                    "description": "Groupes nommés de boutons de notification actionnable mobile à joindre, tels que configurés sous action_groups:."
+                },
+                "actions": {
+                    "name": "Actions",
+                    "description": "Boutons de notification actionnable ponctuels à joindre, sans nécessiter de groupe d'actions préconfiguré."
+                },
+                "media": {
+                    "name": "Média",
+                    "description": "Une caméra ou une image à joindre - peut déclencher un mouvement PTZ et une capture avant la livraison."
+                },
+                "message_html": {
+                    "name": "Message HTML",
+                    "description": "Une alternative HTML au Message, utilisée par les transports prenant en charge une mise en forme riche (par ex. e-mail)."
+                },
+                "debug": {
+                    "name": "Débogage",
+                    "description": "Inclure des détails de diagnostic supplémentaires pour cette notification dans les traces et l'archive."
+                },
+                "force_resend": {
+                    "name": "Forcer le renvoi",
+                    "description": "Envoyer même si la détection des doublons supprimerait autrement cette notification."
+                },
+                "data": {
+                    "name": "Données supplémentaires",
+                    "description": "Données transmises pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
+                }
+            }
+        },
         "reload": {
             "name": "Recharger",
             "description": "Recharge les services Supernotify."

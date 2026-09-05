@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Notifica",
+            "description": "Un'alternativa a notify.supernotify con campi convalidati singolarmente e basati su selettori, invece di un unico blocco dati generico - e, a differenza di notify.supernotify, propaga il Context della chiamata a ogni consegna.",
+            "fields": {
+                "message": {
+                    "name": "Messaggio",
+                    "description": "Il corpo del messaggio della notifica."
+                },
+                "title": {
+                    "name": "Titolo",
+                    "description": "Un titolo facoltativo per la notifica."
+                },
+                "target": {
+                    "name": "Destinazione",
+                    "description": "Chi o cosa notificare - persone, dispositivi mobili, lettori multimediali, aree o altre entità di destinazione. Lasciare vuoto per usare le consegne predefinite/implicite."
+                },
+                "priority": {
+                    "name": "Priorità",
+                    "description": "Usata per abilitare/disabilitare consegne e scenari, e mappata sul proprio flag di priorità/urgenza del trasporto sottostante, se supportato (ad es. push mobile, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Selezione consegna",
+                    "description": "Come viene interpretato il campo Consegna (se impostato) - implicit (si aggiunge ai valori predefiniti), explicit (solo queste, più quelle abilitate da uno scenario) o fixed (solo queste, ignorando gli scenari)."
+                },
+                "delivery": {
+                    "name": "Consegna",
+                    "description": "Limita o modifica consegne specifiche per nome. Un elenco di nomi limita solo a quelle; una mappatura può anche sovrascrivere le opzioni per singola consegna."
+                },
+                "require_scenarios": {
+                    "name": "Scenari richiesti",
+                    "description": "Sopprime questa notifica a meno che almeno uno di questi scenari non sia attualmente attivo."
+                },
+                "apply_scenarios": {
+                    "name": "Scenari da applicare",
+                    "description": "Forza il trattamento di questi scenari come attivi per questa notifica, indipendentemente dalle loro condizioni."
+                },
+                "constrain_scenarios": {
+                    "name": "Scenari vincolanti",
+                    "description": "Consenti solo a questi scenari (più quelli in Scenari da applicare) di influenzare questa notifica, ignorando qualsiasi altro scenario attivo."
+                },
+                "action_groups": {
+                    "name": "Gruppi di azioni",
+                    "description": "Gruppi denominati di pulsanti per notifiche azionabili mobili da allegare, come configurato in action_groups:."
+                },
+                "actions": {
+                    "name": "Azioni",
+                    "description": "Pulsanti per notifiche azionabili una tantum da allegare, senza necessità di un gruppo di azioni preconfigurato."
+                },
+                "media": {
+                    "name": "Media",
+                    "description": "Una fotocamera o un'immagine da allegare - può attivare un movimento PTZ e uno snapshot prima della consegna."
+                },
+                "message_html": {
+                    "name": "Messaggio HTML",
+                    "description": "Un'alternativa HTML al Messaggio, usata dai trasporti che supportano la formattazione ricca (ad es. e-mail)."
+                },
+                "debug": {
+                    "name": "Debug",
+                    "description": "Includi dettagli diagnostici aggiuntivi per questa notifica nelle tracce e nell'archivio."
+                },
+                "force_resend": {
+                    "name": "Forza reinvio",
+                    "description": "Invia anche se il rilevamento dei duplicati sopprimerebbe altrimenti questa notifica."
+                },
+                "data": {
+                    "name": "Dati aggiuntivi",
+                    "description": "Dati passanti per trasporti/blueprint che qui si aspettano propri campi, ad es. attributi da un blueprint di notifica Frigate."
+                }
+            }
+        },
         "reload": {
             "name": "Ricarica",
             "description": "Ricarica i servizi di supernotify."

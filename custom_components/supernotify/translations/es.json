@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Notificar",
+            "description": "Una alternativa a notify.supernotify con campos validados individualmente y controlados por selectores en lugar de un único bloque de datos genérico; y, a diferencia de notify.supernotify, propaga el Context de la llamada a cada entrega.",
+            "fields": {
+                "message": {
+                    "name": "Mensaje",
+                    "description": "El cuerpo del mensaje de la notificación."
+                },
+                "title": {
+                    "name": "Título",
+                    "description": "Un título opcional para la notificación."
+                },
+                "target": {
+                    "name": "Objetivo",
+                    "description": "A quién o qué notificar: personas, dispositivos móviles, reproductores multimedia, áreas u otras entidades objetivo. Déjalo en blanco para usar las entregas predeterminadas/implícitas."
+                },
+                "priority": {
+                    "name": "Prioridad",
+                    "description": "Se usa para activar/desactivar entregas y escenarios, y se asigna a la propia bandera de prioridad/urgencia del transporte subyacente cuando es compatible (por ejemplo, notificación push móvil, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Selección de entrega",
+                    "description": "Cómo se interpreta el campo Entrega (si está definido): implicit (se añade a los valores predeterminados), explicit (solo estos, más los habilitados por escenario) o fixed (solo estos, ignorando los escenarios)."
+                },
+                "delivery": {
+                    "name": "Entrega",
+                    "description": "Restringe o ajusta entregas específicas por nombre. Una lista de nombres restringe solo a esas; un mapeo también puede sobrescribir opciones por entrega."
+                },
+                "require_scenarios": {
+                    "name": "Escenarios requeridos",
+                    "description": "Suprime esta notificación a menos que al menos uno de estos escenarios esté actualmente activo."
+                },
+                "apply_scenarios": {
+                    "name": "Escenarios a aplicar",
+                    "description": "Fuerza a que estos escenarios se traten como activos para esta notificación, independientemente de sus propias condiciones."
+                },
+                "constrain_scenarios": {
+                    "name": "Escenarios restrictivos",
+                    "description": "Solo permite que estos escenarios (más los de Escenarios a aplicar) afecten a esta notificación, ignorando cualquier otro escenario activo."
+                },
+                "action_groups": {
+                    "name": "Grupos de acciones",
+                    "description": "Grupos con nombre de botones de notificación accionable móvil para adjuntar, configurados en action_groups:."
+                },
+                "actions": {
+                    "name": "Acciones",
+                    "description": "Botones de notificación accionable puntuales para adjuntar, sin necesidad de un grupo de acciones preconfigurado."
+                },
+                "media": {
+                    "name": "Multimedia",
+                    "description": "Una cámara o imagen para adjuntar; puede activar un movimiento PTZ y una instantánea antes de la entrega."
+                },
+                "message_html": {
+                    "name": "Mensaje HTML",
+                    "description": "Una alternativa HTML al Mensaje, usada por transportes que admiten formato enriquecido (por ejemplo, correo electrónico)."
+                },
+                "debug": {
+                    "name": "Depuración",
+                    "description": "Incluye detalles de diagnóstico adicionales para esta notificación en las trazas y el archivo."
+                },
+                "force_resend": {
+                    "name": "Forzar reenvío",
+                    "description": "Envía incluso si la detección de duplicados suprimiría esta notificación."
+                },
+                "data": {
+                    "name": "Datos adicionales",
+                    "description": "Datos de paso para transportes/blueprints que esperan sus propios campos aquí, por ejemplo, atributos de un blueprint de notificación de Frigate."
+                }
+            }
+        },
         "reload": {
             "name": "Recargar",
             "description": "Recarga los servicios de Supernotify."

@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "通知",
+            "description": "notify.supernotify 的替代方案，使用单独验证、由选择器驱动的字段，而不是一个通用的数据块——并且与 notify.supernotify 不同，它会将调用操作的 Context 传播到每一次推送。",
+            "fields": {
+                "message": {
+                    "name": "消息",
+                    "description": "通知的消息正文。"
+                },
+                "title": {
+                    "name": "标题",
+                    "description": "通知的可选标题。"
+                },
+                "target": {
+                    "name": "目标",
+                    "description": "要通知的对象——人员、移动设备、媒体播放器、区域或其他目标实体。留空以使用默认/隐式推送。"
+                },
+                "priority": {
+                    "name": "优先级",
+                    "description": "用于启用/禁用推送和场景，并在底层传输方式支持时映射到其自身的优先级/紧急标志（例如移动推送、SMTP、Telegram、Gotify、ntfy）。"
+                },
+                "delivery_selection": {
+                    "name": "推送选择",
+                    "description": "推送字段（如已设置）的解释方式——implicit（在默认值基础上添加）、explicit（仅这些，加上由场景启用的）或 fixed（仅这些，忽略场景）。"
+                },
+                "delivery": {
+                    "name": "推送",
+                    "description": "按名称限制或调整特定推送。名称列表将限制为仅这些；映射还可以按推送覆盖选项。"
+                },
+                "require_scenarios": {
+                    "name": "必需场景",
+                    "description": "除非至少有一个这些场景当前处于活动状态，否则抑制此通知。"
+                },
+                "apply_scenarios": {
+                    "name": "应用场景",
+                    "description": "强制将这些场景视为对此通知处于活动状态，无论其自身条件如何。"
+                },
+                "constrain_scenarios": {
+                    "name": "限制场景",
+                    "description": "仅允许这些场景（以及应用场景中的任何场景）影响此通知，忽略任何其他活动场景。"
+                },
+                "action_groups": {
+                    "name": "操作组",
+                    "description": "要附加的移动可操作通知按钮的命名组，按 action_groups: 中的配置。"
+                },
+                "actions": {
+                    "name": "操作",
+                    "description": "要附加的一次性可操作通知按钮，无需预先配置的操作组。"
+                },
+                "media": {
+                    "name": "媒体",
+                    "description": "要附加的摄像头或图像——可在推送前触发 PTZ 移动和快照。"
+                },
+                "message_html": {
+                    "name": "HTML 消息",
+                    "description": "消息的 HTML 替代方案，供支持富格式的传输方式使用（例如电子邮件）。"
+                },
+                "debug": {
+                    "name": "调试",
+                    "description": "在跟踪记录和存档中为此通知包含额外的诊断详情。"
+                },
+                "force_resend": {
+                    "name": "强制重新发送",
+                    "description": "即使重复检测原本会抑制此通知，也发送。"
+                },
+                "data": {
+                    "name": "额外数据",
+                    "description": "供期望在此处提供自有字段的传输方式/蓝图使用的透传数据，例如来自 Frigate 通知蓝图的属性。"
+                }
+            }
+        },
         "reload": {
             "name": "重新加载",
             "description": "重新加载 Supernotify 服务。"

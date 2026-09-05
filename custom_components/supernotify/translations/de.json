@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Benachrichtigen",
+            "description": "Eine Alternative zu notify.supernotify mit einzeln validierten, durch Auswahlfelder gesteuerten Feldern anstelle eines allgemeinen Datenblocks – und im Gegensatz zu notify.supernotify wird der Context des aufrufenden Aufrufs an jede Zustellung weitergegeben.",
+            "fields": {
+                "message": {
+                    "name": "Nachricht",
+                    "description": "Der Nachrichtentext der Benachrichtigung."
+                },
+                "title": {
+                    "name": "Titel",
+                    "description": "Ein optionaler Titel für die Benachrichtigung."
+                },
+                "target": {
+                    "name": "Ziel",
+                    "description": "Wer oder was benachrichtigt werden soll – Personen, mobile Geräte, Media Player, Bereiche oder andere Zielentitäten. Leer lassen, um die Standard-/impliziten Zustellungen zu verwenden."
+                },
+                "priority": {
+                    "name": "Priorität",
+                    "description": "Aktiviert/deaktiviert Zustellungen und Szenarien und wird, sofern unterstützt, auf das eigene Prioritäts-/Dringlichkeits-Flag des zugrunde liegenden Transports abgebildet (z. B. Mobile Push, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Zustellungsauswahl",
+                    "description": "Wie das Feld „Zustellung“ (falls gesetzt) interpretiert wird – implicit (ergänzt die Standardwerte), explicit (nur diese, plus durch Szenarien aktivierte) oder fixed (nur diese, Szenarien werden ignoriert)."
+                },
+                "delivery": {
+                    "name": "Zustellung",
+                    "description": "Bestimmte Zustellungen nach Namen einschränken oder anpassen. Eine Liste von Namen schränkt auf genau diese ein; eine Zuordnung kann zusätzlich Optionen je Zustellung überschreiben."
+                },
+                "require_scenarios": {
+                    "name": "Erforderliche Szenarien",
+                    "description": "Diese Benachrichtigung unterdrücken, sofern nicht mindestens eines dieser Szenarien aktuell aktiv ist."
+                },
+                "apply_scenarios": {
+                    "name": "Anzuwendende Szenarien",
+                    "description": "Diese Szenarien für diese Benachrichtigung als aktiv behandeln, unabhängig von ihren eigenen Bedingungen."
+                },
+                "constrain_scenarios": {
+                    "name": "Einschränkende Szenarien",
+                    "description": "Nur diese Szenarien (plus alle unter „Anzuwendende Szenarien“) dürfen diese Benachrichtigung beeinflussen; jedes andere aktive Szenario wird ignoriert."
+                },
+                "action_groups": {
+                    "name": "Aktionsgruppen",
+                    "description": "Benannte Gruppen von mobilen Schaltflächen für aktionsfähige Benachrichtigungen, wie unter action_groups: konfiguriert."
+                },
+                "actions": {
+                    "name": "Aktionen",
+                    "description": "Einmalige Schaltflächen für aktionsfähige Benachrichtigungen, ohne dass eine vorkonfigurierte Aktionsgruppe erforderlich ist."
+                },
+                "media": {
+                    "name": "Medien",
+                    "description": "Eine Kamera oder ein Bild zum Anhängen – kann vor der Zustellung eine PTZ-Bewegung und einen Schnappschuss auslösen."
+                },
+                "message_html": {
+                    "name": "HTML-Nachricht",
+                    "description": "Eine HTML-Alternative zu „Nachricht“, verwendet von Transporten, die umfangreiche Formatierung unterstützen (z. B. E-Mail)."
+                },
+                "debug": {
+                    "name": "Debug",
+                    "description": "Zusätzliche Diagnosedetails für diese Benachrichtigung in Traces und im Archiv einschließen."
+                },
+                "force_resend": {
+                    "name": "Erneutes Senden erzwingen",
+                    "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
+                },
+                "data": {
+                    "name": "Zusätzliche Daten",
+                    "description": "Durchgereichte Daten für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
+                }
+            }
+        },
         "reload": {
             "name": "Neu laden",
             "description": "Lädt die Supernotify-Dienste neu."
