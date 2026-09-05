@@ -185,11 +185,11 @@ async def test_render_scenario_templates_missing_condition_variables_defaults_to
         Notification(context, message="hello there"),
         context=context,
     )
-    uut.condition_variables = None  # type: ignore[assignment]
+    uut.condition_variables = None  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     fake_scenario = types.SimpleNamespace(
         delivery_config=lambda _name: DeliveryCustomization({"data": {"message_template": "{{ notification_message }} EXTRA"}})
     )
-    uut._enabled_scenarios = {"fake": fake_scenario}  # type: ignore[dict-item]
+    uut._enabled_scenarios = {"fake": fake_scenario}  # type: ignore[dict-item]  # ty: ignore[invalid-assignment]
 
     result = uut._render_scenario_templates("hello there", "message_template", "notification_message")
     assert result == "hello there EXTRA"
@@ -206,7 +206,7 @@ async def test_render_scenario_templates_template_error_is_caught() -> None:
     fake_scenario = types.SimpleNamespace(
         delivery_config=lambda _name: DeliveryCustomization({"data": {"message_template": "{{ broken"}})
     )
-    uut._enabled_scenarios = {"fake": fake_scenario}  # type: ignore[dict-item]
+    uut._enabled_scenarios = {"fake": fake_scenario}  # type: ignore[dict-item]  # ty: ignore[invalid-assignment]
     broken_template = MagicMock()
     broken_template.async_render.side_effect = TemplateError("bad template")
 

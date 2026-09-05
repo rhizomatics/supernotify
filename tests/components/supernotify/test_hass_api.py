@@ -505,7 +505,7 @@ async def test_build_conditions_raises_when_no_test_built(hass: HomeAssistant) -
 def test_evaluate_conditions_warns_on_missing_vars(hass: HomeAssistant) -> None:
     # Lines 433-434: warns and passes None through when condition_variables is None
     hass_api = HomeAssistantAPI(hass)
-    assert hass_api.evaluate_conditions(lambda variables: variables is None, None) is True  # type: ignore[arg-type]
+    assert hass_api.evaluate_conditions(lambda variables: variables is None, None) is True  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 def test_evaluate_conditions_reraises_exception(hass: HomeAssistant) -> None:

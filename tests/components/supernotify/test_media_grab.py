@@ -463,22 +463,22 @@ async def test_move_camera_unknown_ptz_method(mock_hass: HomeAssistant) -> None:
 
 
 def test_infer_ptz_method_frigate_platform(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="frigate")  # type: ignore[attr-defined]
+    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="frigate")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     assert infer_ptz_method(mock_hass_api, "camera.frigate1") == PTZ_METHOD_FRIGATE
 
 
 def test_infer_ptz_method_defaults_to_onvif_for_other_platforms(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="onvif")  # type: ignore[attr-defined]
+    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="onvif")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     assert infer_ptz_method(mock_hass_api, "camera.onvif1") == PTZ_METHOD_ONVIF
 
 
 def test_infer_ptz_method_no_registry_entry(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value.async_get.return_value = None  # type: ignore[attr-defined]
+    mock_hass_api.entity_registry.return_value.async_get.return_value = None  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
 
 
 def test_infer_ptz_method_no_entity_registry(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value = None  # type: ignore[attr-defined]
+    mock_hass_api.entity_registry.return_value = None  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
 
 
@@ -614,7 +614,7 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
 async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistantAPI) -> None:
     """Image.open failing on corrupt/non-image bytes falls back to a generic "img"
     extension rather than propagating the exception."""
-    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]
+    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     result = await _detect_image_ext(mock_hass_api, b"not an image")
     assert result == "img"
 
@@ -900,7 +900,7 @@ async def test_media_storage_initialize_null_url_prefix_skips_http_registration(
     """media_url_prefix=None: hass_api.register_web_path must not be called."""
     uut = MediaStorage(str(tmp_aiopath), media_url_prefix=None, days=7)
     await uut.initialize(mock_hass_api)
-    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]
+    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
 
 async def test_media_storage_initialize_with_url_prefix_registers_http_path(
@@ -909,4 +909,4 @@ async def test_media_storage_initialize_with_url_prefix_registers_http_path(
     """media_url_prefix set: hass_api.register_web_path is called once with correct args."""
     uut = MediaStorage(str(tmp_aiopath), "/supernotify-media", 7)
     await uut.initialize(mock_hass_api)
-    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]
+    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]

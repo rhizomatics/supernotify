@@ -208,7 +208,7 @@ async def test_priority_interpretation(mock_hass: HomeAssistant, unmocked_config
     context = unmocked_config
     delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}}
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = DeviceInfo("id001", manufacturer="Apple", model="iPhone Fold 23")  # type: ignore[attr-defined]
+    context.hass_api.mobile_app_by_id.return_value = DeviceInfo("id001", manufacturer="Apple", model="iPhone Fold 23")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     context.configure_for_tests([uut])
     await context.initialize()
     e: Envelope = Envelope(

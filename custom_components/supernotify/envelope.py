@@ -96,7 +96,7 @@ class Envelope(DupeCheckable):
                 # notification-level delivery override wins over scenario/delivery data
                 self.data |= delivery_config_data
         else:
-            self.data = delivery_config_data if delivery_config_data else {}
+            self.data = delivery_config_data or {}
 
         if notification:
             self.notification_id = notification.id

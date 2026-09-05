@@ -144,7 +144,7 @@ def test_purge_expired_snoozes() -> None:
 def test_register_snooze_unknown_cmd() -> None:
     uut = Snoozer()
     uut.register_snooze(
-        "BADCMD",  # type: ignore[arg-type]
+        "BADCMD",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         GlobalTargetType.EVERYTHING,
         None,
         RecipientType.EVERYONE,
@@ -167,6 +167,6 @@ def test_current_snoozes_unhandled_target_type(mock_context) -> None:
     delivery = Delivery("email", {}, EmailTransport(mock_context))
     uut = Snoozer()
     snooze = Snooze(GlobalTargetType.EVERYTHING, RecipientType.EVERYONE)
-    snooze.target_type = "UNKNOWN_TYPE"  # type: ignore[assignment]
+    snooze.target_type = "UNKNOWN_TYPE"  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     uut.snoozes["test"] = snooze
     assert uut.current_snoozes(PRIORITY_MEDIUM, delivery) == []

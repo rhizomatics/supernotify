@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import html
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_TELEGRAM
@@ -243,7 +243,7 @@ class TelegramTransport(Transport):
         # negative integers; channel usernames (@channel) would be string but
         # are not currently supported by this transport.
         try:
-            chat_id: int = int(raw_target)
+            chat_id: int = int(cast("str | int", raw_target))
         except (TypeError, ValueError):
             _LOGGER.warning("SUPERNOTIFY telegram: chat_id %r is not numeric (expected int)", raw_target)
             self.record_error(f"chat_id {raw_target!r} not numeric", "deliver")

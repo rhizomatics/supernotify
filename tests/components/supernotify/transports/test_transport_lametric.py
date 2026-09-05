@@ -39,7 +39,7 @@ from custom_components.supernotify.transports.lametric import LaMetricTransport
 def _make_envelope(
     message: str = "Test message",
     title: str | None = None,
-    priority: str = "medium",
+    priority: str | None = "medium",
     data: dict | None = None,
 ):
     """Build a minimal mock Envelope.

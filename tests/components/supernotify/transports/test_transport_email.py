@@ -649,7 +649,7 @@ async def test_build_message_html() -> None:
 
 
 async def test_build_message_with_image_attachment(tmp_path: object) -> None:
-    image_path = tmp_path / "picture.jpg"  # type: ignore[operator]
+    image_path = tmp_path / "picture.jpg"  # type: ignore[operator]  # ty: ignore[unsupported-operator]
     image_path.write_bytes(b"\xff\xd8\xff\xe0notreallyajpegbutclosenough")
 
     uut = _direct_smtp_uut()

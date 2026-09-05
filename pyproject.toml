@@ -159,7 +159,8 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-preview = false
+extend-select = ["ANN", "PYI"]
+preview = true
 ignore = [
     "W191",
     "BLE001", # catch Exception
@@ -202,6 +203,7 @@ ignore = [
     "PGH003",
     "S602",
     "S607",
+    "PLW0108", # lambda hate
 ] # subprocess usage
 unfixable = ["B"]
 
@@ -234,6 +236,11 @@ unfixable = ["B"]
 [tool.ruff.format]
 preview = true
 
+[tool.ty.src]
+include = ["custom_components/supernotify","tests"]
+
+[tool.ty.rules]
+unused-type-ignore-comment="ignore"
 
 [tool.codespell]
 ignore-words-list = "HASS,hass,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"

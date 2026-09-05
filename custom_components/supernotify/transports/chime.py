@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
@@ -131,7 +131,7 @@ class MiniChimeTransport:
 class RestCommandChimeTransport(MiniChimeTransport):
     domain = "rest_command"
 
-    def build(  # type: ignore[override]
+    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
         self, target_config: ChimeTargetConfig, entity_name: str | None, **_kwargs: Any
     ) -> ActionCall | None:
         if entity_name is None:
@@ -144,14 +144,18 @@ class RestCommandChimeTransport(MiniChimeTransport):
 class SwitchChimeTransport(MiniChimeTransport):
     domain = "switch"
 
-    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+        self, target_config: ChimeTargetConfig, **_kwargs: Any
+    ) -> ActionCall | None:
         return ActionCall(self.domain, "turn_on", target_data={ATTR_ENTITY_ID: target_config.entity_id})
 
 
 class SirenChimeTransport(MiniChimeTransport):
     domain = "siren"
 
-    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+        self, target_config: ChimeTargetConfig, **_kwargs: Any
+    ) -> ActionCall | None:
         output_data: dict[str, Any] = {ATTR_DATA: {}}
         if target_config.tune:
             output_data[ATTR_DATA]["tone"] = target_config.tune
@@ -167,7 +171,7 @@ class SirenChimeTransport(MiniChimeTransport):
 class ScriptChimeTransport(MiniChimeTransport):
     domain = "script"
 
-    def build(  # type: ignore[override]
+    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
         self,
         target_config: ChimeTargetConfig,
         entity_name: str | None,
@@ -196,7 +200,9 @@ class ScriptChimeTransport(MiniChimeTransport):
 class AlexaDevicesChimeTransport(MiniChimeTransport):
     domain = "alexa_devices"
 
-    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+        self, target_config: ChimeTargetConfig, **_kwargs: Any
+    ) -> ActionCall | None:
         output_data: dict[str, Any] = {
             "device_id": target_config.device_id,
             "sound": target_config.tune,
@@ -207,7 +213,9 @@ class AlexaDevicesChimeTransport(MiniChimeTransport):
 class MediaPlayerChimeTransport(MiniChimeTransport):
     domain = "media_player"
 
-    def build(self, target_config: ChimeTargetConfig, action_data: dict[str, Any], **_kwargs: Any) -> ActionCall | None:  # type: ignore[override]
+    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+        self, target_config: ChimeTargetConfig, action_data: dict[str, Any], **_kwargs: Any
+    ) -> ActionCall | None:
         input_data = target_config.data or {}
         if action_data:
             input_data.update(action_data)
@@ -437,6 +445,7 @@ def build_aliases(src_config: ConfigType) -> ConfigType:
                 domain_config = domain_config or {}
                 if isinstance(domain_config, str):
                     domain_config = {CONF_TUNE: domain_config}
+                domain_config = cast("dict[str, Any]", domain_config)
                 domain_config.setdefault(CONF_TUNE, alias)
                 if domain_or_label in OPTIONS_CHIME_DOMAINS:
                     domain_config.setdefault(CONF_DOMAIN, domain_or_label)

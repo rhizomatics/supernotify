@@ -5,6 +5,8 @@
   - For example, if a security camera has a PTZ movement, the Home Assistant *Activity* view can show what triggered this
   - One important limitation - Home Assistant's own `notify` platform doesn't pass on the `Context` it receives, however the newer *Notify Entity* does.
   - See the [2026.9 Release Blog](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on the new UI support for this
+### Technical
+- `ty` type checker reinstalled, and several type usages tightened up
 
 ## 2.2.3
 

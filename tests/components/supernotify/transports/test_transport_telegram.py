@@ -74,7 +74,7 @@ def _envelope(
     return Envelope(
         Delivery("telegram_test", ctx.delivery_config("telegram_test"), uut),
         Notification(ctx, message=message, title=title, action_data=action_data or None),
-        data=merged if merged else None,
+        data=merged or None,
     )
 
 
@@ -733,7 +733,7 @@ def test_validate_action_unsupported() -> None:
 
 
 def test_normalise_inline_keyboard_not_a_list() -> None:
-    assert _normalise_inline_keyboard("not-a-list") == []  # type: ignore[arg-type]
+    assert _normalise_inline_keyboard("not-a-list") == []  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 def test_normalise_inline_keyboard_ha_native_shape() -> None:
@@ -771,8 +771,8 @@ async def test_deliver_with_custom_inline_keyboard() -> None:
 
 
 def test_build_inline_keyboard_no_actions() -> None:
-    assert _build_inline_keyboard(None) == []  # type: ignore[arg-type]
-    assert _build_inline_keyboard("not-a-list") == []  # type: ignore[arg-type]
+    assert _build_inline_keyboard(None) == []  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    assert _build_inline_keyboard("not-a-list") == []  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 def test_build_inline_keyboard_truncates_to_five_actions() -> None:
@@ -848,7 +848,7 @@ async def test_deliver_target_legacy_dict_shape() -> None:
     uut.hass_api = mock_api
 
     e = _envelope(ctx, message="Legacy dict target", chat_id=None)
-    e.delivery.target = {ATTR_PHONE: ["111222333"]}  # type: ignore[assignment]
+    e.delivery.target = {ATTR_PHONE: ["111222333"]}  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     result = await uut.deliver(e)
 
     assert result is True
@@ -865,7 +865,7 @@ async def test_deliver_target_legacy_dict_shape_scalar_value() -> None:
     uut.hass_api = mock_api
 
     e = _envelope(ctx, message="Legacy scalar dict target", chat_id=None)
-    e.delivery.target = {ATTR_PHONE: "777888999"}  # type: ignore[assignment]
+    e.delivery.target = {ATTR_PHONE: "777888999"}  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     result = await uut.deliver(e)
 
     assert result is True
@@ -882,7 +882,7 @@ async def test_deliver_target_legacy_list_shape() -> None:
     uut.hass_api = mock_api
 
     e = _envelope(ctx, message="Legacy list target", chat_id=None)
-    e.delivery.target = ["444555666"]  # type: ignore[assignment]
+    e.delivery.target = ["444555666"]  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     result = await uut.deliver(e)
 
     assert result is True

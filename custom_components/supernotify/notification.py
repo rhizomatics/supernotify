@@ -312,7 +312,7 @@ class Notification(ArchivableObject):
                 self.suppress(SuppressionReason.INVALID_ACTION_DATA)
                 raise vol.Invalid("Priority value must be a simple value")
         try:
-            humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)  # type: ignore[arg-type]
+            humanize.validate_with_humanized_errors(action_data, cast("vol.Schema", ACTION_DATA_SCHEMA))
         except vol.Invalid as e:
             _LOGGER.warning("SUPERNOTIFY Invalid action data %s: %s", action_data, e)
             self.suppress(SuppressionReason.INVALID_ACTION_DATA)
@@ -418,7 +418,7 @@ class Notification(ArchivableObject):
         self.debug_trace.record_delivery_selection("ranked", selected)
 
         # TODO: clean up this ugly logic, reorganize delivery around people
-        selected_deliveries: dict[str, DeliveryTargetOverride | None] = {d: None for d in selected}
+        selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)
         personal_deliveries = [d for d in selected if d in recipients_enable_deliveries]
         for personal_delivery in personal_deliveries:
             fixed_targets: list[str] = []

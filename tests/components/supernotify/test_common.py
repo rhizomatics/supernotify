@@ -32,8 +32,8 @@ def test_safe_get():
 
 
 def test_safe_extend():
-    assert safe_extend(None, None) == []  # type:ignore[invalid-argument-type]
-    assert safe_extend(1, 3) == [1, 3]  # type:ignore[invalid-argument-type]
+    assert safe_extend(None, None) == []  # type:ignore[invalid-argument-type]  # ty: ignore[invalid-argument-type]
+    assert safe_extend(1, 3) == [1, 3]  # type:ignore[invalid-argument-type]  # ty: ignore[invalid-argument-type]
     assert safe_extend([], 3) == [3]
     assert safe_extend([1], (2, 3)) == [1, 2, 3]
     assert safe_extend([1, 2], 3) == [1, 2, 3]

@@ -104,7 +104,8 @@ class DeviceInfo:
 
     def __eq__(self, other: object) -> bool:
         """Test support"""
-        return other is not None and hasattr(other, "as_dict") and other.as_dict() == self.as_dict()
+        as_dict = getattr(other, "as_dict", None)
+        return other is not None and callable(as_dict) and as_dict() == self.as_dict()
 
 
 class HomeAssistantAPI:

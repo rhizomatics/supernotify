@@ -55,6 +55,10 @@ repos:
           - pytest_unordered
           - pytest_mock
           - pytest_httpserver
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.78
+    hooks:
+      - id: ty
 
 ci:
     autofix_commit_msg: |

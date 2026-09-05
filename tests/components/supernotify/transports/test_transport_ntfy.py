@@ -17,6 +17,7 @@ Coverage:
 Path in upstream repo: tests/components/supernotify/test_transport_ntfy.py
 """
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -90,9 +91,9 @@ def test_parse_delay_empty_string_passthrough() -> None:
 
 def _ctx(delivery_data: dict | None = None) -> TestingContext:
     """Create a minimal TestingContext with an ntfy_test delivery."""
-    delivery_cfg: dict = {"ntfy_test": {CONF_TRANSPORT: TRANSPORT_NTFY}}
+    delivery_cfg: dict[str, Any] = {"ntfy_test": {CONF_TRANSPORT: TRANSPORT_NTFY}}
     if delivery_data:
-        delivery_cfg["ntfy_test"]["data"] = delivery_data
+        delivery_cfg["ntfy_test"]["data"] = delivery_data  # ty: ignore[invalid-assignment]
     return TestingContext(
         deliveries=delivery_cfg,
         transport_types=[NtfyTransport],

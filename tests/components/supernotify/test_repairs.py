@@ -126,11 +126,11 @@ async def test_shim_backfills_data_fields_on_pre_existing_entry_without_waiting_
 
 
 async def test_shim_migrates_minimal_config_without_any_repair(hass: HomeAssistant) -> None:
-    """A "simple" legacy config - no delivery/transports/scenarios/recipients/cameras/
-    action_groups/links/snooze, nothing that needs moving into supernotify.yaml - must be fully
+    """A 'simple' legacy config - no delivery, transports, scenarios, recipients, cameras,
+    action_groups, links, snooze, nothing that needs moving into supernotify.yaml - must be fully
     migrated (name, paths, archive) just by loading, with no need to ever open or confirm the
     migration repair: per the README, "If you have an existing simple configuration, everything
-    will be migrated for you and there will be no YAML needed.\""""
+    will be migrated for you and there will be no YAML needed."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
