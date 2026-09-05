@@ -243,7 +243,7 @@ include = ["custom_components/supernotify","tests"]
 unused-type-ignore-comment="ignore"
 
 [tool.codespell]
-ignore-words-list = "HASS,hass,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"
+ignore-words-list = "HASS,hass,wee,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"
 # Skip binary/data files, build artifacts, and non-English markdown (locale-named files and locale dirs)
 skip = "*.csv,*.json,./.*,./site,./htmlcov,README.??.md,./README.??-??.md,./docs/??/*.md,./docs/??-??/*.md"
 quiet-level = 2

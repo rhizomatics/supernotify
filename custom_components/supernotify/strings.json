@@ -1,6 +1,76 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Notify",
+            "description": "An alternative to notify.supernotify with individually validated, selector-driven fields instead of one generic data block - and unlike notify.supernotify, propagates the calling action's Context to every delivery.",
+            "fields": {
+                "message": {
+                    "name": "Message",
+                    "description": "The notification message body."
+                },
+                "title": {
+                    "name": "Title",
+                    "description": "An optional title for the notification."
+                },
+                "target": {
+                    "name": "Target",
+                    "description": "Who or what to notify - people, mobile devices, media players, areas, or other target entities. Leave blank to use the default/implicit deliveries."
+                },
+                "priority": {
+                    "name": "Priority",
+                    "description": "Used to enable/disable deliveries and scenarios, and mapped to the underlying transport's own priority/urgency flag where supported (e.g. mobile push, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Delivery Selection",
+                    "description": "How the Delivery field (if set) is interpreted - implicit (adds to the defaults), explicit (only these, plus scenario-enabled ones), or fixed (only these, ignoring scenarios)."
+                },
+                "delivery": {
+                    "name": "Delivery",
+                    "description": "Restrict or tune specific deliveries by name. A list of names restricts to just those; a mapping can also override options per delivery."
+                },
+                "require_scenarios": {
+                    "name": "Require Scenarios",
+                    "description": "Suppress this notification unless at least one of these scenarios is currently active."
+                },
+                "apply_scenarios": {
+                    "name": "Apply Scenarios",
+                    "description": "Force these scenarios to be treated as active for this notification, regardless of their own conditions."
+                },
+                "constrain_scenarios": {
+                    "name": "Constrain Scenarios",
+                    "description": "Only let these scenarios (plus any in Apply Scenarios) affect this notification, ignoring any other active scenario."
+                },
+                "action_groups": {
+                    "name": "Action Groups",
+                    "description": "Named groups of mobile actionable-notification buttons to attach, as configured under action_groups:."
+                },
+                "actions": {
+                    "name": "Actions",
+                    "description": "One-off actionable-notification buttons to attach, without needing a pre-configured action group."
+                },
+                "media": {
+                    "name": "Media",
+                    "description": "A camera or image to attach - can trigger a PTZ move and snapshot before delivery."
+                },
+                "message_html": {
+                    "name": "HTML Message",
+                    "description": "An HTML alternative to Message, used by transports that support rich formatting (e.g. e-mail)."
+                },
+                "debug": {
+                    "name": "Debug",
+                    "description": "Include extra diagnostic detail for this notification in traces and the archive."
+                },
+                "force_resend": {
+                    "name": "Force Resend",
+                    "description": "Send even if duplicate-detection would otherwise suppress this notification."
+                },
+                "data": {
+                    "name": "Extra Data",
+                    "description": "Passthrough data for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
+                }
+            }
+        },
         "reload": {
             "name": "Reload",
             "description": "Reloads supernotify services."

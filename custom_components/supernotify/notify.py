@@ -602,7 +602,7 @@ class SupernotifyAction(BaseNotificationService):
         self,
         message: str = "",
         title: str | None = None,
-        target: list[str] | str | None = None,
+        target: list[str] | str | dict[str, Any] | None = None,
         context: HAContext | None = None,
         **kwargs: Any,
     ) -> None:

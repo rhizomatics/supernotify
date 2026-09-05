@@ -515,3 +515,50 @@ async def test_convert_notify_entities_ignores_unrecognized_notify_entities() ->
     converted = uut.convert_notify_entities(["notify.some_other_integration", "media_player.kitchen"])
 
     assert converted == ["notify.some_other_integration", "media_player.kitchen"]
+
+
+async def test_convert_notify_entities_handles_person_entity_in_dict_target() -> None:
+    """Reproduces a crash reported from a real supernotify.notify call: a dict-shaped target
+    (from Home Assistant's target selector, e.g. {"entity_id": ["person.jey"]}) was passed into
+    ensure_list()/`in` checks designed for a flat string/list target, raising TypeError:
+    unhashable type: 'dict' once ensure_list() wrapped the whole dict as a single element.
+
+    Fixing just the crash isn't enough though: Home Assistant's target selector always puts a
+    picked person entity under `entity_id`, regardless of its domain, but Target()'s dict branch
+    treats each key as already resolved to the right category - and its entity_id category
+    explicitly excludes the person domain (see Target.is_entity_id) - so an unconverted person
+    entity would be silently dropped from targeting rather than raising. It has to be moved to
+    `person_id` here, same as it would be if passed as a flat string/list target instead.
+    """
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities({"entity_id": ["person.alice", "media_player.kitchen"]})
+
+    assert converted == {"entity_id": ["media_player.kitchen"], "person_id": ["person.alice"]}
+
+
+async def test_convert_notify_entities_resolves_recipient_notify_entity_in_dict_target() -> None:
+    """A supernotify.notify target picked as one of supernotify's own notify.recipient_* entities
+    resolves to the underlying person, same as the flat string/list case - avoiding a round trip
+    back through NotifyEntityTransport's notify.send_message. A genuine other-integration notify
+    entity (e.g. notify.some_other_integration) is left in entity_id for that transport to handle."""
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    ctx.people_registry.people["person.alice"].notify_entity_id = "notify.recipient_alice"
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities({"entity_id": ["notify.recipient_alice", "notify.some_other_integration"]})
+
+    assert converted == {"entity_id": ["notify.some_other_integration"], "person_id": ["person.alice"]}
+
+
+async def test_notification_accepts_dict_shaped_target_without_crashing() -> None:
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "a wee test", target={"entity_id": ["person.alice"]})
+
+    assert uut._target is not None
+    assert uut._target.person_ids == ["person.alice"]

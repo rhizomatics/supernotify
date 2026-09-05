@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.const import ATTR_ENTITY_ID
 from voluptuous import humanize
 
 from custom_components.supernotify.schema import SelectionRank
@@ -110,7 +111,7 @@ class Notification(ArchivableObject):
         context: Context,
         message: str | None = None,
         title: str | None = None,
-        target: list[str] | str | None = None,
+        target: list[str] | str | dict[str, Any] | None = None,
         action_data: dict[str, Any] | None = None,
         ha_context: HAContext | None = None,
     ) -> None:
@@ -123,7 +124,7 @@ class Notification(ArchivableObject):
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         action_data = action_data or {}
 
-        if action_data.get(ATTR_RECIPIENTS):
+        if action_data.get(ATTR_RECIPIENTS) and not isinstance(target, dict):
             _LOGGER.warning("SUPERNOTIFY recipients key in notify action data deprecated, list recipients in target instead")
             target = ensure_list(target) + ensure_list(action_data.get(ATTR_RECIPIENTS))
 
@@ -244,18 +245,49 @@ class Notification(ArchivableObject):
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
 
-    def convert_notify_entities(self, target: list[str] | str | None = None) -> list[str] | str | None:
+    def convert_notify_entities(
+        self, target: list[str] | str | dict[str, Any] | None = None
+    ) -> list[str] | str | dict[str, Any] | None:
         """Short circuit supernotify notify entities so they're handled directly so not
-        going round in circles via calls to notify.send_message
+        going round in circles via calls to notify.send_message. A genuine other-integration
+        notify entity is left alone for NotifyEntityTransport to handle normally.
 
-        Defined here rather than in models/Target since requires access to registries
+        Defined here rather than in models/Target since requires access to registries.
 
+        supernotify.notify's `target:` field also accepts the dict shape Home Assistant's own
+        target selector produces, e.g. {"entity_id": ["person.jey", "notify.recipient_alice"]} -
+        unlike this integration's other dict-shaped targets (recipient/delivery config), that
+        `entity_id` list is Home Assistant's raw picker output, not pre-sorted by category: a
+        person entity picked that way still needs to end up as a `person_id`, same as if it had
+        been typed directly into notify.supernotify's flat target list, or it would otherwise be
+        silently dropped by Target() (whose entity_id category explicitly excludes the person
+        domain - see Target.is_entity_id/is_person_id in model.py).
         """
         if not target:
             return target
+        known_entities: dict[str, Recipient] = self.people_registry.notify_entities()
+
+        if isinstance(target, dict):
+            entity_ids = ensure_list(target.get(ATTR_ENTITY_ID))
+            if not entity_ids:
+                return target
+            remaining_entity_ids: list[str] = []
+            person_ids: list[str] = list(ensure_list(target.get(ATTR_PERSON_ID)))
+            for e in entity_ids:
+                if e in known_entities:
+                    # e.g. switch to a person id if a notify entity for recipient
+                    person_ids.append(known_entities[e].entity_id)
+                elif Target.is_person_id(e):
+                    person_ids.append(e)
+                else:
+                    remaining_entity_ids.append(e)
+            updated_target = {**target, ATTR_ENTITY_ID: remaining_entity_ids}
+            if person_ids:
+                updated_target[ATTR_PERSON_ID] = person_ids
+            return updated_target
+
         updated: list[str] = []
         changed: bool = False
-        known_entities: dict[str, Recipient] = self.people_registry.notify_entities()
         for t in ensure_list(target):
             if t in known_entities:
                 # e.g. switch to a person id if a notify entity for recipient

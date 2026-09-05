@@ -16,18 +16,26 @@ notify:
       selector:
         select:
           options:
-            - critical
-            - high
-            - medium
-            - low
-            - minimum
+            - value: critical
+              label: Critical
+            - value: high
+              label: High
+            - value: medium
+              label: Medium
+            - value: low
+              label: Low
+            - value: minimum
+              label: Minimum
     delivery_selection:
       selector:
         select:
           options:
-            - explicit
-            - fixed
-            - implicit
+            - value: explicit
+              label: Explicit
+            - value: fixed
+              label: Fixed
+            - value: implicit
+              label: Implicit
     delivery:
       selector:
         object:
