@@ -574,3 +574,16 @@ STRICT_ACTION_DATA_SCHEMA = vol.All(
     cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
     _ACTION_DATA_FIELDS_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
 )
+
+# Schema for the supernotify.notify action - the same fields as ACTION_DATA_SCHEMA (normally
+# buried in notify.supernotify's generic `data:` blob), but promoted to top-level fields so
+# services.yaml can attach a selector to each one for a typed, discoverable UI in Developer
+# Tools/the action picker, rather than one opaque object field.
+NOTIFY_ACTION_SCHEMA = vol.All(
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
+    _ACTION_DATA_FIELDS_SCHEMA.extend({
+        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_TITLE): cv.string,
+        vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+    }),
+)

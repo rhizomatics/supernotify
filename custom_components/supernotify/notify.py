@@ -14,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
+    CONF_TARGET,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
@@ -51,12 +52,14 @@ from .const import (
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
+    CONF_MESSAGE,
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
     CONF_SCENARIOS,
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
+    CONF_TITLE,
     CONF_TRANSPORTS,
     PRIORITY_MEDIUM,
 )
@@ -68,6 +71,7 @@ from .model import ConditionVariables, SuppressionReason
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
+from .schema import NOTIFY_ACTION_SCHEMA
 from .snoozer import Snoozer
 from .transports.alexa_devices import AlexaDevicesTransport
 from .transports.alexa_media_player import AlexaMediaPlayerTransport
@@ -160,6 +164,7 @@ def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> Superno
 
 
 SUPPLEMENTAL_SERVICE_NAMES: Final[tuple[str, ...]] = (
+    "notify",
     "enquire_configuration",
     "enquire_implicit_deliveries",
     "enquire_deliveries_by_scenario",
@@ -194,6 +199,19 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
     """
     if hass.services.has_service(DOMAIN, "enquire_configuration"):
         return
+
+    async def supplemental_action_notify(call: ServiceCall) -> None:
+        """supernotify.notify - an alternative to notify.supernotify with each option that would
+        otherwise be buried in the generic `data:` field promoted to its own schema-checked,
+        selector-driven field (see NOTIFY_ACTION_SCHEMA/services.yaml), and, unlike notify.supernotify,
+        propagating the calling action's Context through to deliveries (see 2.3.0 changelog note on
+        the legacy notify platform not forwarding Context).
+        """
+        data = dict(call.data)
+        message = data.pop(CONF_MESSAGE)
+        title = data.pop(CONF_TITLE, None)
+        target = data.pop(CONF_TARGET, None)
+        await service.async_send_message(message, title=title, target=target, data=data, context=call.context)
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {
@@ -276,6 +294,12 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
             "days": service.context.media_storage.days if days is None else days,
         }
 
+    hass.services.async_register(
+        DOMAIN,
+        "notify",
+        supplemental_action_notify,
+        schema=NOTIFY_ACTION_SCHEMA,
+    )
     hass.services.async_register(
         DOMAIN,
         "enquire_configuration",

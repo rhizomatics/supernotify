@@ -22,6 +22,7 @@ TOP_LEVEL_SCHEMAS = {
     "FULL_CONFIG_SCHEMA": "Full Configuration",
     "SCENARIO_SCHEMA": "Scenario Definition",
     "STRICT_ACTION_DATA_SCHEMA": "Notify Action Data",
+    "NOTIFY_ACTION_SCHEMA": "Notify Action",
     "DELIVERY_SCHEMA": "Delivery Definition",
     "DELIVERY_CUSTOMIZE_SCHEMA": "Delivery Customization",
     "RECIPIENT_SCHEMA": "Recipient Definition",

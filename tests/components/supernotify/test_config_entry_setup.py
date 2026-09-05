@@ -4,12 +4,15 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import Context
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_MEDIA_PATH
+from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -143,3 +146,63 @@ async def test_setup_entry_raises_config_entry_not_ready_on_initialize_failure(h
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_registers_notify_action(hass: HomeAssistant) -> None:
+    """supernotify.notify is a schema-typed alternative to notify.supernotify, with fields
+    (priority, delivery, scenarios, etc) promoted out of the generic `data:` blob - registered
+    alongside the other supplemental domain-scoped services."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(DOMAIN, "notify")
+
+    await hass.services.async_call(
+        DOMAIN, "notify", {"message": "hello there", "title": "testing", "priority": "high"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data is not None
+    assert entry.runtime_data.failures == 0
+    assert entry.runtime_data.last_notification is not None
+    assert entry.runtime_data.last_notification.priority == "high"
+
+
+async def test_notify_action_rejects_invalid_field() -> None:
+    """A rich, schema-checked field (priority) should reject values outside the known set,
+    same as it would nested under notify.supernotify's `data:` blob."""
+    with pytest.raises(vol.Invalid):
+        NOTIFY_ACTION_SCHEMA({"message": "hello", "priority": ["not", "a", "priority"]})
+
+
+async def test_notify_action_propagates_calling_context(hass: HomeAssistant) -> None:
+    """Unlike notify.supernotify - routed through HA's legacy notify platform, which drops the
+    calling Context (see the 2.3.0 changelog note on this limitation) - supernotify.notify is
+    called directly and must forward the Context through to the resulting Notification."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    call_context = Context()
+    await hass.services.async_call(DOMAIN, "notify", {"message": "hello there"}, blocking=True, context=call_context)
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.last_notification is not None
+    assert entry.runtime_data.last_notification.ha_context is call_context
+
+
+async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "notify")
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service(DOMAIN, "notify")

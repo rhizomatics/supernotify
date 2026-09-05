@@ -286,7 +286,22 @@ fine tuning delivery configurations, or using existing notification blueprints, 
                 title: HASS
 ```
 
+## A Better UI - `supernotify.notify`
+
+Everything above uses `notify.supernotify`, so it fits in with any other `notify` platform and existing notification blueprints. The same options are also available as `supernotify.notify` - options that would otherwise be buried in the generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, and so on) are instead top-level fields, each with its own selector in the Tools Actions or Automations editor UI, and validated against
+[its own schema](../developer/schemas/Notify_Action.md).
+
+```yaml title="Same Example, via supernotify.notify"
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        priority: high
+        delivery: [mobile_push, plain_email]
+```
+
+`supernotify.notify` also propagates the calling action's `Context` through to deliveries - `notify.supernotify` can't do this, since it's routed through Home Assistant's legacy `notify`
+platform, which doesn't pass on the `Context` it receives (see the note under "Tracing Activities" in the [changelog](../changelog.md)).
+
 ## References
 
-The full range of things that go into the second level `data:` section is documented at
-[Notify Action Data Schema](../developer/schemas/Notify_Action_Data.md)
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](../developer/schemas/Notify_Action_Data.md)

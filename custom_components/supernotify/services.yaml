@@ -1,4 +1,71 @@
 reload:
+notify:
+  fields:
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    title:
+      selector:
+        text:
+    target:
+      selector:
+        target:
+    priority:
+      selector:
+        select:
+          options:
+            - critical
+            - high
+            - medium
+            - low
+            - minimum
+    delivery_selection:
+      selector:
+        select:
+          options:
+            - explicit
+            - fixed
+            - implicit
+    delivery:
+      selector:
+        object:
+    require_scenarios:
+      selector:
+        text:
+          multiple: true
+    apply_scenarios:
+      selector:
+        text:
+          multiple: true
+    constrain_scenarios:
+      selector:
+        text:
+          multiple: true
+    action_groups:
+      selector:
+        text:
+          multiple: true
+    actions:
+      selector:
+        object:
+    media:
+      selector:
+        object:
+    message_html:
+      selector:
+        text:
+          multiline: true
+    debug:
+      selector:
+        boolean:
+    force_resend:
+      selector:
+        boolean:
+    data:
+      selector:
+        object:
 enquire_configuration:
 enquire_deliveries_by_scenario:
 enquire_implicit_deliveries:
