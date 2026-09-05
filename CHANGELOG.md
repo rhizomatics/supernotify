@@ -6,7 +6,7 @@
   - The context for the notification isn't passed down by Home Assistant, since the notification platform doesn't follow the curretnt guidelines
   - This usage of the notification platform is `legacy`, replaced by *Notify Entity* which has a very limited action, just title and message
 - A new dedicated `notify` action is now available directly from the Supernotify platform
-  - The action has separate fields, with lookup helpers and validation, to make configuring even sophisticated notifications hugely easier
+  - Options otherwise buried in `notify.supernotify`'s generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, etc) are promoted to their own typed, selector-driven fields, for a richer Developer Tools/automation editor UI, to make configuring even sophisticated notifications hugely easier
   - The original context is preserved, so you can trace from a trigger like motion PIR, all the way thru to an alert call and camera PTZ movement
   - No change to the original `notify.supernotify` action, so nothing breaks, and there's a choice (maximum compatibility with legacy notify, so can easily switch between notify providers, or ease of use and insulated from future deprecations of HA notify)
 
@@ -16,9 +16,9 @@
   - One important limitation - Home Assistant's own `notify` platform doesn't pass on the `Context` it receives, however the newer *Notify Entity* does.
   - See the [2026.9 Release Blog](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on the new UI support for this
   - An end to end integration test `test_integration.test_context_propagates_to_camera_ptz_and_mobile_push` demonstrates this working
-- New `supernotify.notify` action, an alternative to `notify.supernotify` for those not needing to fit in with the wider `notify.*` platform
-  - Options otherwise buried in `notify.supernotify`'s generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, etc) are promoted to their own typed, selector-driven fields, for a richer Developer Tools/automation editor UI
-  - Propagates the calling action's `Context`, working around the `notify` platform limitation noted above
+- New `supernotify.notify` action propagates any context it rexeives
+- Context IDs ( context id, parent context id, user id ) are saved with the archive notification JSON object for debug or analysis
+
 ### Technical
 - `ty` type checker reinstalled, and several type usages tightened up
 - Avoided the mkdocsalypse by switching docs generation to `properdocs`

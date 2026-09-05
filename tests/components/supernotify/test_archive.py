@@ -104,11 +104,20 @@ async def test_integration_archive_with_ha_context(mock_hass: HomeAssistant) -> 
             archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
         )
         await uut.initialize()
-        await uut.async_send_message("just a test", target="person.bob", context=Context())
+        ha_context = Context()
+        await uut.async_send_message("just a test", target="person.bob", context=ha_context)
 
         assert uut.last_notification is not None
         obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
         assert await obj_path.exists()
+        async with aiofiles.open(obj_path) as stream:
+            blob: str = "".join(await stream.readlines())
+            reobj = json.loads(blob)
+        assert reobj["original_context"] == {
+            "id": ha_context.id,
+            "parent_id": ha_context.parent_id,
+            "user_id": ha_context.user_id,
+        }
 
 
 async def test_file_archive(hass_api: HomeAssistantAPI) -> None:

@@ -698,6 +698,9 @@ class Notification(ArchivableObject):
         ]
         # preferred fields
         result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
+        if self.ha_context is not None:
+            # Context.as_dict() takes no kwargs, so it can't go through sanitize() like everything else
+            result["original_context"] = dict(self.ha_context.as_dict())
         result.update({
             k: sanitize(
                 self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)

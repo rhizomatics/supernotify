@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "Notify",
-            "description": "An alternative to notify.supernotify with individually validated, selector-driven fields instead of one generic data block - and unlike notify.supernotify, propagates the calling action's Context to every delivery.",
+            "description": "Send a notification via SuperNotify to one or more notification platforms via a single, unified interface.",
             "fields": {
                 "message": {
                     "name": "Message",

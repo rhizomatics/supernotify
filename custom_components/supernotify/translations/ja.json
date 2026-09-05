@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "通知",
-            "description": "notify.supernotify の代替で、1つの汎用データブロックではなく、個別に検証されたセレクター駆動のフィールドを使用します。notify.supernotify と異なり、呼び出し元アクションの Context をすべての配信に伝播します。",
+            "description": "SuperNotify を介して、単一の統一されたインターフェースで1つ以上の通知プラットフォームに通知を送信します。",
             "fields": {
                 "message": {
                     "name": "メッセージ",

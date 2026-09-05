@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "Melden",
-            "description": "Een alternatief voor notify.supernotify met individueel gevalideerde, door selectors aangestuurde velden in plaats van één algemeen gegevensblok - en in tegenstelling tot notify.supernotify wordt de Context van de aanroepende actie doorgegeven aan elke bezorging.",
+            "description": "Verstuurt via SuperNotify een melding naar een of meer meldingsplatforms via één uniforme interface.",
             "fields": {
                 "message": {
                     "name": "Bericht",

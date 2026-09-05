@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "Notificar",
-            "description": "Una alternativa a notify.supernotify con campos validados individualmente y controlados por selectores en lugar de un único bloque de datos genérico; y, a diferencia de notify.supernotify, propaga el Context de la llamada a cada entrega.",
+            "description": "Envía una notificación a través de SuperNotify a una o más plataformas de notificación mediante una única interfaz unificada.",
             "fields": {
                 "message": {
                     "name": "Mensaje",

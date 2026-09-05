@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "Powiadom",
-            "description": "Alternatywa dla notify.supernotify z osobno walidowanymi polami sterowanymi selektorami zamiast jednego ogólnego bloku danych - i w przeciwieństwie do notify.supernotify, przekazuje Context wywołującej akcji do każdego dostarczenia.",
+            "description": "Wysyła powiadomienie za pośrednictwem SuperNotify do jednej lub kilku platform powiadomień poprzez pojedynczy, ujednolicony interfejs.",
             "fields": {
                 "message": {
                     "name": "Wiadomość",

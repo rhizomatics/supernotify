@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "通知",
-            "description": "notify.supernotify 的替代方案，使用单独验证、由选择器驱动的字段，而不是一个通用的数据块——并且与 notify.supernotify 不同，它会将调用操作的 Context 传播到每一次推送。",
+            "description": "通过 SuperNotify，使用单一、统一的接口向一个或多个通知平台发送通知。",
             "fields": {
                 "message": {
                     "name": "消息",

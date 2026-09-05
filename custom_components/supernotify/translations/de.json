@@ -3,7 +3,7 @@
     "services": {
         "notify": {
             "name": "Benachrichtigen",
-            "description": "Eine Alternative zu notify.supernotify mit einzeln validierten, durch Auswahlfelder gesteuerten Feldern anstelle eines allgemeinen Datenblocks – und im Gegensatz zu notify.supernotify wird der Context des aufrufenden Aufrufs an jede Zustellung weitergegeben.",
+            "description": "Sendet über SuperNotify eine Benachrichtigung an eine oder mehrere Benachrichtigungsplattformen über eine einzige, einheitliche Schnittstelle.",
             "fields": {
                 "message": {
                     "name": "Nachricht",
