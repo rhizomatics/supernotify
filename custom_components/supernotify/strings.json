@@ -27,10 +27,10 @@
                 },
                 "delivery": {
                     "name": "Delivery",
-                    "description": "Restrict or tune specific deliveries by name. A list of names restricts to just those; a mapping can also override options per delivery."
+                    "description": "Restrict or tune specific deliveries by name. A single delivery name, or list of names, restricts to just those. A mapping can also be used to override delivery configurations without limiting the deliveries."
                 },
                 "require_scenarios": {
-                    "name": "Require Scenarios",
+                    "name": "Required Scenarios",
                     "description": "Suppress this notification unless at least one of these scenarios is currently active."
                 },
                 "apply_scenarios": {
@@ -38,7 +38,7 @@
                     "description": "Force these scenarios to be treated as active for this notification, regardless of their own conditions."
                 },
                 "constrain_scenarios": {
-                    "name": "Constrain Scenarios",
+                    "name": "Constrained Scenarios",
                     "description": "Only let these scenarios (plus any in Apply Scenarios) affect this notification, ignoring any other active scenario."
                 },
                 "media": {
