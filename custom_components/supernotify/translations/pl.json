@@ -41,17 +41,17 @@
                     "name": "Scenariusze ograniczające",
                     "description": "Pozwól, aby tylko te scenariusze (oraz te ze Scenariuszy do zastosowania) wpływały na to powiadomienie, ignorując wszelkie inne aktywne scenariusze."
                 },
-                "action_groups": {
-                    "name": "Grupy akcji",
-                    "description": "Nazwane grupy przycisków mobilnych powiadomień z akcjami do dołączenia, skonfigurowane w action_groups:."
+                "media": {
+                    "name": "Multimedia",
+                    "description": "Kamera lub obraz do dołączenia - może wywołać ruch PTZ i zrzut ekranu przed dostarczeniem."
                 },
                 "actions": {
                     "name": "Akcje",
                     "description": "Jednorazowe przyciski powiadomień z akcjami do dołączenia, bez konieczności wcześniej skonfigurowanej grupy akcji."
                 },
-                "media": {
-                    "name": "Multimedia",
-                    "description": "Kamera lub obraz do dołączenia - może wywołać ruch PTZ i zrzut ekranu przed dostarczeniem."
+                "action_groups": {
+                    "name": "Grupy akcji",
+                    "description": "Nazwane grupy przycisków mobilnych powiadomień z akcjami do dołączenia, skonfigurowane w action_groups:."
                 },
                 "message_html": {
                     "name": "Wiadomość HTML",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Dodatkowe dane",
                     "description": "Dane przekazywane dalej dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Zaawansowane",
+                    "description": "Przyciski akcji powiadomień, formatowanie HTML, śledzenie debugowania i inne rzadziej używane opcje."
                 }
             }
         },

@@ -41,17 +41,17 @@
                     "name": "Einschränkende Szenarien",
                     "description": "Nur diese Szenarien (plus alle unter „Anzuwendende Szenarien“) dürfen diese Benachrichtigung beeinflussen; jedes andere aktive Szenario wird ignoriert."
                 },
-                "action_groups": {
-                    "name": "Aktionsgruppen",
-                    "description": "Benannte Gruppen von mobilen Schaltflächen für aktionsfähige Benachrichtigungen, wie unter action_groups: konfiguriert."
+                "media": {
+                    "name": "Medien",
+                    "description": "Eine Kamera oder ein Bild zum Anhängen – kann vor der Zustellung eine PTZ-Bewegung und einen Schnappschuss auslösen."
                 },
                 "actions": {
                     "name": "Aktionen",
                     "description": "Einmalige Schaltflächen für aktionsfähige Benachrichtigungen, ohne dass eine vorkonfigurierte Aktionsgruppe erforderlich ist."
                 },
-                "media": {
-                    "name": "Medien",
-                    "description": "Eine Kamera oder ein Bild zum Anhängen – kann vor der Zustellung eine PTZ-Bewegung und einen Schnappschuss auslösen."
+                "action_groups": {
+                    "name": "Aktionsgruppen",
+                    "description": "Benannte Gruppen von mobilen Schaltflächen für aktionsfähige Benachrichtigungen, wie unter action_groups: konfiguriert."
                 },
                 "message_html": {
                     "name": "HTML-Nachricht",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Zusätzliche Daten",
                     "description": "Durchgereichte Daten für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Erweitert",
+                    "description": "Aktionsschaltflächen für Benachrichtigungen, HTML-Formatierung, Debug-Tracing und weitere selten genutzte Optionen."
                 }
             }
         },

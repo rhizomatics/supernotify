@@ -41,17 +41,17 @@
                     "name": "Constrain Scenarios",
                     "description": "Only let these scenarios (plus any in Apply Scenarios) affect this notification, ignoring any other active scenario."
                 },
-                "action_groups": {
-                    "name": "Action Groups",
-                    "description": "Named groups of mobile actionable-notification buttons to attach, as configured under action_groups:."
+                "media": {
+                    "name": "Media",
+                    "description": "A camera or image to attach - can trigger a PTZ move and snapshot before delivery."
                 },
                 "actions": {
                     "name": "Actions",
                     "description": "One-off actionable-notification buttons to attach, without needing a pre-configured action group."
                 },
-                "media": {
-                    "name": "Media",
-                    "description": "A camera or image to attach - can trigger a PTZ move and snapshot before delivery."
+                "action_groups": {
+                    "name": "Action Groups",
+                    "description": "Named groups of mobile actionable-notification buttons to attach, as configured under action_groups:."
                 },
                 "message_html": {
                     "name": "HTML Message",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Extra Data",
                     "description": "Passthrough data for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Advanced",
+                    "description": "Actionable-notification buttons, HTML formatting, debug tracing, and other less commonly used options."
                 }
             }
         },

@@ -41,17 +41,17 @@
                     "name": "Escenarios restrictivos",
                     "description": "Solo permite que estos escenarios (más los de Escenarios a aplicar) afecten a esta notificación, ignorando cualquier otro escenario activo."
                 },
-                "action_groups": {
-                    "name": "Grupos de acciones",
-                    "description": "Grupos con nombre de botones de notificación accionable móvil para adjuntar, configurados en action_groups:."
+                "media": {
+                    "name": "Multimedia",
+                    "description": "Una cámara o imagen para adjuntar; puede activar un movimiento PTZ y una instantánea antes de la entrega."
                 },
                 "actions": {
                     "name": "Acciones",
                     "description": "Botones de notificación accionable puntuales para adjuntar, sin necesidad de un grupo de acciones preconfigurado."
                 },
-                "media": {
-                    "name": "Multimedia",
-                    "description": "Una cámara o imagen para adjuntar; puede activar un movimiento PTZ y una instantánea antes de la entrega."
+                "action_groups": {
+                    "name": "Grupos de acciones",
+                    "description": "Grupos con nombre de botones de notificación accionable móvil para adjuntar, configurados en action_groups:."
                 },
                 "message_html": {
                     "name": "Mensaje HTML",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Datos adicionales",
                     "description": "Datos de paso para transportes/blueprints que esperan sus propios campos aquí, por ejemplo, atributos de un blueprint de notificación de Frigate."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Avanzado",
+                    "description": "Botones de acción para notificaciones, formato HTML, seguimiento de depuración y otras opciones menos utilizadas."
                 }
             }
         },

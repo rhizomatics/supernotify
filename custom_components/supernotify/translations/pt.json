@@ -41,17 +41,17 @@
                     "name": "Cenários restritivos",
                     "description": "Permite que apenas estes cenários (mais os em Cenários a aplicar) afetem esta notificação, ignorando qualquer outro cenário ativo."
                 },
-                "action_groups": {
-                    "name": "Grupos de ações",
-                    "description": "Grupos nomeados de botões de notificação acionável móvel para anexar, conforme configurado em action_groups:."
+                "media": {
+                    "name": "Mídia",
+                    "description": "Uma câmera ou imagem para anexar - pode acionar um movimento PTZ e uma captura antes da entrega."
                 },
                 "actions": {
                     "name": "Ações",
                     "description": "Botões de notificação acionável avulsos para anexar, sem necessidade de um grupo de ações pré-configurado."
                 },
-                "media": {
-                    "name": "Mídia",
-                    "description": "Uma câmera ou imagem para anexar - pode acionar um movimento PTZ e uma captura antes da entrega."
+                "action_groups": {
+                    "name": "Grupos de ações",
+                    "description": "Grupos nomeados de botões de notificação acionável móvel para anexar, conforme configurado em action_groups:."
                 },
                 "message_html": {
                     "name": "Mensagem HTML",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Dados extra",
                     "description": "Dados de passagem para transportes/blueprints que esperam os seus próprios campos aqui, por exemplo, atributos de um blueprint de notificação Frigate."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Avançado",
+                    "description": "Botões de ação para notificações, formatação HTML, rastreamento de depuração e outras opções menos usadas."
                 }
             }
         },

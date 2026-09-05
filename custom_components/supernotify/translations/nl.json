@@ -41,17 +41,17 @@
                     "name": "Beperkende scenario's",
                     "description": "Laat alleen deze scenario's (plus die in Toe te passen scenario's) deze melding beïnvloeden, en negeer elk ander actief scenario."
                 },
-                "action_groups": {
-                    "name": "Actiegroepen",
-                    "description": "Benoemde groepen mobiele actieknoppen voor meldingen om toe te voegen, zoals geconfigureerd onder action_groups:."
+                "media": {
+                    "name": "Media",
+                    "description": "Een camera of afbeelding om toe te voegen - kan een PTZ-beweging en momentopname activeren vóór bezorging."
                 },
                 "actions": {
                     "name": "Acties",
                     "description": "Eenmalige actieknoppen voor meldingen om toe te voegen, zonder dat een vooraf geconfigureerde actiegroep nodig is."
                 },
-                "media": {
-                    "name": "Media",
-                    "description": "Een camera of afbeelding om toe te voegen - kan een PTZ-beweging en momentopname activeren vóór bezorging."
+                "action_groups": {
+                    "name": "Actiegroepen",
+                    "description": "Benoemde groepen mobiele actieknoppen voor meldingen om toe te voegen, zoals geconfigureerd onder action_groups:."
                 },
                 "message_html": {
                     "name": "HTML-bericht",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Extra gegevens",
                     "description": "Doorgegeven gegevens voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Geavanceerd",
+                    "description": "Actieknoppen voor meldingen, HTML-opmaak, debug-tracering en andere minder gebruikte opties."
                 }
             }
         },

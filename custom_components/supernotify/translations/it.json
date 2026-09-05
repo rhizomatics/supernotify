@@ -41,17 +41,17 @@
                     "name": "Scenari vincolanti",
                     "description": "Consenti solo a questi scenari (più quelli in Scenari da applicare) di influenzare questa notifica, ignorando qualsiasi altro scenario attivo."
                 },
-                "action_groups": {
-                    "name": "Gruppi di azioni",
-                    "description": "Gruppi denominati di pulsanti per notifiche azionabili mobili da allegare, come configurato in action_groups:."
+                "media": {
+                    "name": "Media",
+                    "description": "Una fotocamera o un'immagine da allegare - può attivare un movimento PTZ e uno snapshot prima della consegna."
                 },
                 "actions": {
                     "name": "Azioni",
                     "description": "Pulsanti per notifiche azionabili una tantum da allegare, senza necessità di un gruppo di azioni preconfigurato."
                 },
-                "media": {
-                    "name": "Media",
-                    "description": "Una fotocamera o un'immagine da allegare - può attivare un movimento PTZ e uno snapshot prima della consegna."
+                "action_groups": {
+                    "name": "Gruppi di azioni",
+                    "description": "Gruppi denominati di pulsanti per notifiche azionabili mobili da allegare, come configurato in action_groups:."
                 },
                 "message_html": {
                     "name": "Messaggio HTML",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Dati aggiuntivi",
                     "description": "Dati passanti per trasporti/blueprint che qui si aspettano propri campi, ad es. attributi da un blueprint di notifica Frigate."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Avanzate",
+                    "description": "Pulsanti di azione per le notifiche, formattazione HTML, tracciamento di debug e altre opzioni meno comuni."
                 }
             }
         },

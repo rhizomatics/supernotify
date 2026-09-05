@@ -41,17 +41,17 @@
                     "name": "Scénarios restrictifs",
                     "description": "Ne laisse que ces scénarios (plus ceux de Scénarios à appliquer) affecter cette notification, en ignorant tout autre scénario actif."
                 },
-                "action_groups": {
-                    "name": "Groupes d'actions",
-                    "description": "Groupes nommés de boutons de notification actionnable mobile à joindre, tels que configurés sous action_groups:."
+                "media": {
+                    "name": "Média",
+                    "description": "Une caméra ou une image à joindre - peut déclencher un mouvement PTZ et une capture avant la livraison."
                 },
                 "actions": {
                     "name": "Actions",
                     "description": "Boutons de notification actionnable ponctuels à joindre, sans nécessiter de groupe d'actions préconfiguré."
                 },
-                "media": {
-                    "name": "Média",
-                    "description": "Une caméra ou une image à joindre - peut déclencher un mouvement PTZ et une capture avant la livraison."
+                "action_groups": {
+                    "name": "Groupes d'actions",
+                    "description": "Groupes nommés de boutons de notification actionnable mobile à joindre, tels que configurés sous action_groups:."
                 },
                 "message_html": {
                     "name": "Message HTML",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "Données supplémentaires",
                     "description": "Données transmises pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "Avancé",
+                    "description": "Boutons d'action pour notifications, mise en forme HTML, traçage de débogage et autres options moins courantes."
                 }
             }
         },

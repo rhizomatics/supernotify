@@ -41,17 +41,17 @@
                     "name": "限制场景",
                     "description": "仅允许这些场景（以及应用场景中的任何场景）影响此通知，忽略任何其他活动场景。"
                 },
-                "action_groups": {
-                    "name": "操作组",
-                    "description": "要附加的移动可操作通知按钮的命名组，按 action_groups: 中的配置。"
+                "media": {
+                    "name": "媒体",
+                    "description": "要附加的摄像头或图像——可在推送前触发 PTZ 移动和快照。"
                 },
                 "actions": {
                     "name": "操作",
                     "description": "要附加的一次性可操作通知按钮，无需预先配置的操作组。"
                 },
-                "media": {
-                    "name": "媒体",
-                    "description": "要附加的摄像头或图像——可在推送前触发 PTZ 移动和快照。"
+                "action_groups": {
+                    "name": "操作组",
+                    "description": "要附加的移动可操作通知按钮的命名组，按 action_groups: 中的配置。"
                 },
                 "message_html": {
                     "name": "HTML 消息",
@@ -68,6 +68,12 @@
                 "data": {
                     "name": "额外数据",
                     "description": "供期望在此处提供自有字段的传输方式/蓝图使用的透传数据，例如来自 Frigate 通知蓝图的属性。"
+                }
+            },
+            "sections": {
+                "advanced": {
+                    "name": "高级",
+                    "description": "通知操作按钮、HTML 格式、调试跟踪及其他不常用的选项。"
                 }
             }
         },
