@@ -101,9 +101,13 @@ class EventArchiver(ArchiveDestination):
                 _LOGGER.info("SUPERNOTIFY Archiving dupe notifications as %s events", event_name)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
-        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
-        self.hass_api.fire_event(self.event_name, payload)
-        return True
+        try:
+            payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
+            self.hass_api.fire_event(self.event_name, payload)
+            return True
+        except Exception:
+            _LOGGER.warning(f"SUPERNOTIFY Failed to archive to event {self.event_name}")
+            return False
 
 
 class ArchiveTopic(ArchiveDestination):

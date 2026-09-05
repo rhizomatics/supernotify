@@ -11,6 +11,7 @@ import aiofiles
 import anyio
 import pytest
 from homeassistant.const import CONF_ENABLED
+from homeassistant.core import Context
 
 from custom_components.supernotify.archive import (
     ArchivableObject,
@@ -88,6 +89,26 @@ async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: Outcom
             assert reobj["enabled_scenarios"] == ["alarming", "critical"]
         else:
             assert reobj["enabled_scenarios"]["alarming"]["enabled"]
+
+
+async def test_integration_archive_with_ha_context(mock_hass: HomeAssistant) -> None:
+    """A real automation/script call passes a homeassistant.core.Context, which used to
+    crash archiving since Context.as_dict() doesn't accept the occupancy_only kwarg
+    that Notification.contents() passes to every non-excluded attribute."""
+    with tempfile.TemporaryDirectory() as archive:
+        uut = SupernotifyAction(
+            mock_hass,
+            scenarios={},
+            deliveries={"chime": {"transport": "chime"}},
+            recipients=[],
+            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
+        )
+        await uut.initialize()
+        await uut.async_send_message("just a test", target="person.bob", context=Context())
+
+        assert uut.last_notification is not None
+        obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
+        assert await obj_path.exists()
 
 
 async def test_file_archive(hass_api: HomeAssistantAPI) -> None:
@@ -262,6 +283,14 @@ async def test_event_archiver_archive_fires_event(mock_hass_api: HomeAssistantAP
     result = await uut.archive(msg)
     assert result is True
     mock_hass_api.fire_event.assert_called_once()  # type: ignore
+
+
+async def test_event_archiver_archive_handles_fire_event_exception(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.fire_event.side_effect = Exception("boom")  # type: ignore
+    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.ALL)
+    msg = ArchiveCrashDummy()
+    result = await uut.archive(msg)
+    assert result is False
 
 
 async def test_archive_topic_archive_handles_publish_exception(mock_hass_api: HomeAssistantAPI) -> None:

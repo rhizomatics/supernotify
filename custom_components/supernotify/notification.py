@@ -670,7 +670,7 @@ class Notification(ArchivableObject):
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
         minimal = not diagnostics
-        object_refs = ["context", "people_registry", "delivery_registry"]
+        object_refs = ["context", "ha_context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
         debug_only = ["debug_trace"]
         exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions", "_suppression_reason"]
