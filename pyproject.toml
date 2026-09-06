@@ -166,7 +166,6 @@ ignore=[
     "SIM117",  # Multiple with statements
     "PLW0108" # lay off the lambdas
 ]
-unfixable = ["B"]
 
 [tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
