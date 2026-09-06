@@ -84,7 +84,7 @@
             },
             "sections": {
                 "multimedia": {
-                    "name": "Multimedia Options",
+                    "name": "Multimedia",
                     "description": "Attach a camera snapshot, an existing image, or a video clip to this notification."
                 },
                 "advanced": {
