@@ -36,7 +36,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.schema import SelectionRank
+from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
 from custom_components.supernotify.transports.email import EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
@@ -167,6 +167,22 @@ async def test_channel_transport_override() -> None:
 
     assert email_envelope.message == "testing 123"
     assert email_envelope.title is None
+
+
+async def test_call_transport_records_delivery_exception() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+    await uut.initialize()
+    delivery = ctx.delivery("mobile")
+
+    with patch.object(delivery, "evaluate_conditions", side_effect=RuntimeError("boom")):
+        await uut.deliver()
+
+    assert "mobile" in uut.delivery_exceptions
+    assert "boom" in uut.delivery_exceptions["mobile"][0]
+    assert uut.outcome() == DeliveryOutcome.ERROR
 
 
 async def test_custom_priority() -> None:
