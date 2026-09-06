@@ -36,9 +36,10 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker, sanitize
+from .common import DupeChecker, ensure_list, sanitize
 from .const import (
     ATTR_ACTION,
+    ATTR_CUSTOM_TARGET,
     ATTR_DATA,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
@@ -71,7 +72,7 @@ from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
 from .media_grab import MediaStorage
-from .model import ConditionVariables, SuppressionReason
+from .model import ConditionVariables, SuppressionReason, Target
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
@@ -215,6 +216,18 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
         message = data.pop(CONF_MESSAGE)
         title = data.pop(CONF_TITLE, None)
         target = data.pop(CONF_TARGET, None)
+        # custom_target holds identifiers the target selector can't produce (e-mail addresses,
+        # phone numbers, Slack ids etc) - merge into target here so nothing downstream needs to
+        # know this field exists
+        custom_target = ensure_list(data.pop(ATTR_CUSTOM_TARGET, None))
+        if custom_target:
+            if isinstance(target, dict):
+                merged_target = dict(target)
+                for category, values in Target(custom_target).targets.items():
+                    merged_target[category] = [*ensure_list(merged_target.get(category)), *values]
+                target = merged_target
+            else:
+                target = [*ensure_list(target), *custom_target]
         # camera_entity_id/clip_url/snapshot_url are promoted top-level fields for this action's
         # UI - fold them into media, overriding any same-named key already nested in media: itself
         promoted_media = {

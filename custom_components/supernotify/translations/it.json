@@ -17,6 +17,10 @@
                     "name": "Destinazione",
                     "description": "Chi o cosa notificare - persone, dispositivi mobili, lettori multimediali, aree o altre entità di destinazione. Lasciare vuoto per usare le consegne predefinite/implicite."
                 },
+                "custom_target": {
+                    "name": "Destinazioni personalizzate",
+                    "description": "Destinazioni esterne a Home Assistant, come indirizzi e-mail, numeri di telefono, id Slack ecc."
+                },
                 "priority": {
                     "name": "Priorità",
                     "description": "Usata per abilitare/disabilitare consegne e scenari, e mappata sul proprio flag di priorità/urgenza del trasporto sottostante, se supportato (ad es. push mobile, SMTP, Telegram, Gotify, ntfy)."

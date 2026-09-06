@@ -8,6 +8,7 @@
 - A new dedicated `notify` action is now available directly from the Supernotify platform
   - Options otherwise buried in `notify.supernotify`'s generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, etc) are promoted to their own typed, selector-driven fields, for a richer Developer Tools/automation editor UI, to make configuring even sophisticated notifications hugely easier
   - Camera and image/video URLs are broken out into separate fields to make them easier to use, and also allow the Home Assistant Camera selector to be used
+  - Separate optional field for *custom targets*, like e-mail addresses, Telegram IDs that won't work with Home Assistant built-in selectors. Optional but unnecessary for YAML use, since the `target` field usage is unchanged.
   - The original context is preserved, so you can trace from a trigger like motion PIR, all the way thru to an alert call and camera PTZ movement
   - No change to the original `notify.supernotify` action, so nothing breaks, and there's a choice (maximum compatibility with legacy notify, so can easily switch between notify providers, or ease of use and insulated from future deprecations of HA notify)
 

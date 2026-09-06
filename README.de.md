@@ -37,7 +37,7 @@ Dies hält Automatisierungen, Skripte und AppDaemon-Apps einfach und wartungsfre
 
 Nur mit der UI-Konfiguration beginnen Sie sofort mit mobilen Push-Benachrichtigungen an alle im Haus registrierten Personen, ohne die Namen der mobilen Apps in Benachrichtigungen zu konfigurieren.
 
-![Beispiel für eine Benachrichtigungsaktion](../assets/images/notification.png){width=500}
+![Beispiel für eine Benachrichtigungsaktion](assets/images/notification.png){width=500}
 
 ## Verteilung
 

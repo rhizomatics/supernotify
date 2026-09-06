@@ -17,6 +17,10 @@
                     "name": "Objetivo",
                     "description": "A quién o qué notificar: personas, dispositivos móviles, reproductores multimedia, áreas u otras entidades objetivo. Déjalo en blanco para usar las entregas predeterminadas/implícitas."
                 },
+                "custom_target": {
+                    "name": "Objetivos personalizados",
+                    "description": "Objetivos externos a Home Assistant, como direcciones de correo electrónico, números de teléfono, ids de Slack, etc."
+                },
                 "priority": {
                     "name": "Prioridad",
                     "description": "Se usa para activar/desactivar entregas y escenarios, y se asigna a la propia bandera de prioridad/urgencia del transporte subyacente cuando es compatible (por ejemplo, notificación push móvil, SMTP, Telegram, Gotify, ntfy)."

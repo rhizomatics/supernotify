@@ -17,6 +17,10 @@
                     "name": "Cel",
                     "description": "Kogo lub co powiadomić - osoby, urządzenia mobilne, odtwarzacze multimedialne, obszary lub inne encje docelowe. Pozostaw puste, aby użyć domyślnych/niejawnych dostarczeń."
                 },
+                "custom_target": {
+                    "name": "Niestandardowe cele",
+                    "description": "Cele poza Home Assistant, takie jak adresy e-mail, numery telefonów, identyfikatory Slack itp."
+                },
                 "priority": {
                     "name": "Priorytet",
                     "description": "Używany do włączania/wyłączania dostarczeń i scenariuszy oraz mapowany na własną flagę priorytetu/pilności bazowego transportu, jeśli jest obsługiwana (np. powiadomienia push mobilne, SMTP, Telegram, Gotify, ntfy)."

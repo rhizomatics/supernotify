@@ -37,7 +37,7 @@ Supernotifyの目標はひとつ——**コードなし、最小限の設定で�
 
 UI設定だけで、モバイルアプリ名を設定することなく、家全員へのモバイルプッシュ通知を開始できます。
 
-![通知アクションの例](../assets/images/notification.png){width=500}
+![通知アクションの例](assets/images/notification.png){width=500}
 
 ## 配布
 

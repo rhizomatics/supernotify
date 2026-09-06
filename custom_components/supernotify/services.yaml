@@ -12,6 +12,10 @@ notify:
     target:
       selector:
         target:
+    custom_target:
+      selector:
+        text:
+          multiple: true
     priority:
       selector:
         select:

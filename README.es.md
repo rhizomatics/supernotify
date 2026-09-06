@@ -37,7 +37,7 @@ Esto mantiene las automatizaciones, scripts y aplicaciones AppDaemon simples y f
 
 Con solo la configuración de la interfaz, comienza las notificaciones push móviles a todos los registrados en casa, sin configurar los nombres de las aplicaciones móviles en las notificaciones.
 
-![Ejemplo de acción de notificación](../assets/images/notification.png){width=500}
+![Ejemplo de acción de notificación](assets/images/notification.png){width=500}
 
 ## Distribución
 

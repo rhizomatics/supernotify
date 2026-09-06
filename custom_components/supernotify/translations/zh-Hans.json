@@ -17,6 +17,10 @@
                     "name": "目标",
                     "description": "要通知的对象——人员、移动设备、媒体播放器、区域或其他目标实体。留空以使用默认/隐式推送。"
                 },
+                "custom_target": {
+                    "name": "自定义目标",
+                    "description": "Home Assistant 之外的目标，例如电子邮件地址、电话号码、Slack ID 等。"
+                },
                 "priority": {
                     "name": "优先级",
                     "description": "用于启用/禁用推送和场景，并在底层传输方式支持时映射到其自身的优先级/紧急标志（例如移动推送、SMTP、Telegram、Gotify、ntfy）。"

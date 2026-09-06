@@ -17,6 +17,10 @@
                     "name": "Cible",
                     "description": "Qui ou quoi notifier - personnes, appareils mobiles, lecteurs multimédias, zones ou autres entités cibles. Laisser vide pour utiliser les livraisons par défaut/implicites."
                 },
+                "custom_target": {
+                    "name": "Cibles personnalisées",
+                    "description": "Cibles extérieures à Home Assistant, telles que des adresses e-mail, des numéros de téléphone, des ids Slack, etc."
+                },
                 "priority": {
                     "name": "Priorité",
                     "description": "Utilisée pour activer/désactiver les livraisons et les scénarios, et associée à l'indicateur de priorité/urgence propre au transport sous-jacent lorsqu'il est pris en charge (par ex. notification push mobile, SMTP, Telegram, Gotify, ntfy)."

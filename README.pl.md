@@ -37,7 +37,7 @@ Dzięki temu automatyzacje, skrypty i aplikacje AppDaemon pozostają proste i ł
 
 Wystarczy sama konfiguracja z poziomu interfejsu, aby rozpocząć wysyłanie powiadomień push do wszystkich zarejestrowanych w domu, bez konfigurowania nazw aplikacji mobilnych.
 
-![Przykładowa akcja powiadomienia](../assets/images/notification.png){width=500}
+![Przykładowa akcja powiadomienia](assets/images/notification.png){width=500}
 
 ## Dystrybucja
 

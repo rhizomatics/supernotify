@@ -37,7 +37,7 @@ Cela permet de garder les automatisations, scripts et applications AppDaemon sim
 
 Avec seulement la configuration via l'interface, commencez à envoyer des notifications push mobiles à tous les membres de la maison, sans configurer les noms des applications mobiles dans les notifications.
 
-![Exemple d'action de notification](../assets/images/notification.png){width=500}
+![Exemple d'action de notification](assets/images/notification.png){width=500}
 
 ## Distribution
 

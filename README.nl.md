@@ -37,7 +37,7 @@ Dit houdt automatiseringen, scripts en AppDaemon-apps eenvoudig en onderhoudsvri
 
 Met alleen de UI-configuratie start u direct met mobiele pushmeldingen naar iedereen in huis, zonder dat u de namen van mobiele apps in meldingen hoeft te configureren.
 
-![Voorbeeld van een meldingsactie](../assets/images/notification.png){width=500}
+![Voorbeeld van een meldingsactie](assets/images/notification.png){width=500}
 
 ## Distributie
 

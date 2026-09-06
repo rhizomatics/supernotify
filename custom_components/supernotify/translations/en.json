@@ -17,6 +17,10 @@
                     "name": "Target",
                     "description": "Who or what to notify - people, mobile devices, media players, chimes, areas, or other target entities. Leave blank to use the default/implicit deliveries."
                 },
+                "custom_target": {
+                    "name": "Custom Targets",
+                    "description": "Targets outside of Home Assistant, such as e-mail addresses, phone numbers, Slack ids etc."
+                },
                 "priority": {
                     "name": "Priority",
                     "description": "Used to enable/disable deliveries and scenarios, and mapped to the underlying transport's own priority/urgency flag where supported (e.g. mobile push, SMTP, Telegram, Gotify, ntfy)."

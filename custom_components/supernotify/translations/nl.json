@@ -17,6 +17,10 @@
                     "name": "Doel",
                     "description": "Wie of wat te melden - personen, mobiele apparaten, mediaspelers, zones of andere doelentiteiten. Laat leeg om de standaard/impliciete bezorgingen te gebruiken."
                 },
+                "custom_target": {
+                    "name": "Aangepaste doelen",
+                    "description": "Doelen buiten Home Assistant, zoals e-mailadressen, telefoonnummers, Slack-id's enz."
+                },
                 "priority": {
                     "name": "Prioriteit",
                     "description": "Gebruikt om bezorgingen en scenario's in/uit te schakelen, en indien ondersteund toegewezen aan de eigen prioriteits-/urgentievlag van het onderliggende transport (bijv. mobiele push, SMTP, Telegram, Gotify, ntfy)."

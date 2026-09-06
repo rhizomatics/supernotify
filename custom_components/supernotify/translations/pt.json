@@ -17,6 +17,10 @@
                     "name": "Destino",
                     "description": "Quem ou o que notificar - pessoas, dispositivos móveis, reprodutores de mídia, áreas ou outras entidades de destino. Deixe em branco para usar as entregas padrão/implícitas."
                 },
+                "custom_target": {
+                    "name": "Destinos personalizados",
+                    "description": "Destinos fora do Home Assistant, como endereços de e-mail, números de telefone, ids do Slack etc."
+                },
                 "priority": {
                     "name": "Prioridade",
                     "description": "Usada para ativar/desativar entregas e cenários, e mapeada para o próprio sinalizador de prioridade/urgência do transporte subjacente, quando suportado (por exemplo, push móvel, SMTP, Telegram, Gotify, ntfy)."

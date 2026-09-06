@@ -17,6 +17,10 @@
                     "name": "Ziel",
                     "description": "Wer oder was benachrichtigt werden soll – Personen, mobile Geräte, Media Player, Bereiche oder andere Zielentitäten. Leer lassen, um die Standard-/impliziten Zustellungen zu verwenden."
                 },
+                "custom_target": {
+                    "name": "Benutzerdefinierte Ziele",
+                    "description": "Ziele außerhalb von Home Assistant, wie z. B. E-Mail-Adressen, Telefonnummern, Slack-IDs usw."
+                },
                 "priority": {
                     "name": "Priorität",
                     "description": "Aktiviert/deaktiviert Zustellungen und Szenarien und wird, sofern unterstützt, auf das eigene Prioritäts-/Dringlichkeits-Flag des zugrunde liegenden Transports abgebildet (z. B. Mobile Push, SMTP, Telegram, Gotify, ntfy)."

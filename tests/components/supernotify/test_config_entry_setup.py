@@ -12,6 +12,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry  # type
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_MEDIA_PATH
+from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
 
 if TYPE_CHECKING:
@@ -251,6 +252,57 @@ async def test_notify_action_top_level_media_field_overrides_nested_media_block(
 
     assert entry.runtime_data.last_notification is not None
     assert entry.runtime_data.last_notification.media == {"camera_entity_id": "camera.front_door", "camera_delay": 3}
+
+
+async def test_notify_action_merges_custom_target_into_dict_target(hass: HomeAssistant) -> None:
+    """custom_target is a free-text escape hatch for identifiers the target: selector can't
+    produce - e-mail addresses, phone numbers, Slack ids etc. supplemental_action_notify must
+    merge it into target before Notification ever sees it, classifying recognisable identifiers
+    (e-mail, phone) same as if they'd been typed into a flat target list, and leaving anything
+    unrecognised (e.g. a Slack id) as an opaque custom target."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {
+            "message": "hello there",
+            "target": {"entity_id": ["switch.hall"]},
+            "custom_target": ["joe@example.com", "+4497177848484", "U123SLACK"],
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    target = entry.runtime_data.last_notification._target
+    assert target is not None
+    assert target.entity_ids == ["switch.hall"]
+    assert target.email == ["joe@example.com"]
+    assert target.phone == ["+4497177848484"]
+    assert target.targets.get(Target.UNKNOWN_CUSTOM_CATEGORY) == ["U123SLACK"]
+
+
+async def test_notify_action_custom_target_alone_populates_target(hass: HomeAssistant) -> None:
+    """custom_target must still work with no target: selector value at all."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {"message": "hello there", "custom_target": "joe@example.com"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    target = entry.runtime_data.last_notification._target
+    assert target is not None
+    assert target.email == ["joe@example.com"]
 
 
 async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:

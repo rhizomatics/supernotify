@@ -37,7 +37,7 @@ Supernotify 只有一个目标——**用最简单的通知触发尽可能多的
 
 仅通过 UI 配置，即可向家中所有人发送移动推送通知，无需配置移动应用名称。
 
-![通知操作示例](../assets/images/notification.png){width=500}
+![通知操作示例](assets/images/notification.png){width=500}
 
 ## 分发方式
 
