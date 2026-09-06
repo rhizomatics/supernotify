@@ -788,6 +788,21 @@ class Notification(ArchivableObject):
     async def select_scenarios(self) -> list[str]:
         return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(self.condition_variables)]
 
+    def _filter_resolve_select_targets(
+        self, computed_target: Target, delivery: Delivery, stages: tuple[str, str, str, str]
+    ) -> Target:
+        """Snooze-filter, resolve indirect/scenario targets, then apply delivery target selection."""
+        computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
+        self.debug_trace.record_target(delivery.name, stages[0], computed_target)
+        for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
+            computed_target += indirect_target
+        self.debug_trace.record_target(delivery.name, stages[1], computed_target)
+        computed_target += self.resolve_scenario_targets(delivery)
+        self.debug_trace.record_target(delivery.name, stages[2], computed_target)
+        computed_target = delivery.select_targets(computed_target)
+        self.debug_trace.record_target(delivery.name, stages[3], computed_target)
+        return computed_target
+
     def generate_targets(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> list[Target]:
 
         if delivery.target_required == TargetRequired.NEVER:
@@ -822,17 +837,11 @@ class Notification(ArchivableObject):
             self.debug_trace.record_target(delivery.name, "202_action_target", computed_target)
 
         # 1st round of filtering for snooze and resolving people->direct targets
-        computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-        self.debug_trace.record_target(delivery.name, "300_post_snooze", computed_target)
-        # turn person_ids into emails and phone numbers
-        for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
-            computed_target += indirect_target
-        self.debug_trace.record_target(delivery.name, "310_resolve_indirect", computed_target)
-        computed_target += self.resolve_scenario_targets(delivery)
-        self.debug_trace.record_target(delivery.name, "320_resolved_scenario_targets", computed_target)
-        # filter out target not required for this delivery
-        computed_target = delivery.select_targets(computed_target)
-        self.debug_trace.record_target(delivery.name, "330_delivery_selection", computed_target)
+        computed_target = self._filter_resolve_select_targets(
+            computed_target,
+            delivery,
+            ("300_post_snooze", "310_resolve_indirect", "320_resolved_scenario_targets", "330_delivery_selection"),
+        )
         primary_count = len(computed_target)
 
         if delivery.target_usage == TARGET_USE_ON_NO_DELIVERY_TARGETS:
@@ -866,15 +875,11 @@ class Notification(ArchivableObject):
             )
 
             # 2nd round of filtering for snooze and resolving people->direct targets after delivery target applied
-            computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-            self.debug_trace.record_target(delivery.name, "501_post_snooze", computed_target)
-            for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
-                computed_target += indirect_target
-            self.debug_trace.record_target(delivery.name, "502_resolved_indirect_targets", computed_target)
-            computed_target += self.resolve_scenario_targets(delivery)
-            self.debug_trace.record_target(delivery.name, "503_resolved_scenario_targets", computed_target)
-            computed_target = delivery.select_targets(computed_target)
-            self.debug_trace.record_target(delivery.name, "504_delivery_selection", computed_target)
+            computed_target = self._filter_resolve_select_targets(
+                computed_target,
+                delivery,
+                ("501_post_snooze", "502_resolve_indirect", "503_resolved_scenario_targets", "504_delivery_selection"),
+            )
 
         # If the action call explicitly specified a target for this delivery, it takes
         # precedence over all resolved/merged targets above.
