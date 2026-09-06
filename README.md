@@ -26,12 +26,11 @@
 
 >> `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
 
->> If you have an advanced configuration (deliveries, scenarios, cameras, persons, actions etc) then a *Repair* will be raised to move these to a new `supernotify.yaml` file and add an `include` statement to your `configuration.yaml`. Or you can choose to
-manually move the config out of `notify` block however
-you please.
+>> If you have an advanced configuration (deliveries, scenarios, cameras, persons, actions etc) then a *Repair* will be raised to move these to a new `supernotify.yaml` file and add an `include` statement to your `configuration.yaml`. Or you can choose to manually move the config out of `notify` block however you please.
 
->> In either case, nothing will be deleted or commented out, so it will be easy to revert the change. Remove the
-old config when you are comfortable the new version is working for you. This will also remove the `[homeassistant.components.notify] Failed to initialize notification service supernotify` warning from the log, which comes from the old notify implementation.
+>> In either case, nothing will be deleted or commented out, so it will be easy to revert the change. Remove the old config when you are comfortable the new version is working for you. This will also remove the `[homeassistant.components.notify] Failed to initialize notification service supernotify` warning from the log, which comes from the old notify implementation.
+
+>> An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
 A **unified notification interface** on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
