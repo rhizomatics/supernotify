@@ -46,7 +46,7 @@ class ArchivableObject:
         pass
 
     @abstractmethod
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         pass
 
     def outcome(self) -> DeliveryOutcome:

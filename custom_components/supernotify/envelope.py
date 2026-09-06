@@ -176,7 +176,7 @@ class Envelope(DupeCheckable):
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
         return json_ready
 
-    def __eq__(self, other: Any | None) -> bool:
+    def __eq__(self, other: Any | None) -> bool:  # ruff: ignore[any-type]
         """Specialized equality check for subset of attributes"""
         if other is None or not isinstance(other, Envelope):
             return False

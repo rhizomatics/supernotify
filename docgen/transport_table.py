@@ -8,7 +8,7 @@ from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
 
-def esc(v: Any) -> str:
+def esc(v: Any) -> str:  # ruff: ignore[any-type]
     v = "-" if v is None else v
     v = str(v) if not isinstance(v, str) else v
     return v.replace("|", "&#124;")

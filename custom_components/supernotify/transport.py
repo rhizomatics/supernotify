@@ -129,7 +129,7 @@ class Transport:
 
         """
 
-    def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> Any:
+    def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> dict[str, Any]:  # ruff: ignore[any-type]
         if data is not None:
             action_data[key] = data
         return action_data

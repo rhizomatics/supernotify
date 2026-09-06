@@ -689,7 +689,12 @@ class HomeAssistantAPI:
         return False
 
     async def mqtt_publish(
-        self, topic: str, payload: Any = None, qos: int = 0, retain: bool = False, raise_on_error: bool = True
+        self,
+        topic: str,
+        payload: Any = None,  # ruff: ignore[any-type]
+        qos: int = 0,
+        retain: bool = False,
+        raise_on_error: bool = True,
     ) -> None:
         from homeassistant.components import mqtt
 
@@ -712,7 +717,7 @@ class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
         super().__init__(*args, **kwargs)
         self.condition_errors: list[ConditionError] = []
 
-    def capture(self, args: Any) -> None:
+    def capture(self, args: list | tuple | None) -> None:
         if args and isinstance(args, list | tuple):
             for arg in args:
                 if isinstance(arg, ConditionErrorContainer):
@@ -720,11 +725,11 @@ class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
                 elif isinstance(arg, ConditionError):
                     self.condition_errors.append(arg)
 
-    def error(self, msg: Any, *args: object, **kwargs: Any) -> None:
+    def error(self, msg: object, *args: object, **kwargs: Any) -> None:
         self.capture(args)
         self.logger.error(msg, *args, **kwargs)
 
-    def warning(self, msg: Any, *args: Any, **kwargs: Any) -> None:
+    def warning(self, msg: object, *args: Any, **kwargs: Any) -> None:
         self.capture(args)
         self.logger.warning(msg, *args, **kwargs)
 
@@ -733,12 +738,12 @@ class TemplateWrapper:
     def __init__(self, obj: Template) -> None:
         self._obj = obj
 
-    def __getattr__(self, name: str) -> Any:
+    def __getattr__(self, name: str) -> Any:  # ruff: ignore[any-type]
         if name == "async_render_to_info":
             return partial(self._obj.async_render_to_info, strict=True)
         return getattr(self._obj, name)
 
-    def __setattr__(self, name: str, value: Any) -> None:
+    def __setattr__(self, name: str, value: Any) -> None:  # ruff: ignore[any-type]
         super().__setattr__(name, value)
 
     def __repr__(self) -> str:

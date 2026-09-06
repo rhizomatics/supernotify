@@ -33,12 +33,12 @@ _LOGGER = logging.getLogger(__name__)
 _FALSY_STRINGS = frozenset({"false", "0", "no", "off", ""})
 
 
-def safe_get(probably_a_dict: dict[Any, Any] | None, key: Any, default: Any = None) -> Any:
+def safe_get(probably_a_dict: dict[Any, Any] | None, key: Any, default: Any = None) -> Any:  # ruff: ignore[any-type]
     probably_a_dict = probably_a_dict or {}
     return probably_a_dict.get(key, default)
 
 
-def safe_extend(target: list[Any], extension: list[Any] | tuple[Any] | Any) -> list[Any]:
+def safe_extend(target: list[Any], extension: list[Any] | tuple[Any] | Any) -> list[Any]:  # ruff: ignore[any-type]
     if target is None:
         target = []
     elif not isinstance(target, list):
@@ -50,13 +50,13 @@ def safe_extend(target: list[Any], extension: list[Any] | tuple[Any] | Any) -> l
     return target
 
 
-def nullable_ensure_list(v: Any) -> list[Any] | None:
+def nullable_ensure_list(v: Any) -> list[Any] | None:  # ruff: ignore[any-type]
     if v is None:
         return None
     return ensure_list(v)
 
 
-def ensure_list(v: Any) -> list[Any]:
+def ensure_list(v: Any) -> list[Any]:  # ruff: ignore[any-type]
     if v is None:
         return []
     if isinstance(v, list):
@@ -66,7 +66,7 @@ def ensure_list(v: Any) -> list[Any]:
     return [v]
 
 
-def ensure_dict(v: Any, default: Any = None) -> dict[Any, Any]:
+def ensure_dict(v: Any, default: Any = None) -> dict[Any, Any]:  # ruff: ignore[any-type]
     if v is None:
         return {}
     if isinstance(v, dict):
@@ -76,7 +76,7 @@ def ensure_dict(v: Any, default: Any = None) -> dict[Any, Any]:
     return {v: default}
 
 
-def sanitize(v: Any, minimal: bool = True, top_level_keys_only: bool = False, **kwargs) -> Any:
+def sanitize(v: Any, minimal: bool = True, top_level_keys_only: bool = False, **kwargs) -> Any:  # ruff: ignore[any-type]
     if isinstance(v, dt.datetime | dt.time | dt.date):
         return v.isoformat()
     if isinstance(v, str | int | float | bool):
@@ -165,7 +165,7 @@ class DupeChecker:
         return dupe
 
 
-def boolify(value: Any, default: bool) -> bool:
+def boolify(value: Any, default: bool) -> bool:  # ruff: ignore[any-type]
     """Convert a value to bool, correctly handling string 'false'/'true'.
 
     Python's built-in bool() treats any non-empty string as True, so
@@ -181,7 +181,7 @@ def boolify(value: Any, default: bool) -> bool:
     return bool(value)
 
 
-def int_or_none(v: Any) -> int | None:
+def int_or_none(v: Any) -> int | None:  # ruff: ignore[any-type]
     if v is not None:
         try:
             return int(v)

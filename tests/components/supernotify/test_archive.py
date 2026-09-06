@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 
 
 class ArchiveCrashDummy(ArchivableObject):
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         return {"a_dict": {}, "a_list": [], "a_str": "", "a_int": 984}
 
     def base_filename(self) -> str:
@@ -336,7 +336,7 @@ class ArchiveFirstCallCrashes(ArchivableObject):
     def base_filename(self) -> str:
         return "crashy"
 
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         if diagnostics:
             raise ValueError("boom on full contents")
         return {"minimal": True}
@@ -359,7 +359,7 @@ class ArchiveAlwaysCrashes(ArchivableObject):
     def base_filename(self) -> str:
         return "always_crashy"
 
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         raise ValueError("boom always")
 
 

@@ -56,7 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
 
 
-def _event_policy_str(value: Any) -> str:
+def _event_policy_str(value: Any) -> str:  # ruff: ignore[any-type]
     """Render an OutcomeSelection as the pipe-separated name string parse_event_policy
     expects (e.g. "ERROR|DUPE"), whatever form it currently happens to be in.
 
@@ -83,7 +83,7 @@ def _event_policy_str(value: Any) -> str:
 _OUTCOME_OPTIONS = [flag.name.lower() for flag in OutcomeSelection if flag != OutcomeSelection.NONE and flag.name]
 
 
-def _event_policy_to_list(value: Any) -> list[str]:
+def _event_policy_to_list(value: str) -> list[str]:
     """Turn a stored OutcomeSelection value into the list of names a multi-select needs."""
     policy_str = _event_policy_str(value)
     return [] if policy_str in ("", "NONE") else [part.lower() for part in policy_str.split("|")]

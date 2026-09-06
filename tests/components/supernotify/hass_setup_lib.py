@@ -448,7 +448,7 @@ def register_device(
     title: str = "test fixture",
     model: str | None = None,
     manufacturer: str | None = None,
-    identifiers: Any = None,
+    identifiers: Any = None,  # ruff: ignore[any-type]
 ) -> DeviceEntry | None:
     config_entry = config_entries.ConfigEntry(
         domain=domain,

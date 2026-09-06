@@ -452,7 +452,7 @@ class DeliveryCustomization:
         else:
             self.target = None
 
-    def data_value(self, key: str) -> Any:
+    def data_value(self, key: str) -> Any:  # ruff: ignore[any-type]
         return self.data.get(key) if self.data else None
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
@@ -737,7 +737,7 @@ class TargetRequired(StrEnum):
     OPTIONAL = auto()
 
     @classmethod
-    def _missing_(cls, value: Any) -> TargetRequired | None:
+    def _missing_(cls, value: Any) -> TargetRequired | None:  # ruff: ignore[any-type]
         """Backward compatibility for binary values"""
         if value is True or (isinstance(value, str) and value.lower() in ("true", "on")):
             return cls.ALWAYS
@@ -844,7 +844,7 @@ class DebugTrace:
         """Debug support for recording detailed target resolution in archived notification"""
         self.delivery_selection[stage] = delivery_selection
 
-    def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:
+    def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:  # ruff: ignore[any-type]
         self.delivery_artefacts.setdefault(delivery, {})
         self.delivery_artefacts[delivery][artefact_name] = artefact
 

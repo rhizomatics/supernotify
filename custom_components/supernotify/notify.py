@@ -866,7 +866,7 @@ class SupernotifyAction(BaseNotificationService):
         occupiers: dict[str, list[Recipient]] = self.context.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
 
-        def safe_json(v: Any) -> Any:
+        def safe_json(v: Any) -> Any:  # ruff: ignore[any-type]
             return json.loads(json.dumps(v, cls=ExtendedJSONEncoder))
 
         enabled = []

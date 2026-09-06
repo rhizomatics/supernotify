@@ -44,7 +44,7 @@ TOP_LEVEL_SCHEMAS = {
 
 
 def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) -> None:
-    def defuncify(v: typing.Any) -> typing.Any:
+    def defuncify(v: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
         if isinstance(v, FunctionType):
             if v.__name__ in ("url", "string"):
                 return str

@@ -196,7 +196,6 @@ ignore = [
     "D415",
     "D400",
     "D415",
-    "ANN401",
     "S101",
     "C901",
     "FURB113",
@@ -206,6 +205,9 @@ ignore = [
     "PLW0108", # lambda hate
 ] # subprocess usage
 unfixable = ["B"]
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = []
@@ -252,8 +254,8 @@ quiet-level = 2
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 log_cli = 1
-log_level = "DEBUG"
-log_cli_level = "DEBUG"
+log_level = "WARNING"
+log_cli_level = "WARNING"
 testpaths = ["tests"]
 norecursedirs = [".git", "templates"]
 

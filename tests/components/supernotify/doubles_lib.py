@@ -5,6 +5,7 @@ from unittest.mock import Mock, call
 
 import aiofiles
 from homeassistant.components import image
+from homeassistant.core import Context as HAContext
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -36,7 +37,7 @@ def service_call(
     service: str,
     service_data: dict[str, Any] | None = None,
     blocking: bool = False,
-    context: Any = None,
+    context: HAContext | None = None,
     target: dict[str, Any] | None = None,
     return_response: bool = False,
 ):

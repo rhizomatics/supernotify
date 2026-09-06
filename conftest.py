@@ -300,7 +300,7 @@ def uninitialized_unmocked_config(mock_hass_api: HomeAssistantAPI, tmp_path) -> 
 
 
 @pytest.fixture
-def local_server(httpserver_ssl_context: SSLContext | None, socket_enabled: Any) -> Generator[HTTPServer]:
+def local_server(httpserver_ssl_context: SSLContext | None, socket_enabled: bool) -> Generator[HTTPServer]:
     """pytest-socket will fail at fixture creation time, before test that uses it"""
     server = HTTPServer(host="127.0.0.1", port=0, ssl_context=httpserver_ssl_context)
     server.start()
@@ -311,7 +311,7 @@ def local_server(httpserver_ssl_context: SSLContext | None, socket_enabled: Any)
 
 
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: Any) -> None:
+def auto_enable_custom_integrations(enable_custom_integrations: bool) -> None:
     """Enable custom integrations in all tests."""
     return
 
