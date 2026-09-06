@@ -1,4 +1,4 @@
-![Supernotify](assets/images/dark_icon.png){ align=left }
+![Supernotify](https://supernotify.rhizomatics.org.uk/dev/assets/images/dark_icon.png){ align=left }
 
 # Supernotify - Unified Notifications for Home Assistant
 
@@ -45,7 +45,7 @@ Start off with zero YAML configuration and easily do [mobile push notifications 
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
-![Example Notification Action](assets/images/notification.png){width=500}
+![Example Notification Action](https://supernotify.rhizomatics.org.uk/dev/assets/images/notification.png){width=500}
 
 ## Distribution
 
