@@ -85,7 +85,7 @@ class DummyService:
                 )
 
     @classmethod
-    def service_delegator(cls, domain: str, action: str, **kwargs) -> ServiceResponse | None:
+    def service_delegator(cls, domain: str, action: str, **kwargs: Any) -> ServiceResponse | None:
         service: Callable = cls.MOCKED_SERVICES[domain, action]
         return service(domain, action, **kwargs)
 

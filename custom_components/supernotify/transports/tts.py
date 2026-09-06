@@ -94,9 +94,8 @@ class TTSTransport(Transport):
             delivered = await self.call_media_players(envelope, media_player_targets)
 
         mobile_targets = envelope.target.mobile_app_ids or []
-        if mobile_targets:
-            if await self.call_mobile_apps(envelope, mobile_targets):
-                delivered = True
+        if mobile_targets and await self.call_mobile_apps(envelope, mobile_targets):
+            delivered = True
         return delivered
 
     async def call_media_players(self, envelope: Envelope, targets: list[str]) -> bool:

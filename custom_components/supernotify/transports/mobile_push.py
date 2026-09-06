@@ -229,11 +229,10 @@ class MobilePushTransport(Transport):
         """Attempt to create a title for mobile action from the TITLE of the web page at the URL"""
         if url in self.action_titles:
             return self.action_titles[url]
-        if url in self.action_title_failures:
+        if url in self.action_title_failures and time.time() - self.action_title_failures[url] < retry_timeout:
             # don't retry too often
-            if time.time() - self.action_title_failures[url] < retry_timeout:
-                _LOGGER.debug("SUPERNOTIFY Skipping retry after previous failure to retrieve url title for %s", url)
-                return None
+            _LOGGER.debug("SUPERNOTIFY Skipping retry after previous failure to retrieve url title for %s", url)
+            return None
         try:
             websession: ClientSession = self.context.hass_api.http_session()
             resp: ClientResponse = await websession.get(url, timeout=ClientTimeout(total=5.0))

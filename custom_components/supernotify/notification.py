@@ -631,29 +631,28 @@ class Notification(ArchivableObject):
         suppression_reason: SuppressionReason | None = None,
     ) -> None:
         """Debugging (and unit test) support for notifications that failed or were skipped"""
-        if delivery:
-            if envelope:
-                self.delivered += envelope.delivered
-                self.error_count += envelope.error_count
-                self.deliveries.setdefault(delivery.name, {})
-                if envelope.delivered:
-                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
-                    self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+        if delivery and envelope:
+            self.delivered += envelope.delivered
+            self.error_count += envelope.error_count
+            self.deliveries.setdefault(delivery.name, {})
+            if envelope.delivered:
+                self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
+                self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+            else:
+                if suppression_reason:
+                    envelope.skip_reason = suppression_reason
+                    if suppression_reason not in self._skip_reasons:
+                        self._skip_reasons.append(suppression_reason)
+                    if suppression_reason == SuppressionReason.DUPE:
+                        self.dupe = True
+                if envelope.error_count:
+                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])
+                    self.deliveries[delivery.name][EnvelopeOutcome.ERROR].append(envelope)  # type: ignore
+                    self.failed += 1
                 else:
-                    if suppression_reason:
-                        envelope.skip_reason = suppression_reason
-                        if suppression_reason not in self._skip_reasons:
-                            self._skip_reasons.append(suppression_reason)
-                        if suppression_reason == SuppressionReason.DUPE:
-                            self.dupe = True
-                    if envelope.error_count:
-                        self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])
-                        self.deliveries[delivery.name][EnvelopeOutcome.ERROR].append(envelope)  # type: ignore
-                        self.failed += 1
-                    else:
-                        self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])
-                        self.deliveries[delivery.name][EnvelopeOutcome.SUPPRESSED].append(envelope)  # type: ignore
-                        self.suppressed += 1
+                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])
+                    self.deliveries[delivery.name][EnvelopeOutcome.SUPPRESSED].append(envelope)  # type: ignore
+                    self.suppressed += 1
 
         if not envelope:
             delivery_name: str = delivery.name if delivery else "!UNKNOWN!"

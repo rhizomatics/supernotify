@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -307,7 +307,7 @@ class TestPreAnnounce:
         call_delay = 0.2
         states = {f"media_player.d{i}": {"volume": 0.5, "playing": True} for i in range(5)}
 
-        async def _delayed_call(*args, **kwargs):
+        async def _delayed_call(*args: Any, **kwargs: Any):
             await asyncio.sleep(call_delay)
 
         t.hass_api.call_service = AsyncMock(side_effect=_delayed_call)
@@ -365,7 +365,7 @@ class TestPostAnnounce:
         call_delay = 0.2
         states = {f"media_player.d{i}": {"volume": 0.5, "playing": False} for i in range(5)}
 
-        async def _delayed_call(*args, **kwargs):
+        async def _delayed_call(*args: Any, **kwargs: Any):
             await asyncio.sleep(call_delay)
 
         t.hass_api.call_service = AsyncMock(side_effect=_delayed_call)
@@ -606,12 +606,14 @@ class TestDeliver:
                 # inside _post_announce) must still be reached and complete normally.
                 raise asyncio.CancelledError()
 
-        with patch(
-            "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep",
-            side_effect=_sleep_side_effect,
+        with (
+            patch(
+                "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep",
+                side_effect=_sleep_side_effect,
+            ),
+            pytest.raises(asyncio.CancelledError),
         ):
-            with pytest.raises(asyncio.CancelledError):
-                await t.deliver(envelope)
+            await t.deliver(envelope)
         names = _service_names(t)
         assert "media_pause" in names
         assert "media_play" in names

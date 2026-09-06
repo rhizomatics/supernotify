@@ -95,7 +95,7 @@ class ChimeTargetConfig:
         self.duration: int | None = duration
         self.data: dict[str, Any] | None = data or {}
 
-    def as_dict(self, **kwargs) -> dict[str, Any]:
+    def as_dict(self, **kwargs: Any) -> dict[str, Any]:
         return {
             "entity_id": self.entity_id,
             "device_id": self.device_id,

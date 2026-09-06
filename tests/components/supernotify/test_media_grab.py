@@ -6,7 +6,7 @@ import time
 from contextlib import chdir
 from io import BytesIO
 from os import fspath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
@@ -127,7 +127,7 @@ async def test_snap_camera(unmocked_hass_api, tmp_aiopath: Path) -> None:
     called_entity: str | None = None
     fixture_image_path: Path = IMAGE_PATH / "example_image.jpeg"
 
-    async def dummy_snapshot(call: ServiceCall, **kwargs) -> ServiceResponse | None:
+    async def dummy_snapshot(call: ServiceCall, **kwargs: Any) -> ServiceResponse | None:
         nonlocal called_entity
         called_entity = call.data["entity_id"]
         # recorder serialises call_service events to JSON; a pathlib.Path filename breaks that silently
@@ -418,10 +418,9 @@ async def test_media_storage(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
         Mock(path="def", is_dir=Mock(return_value=False), is_file=Mock(return_value=True), stat=new_time),
         Mock(path="xyz", is_dir=Mock(return_value=False), is_file=Mock(return_value=True), stat=old_time),
     ]
-    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan:
-        with patch("aiofiles.os.unlink") as rmfr:
-            await uut.cleanup()
-            rmfr.assert_called_once_with(Path("xyz"))
+    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan, patch("aiofiles.os.unlink") as rmfr:
+        await uut.cleanup()
+        rmfr.assert_called_once_with(Path("xyz"))
     # skip cleanup for a few hours
     assert uut.media_path is not None
     first_purge = uut.last_purge

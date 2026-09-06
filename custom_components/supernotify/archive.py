@@ -296,12 +296,10 @@ class NotificationArchive:
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         archived: bool = False
-        if self.archive_topic:
-            if await self.archive_topic.archive(archive_object):
-                archived = True
-        if self.archive_directory:
-            if await self.archive_directory.archive(archive_object):
-                archived = True
+        if self.archive_topic and await self.archive_topic.archive(archive_object):
+            archived = True
+        if self.archive_directory and await self.archive_directory.archive(archive_object):
+            archived = True
         if self.event_archiver and archive_object.selected(self.event_selection):
             await self.event_archiver.archive(archive_object)
 

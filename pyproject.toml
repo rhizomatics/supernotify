@@ -161,49 +161,11 @@ exclude = [
 [tool.ruff.lint]
 extend-select = ["ANN", "PYI"]
 preview = true
-ignore = [
-    "W191",
-    "BLE001", # catch Exception
-    "E111",
-    "E114",
-    "E117",
-    "D206",
-    "D300",
-    "Q000",
-    "Q001",
-    "COM812",
-    "COM819",
-    "ISC001",
-    "RUF067",  # __init__ more than exports
-    "ISC002",  # std formatter conflicts
-    "D203",
-    "D213",    # other formatter clashes
-    "TD002",
-    "TD003",
-    "TD005",
-    "TRY002", # create custom exceptions
-    "SIM102",
-    "SIM117",
-    "ANN002",
-    "ANN003",
-    "SIM108",
-    "D103",
-    "D100",
-    "D101",
-    "D102",
-    "D104",
-    "D107",
-    "D415",
-    "D400",
-    "D415",
-    "S101",
-    "C901",
-    "FURB113",
-    "PGH003",
-    "S602",
-    "S607",
-    "PLW0108", # lambda hate
-] # subprocess usage
+ignore=[
+    "BLE001", # Blind except
+    "SIM117",  # Multiple with statements
+    "PLW0108" # lay off the lambdas
+]
 unfixable = ["B"]
 
 [tool.ruff.lint.flake8-annotations]

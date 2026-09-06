@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import (
@@ -366,7 +367,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         transport_configs=TRANSPORT_DEFAULTS,
     )
 
-    def call_service(domain, service, service_data=None, **kwargs):
+    def call_service(domain, service, service_data=None, **kwargs: Any):
         if service == "make_fail":
             raise ServiceValidationError("just because")
 

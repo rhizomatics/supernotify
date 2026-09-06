@@ -347,7 +347,7 @@ async def test_subscribe_and_unsubscribe(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
     calls: int = 0
 
-    def listener(*args, **kwargs):
+    def listener(*args: Any, **kwargs: Any):
         nonlocal calls
         calls += 1
 

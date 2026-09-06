@@ -76,7 +76,7 @@ def ensure_dict(v: Any, default: Any = None) -> dict[Any, Any]:  # ruff: ignore[
     return {v: default}
 
 
-def sanitize(v: Any, minimal: bool = True, top_level_keys_only: bool = False, **kwargs) -> Any:  # ruff: ignore[any-type]
+def sanitize(v: Any, minimal: bool = True, top_level_keys_only: bool = False, **kwargs: Any) -> Any:  # ruff: ignore[any-type]
     if isinstance(v, dt.datetime | dt.time | dt.date):
         return v.isoformat()
     if isinstance(v, str | int | float | bool):
