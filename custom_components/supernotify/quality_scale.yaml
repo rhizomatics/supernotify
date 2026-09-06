@@ -269,10 +269,9 @@ rules:
     comment: No dedicated troubleshooting doc found under docs/.
 
   docs-use-cases:
-    status: todo
+    status: done
     comment: |
-      docs/concepts.md and docs/recipes/ cover this informally; no dedicated
-      use-cases page.
+      docs/concepts.md and docs/recipes/ cover use cases
 
   dynamic-devices:
     status: exempt
