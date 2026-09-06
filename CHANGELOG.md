@@ -1,3 +1,8 @@
+## 2.3.1
+
+### Technical
+- Clean up of code and tests, tightened linting and typing rules
+
 ## 2.3.0
 
 ### Dedicated Notify Action
