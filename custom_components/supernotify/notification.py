@@ -700,7 +700,13 @@ class Notification(ArchivableObject):
         result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
         if self.ha_context is not None:
             # Context.as_dict() takes no kwargs, so it can't go through sanitize() like everything else
-            result["original_context"] = dict(self.ha_context.as_dict())
+            original_context = dict(self.ha_context.as_dict())
+            user_id = original_context.get("user_id")
+            if user_id:
+                user_name = self.people_registry.name_for_user_id(user_id)
+                if user_name:
+                    original_context["user"] = user_name
+            result["original_context"] = original_context
         result.update({
             k: sanitize(
                 self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)

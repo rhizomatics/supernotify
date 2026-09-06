@@ -245,6 +245,12 @@ class PeopleRegistry:
             return state.attributes
         return None
 
+    def name_for_user_id(self, user_id: str) -> str | None:
+        for recipient in self.people.values():
+            if recipient.user_id == user_id:
+                return recipient.alias or recipient.name
+        return None
+
     def find_people(self) -> list[str]:
         return self.hass_api.entity_ids_for_domain(PERSON_DOMAIN)
 
