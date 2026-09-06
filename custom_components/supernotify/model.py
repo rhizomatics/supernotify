@@ -689,6 +689,8 @@ class ConditionVariables:
     ) -> None:
         occupiers = occupiers or {}
         self.occupancy = []
+        if not occupiers.get(STATE_NOT_HOME) and not occupiers.get(STATE_HOME):
+            self.occupancy.append("UNDEFINED_OCCUPANTS")
         if not occupiers.get(STATE_NOT_HOME) and occupiers.get(STATE_HOME):
             self.occupancy.append("ALL_HOME")
         elif occupiers.get(STATE_NOT_HOME) and not occupiers.get(STATE_HOME):
@@ -729,6 +731,7 @@ class SuppressionReason(StrEnum):
     PRIORITY = "PRIORITY"
     DELIVERY_CONDITION = "DELIVERY_CONDITION"
     UNKNOWN = "UNKNOWN"
+    ERROR = "ERROR"
 
 
 class TargetRequired(StrEnum):
@@ -788,7 +791,9 @@ class DebugTrace:
         title: str | None,
         data: dict[str, Any] | None,
         target: dict[str, list[str]] | list[str] | str | None,
+        debug: bool = True,
     ) -> None:
+        self.debug: bool = debug
         self.message: str | None = message
         self.title: str | None = title
         self.data: dict[str, Any] | None = dict(data) if data else data
@@ -819,6 +824,8 @@ class DebugTrace:
 
     def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
+        if not self.debug:
+            return
         self.resolved.setdefault(delivery_name, {})
         self.resolved[delivery_name].setdefault(stage, {})
         self._last_target.setdefault(delivery_name, {})
@@ -842,13 +849,19 @@ class DebugTrace:
 
     def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
+        if not self.debug:
+            return
         self.delivery_selection[stage] = delivery_selection
 
     def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:  # ruff: ignore[any-type]
+        if not self.debug:
+            return
         self.delivery_artefacts.setdefault(delivery, {})
         self.delivery_artefacts[delivery][artefact_name] = artefact
 
     def record_delivery_exception(self, delivery: str, context: str, exception: Exception) -> None:
+        if not self.debug:
+            return
         self.delivery_exceptions.setdefault(delivery, {})
         self.delivery_exceptions[delivery].setdefault(context, [])
         self.delivery_exceptions[delivery][context].append(format_exception(exception))

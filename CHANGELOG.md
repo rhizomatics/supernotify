@@ -2,6 +2,8 @@
 
 ### Technical
 - Clean up of code and tests, tightened linting and typing rules
+- Tidied up some error handling and diagnostics for notification delivery
+- If no occupants defined, then occupancy will be explicitly `UNDEFINED_OCCUPANTS` rather than ambiguous
 
 ## 2.3.0
 

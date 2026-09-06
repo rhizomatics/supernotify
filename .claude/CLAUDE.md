@@ -65,6 +65,8 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+For code reviews, produce a single list of findings, graded by risk.
+
 
 ## Project Context
 
