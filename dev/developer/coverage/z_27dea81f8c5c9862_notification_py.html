@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for custom_components/supernotify/notification.py: 90%</title>
+    <title>Coverage for custom_components/supernotify/notification.py: 91%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
     <script src="coverage_html_cb_dd2e7eb5.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>custom_components<span class="sep">/</span>supernotify<span class="sep">/</span>notification.py</b>:
-            <span class="pc_cov">90%</span>
+            <span class="pc_cov">91%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">595 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">535<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">60<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">542<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">53<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">7<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_notify_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-06 19:04 +0000
+            created at 2026-09-06 19:07 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -693,15 +693,15 @@
     <p class="run"><span class="n"><a id="t611" href="#t611">611</a></span><span class="t">                    <span class="nam">envelope</span><span class="op">.</span><span class="nam">delivery_error</span> <span class="op">=</span> <span class="nam">format_exception</span><span class="op">(</span><span class="nam">e2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t612" href="#t612">612</a></span><span class="t">                    <span class="nam">self</span><span class="op">.</span><span class="nam">record_result</span><span class="op">(</span><span class="nam">delivery</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t613" href="#t613">613</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t">        <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">exception</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t">                <span class="str">&quot;SUPERNOTIFY Failed to notify using delivery %s via %s&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t">                <span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t">                <span class="nam">type</span><span class="op">(</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">transport</span><span class="op">)</span><span class="op">.</span><span class="nam">__name__</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis mis2 show_mis"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_exceptions</span><span class="op">.</span><span class="nam">setdefault</span><span class="op">(</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span> <span class="op">[</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_exceptions</span><span class="op">[</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">]</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">&quot;\n&quot;</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">format_exception</span><span class="op">(</span><span class="nam">e</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">record_result</span><span class="op">(</span><span class="nam">delivery</span><span class="op">,</span> <span class="key">None</span><span class="op">,</span> <span class="nam">suppression_reason</span><span class="op">=</span><span class="nam">SuppressionReason</span><span class="op">.</span><span class="nam">ERROR</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t614" href="#t614">614</a></span><span class="t">        <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t615" href="#t615">615</a></span><span class="t">            <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">exception</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t616" href="#t616">616</a></span><span class="t">                <span class="str">&quot;SUPERNOTIFY Failed to notify using delivery %s via %s&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t617" href="#t617">617</a></span><span class="t">                <span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t618" href="#t618">618</a></span><span class="t">                <span class="nam">type</span><span class="op">(</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">transport</span><span class="op">)</span><span class="op">.</span><span class="nam">__name__</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_exceptions</span><span class="op">.</span><span class="nam">setdefault</span><span class="op">(</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">,</span> <span class="op">[</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_exceptions</span><span class="op">[</span><span class="nam">delivery</span><span class="op">.</span><span class="nam">name</span><span class="op">]</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">&quot;\n&quot;</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="nam">format_exception</span><span class="op">(</span><span class="nam">e</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">record_result</span><span class="op">(</span><span class="nam">delivery</span><span class="op">,</span> <span class="key">None</span><span class="op">,</span> <span class="nam">suppression_reason</span><span class="op">=</span><span class="nam">SuppressionReason</span><span class="op">.</span><span class="nam">ERROR</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t623" href="#t623">623</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t624" href="#t624">624</a></span><span class="t">    <span class="key">def</span> <span class="nam">record_result</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t625" href="#t625">625</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -746,8 +746,8 @@
     <p class="run"><span class="n"><a id="t664" href="#t664">664</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">deliveries</span><span class="op">[</span><span class="nam">delivery_name</span><span class="op">]</span><span class="op">[</span><span class="nam">EnvelopeOutcome</span><span class="op">.</span><span class="nam">SKIPPED</span><span class="op">]</span> <span class="op">=</span> <span class="nam">skip_summary</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t665" href="#t665">665</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">skipped</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t666" href="#t666">666</a></span><span class="t">            <span class="key">if</span> <span class="nam">suppression_reason</span> <span class="op">==</span> <span class="nam">SuppressionReason</span><span class="op">.</span><span class="nam">ERROR</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t667" href="#t667">667</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">error_count</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t668" href="#t668">668</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">failed</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t667" href="#t667">667</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">error_count</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t668" href="#t668">668</a></span><span class="t">                <span class="nam">self</span><span class="op">.</span><span class="nam">failed</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t669" href="#t669">669</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t670" href="#t670">670</a></span><span class="t">    <span class="key">def</span> <span class="nam">contents</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">diagnostics</span><span class="op">:</span> <span class="nam">bool</span> <span class="op">=</span> <span class="key">False</span><span class="op">,</span> <span class="op">**</span><span class="nam">_kwargs</span><span class="op">:</span> <span class="nam">Any</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t671" href="#t671">671</a></span><span class="t">        <span class="str">&quot;&quot;&quot;ArchiveableObject implementation&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
@@ -1078,7 +1078,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_notify_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-06 19:04 +0000
+            created at 2026-09-06 19:07 +0000
         </p>
     </div>
 </footer>
