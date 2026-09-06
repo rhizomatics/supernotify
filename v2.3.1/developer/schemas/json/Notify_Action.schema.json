@@ -332,6 +332,21 @@
           }
         }
       ]
+    },
+    "custom_target": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "camera_entity_id": {
+      "type": "string"
+    },
+    "clip_url": {
+      "type": "string"
+    },
+    "snapshot_url": {
+      "type": "string"
     }
   },
   "required": [
