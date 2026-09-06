@@ -42,7 +42,7 @@ cameras:
 ## Example Action Call
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: 'ALERT: {{ state_attr(motion_sensor,"friendly_name") }}'
         message: Motion at night in {{ state_attr(motion_sensor,"friendly_name")

@@ -99,7 +99,7 @@ Supernotifyは現在、基本設定には標準のHome Assistant UI設定、高�
 モバイルプッシュ設定の自動化を含め、シンプルな非YAML設定だけで多くのことができます。ドキュメント内の[レシピ](recipes/index.md)と、このモバイルプッシュの例をご覧ください：
 
 ```yaml title="YAMLゼロ、すべてUI設定"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: こんにちは！全員のモバイルアプリに送信するSupernotifyのテストです
 ```

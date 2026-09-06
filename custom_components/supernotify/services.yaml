@@ -39,18 +39,6 @@ notify:
     delivery:
       selector:
         object:
-    require_scenarios:
-      selector:
-        text:
-          multiple: true
-    apply_scenarios:
-      selector:
-        text:
-          multiple: true
-    constrain_scenarios:
-      selector:
-        text:
-          multiple: true
     multimedia:
       collapsed: false
       fields:
@@ -67,6 +55,21 @@ notify:
         media:
           selector:
             object:
+    scenarios:
+      collapsed: false
+      fields:
+        require_scenarios:
+          selector:
+            text:
+              multiple: true
+        apply_scenarios:
+          selector:
+            text:
+              multiple: true
+        constrain_scenarios:
+          selector:
+            text:
+              multiple: true
     advanced:
       collapsed: true
       fields:

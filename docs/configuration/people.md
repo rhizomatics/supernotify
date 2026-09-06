@@ -77,7 +77,7 @@ in a similar way (`enabled` defaults to `True`).
 This means you can do multi-channel notification with a single reference to a `person` entity in a notification, and automatically the email, phone number, mobile app notification service, or whatever else is used as appropriate in each notification. This is all it takes:
 
 ```yaml title="Example Message to All Devices"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Security Notification
         message: Something went off in the basement
@@ -89,7 +89,7 @@ If you want to pin it down to specific people, add a list of targets ( you can a
 target list with email addresses, notify entities, or direct mobile actions ).
 
 ```yaml title="Example Message to Some People"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Warning All Kids
         message: Something happened and we are unhappy
@@ -120,12 +120,12 @@ Every recipient is also automatically exposed as its own `notify.recipient_XXXXX
         message: Your bin needs to go out!!!
 ```
 
-This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` does, just scoped to that one recipient instead of the whole People Registry.
+This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` or `supernotify.notify` does, just scoped to that one recipient instead of the whole People Registry.
 
 Because it's an ordinary Home Assistant Notify Entity, it can be added as a member of a Home Assistant **Notify Group** helper ( *Settings → Devices & Services → Helpers → Add Helper → Group → Notify Group* ), to combine several recipients - or a subset of them - under one target, without needing a Supernotify Scenario just for that. These can be a mix of Supernotify provided and other platform Notify Entities.
 
 !!! note
-    Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `notify.supernotify` action with an explicit `target:` if you need any of that for a specific recipient.
+    Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `supernotify.notify` action with an explicit `target:` if you need any of that for a specific recipient.
 
 ## Enabling, Disabling and Overriding Targets per Delivery
 

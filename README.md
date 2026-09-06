@@ -119,7 +119,7 @@ Presently Supernotify supports standard Home Assistant UI based config for the b
 A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](recipes/index.md) in the documentation, and this mobile push example:
 
 ```yaml title="With zero YAML all UI config"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```

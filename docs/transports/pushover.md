@@ -96,7 +96,7 @@ pushover_emergency:
 ### Example Call
 
 ```yaml
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "Test transport nativo Pushover - Se ricevi con suono magic, funziona!"
   title: "PR Pushover Smoke Test"

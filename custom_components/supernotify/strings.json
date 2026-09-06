@@ -87,6 +87,10 @@
                     "name": "Multimedia",
                     "description": "Attach a camera snapshot, an existing image, or a video clip to this notification."
                 },
+                "scenarios": {
+                    "name": "Scenarios",
+                    "description": "Require, force-apply, or constrain which scenarios affect this notification."
+                },
                 "advanced": {
                     "name": "Advanced",
                     "description": "Actionable-notification buttons, HTML formatting, debug tracing, and other less commonly used options."

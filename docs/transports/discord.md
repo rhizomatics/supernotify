@@ -71,7 +71,7 @@ integration downloads at most 8MB per attachment.
 Example call with an embed and a snapshot:
 
 ```yaml
-action: notify.supernotify
+action: supernotify.notify
 data:
   title: "Alarm"
   message: "Motion detected"

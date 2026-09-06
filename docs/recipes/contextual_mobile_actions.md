@@ -85,7 +85,7 @@ supernotify:
 ### Example Notify Action
 
 ```yaml
-action: notify.supernotify
+action: supernotify.notify
 data:
     message: Motion detected in hallway
 ```

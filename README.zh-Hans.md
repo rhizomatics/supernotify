@@ -99,7 +99,7 @@ Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置�
 使用简单的非 YAML 配置即可完成很多操作，包括移动推送设置的自动化。请参阅文档中的[使用示例](recipes/index.md)，以及以下移动推送示例：
 
 ```yaml title="零 YAML，全部通过 UI 配置"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: 你好！这是 Supernotify 的测试，正在向所有人的移动应用发送通知
 ```

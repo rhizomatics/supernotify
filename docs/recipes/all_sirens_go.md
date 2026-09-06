@@ -28,7 +28,7 @@ Use a `chime` delivery with a set of aliases that cope with the variety of imple
 a notification action, either on its own, or as part of a broader notification with email, mobile push etc
 
 ```yaml
-    - action: notify.supernotify
+    - action: supernotify.notify
       data:
         message: ""
         delivery:

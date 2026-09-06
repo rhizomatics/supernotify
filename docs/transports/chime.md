@@ -42,7 +42,7 @@ A doorbell notification can be sent to multiple devices just by selecting a tune
 [Example Configuration](#example) below for how this can work.)
 
 ```yaml
-    - action: notify.supernotify
+    - action: supernotify.notify
       data:
         message: ""
         delivery:

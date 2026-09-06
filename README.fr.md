@@ -99,7 +99,7 @@ Supernotify prend actuellement en charge la configuration standard via l'interfa
 Beaucoup de choses peuvent être faites avec la configuration simple sans YAML, y compris l'automatisation de la configuration des notifications push mobiles. Consultez les [recettes](recipes/index.md) dans la documentation, ainsi que cet exemple de notification push mobile :
 
 ```yaml title="Avec zéro YAML, tout configuré via l'interface"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Bonjour ! Test de Supernotify envoyant vers les applications mobiles de tout le monde
 ```

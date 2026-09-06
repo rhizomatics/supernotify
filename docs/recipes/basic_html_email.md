@@ -22,7 +22,7 @@ with only a title ( that gets picked up for mobile push, alexa and other brief c
 a much more detailed body only for email.
 
 ```yaml title="Example Action Call"
-- action: notify.supernotify
+- action: supernotify.notify
       data:
         title: "Motion Detection at Back Door"
         message: "Motion has been detected at the back door"

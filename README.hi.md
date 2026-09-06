@@ -99,7 +99,7 @@ Supernotify अब बुनियादी सेटअप के लिए म
 सरल गैर-YAML कॉन्फ़िगरेशन से बहुत कुछ किया जा सकता है, जिसमें मोबाइल पुश सेटअप का स्वचालन भी शामिल है। दस्तावेज़ में [रेसिपी](recipes/index.md) देखें, और यह मोबाइल पुश उदाहरण:
 
 ```yaml title="शून्य YAML के साथ, सब कुछ UI से कॉन्फ़िगर"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: नमस्ते! Supernotify परीक्षण — सभी के मोबाइल ऐप्स पर भेज रहे हैं
 ```

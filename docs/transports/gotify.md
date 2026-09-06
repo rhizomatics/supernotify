@@ -40,7 +40,7 @@ Tested on Home Assistant 2026.3.4 with:
 
 ```yaml
 # 1. Basic message — priority auto-mapping
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "Test base Gotify"
   title: "SuperNotify Test"
@@ -48,7 +48,7 @@ data:
 # Result: notification received, priority=5 (int) in Gotify ✅
 
 # 2. Critical alert — priority mapping
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "Allarme ingresso attivo"
   title: "🚨 Allarme"
@@ -57,7 +57,7 @@ data:
 # Result: priority=10, notification shown with max urgency ✅
 
 # 3. With bigImageUrl from camera snapshot
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "Movimento rilevato"
   delivery: [gotify_con_camera]
@@ -68,7 +68,7 @@ data:
 # Result: snapshot taken, bigImageUrl present, image visible on tap ✅
 
 # 4. With click URL and Markdown
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "**Porta aperta** — controlla la dashboard"
   delivery: [gotify_base]

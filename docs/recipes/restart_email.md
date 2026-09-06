@@ -29,7 +29,7 @@ automations:
     - event: start
       trigger: homeassistant
   action:
-      action: notify.supernotify
+      action: supernotify.notify
       data:
         title: "Home Assistant Restart"
         message: "Home Assistant has started up."

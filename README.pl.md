@@ -99,7 +99,7 @@ Supernotify obsługuje obecnie standardową konfigurację z poziomu interfejsu H
 Wiele można osiągnąć dzięki prostej konfiguracji bez YAML, w tym automatyzacji konfiguracji powiadomień push. Zobacz [przepisy](recipes/index.md) w dokumentacji oraz ten przykład powiadomień push:
 
 ```yaml title="Z zerem YAML, wszystko skonfigurowane przez interfejs"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Cześć! Test Supernotify wysyłający do aplikacji mobilnych wszystkich
 ```

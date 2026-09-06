@@ -128,7 +128,7 @@ triggered by using `apply_scenarios`, and so any overrides declared in those sce
 The `constrain_scenarios` prevents any scenario other than `unoccupied` or the ones explicitly applied here ( to switch off all other scenarios, use `NO_SCENARIO`). Constraining a scenario doesn't actually select it, only permits it if otherwise selected by a condition, and it doesn't affect scenarios explicitly switched on in the same data block by `apply_scenarios`.
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Security Notification
         message: '{{state_attr(sensor,"friendly_name")}} triggered'
@@ -160,7 +160,7 @@ Using `required_scenarios`, a notification can be generated that will only be de
 listed scenarios has an active condition.
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Hallway PIR
         message: Somebody in the hall

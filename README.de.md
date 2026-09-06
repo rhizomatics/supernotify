@@ -99,7 +99,7 @@ Supernotify unterstützt derzeit die standardmäßige Home Assistant UI-Konfigur
 Mit der einfachen Nicht-YAML-Konfiguration lässt sich bereits viel erreichen, einschließlich der automatischen Einrichtung von Mobile Push. Siehe die [Rezepte](recipes/index.md) in der Dokumentation, sowie dieses Mobile-Push-Beispiel:
 
 ```yaml title="Mit null YAML, alles per UI konfiguriert"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Hallo! Test von Supernotify, das an alle mobilen Apps sendet
 ```

@@ -67,7 +67,7 @@ supernotify:
 Whatever method has been defined, you can always override it on an notification action call
 
 ```yaml title="Example Message"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something went off in the basement
         target: john@mcdoe.co.bn

@@ -45,7 +45,7 @@ delivery:
 Use this deliveries with action calls like this:
 
 ```yaml title="Example Action Call"
-    - action: notify.supernotify
+    - action: supernotify.notify
       data:
         title: "My Home Notification"
         message: "Notify via custom chat"
@@ -92,7 +92,7 @@ delivery:
 This can also be used in a notification call:
 
 ```yaml title="Example Action Call"
-    - action: notify.supernotify
+    - action: supernotify.notify
       data:
         message: "Notify via slack"
         target:

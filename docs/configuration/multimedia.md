@@ -77,7 +77,7 @@ These options can be set in the `delivery` or `transport` configuration, or in t
 ### Example Action
 
 ```yaml
- - action: notify.supernotify
+ - action: supernotify.notify
       data:
         title: "My Home Notification"
         message: "Notify with image snapshot taking close-up of vehicle on driveway"

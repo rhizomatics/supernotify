@@ -7,16 +7,24 @@ tags:
   - notification
 description: How to send notifications using Supernotify from automations or the Home Assistant app
 ---
-# Sending Notifications
 
-From an automation, call Supernotify as you would any other `notify` platform. For many cases, you can convert an existing notification call to Supernotify by only changing the `action` name, for example if its an email notification, mobile push action or `notify.send_message`.
+## Sending Notifications
 
-!!! info
-    These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though
-    you are free to name it however you like.
+Use the `supernotify.notify` action for the easiest way to send notifications, with guidance for each main part of the `data` section and selectors.
 
-There are lots more examples in the [Recipes](../recipes/index.md), including how to make it work well
-with Frigate, AppDaemon and Alexa.
+```yaml title="Same Example, via supernotify.notify"
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        priority: high
+        delivery: mobile_push
+```
+
+`supernotify.notify` also retains the original context of the action, and propagates that down to any actions it calls, such as for underlying notification transports or moving a PTZ camera. (See the [original Home Assistant blog post](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on tracing context.)
+
+All of the examples below will work equally with `supernotify.notify` (easier to use when using in the Actions or Automations UI) or the `notify` platform compatible `notify.supernotify` style action.
+
+There are lots more examples in the [Recipes](../recipes/index.md), including how to make it work well with Frigate, AppDaemon and Alexa.
 
 ## Simplest Example
 
@@ -25,7 +33,7 @@ In this example, there's no configuration, target or anything more than the stan
 This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry in Home Assistant.
 
 ```yaml title="Example Message to All Devices"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something went off in the basement
 ```
@@ -35,7 +43,7 @@ This notification will go out to all the implicit deliveries. If there's no conf
 Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications.
 
 ```yaml title="Example Message to All Devices"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something went off in the basement
         target: person.john_mcdoe
@@ -46,7 +54,7 @@ In this case, the notification will go only to John, to any mobile devices he's 
 Its also possible to put the e-mail, mobile action, notify entity or similar directly into the target:
 
 ```yaml title="Example Email Message"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something went off in the basement
         target: john@mcdoe.co.bn
@@ -60,7 +68,7 @@ This is what a complicated target looks like - any of the separate address types
 is most convenient
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something went off in the basement
         target:
@@ -88,7 +96,7 @@ Valid Priorities:
 Example Message
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something boring happened
         priority: low
@@ -100,7 +108,7 @@ Notifications are checked for duplicates based on a selected policy. This
 can also be turned off for individual notifications using `force_resend`.
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Something happened
         force_resend: true
@@ -126,7 +134,7 @@ Delivery selection can be passed in the `data` of an action call using the `deli
 An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override. If in doubt, add the `delivery_selection` to make it clear.
 
 ```yaml title="Implicit (default) - implied by a mapping"
-  - action: notify.supernotify
+  - action:supernotify.notify
     data:
         message: Garden sensor triggered
         delivery:
@@ -139,7 +147,7 @@ In this example, `mobile_push` and `plain_email` are selected as deliveries, eve
 any deliveries selected by conditions or scenarios will be added to the list.
 
 ```yaml title="Explicit - implied by a list"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Garden sensor triggered
         delivery:
@@ -150,7 +158,7 @@ any deliveries selected by conditions or scenarios will be added to the list.
 In this case `plain_email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
 
 ```yaml title="Fixed - always set explicitly"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Garden sensor triggered
         delivery_selection: fixed
@@ -218,7 +226,7 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
     to:
     - finished
   actions:
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
       message: Dishwasher is finished
       data:
@@ -253,7 +261,7 @@ Templates can be used freely, as in other `notify` integrations
 ## Adding a Link to Mobile Push Notification
 
 ```yaml title="More Advanced Action Call"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Security Notification
         message: Garden sensor triggered
@@ -265,15 +273,13 @@ Templates can be used freely, as in other `notify` integrations
 ```
 
 Note here that the `clickAction` is defined only on the `mobile_push` delivery. However
-it is also possible to simply define everything at the top level `data` section and let the individual
-transport adaptors pick out the attributes they need. This is helpful either if you don't care about
-fine tuning delivery configurations, or using existing notification blueprints, such as the popular
+it is also possible to simply define everything at the top level `data` section and let the individual transport adaptors pick out the attributes they need. This is helpful either if you don't care about fine tuning delivery configurations, or using existing notification blueprints, such as the popular
 [Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications).
 
 ## Customizing message per channel
 
 ```yaml title="Channel Specific Messages"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Garden sensor triggered
         title: Something has happened
@@ -286,21 +292,12 @@ fine tuning delivery configurations, or using existing notification blueprints, 
                 title: HASS
 ```
 
-## A Better UI - `supernotify.notify`
+# Alternate Notification Action
 
-Everything above uses `notify.supernotify`, so it fits in with any other `notify` platform and existing notification blueprints. The same options are also available as `supernotify.notify` - options that would otherwise be buried in the generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, and so on) are instead top-level fields, each with its own selector in the Tools Actions or Automations editor UI, and validated against
-[its own schema](../developer/schemas/Notify_Action.md).
+Supernotify also has compatibility with the original "legacy" notification platform, and the newer **Notify Entity** style - these are good for compatibility, but both are much more limited in the UI, and for entities, in what can be passed down to fine tune the notification. Use `notify.supernotify` for the legacy notification style, presuming you've named the platform that way when setting it up.
 
-```yaml title="Same Example, via supernotify.notify"
-  - action: supernotify.notify
-    data:
-        message: Garden sensor triggered
-        priority: high
-        delivery: [mobile_push, plain_email]
-```
-
-`supernotify.notify` also propagates the calling action's `Context` through to deliveries - `notify.supernotify` can't do this, since it's routed through Home Assistant's legacy `notify`
-platform, which doesn't pass on the `Context` it receives (see the note under "Tracing Activities" in the [changelog](../changelog.md)).
+!!! info
+    These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though you are free to name it however you like.
 
 ## References
 

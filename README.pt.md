@@ -99,7 +99,7 @@ Atualmente, o Supernotify suporta a configuração padrão pela interface do Hom
 Muito pode ser feito com a simples configuração sem YAML, incluindo a automação da configuração de push móvel. Veja as [receitas](recipes/index.md) na documentação, e este exemplo de push móvel:
 
 ```yaml title="Com zero YAML, tudo configurado pela interface"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Olá! Testando o Supernotify enviando para os aplicativos móveis de todos
 ```

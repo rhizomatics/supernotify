@@ -104,7 +104,7 @@ automations:
     value_template: '{{trigger.payload_json is defined and not trigger.payload_json.description.startswith(''NO RISK'')
       and not trigger.payload_json.description.startswith(''LOW RISK'') and not trigger.payload_json.description.startswith(''UNKNOWN'')'
   actions:
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
       message: >-
           {% set description = trigger.payload_json.description %}
