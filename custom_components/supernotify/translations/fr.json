@@ -87,6 +87,10 @@
                     "name": "Options multimédias",
                     "description": "Joindre un instantané de caméra, une image existante ou un clip vidéo à cette notification."
                 },
+                "scenarios": {
+                    "name": "Scénarios",
+                    "description": "Définit les scénarios requis, à appliquer de force, ou restrictifs pour cette notification."
+                },
                 "advanced": {
                     "name": "Avancé",
                     "description": "Boutons d'action pour notifications, mise en forme HTML, traçage de débogage et autres options moins courantes."

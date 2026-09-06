@@ -87,6 +87,10 @@
                     "name": "Multimedia-Optionen",
                     "description": "Einen Kamera-Schnappschuss, ein vorhandenes Bild oder einen Videoclip an diese Benachrichtigung anhängen."
                 },
+                "scenarios": {
+                    "name": "Szenarien",
+                    "description": "Legt fest, welche Szenarien für diese Benachrichtigung erforderlich sind, erzwungen angewendet werden oder sie einschränken."
+                },
                 "advanced": {
                     "name": "Erweitert",
                     "description": "Aktionsschaltflächen für Benachrichtigungen, HTML-Formatierung, Debug-Tracing und weitere selten genutzte Optionen."

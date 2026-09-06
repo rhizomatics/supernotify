@@ -87,6 +87,10 @@
                     "name": "多媒体选项",
                     "description": "为此通知附加摄像头快照、现有图片或视频片段。"
                 },
+                "scenarios": {
+                    "name": "场景",
+                    "description": "控制哪些场景对此通知是必需的、强制应用的或加以限制的。"
+                },
                 "advanced": {
                     "name": "高级",
                     "description": "通知操作按钮、HTML 格式、调试跟踪及其他不常用的选项。"

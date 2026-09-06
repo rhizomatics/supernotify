@@ -27,7 +27,7 @@
 
 >> Wenn du eine fortgeschrittene Konfiguration hast (Lieferungen, Szenarien, Kameras, Personen, Aktionen usw.), wird eine *Reparatur* ausgelöst, um diese in eine neue Datei `supernotify.yaml` zu verschieben und eine `include`-Anweisung zu deiner `configuration.yaml` hinzuzufügen. Oder du kannst die Konfiguration manuell aus dem `notify`-Block verschieben, wie es dir beliebt.
 
->> In beiden Fällen wird nichts gelöscht oder auskommentiert, sodass die Änderung leicht rückgängig zu machen ist. Entferne die alte Konfiguration, sobald du sicher bist, dass die neue Version für dich funktioniert.
+>> In beiden Fällen wird nichts gelöscht oder auskommentiert, sodass die Änderung leicht rückgängig zu machen ist. Entferne die alte Konfiguration, sobald du sicher bist, dass die neue Version für dich funktioniert. Dadurch wird auch die Warnung `[homeassistant.components.notify] Failed to initialize notification service supernotify` aus dem Protokoll entfernt, die von der alten notify-Implementierung stammt.
 
 Eine **einheitliche Benachrichtigungsschnittstelle** auf Basis der integrierten `notify`-Plattform von Home Assistant, um mehrere Benachrichtigungskanäle und komplexe Szenarien erheblich zu vereinfachen, einschließlich Mehrkanal-Benachrichtigungen, bedingter Benachrichtigungen, mobiler Aktionen, Kamera-Snapshots, Klingeltöne und vorlagenbasierter HTML-E-Mails.
 
@@ -37,6 +37,7 @@ Dies hält Automatisierungen, Skripte und AppDaemon-Apps einfach und wartungsfre
 
 Nur mit der UI-Konfiguration beginnen Sie sofort mit mobilen Push-Benachrichtigungen an alle im Haus registrierten Personen, ohne die Namen der mobilen Apps in Benachrichtigungen zu konfigurieren.
 
+![Beispiel für eine Benachrichtigungsaktion](../assets/images/notification.png){width=500}
 
 ## Verteilung
 

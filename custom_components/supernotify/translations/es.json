@@ -87,6 +87,10 @@
                     "name": "Opciones multimedia",
                     "description": "Adjuntar una instantánea de cámara, una imagen existente o un clip de vídeo a esta notificación."
                 },
+                "scenarios": {
+                    "name": "Escenarios",
+                    "description": "Requiere, fuerza la aplicación o restringe qué escenarios afectan a esta notificación."
+                },
                 "advanced": {
                     "name": "Avanzado",
                     "description": "Botones de acción para notificaciones, formato HTML, seguimiento de depuración y otras opciones menos utilizadas."

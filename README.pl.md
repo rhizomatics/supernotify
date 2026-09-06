@@ -27,7 +27,7 @@
 
 >> Jeśli masz zaawansowaną konfigurację (dostarczenia, scenariusze, kamery, osoby, akcje itp.), zostanie zgłoszona *naprawa*, która przeniesie je do nowego pliku `supernotify.yaml` i doda instrukcję `include` do Twojego `configuration.yaml`. Możesz też ręcznie przenieść konfigurację z bloku `notify`, jak Ci wygodnie.
 
->> W obu przypadkach nic nie zostanie usunięte ani zakomentowane, więc łatwo będzie cofnąć zmianę. Usuń starą konfigurację, gdy upewnisz się, że nowa wersja działa poprawnie.
+>> W obu przypadkach nic nie zostanie usunięte ani zakomentowane, więc łatwo będzie cofnąć zmianę. Usuń starą konfigurację, gdy upewnisz się, że nowa wersja działa poprawnie. Usunie to również ostrzeżenie `[homeassistant.components.notify] Failed to initialize notification service supernotify` z dziennika, które pochodzi ze starej implementacji notify.
 
 **Ujednolicony interfejs powiadomień** zbudowany na wbudowanej platformie `notify` Home Assistant, który znacznie upraszcza obsługę wielu kanałów powiadomień i złożonych scenariuszy — w tym powiadomień wielokanałowych, warunkowych, akcji mobilnych, zdjęć z kamer, dzwonków i szablonowych e-maili HTML.
 
@@ -37,6 +37,7 @@ Dzięki temu automatyzacje, skrypty i aplikacje AppDaemon pozostają proste i ł
 
 Wystarczy sama konfiguracja z poziomu interfejsu, aby rozpocząć wysyłanie powiadomień push do wszystkich zarejestrowanych w domu, bez konfigurowania nazw aplikacji mobilnych.
 
+![Przykładowa akcja powiadomienia](../assets/images/notification.png){width=500}
 
 ## Dystrybucja
 

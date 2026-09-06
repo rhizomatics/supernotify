@@ -27,7 +27,7 @@
 
 >> 如果你使用的是高级配置（推送、场景、摄像头、人员、操作等），系统会发起一个*修复*，将这些内容迁移到新的 `supernotify.yaml` 文件中，并在你的 `configuration.yaml` 中添加一条 `include` 语句。你也可以选择按自己喜欢的方式，手动将配置从 `notify` 块中移出。
 
->> 无论哪种方式，都不会删除或注释掉任何内容，因此很容易撤销此更改。当你确认新版本对你可以正常工作后，再删除旧配置。
+>> 无论哪种方式，都不会删除或注释掉任何内容，因此很容易撤销此更改。当你确认新版本对你可以正常工作后，再删除旧配置。这也会从日志中移除来自旧版 notify 实现的 `[homeassistant.components.notify] Failed to initialize notification service supernotify` 警告。
 
 基于 Home Assistant 内置 `notify` 平台构建的**统一通知接口**，大幅简化多通知渠道和复杂场景的管理——包括多渠道通知、条件通知、移动操作、摄像头快照、门铃音效和基于模板的 HTML 邮件。
 
@@ -37,6 +37,7 @@ Supernotify 只有一个目标——**用最简单的通知触发尽可能多的
 
 仅通过 UI 配置，即可向家中所有人发送移动推送通知，无需配置移动应用名称。
 
+![通知操作示例](../assets/images/notification.png){width=500}
 
 ## 分发方式
 

@@ -87,6 +87,10 @@
                     "name": "Opções de multimédia",
                     "description": "Anexar uma captura de câmara, uma imagem existente ou um clipe de vídeo a esta notificação."
                 },
+                "scenarios": {
+                    "name": "Cenários",
+                    "description": "Defina quais cenários são exigidos, aplicados forçadamente ou restringem esta notificação."
+                },
                 "advanced": {
                     "name": "Avançado",
                     "description": "Botões de ação para notificações, formatação HTML, rastreamento de depuração e outras opções menos usadas."

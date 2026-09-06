@@ -87,6 +87,10 @@
                     "name": "Opzioni multimediali",
                     "description": "Allega uno scatto della videocamera, un'immagine esistente o una clip video a questa notifica."
                 },
+                "scenarios": {
+                    "name": "Scenari",
+                    "description": "Richiedi, forza l'applicazione o vincola quali scenari influenzano questa notifica."
+                },
                 "advanced": {
                     "name": "Avanzate",
                     "description": "Pulsanti di azione per le notifiche, formattazione HTML, tracciamento di debug e altre opzioni meno comuni."

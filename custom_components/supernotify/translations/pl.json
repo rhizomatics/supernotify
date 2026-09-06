@@ -87,6 +87,10 @@
                     "name": "Opcje multimediów",
                     "description": "Załącz zrzut z kamery, istniejący obraz lub klip wideo do tego powiadomienia."
                 },
+                "scenarios": {
+                    "name": "Scenariusze",
+                    "description": "Określa, które scenariusze są wymagane, wymuszane, czy ograniczają to powiadomienie."
+                },
                 "advanced": {
                     "name": "Zaawansowane",
                     "description": "Przyciski akcji powiadomień, formatowanie HTML, śledzenie debugowania i inne rzadziej używane opcje."

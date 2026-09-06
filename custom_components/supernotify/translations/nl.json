@@ -87,6 +87,10 @@
                     "name": "Multimedia-opties",
                     "description": "Voeg een camera-momentopname, een bestaande afbeelding of een videoclip toe aan deze melding."
                 },
+                "scenarios": {
+                    "name": "Scenario's",
+                    "description": "Bepaal welke scenario's vereist zijn, geforceerd worden toegepast, of deze melding beperken."
+                },
                 "advanced": {
                     "name": "Geavanceerd",
                     "description": "Actieknoppen voor meldingen, HTML-opmaak, debug-tracering en andere minder gebruikte opties."
