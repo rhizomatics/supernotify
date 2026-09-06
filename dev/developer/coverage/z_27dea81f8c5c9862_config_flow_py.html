@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_const_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-06 17:30 +0000
+            created at 2026-09-06 18:11 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -138,7 +138,7 @@
     <p class="run"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t"><span class="nam">_DUPE_POLICIES</span> <span class="op">=</span> <span class="op">[</span><span class="nam">ATTR_DUPE_POLICY_MTSLP</span><span class="op">,</span> <span class="nam">ATTR_DUPE_POLICY_MT</span><span class="op">,</span> <span class="nam">ATTR_DUPE_POLICY_NONE</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="key">def</span> <span class="nam">_event_policy_str</span><span class="op">(</span><span class="nam">value</span><span class="op">:</span> <span class="nam">Any</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t"><span class="key">def</span> <span class="nam">_event_policy_str</span><span class="op">(</span><span class="nam">value</span><span class="op">:</span> <span class="nam">Any</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span><span class="op">:</span>  <span class="com"># ruff: ignore[any-type]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Render an OutcomeSelection as the pipe-separated name string parse_event_policy</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t"><span class="str">    expects (e.g. &quot;ERROR|DUPE&quot;), whatever form it currently happens to be in.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -165,7 +165,7 @@
     <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t"><span class="nam">_OUTCOME_OPTIONS</span> <span class="op">=</span> <span class="op">[</span><span class="nam">flag</span><span class="op">.</span><span class="nam">name</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span> <span class="key">for</span> <span class="nam">flag</span> <span class="key">in</span> <span class="nam">OutcomeSelection</span> <span class="key">if</span> <span class="nam">flag</span> <span class="op">!=</span> <span class="nam">OutcomeSelection</span><span class="op">.</span><span class="nam">NONE</span> <span class="key">and</span> <span class="nam">flag</span><span class="op">.</span><span class="nam">name</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t"><span class="key">def</span> <span class="nam">_event_policy_to_list</span><span class="op">(</span><span class="nam">value</span><span class="op">:</span> <span class="nam">Any</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t"><span class="key">def</span> <span class="nam">_event_policy_to_list</span><span class="op">(</span><span class="nam">value</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">list</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Turn a stored OutcomeSelection value into the list of names a multi-select needs.&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="nam">policy_str</span> <span class="op">=</span> <span class="nam">_event_policy_str</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">    <span class="key">return</span> <span class="op">[</span><span class="op">]</span> <span class="key">if</span> <span class="nam">policy_str</span> <span class="key">in</span> <span class="op">(</span><span class="str">&quot;&quot;</span><span class="op">,</span> <span class="str">&quot;NONE&quot;</span><span class="op">)</span> <span class="key">else</span> <span class="op">[</span><span class="nam">part</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span> <span class="key">for</span> <span class="nam">part</span> <span class="key">in</span> <span class="nam">policy_str</span><span class="op">.</span><span class="nam">split</span><span class="op">(</span><span class="str">&quot;|&quot;</span><span class="op">)</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
@@ -476,7 +476,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_const_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-06 17:30 +0000
+            created at 2026-09-06 18:11 +0000
         </p>
     </div>
 </footer>
