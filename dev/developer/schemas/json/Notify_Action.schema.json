@@ -333,6 +333,12 @@
         }
       ]
     },
+    "custom_target": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "camera_entity_id": {
       "type": "string"
     },
