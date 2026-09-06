@@ -15,7 +15,7 @@
                 },
                 "target": {
                     "name": "Target",
-                    "description": "Who or what to notify - people, mobile devices, media players, areas, or other target entities. Leave blank to use the default/implicit deliveries."
+                    "description": "Who or what to notify - people, mobile devices, media players, chimes, areas, or other target entities. Leave blank to use the default/implicit deliveries."
                 },
                 "priority": {
                     "name": "Priority",
