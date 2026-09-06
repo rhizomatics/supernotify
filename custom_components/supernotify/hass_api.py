@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
@@ -14,7 +15,7 @@ from homeassistant.util import slugify
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable, Iterable, Iterator, Mapping
+    from collections.abc import Callable, Iterable, Iterator
 
     import aiohttp
     from anyio import Path
@@ -557,9 +558,10 @@ class HomeAssistantAPI:
             return []
 
         all_devs = enabled_devs = found_devs = skipped_devs = 0
-        if hasattr(dev_reg.devices, "values"):
+        all_ha_devices: Iterable[DeviceEntry]
+        if isinstance(dev_reg.devices, Mapping):
             # 2026.8 HA and prior
-            all_ha_devices: Iterable[DeviceEntry] = dev_reg.devices.values()  # ty: ignore[call-non-callable]
+            all_ha_devices = dev_reg.devices.values()
         else:
             all_ha_devices = dev_reg.devices  # type: ignore[assignment]
         for dev in all_ha_devices:
