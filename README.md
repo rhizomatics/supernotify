@@ -37,7 +37,7 @@ A **unified notification interface** on top of HomeAssistant's built in `notify`
 
 Supernotify has one goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-Start off with zero YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), or redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications. And with advanced YAML configuration, the possibilities are endless.
+Start off with zero YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), attach a camera snapshot to an e-mail, or redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications. And with advanced YAML configuration, the possibilities are endless.
 
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
