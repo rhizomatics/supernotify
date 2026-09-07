@@ -213,3 +213,38 @@ scenarios:
        data:
         priority: critical
 ```
+
+## Scenario state
+
+Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its
+conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate
+between notifications — one with no conditions, or whose conditions depend only on the priority of
+the notification being sent.
+
+The state is kept current in two ways. A change to an entity referenced by a scenario's conditions
+re-evaluates the scenarios that depend on that entity, immediately. A periodic sweep then covers
+what no entity change can announce: time windows, sun position, and templates whose dependencies
+could not be determined statically.
+
+Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on
+small hardware is worth controlling:
+
+```yaml
+scenario_state:
+  enabled: true        # false subscribes to nothing and starts no timer
+  refresh_interval: 60 # seconds; 0 keeps the reactive path and drops the sweep
+```
+
+An individual scenario can be kept out of it, which is useful for one expensive template among
+otherwise cheap scenarios:
+
+```yaml
+scenarios:
+  everything_open:
+    expose_state: false
+    condition:
+      - condition: template
+        value_template: "{{ states.binary_sensor | selectattr('state','eq','on') | list | count > 3 }}"
+```
+
+Such a scenario still works normally for notifications; it simply stays `unknown` as an entity.
