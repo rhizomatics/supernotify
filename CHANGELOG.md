@@ -1,4 +1,4 @@
-## 2.3.2
+## 2.4.0
 
 ### Live Scenarios
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
