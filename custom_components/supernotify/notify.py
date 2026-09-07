@@ -15,12 +15,16 @@ from homeassistant.components.notify import (
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
     CONF_ENABLED,
+    CONF_TARGET,
     EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
+)
+from homeassistant.core import (
+    Context as HAContext,
 )
 from homeassistant.core import (
     Event,
@@ -37,10 +41,15 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker, sanitize
+from .common import DupeChecker, ensure_list, sanitize
 from .const import (
     ATTR_ACTION,
+    ATTR_CUSTOM_TARGET,
     ATTR_DATA,
+    ATTR_MEDIA,
+    ATTR_MEDIA_CAMERA_ENTITY_ID,
+    ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_URL,
     CONF_ACTION_GROUPS,
     CONF_ACTIONS,
     CONF_ARCHIVE,
@@ -53,6 +62,7 @@ from .const import (
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
+    CONF_MESSAGE,
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
@@ -61,6 +71,7 @@ from .const import (
     CONF_SCENARIOS,
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
+    CONF_TITLE,
     CONF_TRANSPORTS,
     PRIORITY_MEDIUM,
     SCENARIO_STATE_REFRESH_DEFAULT,
@@ -69,10 +80,11 @@ from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
 from .media_grab import MediaStorage
-from .model import ConditionVariables, SuppressionReason
+from .model import ConditionVariables, SuppressionReason, Target
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
+from .schema import NOTIFY_ACTION_SCHEMA
 from .snoozer import Snoozer
 from .transports.alexa_devices import AlexaDevicesTransport
 from .transports.alexa_media_player import AlexaMediaPlayerTransport
@@ -100,8 +112,10 @@ if TYPE_CHECKING:
     import datetime as dt
 
     from homeassistant.helpers import entity_registry as er
+    from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+    from . import SupernotifyConfigEntry
     from .scenario import Scenario
     from .transport import Transport
 
@@ -163,6 +177,7 @@ def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> Superno
 
 
 SUPPLEMENTAL_SERVICE_NAMES: Final[tuple[str, ...]] = (
+    "notify",
     "enquire_configuration",
     "enquire_implicit_deliveries",
     "enquire_deliveries_by_scenario",
@@ -198,6 +213,42 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
     if hass.services.has_service(DOMAIN, "enquire_configuration"):
         return
 
+    async def supplemental_action_notify(call: ServiceCall) -> None:
+        """supernotify.notify - an alternative to notify.supernotify with each option that would
+        otherwise be buried in the generic `data:` field promoted to its own schema-checked,
+        selector-driven field (see NOTIFY_ACTION_SCHEMA/services.yaml), and, unlike notify.supernotify,
+        propagating the calling action's Context through to deliveries (see 2.3.0 changelog note on
+        the legacy notify platform not forwarding Context).
+        """
+        data = dict(call.data)
+        message = data.pop(CONF_MESSAGE)
+        title = data.pop(CONF_TITLE, None)
+        target = data.pop(CONF_TARGET, None)
+        # custom_target holds identifiers the target selector can't produce (e-mail addresses,
+        # phone numbers, Slack ids etc) - merge into target here so nothing downstream needs to
+        # know this field exists
+        custom_target = ensure_list(data.pop(ATTR_CUSTOM_TARGET, None))
+        if custom_target:
+            if isinstance(target, dict):
+                merged_target = dict(target)
+                for category, values in Target(custom_target).targets.items():
+                    merged_target[category] = [*ensure_list(merged_target.get(category)), *values]
+                target = merged_target
+            else:
+                target = [*ensure_list(target), *custom_target]
+        # camera_entity_id/clip_url/snapshot_url are promoted top-level fields for this action's
+        # UI - fold them into media, overriding any same-named key already nested in media: itself
+        promoted_media = {
+            key: data.pop(key)
+            for key in (ATTR_MEDIA_CAMERA_ENTITY_ID, ATTR_MEDIA_CLIP_URL, ATTR_MEDIA_SNAPSHOT_URL)
+            if key in data
+        }
+        if promoted_media:
+            media = dict(data.get(ATTR_MEDIA) or {})
+            media.update(promoted_media)
+            data[ATTR_MEDIA] = media
+        await service.async_send_message(message, title=title, target=target, data=data, context=call.context)
+
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {
             CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
@@ -227,8 +278,9 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
     def supplemental_action_enquire_deliveries_by_scenario(_call: ServiceCall) -> dict[str, Any]:
         return service.enquire_deliveries_by_scenario()
 
-    def supplemental_action_enquire_last_notification(_call: ServiceCall) -> dict[str, Any]:
-        return service.last_notification.contents() if service.last_notification else {}
+    def supplemental_action_enquire_last_notification(call: ServiceCall) -> dict[str, Any]:
+        diagnostics = call.data.get("diagnostics", False)
+        return service.last_notification.contents(diagnostics=diagnostics) if service.last_notification else {}
 
     async def supplemental_action_enquire_active_scenarios(call: ServiceCall) -> dict[str, Any]:
         trace = call.data.get("trace", False)
@@ -278,6 +330,12 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
             "days": service.context.media_storage.days if days is None else days,
         }
 
+    hass.services.async_register(
+        DOMAIN,
+        "notify",
+        supplemental_action_notify,
+        schema=NOTIFY_ACTION_SCHEMA,
+    )
     hass.services.async_register(
         DOMAIN,
         "enquire_configuration",
@@ -420,7 +478,65 @@ class SupernotifyEntity(NotifyEntity):
         self, message: str, title: str | None = None, target: str | list[str] | None = None, data: dict[str, Any] | None = None
     ) -> None:
         """Send a message to a user."""
-        await self._platform.async_send_message(message, title=title, target=target, data=data)
+        await self._platform.async_send_message(message, title=title, target=target, data=data, context=self._context)
+
+
+class RecipientNotifyEntity(NotifyEntity):
+    """Expose a single recipient as its own `notify.recipient_<name>` entity.
+
+    Sent as an ordinary `target` on the main supernotify action, just like any other entity -
+    Notification recognizes it as one of supernotify's own published recipient notify entities
+    and resolves it to this recipient, still going through the full default-recipient delivery pipeline
+    (occupancy, scenarios, personal delivery overrides, dedupe, snooze) rather than a literal,
+    unscoped target override. Per HA's notify entity service schema, only message/title are
+    ever passed in here - no data/target.
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        unique_id: str,
+        recipient: Recipient,
+        platform: SupernotifyAction,
+    ) -> None:
+        """Initialize the recipient notify entity."""
+        self._attr_unique_id = unique_id
+        self._attr_name = recipient.alias or recipient.name
+        self._attr_supported_features = NotifyEntityFeature.TITLE
+        self._recipient = recipient
+        self._platform = platform
+        self.entity_id = f"notify.recipient_{recipient.name}"
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._recipient.notify_entity_id = self.entity_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._recipient.notify_entity_id = None
+        await super().async_will_remove_from_hass()
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to this recipient."""
+        await self._platform.async_send_message(message, title=title, target=self.entity_id, context=self._context)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SupernotifyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Expose each configured recipient as its own notify entity.
+
+    Forwarded to from async_setup_entry in __init__.py once the SupernotifyAction (entry.
+    runtime_data) is fully initialized, so people_registry is already populated.
+    """
+    _ = hass
+    service = entry.runtime_data
+    async_add_entities(
+        RecipientNotifyEntity(f"{entry.entry_id}_recipient_{recipient.name}", recipient, service)
+        for recipient in service.context.people_registry.people.values()
+    )
 
 
 class SupernotifyAction(BaseNotificationService):
@@ -536,15 +652,27 @@ class SupernotifyAction(BaseNotificationService):
         _LOGGER.info("SUPERNOTIFY Shut down")
 
     async def async_send_message(
-        self, message: str = "", title: str | None = None, target: list[str] | str | None = None, **kwargs: Any
+        self,
+        message: str = "",
+        title: str | None = None,
+        target: list[str] | str | dict[str, Any] | None = None,
+        context: HAContext | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send a message via chosen transport."""
         data = kwargs.get(ATTR_DATA, {})
         notification = None
         _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
 
+        if context is None:
+            # the legacy notify.supernotify platform service never forwards the calling
+            # Context (HA core's BaseNotificationService doesn't pass it through), so
+            # without this every downstream service call for this notification would get
+            # its own unrelated Context, leaving them unlinked in the logbook/recorder
+            context = HAContext()
+
         try:
-            notification = Notification(self.context, message, title, target, data)
+            notification = Notification(self.context, message, title, target, data, ha_context=context)
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1
@@ -863,7 +991,7 @@ class SupernotifyAction(BaseNotificationService):
         occupiers: dict[str, list[Recipient]] = self.context.people_registry.determine_occupancy()
         cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
 
-        def safe_json(v: Any) -> Any:
+        def safe_json(v: Any) -> Any:  # ruff: ignore[any-type]
             return json.loads(json.dumps(v, cls=ExtendedJSONEncoder))
 
         enabled = []

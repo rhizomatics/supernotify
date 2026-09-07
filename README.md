@@ -1,4 +1,4 @@
-![Supernotify](assets/images/dark_icon.png){ align=left }
+![Supernotify](https://supernotify.rhizomatics.org.uk/dev/assets/images/dark_icon.png){ align=left }
 
 # Supernotify - Unified Notifications for Home Assistant
 
@@ -26,19 +26,17 @@
 
 >> `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
 
->> If you have an advanced configuration (deliveries, scenarios, cameras, persons, actions etc) then a *Repair* will be raised to move these to a new `supernotify.yaml` file and add an `include` statement to your `configuration.yaml`. Or you can choose to
-manually move the config out of `notify` block however
-you please.
+>> If you have an advanced configuration (deliveries, scenarios, cameras, persons, actions etc) then a *Repair* will be raised to move these to a new `supernotify.yaml` file and add an `include` statement to your `configuration.yaml`. Or you can choose to manually move the config out of `notify` block however you please.
 
->> In either case, nothing will be deleted or commented out, so it will be easy to revert the change. Remove the
-old config when you are comfortable the new version is working for you. This will also remove the `[homeassistant.components.notify] Failed to initialize notification service supernotify` warning from the log, which
-comes from the old notify implementation.
+>> In either case, nothing will be deleted or commented out, so it will be easy to revert the change. Remove the old config when you are comfortable the new version is working for you. This will also remove the `[homeassistant.components.notify] Failed to initialize notification service supernotify` warning from the log, which comes from the old notify implementation.
+
+>> An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
 A **unified notification interface** on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
 
 Supernotify has one goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-Start off with zero YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), or redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications. And with advanced YAML configuration, the possibilities are endless.
+Start off with zero YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), attach a camera snapshot to an e-mail, or redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications. And with advanced YAML configuration, the possibilities are endless.
 
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
@@ -46,6 +44,7 @@ Start off with zero YAML configuration and easily do [mobile push notifications 
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
+![Example Notification Action](https://supernotify.rhizomatics.org.uk/dev/assets/images/notification.png){width=500}
 
 ## Distribution
 
@@ -119,7 +118,7 @@ Presently Supernotify supports standard Home Assistant UI based config for the b
 A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](recipes/index.md) in the documentation, and this mobile push example:
 
 ```yaml title="With zero YAML all UI config"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```

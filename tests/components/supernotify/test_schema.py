@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from homeassistant.const import CONF_HOST
 
-from custom_components.supernotify.const import ATTR_EMAIL, CONF_CONNECTION, CONF_DELIVERY_DEFAULTS, CONF_OPTIONS, OPTION_SENDER
+from custom_components.supernotify.const import (
+    ATTR_EMAIL,
+    CONF_CONNECTION,
+    CONF_DELIVERY_DEFAULTS,
+    CONF_OPTIONS,
+    OPTION_SENDER,
+)
 from custom_components.supernotify.schema import TARGET_SCHEMA, TRANSPORT_SCHEMA
 
 

@@ -1,8 +1,112 @@
 reload:
+notify:
+  fields:
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    title:
+      selector:
+        text:
+    target:
+      selector:
+        target:
+    custom_target:
+      selector:
+        text:
+          multiple: true
+    priority:
+      selector:
+        select:
+          options:
+            - value: critical
+              label: Critical
+            - value: high
+              label: High
+            - value: medium
+              label: Medium
+            - value: low
+              label: Low
+            - value: minimum
+              label: Minimum
+    delivery_selection:
+      selector:
+        select:
+          options:
+            - value: explicit
+              label: Explicit
+            - value: fixed
+              label: Fixed
+            - value: implicit
+              label: Implicit
+    delivery:
+      selector:
+        object:
+    multimedia:
+      collapsed: false
+      fields:
+        camera_entity_id:
+          selector:
+            entity:
+              domain: camera
+        snapshot_url:
+          selector:
+            text:
+        clip_url:
+          selector:
+            text:
+        media:
+          selector:
+            object:
+    scenarios:
+      collapsed: false
+      fields:
+        require_scenarios:
+          selector:
+            text:
+              multiple: true
+        apply_scenarios:
+          selector:
+            text:
+              multiple: true
+        constrain_scenarios:
+          selector:
+            text:
+              multiple: true
+    advanced:
+      collapsed: true
+      fields:
+        actions:
+          selector:
+            object:
+        action_groups:
+          selector:
+            text:
+              multiple: true
+        message_html:
+          selector:
+            text:
+              multiline: true
+        debug:
+          selector:
+            boolean:
+        force_resend:
+          selector:
+            boolean:
+        data:
+          selector:
+            object:
 enquire_configuration:
 enquire_deliveries_by_scenario:
 enquire_implicit_deliveries:
 enquire_last_notification:
+  fields:
+    diagnostics:
+      required: false
+      selector:
+        boolean:
+enquire_recipients:
 enquire_scenarios:
 enquire_active_scenarios:
   fields:
@@ -32,21 +136,3 @@ purge_archive:
         number:
           min: 0
           unit_of_measurement: days
-
-snooze:
-  fields:
-    minutes:
-      required: false
-      example: 60
-      selector:
-        number:
-          min: 0
-          unit_of_measurement: minutes
-    target_type:
-      required: false
-      selector:
-        text:
-    target:
-      required: false
-      selector:
-        text:

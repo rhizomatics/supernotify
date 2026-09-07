@@ -1,6 +1,106 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Notify",
+            "description": "Send a notification via SuperNotify to one or more notification platforms via a single, unified interface.",
+            "fields": {
+                "message": {
+                    "name": "Message",
+                    "description": "The notification message body."
+                },
+                "title": {
+                    "name": "Title",
+                    "description": "An optional title for the notification."
+                },
+                "target": {
+                    "name": "Target",
+                    "description": "Who or what to notify - people, mobile devices, media players, chimes, areas, or other target entities. Leave blank to use the default/implicit deliveries."
+                },
+                "custom_target": {
+                    "name": "Custom Targets",
+                    "description": "Targets outside of Home Assistant, such as e-mail addresses, phone numbers, Slack ids etc."
+                },
+                "priority": {
+                    "name": "Priority",
+                    "description": "Used to enable/disable deliveries and scenarios, and mapped to the underlying transport's own priority/urgency flag where supported (e.g. mobile push, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Delivery Selection",
+                    "description": "How the Delivery field (if set) is interpreted - implicit (adds to the defaults), explicit (only these, plus scenario-enabled ones), or fixed (only these, ignoring scenarios)."
+                },
+                "delivery": {
+                    "name": "Delivery",
+                    "description": "Restrict or tune specific deliveries by name. A single delivery name, or list of names, restricts to just those. A mapping can also be used to override delivery configurations without limiting the deliveries."
+                },
+                "require_scenarios": {
+                    "name": "Required Scenarios",
+                    "description": "Suppress this notification unless at least one of these scenarios is currently active."
+                },
+                "apply_scenarios": {
+                    "name": "Apply Scenarios",
+                    "description": "Force these scenarios to be treated as active for this notification, regardless of their own conditions."
+                },
+                "constrain_scenarios": {
+                    "name": "Constrained Scenarios",
+                    "description": "Only let these scenarios (plus any in Apply Scenarios) affect this notification, ignoring any other active scenario."
+                },
+                "camera_entity_id": {
+                    "name": "Camera",
+                    "description": "A camera to snapshot (and PTZ move first, if configured) before delivery."
+                },
+                "snapshot_url": {
+                    "name": "Snapshot URL",
+                    "description": "A pre-existing image URL to attach, instead of triggering a new camera snapshot."
+                },
+                "clip_url": {
+                    "name": "Clip URL",
+                    "description": "A pre-existing video clip URL to attach."
+                },
+                "media": {
+                    "name": "Other Media Options",
+                    "description": "Advanced media options not covered by the fields above, e.g. PTZ preset, capture delay, or image format overrides."
+                },
+                "actions": {
+                    "name": "Actions",
+                    "description": "One-off actionable-notification buttons to attach, without needing a pre-configured action group."
+                },
+                "action_groups": {
+                    "name": "Action Groups",
+                    "description": "Named groups of mobile actionable-notification buttons to attach, as configured under action_groups:."
+                },
+                "message_html": {
+                    "name": "HTML Message",
+                    "description": "An HTML alternative to Message, used by transports that support rich formatting (e.g. e-mail)."
+                },
+                "debug": {
+                    "name": "Debug",
+                    "description": "Include extra diagnostic detail for this notification in traces and the archive."
+                },
+                "force_resend": {
+                    "name": "Force Resend",
+                    "description": "Send even if duplicate-detection would otherwise suppress this notification."
+                },
+                "data": {
+                    "name": "Extra Data",
+                    "description": "Passthrough data for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
+                }
+            },
+            "sections": {
+                "multimedia": {
+                    "name": "Multimedia",
+                    "description": "Attach a camera snapshot, an existing image, or a video clip to this notification."
+                },
+                "scenarios": {
+                    "name": "Scenarios",
+                    "description": "Require, force-apply, or constrain which scenarios affect this notification."
+                },
+                "advanced": {
+                    "name": "Advanced",
+                    "description": "Actionable-notification buttons, HTML formatting, debug tracing, and other less commonly used options."
+                }
+            }
+        },
         "reload": {
             "name": "Reload",
             "description": "Reloads supernotify services."

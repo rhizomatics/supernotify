@@ -27,7 +27,7 @@
 
 >> Se tiver uma configuração avançada (entregas, cenários, câmeras, pessoas, ações etc.), será gerada uma *reparação* para mover essas definições para um novo ficheiro `supernotify.yaml` e adicionar uma instrução `include` ao seu `configuration.yaml`. Ou pode optar por mover a configuração manualmente para fora do bloco `notify`, da forma que preferir.
 
->> Em qualquer dos casos, nada será eliminado ou comentado, pelo que será fácil reverter a alteração. Remova a configuração antiga quando tiver a certeza de que a nova versão está a funcionar bem para si.
+>> Em qualquer dos casos, nada será eliminado ou comentado, pelo que será fácil reverter a alteração. Remova a configuração antiga quando tiver a certeza de que a nova versão está a funcionar bem para si. Isto também removerá o aviso `[homeassistant.components.notify] Failed to initialize notification service supernotify` do registo, que provém da implementação antiga do notify.
 
 Uma **interface de notificação unificada** sobre a plataforma `notify` integrada do Home Assistant, para simplificar consideravelmente múltiplos canais de notificação e cenários complexos, incluindo notificações multicanal, notificações condicionais, ações móveis, capturas de câmera, carrilhões e e-mails HTML baseados em modelos.
 
@@ -37,6 +37,7 @@ Isso mantém as automações, scripts e aplicativos AppDaemon simples e fáceis 
 
 Apenas com a configuração da interface, comece as notificações push móveis para todos os registrados em casa, sem configurar os nomes dos aplicativos móveis nas notificações.
 
+![Exemplo de ação de notificação](assets/images/notification.png){width=500}
 
 ## Distribuição
 
@@ -99,7 +100,7 @@ Atualmente, o Supernotify suporta a configuração padrão pela interface do Hom
 Muito pode ser feito com a simples configuração sem YAML, incluindo a automação da configuração de push móvel. Veja as [receitas](recipes/index.md) na documentação, e este exemplo de push móvel:
 
 ```yaml title="Com zero YAML, tudo configurado pela interface"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Olá! Testando o Supernotify enviando para os aplicativos móveis de todos
 ```

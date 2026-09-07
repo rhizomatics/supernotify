@@ -39,6 +39,7 @@ from .const import (
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_ACTIONS,
+    ATTR_CUSTOM_TARGET,
     ATTR_DATA,
     ATTR_DEBUG,
     ATTR_DELIVERY,
@@ -148,6 +149,7 @@ from .const import (
     OPTION_CHIME_ALIASES,
     OPTIONS_CHIME_DOMAINS,
     PRIORITY_VALUES,
+    PTZ_DELAY_DEFAULT,
     PTZ_METHOD_ONVIF,
     PTZ_METHOD_VALUES,
     RESERVED_DATA_KEYS,
@@ -400,12 +402,12 @@ CAMERA_SCHEMA = vol.Schema({
     vol.Optional(CONF_DEVICE_TRACKER): cv.entity_id,
     vol.Optional(CONF_PTZ_CAMERA): cv.entity_id,
     vol.Optional(CONF_PTZ_PRESET_DEFAULT, default=1): vol.Any(cv.positive_int, cv.string),
-    vol.Optional(CONF_PTZ_DELAY, default=0): int,
+    vol.Optional(CONF_PTZ_DELAY, default=PTZ_DELAY_DEFAULT): int,
     vol.Optional(CONF_PTZ_METHOD, default=PTZ_METHOD_ONVIF): vol.In(PTZ_METHOD_VALUES),
 })
 MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
-    vol.Optional(ATTR_MEDIA_CAMERA_DELAY, default=0): int,
+    vol.Optional(ATTR_MEDIA_CAMERA_DELAY): int,
     vol.Optional(ATTR_MEDIA_CAMERA_PTZ_PRESET): vol.Any(cv.positive_int, cv.string),
     # URL fragments allowed
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
@@ -486,7 +488,7 @@ HOUSEKEEPING_SCHEMA = vol.Schema({
 # extra=ALLOW_EXTRA matches the old PLATFORM_SCHEMA-derived schema's inherited leniency (HA's
 # base notify PLATFORM_SCHEMA itself uses ALLOW_EXTRA) - stray/unrecognized keys pass through
 # rather than failing validation.
-SUPERNOTIFY_YAML_SCHEMA = vol.Schema(
+SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_SCHEMA},
         vol.Optional(CONF_ACTION_GROUPS, default=dict): {cv.string: [MOBILE_ACTION_SCHEMA]},
@@ -559,7 +561,7 @@ CHIME_ALIASES_SCHEMA = vol.Schema({
 })
 
 
-ACTION_DATA_SCHEMA = vol.Schema(
+_ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DELIVERY): vol.Any(cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)}),
         vol.Optional(ATTR_PRIORITY): vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys()))),
@@ -580,4 +582,35 @@ ACTION_DATA_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,  # allow other data, e.g. the android/ios mobile push
 )
 
-STRICT_ACTION_DATA_SCHEMA = ACTION_DATA_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA)
+ACTION_DATA_SCHEMA = vol.All(
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
+    _ACTION_DATA_FIELDS_SCHEMA,
+)
+
+STRICT_ACTION_DATA_SCHEMA = vol.All(
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
+    _ACTION_DATA_FIELDS_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
+)
+
+# Schema for the supernotify.notify action - the same fields as ACTION_DATA_SCHEMA (normally
+# buried in notify.supernotify's generic `data:` blob), but promoted to top-level fields so
+# services.yaml can attach a selector to each one for a typed, discoverable UI in Developer
+# Tools/the action picker, rather than one opaque object field.
+NOTIFY_ACTION_SCHEMA = vol.All(
+    cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
+    _ACTION_DATA_FIELDS_SCHEMA.extend({
+        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_TITLE): cv.string,
+        vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+        # the target selector behind CONF_TARGET can only produce entity/device/area/floor/label
+        # ids, so custom_target is a free-text escape hatch for targets it can't - e-mail
+        # addresses, phone numbers, Slack ids etc. notify.py's supplemental_action_notify merges
+        # it back into target before Notification ever sees it
+        vol.Optional(ATTR_CUSTOM_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        # promoted out of media: for their own selectors - notify.py's supplemental_action_notify
+        # merges them back into media before Notification ever sees them
+        vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
+        vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
+        vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
+    }),
+)

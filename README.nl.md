@@ -27,7 +27,7 @@
 
 >> Als je een geavanceerde configuratie hebt (bezorgingen, scenario's, camera's, personen, acties enz.), wordt er een *reparatie* aangemaakt om deze naar een nieuw bestand `supernotify.yaml` te verplaatsen en een `include`-instructie aan je `configuration.yaml` toe te voegen. Of je kunt ervoor kiezen om de configuratie handmatig uit het `notify`-blok te halen, zoals jij dat wilt.
 
->> In beide gevallen wordt er niets verwijderd of uitgecommentarieerd, zodat de wijziging eenvoudig terug te draaien is. Verwijder de oude configuratie zodra je er zeker van bent dat de nieuwe versie voor jou werkt.
+>> In beide gevallen wordt er niets verwijderd of uitgecommentarieerd, zodat de wijziging eenvoudig terug te draaien is. Verwijder de oude configuratie zodra je er zeker van bent dat de nieuwe versie voor jou werkt. Dit verwijdert ook de waarschuwing `[homeassistant.components.notify] Failed to initialize notification service supernotify` uit het log, die afkomstig is van de oude notify-implementatie.
 
 Een **uniforme meldingsinterface** bovenop het ingebouwde `notify`-platform van Home Assistant, om meerdere meldingskanalen en complexe scenario's sterk te vereenvoudigen, inclusief meerkanaalsmeldingen, voorwaardelijke meldingen, mobiele acties, camera-snapshots, geluidssignalen en op sjablonen gebaseerde HTML-e-mails.
 
@@ -37,6 +37,7 @@ Dit houdt automatiseringen, scripts en AppDaemon-apps eenvoudig en onderhoudsvri
 
 Met alleen de UI-configuratie start u direct met mobiele pushmeldingen naar iedereen in huis, zonder dat u de namen van mobiele apps in meldingen hoeft te configureren.
 
+![Voorbeeld van een meldingsactie](assets/images/notification.png){width=500}
 
 ## Distributie
 
@@ -99,7 +100,7 @@ Supernotify ondersteunt momenteel standaard Home Assistant UI-configuratie voor 
 Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief automatisering van de mobiele push-instelling. Zie de [recepten](recipes/index.md) in de documentatie, en dit mobiele push-voorbeeld:
 
 ```yaml title="Met nul YAML, alles via de UI geconfigureerd"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         message: Hallo! Dit is een test van Supernotify die naar ieders mobiele apps stuurt
 ```

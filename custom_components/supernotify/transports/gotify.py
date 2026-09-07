@@ -92,7 +92,7 @@ def _build_extras(
     if intent_url:
         extras["android::action"] = {"onReceive": {"intentUrl": intent_url}}
 
-    return extras if extras else None
+    return extras or None
 
 
 class GotifyTransport(Transport):

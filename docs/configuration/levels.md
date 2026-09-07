@@ -26,7 +26,7 @@ set of overrides - `target`,`data`,`enabled` - can then be applied by scenarios,
 For example, if there's one specific automation you didn't want to have your `alexa_announce` delivery applied, you could disable it like this rather than adding more rules to the supernotify config for just one case:
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: For Your Eyes Only
         message: There might be someone in the house!!!

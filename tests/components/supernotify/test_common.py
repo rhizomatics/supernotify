@@ -7,12 +7,22 @@ from custom_components.supernotify.common import (
     boolify,
     ensure_dict,
     ensure_list,
+    int_or_none,
     safe_extend,
     safe_get,
 )
 from custom_components.supernotify.const import ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE, CONF_DUPE_POLICY
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
+
+
+def test_int_or_none():
+    assert int_or_none("cheese!") is None
+    assert int_or_none(23) == 23
+    assert int_or_none("23") == 23
+    assert int_or_none(23.12) == 23
+    assert int_or_none("-23") == -23
+    assert int_or_none("") is None
 
 
 def test_safe_get():
@@ -22,8 +32,8 @@ def test_safe_get():
 
 
 def test_safe_extend():
-    assert safe_extend(None, None) == []  # type:ignore[invalid-argument-type]
-    assert safe_extend(1, 3) == [1, 3]  # type:ignore[invalid-argument-type]
+    assert safe_extend(None, None) == []  # type:ignore[invalid-argument-type]  # ty: ignore[invalid-argument-type]
+    assert safe_extend(1, 3) == [1, 3]  # type:ignore[invalid-argument-type]  # ty: ignore[invalid-argument-type]
     assert safe_extend([], 3) == [3]
     assert safe_extend([1], (2, 3)) == [1, 2, 3]
     assert safe_extend([1, 2], 3) == [1, 2, 3]

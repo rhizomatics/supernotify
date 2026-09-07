@@ -10,7 +10,7 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.5
+    rev: v0.16.6
     hooks:
      # Run the linter.
       - id: ruff-check
@@ -41,8 +41,8 @@ repos:
           - --show-error-context
         exclude: docgen/.*\.py
         additional_dependencies:
-          - homeassistant-stubs
-          - pytest-homeassistant-custom-component
+          - homeassistant-stubs==2026.9.1
+          - pytest-homeassistant-custom-component>=0.13.356
           - types-python-slugify>=8.0.2.20240310
           - voluptuous-stubs>=0.1.1
           - pytest
@@ -55,6 +55,10 @@ repos:
           - pytest_unordered
           - pytest_mock
           - pytest_httpserver
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.78
+    hooks:
+      - id: ty
 
 ci:
     autofix_commit_msg: |

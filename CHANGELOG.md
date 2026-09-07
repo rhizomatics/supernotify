@@ -1,3 +1,90 @@
+## 2.3.2
+
+### Tracing Activities
+
+- If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
+
+## 2.3.1
+
+### Occupancy
+- If no occupants defined, then occupancy will be explicitly `UNDEFINED_OCCUPANTS` rather than left ambiguous
+### Technical
+- Clean up of code and tests, tightened linting and typing rules
+- Tidied up some error handling and diagnostics for notification delivery
+- Image grab task now cleaned up if delivery times out
+
+
+## 2.3.0
+
+### Dedicated Notify Action
+- The existing `notify` action is offered via the HA `notify` platform, so Supernotify acts as a 'sub-platform'. This has several consequences:
+  - The web page in Tools | Actions or the Automations dialog is unfriendly to use with lots of things to put into `data` section with no help
+  - The context for the notification isn't passed down by Home Assistant, since the notification platform doesn't follow the curretnt guidelines
+  - This usage of the notification platform is `legacy`, replaced by *Notify Entity* which has a very limited action, just title and message
+- A new dedicated `notify` action is now available directly from the Supernotify platform
+  - Options otherwise buried in `notify.supernotify`'s generic `data:` field (`priority`, `delivery`, `require_scenarios`, `media`, etc) are promoted to their own typed, selector-driven fields, for a richer Developer Tools/automation editor UI, to make configuring even sophisticated notifications hugely easier
+  - Camera and image/video URLs are broken out into separate fields to make them easier to use, and also allow the Home Assistant Camera selector to be used
+  - Separate optional field for *custom targets*, like e-mail addresses, Telegram IDs that won't work with Home Assistant built-in selectors. Optional but unnecessary for YAML use, since the `target` field usage is unchanged.
+  - The original context is preserved, so you can trace from a trigger like motion PIR, all the way thru to an alert call and camera PTZ movement
+  - No change to the original `notify.supernotify` action, so nothing breaks, and there's a choice (maximum compatibility with legacy notify, so can easily switch between notify providers, or ease of use and insulated from future deprecations of HA notify)
+
+### Tracing Activities
+- Home Assistant `Context` is propagated to all Home Assistant services used
+  - For example, if a security camera has a PTZ movement, the Home Assistant *Activity* view can show what triggered this
+  - One important limitation - Home Assistant's own `notify` platform doesn't pass on the `Context` it receives, however the newer *Notify Entity* does.
+  - See the [2026.9 Release Blog](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on the new UI support for this
+  - An end to end integration test `test_integration.test_context_propagates_to_camera_ptz_and_mobile_push` demonstrates this working
+- New `supernotify.notify` action propagates any context it rexeives
+- Context IDs ( context id, parent context id, user id ) are saved with the archive notification JSON object for debug or analysis
+
+### Technical
+- `ty` type checker reinstalled, and several type usages tightened up
+- Avoided the mkdocsalypse by switching docs generation to `properdocs`
+
+## 2.2.3
+
+- `enquire_last_notification` now has option to return the full notification with diagnostic info
+- Alexa Media Player fixes
+  - Fixed `wait_for_tts` if auto_pause switched off
+  - Fixed empty message meaning music not unpaused
+  - Post announce now also uses async calls for better performance / Home Assistant conformity
+  - Post announce runs if main notification fails if needed for cleanup
+- Cameras
+  - Fixed default PTZ delay
+
+## 2.2.2
+
+- Explicit `camera_delay` in notification respected even if there's no PTZ requested
+- Improved logging for camera PTZ and snapping
+- `enquire_recipients` now exposed as a Home Assistant action
+- Alexa Media Player transport has fix for [#176](https://github.com/rhizomatics/supernotify/issues/176) error when volume set
+
+## 2.2.1
+
+### Alexa Media Player
+- Capture of pre-announcement state to minimize impact on audio already playing now more efficient with async rather than loop per Alexa device
+- Improved documentation for volume, pause etc control per notification
+- Added new `media_auto_pause` transport/delivery option to allow the audio interruption handling to be globally disabled by default
+  - Can still be overridden if needed by a separate `delivery` definition
+  - Saves delay and Amazon API calls on every notification, minimizing chance of rate limiting
+### Fixes
+- Log warning in Home Assistant Recorder when using camera snapshots, and a JSON serialization problem [[#173](https://github.com/rhizomatics/supernotify/issues/173)]
+- Fixed deprecation version comment [[#174](https://github.com/rhizomatics/supernotify/issues/174)]
+- Fixed `ptz_delay` applied when no PTZ preset [[#172](https://github.com/rhizomatics/supernotify/issues/172)]
+
+## 2.2.0
+
+* Recipients and Notify Entities
+  * Recipients are now **Notify Entities**, so can be called with `send_message` directly from automations, and also support being member of a **Notify Entity Group**
+  * Undocumented `recipients` key on notify action data now deprecated, specify recipients as regular targets
+  * Improved handling of enablement or disablement of deliveries per recipient
+* Cameras - more usable without YAML config
+  * `ptz_method` now defaults to `frigate` if the camera defined by the frigate integration even if no `camera` definition provided in config
+  * `ptz_delay` defaults to `10` if not defined in camera config, or camera not defined at all
+* Minor fixes
+  * Conditional error log handler for placeholders
+  * Strict template mode undo
+  * Better tests
 
 ## 2.1.0
 

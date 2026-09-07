@@ -49,7 +49,7 @@ telegram_alarms:
 ```
 ## Example call
 
-```yaml title="action: notify.supernotify"
+```yaml title="action: supernotify.notify"
 data:
   message: "Motion detected at front door"
   title: "📷 Front Camera"

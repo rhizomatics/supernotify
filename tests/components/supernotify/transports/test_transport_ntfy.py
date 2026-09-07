@@ -17,6 +17,7 @@ Coverage:
 Path in upstream repo: tests/components/supernotify/test_transport_ntfy.py
 """
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -90,9 +91,9 @@ def test_parse_delay_empty_string_passthrough() -> None:
 
 def _ctx(delivery_data: dict | None = None) -> TestingContext:
     """Create a minimal TestingContext with an ntfy_test delivery."""
-    delivery_cfg: dict = {"ntfy_test": {CONF_TRANSPORT: TRANSPORT_NTFY}}
+    delivery_cfg: dict[str, Any] = {"ntfy_test": {CONF_TRANSPORT: TRANSPORT_NTFY}}
     if delivery_data:
-        delivery_cfg["ntfy_test"]["data"] = delivery_data
+        delivery_cfg["ntfy_test"]["data"] = delivery_data  # ty: ignore[invalid-assignment]
     return TestingContext(
         deliveries=delivery_cfg,
         transport_types=[NtfyTransport],
@@ -474,9 +475,9 @@ async def test_attach_image_camera_snapshot_failure_delivery_continues() -> None
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_NTFY)
 
-    async def _side_effect(domain: str, service: str, **kwargs):  # type: ignore[return]
+    async def _side_effect(domain: str, service: str, **kwargs: Any):  # type: ignore[return]
         if domain == "camera" and service == "snapshot":
-            raise Exception("camera unreachable")
+            raise OSError("camera unreachable")
 
     ctx.hass.services.async_call.side_effect = _side_effect  # type: ignore
 

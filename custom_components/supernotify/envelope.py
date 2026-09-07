@@ -39,6 +39,7 @@ from .model import (
 
 if typing.TYPE_CHECKING:
     from anyio import Path
+    from homeassistant.core import Context as HAContext
 
     from custom_components.supernotify.common import CallRecord
 
@@ -62,9 +63,11 @@ class Envelope(DupeCheckable):
         target: Target | None = None,  # targets only for this delivery
         data: dict[str, Any] | None = None,
         context: Context | None = None,  # notification data customized for this delivery
+        ha_context: HAContext | None = None,  # calling HA service context, propagated to HA service calls
     ) -> None:
         self.target: Target = target or Target()
         self.context: Context | None = context
+        self.ha_context: HAContext | None = ha_context
         self.delivery_name: str = delivery.name
         self.delivery: Delivery = delivery
         self._notification = notification
@@ -93,7 +96,7 @@ class Envelope(DupeCheckable):
                 # notification-level delivery override wins over scenario/delivery data
                 self.data |= delivery_config_data
         else:
-            self.data = delivery_config_data if delivery_config_data else {}
+            self.data = delivery_config_data or {}
 
         if notification:
             self.notification_id = notification.id
@@ -129,7 +132,9 @@ class Envelope(DupeCheckable):
         """Grab an image from a camera, snapshot URL, MQTT Image etc"""
         image_path: Path | None = None
         if self._notification:
-            image_path = await grab_image(self._notification, self.delivery, self._notification.context)
+            image_path = await grab_image(
+                self._notification, self.delivery, self._notification.context, ha_context=self.ha_context
+            )
         return image_path
 
     def core_action_data(self, force_message: bool = True) -> dict[str, Any]:
@@ -150,7 +155,7 @@ class Envelope(DupeCheckable):
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
-        exclude_attrs: list[str] = ["_notification", "context", "condition_variables"]
+        exclude_attrs: list[str] = ["_notification", "context", "ha_context", "condition_variables"]
         if minimal:
             exclude_attrs.append("delivery")
             features: TransportFeature = self.delivery.transport.supported_features
@@ -171,7 +176,7 @@ class Envelope(DupeCheckable):
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
         return json_ready
 
-    def __eq__(self, other: Any | None) -> bool:
+    def __eq__(self, other: Any | None) -> bool:  # ruff: ignore[any-type]
         """Specialized equality check for subset of attributes"""
         if other is None or not isinstance(other, Envelope):
             return False

@@ -120,23 +120,17 @@ class Target:
             pass  # empty constructor is valid case for target building
         elif isinstance(target, list):
             # simplified and legacy way of assuming list of entities that can be discriminated by validator
-            targets_left = list(target)
+            targets = list(target)
             for category in self.AUTO_CATEGORIES:
-                validator = getattr(self, f"is_{category}", None)
-                if validator is not None:
-                    matched = []
-                    for t in targets_left:
-                        if t not in matched and validator(t):
-                            self.targets.setdefault(category, [])
-                            self.targets[category].append(t)
-                            matched.append(t)
-                    targets_left = [t for t in targets_left if t not in matched]
-                else:
-                    _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
-                if not targets_left:
+                matched = self._filter_by_category(category, targets)
+                if matched:
+                    self.targets.setdefault(category, [])
+                    self.targets[category].extend([t for t in matched if t not in self.targets[category]])
+                    targets = [t for t in targets if t not in matched]
+                if not targets:
                     break
-            if targets_left:
-                self.targets[self.UNKNOWN_CUSTOM_CATEGORY] = targets_left
+            if targets:
+                self.targets[self.UNKNOWN_CUSTOM_CATEGORY] = targets
 
         elif isinstance(target, dict):
             for category in target:
@@ -144,17 +138,10 @@ class Target:
                 if not targets:
                     continue
                 if category in self.AUTO_CATEGORIES:
-                    validator = getattr(self, f"is_{category}", None)
-                    if validator is not None:
-                        for t in targets:
-                            if validator(t):
-                                self.targets.setdefault(category, [])
-                                if t not in self.targets[category]:
-                                    self.targets[category].append(t)
-                            else:
-                                _LOGGER.warning("SUPERNOTIFY Target skipped invalid %s target: %s", category, t)
-                    else:
-                        _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+                    matched = self._filter_by_category(category, targets)
+                    if matched:
+                        self.targets.setdefault(category, [])
+                        self.targets[category].extend([t for t in matched if t not in self.targets[category]])
 
                 elif category in self.CATEGORIES:
                     # categories that can't be automatically detected, like label_id
@@ -172,6 +159,17 @@ class Target:
                     self.target_specific_data[category, t] = target_data
         if target_data and not target_specific_data:
             self.target_data = target_data
+
+    def _filter_by_category(self, category: str, candidates: list[str]) -> list[str]:
+        matched: list[str] = []
+        validator = getattr(self, f"is_{category}", None)
+        if validator is not None:
+            for t in candidates:
+                if t not in matched and validator(t):
+                    matched.append(t)
+        else:
+            _LOGGER.debug("SUPERNOTIFY Missing validator for selective target category %s", category)
+        return matched
 
     # Targets by category
 
@@ -430,9 +428,18 @@ class TransportConfig:
 
 
 class DeliveryCustomization:
-    def __init__(self, config: ConfigType | None, target_specific: bool = False) -> None:
+    def __init__(
+        self, config: ConfigType | None = None, target_specific: bool = False, default_enabled: bool | None = None
+    ) -> None:
         config = config or {}
-        self.enabled: bool | None = config.get(CONF_ENABLED, True)
+        # defining a customization doesn't imply that the delivery is always enabled -
+        # default_enabled only fills in when the `enabled` key is omitted entirely (dict.get
+        # default only applies when the key is absent), never overrides an explicit
+        # `enabled: None`/`false`/`true` - e.g. Scenario.enabling_deliveries() relies on this to
+        # treat a directly-named delivery with no `enabled` key as enabling it (matching the
+        # list/string delivery config forms), but not one explicitly set to `enabled: None`
+        # just to carry other data (e.g. a priority override).
+        self.enabled: bool | None = config.get(CONF_ENABLED, default_enabled)
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
         # TODO: only works for scenario or recipient, not action call
         self.target: Target | None
@@ -445,7 +452,7 @@ class DeliveryCustomization:
         else:
             self.target = None
 
-    def data_value(self, key: str) -> Any:
+    def data_value(self, key: str) -> Any:  # ruff: ignore[any-type]
         return self.data.get(key) if self.data else None
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
@@ -682,6 +689,8 @@ class ConditionVariables:
     ) -> None:
         occupiers = occupiers or {}
         self.occupancy = []
+        if not occupiers.get(STATE_NOT_HOME) and not occupiers.get(STATE_HOME):
+            self.occupancy.append("UNDEFINED_OCCUPANTS")
         if not occupiers.get(STATE_NOT_HOME) and occupiers.get(STATE_HOME):
             self.occupancy.append("ALL_HOME")
         elif occupiers.get(STATE_NOT_HOME) and not occupiers.get(STATE_HOME):
@@ -722,6 +731,7 @@ class SuppressionReason(StrEnum):
     PRIORITY = "PRIORITY"
     DELIVERY_CONDITION = "DELIVERY_CONDITION"
     UNKNOWN = "UNKNOWN"
+    ERROR = "ERROR"
 
 
 class TargetRequired(StrEnum):
@@ -730,7 +740,7 @@ class TargetRequired(StrEnum):
     OPTIONAL = auto()
 
     @classmethod
-    def _missing_(cls, value: Any) -> TargetRequired | None:
+    def _missing_(cls, value: Any) -> TargetRequired | None:  # ruff: ignore[any-type]
         """Backward compatibility for binary values"""
         if value is True or (isinstance(value, str) and value.lower() in ("true", "on")):
             return cls.ALWAYS
@@ -781,7 +791,9 @@ class DebugTrace:
         title: str | None,
         data: dict[str, Any] | None,
         target: dict[str, list[str]] | list[str] | str | None,
+        debug: bool = True,
     ) -> None:
+        self.debug: bool = debug
         self.message: str | None = message
         self.title: str | None = title
         self.data: dict[str, Any] | None = dict(data) if data else data
@@ -812,6 +824,8 @@ class DebugTrace:
 
     def record_target(self, delivery_name: str, stage: str, computed: Target | list[Target]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
+        if not self.debug:
+            return
         self.resolved.setdefault(delivery_name, {})
         self.resolved[delivery_name].setdefault(stage, {})
         self._last_target.setdefault(delivery_name, {})
@@ -835,13 +849,19 @@ class DebugTrace:
 
     def record_delivery_selection(self, stage: str, delivery_selection: list[str]) -> None:
         """Debug support for recording detailed target resolution in archived notification"""
+        if not self.debug:
+            return
         self.delivery_selection[stage] = delivery_selection
 
-    def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:
+    def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:  # ruff: ignore[any-type]
+        if not self.debug:
+            return
         self.delivery_artefacts.setdefault(delivery, {})
         self.delivery_artefacts[delivery][artefact_name] = artefact
 
     def record_delivery_exception(self, delivery: str, context: str, exception: Exception) -> None:
+        if not self.debug:
+            return
         self.delivery_exceptions.setdefault(delivery, {})
         self.delivery_exceptions[delivery].setdefault(context, [])
         self.delivery_exceptions[delivery][context].append(format_exception(exception))

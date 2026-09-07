@@ -95,7 +95,7 @@ _PRIORITY_ICON = {
 _DEFAULT_ICON = "info"
 
 
-def _coerce_int(value: Any) -> int | None:
+def _coerce_int(value: Any) -> int | None:  # ruff: ignore[any-type]
     """Best-effort int coercion. Returns None on failure."""
     if value is None:
         return None

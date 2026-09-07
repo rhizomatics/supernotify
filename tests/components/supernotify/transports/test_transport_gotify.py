@@ -22,6 +22,7 @@ Note implementative:
 Percorso nel repo upstream: tests/components/supernotify/test_transport_gotify.py
 """
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -159,14 +160,14 @@ def test_validate_action_none_is_invalid() -> None:
 
 def _ctx(delivery_data: dict | None = None, action: str = "notify.gotify") -> TestingContext:
     """Crea un TestingContext minimale con una delivery gotify_test."""
-    delivery_cfg: dict = {
+    delivery_cfg: dict[str, Any] = {
         "gotify_test": {
             CONF_TRANSPORT: TRANSPORT_GOTIFY,
             CONF_ACTION: action,
         }
     }
     if delivery_data:
-        delivery_cfg["gotify_test"]["data"] = delivery_data
+        delivery_cfg["gotify_test"]["data"] = delivery_data  # ty: ignore[invalid-assignment]
     return TestingContext(
         deliveries=delivery_cfg,
         transport_types=[GotifyTransport],

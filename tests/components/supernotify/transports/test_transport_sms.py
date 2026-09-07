@@ -1,3 +1,5 @@
+import string
+
 from homeassistant.const import CONF_ACTION
 
 from custom_components.supernotify.const import CONF_TRANSPORT, TRANSPORT_SMS
@@ -98,11 +100,11 @@ async def test_deliver_jumbo() -> None:
     assert await uut.deliver(
         Envelope(
             Delivery("smsify", ctx.delivery_config("smsify"), uut),
-            Notification(ctx, message="0123456789" * 20),
+            Notification(ctx, message=string.digits * 20),
             target=Target(["+447979123456"]),
         )
     )
-    truncated = "0123456789" * 15 + "01234567"
+    truncated = string.digits * 15 + string.octdigits
     ctx.hass.services.async_call.assert_called_with(  # type:ignore
         "notify",
         "smsify",

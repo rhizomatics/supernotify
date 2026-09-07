@@ -21,7 +21,7 @@ Although Supernotify will automatically set most useful mobile push options,
 its also possible to directly set them, as in this example:
 
 ```yaml
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
       message: Movement at garden gate
       data:

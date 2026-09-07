@@ -67,7 +67,8 @@ class Recipient:
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
-        self.entity_id = config[CONF_PERSON]
+        self.entity_id: str = config[CONF_PERSON]
+        self.notify_entity_id: str | None = None
         self.name: str = self.entity_id.replace("person.", "")
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)
@@ -77,7 +78,7 @@ class Recipient:
 
         self._target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
         self.delivery_overrides: dict[str, DeliveryCustomization] = {
-            k: DeliveryCustomization(v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
+            k: DeliveryCustomization(config=v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
@@ -137,7 +138,20 @@ class Recipient:
         return {k: v for k, v in self.mobile_devices.items() if v.get(CONF_ENABLED, True)}
 
     def enabling_delivery_names(self) -> list[str]:
-        return [delname for delname, delconf in self.delivery_overrides.items() if delconf.enabled is True]
+        """Explicitly overriding enabled state"""
+        return [
+            delname
+            for delname, delconf in self.delivery_overrides.items()
+            if delconf.enabled is not None and delconf.enabled is True
+        ]
+
+    def disabling_delivery_names(self) -> list[str]:
+        """Explicitly overriding enabled state"""
+        return [
+            delname
+            for delname, delconf in self.delivery_overrides.items()
+            if delconf.enabled is not None and delconf.enabled is False
+        ]
 
     def target(self, delivery_name: str) -> Target:
         recipient_target: Target = self._target
@@ -231,8 +245,17 @@ class PeopleRegistry:
             return state.attributes
         return None
 
+    def name_for_user_id(self, user_id: str) -> str | None:
+        for recipient in self.people.values():
+            if recipient.user_id == user_id:
+                return recipient.alias or recipient.name
+        return None
+
     def find_people(self) -> list[str]:
         return self.hass_api.entity_ids_for_domain(PERSON_DOMAIN)
+
+    def notify_entities(self) -> dict[str, Recipient]:
+        return {p.notify_entity_id: p for p in self.people.values() if p.notify_entity_id}
 
     def enabled_recipients(self) -> list[Recipient]:
         return [p for p in self.people.values() if p.enabled]

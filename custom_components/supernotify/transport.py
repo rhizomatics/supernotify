@@ -129,7 +129,7 @@ class Transport:
 
         """
 
-    def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> Any:
+    def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> dict[str, Any]:  # ruff: ignore[any-type]
         if data is not None:
             action_data[key] = data
         return action_data
@@ -181,7 +181,12 @@ class Transport:
                 service_data_as_sent = dict(action_data)
                 timestamp = dt.datetime.now(tz=dt_util.get_default_time_zone())
                 service_response = await self.hass_api.call_service(
-                    domain, service, service_data=action_data, target=target_data, debug=delivery.debug
+                    domain,
+                    service,
+                    service_data=action_data,
+                    target=target_data,
+                    debug=delivery.debug,
+                    context=envelope.ha_context,
                 )
                 envelope.calls.append(
                     CallRecord(
@@ -199,7 +204,7 @@ class Transport:
                 service_data_as_sent = dict(action_data)
                 timestamp = dt.datetime.now(tz=dt_util.get_default_time_zone())
                 service_response = await self.hass_api.call_service(
-                    domain, service, service_data=action_data, debug=delivery.debug
+                    domain, service, service_data=action_data, debug=delivery.debug, context=envelope.ha_context
                 )
                 envelope.calls.append(
                     CallRecord(

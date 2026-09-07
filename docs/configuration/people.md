@@ -9,11 +9,9 @@ tags:
 ---
 # People
 
-While Home Assistant has both a `Person` and `User`, neither are directly useful or extensible for notifications
-and occupancy checks.
+While Home Assistant has both a `Person` and `User`, neither are directly useful or extensible for notifications and occupancy checks.
 
-Supernotify adds a **People Registry** for notifications and occupancy, which builds on top of the Home Assistant
-entities ( and will be retired/adapted when Home Assistant does have this support). The term *Recipient* is used for what Supernotify manages, to distinguish from the Home Assistant terms.
+Supernotify adds a **People Registry** for notifications and occupancy, which builds on top of the Home Assistant entities ( and will be retired/adapted when Home Assistant does have this support). The term *Recipient* is used for what Supernotify manages, to distinguish from the Home Assistant terms.
 
 With the `recipient` definition you can:
 
@@ -24,6 +22,8 @@ With the `recipient` definition you can:
 - Also register custom targets, like Discord, Telegram etc IDs, that could be used in a *Generic* delivery
 - Switch off a recipient, even if they were automatically discovered
 - Set default targets for specific deliveries, so for example, an email address is always copied in on them
+- Create a **Notify Entity** for that person, which will use any or all of the delivery transports enabled for them.
+  - The Notify Entity for Recipient can also be a member of a **Notify Entity Group**
 
 ## Automatic Recipient Discovery
 
@@ -74,25 +74,22 @@ in a similar way (`enabled` defaults to `True`).
 
 ## Sending Notifications
 
-This means you can do multi-channel notification with a single reference to a `person` entity in a notification,
-and automatically the email, phone number, mobile app notification service, or whatever else is used as appropriate
-in each notification. This is all it takes:
+This means you can do multi-channel notification with a single reference to a `person` entity in a notification, and automatically the email, phone number, mobile app notification service, or whatever else is used as appropriate in each notification. This is all it takes:
 
 ```yaml title="Example Message to All Devices"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Security Notification
         message: Something went off in the basement
 ```
 
-Since by default everyone in the people list gets every notification, you don't even need to define targets at all in
-each automation/script/blueprint/appdaemon app.
+Since by default everyone in the people list gets every notification, you don't even need to define targets at all in each automation/script/blueprint/appdaemon app.
 
 If you want to pin it down to specific people, add a list of targets ( you can also mix and match this
 target list with email addresses, notify entities, or direct mobile actions ).
 
 ```yaml title="Example Message to Some People"
-  - action: notify.supernotify
+  - action: supernotify.notify
     data:
         title: Warning All Kids
         message: Something happened and we are unhappy
@@ -104,14 +101,98 @@ target list with email addresses, notify entities, or direct mobile actions ).
 ```
 ## Entities
 
-Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is
-the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools,
-automations, API or whatever ) will disable or enable the recipient.
+Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools, automations, API or whatever ) will disable or enable the recipient.
 
 This can be handy if someone should be temporarily switched off for notifications, or you want your own
 automation to determine which people get notified when.
 
 The entity also exposes the recipient attributes, such as email, mobile devices, target, custom data etc.
+
+## Notify Entity
+
+Every recipient is also automatically exposed as its own `notify.recipient_XXXXX` entity - a real, callable [Notify Entity](https://www.home-assistant.io/integrations/notify/), not just the diagnostic sensor above. It can be targeted directly from any automation, script or Lovelace UI that expects a standard Home Assistant notify target:
+
+```yaml title="Example Automation Action"
+    - action: notify.send_message
+      target:
+        entity_id: notify.recipient_new_home_owner
+      data:
+        message: Your bin needs to go out!!!
+```
+
+This goes through the full Supernotify delivery pipeline - occupancy, scenarios, personal delivery overrides, de-dupe, snooze - exactly as `notify.supernotify` or `supernotify.notify` does, just scoped to that one recipient instead of the whole People Registry.
+
+Because it's an ordinary Home Assistant Notify Entity, it can be added as a member of a Home Assistant **Notify Group** helper ( *Settings → Devices & Services → Helpers → Add Helper → Group → Notify Group* ), to combine several recipients - or a subset of them - under one target, without needing a Supernotify Scenario just for that. These can be a mix of Supernotify provided and other platform Notify Entities.
+
+!!! note
+    Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `supernotify.notify` action with an explicit `target:` if you need any of that for a specific recipient.
+
+## Enabling, Disabling and Overriding Targets per Delivery
+
+A recipient's `delivery:` block (also used below for [per-delivery targets](#manual-configuration)) can switch a delivery on or off just for that recipient, on top of whatever a *Scenario* or the delivery itself decides for everyone else.
+
+### Enabling a Delivery Just for One Recipient
+
+A delivery doesn't need to be turned on for everybody to be useful to one person - an explicit `enabled: true` in a recipient's own `delivery:` block switches it on for them alone, or conversely `enabled: false` to switch it off just for those recipients.
+
+A `target:` override can also be used, independently of the enabled status, to override the target only for that recipient on that delivery. For example, a Slack delivery built with the [Generic Transport](../transports/generic.md#selecting-targets) that only Jane uses:
+
+```yaml
+delivery:
+  slack:
+    transport: generic
+    action: notify.my_slack_service
+    enabled: false
+    options:
+      target_categories: slack_channel
+
+recipients:
+  - person: person.jane
+    delivery:
+      slack:
+        enabled: true # leave this out if the slack delivery is usually enabled for everyone
+        target:
+          slack_channel: A20H2AN55DX
+```
+
+Nobody else is bothered by Slack messages, since `slack` was never enabled at the delivery level - only for Jane's recipient entry, and only because she explicitly set `enabled: true`.
+
+### Disabling a Delivery for One Recipient
+
+The opposite works too - a delivery that's already enabled for everybody can be switched off for one recipient, without touching the delivery itself:
+
+```yaml
+delivery:
+  html_email:
+    transport: email
+    template: default.html.j2
+
+recipients:
+  - person: person.new_home_owner
+    email: jalaboli@myhome.net
+  - person: person.grumpy_teenager
+    email: leave.me.alone@myhome.net
+    delivery:
+      html_email:
+        enabled: false
+```
+
+Everyone else still gets `html_email`; `person.grumpy_teenager` is left out of just that delivery, while still receiving anything else that applies to them (mobile push, other deliveries, and so on).
+
+### Adding a Target for One Recipient
+
+The same `delivery:` block can add extra targets or data to a delivery that's already firing for everyone, rather than switching it on or off entirely - for example, CC'ing an assistant on the household's `html_email` delivery:
+
+```yaml
+recipients:
+  - person: person.new_home_owner
+    delivery:
+      html_email:
+        target:
+          - assistant@myhome.net
+```
+
+`enabled`, `target` and `data` can be combined in the same block as needed - `enabled: false` always wins over any `target`/`data` set alongside it, since a recipient who's opted out shouldn't still pick up delivery-specific extras.
 
 ## Manual Configuration
 
@@ -122,7 +203,7 @@ The entity also exposes the recipient attributes, such as email, mobile devices,
       phone_number: "+430504103451"
       delivery:
         alexa_announce:
-        target:
+          target:
             - media_player.echo_study
 ```
 
@@ -130,13 +211,9 @@ The entity also exposes the recipient attributes, such as email, mobile devices,
 
 ### Simple
 
-One good reason for manual device registration is that adding devices to the Person in Home Assistant affects
-the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you
-would like to have notifications on, but aren't always with you, adding them to Person might make it it look
-as if you're home when its only an iPad sitting on a shelf.
+One good reason for manual device registration is that adding devices to the Person in Home Assistant affects the occupancy calculation that Home Assistant makes. So if you have devices, like an iPad or laptop, that you would like to have notifications on, but aren't always with you, adding them to Person might make it it look as if you're home when its only an iPad sitting on a shelf.
 
-So adding these devices to the `recipients` section of Supernotify configuration will mean they get included
-in notifications, but won't be used for occupancy, by Supernotify or other integrations.
+So adding these devices to the `recipients` section of Supernotify configuration will mean they get included in notifications, but won't be used for occupancy, by Supernotify or other integrations.
 
 ```title="Simple Example"
 recipients:

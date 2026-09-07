@@ -86,7 +86,7 @@ lametric_test:
 Then call this action ...
 
 ```yaml
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "Test transport nativo LaMetric - Se vedi questo sul display LaMetric, funziona!"
   data:

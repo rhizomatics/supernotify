@@ -4,12 +4,14 @@ import asyncio
 import datetime as dt
 import logging
 import uuid
+from dataclasses import dataclass
 from traceback import format_exception
 from typing import TYPE_CHECKING, Any, cast
 
 import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.const import ATTR_ENTITY_ID
 from voluptuous import humanize
 
 from custom_components.supernotify.schema import SelectionRank
@@ -63,6 +65,8 @@ from .model import (
 from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome
 
 if TYPE_CHECKING:
+    from homeassistant.core import Context as HAContext
+
     from .context import Context
     from .delivery import Delivery, DeliveryRegistry
     from .people import PeopleRegistry, Recipient
@@ -91,23 +95,46 @@ INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
 type DeliveryName = str
 
 
+@dataclass
+class DeliveryTargetOverride:
+    fixed: list[str]
+    include: list[str]
+    exclude: list[str]
+
+    def as_dict(self) -> dict[str, Any]:
+        return {"fixed": self.fixed, "include": self.include, "exclude": self.exclude}
+
+
 class Notification(ArchivableObject):
     def __init__(
         self,
         context: Context,
         message: str | None = None,
         title: str | None = None,
-        target: list[str] | str | None = None,
+        target: list[str] | str | dict[str, Any] | None = None,
         action_data: dict[str, Any] | None = None,
+        ha_context: HAContext | None = None,
     ) -> None:
         self.created: dt.datetime = dt.datetime.now(tz=dt_util.get_default_time_zone())
-        self.debug_trace: DebugTrace = DebugTrace(message=message, title=title, data=action_data, target=target)
+        self.debug_trace: DebugTrace = DebugTrace(
+            message=message,
+            title=title,
+            data=action_data,
+            target=target,
+            debug=bool((action_data or {}).get(ATTR_DEBUG, False)),
+        )
         self.message: str | None = message
         self.context: Context = context
+        self.ha_context: HAContext | None = ha_context
         self.people_registry: PeopleRegistry = context.people_registry
         self.delivery_registry: DeliveryRegistry = context.delivery_registry
         action_data = action_data or {}
-        self._target: Target | None = Target(target) if target else None
+
+        if action_data.get(ATTR_RECIPIENTS) and not isinstance(target, dict):
+            _LOGGER.warning("SUPERNOTIFY recipients key in notify action data deprecated, list recipients in target instead")
+            target = ensure_list(target) + ensure_list(action_data.get(ATTR_RECIPIENTS))
+
+        self._target: Target | None = Target(self.convert_notify_entities(target)) if target else None
         self._already_selected: Target = Target()
         self._title: str | None = title
         self.id = str(uuid.uuid1())
@@ -119,7 +146,7 @@ class Notification(ArchivableObject):
         self.fallback: int = 0
         self.dupe: bool = False
         self.deliveries: dict[DeliveryName, dict[EnvelopeOutcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
-        self.delivery_exceptions: dict[DeliveryName, list[str]]
+        self.delivery_exceptions: dict[DeliveryName, list[str]] = {}
         self._skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
@@ -141,39 +168,37 @@ class Notification(ArchivableObject):
         self.delivery_overrides: dict[str, DeliveryCustomization] = {}
 
         delivery_data = action_data.get(ATTR_DELIVERY)
+        if self.delivery_selection is None:
+            if isinstance(delivery_data, list) or (isinstance(delivery_data, str) and delivery_data):
+                self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
+            else:
+                self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
         if isinstance(delivery_data, list):
             # a bare list of deliveries implies intent to restrict
             _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for list %s", delivery_data)
-            if self.delivery_selection is None:
-                self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
-            self.delivery_overrides = {k: DeliveryCustomization({}) for k in action_data.get(ATTR_DELIVERY, [])}
+            self.delivery_overrides = {
+                k: DeliveryCustomization(config=None, default_enabled=True) for k in action_data.get(ATTR_DELIVERY, [])
+            }
         elif isinstance(delivery_data, str) and delivery_data:
             # a bare list of deliveries implies intent to restrict
             _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as explicit for single %s", delivery_data)
-            if self.delivery_selection is None:
-                self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
-            self.delivery_overrides = {delivery_data: DeliveryCustomization({})}
+            self.delivery_overrides = {delivery_data: DeliveryCustomization(config=None, default_enabled=True)}
         elif isinstance(delivery_data, dict):
             # whereas a dict may be used to tune or restrict
-            if self.delivery_selection is None:
-                self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
             _LOGGER.debug("SUPERNOTIFY Defaulting delivery selection as implicit for mapping %s", delivery_data)
-            self.delivery_overrides = {k: DeliveryCustomization(v) for k, v in action_data.get(ATTR_DELIVERY, {}).items()}
+            self.delivery_overrides = {
+                k: DeliveryCustomization(config={**(v or {})}, default_enabled=True)
+                for k, v in action_data.get(ATTR_DELIVERY, {}).items()
+            }
         elif delivery_data:
             _LOGGER.warning("SUPERNOTIFY Unable to interpret delivery data %s", delivery_data)
-            if self.delivery_selection is None:
-                self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
-        else:
-            if self.delivery_selection is None:
-                self.delivery_selection = DELIVERY_SELECTION_IMPLICIT
 
         self.action_groups: list[str] | None = nullable_ensure_list(action_data.get(ATTR_ACTION_GROUPS))
-        self.recipients_override: list[str] | None = nullable_ensure_list(action_data.get(ATTR_RECIPIENTS))
         self.media: dict[str, Any] = action_data.get(ATTR_MEDIA) or {}
         self.debug: bool = action_data.get(ATTR_DEBUG, False)
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
 
-        self.selected_deliveries: dict[str, dict[str, Any]] = {}
+        self.selected_deliveries: dict[str, DeliveryTargetOverride | None] = {}
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self._suppression_reason: SuppressionReason | None = None
@@ -220,6 +245,61 @@ class Notification(ArchivableObject):
         if not self.media:
             self.media = self.media_requirements(self.extra_data)
 
+    def convert_notify_entities(
+        self, target: list[str] | str | dict[str, Any] | None = None
+    ) -> list[str] | str | dict[str, Any] | None:
+        """Short circuit supernotify notify entities so they're handled directly so not
+        going round in circles via calls to notify.send_message. A genuine other-integration
+        notify entity is left alone for NotifyEntityTransport to handle normally.
+
+        Defined here rather than in models/Target since requires access to registries.
+
+        supernotify.notify's `target:` field also accepts the dict shape Home Assistant's own
+        target selector produces, e.g. {"entity_id": ["person.jey", "notify.recipient_alice"]} -
+        unlike this integration's other dict-shaped targets (recipient/delivery config), that
+        `entity_id` list is Home Assistant's raw picker output, not pre-sorted by category: a
+        person entity picked that way still needs to end up as a `person_id`, same as if it had
+        been typed directly into notify.supernotify's flat target list, or it would otherwise be
+        silently dropped by Target() (whose entity_id category explicitly excludes the person
+        domain - see Target.is_entity_id/is_person_id in model.py).
+        """
+        if not target:
+            return target
+        known_entities: dict[str, Recipient] = self.people_registry.notify_entities()
+
+        if isinstance(target, dict):
+            entity_ids = ensure_list(target.get(ATTR_ENTITY_ID))
+            if not entity_ids:
+                return target
+            remaining_entity_ids: list[str] = []
+            person_ids: list[str] = list(ensure_list(target.get(ATTR_PERSON_ID)))
+            for e in entity_ids:
+                if e in known_entities:
+                    # e.g. switch to a person id if a notify entity for recipient
+                    person_ids.append(known_entities[e].entity_id)
+                elif Target.is_person_id(e):
+                    person_ids.append(e)
+                else:
+                    remaining_entity_ids.append(e)
+            updated_target = {**target, ATTR_ENTITY_ID: remaining_entity_ids}
+            if person_ids:
+                updated_target[ATTR_PERSON_ID] = person_ids
+            return updated_target
+
+        updated: list[str] = []
+        changed: bool = False
+        for t in ensure_list(target):
+            if t in known_entities:
+                # e.g. switch to a person id if a notify entity for recipient
+                updated.append(known_entities[t].entity_id)
+                changed = True
+            else:
+                updated.append(t)
+
+        if changed:
+            return updated
+        return target
+
     def outcome(self) -> DeliveryOutcome:
         if self.error_count > 0:
             return DeliveryOutcome.ERROR
@@ -264,7 +344,7 @@ class Notification(ArchivableObject):
                 self.suppress(SuppressionReason.INVALID_ACTION_DATA)
                 raise vol.Invalid("Priority value must be a simple value")
         try:
-            humanize.validate_with_humanized_errors(action_data, ACTION_DATA_SCHEMA)
+            humanize.validate_with_humanized_errors(action_data, cast("vol.Schema", ACTION_DATA_SCHEMA))
         except vol.Invalid as e:
             _LOGGER.warning("SUPERNOTIFY Invalid action data %s: %s", action_data, e)
             self.suppress(SuppressionReason.INVALID_ACTION_DATA)
@@ -291,11 +371,13 @@ class Notification(ArchivableObject):
         else:
             self.action_groups = action_groups
 
-    def select_deliveries(self) -> dict[str, dict[str, Any]]:
+    def select_deliveries(self) -> dict[str, DeliveryTargetOverride | None]:
         scenario_enable_deliveries: list[str] = []
         scenario_disable_deliveries: list[str] = []
         default_enable_deliveries: list[str] = []
         recipients_enable_deliveries: list[str] = []
+        recipients_disable_deliveries: list[str] = []
+        all_recipients = self.all_recipients()
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
@@ -306,8 +388,10 @@ class Notification(ArchivableObject):
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
 
-            for recipient in self.all_recipients():
+            for recipient in all_recipients:
                 recipients_enable_deliveries.extend(recipient.enabling_delivery_names())
+                # See also Recipient.target() for the disabled cases
+                recipients_disable_deliveries.extend(recipient.disabling_delivery_names())
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
                 # all deliveries with SELECTION_DEFAULT in CONF_SELECTION
                 default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
@@ -323,24 +407,16 @@ class Notification(ArchivableObject):
         # apply the deliveries defined in the notification action call
         for delivery, delivery_override in self.delivery_overrides.items():
             if (
-                (delivery_override is None or delivery_override.enabled is True)
+                (delivery_override is None or delivery_override.enabled is not False)
                 and delivery in self.context.delivery_registry.enabled_deliveries
             ) or (
-                (delivery_override is not None and delivery_override.enabled is True)
+                (delivery_override is not None and delivery_override.enabled is not False)
                 and delivery in self.context.delivery_registry.disabled_deliveries
             ):
                 override_enable_deliveries.append(delivery)
             elif delivery_override is not None and delivery_override.enabled is False:
                 override_disable_deliveries.append(delivery)
 
-        # if self.delivery_selection != DELIVERY_SELECTION_FIXED:
-        #    scenario_disable_deliveries = [
-        #        d.name
-        #        for d in self.context.delivery_registry.deliveries.values()
-        #        if d.selection == [SELECTION_BY_SCENARIO]
-        #        and d.name not in scenario_enable_deliveries
-        #        and (d.name not in override_enable_deliveries or self.delivery_selection != DELIVERY_SELECTION_EXPLICIT)
-        #    ]
         all_global_enabled: list[str] = list(
             set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
         )
@@ -366,15 +442,26 @@ class Notification(ArchivableObject):
         selected = first + anywhere + last
         self.debug_trace.record_delivery_selection("ranked", selected)
 
-        # TODO: clean up this ugly logic, reorganize delivery around people
-        results: dict[str, dict[str, Any]] = {d: {} for d in selected}
-        personal_deliveries = [d for d in selected if d not in all_global_enabled and d in recipients_enable_deliveries]
+        selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)
+        personal_deliveries = [d for d in selected if d in recipients_enable_deliveries]
         for personal_delivery in personal_deliveries:
-            results[personal_delivery].setdefault("recipients", [])
-            for recipient in self.all_recipients():
+            fixed_targets: list[str] = []
+            include_targets: list[str] = []
+            exclude_targets: list[str] = []
+            for recipient in all_recipients:
                 if personal_delivery in recipient.enabling_delivery_names():
-                    results[personal_delivery]["recipients"].append(recipient.entity_id)
-        return results
+                    if personal_delivery in all_global_enabled:
+                        # delivery already selected, make sure this recipient also included
+                        include_targets.append(recipient.entity_id)
+                    else:
+                        # this delivery has been explicitly enabled for individual recipients
+                        fixed_targets.append(recipient.entity_id)
+                elif personal_delivery in recipient.disabling_delivery_names():
+                    exclude_targets.append(recipient.entity_id)
+            selected_deliveries[personal_delivery] = DeliveryTargetOverride(
+                fixed=fixed_targets, exclude=exclude_targets, include=include_targets
+            )
+        return selected_deliveries
 
     def suppress(self, reason: SuppressionReason) -> None:
         self._suppression_reason = reason
@@ -397,13 +484,13 @@ class Notification(ArchivableObject):
             _LOGGER.info("SUPERNOTIFY Suppressing globally silenced/snoozed notification (%s)", self.id)
             for delivery_name in self.selected_deliveries:
                 delivery = self.context.delivery_registry.deliveries.get(delivery_name)
-                self.record_result(delivery, suppression_reason=SuppressionReason.SNOOZED)
+                self.record_result(delivery, suppression_reason=self._suppression_reason)
         else:
             # Deliveries for transports that call grab_image() are deferred so that
             # PTZ movement runs concurrently with non-image deliveries (chime, TTS, etc.)
             camera_configured = bool(self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID) or self.media.get(ATTR_MEDIA_SNAPSHOT_URL))
-            immediate_deliveries: dict[str, dict[str, Any]] = {}
-            deferred_deliveries: dict[str, dict[str, Any]] = {}
+            immediate_deliveries: dict[str, DeliveryTargetOverride | None] = {}
+            deferred_deliveries: dict[str, DeliveryTargetOverride | None] = {}
             for delivery_name, details in self.selected_deliveries.items():
                 d = self.context.delivery_registry.deliveries.get(delivery_name)
                 if d and camera_configured and d.transport.supported_features & TransportFeature.SNAPSHOT_IMAGE:
@@ -414,7 +501,7 @@ class Notification(ArchivableObject):
             # Start image grab immediately so PTZ runs while immediate deliveries execute
             image_task: asyncio.Task | None = None
             if deferred_deliveries:
-                image_task = asyncio.create_task(_snap_notification_image(self, self.context))
+                image_task = asyncio.create_task(_snap_notification_image(self, self.context, ha_context=self.ha_context))
 
             _LOGGER.debug("SUPERNOTIFY Scheduling %s immediate deliveries", len(deferred_deliveries))
             await self._schedule_deliveries(immediate_deliveries)
@@ -428,6 +515,8 @@ class Notification(ArchivableObject):
                         await image_task
                 except Exception:
                     _LOGGER.exception("SUPERNOTIFY Failed to pre-grab image")
+                    if not image_task.done():
+                        image_task.cancel()
 
             _LOGGER.debug("SUPERNOTIFY Scheduling %s deferred deliveries", len(deferred_deliveries))
             await self._schedule_deliveries(deferred_deliveries)
@@ -455,12 +544,12 @@ class Notification(ArchivableObject):
 
         return self.delivered > 0
 
-    async def _schedule_deliveries(self, deliveries: dict[str, dict[str, Any]]) -> None:
+    async def _schedule_deliveries(self, deliveries: dict[str, DeliveryTargetOverride | None]) -> None:
         delivery_coros = []
-        for delivery_name, details in deliveries.items():
+        for delivery_name, target_overrides in deliveries.items():
             delivery = self.context.delivery_registry.deliveries.get(delivery_name)
             if delivery:
-                delivery_coros.append(self.call_transport(delivery, recipients=details.get("recipients")))
+                delivery_coros.append(self.call_transport(delivery, target_overrides))
             else:
                 _LOGGER.error("SUPERNOTIFY Unexpected missing delivery %s", delivery_name)
         if delivery_coros:
@@ -469,7 +558,7 @@ class Notification(ArchivableObject):
                 if isinstance(result, BaseException):
                     _LOGGER.error("SUPERNOTIFY Unexpected error in parallel delivery: %s", result)
 
-    async def call_transport(self, delivery: Delivery, recipients: list[str] | None = None) -> None:
+    async def call_transport(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> None:
         try:
             transport: Transport = delivery.transport
             if not transport.enabled:
@@ -488,7 +577,7 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, suppression_reason=SuppressionReason.DELIVERY_CONDITION)
                     return
 
-            targets: list[Target] = self.generate_targets(delivery, recipients=recipients)
+            targets: list[Target] = self.generate_targets(delivery, target_override)
             envelopes: list[Envelope] = self.generate_envelopes(delivery, targets)
             if not envelopes:
                 if delivery.target_required == TargetRequired.ALWAYS and (
@@ -498,6 +587,7 @@ class Notification(ArchivableObject):
                 else:
                     reason = SuppressionReason.UNKNOWN
                 self.record_result(delivery, targets=targets, suppression_reason=reason)
+                return
 
             for envelope in envelopes:
                 if not self.force_resend and self.context.dupe_checker.check(envelope):
@@ -505,13 +595,15 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
                 try:
-                    if not await transport.deliver(envelope, debug_trace=self.debug_trace):
+                    if await transport.deliver(envelope, debug_trace=self.debug_trace):
+                        self.record_result(delivery, envelope)
+                    else:
                         _LOGGER.info(
                             "SUPERNOTIFY No delivery for %s (targets: %s)",
                             delivery.name,
                             envelope.target.as_dict() if envelope.target else "NONE",
                         )
-                    self.record_result(delivery, envelope)
+                        self.record_result(delivery, envelope, suppression_reason=SuppressionReason.UNKNOWN)
                 except Exception as e2:
                     envelope.error_count = envelope.error_count + 1
                     transport.record_error(str(e2), method="deliver")
@@ -527,6 +619,7 @@ class Notification(ArchivableObject):
             )
             self.delivery_exceptions.setdefault(delivery.name, [])
             self.delivery_exceptions[delivery.name].append("\n".join(format_exception(e)))
+            self.record_result(delivery, None, suppression_reason=SuppressionReason.ERROR)
 
     def record_result(
         self,
@@ -536,29 +629,28 @@ class Notification(ArchivableObject):
         suppression_reason: SuppressionReason | None = None,
     ) -> None:
         """Debugging (and unit test) support for notifications that failed or were skipped"""
-        if delivery:
-            if envelope:
-                self.delivered += envelope.delivered
-                self.error_count += envelope.error_count
-                self.deliveries.setdefault(delivery.name, {})
-                if envelope.delivered:
-                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
-                    self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+        if delivery and envelope:
+            self.delivered += envelope.delivered
+            self.error_count += envelope.error_count
+            self.deliveries.setdefault(delivery.name, {})
+            if envelope.delivered:
+                self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
+                self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+            else:
+                if suppression_reason:
+                    envelope.skip_reason = suppression_reason
+                    if suppression_reason not in self._skip_reasons:
+                        self._skip_reasons.append(suppression_reason)
+                    if suppression_reason == SuppressionReason.DUPE:
+                        self.dupe = True
+                if envelope.error_count:
+                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])
+                    self.deliveries[delivery.name][EnvelopeOutcome.ERROR].append(envelope)  # type: ignore
+                    self.failed += 1
                 else:
-                    if suppression_reason:
-                        envelope.skip_reason = suppression_reason
-                        if suppression_reason not in self._skip_reasons:
-                            self._skip_reasons.append(suppression_reason)
-                        if suppression_reason == SuppressionReason.DUPE:
-                            self.dupe = True
-                    if envelope.error_count:
-                        self.deliveries[delivery.name].setdefault(EnvelopeOutcome.ERROR, [])
-                        self.deliveries[delivery.name][EnvelopeOutcome.ERROR].append(envelope)  # type: ignore
-                        self.failed += 1
-                    else:
-                        self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])
-                        self.deliveries[delivery.name][EnvelopeOutcome.SUPPRESSED].append(envelope)  # type: ignore
-                        self.suppressed += 1
+                    self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUPPRESSED, [])
+                    self.deliveries[delivery.name][EnvelopeOutcome.SUPPRESSED].append(envelope)  # type: ignore
+                    self.suppressed += 1
 
         if not envelope:
             delivery_name: str = delivery.name if delivery else "!UNKNOWN!"
@@ -571,11 +663,14 @@ class Notification(ArchivableObject):
                 skip_summary["targets"] = targets
             self.deliveries[delivery_name][EnvelopeOutcome.SKIPPED] = skip_summary
             self.skipped += 1
+            if suppression_reason == SuppressionReason.ERROR:
+                self.error_count += 1
+                self.failed += 1
 
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
         minimal = not diagnostics
-        object_refs = ["context", "people_registry", "delivery_registry"]
+        object_refs = ["context", "ha_context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
         debug_only = ["debug_trace"]
         exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions", "_suppression_reason"]
@@ -593,7 +688,6 @@ class Notification(ArchivableObject):
             "delivery_overrides",
             "delivery_selection",
             "selected_deliveries",
-            "recipients_override",
             "delivered",
             "failed",
             "suppressed",
@@ -604,6 +698,15 @@ class Notification(ArchivableObject):
         ]
         # preferred fields
         result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
+        if self.ha_context is not None:
+            # Context.as_dict() takes no kwargs, so it can't go through sanitize() like everything else
+            original_context = dict(self.ha_context.as_dict())
+            user_id = original_context.get("user_id")
+            if user_id:
+                user_name = self.people_registry.name_for_user_id(user_id)
+                if user_name:
+                    original_context["user"] = user_name
+            result["original_context"] = original_context
         result.update({
             k: sanitize(
                 self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
@@ -685,7 +788,22 @@ class Notification(ArchivableObject):
     async def select_scenarios(self) -> list[str]:
         return [s.name for s in self.context.scenario_registry.scenarios.values() if s.evaluate(self.condition_variables)]
 
-    def generate_targets(self, delivery: Delivery, recipients: list[str] | None = None) -> list[Target]:
+    def _filter_resolve_select_targets(
+        self, computed_target: Target, delivery: Delivery, stages: tuple[str, str, str, str]
+    ) -> Target:
+        """Snooze-filter, resolve indirect/scenario targets, then apply delivery target selection."""
+        computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
+        self.debug_trace.record_target(delivery.name, stages[0], computed_target)
+        for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
+            computed_target += indirect_target
+        self.debug_trace.record_target(delivery.name, stages[1], computed_target)
+        computed_target += self.resolve_scenario_targets(delivery)
+        self.debug_trace.record_target(delivery.name, stages[2], computed_target)
+        computed_target = delivery.select_targets(computed_target)
+        self.debug_trace.record_target(delivery.name, stages[3], computed_target)
+        return computed_target
+
+    def generate_targets(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> list[Target]:
 
         if delivery.target_required == TargetRequired.NEVER:
             # don't waste time computing targets for deliveries that don't need them
@@ -700,8 +818,9 @@ class Notification(ArchivableObject):
             else:
                 computed_target = Target(None, target_data=delivery.data)
                 self.debug_trace.record_target(delivery.name, "101_delivery_default_fixed_empty", computed_target)
-        elif recipients is not None:
-            computed_target = Target(recipients)
+        elif target_override is not None and target_override.fixed:
+            # personal deliveries
+            computed_target = Target(target_override.fixed)
             self.debug_trace.record_target(delivery.name, "102_delivery_default_fixed", computed_target)
 
         elif not self._target:
@@ -710,20 +829,19 @@ class Notification(ArchivableObject):
             self.debug_trace.record_target(delivery.name, "201_no_action_target", computed_target)
         else:
             computed_target = self._target.safe_copy()
+            if target_override is not None:
+                if target_override.include:
+                    computed_target += Target(target_override.include)
+                if target_override.exclude:
+                    computed_target -= Target(target_override.exclude)
             self.debug_trace.record_target(delivery.name, "202_action_target", computed_target)
 
         # 1st round of filtering for snooze and resolving people->direct targets
-        computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-        self.debug_trace.record_target(delivery.name, "300_post_snooze", computed_target)
-        # turn person_ids into emails and phone numbers
-        for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
-            computed_target += indirect_target
-        self.debug_trace.record_target(delivery.name, "310_resolve_indirect", computed_target)
-        computed_target += self.resolve_scenario_targets(delivery)
-        self.debug_trace.record_target(delivery.name, "320_resolved_scenario_targets", computed_target)
-        # filter out target not required for this delivery
-        computed_target = delivery.select_targets(computed_target)
-        self.debug_trace.record_target(delivery.name, "330_delivery_selection", computed_target)
+        computed_target = self._filter_resolve_select_targets(
+            computed_target,
+            delivery,
+            ("300_post_snooze", "310_resolve_indirect", "320_resolved_scenario_targets", "330_delivery_selection"),
+        )
         primary_count = len(computed_target)
 
         if delivery.target_usage == TARGET_USE_ON_NO_DELIVERY_TARGETS:
@@ -757,15 +875,11 @@ class Notification(ArchivableObject):
             )
 
             # 2nd round of filtering for snooze and resolving people->direct targets after delivery target applied
-            computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
-            self.debug_trace.record_target(delivery.name, "501_post_snooze", computed_target)
-            for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
-                computed_target += indirect_target
-            self.debug_trace.record_target(delivery.name, "502_resolved_indirect_targets", computed_target)
-            computed_target += self.resolve_scenario_targets(delivery)
-            self.debug_trace.record_target(delivery.name, "503_resolved_scenario_targets", computed_target)
-            computed_target = delivery.select_targets(computed_target)
-            self.debug_trace.record_target(delivery.name, "504_delivery_selection", computed_target)
+            computed_target = self._filter_resolve_select_targets(
+                computed_target,
+                delivery,
+                ("501_post_snooze", "502_resolve_indirect", "503_resolved_scenario_targets", "504_delivery_selection"),
+            )
 
         # If the action call explicitly specified a target for this delivery, it takes
         # precedence over all resolved/merged targets above.
@@ -815,14 +929,14 @@ class Notification(ArchivableObject):
         else:
             # default to all known recipients
             recipients = self.people_registry.enabled_recipients()
-            recipients = [r for r in recipients if self.recipients_override is None or r.entity_id in self.recipients_override]
         return recipients
 
     def default_person_ids(self, delivery: Delivery) -> Target:
         # If target not specified on service call or delivery, then default to std list of recipients
         people: list[Recipient] = self.people_registry.filter_recipients_by_occupancy(delivery.occupancy)
-        people = [p for p in people if self.recipients_override is None or p.entity_id in self.recipients_override]
-        return Target({ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id]})
+        return Target({
+            ATTR_PERSON_ID: [p.entity_id for p in people if p.entity_id and delivery.name not in p.disabling_delivery_names()]
+        })
 
     def resolve_indirect_targets(self, target: Target, delivery: Delivery) -> list[Target]:
         # enrich data selected in configuration for this delivery, from direct target definition or attrs like email or phone
@@ -868,6 +982,8 @@ class Notification(ArchivableObject):
                     k: v for k, v in self.extra_data.items() if k not in INTERNAL_DATA_KEYS
                 })  # action call data
 
-                envelopes.append(Envelope(delivery, self, target, envelope_data, context=self.context))
+                envelopes.append(
+                    Envelope(delivery, self, target, envelope_data, context=self.context, ha_context=self.ha_context)
+                )
 
         return envelopes

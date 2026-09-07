@@ -1,6 +1,106 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Powiadom",
+            "description": "Wysyła powiadomienie za pośrednictwem SuperNotify do jednej lub kilku platform powiadomień poprzez pojedynczy, ujednolicony interfejs.",
+            "fields": {
+                "message": {
+                    "name": "Wiadomość",
+                    "description": "Treść wiadomości powiadomienia."
+                },
+                "title": {
+                    "name": "Tytuł",
+                    "description": "Opcjonalny tytuł powiadomienia."
+                },
+                "target": {
+                    "name": "Cel",
+                    "description": "Kogo lub co powiadomić - osoby, urządzenia mobilne, odtwarzacze multimedialne, obszary lub inne encje docelowe. Pozostaw puste, aby użyć domyślnych/niejawnych dostarczeń."
+                },
+                "custom_target": {
+                    "name": "Niestandardowe cele",
+                    "description": "Cele poza Home Assistant, takie jak adresy e-mail, numery telefonów, identyfikatory Slack itp."
+                },
+                "priority": {
+                    "name": "Priorytet",
+                    "description": "Używany do włączania/wyłączania dostarczeń i scenariuszy oraz mapowany na własną flagę priorytetu/pilności bazowego transportu, jeśli jest obsługiwana (np. powiadomienia push mobilne, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Wybór dostarczenia",
+                    "description": "Jak interpretowane jest pole Dostarczenie (jeśli ustawione) - implicit (dodaje do wartości domyślnych), explicit (tylko te, plus włączone przez scenariusz) lub fixed (tylko te, scenariusze są ignorowane)."
+                },
+                "delivery": {
+                    "name": "Dostarczenie",
+                    "description": "Ogranicz lub dostrój konkretne dostarczenia według nazwy. Lista nazw ogranicza tylko do nich; mapowanie może również nadpisywać opcje dla poszczególnych dostarczeń."
+                },
+                "require_scenarios": {
+                    "name": "Wymagane scenariusze",
+                    "description": "Wstrzymaj to powiadomienie, chyba że przynajmniej jeden z tych scenariuszy jest obecnie aktywny."
+                },
+                "apply_scenarios": {
+                    "name": "Scenariusze do zastosowania",
+                    "description": "Wymuś traktowanie tych scenariuszy jako aktywnych dla tego powiadomienia, niezależnie od ich własnych warunków."
+                },
+                "constrain_scenarios": {
+                    "name": "Scenariusze ograniczające",
+                    "description": "Pozwól, aby tylko te scenariusze (oraz te ze Scenariuszy do zastosowania) wpływały na to powiadomienie, ignorując wszelkie inne aktywne scenariusze."
+                },
+                "camera_entity_id": {
+                    "name": "Kamera",
+                    "description": "Kamera do wykonania zrzutu (i najpierw ruchu PTZ, jeśli skonfigurowano) przed dostarczeniem."
+                },
+                "snapshot_url": {
+                    "name": "URL zrzutu",
+                    "description": "Już istniejący URL obrazu do załączenia, zamiast wywoływania nowego zrzutu z kamery."
+                },
+                "clip_url": {
+                    "name": "URL klipu",
+                    "description": "Już istniejący URL klipu wideo do załączenia."
+                },
+                "media": {
+                    "name": "Inne opcje multimediów",
+                    "description": "Zaawansowane opcje multimediów nieobjęte powyższymi polami, np. ustawienie PTZ, opóźnienie przechwytywania lub nadpisania formatu obrazu."
+                },
+                "actions": {
+                    "name": "Akcje",
+                    "description": "Jednorazowe przyciski powiadomień z akcjami do dołączenia, bez konieczności wcześniej skonfigurowanej grupy akcji."
+                },
+                "action_groups": {
+                    "name": "Grupy akcji",
+                    "description": "Nazwane grupy przycisków mobilnych powiadomień z akcjami do dołączenia, skonfigurowane w action_groups:."
+                },
+                "message_html": {
+                    "name": "Wiadomość HTML",
+                    "description": "Alternatywa HTML dla Wiadomości, używana przez transporty obsługujące bogate formatowanie (np. e-mail)."
+                },
+                "debug": {
+                    "name": "Debugowanie",
+                    "description": "Uwzględnij dodatkowe szczegóły diagnostyczne tego powiadomienia w śladach i archiwum."
+                },
+                "force_resend": {
+                    "name": "Wymuś ponowne wysłanie",
+                    "description": "Wyślij nawet, jeśli wykrywanie duplikatów w innym przypadku wstrzymałoby to powiadomienie."
+                },
+                "data": {
+                    "name": "Dodatkowe dane",
+                    "description": "Dane przekazywane dalej dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
+                }
+            },
+            "sections": {
+                "multimedia": {
+                    "name": "Opcje multimediów",
+                    "description": "Załącz zrzut z kamery, istniejący obraz lub klip wideo do tego powiadomienia."
+                },
+                "scenarios": {
+                    "name": "Scenariusze",
+                    "description": "Określa, które scenariusze są wymagane, wymuszane, czy ograniczają to powiadomienie."
+                },
+                "advanced": {
+                    "name": "Zaawansowane",
+                    "description": "Przyciski akcji powiadomień, formatowanie HTML, śledzenie debugowania i inne rzadziej używane opcje."
+                }
+            }
+        },
         "reload": {
             "name": "Przeładuj",
             "description": "Ponownie ładuje usługi Supernotify."

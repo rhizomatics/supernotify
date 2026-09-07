@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import io
+import json
 import time
 from contextlib import chdir
 from io import BytesIO
 from os import fspath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
@@ -26,9 +27,12 @@ from conftest import IMAGE_PATH, TestImage
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_PATH,
     CONF_CAMERA,
+    CONF_PTZ_DELAY,
     CONF_PTZ_PRESET_DEFAULT,
     MEDIA_OPTION_REPROCESS,
+    PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
+    PTZ_METHOD_ONVIF,
 )
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
@@ -37,6 +41,7 @@ from custom_components.supernotify.media_grab import (
     _detect_image_ext,
     camera_available,
     grab_image,
+    infer_ptz_method,
     move_camera_to_ptz_preset,
     select_avail_camera,
     snap_camera,
@@ -46,6 +51,7 @@ from custom_components.supernotify.media_grab import (
     write_image_from_bitmap,
 )
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.schema import MEDIA_SCHEMA
 
 from .hass_setup_lib import TestingContext
 
@@ -121,9 +127,11 @@ async def test_snap_camera(unmocked_hass_api, tmp_aiopath: Path) -> None:
     called_entity: str | None = None
     fixture_image_path: Path = IMAGE_PATH / "example_image.jpeg"
 
-    async def dummy_snapshot(call: ServiceCall, **kwargs) -> ServiceResponse | None:
+    async def dummy_snapshot(call: ServiceCall, **kwargs: Any) -> ServiceResponse | None:
         nonlocal called_entity
         called_entity = call.data["entity_id"]
+        # recorder serialises call_service events to JSON; a pathlib.Path filename breaks that silently
+        json.dumps(call.data)
         async with await anyio.Path(fixture_image_path).open("rb") as f:
             image = Image.open(io.BytesIO(await f.read()))
             buffer = BytesIO()
@@ -410,10 +418,9 @@ async def test_media_storage(mock_hass_api: HomeAssistantAPI, tmp_path) -> None:
         Mock(path="def", is_dir=Mock(return_value=False), is_file=Mock(return_value=True), stat=new_time),
         Mock(path="xyz", is_dir=Mock(return_value=False), is_file=Mock(return_value=True), stat=old_time),
     ]
-    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan:
-        with patch("aiofiles.os.unlink") as rmfr:
-            await uut.cleanup()
-            rmfr.assert_called_once_with(Path("xyz"))
+    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan, patch("aiofiles.os.unlink") as rmfr:
+        await uut.cleanup()
+        rmfr.assert_called_once_with(Path("xyz"))
     # skip cleanup for a few hours
     assert uut.media_path is not None
     first_purge = uut.last_purge
@@ -449,6 +456,29 @@ async def test_move_camera_unknown_ptz_method(mock_hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(mock_hass)
     await move_camera_to_ptz_preset(hass_api, "camera.x", "Upstairs", method="zigbee")
     mock_hass.services.async_call.assert_not_called()  # type: ignore
+
+
+# --- infer_ptz_method ---
+
+
+def test_infer_ptz_method_frigate_platform(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="frigate")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    assert infer_ptz_method(mock_hass_api, "camera.frigate1") == PTZ_METHOD_FRIGATE
+
+
+def test_infer_ptz_method_defaults_to_onvif_for_other_platforms(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="onvif")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    assert infer_ptz_method(mock_hass_api, "camera.onvif1") == PTZ_METHOD_ONVIF
+
+
+def test_infer_ptz_method_no_registry_entry(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value.async_get.return_value = None  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
+
+
+def test_infer_ptz_method_no_entity_registry(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.entity_registry.return_value = None  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
 
 
 # --- snap_image_entity ---
@@ -583,7 +613,7 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
 async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistantAPI) -> None:
     """Image.open failing on corrupt/non-image bytes falls back to a generic "img"
     extension rather than propagating the exception."""
-    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]
+    mock_hass_api.create_job.side_effect = OSError("cannot identify image file")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     result = await _detect_image_ext(mock_hass_api, b"not an image")
     assert result == "img"
 
@@ -641,6 +671,62 @@ async def test_grab_image_with_camera(hass: HomeAssistant, tmp_aiopath: Path) ->
     mock_snap.assert_called_once()
 
 
+async def test_grab_image_with_camera_no_ptz_skips_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A plain (non-PTZ) camera snap must not incur the ptz_delay wait, even though
+    ptz_delay defaults to 10 whether or not a camera is PTZ-capable."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
+                await snap_notification_image(notification, ctx)
+    mock_sleep.assert_not_called()
+
+
+async def test_grab_image_with_camera_ptz_applies_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """The ptz_delay wait should still be applied after an actual PTZ move."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    ctx.cameras = {"camera.front": {CONF_CAMERA: "camera.front", CONF_PTZ_DELAY: 3}}
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
+                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                    notification = Notification(
+                        ctx,
+                        "Test",
+                        action_data={"media": {"camera_entity_id": "camera.front", "camera_ptz_preset": "Doorway"}},
+                    )
+                    await snap_notification_image(notification, ctx)
+    mock_sleep.assert_called_once_with(3)
+
+
+async def test_grab_image_with_camera_ptz_scenario_media_uses_ptz_delay_default(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """Regression test: a scenario's media: block validates through MEDIA_SCHEMA and is merged
+    into notification.media (see Notification.apply_scenario). MEDIA_SCHEMA previously defaulted
+    camera_delay to 0, so a scenario media block that never set camera_delay still merged in a
+    camera_delay=0 that looked "explicit", skipping PTZ_DELAY_DEFAULT and snapping immediately
+    after the PTZ move instead of waiting for it to settle.
+    """
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+            with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock):
+                with patch("custom_components.supernotify.media_grab.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+                    notification = Notification(
+                        ctx,
+                        "Test",
+                        action_data={"media": {"camera_entity_id": "camera.front", "camera_ptz_preset": "Doorway"}},
+                    )
+                    # Simulate a scenario's media: {} block, which has no camera_delay set but
+                    # still validates through MEDIA_SCHEMA and is merged into notification.media.
+                    notification.media.update(MEDIA_SCHEMA({}))
+                    await snap_notification_image(notification, ctx)
+    mock_sleep.assert_called_once_with(PTZ_DELAY_DEFAULT)
+
+
 async def test_grab_image_with_camera_ptz(hass: HomeAssistant, tmp_aiopath: Path) -> None:
     ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
     await ctx.test_initialize()
@@ -657,6 +743,46 @@ async def test_grab_image_with_camera_ptz(hass: HomeAssistant, tmp_aiopath: Path
                 )
                 await snap_notification_image(notification, ctx)
     assert mock_ptz.call_count == 2  # move to preset before snap, return to default after
+
+
+async def test_grab_image_with_camera_not_in_config(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A camera_entity_id absent from the cameras: config section, but with a real
+    state in Home Assistant, should still be selected and snapped rather than rejected."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    assert "camera.unregistered" not in ctx.cameras
+    hass.states.async_set("camera.unregistered", "idle")
+
+    with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None) as mock_snap:
+        notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.unregistered"}})
+        await snap_notification_image(notification, ctx)
+    mock_snap.assert_called_once()
+    assert mock_snap.call_args[0][1] == "camera.unregistered"
+
+
+async def test_grab_image_with_camera_not_in_config_infers_frigate_ptz(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A camera absent from cameras: config has no explicit ptz_method to consult. If a ptz
+    preset is requested, the method should be inferred from the integration that registered
+    the entity (frigate here) rather than falling back to the onvif default."""
+    from homeassistant.helpers import entity_registry as er
+
+    ent_reg = er.async_get(hass)
+    ent_reg.async_get_or_create("camera", "frigate", "cam-1", suggested_object_id="frigate_cam")
+    hass.states.async_set("camera.frigate_cam", "idle")
+
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    assert "camera.frigate_cam" not in ctx.cameras
+
+    with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None):
+        with patch("custom_components.supernotify.media_grab.move_camera_to_ptz_preset", new_callable=AsyncMock) as mock_ptz:
+            notification = Notification(
+                ctx,
+                "Test",
+                action_data={"media": {"camera_entity_id": "camera.frigate_cam", "camera_ptz_preset": "Doorway"}},
+            )
+            await snap_notification_image(notification, ctx)
+    mock_ptz.assert_called_once_with(ctx.hass_api, "camera.frigate_cam", "Doorway", method=PTZ_METHOD_FRIGATE, ha_context=None)
 
 
 async def test_grab_image_camera_unavailable(hass: HomeAssistant) -> None:
@@ -773,7 +899,7 @@ async def test_media_storage_initialize_null_url_prefix_skips_http_registration(
     """media_url_prefix=None: hass_api.register_web_path must not be called."""
     uut = MediaStorage(str(tmp_aiopath), media_url_prefix=None, days=7)
     await uut.initialize(mock_hass_api)
-    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]
+    mock_hass_api.register_web_path.assert_not_called()  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
 
 
 async def test_media_storage_initialize_with_url_prefix_registers_http_path(
@@ -782,4 +908,4 @@ async def test_media_storage_initialize_with_url_prefix_registers_http_path(
     """media_url_prefix set: hass_api.register_web_path is called once with correct args."""
     uut = MediaStorage(str(tmp_aiopath), "/supernotify-media", 7)
     await uut.initialize(mock_hass_api)
-    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]
+    mock_hass_api.register_web_path.assert_called_once_with(uut.media_path, "/supernotify-media")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]

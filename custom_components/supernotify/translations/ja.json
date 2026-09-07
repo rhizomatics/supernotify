@@ -1,6 +1,106 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "通知",
+            "description": "SuperNotify を介して、単一の統一されたインターフェースで1つ以上の通知プラットフォームに通知を送信します。",
+            "fields": {
+                "message": {
+                    "name": "メッセージ",
+                    "description": "通知のメッセージ本文。"
+                },
+                "title": {
+                    "name": "タイトル",
+                    "description": "通知の任意のタイトル。"
+                },
+                "target": {
+                    "name": "ターゲット",
+                    "description": "誰または何に通知するか - 人、モバイルデバイス、メディアプレーヤー、エリア、またはその他のターゲットエンティティ。デフォルト/暗黙の配信を使用する場合は空のままにします。"
+                },
+                "custom_target": {
+                    "name": "カスタムターゲット",
+                    "description": "Home Assistant外のターゲット（メールアドレス、電話番号、Slack IDなど）。"
+                },
+                "priority": {
+                    "name": "優先度",
+                    "description": "配信やシナリオの有効/無効化に使用され、サポートされている場合は基盤となるトランスポート自体の優先度/緊急度フラグにマッピングされます（例: モバイルプッシュ、SMTP、Telegram、Gotify、ntfy）。"
+                },
+                "delivery_selection": {
+                    "name": "配信選択",
+                    "description": "配信フィールド（設定されている場合）の解釈方法 - implicit（デフォルトに追加）、explicit（これらのみ、およびシナリオで有効化されたもの）、fixed（これらのみ、シナリオを無視）。"
+                },
+                "delivery": {
+                    "name": "配信",
+                    "description": "名前で特定の配信を制限または調整します。名前のリストはそれらのみに制限します。マッピングでは配信ごとにオプションを上書きすることもできます。"
+                },
+                "require_scenarios": {
+                    "name": "必須シナリオ",
+                    "description": "これらのシナリオのうち少なくとも1つが現在有効でない限り、この通知を抑制します。"
+                },
+                "apply_scenarios": {
+                    "name": "適用シナリオ",
+                    "description": "これらのシナリオを、それ自体の条件に関係なく、この通知に対して有効として扱うよう強制します。"
+                },
+                "constrain_scenarios": {
+                    "name": "制約シナリオ",
+                    "description": "これらのシナリオ（および適用シナリオ内のもの）のみがこの通知に影響を与えることを許可し、他の有効なシナリオは無視します。"
+                },
+                "camera_entity_id": {
+                    "name": "カメラ",
+                    "description": "配信前にスナップショットを撮影する（設定されていればまずPTZ移動も行う）カメラ。"
+                },
+                "snapshot_url": {
+                    "name": "スナップショットURL",
+                    "description": "新しいカメラスナップショットをトリガーする代わりに添付する、既存の画像URL。"
+                },
+                "clip_url": {
+                    "name": "クリップURL",
+                    "description": "添付する既存の動画クリップURL。"
+                },
+                "media": {
+                    "name": "その他のメディアオプション",
+                    "description": "上記のフィールドでカバーされない高度なメディアオプション。例: PTZプリセット、キャプチャの遅延、画像フォーマットの上書きなど。"
+                },
+                "actions": {
+                    "name": "アクション",
+                    "description": "事前設定されたアクショングループを必要とせずに添付する、単発のアクション可能通知ボタン。"
+                },
+                "action_groups": {
+                    "name": "アクショングループ",
+                    "description": "action_groups: で設定された、添付するモバイルアクション可能通知ボタンの名前付きグループ。"
+                },
+                "message_html": {
+                    "name": "HTML メッセージ",
+                    "description": "メッセージの HTML 代替で、リッチフォーマットをサポートするトランスポート（例: メール）で使用されます。"
+                },
+                "debug": {
+                    "name": "デバッグ",
+                    "description": "トレースおよびアーカイブにこの通知の追加の診断詳細を含めます。"
+                },
+                "force_resend": {
+                    "name": "再送信を強制",
+                    "description": "重複検出によりこの通知が抑制される場合でも送信します。"
+                },
+                "data": {
+                    "name": "追加データ",
+                    "description": "ここで独自のフィールドを期待するトランスポート/ブループリント向けのパススルーデータ。例: Frigate 通知ブループリントの属性。"
+                }
+            },
+            "sections": {
+                "multimedia": {
+                    "name": "マルチメディアオプション",
+                    "description": "カメラのスナップショット、既存の画像、または動画クリップをこの通知に添付します。"
+                },
+                "scenarios": {
+                    "name": "シナリオ",
+                    "description": "この通知に影響を与えるシナリオを必須化、強制適用、または制限します。"
+                },
+                "advanced": {
+                    "name": "詳細設定",
+                    "description": "通知のアクションボタン、HTML書式設定、デバッグトレース、その他あまり使用されないオプションです。"
+                }
+            }
+        },
         "reload": {
             "name": "リロード",
             "description": "Supernotifyサービスを再読み込みします。"

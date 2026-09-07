@@ -11,11 +11,20 @@ import aiofiles
 import anyio
 import pytest
 from homeassistant.const import CONF_ENABLED
+from homeassistant.core import Context
 
-from custom_components.supernotify.archive import ArchivableObject, NotificationArchive
+from custom_components.supernotify.archive import (
+    ArchivableObject,
+    ArchiveDestination,
+    ArchiveDirectory,
+    ArchiveTopic,
+    EventArchiver,
+    NotificationArchive,
+)
 from custom_components.supernotify.const import (
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
+    CONF_ARCHIVE_EVENT_SELECTION,
     CONF_ARCHIVE_MQTT_QOS,
     CONF_ARCHIVE_MQTT_RETAIN,
     CONF_ARCHIVE_MQTT_TOPIC,
@@ -31,7 +40,7 @@ if TYPE_CHECKING:
 
 
 class ArchiveCrashDummy(ArchivableObject):
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         return {"a_dict": {}, "a_list": [], "a_str": "", "a_int": 984}
 
     def base_filename(self) -> str:
@@ -82,6 +91,35 @@ async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: Outcom
             assert reobj["enabled_scenarios"]["alarming"]["enabled"]
 
 
+async def test_integration_archive_with_ha_context(mock_hass: HomeAssistant) -> None:
+    """A real automation/script call passes a homeassistant.core.Context, which used to
+    crash archiving since Context.as_dict() doesn't accept the occupancy_only kwarg
+    that Notification.contents() passes to every non-excluded attribute."""
+    with tempfile.TemporaryDirectory() as archive:
+        uut = SupernotifyAction(
+            mock_hass,
+            scenarios={},
+            deliveries={"chime": {"transport": "chime"}},
+            recipients=[],
+            archive={CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive},
+        )
+        await uut.initialize()
+        ha_context = Context()
+        await uut.async_send_message("just a test", target="person.bob", context=ha_context)
+
+        assert uut.last_notification is not None
+        obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
+        assert await obj_path.exists()
+        async with aiofiles.open(obj_path) as stream:
+            blob: str = "".join(await stream.readlines())
+            reobj = json.loads(blob)
+        assert reobj["original_context"] == {
+            "id": ha_context.id,
+            "parent_id": ha_context.parent_id,
+            "user_id": ha_context.user_id,
+        }
+
+
 async def test_file_archive(hass_api: HomeAssistantAPI) -> None:
     with tempfile.TemporaryDirectory() as archive:
         uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_PATH: archive, CONF_ARCHIVE_DAYS: "7"}, hass_api)
@@ -108,10 +146,9 @@ async def test_cleanup_archive(mock_hass_api: HomeAssistantAPI) -> None:
         Mock(path="def", stat=new_time),
         Mock(path="xyz", stat=old_time),
     ]
-    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan:
-        with patch("aiofiles.os.unlink") as rmfr:
-            await uut.cleanup()
-            rmfr.assert_called_once_with("xyz")
+    with patch("aiofiles.os.scandir", return_value=mock_files) as _scan, patch("aiofiles.os.unlink") as rmfr:
+        await uut.cleanup()
+        rmfr.assert_called_once_with("xyz")
     # skip cleanup for a few hours
     assert uut.archive_directory is not None
     first_purge = uut.archive_directory.last_purge
@@ -172,7 +209,6 @@ async def test_archive_no_mqtt_publish_when_topic_blank(mock_hass_api: HomeAssis
 
 
 def test_event_archiver_specific_diagnostic_flags(mock_hass_api: HomeAssistantAPI) -> None:
-    from custom_components.supernotify.archive import EventArchiver
 
     # Lines 85, 90, 92, 98: each flag triggers its own log in else branch
     flags = OutcomeSelection.SUCCESS | OutcomeSelection.FALLBACK_DELIVERY | OutcomeSelection.NO_DELIVERY | OutcomeSelection.DUPE
@@ -181,7 +217,6 @@ def test_event_archiver_specific_diagnostic_flags(mock_hass_api: HomeAssistantAP
 
 
 async def test_archive_directory_init_path_not_creatable() -> None:
-    from custom_components.supernotify.archive import ArchiveDirectory
 
     with (
         patch.object(anyio.Path, "exists", new=AsyncMock(return_value=False)),
@@ -193,7 +228,6 @@ async def test_archive_directory_init_path_not_creatable() -> None:
 
 
 async def test_archive_directory_cleanup_no_path() -> None:
-    from custom_components.supernotify.archive import ArchiveDirectory
 
     uut = ArchiveDirectory("/some/path", 60)
     # skip initialize so archive_path stays None
@@ -205,8 +239,6 @@ async def test_archive_directory_cleanup_skips_startup(mock_hass_api: HomeAssist
     import time
     from pathlib import Path
     from unittest.mock import MagicMock, patch
-
-    from custom_components.supernotify.archive import ArchiveDirectory
 
     with tempfile.TemporaryDirectory() as tmp:
         uut = ArchiveDirectory(tmp, 60)
@@ -224,3 +256,123 @@ async def test_archive_directory_cleanup_skips_startup(mock_hass_api: HomeAssist
                 purged = await uut.cleanup(1, True)
         assert purged == 1  # startup skipped, old_file purged
         mock_unlink.assert_called_once()
+
+
+def test_selected_returns_false_for_none_policy() -> None:
+    msg = ArchiveCrashDummy()
+    assert msg.selected(OutcomeSelection.NONE) is False
+
+
+async def test_archivable_object_abstract_stubs_return_none() -> None:
+    obj = ArchivableObject()  # type: ignore[abstract]
+    assert obj.base_filename() is None
+    assert obj.contents() is None
+
+
+async def test_archive_destination_abstract_stub_returns_none() -> None:
+    destination = ArchiveDestination()  # type: ignore[abstract]
+    result = await destination.archive(ArchiveCrashDummy())
+    assert result is None
+
+
+def test_event_archiver_none_diagnostics_logs_nothing(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.NONE)
+    assert uut.diagnostics == OutcomeSelection.NONE
+
+
+def test_event_archiver_partial_delivery_diagnostic_flag(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.PARTIAL_DELIVERY)
+    assert uut.diagnostics == OutcomeSelection.PARTIAL_DELIVERY
+
+
+async def test_event_archiver_archive_fires_event(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.ALL)
+    msg = ArchiveCrashDummy()
+    result = await uut.archive(msg)
+    assert result is True
+    mock_hass_api.fire_event.assert_called_once()  # type: ignore
+
+
+async def test_event_archiver_archive_handles_fire_event_exception(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.fire_event.side_effect = Exception("boom")  # type: ignore
+    uut = EventArchiver(mock_hass_api, "test.event", OutcomeSelection.ALL)
+    msg = ArchiveCrashDummy()
+    result = await uut.archive(msg)
+    assert result is False
+
+
+async def test_archive_topic_archive_handles_publish_exception(mock_hass_api: HomeAssistantAPI) -> None:
+    mock_hass_api.mqtt_publish = AsyncMock(side_effect=Exception("boom"))  # type: ignore
+    uut = ArchiveTopic(mock_hass_api, "test.topic")
+    await uut.initialize()
+    msg = ArchiveCrashDummy()
+    assert await uut.archive(msg) is False
+
+
+async def test_archive_directory_init_touch_fails() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        with patch.object(anyio.Path, "touch", new=AsyncMock(side_effect=PermissionError("no permission"))):
+            uut = ArchiveDirectory(tmp, 60)
+            await uut.initialize()
+        assert not uut.enabled
+
+
+async def test_archive_directory_size_without_initialize() -> None:
+    uut = ArchiveDirectory("/never/initialized", 60)
+    assert await uut.size() == 0
+
+
+async def test_archive_directory_cleanup_handles_scandir_exception() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        uut = ArchiveDirectory(tmp, 60)
+        await uut.initialize()
+        with patch("aiofiles.os.scandir", side_effect=OSError("boom")):
+            purged = await uut.cleanup(1, True)
+        assert purged == 0
+
+
+class ArchiveFirstCallCrashes(ArchivableObject):
+    def base_filename(self) -> str:
+        return "crashy"
+
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
+        if diagnostics:
+            raise ValueError("boom on full contents")
+        return {"minimal": True}
+
+
+async def test_archive_directory_archive_falls_back_to_minimal_on_error() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        uut = ArchiveDirectory(tmp, 60, diagnostics=OutcomeSelection.ALL)
+        await uut.initialize()
+        msg = ArchiveFirstCallCrashes()
+        assert await uut.archive(msg) is True
+        obj_path: anyio.Path = anyio.Path(tmp) / "crashy.json"
+        assert await obj_path.exists()
+        async with aiofiles.open(obj_path) as stream:
+            blob: str = "".join(await stream.readlines())
+        assert json.loads(blob) == {"minimal": True}
+
+
+class ArchiveAlwaysCrashes(ArchivableObject):
+    def base_filename(self) -> str:
+        return "always_crashy"
+
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
+        raise ValueError("boom always")
+
+
+async def test_archive_directory_archive_fallback_also_fails() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        uut = ArchiveDirectory(tmp, 60, diagnostics=OutcomeSelection.ALL)
+        await uut.initialize()
+        msg = ArchiveAlwaysCrashes()
+        assert await uut.archive(msg) is False
+
+
+async def test_notification_archive_fires_event_when_selected(mock_hass_api: HomeAssistantAPI) -> None:
+    uut = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_EVENT_SELECTION: OutcomeSelection.ALL}, mock_hass_api)
+    await uut.initialize()
+    msg = ArchiveCrashDummy()
+    assert await uut.archive(msg) is False  # no directory/topic configured, but event still fires
+    mock_hass_api.fire_event.assert_called_once()  # type: ignore

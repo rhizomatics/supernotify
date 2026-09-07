@@ -45,6 +45,12 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("de", "config.step.reconfigure.data.name"),
     ("es", "selector.outcome_selection.options.error"),  # "Error" is the Spanish word too
     ("it", "options.step.archive.sections.file.name"),  # "File" is a standard Italian loanword
+    ("de", "services.notify.fields.debug.name"),  # "Debug" is a standard German tech loanword
+    ("it", "services.notify.fields.debug.name"),  # "Debug" is a standard Italian tech loanword
+    ("nl", "services.notify.fields.debug.name"),  # "Debug" is a standard Dutch tech loanword
+    ("nl", "services.notify.fields.camera_entity_id.name"),  # "Camera" is also the Dutch word for camera
+    ("fr", "services.notify.fields.message.name"),  # "Message" is also the French word for message
+    ("fr", "services.notify.fields.actions.name"),  # "Actions" is also the French word for actions
 }
 
 

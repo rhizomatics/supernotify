@@ -46,7 +46,7 @@ class ArchivableObject:
         pass
 
     @abstractmethod
-    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> Any:
+    def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         pass
 
     def outcome(self) -> DeliveryOutcome:
@@ -101,9 +101,13 @@ class EventArchiver(ArchiveDestination):
                 _LOGGER.info("SUPERNOTIFY Archiving dupe notifications as %s events", event_name)
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
-        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
-        self.hass_api.fire_event(self.event_name, payload)
-        return True
+        try:
+            payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
+            self.hass_api.fire_event(self.event_name, payload)
+            return True
+        except Exception:
+            _LOGGER.warning(f"SUPERNOTIFY Failed to archive to event {self.event_name}")
+            return False
 
 
 class ArchiveTopic(ArchiveDestination):
@@ -292,12 +296,10 @@ class NotificationArchive:
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         archived: bool = False
-        if self.archive_topic:
-            if await self.archive_topic.archive(archive_object):
-                archived = True
-        if self.archive_directory:
-            if await self.archive_directory.archive(archive_object):
-                archived = True
+        if self.archive_topic and await self.archive_topic.archive(archive_object):
+            archived = True
+        if self.archive_directory and await self.archive_directory.archive(archive_object):
+            archived = True
         if self.event_archiver and archive_object.selected(self.event_selection):
             await self.event_archiver.archive(archive_object)
 

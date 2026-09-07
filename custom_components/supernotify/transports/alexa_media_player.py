@@ -45,6 +45,7 @@ Data keys (all optional):
                                   Japanese / Chinese / Korean : 0.180
                                   Arabic                      : 0.075
 
+
 References:
 - energywave/multinotify https://github.com/energywave/multinotify
 - ago19800/centralino    https://github.com/ago19800/centralino
@@ -67,6 +68,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
+    OPTION_MEDIA_AUTO_PAUSE,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -85,6 +87,8 @@ from custom_components.supernotify.model import (
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
+    from homeassistant.core import Context as HAContext
+
     from custom_components.supernotify.envelope import Envelope
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
@@ -128,6 +132,7 @@ class AlexaMediaPlayerTransport(Transport):
 
     options:
         message_usage: standard | use_title | combine_title
+        media_auto_pause: bool, sets the default for pausing music/restoring volume
     """
 
     name = TRANSPORT_ALEXA_MEDIA_PLAYER
@@ -151,16 +156,19 @@ class AlexaMediaPlayerTransport(Transport):
             OPTION_UNIQUE_TARGETS: True,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_TARGET_SELECT: [RE_VALID_ALEXA],
+            OPTION_MEDIA_AUTO_PAUSE: True,
         }
         return config
 
     def validate_action(self, action: str | None) -> bool:
         return action is not None
 
-    async def _safe_service(self, domain: str, service: str, service_data: dict[str, Any]) -> bool:
+    async def _safe_service(
+        self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None
+    ) -> bool:
         """Call a HA service via hass_api, catching exceptions so offline devices never block overall delivery."""
         try:
-            await self.hass_api.call_service(domain, service, service_data=service_data)
+            await self.hass_api.call_service(domain, service, service_data=service_data, context=context)
             return True
         except Exception as exc:
             _LOGGER.debug(
@@ -199,50 +207,66 @@ class AlexaMediaPlayerTransport(Transport):
         states: dict[str, dict[str, Any]],
         requested_volume: float,
         pause_music: bool,
+        context: HAContext | None = None,
     ) -> set[str]:
-        """Pause music, stop beep, set announcement volume."""
-        volume_set_failed: set[str] = set()
-        for mp, prev in states.items():
+        """Pause music, stop beep, set announcement volume. Runs per-device concurrently since
+        each Alexa cloud round trip can take seconds, and serializing across targets stacks
+        that latency instead of overlapping it."""
+
+        async def handle(mp: str, prev: dict[str, Any]) -> tuple[str, bool]:
             if prev["playing"]:
                 if pause_music:
                     # Pause only — do NOT also call media_stop.
                     # media_stop after media_pause kills streaming sessions
                     # (Spotify, etc.) making them impossible to resume later.
                     # media_pause leaves the session alive for media_play resume.
-                    await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+                    await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp}, context=context)
                 else:
                     # Not pausing: use media_stop to suppress the Alexa
                     # confirmation beep before volume_set (no resume expected).
-                    await self._safe_service("media_player", "media_stop", {ATTR_ENTITY_ID: mp})
-            if not await self._safe_service(
+                    await self._safe_service("media_player", "media_stop", {ATTR_ENTITY_ID: mp}, context=context)
+            ok = await self._safe_service(
                 "media_player",
                 "volume_set",
                 {ATTR_ENTITY_ID: mp, "volume_level": requested_volume},
-            ):
-                volume_set_failed.add(mp)
-        return volume_set_failed
+                context=context,
+            )
+            return mp, ok
+
+        results = await asyncio.gather(*(handle(mp, prev) for mp, prev in states.items()))
+        return {mp for mp, ok in results if not ok}
 
     async def _post_announce(
         self,
         states: dict[str, dict[str, Any]],
         restore_volume: bool,
         pause_music: bool,
+        context: HAContext | None = None,
     ) -> None:
-        """Restore volume and resume music after announcement."""
+        """Restore volume and resume music after announcement, per-device concurrently."""
         music_devices = [mp for mp, s in states.items() if pause_music and s["playing"]]
-        for mp, prev in states.items():
+        if restore_volume:
             # Do NOT call media_stop here: after TTS finishes Alexa is already
             # idle, so media_stop would produce an unwanted confirmation beep.
-            if restore_volume:
-                await self._safe_service(
-                    "media_player",
-                    "volume_set",
-                    {ATTR_ENTITY_ID: mp, "volume_level": prev["volume"]},
+            await asyncio.gather(
+                *(
+                    self._safe_service(
+                        "media_player",
+                        "volume_set",
+                        {ATTR_ENTITY_ID: mp, "volume_level": prev["volume"]},
+                        context=context,
+                    )
+                    for mp, prev in states.items()
                 )
+            )
         if music_devices:
             await asyncio.sleep(_MUSIC_RESUME_DELAY)
-            for mp in music_devices:
-                await self._safe_service("media_player", "media_play", {ATTR_ENTITY_ID: mp})
+            await asyncio.gather(
+                *(
+                    self._safe_service("media_player", "media_play", {ATTR_ENTITY_ID: mp}, context=context)
+                    for mp in music_devices
+                )
+            )
 
     async def deliver(
         self,
@@ -267,6 +291,8 @@ class AlexaMediaPlayerTransport(Transport):
         wait_for_tts: bool = boolify(raw_data.pop("wait_for_tts", False), default=False)
         tts_char_speed: float = float(raw_data.pop("tts_char_speed", _CHAR_WEIGHT))
 
+        auto_pause = envelope.delivery.option_bool(OPTION_MEDIA_AUTO_PAUSE, True)
+
         # Resolve Jinja2 template if volume is still a raw template string
         # (scenarios store volume as a template; _resolve_data_templates only
         # runs for archiving, not for delivery).
@@ -287,20 +313,32 @@ class AlexaMediaPlayerTransport(Transport):
             except (TypeError, ValueError) as e:  # py3.13 compat
                 _LOGGER.warning("SUPERNOTIFY alexa_media_player: invalid volume value %r, ignoring: %s", volume_raw, e)
 
-        # Pre-announce
         states: dict[str, dict[str, Any]] = {}
-        needs_restore = requested_volume is not None or pause_music
-
-        if needs_restore:
-            states = await self._snapshot_states(media_players, volume_fallback)
-
+        needs_restore = False
         volume_set_failed: set[str] = set()
-        if requested_volume is not None and states:
-            volume_set_failed = await self._pre_announce(states, requested_volume, pause_music)
-        elif pause_music and states:
-            for mp, prev in states.items():
-                if prev["playing"]:
-                    await self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp})
+
+        if auto_pause:
+            # Pre-announce
+            needs_restore = requested_volume is not None or pause_music
+
+            if needs_restore:
+                states = await self._snapshot_states(media_players, volume_fallback)
+
+            if requested_volume is not None and states:
+                volume_set_failed = await self._pre_announce(states, requested_volume, pause_music, context=envelope.ha_context)
+            elif pause_music and states:
+                await asyncio.gather(
+                    *(
+                        self._safe_service("media_player", "media_pause", {ATTR_ENTITY_ID: mp}, context=envelope.ha_context)
+                        for mp, prev in states.items()
+                        if prev["playing"]
+                    )
+                )
+
+        # needs_post_announce is True whenever there is something to undo (volume change or
+        # music was paused); computed here, before the announce, so it's available in the
+        # finally block below regardless of what happens during the announce/TTS wait.
+        needs_post_announce = needs_restore and bool(states)
 
         # Announce
         call_type: str = raw_data.pop("type", "announce")
@@ -309,30 +347,35 @@ class AlexaMediaPlayerTransport(Transport):
             ATTR_DATA: {"type": call_type},
             ATTR_TARGET: media_players,
         }
-        if requested_volume is not None and volume_set_failed:
+        if requested_volume is not None and auto_pause and volume_set_failed:
             # Fallback path: if pre-announce volume_set fails for one or more
             # players, pass volume through notify.alexa_media too.
             action_data[ATTR_DATA]["volume"] = requested_volume
 
-        result = await self.call_action(envelope, action_data=action_data)
+        result = False
+        try:
+            result = await self.call_action(envelope, action_data=action_data)
 
-        # Post-announce: optionally wait for TTS, then restore volume / resume music.
-        # needs_post_announce is True whenever there is something to undo (volume change
-        # or music was paused); in that case the TTS wait is always performed so the
-        # restore/resume happens after Alexa finishes speaking.
-        # wait_for_tts additionally blocks even in pure fire-and-forget deliveries,
-        # allowing automation sequences to run only after the announcement ends.
-        needs_post_announce = needs_restore and bool(states)
-        if (needs_post_announce or wait_for_tts) and envelope.message:
-            tts_duration = _estimate_tts_duration(envelope.message, tts_char_speed)
-            _LOGGER.debug(
-                "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch)",
-                tts_duration,
-                len(RE_SSML_TAG.sub("", envelope.message)),
-                tts_char_speed,
-            )
-            await asyncio.sleep(tts_duration)
+            # Post-announce wait: optionally wait for TTS before restoring volume / resuming
+            # music. wait_for_tts additionally blocks even in pure fire-and-forget deliveries,
+            # allowing automation sequences to run only after the announcement ends, and does
+            # so regardless of auto_pause since it has nothing to do with restoring state.
+            if (needs_post_announce or wait_for_tts) and envelope.message:
+                tts_duration = _estimate_tts_duration(envelope.message, tts_char_speed)
+                _LOGGER.debug(
+                    "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch)",
+                    tts_duration,
+                    len(RE_SSML_TAG.sub("", envelope.message)),
+                    tts_char_speed,
+                )
+                await asyncio.sleep(tts_duration)
+        finally:
+            # Restore/resume must run even if the announce call or TTS wait raises or is
+            # cancelled (e.g. HA shutting down), otherwise a pre-announce pause/volume change
+            # made above is never undone and the device is stuck paused/at announce volume.
             if needs_post_announce:
-                await self._post_announce(states, restore_volume and requested_volume is not None, pause_music)
+                await self._post_announce(
+                    states, restore_volume and requested_volume is not None, pause_music, context=envelope.ha_context
+                )
 
         return result

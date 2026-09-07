@@ -9,7 +9,7 @@ By default, advanced configuration - `delivery`, `transports`, `scenarios`, `rec
 
 ## Naming the Integration
 
-By default every automation calls the action `notify.supernotify`. If you need a different name (for example to match existing automations), set it from the Integrations page: **Settings → Devices & Services → Supernotify → Configure**, or during initial setup. This is the only place the name is set - it is not a YAML key.
+By default every automation calls the action `notify.supernotify` for Notify compatibility or `supernotify.notify` for friendlier UI. If you need a different name (for example to match existing automations), set it from the Integrations page: **Settings → Devices & Services → Supernotify → Configure**, or during initial setup. This is the only place the name is set - it is not a YAML key.
 
 ## Splitting Out YAML
 

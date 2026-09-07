@@ -65,6 +65,8 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+For code reviews, produce a single list of findings, graded by risk.
+
 
 ## Project Context
 
@@ -87,4 +89,4 @@ Common commands:
 - `uv run mypy custom_components/supernotify` - type check
 - `uv run codespell` - spell check
 - `pre-commit run` - check all staged files
-- `mkdocs build` - build the documentation without starting a server
+- `properdocs build` - build the documentation without starting a server

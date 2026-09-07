@@ -5,8 +5,8 @@ readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.13.2"
 dependencies = [
-    "homeassistant>=2026.8.0; python_full_version >= '3.14.2'",
-    "homeassistant<2026.3.0; python_full_version < '3.14.2'",
+    "homeassistant>=2026.9.0; python_full_version >= '3.14.2'",
+    "homeassistant>=2025.10.4,<2026.3.0; python_full_version < '3.14.2'",
     "cachetools",
     "bs4",
     "aiofiles",
@@ -65,7 +65,7 @@ dev=[
     "aiontfy==0.8.2; python_full_version < '3.14.2'",
     "aiontfy==0.8.5; python_full_version >= '3.14.2'",
     "zeroconf==0.148.0; python_full_version < '3.14.2'",
-    "zeroconf>=0.150.0; python_full_version >= '3.14.2'",
+    "zeroconf>=0.150.1; python_full_version >= '3.14.2'",
 
     # home assistant tts testing
     "mutagen",
@@ -84,7 +84,7 @@ docs=[
     "mkdocs-autorefs",
     "mkdocs-coverage",
     "mkdocs-pagetree-plugin",
-    "mkdocs<2.0.0",
+    "properdocs",
     "json-schema-for-humans",
     "mkdocs-gen-files",
     "voluptuous-openapi==0.2.0; python_full_version < '3.14.2'",
@@ -111,9 +111,9 @@ environments = [
 override-dependencies = [
     #"voluptuous-openapi==0.2.0"
     "homeassistant==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant>=2026.8.0; python_full_version >= '3.14.2'",
+    "homeassistant==2026.9.1; python_full_version >= '3.14.2'",
     "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant-stubs>=2026.8.0; python_full_version >= '3.14.2'",
+    "homeassistant-stubs==2026.9.1; python_full_version >= '3.14.2'",
 
 ]
 exclude-newer = "5 days"
@@ -159,51 +159,16 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-preview = false
-ignore = [
-    "W191",
-    "BLE001", # catch Exception
-    "E111",
-    "E114",
-    "E117",
-    "D206",
-    "D300",
-    "Q000",
-    "Q001",
-    "COM812",
-    "COM819",
-    "ISC001",
-    "RUF067",  # __init__ more than exports
-    "ISC002",  # std formatter conflicts
-    "D203",
-    "D213",    # other formatter clashes
-    "TD002",
-    "TD003",
-    "TD005",
-    "TRY002", # create custom exceptions
-    "SIM102",
-    "SIM117",
-    "ANN002",
-    "ANN003",
-    "SIM108",
-    "D103",
-    "D100",
-    "D101",
-    "D102",
-    "D104",
-    "D107",
-    "D415",
-    "D400",
-    "D415",
-    "ANN401",
-    "S101",
-    "C901",
-    "FURB113",
-    "PGH003",
-    "S602",
-    "S607",
-] # subprocess usage
-unfixable = ["B"]
+extend-select = ["ANN", "PYI"]
+preview = true
+ignore=[
+    "BLE001", # Blind except
+    "SIM117",  # Multiple with statements
+    "PLW0108" # lay off the lambdas
+]
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = []
@@ -234,9 +199,14 @@ unfixable = ["B"]
 [tool.ruff.format]
 preview = true
 
+[tool.ty.src]
+include = ["custom_components/supernotify","tests"]
+
+[tool.ty.rules]
+unused-type-ignore-comment="ignore"
 
 [tool.codespell]
-ignore-words-list = "HASS,hass,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"
+ignore-words-list = "HASS,hass,wee,alot,NotIn,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing,astroid"
 # Skip binary/data files, build artifacts, and non-English markdown (locale-named files and locale dirs)
 skip = "*.csv,*.json,./.*,./site,./htmlcov,README.??.md,./README.??-??.md,./docs/??/*.md,./docs/??-??/*.md"
 quiet-level = 2
@@ -245,8 +215,8 @@ quiet-level = 2
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 log_cli = 1
-log_level = "DEBUG"
-log_cli_level = "DEBUG"
+log_level = "WARNING"
+log_cli_level = "WARNING"
 testpaths = ["tests"]
 norecursedirs = [".git", "templates"]
 

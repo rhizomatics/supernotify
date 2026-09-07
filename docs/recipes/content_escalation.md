@@ -41,5 +41,5 @@ In this case a Frigate notification is usually a medium priority, however if the
 
 ## Variations
 
-- Use ```{{'LONE_HOME' in occupancy}}``` to check if home is empty
+- Use ```{{'LONE_HOME' in occupancy}}``` to check if only one person is home
 - Use risk levels in the message, as set by GenAI in the [Voice Described CCTV Recipe](./voice_described_cctv.md)

@@ -1,7 +1,16 @@
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import ANY, AsyncMock, Mock
 
-from homeassistant.const import CONF_ACTION, CONF_CONDITION, CONF_CONDITIONS, CONF_ENTITY_ID, CONF_STATE, CONF_TARGET
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import (
+    CONF_ACTION,
+    CONF_CONDITION,
+    CONF_CONDITIONS,
+    CONF_ENABLED,
+    CONF_ENTITY_ID,
+    CONF_STATE,
+    CONF_TARGET,
+)
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
@@ -91,15 +100,19 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         data={"delivery": ["persistent"]},
     )
     # explicit delivery selection overrides everything else
+    # no explicit context was supplied, so async_send_message must have synthesized one
+    # rather than leaving it None, else this and any subsequent service call in the same
+    # notification would be unlinked in the logbook/recorder
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
+    assert isinstance(uut.context.hass_api._hass.services.async_call.call_args.kwargs["context"], Context)  # type: ignore
     uut.context.hass_api._hass.services.async_call.reset_mock()  # type: ignore
     await uut.async_send_message(
         title="test_title",
@@ -115,7 +128,34 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         "create",
         service_data={"title": "test_title", "message": "testing 123"},
         blocking=False,
-        context=None,
+        context=ANY,
+        target=None,
+        return_response=False,
+    )
+
+
+async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mock) -> None:
+    """A HA Context supplied to async_send_message (e.g. from the calling ServiceCall/entity
+    service) should reach the underlying notify service call, so the logbook/trace can chain
+    the resulting action back to its trigger."""
+    from homeassistant.core import Context
+
+    uut = SupernotifyAction(
+        mock_hass,
+        deliveries=DELIVERY,
+        recipients=RECIPIENTS,
+        transport_configs=TRANSPORT_DEFAULTS,
+        dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
+    )
+    await uut.initialize()
+    caller_context = Context()
+    await uut.async_send_message(message="testing 123", data={"delivery": "text"}, context=caller_context)
+    mock_hass.services.async_call.assert_called_with(
+        "notify",
+        "sms",
+        service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
+        blocking=False,
+        context=caller_context,
         target=None,
         return_response=False,
     )
@@ -133,15 +173,17 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     await uut.initialize()
     await uut.async_send_message(message="testing 123", data={"delivery": "text"})
     assert mock_hass.services.async_call.call_count == 1
+    # no explicit context supplied, so one was synthesized rather than left None
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "sms",
         service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
+    assert isinstance(mock_hass.services.async_call.call_args.kwargs["context"], Context)
     # contra-test
     mock_hass.services.async_call.reset_mock()
     await uut.async_send_message(message="testing 123")
@@ -200,6 +242,56 @@ async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> N
     assert dummy.service.calls[1].data["_UNKNOWN_"] == ["abc789"]
     assert dummy.service.calls[1].data["email"] == ["me@tester.net"]
     assert dummy.service.calls[1].data["mobile_app_id"] == ["mobile_app_new_iphone"]
+
+
+async def test_recipient_can_disable_a_globally_enabled_delivery(mock_hass: HomeAssistant) -> None:
+    """A delivery that's enabled for everyone can still be individually opted out of by a
+    single recipient - that recipient is omitted, everyone else still gets it.
+    """
+    recipients = [
+        {"person": "person.stays_in", CONF_DELIVERY: {"dummy": {CONF_TARGET: "in"}}},
+        {"person": "person.explicitly_in", CONF_DELIVERY: {"dummy": {CONF_ENABLED: True, CONF_TARGET: "explicit"}}},
+        {"person": "person.opts_out", CONF_DELIVERY: {"dummy": {CONF_ENABLED: False, CONF_TARGET: "out"}}},
+    ]
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(
+        message="testing 123",
+        data={"delivery": "dummy"},
+    )
+
+    assert len(dummy.service.calls) == 1
+    assert dummy.service.calls[0].data["_UNKNOWN_"] == ["in", "explicit"]
+
+
+async def test_default_person_ids_excludes_recipients_who_disabled_the_delivery(mock_hass: HomeAssistant) -> None:
+    """default_person_ids (notification.py) must exclude a recipient who's personally disabled
+    a delivery from the initial candidate list - otherwise their own base contact info (e.g.
+    email) still leaks through via resolve_indirect_targets/Recipient.target(), since that
+    method's enabled gate only withholds the delivery-specific override, not the recipient's
+    base target. Giving the opted-out recipient a base email (not just a delivery-specific
+    target) means this test only passes because of default_person_ids' own filtering - without
+    it, their base target has nothing else to strip and the email would leak through."""
+    recipients = [
+        {"person": "person.stays_in", CONF_DELIVERY: {"dummy": {CONF_TARGET: ["stays_in_target"]}}},
+        {
+            "person": "person.opts_out",
+            "email": "opts_out@example.com",
+            CONF_DELIVERY: {"dummy": {CONF_ENABLED: False}},
+        },
+    ]
+    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    await uut.async_send_message(message="testing 123", data={"delivery": "dummy"})
+
+    assert len(dummy.service.calls) == 1
+    assert dummy.service.calls[0].data == {"_UNKNOWN_": ["stays_in_target"]}
 
 
 async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:
@@ -281,7 +373,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         transport_configs=TRANSPORT_DEFAULTS,
     )
 
-    def call_service(domain, service, service_data=None, **kwargs):
+    def call_service(domain, service, service_data=None, **kwargs: Any):
         if service == "make_fail":
             raise ServiceValidationError("just because")
 
@@ -293,7 +385,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         "dummy",
         service_data={"message": "just a test"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
@@ -316,7 +408,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
         "dummy",
         service_data={"message": "just a test"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )

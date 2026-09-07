@@ -1,10 +1,10 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
-from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_TARGET
+from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -36,7 +36,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.schema import SelectionRank
+from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
 from custom_components.supernotify.transports.email import EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
@@ -81,7 +81,6 @@ async def test_simple_create() -> None:
     assert uut.priority == "medium"
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert uut.recipients_override is None
     assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
@@ -168,6 +167,22 @@ async def test_channel_transport_override() -> None:
 
     assert email_envelope.message == "testing 123"
     assert email_envelope.title is None
+
+
+async def test_call_transport_records_delivery_exception() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+    await uut.initialize()
+    delivery = ctx.delivery("mobile")
+
+    with patch.object(delivery, "evaluate_conditions", side_effect=RuntimeError("boom")):
+        await uut.deliver()
+
+    assert "mobile" in uut.delivery_exceptions
+    assert "boom" in uut.delivery_exceptions["mobile"][0]
+    assert uut.outcome() == DeliveryOutcome.ERROR
 
 
 async def test_custom_priority() -> None:
@@ -293,7 +308,7 @@ async def test_select_recipient_deliveries() -> None:
                 CONF_PERSON: "person.new_home_owner",
                 CONF_EMAIL: "owner@mctest.org",
                 CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_joephone"}],
-                CONF_DELIVERY: {"chatty": {}},
+                CONF_DELIVERY: {"chatty": {CONF_ENABLED: True}},
             },
             {
                 CONF_PERSON: "person.kid_no_3",
@@ -416,6 +431,47 @@ async def test_camera_entity() -> None:
         mock_snap_cam.assert_not_called()
 
 
+async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
+    """Capturing an image has real overhead (a service call, then polling for the file
+    to appear) that must not be paid when no selected delivery would even use it — here
+    only chime (no SNAPSHOT_IMAGE feature) is selected, despite camera media being present."""
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx,
+        "testing 123",
+        action_data={
+            CONF_DELIVERY: ["chime"],
+            CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"},
+        },
+    )
+    await uut.initialize()
+    with patch("custom_components.supernotify.notification._snap_notification_image", new_callable=AsyncMock) as mock_snap:
+        await uut.deliver()
+    mock_snap.assert_not_called()
+
+
+async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
+    """mobile (mobile_push) supports SNAPSHOT_IMAGE, so with camera media present the
+    image grab must be kicked off."""
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx,
+        "testing 123",
+        action_data={
+            CONF_DELIVERY: ["mobile"],
+            CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"},
+        },
+    )
+    await uut.initialize()
+    with patch(
+        "custom_components.supernotify.notification._snap_notification_image", new_callable=AsyncMock, return_value=None
+    ) as mock_snap:
+        await uut.deliver()
+    mock_snap.assert_called_once()
+
+
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(
         deliveries={
@@ -454,3 +510,71 @@ async def test_delivery_selection_order() -> None:
     assert next(iter(uut.selected_deliveries)) == "eager"
     assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
     assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
+
+
+async def test_convert_notify_entities() -> None:
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    ctx.people_registry.people["person.alice"].notify_entity_id = "notify.recipient_alice"
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities(["notify.recipient_alice", "media_player.kitchen"])
+
+    assert converted == ["person.alice", "media_player.kitchen"]
+
+
+async def test_convert_notify_entities_ignores_unrecognized_notify_entities() -> None:
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities(["notify.some_other_integration", "media_player.kitchen"])
+
+    assert converted == ["notify.some_other_integration", "media_player.kitchen"]
+
+
+async def test_convert_notify_entities_handles_person_entity_in_dict_target() -> None:
+    """Reproduces a crash reported from a real supernotify.notify call: a dict-shaped target
+    (from Home Assistant's target selector, e.g. {"entity_id": ["person.jey"]}) was passed into
+    ensure_list()/`in` checks designed for a flat string/list target, raising TypeError:
+    unhashable type: 'dict' once ensure_list() wrapped the whole dict as a single element.
+
+    Fixing just the crash isn't enough though: Home Assistant's target selector always puts a
+    picked person entity under `entity_id`, regardless of its domain, but Target()'s dict branch
+    treats each key as already resolved to the right category - and its entity_id category
+    explicitly excludes the person domain (see Target.is_entity_id) - so an unconverted person
+    entity would be silently dropped from targeting rather than raising. It has to be moved to
+    `person_id` here, same as it would be if passed as a flat string/list target instead.
+    """
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities({"entity_id": ["person.alice", "media_player.kitchen"]})
+
+    assert converted == {"entity_id": ["media_player.kitchen"], "person_id": ["person.alice"]}
+
+
+async def test_convert_notify_entities_resolves_recipient_notify_entity_in_dict_target() -> None:
+    """A supernotify.notify target picked as one of supernotify's own notify.recipient_* entities
+    resolves to the underlying person, same as the flat string/list case - avoiding a round trip
+    back through NotifyEntityTransport's notify.send_message. A genuine other-integration notify
+    entity (e.g. notify.some_other_integration) is left in entity_id for that transport to handle."""
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    ctx.people_registry.people["person.alice"].notify_entity_id = "notify.recipient_alice"
+    uut = Notification(ctx, "testing 123")
+
+    converted = uut.convert_notify_entities({"entity_id": ["notify.recipient_alice", "notify.some_other_integration"]})
+
+    assert converted == {"entity_id": ["notify.some_other_integration"], "person_id": ["person.alice"]}
+
+
+async def test_notification_accepts_dict_shaped_target_without_crashing() -> None:
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "a wee test", target={"entity_id": ["person.alice"]})
+
+    assert uut._target is not None
+    assert uut._target.person_ids == ["person.alice"]

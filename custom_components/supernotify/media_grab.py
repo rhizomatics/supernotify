@@ -37,16 +37,23 @@ from custom_components.supernotify.const import (
     MEDIA_OPTION_REPROCESS,
     OPTION_JPEG,
     OPTION_PNG,
+    PLATFORM_FRIGATE,
+    PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
 )
 
+from .common import int_or_none
+
 if TYPE_CHECKING:
     from homeassistant.components.image import ImageEntity
+    from homeassistant.core import Context as HAContext
     from homeassistant.core import State
 
     from .context import Context
+    from .delivery import Delivery
     from .hass_api import HomeAssistantAPI
+    from .notification import Notification
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,8 +100,25 @@ async def snapshot_from_url(
     return None
 
 
+def infer_ptz_method(hass_api: HomeAssistantAPI, camera_entity_id: str) -> str:
+    """Guess a PTZ method from the integration that owns the camera entity.
+
+    Used only as a fallback for cameras with no entry in the cameras: config, where
+    there's no explicit ptz_method to consult.
+    """
+    ent_reg = hass_api.entity_registry()
+    reg_entry = ent_reg.async_get(camera_entity_id) if ent_reg else None
+    if reg_entry and reg_entry.platform == PLATFORM_FRIGATE:
+        return PTZ_METHOD_FRIGATE
+    return PTZ_METHOD_ONVIF
+
+
 async def move_camera_to_ptz_preset(
-    hass_api: HomeAssistantAPI, camera_entity_id: str, preset: str | int, method: str = PTZ_METHOD_ONVIF
+    hass_api: HomeAssistantAPI,
+    camera_entity_id: str,
+    preset: str | int,
+    method: str = PTZ_METHOD_ONVIF,
+    ha_context: HAContext | None = None,
 ) -> None:
     try:
         _LOGGER.info("SUPERNOTIFY Executing PTZ by %s to %s for %s", method, preset, camera_entity_id)
@@ -106,6 +130,7 @@ async def move_camera_to_ptz_preset(
                 target={"entity_id": camera_entity_id},
                 return_response=False,
                 blocking=True,
+                context=ha_context,
             )
 
         elif method == PTZ_METHOD_ONVIF:
@@ -116,6 +141,7 @@ async def move_camera_to_ptz_preset(
                 target={"entity_id": camera_entity_id},
                 return_response=False,
                 blocking=True,
+                context=ha_context,
             )
         else:
             _LOGGER.warning("SUPERNOTIFY Unknown PTZ method %s", method)
@@ -155,6 +181,7 @@ async def snap_camera(
     notification_id: str,
     media_path: Path,
     max_camera_wait: int = 20,
+    ha_context: HAContext | None = None,
 ) -> Path | None:
     """Snap a camera and save the raw image. No reprocessing."""
     if not camera_entity_id:
@@ -171,9 +198,10 @@ async def snap_camera(
         await hass_api.call_service(
             "camera",
             "snapshot",
-            service_data={"entity_id": camera_entity_id, "filename": share_path},
+            service_data={"entity_id": camera_entity_id, "filename": str(share_path)},
             return_response=False,
             blocking=True,
+            context=ha_context,
         )
 
         cutoff_time = time.time() + max_camera_wait
@@ -275,7 +303,9 @@ async def _detect_image_ext(hass_api: HomeAssistantAPI, bitmap: bytes) -> str:
         return "img"
 
 
-async def snap_notification_image(notification: Notification, context: Context) -> Path | None:  # type: ignore  # noqa: F821
+async def snap_notification_image(
+    notification: Notification, context: Context, ha_context: HAContext | None = None
+) -> Path | None:
     """Delivery-neutral image acquisition: PTZ movement, camera snap, URL fetch, or image entity.
 
     Caches the raw image path on notification._raw_image_path. Safe to call multiple times;
@@ -288,7 +318,7 @@ async def snap_notification_image(notification: Notification, context: Context) 
         return Path(notification.media[ATTR_MEDIA_SNAPSHOT_PATH])
 
     snapshot_url = notification.media.get(ATTR_MEDIA_SNAPSHOT_URL)
-    camera_entity_id = notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+    camera_entity_id = cast("str", notification.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID))
     media_path: Path | None = context.media_storage.media_path
 
     if not media_path or (not snapshot_url and not camera_entity_id):
@@ -308,35 +338,52 @@ async def snap_notification_image(notification: Notification, context: Context) 
         if active_camera_entity_id:
             camera_config = context.cameras.get(active_camera_entity_id, {})
             camera_ptz_entity_id: str = camera_config.get(CONF_PTZ_CAMERA, active_camera_entity_id)
-            camera_delay = notification.media.get(ATTR_MEDIA_CAMERA_DELAY, camera_config.get(CONF_PTZ_DELAY))
+            camera_delay: int | None = int_or_none(notification.media.get(ATTR_MEDIA_CAMERA_DELAY))
             camera_ptz_preset_default = camera_config.get(CONF_PTZ_PRESET_DEFAULT)
-            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD, PTZ_METHOD_ONVIF)
             camera_ptz_preset = notification.media.get(ATTR_MEDIA_CAMERA_PTZ_PRESET)
-            _LOGGER.debug(
-                "SUPERNOTIFY Snapping camera %s, ptz %s->%s (%s), delay %s secs",
-                active_camera_entity_id,
-                camera_ptz_preset,
-                camera_ptz_preset_default,
-                camera_ptz_entity_id,
-                camera_delay,
-            )
+            camera_ptz_method = camera_config.get(CONF_PTZ_METHOD)
+            if camera_ptz_method is None:
+                camera_ptz_method = infer_ptz_method(context.hass_api, camera_ptz_entity_id)
+
             if camera_ptz_preset:
+                camera_delay = (
+                    camera_delay if camera_delay is not None else camera_config.get(CONF_PTZ_DELAY, PTZ_DELAY_DEFAULT)
+                )
+                _LOGGER.debug(
+                    "SUPERNOTIFY Moving camera %s, ptz %s->%s (%s), delay %s secs",
+                    active_camera_entity_id,
+                    camera_ptz_preset,
+                    camera_ptz_preset_default,
+                    camera_ptz_entity_id,
+                    camera_delay,
+                )
                 await move_camera_to_ptz_preset(
-                    context.hass_api, camera_ptz_entity_id, camera_ptz_preset, method=camera_ptz_method
+                    context.hass_api, camera_ptz_entity_id, camera_ptz_preset, method=camera_ptz_method, ha_context=ha_context
                 )
             if camera_delay:
+                # pause if there's a PTZ movement, or notification explicitly asked for `camera_delay`
                 _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
                 await asyncio.sleep(camera_delay)
+
+            max_camera_wait: int = 15
+            _LOGGER.debug(
+                "SUPERNOTIFY Snapping camera %s, max_wait: %s, to: %s", active_camera_entity_id, max_camera_wait, media_path
+            )
             raw_path = await snap_camera(
                 context.hass_api,
                 active_camera_entity_id,
                 notification.id,
                 media_path=media_path,
-                max_camera_wait=15,
+                max_camera_wait=max_camera_wait,
+                ha_context=ha_context,
             )
             if camera_ptz_preset and camera_ptz_preset_default:
                 await move_camera_to_ptz_preset(
-                    context.hass_api, camera_ptz_entity_id, camera_ptz_preset_default, method=camera_ptz_method
+                    context.hass_api,
+                    camera_ptz_entity_id,
+                    camera_ptz_preset_default,
+                    method=camera_ptz_method,
+                    ha_context=ha_context,
                 )
 
     if raw_path is None:
@@ -345,7 +392,9 @@ async def snap_notification_image(notification: Notification, context: Context) 
     return raw_path
 
 
-async def grab_image(notification: Notification, delivery: Delivery, context: Context) -> Path | None:  # type: ignore  # noqa: F821
+async def grab_image(
+    notification: Notification, delivery: Delivery, context: Context, ha_context: HAContext | None = None
+) -> Path | None:
     """Get a delivery-ready image, reprocessing the raw snap with delivery-specific settings.
 
     The raw snap is cached on the notification; reprocessed variants are cached by filename
@@ -359,7 +408,7 @@ async def grab_image(notification: Notification, delivery: Delivery, context: Co
     if notification.media.get(ATTR_MEDIA_SNAPSHOT_PATH) is not None:
         return Path(notification.media[ATTR_MEDIA_SNAPSHOT_PATH])
 
-    raw_path = await snap_notification_image(notification, context)
+    raw_path = await snap_notification_image(notification, context, ha_context=ha_context)
     if raw_path is None:
         return None
 

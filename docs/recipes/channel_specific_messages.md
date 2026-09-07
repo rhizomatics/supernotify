@@ -20,7 +20,7 @@ delivery name will be matched against the Transport name if there's no matching 
 ## Example Notification
 
 ```yaml title="Example Action Call"
-- action: notify.supernotify
+- action: supernotify.notify
       data:
         title: "Motion Detection at Back Door"
         message: "Motion has been detected at the back door"

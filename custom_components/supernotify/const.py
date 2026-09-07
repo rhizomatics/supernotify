@@ -73,6 +73,8 @@ CONF_ARCHIVE_EVENT_SELECTION: Final[str] = "event_selection"
 CONF_ARCHIVE_DIAGNOSTICS: Final[str] = "diagnostics"
 CONF_MEDIA_STORAGE_DAYS: Final[str] = "media_storage_days"
 
+PLATFORM_FRIGATE = "frigate"
+
 OCCUPANCY_ANY_IN = "any_in"
 OCCUPANCY_ANY_OUT = "any_out"
 OCCUPANCY_ALL_IN = "all_in"
@@ -94,6 +96,7 @@ ATTR_DEFAULT = "default"
 ATTR_NOTIFICATION_ID = "notification_id"
 ATTR_DELIVERY_SELECTION = "delivery_selection"
 ATTR_RECIPIENTS = "recipients"
+ATTR_CUSTOM_TARGET = "custom_target"
 ATTR_DATA = "data"
 ATTR_MEDIA = "media"
 ATTR_TITLE = "title"
@@ -133,6 +136,7 @@ DELIVERY_SELECTION_VALUES = [DELIVERY_SELECTION_EXPLICIT, DELIVERY_SELECTION_FIX
 PTZ_METHOD_ONVIF = "onvif"
 PTZ_METHOD_FRIGATE = "frigate"
 PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
+PTZ_DELAY_DEFAULT = 10
 
 SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
 SELECTION_FALLBACK = "fallback"
@@ -202,6 +206,7 @@ OPTION_SENDER = "sender"
 OPTION_SENDER_NAME = "sender_name"
 OPTION_DEFAULT_TITLE = "default_title"
 OPTION_MODE = "mode"
+OPTION_MEDIA_AUTO_PAUSE = "media_auto_pause"
 
 SELECT_INCLUDE = "include"
 SELECT_EXCLUDE = "exclude"

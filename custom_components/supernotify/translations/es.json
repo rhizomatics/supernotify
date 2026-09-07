@@ -1,6 +1,106 @@
 {
     "title": "Supernotify",
     "services": {
+        "notify": {
+            "name": "Notificar",
+            "description": "Envía una notificación a través de SuperNotify a una o más plataformas de notificación mediante una única interfaz unificada.",
+            "fields": {
+                "message": {
+                    "name": "Mensaje",
+                    "description": "El cuerpo del mensaje de la notificación."
+                },
+                "title": {
+                    "name": "Título",
+                    "description": "Un título opcional para la notificación."
+                },
+                "target": {
+                    "name": "Objetivo",
+                    "description": "A quién o qué notificar: personas, dispositivos móviles, reproductores multimedia, áreas u otras entidades objetivo. Déjalo en blanco para usar las entregas predeterminadas/implícitas."
+                },
+                "custom_target": {
+                    "name": "Objetivos personalizados",
+                    "description": "Objetivos externos a Home Assistant, como direcciones de correo electrónico, números de teléfono, ids de Slack, etc."
+                },
+                "priority": {
+                    "name": "Prioridad",
+                    "description": "Se usa para activar/desactivar entregas y escenarios, y se asigna a la propia bandera de prioridad/urgencia del transporte subyacente cuando es compatible (por ejemplo, notificación push móvil, SMTP, Telegram, Gotify, ntfy)."
+                },
+                "delivery_selection": {
+                    "name": "Selección de entrega",
+                    "description": "Cómo se interpreta el campo Entrega (si está definido): implicit (se añade a los valores predeterminados), explicit (solo estos, más los habilitados por escenario) o fixed (solo estos, ignorando los escenarios)."
+                },
+                "delivery": {
+                    "name": "Entrega",
+                    "description": "Restringe o ajusta entregas específicas por nombre. Una lista de nombres restringe solo a esas; un mapeo también puede sobrescribir opciones por entrega."
+                },
+                "require_scenarios": {
+                    "name": "Escenarios requeridos",
+                    "description": "Suprime esta notificación a menos que al menos uno de estos escenarios esté actualmente activo."
+                },
+                "apply_scenarios": {
+                    "name": "Escenarios a aplicar",
+                    "description": "Fuerza a que estos escenarios se traten como activos para esta notificación, independientemente de sus propias condiciones."
+                },
+                "constrain_scenarios": {
+                    "name": "Escenarios restrictivos",
+                    "description": "Solo permite que estos escenarios (más los de Escenarios a aplicar) afecten a esta notificación, ignorando cualquier otro escenario activo."
+                },
+                "camera_entity_id": {
+                    "name": "Cámara",
+                    "description": "Una cámara para capturar una instantánea (y realizar primero un movimiento PTZ, si está configurado) antes de la entrega."
+                },
+                "snapshot_url": {
+                    "name": "URL de la instantánea",
+                    "description": "Una URL de imagen ya existente para adjuntar, en lugar de activar una nueva instantánea de la cámara."
+                },
+                "clip_url": {
+                    "name": "URL del clip",
+                    "description": "Una URL de clip de vídeo ya existente para adjuntar."
+                },
+                "media": {
+                    "name": "Otras opciones de medios",
+                    "description": "Opciones de medios avanzadas no cubiertas por los campos anteriores, por ejemplo, preajuste PTZ, retardo de captura o anulaciones de formato de imagen."
+                },
+                "actions": {
+                    "name": "Acciones",
+                    "description": "Botones de notificación accionable puntuales para adjuntar, sin necesidad de un grupo de acciones preconfigurado."
+                },
+                "action_groups": {
+                    "name": "Grupos de acciones",
+                    "description": "Grupos con nombre de botones de notificación accionable móvil para adjuntar, configurados en action_groups:."
+                },
+                "message_html": {
+                    "name": "Mensaje HTML",
+                    "description": "Una alternativa HTML al Mensaje, usada por transportes que admiten formato enriquecido (por ejemplo, correo electrónico)."
+                },
+                "debug": {
+                    "name": "Depuración",
+                    "description": "Incluye detalles de diagnóstico adicionales para esta notificación en las trazas y el archivo."
+                },
+                "force_resend": {
+                    "name": "Forzar reenvío",
+                    "description": "Envía incluso si la detección de duplicados suprimiría esta notificación."
+                },
+                "data": {
+                    "name": "Datos adicionales",
+                    "description": "Datos de paso para transportes/blueprints que esperan sus propios campos aquí, por ejemplo, atributos de un blueprint de notificación de Frigate."
+                }
+            },
+            "sections": {
+                "multimedia": {
+                    "name": "Opciones multimedia",
+                    "description": "Adjuntar una instantánea de cámara, una imagen existente o un clip de vídeo a esta notificación."
+                },
+                "scenarios": {
+                    "name": "Escenarios",
+                    "description": "Requiere, fuerza la aplicación o restringe qué escenarios afectan a esta notificación."
+                },
+                "advanced": {
+                    "name": "Avanzado",
+                    "description": "Botones de acción para notificaciones, formato HTML, seguimiento de depuración y otras opciones menos utilizadas."
+                }
+            }
+        },
         "reload": {
             "name": "Recargar",
             "description": "Recarga los servicios de Supernotify."

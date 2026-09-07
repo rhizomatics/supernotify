@@ -211,7 +211,6 @@ See the [Otel Event Recipe](../recipes/otel_events.md) for more.
     "alarm_panel",
     "lights"
   ],
-  "recipients_override": null,
   "media": {
     "snapshot_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
     "clip_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8"

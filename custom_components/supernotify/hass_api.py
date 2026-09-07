@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any
@@ -14,7 +15,7 @@ from homeassistant.util import slugify
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable, Iterable, Iterator, Mapping
+    from collections.abc import Callable, Iterable, Iterator
 
     import aiohttp
     from anyio import Path
@@ -105,7 +106,8 @@ class DeviceInfo:
 
     def __eq__(self, other: object) -> bool:
         """Test support"""
-        return other is not None and hasattr(other, "as_dict") and other.as_dict() == self.as_dict()
+        as_dict = getattr(other, "as_dict", None)
+        return other is not None and callable(as_dict) and as_dict() == self.as_dict()
 
 
 class HomeAssistantAPI:
@@ -213,6 +215,7 @@ class HomeAssistantAPI:
         return_response: bool | None = None,
         blocking: bool | None = None,
         debug: bool = False,
+        context: HomeAssistantContext | None = None,
     ) -> ServiceResponse | None:
 
         if return_response is None or blocking is None:
@@ -231,7 +234,7 @@ class HomeAssistantAPI:
             service,
             service_data=service_data,
             blocking=blocking,
-            context=None,
+            context=context,
             target=target,
             return_response=return_response,
         )
@@ -559,7 +562,13 @@ class HomeAssistantAPI:
             return []
 
         all_devs = enabled_devs = found_devs = skipped_devs = 0
-        for dev in dev_reg.devices.values():
+        all_ha_devices: Iterable[DeviceEntry]
+        if isinstance(dev_reg.devices, Mapping):
+            # 2026.8 HA and prior
+            all_ha_devices = dev_reg.devices.values()
+        else:
+            all_ha_devices = dev_reg.devices  # type: ignore[assignment]
+        for dev in all_ha_devices:
             all_devs += 1
 
             if dev.disabled:
@@ -627,7 +636,7 @@ class HomeAssistantAPI:
         verified_domain: str | None = None
         device_registry = self.device_registry()
         if device_registry:
-            device: DeviceEntry | None = device_registry.async_get(device_id)
+            device: DeviceEntry | None = self.find_device(device_id)
             if device:
                 matching_domains = [d for d, _id in device.identifiers if d in domains]
                 if matching_domains:
@@ -663,6 +672,15 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
         return self._device_registry
 
+    def find_device(self, device_id: str) -> DeviceEntry | None:
+        if self._device_registry is None:
+            return None
+        try:
+            return self._device_registry.async_get(device_id, include_child_devices=False)  # type: ignore[call-arg]
+        except TypeError:
+            # older HA
+            return cast("DeviceEntry|None", self._device_registry.async_get(device_id))
+
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
         from homeassistant.components import mqtt
 
@@ -675,7 +693,12 @@ class HomeAssistantAPI:
         return False
 
     async def mqtt_publish(
-        self, topic: str, payload: Any = None, qos: int = 0, retain: bool = False, raise_on_error: bool = True
+        self,
+        topic: str,
+        payload: Any = None,  # ruff: ignore[any-type]
+        qos: int = 0,
+        retain: bool = False,
+        raise_on_error: bool = True,
     ) -> None:
         from homeassistant.components import mqtt
 
@@ -698,7 +721,7 @@ class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
         super().__init__(*args, **kwargs)
         self.condition_errors: list[ConditionError] = []
 
-    def capture(self, args: Any) -> None:
+    def capture(self, args: list | tuple | None) -> None:
         if args and isinstance(args, list | tuple):
             for arg in args:
                 if isinstance(arg, ConditionErrorContainer):
@@ -706,31 +729,32 @@ class ConditionErrorLoggingAdaptor(logging.LoggerAdapter):
                 elif isinstance(arg, ConditionError):
                     self.condition_errors.append(arg)
 
-    def error(self, msg: Any, *args: object, **kwargs: Any) -> None:
+    def error(self, msg: object, *args: object, **kwargs: Any) -> None:
         self.capture(args)
-        self.logger.error(msg, args, kwargs)
+        self.logger.error(msg, *args, **kwargs)
 
-    def warning(self, msg: Any, *args: Any, **kwargs: Any) -> None:
+    def warning(self, msg: object, *args: Any, **kwargs: Any) -> None:
         self.capture(args)
-        self.logger.warning(msg, args, kwargs)
+        self.logger.warning(msg, *args, **kwargs)
+
+
+class TemplateWrapper:
+    def __init__(self, obj: Template) -> None:
+        self._obj = obj
+
+    def __getattr__(self, name: str) -> Any:  # ruff: ignore[any-type]
+        if name == "async_render_to_info":
+            return partial(self._obj.async_render_to_info, strict=True)
+        return getattr(self._obj, name)
+
+    def __setattr__(self, name: str, value: Any) -> None:  # ruff: ignore[any-type]
+        super().__setattr__(name, value)
+
+    def __repr__(self) -> str:
+        return self._obj.__repr__() if self._obj else "NULL TEMPLATE"
 
 
 def force_strict_template_mode(conditions: list[ConfigType], undo: bool = False) -> None:
-    class TemplateWrapper:
-        def __init__(self, obj: Template) -> None:
-            self._obj = obj
-
-        def __getattr__(self, name: str) -> Any:
-            if name == "async_render_to_info":
-                return partial(self._obj.async_render_to_info, strict=True)
-            return getattr(self._obj, name)
-
-        def __setattr__(self, name: str, value: Any) -> None:
-            super().__setattr__(name, value)
-
-        def __repr__(self) -> str:
-            return self._obj.__repr__() if self._obj else "NULL TEMPLATE"
-
     def wrap_template(cond: ConfigType, undo: bool) -> ConfigType:
         for key, val in cond.items():
             if not undo and isinstance(val, Template) and hasattr(val, "_env"):

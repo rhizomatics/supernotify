@@ -52,11 +52,11 @@ def _make_transport(
     object_url: str | None = OBJECT_URL,
     object_url_raises: bool = False,
     internal_url: str = INTERNAL_URL,
-) -> Any:
+) -> Any:  # ruff: ignore[any-type]
     """Construct a KodiTransport with hass_api / context / call_action mocked.
 
     Returns Any (not KodiTransport): call_action/record_error below are replaced with
-    Mocks, which mypy rejects as assignments to real bound methods on the concrete type.
+    Mocks, which mypy and ty reject as assignments to real bound methods on the concrete type.
     """
     transport: Any = KodiTransport.__new__(KodiTransport)
     transport.hass_api = MagicMock()
@@ -80,7 +80,7 @@ def _make_envelope(
     targets: list[Any] | None = None,
     priority: str | None = "medium",
     media: dict[str, Any] | None = None,
-    grab_image_value: Any = None,
+    grab_image_value: Path | None = None,
     grab_image_raises: bool = False,
 ) -> MagicMock:
     """Build a mock Envelope exposing the attributes deliver() consumes."""
@@ -99,12 +99,12 @@ def _make_envelope(
     return envelope
 
 
-def _action_data(transport: Any) -> dict[str, Any]:
+def _action_data(transport: Any) -> dict[str, Any]:  # ruff: ignore[any-type]
     """Return the action_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["action_data"]
 
 
-def _target_data(transport: Any) -> dict[str, Any]:
+def _target_data(transport: Any) -> dict[str, Any]:  # ruff: ignore[any-type]
     """Return the target_data kwarg of the most recent call_action invocation."""
     return transport.call_action.call_args.kwargs["target_data"]
 
@@ -171,7 +171,7 @@ def test_transport_name() -> None:
         ([1500], None),
     ],
 )
-def test_coerce_int(value: Any, expected: int | None) -> None:
+def test_coerce_int(value: Any, expected: int | None) -> None:  # ruff: ignore[any-type]
     assert _coerce_int(value) == expected
 
 
@@ -361,7 +361,7 @@ async def test_deliver_icon_override_custom_url() -> None:
         (MIN_DISPLAYTIME, MIN_DISPLAYTIME),  # exactly the minimum
     ],
 )
-async def test_deliver_displaytime_coercion(raw: Any, expected: int) -> None:
+async def test_deliver_displaytime_coercion(raw: Any, expected: int) -> None:  # ruff: ignore[any-type]
     uut = _make_transport()
     envelope = _make_envelope(data={"kodi_displaytime": raw})
 

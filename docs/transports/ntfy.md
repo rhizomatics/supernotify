@@ -106,7 +106,7 @@ ntfy_alarms:
 **Example call:**
 
 ```yaml
-action: notify.supernotify
+action: supernotify.notify
 data:
   message: "Motion detected at entrance"
   title: "📷 Front Camera"
