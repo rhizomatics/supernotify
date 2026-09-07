@@ -10,7 +10,7 @@ from homeassistant.const import CONF_NAME, SERVICE_RELOAD, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.loader import async_get_integration
+from homeassistant.loader import Integration, async_get_integration
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -18,9 +18,12 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
     from homeassistant.helpers.typing import ConfigType
 
-    from .notify import SupernotifyAction
+    from .notify_compatibility import SuperNotificationService, SupernotifyEngine
 
-    type SupernotifyConfigEntry = ConfigEntry[SupernotifyAction]
+    # entry.runtime_data is typed against the engine, not the legacy SuperNotificationService shim
+    # (still used below to register/unregister notify.supernotify itself) - see SuperNotificationService's
+    # docstring in notify.py for why that split exists.
+    type SupernotifyConfigEntry = ConfigEntry[SupernotifyEngine]
 
 DOMAIN = "supernotify"
 
@@ -100,11 +103,28 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
+    from .engine import build_supernotify_engine
     from .notification import set_version
-    from .notify import async_register_supplemental_services, build_supernotify_action
+    from .notify import async_register_supplemental_services
+    from .notify_compatibility import SuperNotificationService
 
-    integration = await async_get_integration(hass, DOMAIN)
+    integration: Integration = await async_get_integration(hass, DOMAIN)
     set_version(str(integration.version) if integration.version else "unknown")
+
+    full_config = _entry_full_config(hass, entry)
+    engine: SupernotifyEngine = build_supernotify_engine(hass, full_config)
+    try:
+        await engine.initialize()
+    except Exception as err:
+        _LOGGER.exception("SUPERNOTIFY Failed to initialize, will retry")
+        raise ConfigEntryNotReady(f"SUPERNOTIFY Failed to initialize: {err}") from err
+
+    async_register_supplemental_services(hass, engine, full_config)
+    entry.runtime_data = engine
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
+
+    ## Legacy Notification Service set-up
 
     # Matches the slugify(conf_name or SERVICE_NOTIFY) logic the legacy notify platform loader
     # used to apply to a YAML `name:` field, so an existing custom notify.<name> action (e.g.
@@ -119,19 +139,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
         )
         return True
 
-    full_config = _entry_full_config(hass, entry)
-    service: SupernotifyAction = build_supernotify_action(hass, full_config)
-    try:
-        await service.initialize()
-    except Exception as err:
-        _LOGGER.exception("SUPERNOTIFY Failed to initialize, will retry")
-        raise ConfigEntryNotReady(f"SUPERNOTIFY Failed to initialize: {err}") from err
-    await service.async_setup(hass, service_name, service_name)
-    await service.async_register_services()
-    async_register_supplemental_services(hass, service, full_config)
-    entry.runtime_data = service
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
+    notify_service: SuperNotificationService = SuperNotificationService(engine)
+    await notify_service.async_setup(hass, service_name, service_name)
+    await notify_service.async_register_services()
+    # without this, notify.<service_name> outlives the entry - reload (e.g. an options update,
+    # or repairs.py's legacy-name migration) leaves it bound to a shut-down engine and
+    # permanently blocks re-registration, since a later setup sees has_service() above already
+    # true and skips wiring the new engine's notify service up at all
+    entry.async_on_unload(notify_service.async_unregister_services)
+
     return True
 
 
@@ -144,8 +160,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry)
     from .notify import async_unregister_supplemental_services
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
-    service: SupernotifyAction | None = getattr(entry, "runtime_data", None)
-    if service is not None:
-        await service.async_unregister_services()
+    engine: SupernotifyEngine | None = getattr(entry, "runtime_data", None)
+    if engine is not None:
+        engine.shutdown()
         async_unregister_supplemental_services(hass)
     return unload_ok

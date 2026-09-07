@@ -34,7 +34,7 @@ async def test_setup_entry_registers_notify_service(hass: HomeAssistant) -> None
 
     # no recipients/target configured (a truly empty, minimal.yaml-equivalent setup), so
     # there's nowhere to route the message - the point here is that the call reaches a live
-    # SupernotifyAction wired up by the config entry, without raising
+    # SuperNotificationService wired up by the config entry, without raising
     assert entry.runtime_data is not None
     assert entry.runtime_data.failures == 0
 
@@ -134,13 +134,13 @@ async def test_options_update_reloads_entry_with_new_archive_path(hass: HomeAssi
 
 
 async def test_setup_entry_raises_config_entry_not_ready_on_initialize_failure(hass: HomeAssistant) -> None:
-    """A failure during SupernotifyAction.initialize() should leave HA free to retry setup
+    """A failure during SuperNotificationService.initialize() should leave HA free to retry setup
     (ConfigEntryState.SETUP_RETRY), not propagate as a raw unhandled exception."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
 
     with patch(
-        "custom_components.supernotify.notify.SupernotifyAction.initialize",
+        "custom_components.supernotify.engine.SupernotifyEngine.initialize",
         AsyncMock(side_effect=RuntimeError("boom")),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)

@@ -1,3 +1,12 @@
+## 2.4.1
+
+### Tracing Activities
+- Fixed missing contexts on downstream actions, a consequence of relying on code from the "legacy" Home Assistant Notification platform, which throws away context
+
+### Technical
+- The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
+- `notify.py` further slimmed down by moving main engine to `engine.py` and the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
+
 ## 2.4.0
 
 ### Live Scenarios
@@ -655,8 +664,8 @@ is archived for debug purposes ( and supports the new unique target value functi
 
 ## 1.1.6
 - HomeAssistant logic moved from `Context` to `HomeAssistantAPI`
-- Initialization logic moved from `Context` to `SupernotifyAction`
-- References to `SupernotifyAction` now consistent rather than `SuperNotificationAction`
+- Initialization logic moved from `Context` to `SuperNotificationService`
+- References to `SuperNotificationService` now consistent rather than `SuperNotificationAction`
 - Move camera PTZ and image handling from `Notification` to `media_grab.py`
 
 ## 1.1.5

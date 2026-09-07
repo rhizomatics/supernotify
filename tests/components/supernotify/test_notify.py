@@ -38,8 +38,9 @@ from custom_components.supernotify.const import (
     TRANSPORT_PERSISTENT,
     TRANSPORT_SMS,
 )
+from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.model import TargetRequired
-from custom_components.supernotify.notify import SupernotifyAction
+from custom_components.supernotify.notify_compatibility import SuperNotificationService
 from custom_components.supernotify.schema import DELIVERY_SCHEMA
 from tests.components.supernotify.doubles_lib import DummyTransport
 
@@ -76,7 +77,7 @@ TRANSPORT_DEFAULTS: dict[str, dict] = {
 
 
 async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> None:
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries=DELIVERY,
         scenarios=SCENARIOS,
@@ -140,7 +141,7 @@ async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mo
     the resulting action back to its trigger."""
     from homeassistant.core import Context
 
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries=DELIVERY,
         recipients=RECIPIENTS,
@@ -161,8 +162,44 @@ async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mo
     )
 
 
+async def test_legacy_notify_service_call_propagates_context(mock_hass: Mock) -> None:
+    """notify.supernotify (and notify.<target>) are dispatched by HA core's
+    BaseNotificationService._async_notify_message_service, which normally drops the calling
+    ServiceCall's Context before invoking async_send_message. SuperNotificationService overrides that
+    method so an automation-triggered notify.supernotify call still chains through to the
+    downstream mobile_app/etc service call, rather than showing up with no recorded cause."""
+    engine = SupernotifyEngine(
+        mock_hass,
+        deliveries=DELIVERY,
+        recipients=RECIPIENTS,
+        transport_configs=TRANSPORT_DEFAULTS,
+        dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
+    )
+    uut = SuperNotificationService(engine)
+    await engine.initialize()
+    uut.registered_targets = {}
+    caller_context = Context()
+    call = ServiceCall(
+        mock_hass,
+        "notify",
+        "supernotify",
+        data={"message": "testing 123", "data": {"delivery": "text"}},
+        context=caller_context,
+    )
+    await uut._async_notify_message_service(call)
+    mock_hass.services.async_call.assert_called_with(
+        "notify",
+        "sms",
+        service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
+        blocking=False,
+        context=caller_context,
+        target=None,
+        return_response=False,
+    )
+
+
 async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries=DELIVERY,
         scenarios=SCENARIOS,
@@ -191,7 +228,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
 
 
 async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
     dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
@@ -226,7 +263,7 @@ async def test_recipient_delivery_data_override(mock_hass: HomeAssistant) -> Non
 
 
 async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
     dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
@@ -253,7 +290,7 @@ async def test_recipient_can_disable_a_globally_enabled_delivery(mock_hass: Home
         {"person": "person.explicitly_in", CONF_DELIVERY: {"dummy": {CONF_ENABLED: True, CONF_TARGET: "explicit"}}},
         {"person": "person.opts_out", CONF_DELIVERY: {"dummy": {CONF_ENABLED: False, CONF_TARGET: "out"}}},
     ]
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
     dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
@@ -283,7 +320,7 @@ async def test_default_person_ids_excludes_recipients_who_disabled_the_delivery(
             CONF_DELIVERY: {"dummy": {CONF_ENABLED: False}},
         },
     ]
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=recipients)
     dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
@@ -296,7 +333,7 @@ async def test_default_person_ids_excludes_recipients_who_disabled_the_delivery(
 
 async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:
     delivery_config = {"broken": {CONF_TRANSPORT: "dummy"}}
-    uut = SupernotifyAction(mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
     broken = DummyTransport(
         uut.context, target_required=TargetRequired.OPTIONAL, service_exception=OSError("a self-inflicted error has occurred")
     )
@@ -324,7 +361,7 @@ async def test_delivery_to_broken_service(mock_hass: HomeAssistant) -> None:
 
 async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
     delivery_config = {"broken": {CONF_TRANSPORT: "dummy"}}
-    uut = SupernotifyAction(mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, deliveries=delivery_config, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
     broken = DummyTransport(
         uut.context,
         target_required=TargetRequired.OPTIONAL,
@@ -353,14 +390,14 @@ async def test_delivery_to_broken_transport(mock_hass: HomeAssistant) -> None:
 
 
 async def test_null_delivery(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(mock_hass)
+    uut = SupernotifyEngine(mock_hass)
     await uut.initialize()
     await uut.async_send_message("just a test")
     mock_hass.services.async_call.assert_not_called()  # type: ignore
 
 
 async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries={
             "generic": {
@@ -392,7 +429,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
 
 
 async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries={
             "generic": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_SELECTION: [SELECTION_FALLBACK], CONF_ACTION: "notify.dummy"},
@@ -415,7 +452,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
 
 
 async def test_dupe_check_suppresses_repeat_message(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
     dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
@@ -428,7 +465,7 @@ async def test_dupe_check_suppresses_repeat_message(mock_hass: HomeAssistant) ->
 
 
 async def test_force_resend_bypasses_dupe_check(mock_hass: HomeAssistant) -> None:
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS, recipients=RECIPIENTS)
     dummy = DummyTransport(uut.context)
     uut.context.configure_for_tests(transport_instances=[dummy])
     await uut.initialize()
@@ -479,7 +516,7 @@ async def test_send_message_with_conditions(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     delivery_config = {"testablity": DELIVERY_SCHEMA(delivery)}
-    uut = SupernotifyAction(hass, deliveries=delivery_config, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(hass, deliveries=delivery_config, recipients=RECIPIENTS)
     await uut.initialize()
 
     await uut.async_send_message(title="test_title", message="testing 123")
@@ -520,14 +557,14 @@ async def test_async_nightly_tasks(mock_hass: Mock) -> None:
     # Lines 692-696: nightly housekeeping runs archive cleanup, snooze purge, media cleanup
     import datetime
 
-    uut = SupernotifyAction(mock_hass)
+    uut = SupernotifyEngine(mock_hass)
     await uut.initialize()
     await uut.async_nightly_tasks(datetime.datetime.now(tz=datetime.UTC))
 
 
 async def test_enquire_occupancy(mock_hass: Mock) -> None:
     # Lines 633-634: returns dict from people_registry.determine_occupancy
-    uut = SupernotifyAction(mock_hass, recipients=RECIPIENTS)
+    uut = SupernotifyEngine(mock_hass, recipients=RECIPIENTS)
     await uut.initialize()
     result = await uut.enquire_occupancy()
     assert isinstance(result, dict)
@@ -535,7 +572,7 @@ async def test_enquire_occupancy(mock_hass: Mock) -> None:
 
 async def test_enquire_scenarios(mock_hass: Mock) -> None:
     # Line 659: returns dict of scenario attributes
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
     await uut.initialize()
     result = uut.enquire_scenarios()
     assert "scenario1" in result
@@ -546,7 +583,7 @@ async def test_on_mobile_action_ignores_non_supernotify(mock_hass: Mock) -> None
     # Line 687: early return when action doesn't start with SUPERNOTIFY_
     from homeassistant.core import Event as HassEvent
 
-    uut = SupernotifyAction(mock_hass)
+    uut = SupernotifyEngine(mock_hass)
     await uut.initialize()
     event: HassEvent = HassEvent("mobile_app_notification_action", data={"action": "OTHER_APP_ACTION"})
     uut.on_mobile_action(event)  # should return without doing anything
@@ -557,16 +594,16 @@ async def test_send_message_exception_handling(mock_hass: Mock) -> None:
     # Lines 439-445: exception in notification processing is caught
     from unittest.mock import patch
 
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY)
     await uut.initialize()
-    with patch("custom_components.supernotify.notify.Notification", side_effect=RuntimeError("boom")):
+    with patch("custom_components.supernotify.engine.Notification", side_effect=RuntimeError("boom")):
         await uut.async_send_message("test message")
     assert uut.failures == 1
 
 
 async def test_entity_state_change_unknown_scenario(mock_hass: Mock) -> None:
     # Line 470: warning when state change is for unknown scenario
-    uut = SupernotifyAction(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
     await uut.initialize()
     event = Mock()
     event.event_type = "state_changed"

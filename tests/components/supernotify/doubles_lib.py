@@ -16,8 +16,8 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.const import CONF_TRANSPORT
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.model import TargetRequired, TransportConfig
-from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
