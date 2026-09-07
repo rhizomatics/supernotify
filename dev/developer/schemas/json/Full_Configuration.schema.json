@@ -540,6 +540,10 @@
             "default": true,
             "type": "string"
           },
+          "expose_state": {
+            "default": true,
+            "type": "string"
+          },
           "conditions": {
             "type": "array",
             "items": {
@@ -1004,6 +1008,22 @@
           "type": "integer",
           "minimum": 0,
           "default": 3600
+        }
+      },
+      "required": [],
+      "default": {}
+    },
+    "scenario_control": {
+      "type": "object",
+      "properties": {
+        "refresh": {
+          "default": false,
+          "type": "string"
+        },
+        "refresh_interval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60
         }
       },
       "required": [],

@@ -8,6 +8,10 @@
       "default": true,
       "type": "string"
     },
+    "expose_state": {
+      "default": true,
+      "type": "string"
+    },
     "conditions": {
       "type": "array",
       "items": {
