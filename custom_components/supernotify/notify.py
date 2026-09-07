@@ -77,7 +77,7 @@ SUPPLEMENTAL_SERVICE_NAMES: Final[tuple[str, ...]] = (
 
 
 @callback
-def async_register_supplemental_services(hass: HomeAssistant, service: SupernotifyEngine, config: ConfigType) -> None:
+def async_register_supplemental_services(hass: HomeAssistant, engine: SupernotifyEngine, config: ConfigType) -> None:
     """Register the domain-scoped supplemental/debugging/admin services.
 
     Shared by the legacy YAML platform (async_get_service, below) and the config-entry setup
@@ -129,7 +129,7 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
             media = dict(data.get(ATTR_MEDIA) or {})
             media.update(promoted_media)
             data[ATTR_MEDIA] = media
-        await service.async_send_message(message, title=title, target=target, data=data, context=call.context)
+        await engine.async_send_message(message, title=title, target=target, data=data, context=call.context)
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {
@@ -152,64 +152,64 @@ def async_register_supplemental_services(hass: HomeAssistant, service: Supernoti
         }
 
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
-        return service.expose_entities()
+        return engine.expose_entities()
 
     def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:
-        return service.enquire_implicit_deliveries()
+        return engine.enquire_implicit_deliveries()
 
     def supplemental_action_enquire_deliveries_by_scenario(_call: ServiceCall) -> dict[str, Any]:
-        return service.enquire_deliveries_by_scenario()
+        return engine.enquire_deliveries_by_scenario()
 
     def supplemental_action_enquire_last_notification(call: ServiceCall) -> dict[str, Any]:
         diagnostics = call.data.get("diagnostics", False)
-        return service.last_notification.contents(diagnostics=diagnostics) if service.last_notification else {}
+        return engine.last_notification.contents(diagnostics=diagnostics) if engine.last_notification else {}
 
     async def supplemental_action_enquire_active_scenarios(call: ServiceCall) -> dict[str, Any]:
         trace = call.data.get("trace", False)
-        result: dict[str, Any] = {"scenarios": await service.enquire_active_scenarios()}
+        result: dict[str, Any] = {"scenarios": await engine.enquire_active_scenarios()}
         if trace:
-            result["trace"] = await service.trace_active_scenarios()
+            result["trace"] = await engine.trace_active_scenarios()
         return result
 
     def supplemental_action_enquire_scenarios(_call: ServiceCall) -> dict[str, Any]:
-        return {"scenarios": service.enquire_scenarios()}
+        return {"scenarios": engine.enquire_scenarios()}
 
     async def supplemental_action_enquire_occupancy(_call: ServiceCall) -> dict[str, Any]:
-        return {"scenarios": await service.enquire_occupancy()}
+        return {"scenarios": await engine.enquire_occupancy()}
 
     def supplemental_action_enquire_snoozes(_call: ServiceCall) -> dict[str, Any]:
-        return {"snoozes": service.enquire_snoozes()}
+        return {"snoozes": engine.enquire_snoozes()}
 
     def supplemental_action_clear_snoozes(_call: ServiceCall) -> dict[str, Any]:
-        return {"cleared": service.clear_snoozes()}
+        return {"cleared": engine.clear_snoozes()}
 
     def supplemental_action_enquire_recipients(_call: ServiceCall) -> dict[str, Any]:
-        return {"recipients": service.enquire_recipients()}
+        return {"recipients": engine.enquire_recipients()}
 
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
-        if not service.context.archive.enabled:
+        if not engine.context.archive.enabled:
             raise ServiceValidationError("No archive configured")
-        purged = await service.context.archive.cleanup(days=days, force=True)
-        arch_size = await service.context.archive.size()
+        purged = await engine.context.archive.cleanup(days=days, force=True)
+        arch_size = await engine.context.archive.size()
         return {
             "purged": purged,
             "remaining": arch_size,
             "interval": ARCHIVE_PURGE_MIN_INTERVAL,
-            "days": service.context.archive.archive_days if days is None else days,
+            "days": engine.context.archive.archive_days if days is None else days,
         }
 
     async def supplemental_action_purge_media(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
-        if not service.context.media_storage.media_path:
+        if not engine.context.media_storage.media_path:
             raise ServiceValidationError("No media storage configured")
-        purged = await service.context.media_storage.cleanup(days=days, force=True)
-        size = await service.context.media_storage.size()
+        purged = await engine.context.media_storage.cleanup(days=days, force=True)
+        size = await engine.context.media_storage.size()
         return {
             "purged": purged,
             "remaining": size,
-            "interval": service.context.media_storage.purge_minute_interval,
-            "days": service.context.media_storage.days if days is None else days,
+            "interval": engine.context.media_storage.purge_minute_interval,
+            "days": engine.context.media_storage.days if days is None else days,
         }
 
     hass.services.async_register(
