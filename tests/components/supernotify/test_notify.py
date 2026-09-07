@@ -1,6 +1,7 @@
-from typing import Any
+from typing import Any, cast
 from unittest.mock import ANY, AsyncMock, Mock
 
+from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     CONF_ACTION,
     CONF_CONDITION,
@@ -12,8 +13,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_NONE,
     ATTR_FORCE_RESEND,
@@ -540,6 +543,44 @@ async def test_enquire_scenarios(mock_hass: Mock) -> None:
     result = uut.enquire_scenarios()
     assert "scenario1" in result
     assert "scenario2" in result
+
+
+async def test_enquire_last_notification_diagnostics_flag(hass: HomeAssistant) -> None:
+    """enquire_last_notification only includes the DebugTrace (`debug_trace`, built for every
+    notification regardless - see Notification.contents()) when the caller opts in with
+    `diagnostics: true`; a bare call gets the pared-down view. Same shape as the `trace` flag
+    on enquire_active_scenarios, which this field was modelled on."""
+
+    async def _mock_notification(_call: ServiceCall) -> None:
+        return None
+
+    hass.services.async_register("testing", "mock_notification", _mock_notification)
+    delivery_config = {
+        "testablity": {
+            CONF_TRANSPORT: TRANSPORT_GENERIC,
+            CONF_ACTION: "testing.mock_notification",
+            CONF_TARGET_REQUIRED: "never",
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DELIVERY: delivery_config}})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"message": "testing diagnostics"}, blocking=True)
+    await hass.async_block_till_done()
+
+    plain = cast(
+        "dict[str, Any]",
+        await hass.services.async_call(DOMAIN, "enquire_last_notification", None, blocking=True, return_response=True),
+    )
+    assert "debug_trace" not in plain
+
+    full = cast(
+        "dict[str, Any]",
+        await hass.services.async_call(
+            DOMAIN, "enquire_last_notification", {"diagnostics": True}, blocking=True, return_response=True
+        ),
+    )
+    assert "debug_trace" in full
 
 
 async def test_on_mobile_action_ignores_non_supernotify(mock_hass: Mock) -> None:
