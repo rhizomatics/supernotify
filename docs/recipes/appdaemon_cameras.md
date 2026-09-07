@@ -42,7 +42,7 @@ an action data dictionary.
 
     try:
         self.hass.call_service(
-            "notify/supernotify",
+            "supernotify/notify",
             message=message,
             title=title,
             data=action_data)
