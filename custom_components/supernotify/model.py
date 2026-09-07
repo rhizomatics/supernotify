@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import logging
 import re
 from dataclasses import dataclass, field
@@ -26,6 +27,9 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_HOME,
     STATE_NOT_HOME,
+)
+from homeassistant.core import (
+    Context as HAContext,
 )
 from homeassistant.core import valid_entity_id
 
@@ -865,3 +869,13 @@ class DebugTrace:
         self.delivery_exceptions.setdefault(delivery, {})
         self.delivery_exceptions[delivery].setdefault(context, [])
         self.delivery_exceptions[delivery][context].append(format_exception(exception))
+
+
+class NotifyEntityPlatform:
+    """No simple base class in NotifyEntity to reuse, plus lack of support for Context passing"""
+
+    @abc.abstractmethod
+    async def async_send_message(
+        self, message: str, title: str | None = None, target: str | None = None, context: HAContext | None = None
+    ) -> None:
+        """implement message"""

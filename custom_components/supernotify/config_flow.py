@@ -2,7 +2,8 @@
 
 A UI setup path that reproduces examples/minimal.yaml (everything auto-discovered, no required
 fields), plus options pages for the archive, dupe_check and housekeeping settings. Delivery,
-transports, scenarios, recipients, cameras, action_groups, links and snooze stay YAML-only, now
+transports, scenarios, scenario_control, recipients, cameras, action_groups, links and snooze stay
+YAML-only, now
 under a top-level `supernotify:` key (see CONFIG_SCHEMA/async_setup in __init__.py) rather than
 the legacy `notify: - platform: supernotify` block - this config entry is the sole,
 unconditional owner of registering notify.supernotify in every case.

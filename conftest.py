@@ -290,7 +290,7 @@ async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: Hom
 @pytest.fixture
 def uninitialized_unmocked_config(mock_hass_api: HomeAssistantAPI, tmp_path) -> Context:
     people_registry = PeopleRegistry([], mock_hass_api)
-    scenario_registry = ScenarioRegistry({})
+    scenario_registry = ScenarioRegistry({}, {}, people_registry)
     delivery_registry = DeliveryRegistry({})
     dupe_checker = DupeChecker({})
     media_storage = MediaStorage(tmp_path / "media", days=1)

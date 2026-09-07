@@ -1,8 +1,15 @@
 ## 2.3.2
 
+### Live Scenarios
+- Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
+- New **Scenario Control** configuration added, with initial usage for controlling live scenario state
+
 ### Tracing Activities
 
 - If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
+
+### Technical
+- `notify.py` slimmed down, moving functionality out to the main registries
 
 ## 2.3.1
 
@@ -112,8 +119,8 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 - `binary_sensor.supernotify_scenario_<name>` now reports the evaluated state of the scenario (`on`/`off`) instead of a hard-coded `unknown`. A state change of an entity a scenario's conditions reference re-evaluates only the scenarios depending on that entity; a periodic sweep covers conditions no entity change announces, such as time windows. Scenarios whose conditions reference no entity (priority-only or manually applied) stay `unknown`.
 - Evaluating conditions costs whatever the conditions cost, so the whole mechanism is switchable:
-  - `scenario_state: {enabled: false}` subscribes to nothing and starts no timer
-  - `scenario_state: {refresh_interval: <seconds>}` tunes the sweep, or disables it with `0` while keeping the reactive path
+  - `scenario_control: {refresh: false}` subscribes to nothing and starts no timer
+  - `scenario_control: {refresh_interval: <seconds>}` tunes the sweep, or disables it with `0` while keeping the reactive path
   - `expose_state: false` on an individual scenario keeps an expensive one out of it without turning the feature off
 
 ### ConfigFlow

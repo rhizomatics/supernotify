@@ -167,7 +167,7 @@ class Notification(ArchivableObject):
         self.delivery_selection: str | None = action_data.get(ATTR_DELIVERY_SELECTION)
         self.delivery_overrides: dict[str, DeliveryCustomization] = {}
 
-        delivery_data = action_data.get(ATTR_DELIVERY)
+        delivery_data: Any | None = action_data.get(ATTR_DELIVERY)
         if self.delivery_selection is None:
             if isinstance(delivery_data, list) or (isinstance(delivery_data, str) and delivery_data):
                 self.delivery_selection = DELIVERY_SELECTION_EXPLICIT
@@ -233,7 +233,7 @@ class Notification(ArchivableObject):
             self.suppress(SuppressionReason.NO_SCENARIO)
         else:
             for s in enabled_scenario_names:
-                scenario_obj = self.context.scenario_registry.scenarios.get(s)
+                scenario_obj: Scenario | None = self.context.scenario_registry.scenarios.get(s)
                 if scenario_obj is not None:
                     self.enabled_scenarios[s] = scenario_obj
 
@@ -281,7 +281,7 @@ class Notification(ArchivableObject):
                     person_ids.append(e)
                 else:
                     remaining_entity_ids.append(e)
-            updated_target = {**target, ATTR_ENTITY_ID: remaining_entity_ids}
+            updated_target: dict[str, list[str] | Any] = {**target, ATTR_ENTITY_ID: remaining_entity_ids}
             if person_ids:
                 updated_target[ATTR_PERSON_ID] = person_ids
             return updated_target
@@ -319,7 +319,7 @@ class Notification(ArchivableObject):
         Example is the Frigate blueprint, which generates `image`, `video` etc
         in the `data` section, that can also be used for email attachments
         """
-        media_dict = {}
+        media_dict: dict[str, Any | None] = {}
         if not data:
             return {}
         if data.get(ATTR_IMAGE):
@@ -439,7 +439,7 @@ class Notification(ArchivableObject):
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
         last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]
-        selected = first + anywhere + last
+        selected: list[str] = first + anywhere + last
         self.debug_trace.record_delivery_selection("ranked", selected)
 
         selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)

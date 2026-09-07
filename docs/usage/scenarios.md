@@ -230,8 +230,8 @@ Evaluating conditions costs whatever those conditions cost, which for template-h
 small hardware is worth controlling:
 
 ```yaml
-scenario_state:
-  enabled: true        # false subscribes to nothing and starts no timer
+scenario_control:
+  refresh: true        # false subscribes to nothing and starts no timer
   refresh_interval: 60 # seconds; 0 keeps the reactive path and drops the sweep
 ```
 

@@ -6,7 +6,7 @@ import json
 import logging
 from dataclasses import asdict
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from homeassistant.components.notify import (
     NotifyEntity,
@@ -14,14 +14,8 @@ from homeassistant.components.notify import (
 )
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
-    CONF_ENABLED,
     CONF_TARGET,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    EntityCategory,
-    Platform,
 )
 from homeassistant.core import (
     Context as HAContext,
@@ -36,12 +30,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import condition
 from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL, NotificationArchive
-from .common import DupeChecker, ensure_list, sanitize
+from .common import DupeChecker, ensure_list
 from .const import (
     ATTR_ACTION,
     ATTR_CUSTOM_TARGET,
@@ -66,21 +59,19 @@ from .const import (
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
-    CONF_REFRESH_INTERVAL,
-    CONF_SCENARIO_STATE,
+    CONF_SCENARIO_CONTROL,
     CONF_SCENARIOS,
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TITLE,
     CONF_TRANSPORTS,
     PRIORITY_MEDIUM,
-    SCENARIO_STATE_REFRESH_DEFAULT,
 )
 from .context import Context
 from .delivery import DeliveryRegistry
 from .hass_api import HomeAssistantAPI
 from .media_grab import MediaStorage
-from .model import ConditionVariables, SuppressionReason, Target
+from .model import ConditionVariables, NotifyEntityPlatform, SuppressionReason, Target
 from .notification import Notification
 from .people import PeopleRegistry, Recipient
 from .scenario import ScenarioRegistry
@@ -111,12 +102,10 @@ from .transports.tts import TTSTransport
 if TYPE_CHECKING:
     import datetime as dt
 
-    from homeassistant.helpers import entity_registry as er
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
     from . import SupernotifyConfigEntry
-    from .scenario import Scenario
     from .transport import Transport
 
 PARALLEL_UPDATES = 0
@@ -172,7 +161,7 @@ def build_supernotify_action(hass: HomeAssistant, config: ConfigType) -> Superno
         cameras=config[CONF_CAMERAS],
         dupe_check=config[CONF_DUPE_CHECK],
         snooze=config[CONF_SNOOZE],
-        scenario_state=config.get(CONF_SCENARIO_STATE),
+        scenario_control=config.get(CONF_SCENARIO_CONTROL),
     )
 
 
@@ -481,46 +470,6 @@ class SupernotifyEntity(NotifyEntity):
         await self._platform.async_send_message(message, title=title, target=target, data=data, context=self._context)
 
 
-class RecipientNotifyEntity(NotifyEntity):
-    """Expose a single recipient as its own `notify.recipient_<name>` entity.
-
-    Sent as an ordinary `target` on the main supernotify action, just like any other entity -
-    Notification recognizes it as one of supernotify's own published recipient notify entities
-    and resolves it to this recipient, still going through the full default-recipient delivery pipeline
-    (occupancy, scenarios, personal delivery overrides, dedupe, snooze) rather than a literal,
-    unscoped target override. Per HA's notify entity service schema, only message/title are
-    ever passed in here - no data/target.
-    """
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        unique_id: str,
-        recipient: Recipient,
-        platform: SupernotifyAction,
-    ) -> None:
-        """Initialize the recipient notify entity."""
-        self._attr_unique_id = unique_id
-        self._attr_name = recipient.alias or recipient.name
-        self._attr_supported_features = NotifyEntityFeature.TITLE
-        self._recipient = recipient
-        self._platform = platform
-        self.entity_id = f"notify.recipient_{recipient.name}"
-
-    async def async_added_to_hass(self) -> None:
-        await super().async_added_to_hass()
-        self._recipient.notify_entity_id = self.entity_id
-
-    async def async_will_remove_from_hass(self) -> None:
-        self._recipient.notify_entity_id = None
-        await super().async_will_remove_from_hass()
-
-    async def async_send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message to this recipient."""
-        await self._platform.async_send_message(message, title=title, target=self.entity_id, context=self._context)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SupernotifyConfigEntry,
@@ -531,11 +480,10 @@ async def async_setup_entry(
     Forwarded to from async_setup_entry in __init__.py once the SupernotifyAction (entry.
     runtime_data) is fully initialized, so people_registry is already populated.
     """
-    _ = hass
-    service = entry.runtime_data
-    async_add_entities(
-        RecipientNotifyEntity(f"{entry.entry_id}_recipient_{recipient.name}", recipient, service)
-        for recipient in service.context.people_registry.people.values()
+    # _ = hass
+    # entry.runtime_data is SupernotifyAction
+    entry.runtime_data.context.people_registry.expose_notify_entities(
+        entry.entry_id, async_add_entities, cast(NotifyEntityPlatform, entry.runtime_data)
     )
 
 
@@ -561,20 +509,22 @@ class SupernotifyAction(BaseNotificationService):
         cameras: list[dict[str, Any]] | None = None,
         dupe_check: dict[str, Any] | None = None,
         snooze: dict[str, Any] | None = None,
-        scenario_state: dict[str, Any] | None = None,
+        scenario_control: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None
         self.failures: int = 0
         self.housekeeping: dict[str, Any] = housekeeping or {}
-        self.scenario_state_config: dict[str, Any] = scenario_state or {}
         self.sent: int = 0
         hass_api = HomeAssistantAPI(hass)
 
+        people_registry = PeopleRegistry(
+            recipients or [], hass_api, discover=recipients_discovery, mobile_discovery=mobile_discovery
+        )
         self.context = Context(
             hass_api,
-            PeopleRegistry(recipients or [], hass_api, discover=recipients_discovery, mobile_discovery=mobile_discovery),
-            ScenarioRegistry(scenarios or {}),
+            people_registry,
+            ScenarioRegistry(scenarios or {}, scenario_control, people_registry),
             DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
@@ -591,8 +541,6 @@ class SupernotifyAction(BaseNotificationService):
             cameras=cameras,
         )
 
-        self.exposed_entities: list[str] = []
-
     async def initialize(self) -> None:
         await self.context.initialize()
         self.context.hass_api.initialize()
@@ -606,24 +554,9 @@ class SupernotifyAction(BaseNotificationService):
         await self.context.archive.initialize()
         await self.context.media_storage.initialize(self.context.hass_api)
 
-        self._scenario_cond_entities = self._collect_scenario_condition_entities()
-        self._scenario_by_entity = self._index_scenarios_by_entity()
         self.expose_entities()
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
-        self.context.hass_api.subscribe_state(self.exposed_entities, self._entity_state_change_listener)
-        # Keep the scenario binary_sensors' state current: react to their condition entities
-        # (immediate, and only for the scenarios that depend on the entity that changed), plus
-        # a periodic sweep for conditions no entity change announces - time windows, sun, and
-        # templates whose dependencies could not be extracted.
-        # Evaluating conditions costs whatever the conditions cost, so the whole mechanism is
-        # switchable: `scenario_state: {enabled: false}` subscribes to nothing and starts no
-        # timer, and `refresh_interval: 0` keeps the reactive path without the sweep.
-        if self.scenario_state_enabled:
-            scenario_watch: set[str] = set(self._scenario_by_entity)
-            if scenario_watch:
-                self.context.hass_api.subscribe_state(sorted(scenario_watch), self.async_refresh_scenario_states)
-            if self.scenario_state_interval:
-                self.context.hass_api.subscribe_interval(self.scenario_state_interval, self.async_refresh_scenario_states)
+        self.context.hass_api.subscribe_state(self.context.hass_api.exposed_entities, self._entity_state_change_listener)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -714,249 +647,36 @@ class SupernotifyAction(BaseNotificationService):
             )
 
     async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
-        changes = 0
-        if event is not None:
-            _LOGGER.debug(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
-            new_state: State | None = event.data["new_state"]
-            if new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_scenario_"):
-                scenario: Scenario | None = self.context.scenario_registry.scenarios.get(
-                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_scenario_", "")
-                )
-                if scenario is None:
-                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown scenario {event.data['entity_id']}")
-                else:
-                    if new_state.state == "off" and scenario.enabled:
-                        scenario.enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling scenario {scenario.name}")
-                        changes += 1
-                    elif new_state.state == "on" and not scenario.enabled:
-                        scenario.enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling scenario {scenario.name}")
-                        changes += 1
-                    else:
-                        _LOGGER.info(f"SUPERNOTIFY No change to scenario {scenario.name}, already {new_state}")
-            elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_delivery_"):
-                delivery_name: str = event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_delivery_", "")
-                if new_state.state == "off":
-                    if self.context.delivery_registry.disable(delivery_name):
-                        changes += 1
-                elif new_state.state == "on":
-                    if self.context.delivery_registry.enable(delivery_name):
-                        changes += 1
-                else:
-                    _LOGGER.info(f"SUPERNOTIFY No change to delivery {delivery_name} for state {new_state.state}")
-            elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_transport_"):
-                transport: Transport | None = self.context.delivery_registry.transports.get(
-                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_transport_", "")
-                )
-                if transport is None:
-                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown transport {event.data['entity_id']}")
-                else:
-                    if new_state.state == "off" and transport.enabled:
-                        transport.enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling transport {transport.name}")
-                        changes += 1
-                    elif new_state.state == "on" and not transport.enabled:
-                        transport.enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling transport {transport.name}")
-                        changes += 1
-                    else:
-                        _LOGGER.info(f"SUPERNOTIFY No change to transport {transport.name}, already {new_state}")
-            elif new_state and event.data["entity_id"].startswith(f"binary_sensor.{DOMAIN}_recipient_"):
-                recipient: Recipient | None = self.context.people_registry.people.get(
-                    event.data["entity_id"].replace(f"binary_sensor.{DOMAIN}_recipient_", "person.")
-                )
-                if recipient is None:
-                    _LOGGER.warning(f"SUPERNOTIFY Event for unknown recipient {event.data['entity_id']}")
-                else:
-                    if new_state.state == "off" and recipient.enabled:
-                        recipient.enabled = False
-                        _LOGGER.info(f"SUPERNOTIFY Disabling recipient {recipient.entity_id}")
-                        changes += 1
-                    elif new_state.state == "on" and not recipient.enabled:
-                        recipient.enabled = True
-                        _LOGGER.info(f"SUPERNOTIFY Enabling recipient {recipient.entity_id}")
-                        changes += 1
-                    else:
-                        _LOGGER.info(f"SUPERNOTIFY No change to recipient {recipient.entity_id}, already {new_state}")
-
-            else:
-                _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
-
-    def _collect_scenario_condition_entities(self) -> dict[str, set[str]]:
-        """Entities referenced by each scenario's conditions.
-
-        A scenario whose conditions reference no Home Assistant entity depends
-        only on the per-notification variables (notification_priority /
-        applied_scenarios). Such a scenario is 'transient': it has no meaningful
-        state between notifications, so it is left as STATE_UNKNOWN. Extraction is
-        best-effort (templates are opaque); the periodic refresh is the safety net.
-        """
-        mapping: dict[str, set[str]] = {}
-        for name, scenario in self.context.scenario_registry.scenarios.items():
-            ents: set[str] = set()
-            for cond in scenario.conditions_config or []:
-                try:
-                    ents |= condition.async_extract_entities(cond)
-                except Exception:
-                    _LOGGER.debug("SUPERNOTIFY could not extract entities for scenario %s", name)
-            mapping[name] = ents
-        return mapping
-
-    @property
-    def scenario_state_enabled(self) -> bool:
-        return bool(self.scenario_state_config.get(CONF_ENABLED, True))
-
-    @property
-    def scenario_state_interval(self) -> int:
-        return int(self.scenario_state_config.get(CONF_REFRESH_INTERVAL, SCENARIO_STATE_REFRESH_DEFAULT))
-
-    def _index_scenarios_by_entity(self) -> dict[str, set[str]]:
-        """Reverse of _collect_scenario_condition_entities: entity -> scenarios depending on it.
-
-        Used to re-evaluate only the scenarios a state change can actually affect, instead of
-        the whole registry on every event.
-        """
-        index: dict[str, set[str]] = {}
-        for name, entities in self._scenario_cond_entities.items():
-            scenario = self.context.scenario_registry.scenarios.get(name)
-            if scenario is not None and not scenario.expose_state:
-                continue
-            for entity_id in entities:
-                index.setdefault(entity_id, set()).add(name)
-        return index
-
-    def _scenario_state(self, scenario: Scenario, cvars: ConditionVariables | None = None) -> str:
-        """State to expose for a scenario binary_sensor.
-
-        - no conditions, or conditions with no source entity -> transient/manual
-          -> STATE_UNKNOWN (state is undefined outside of a notification);
-        - otherwise ON/OFF from a neutral evaluation (current occupancy, medium
-          priority), the same basis as enquire_active_scenarios().
-        """
-        if not scenario.expose_state:
-            return STATE_UNKNOWN
-        if not scenario.conditions_config:
-            return STATE_UNKNOWN
-        if not getattr(self, "_scenario_cond_entities", {}).get(scenario.name):
-            return STATE_UNKNOWN
-        if cvars is None:
-            occupiers = self.context.people_registry.determine_occupancy()
-            cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
-        return STATE_ON if scenario.evaluate(cvars) else STATE_OFF
-
-    @callback
-    def async_refresh_scenario_states(self, *args: Any) -> None:
-        """Re-evaluate and re-publish the state of every scenario binary_sensor.
-
-        Triggered by the 1-minute timer (time/date scenarios and any dependency
-        not captured by entity extraction) and by state changes of the scenarios'
-        condition entities (immediate reactivity). Pure in-memory evaluation over
-        cached states; no I/O.
-        """
-        if not self.scenario_state_enabled:
+        if event is None:
             return
-        names: set[str] | None = None
-        if args:
-            event = args[0]
-            entity_id = getattr(event, "data", {}).get("entity_id") if hasattr(event, "data") else None
-            if entity_id is not None:
-                names = self._scenario_by_entity.get(entity_id, set())
-                if not names:
-                    return
+        _LOGGER.debug(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
+        new_state: State | None = event.data["new_state"]
+        if new_state is None:
+            return
 
-        occupiers = self.context.people_registry.determine_occupancy()
-        cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
-        for name, scenario in self.context.scenario_registry.scenarios.items():
-            if names is not None and name not in names:
-                continue
-            self.context.hass_api.set_state(
-                f"binary_sensor.{DOMAIN}_scenario_{name}",
-                self._scenario_state(scenario, cvars),
-                sanitize(scenario.attributes(include_condition=False)),
-            )
-
-    def expose_entity(
-        self,
-        entity_name: str,
-        state: str,
-        attributes: dict[str, Any],
-        platform: str = Platform.BINARY_SENSOR,
-        original_name: str | None = None,
-        original_icon: str | None = None,
-        entity_registry: er.EntityRegistry | None = None,
-    ) -> None:
-        """Expose a technical entity in Home Assistant representing internal state and attributes"""
-        entity_id: str
-        if entity_registry is not None:
-            try:
-                entry: er.RegistryEntry = entity_registry.async_get_or_create(
-                    platform,
-                    DOMAIN,
-                    entity_name,
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    original_name=original_name,
-                    original_icon=original_icon,
-                )
-                entity_id = entry.entity_id
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_name, e)
-                # continue anyway even if not registered as state is independent of entity
-                entity_id = f"{platform}.{DOMAIN}_{entity_name}"
-        try:
-            self.context.hass_api.set_state(entity_id, state, attributes)
-            self.exposed_entities.append(entity_id)
-        except Exception as e:
-            _LOGGER.error("SUPERNOTIFY Unable to set state for entity %s: %s", entity_id, e)
+        entity_id: str = event.data["entity_id"]
+        for registry in (
+            self.context.scenario_registry,
+            self.context.delivery_registry,
+            self.context.people_registry,
+        ):
+            if registry.handle_entity_state_change(entity_id, new_state) is not None:
+                return
+        _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
 
     def expose_entities(self) -> None:
         # Create on the fly entities for key internal config and state
-        ent_reg: er.EntityRegistry | None = self.context.hass_api.entity_registry()
-        if ent_reg is None:
-            _LOGGER.error("SUPERNOTIFY Unable to access entity registry to expose entities")
-            return
 
+        # pseudo-entities, no more than states
         self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
         self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
 
-        for scenario in self.context.scenario_registry.scenarios.values():
-            self.expose_entity(
-                f"scenario_{scenario.name}",
-                state=self._scenario_state(scenario),
-                attributes=sanitize(scenario.attributes(include_condition=False)),
-                original_name=f"{scenario.name} Scenario",
-                original_icon="mdi:clipboard-text",
-                entity_registry=ent_reg,
-            )
-        for transport in self.context.delivery_registry.transports.values():
-            self.expose_entity(
-                f"transport_{transport.name}",
-                state=STATE_ON if transport.enabled else STATE_OFF,
-                attributes=sanitize(transport.attributes()),
-                original_name=f"{transport.name} Transport Adaptor",
-                original_icon="mdi:truck-fast",
-                entity_registry=ent_reg,
-            )
+        # actual entities
+        self.context.scenario_registry.expose_entities(self.context.hass_api)
+        self.context.delivery_registry.expose_entities(self.context.hass_api)
+        self.context.people_registry.expose_entities(self.context.hass_api)
 
-        for delivery in self.context.delivery_registry.deliveries.values():
-            self.expose_entity(
-                f"delivery_{delivery.name}",
-                state=STATE_ON if delivery.enabled else STATE_OFF,
-                attributes=sanitize(delivery.attributes()),
-                original_name=f"{delivery.name} Delivery Configuration",
-                original_icon="mdi:package-variant",
-                entity_registry=ent_reg,
-            )
-
-        for recipient in self.context.people_registry.people.values():
-            self.expose_entity(
-                f"recipient_{recipient.name}",
-                state=STATE_ON if recipient.enabled else STATE_OFF,
-                attributes=sanitize(recipient.attributes()),
-                original_name=f"{recipient.name}",
-                original_icon="mdi:account-arrow-left",
-                entity_registry=ent_reg,
-            )
+        # people registry also creates recipients as entities
 
     def enquire_implicit_deliveries(self) -> dict[str, Any]:
         v: dict[str, list[str]] = {}

@@ -6,6 +6,10 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
+from homeassistant.components.notify import (
+    NotifyEntity,
+    NotifyEntityFeature,
+)
 from homeassistant.components.person.const import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -16,11 +20,15 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_HOME,
     STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
     EntityCategory,
 )
 from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import ensure_list
+from . import DOMAIN
+from .common import ensure_list, sanitize
 from .const import (
     ATTR_ALIAS,
     ATTR_EMAIL,
@@ -45,7 +53,7 @@ from .const import (
     OCCUPANCY_ONLY_IN,
     OCCUPANCY_ONLY_OUT,
 )
-from .model import DeliveryCustomization, Target
+from .model import DeliveryCustomization, NotifyEntityPlatform, Target
 
 if TYPE_CHECKING:
     from homeassistant.core import State
@@ -54,6 +62,46 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class RecipientNotifyEntity(NotifyEntity):
+    """Expose a single recipient as its own `notify.recipient_<name>` entity.
+
+    Sent as an ordinary `target` on the main supernotify action, just like any other entity -
+    Notification recognizes it as one of supernotify's own published recipient notify entities
+    and resolves it to this recipient, still going through the full default-recipient delivery pipeline
+    (occupancy, scenarios, personal delivery overrides, dedupe, snooze) rather than a literal,
+    unscoped target override. Per HA's notify entity service schema, only message/title are
+    ever passed in here - no data/target.
+    """
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        unique_id: str,
+        recipient: Recipient,
+        platform: NotifyEntityPlatform,
+    ) -> None:
+        """Initialize the recipient notify entity."""
+        self._attr_unique_id = unique_id
+        self._attr_name = recipient.alias or recipient.name
+        self._attr_supported_features = NotifyEntityFeature.TITLE
+        self._recipient = recipient
+        self._platform = platform
+        self.entity_id = f"notify.recipient_{recipient.name}"
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._recipient.notify_entity_id = self.entity_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._recipient.notify_entity_id = None
+        await super().async_will_remove_from_hass()
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message to this recipient."""
+        await self._platform.async_send_message(message, title=title, target=self.entity_id, context=self._context)
 
 
 class Recipient:
@@ -238,6 +286,49 @@ class PeopleRegistry:
             recipient.initialize(self)
 
             self.people[recipient.entity_id] = recipient
+
+    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
+        for recipient in self.people.values():
+            hass_api.expose_entity(
+                f"recipient_{recipient.name}",
+                state=STATE_ON if recipient.enabled else STATE_OFF,
+                attributes=sanitize(recipient.attributes()),
+                original_name=f"{recipient.name}",
+                original_icon="mdi:account-arrow-left",
+            )
+
+    def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
+        """React to a recipient binary_sensor being toggled on/off.
+
+        Returns None if entity_id isn't one of ours, True if it was recognised and its
+        enabled state changed, False if recognised but unknown or already in that state.
+        """
+        prefix = f"binary_sensor.{DOMAIN}_recipient_"
+        if not entity_id.startswith(prefix):
+            return None
+
+        recipient = self.people.get("person." + entity_id.removeprefix(prefix))
+        if recipient is None:
+            _LOGGER.warning("SUPERNOTIFY Event for unknown recipient %s", entity_id)
+            return False
+        if new_state.state == STATE_OFF and recipient.enabled:
+            recipient.enabled = False
+            _LOGGER.info("SUPERNOTIFY Disabling recipient %s", recipient.entity_id)
+            return True
+        if new_state.state == STATE_ON and not recipient.enabled:
+            recipient.enabled = True
+            _LOGGER.info("SUPERNOTIFY Enabling recipient %s", recipient.entity_id)
+            return True
+        _LOGGER.info("SUPERNOTIFY No change to recipient %s, already %s", recipient.entity_id, new_state)
+        return False
+
+    def expose_notify_entities(
+        self, entry_id: str, async_add_entities: AddConfigEntryEntitiesCallback, service: NotifyEntityPlatform
+    ) -> None:
+        async_add_entities(
+            RecipientNotifyEntity(f"{entry_id}_recipient_{recipient.name}", recipient, service)
+            for recipient in self.people.values()
+        )
 
     def person_attributes(self, entity_id: str) -> dict[str, Any] | None:
         state: State | None = self.hass_api.get_state(entity_id)

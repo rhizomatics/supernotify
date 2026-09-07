@@ -15,10 +15,15 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIONS,
     CONF_TARGET,
+    STATE_OFF,
+    STATE_ON,
 )
 
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
 
+from . import DOMAIN
+from .common import sanitize
 from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
@@ -54,6 +59,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.core import State
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.hass_api import DeviceInfo
@@ -294,6 +300,61 @@ class DeliveryRegistry:
         await self.initialize_transports(context)
         await self.autogenerate_deliveries(context)
         self.initialize_deliveries()
+
+    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
+        for transport in self.transports.values():
+            hass_api.expose_entity(
+                f"transport_{transport.name}",
+                state=STATE_ON if transport.enabled else STATE_OFF,
+                attributes=sanitize(transport.attributes()),
+                original_name=f"{transport.name} Transport Adaptor",
+                original_icon="mdi:truck-fast",
+            )
+        for delivery in self._deliveries.values():
+            hass_api.expose_entity(
+                f"delivery_{delivery.name}",
+                state=STATE_ON if delivery.enabled else STATE_OFF,
+                attributes=sanitize(delivery.attributes()),
+                original_name=f"{delivery.name} Delivery Configuration",
+                original_icon="mdi:package-variant",
+            )
+
+    def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
+        """React to a delivery or transport binary_sensor being toggled on/off.
+
+        Returns None if entity_id belongs to neither (not a delivery/transport entity of
+        ours), True if it was recognised and its enabled state changed, False if recognised
+        but unknown or already in that state.
+        """
+        delivery_prefix = f"binary_sensor.{DOMAIN}_delivery_"
+        transport_prefix = f"binary_sensor.{DOMAIN}_transport_"
+        if entity_id.startswith(delivery_prefix):
+            delivery_name = entity_id.removeprefix(delivery_prefix)
+            if new_state.state == STATE_OFF:
+                return self.disable(delivery_name)
+            if new_state.state == STATE_ON:
+                return self.enable(delivery_name)
+            _LOGGER.info("SUPERNOTIFY No change to delivery %s for state %s", delivery_name, new_state.state)
+            return False
+
+        if entity_id.startswith(transport_prefix):
+            transport_name = entity_id.removeprefix(transport_prefix)
+            transport = self.transports.get(transport_name)
+            if transport is None:
+                _LOGGER.warning("SUPERNOTIFY Event for unknown transport %s", entity_id)
+                return False
+            if new_state.state == STATE_OFF and transport.enabled:
+                transport.enabled = False
+                _LOGGER.info("SUPERNOTIFY Disabling transport %s", transport.name)
+                return True
+            if new_state.state == STATE_ON and not transport.enabled:
+                transport.enabled = True
+                _LOGGER.info("SUPERNOTIFY Enabling transport %s", transport.name)
+                return True
+            _LOGGER.info("SUPERNOTIFY No change to transport %s, already %s", transport.name, new_state)
+            return False
+
+        return None
 
     def initialize_deliveries(self) -> None:
         for delivery in self._deliveries.values():

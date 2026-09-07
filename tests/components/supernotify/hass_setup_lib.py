@@ -255,6 +255,7 @@ class TestingContext(Context):
             self.hass.data[DATA_MQTT].client.connected = True
             self.hass.config_entries._entries = ConfigEntryItems(self.hass)
             self.hass.loop_thread_id = 0
+            self.hass.loop.time.return_value = 0.0
 
             for recipient in self.config.get(CONF_RECIPIENTS, []):
                 if recipient.get(CONF_PERSON):
@@ -285,7 +286,7 @@ class TestingContext(Context):
 
         hass_api = HomeAssistantAPI(self.hass)
         people_registry = PeopleRegistry(self.config.get(CONF_RECIPIENTS) or [], hass_api)
-        scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {})
+        scenario_registry = ScenarioRegistry(self.config.get(CONF_SCENARIOS) or {}, {}, people_registry)
         archive = NotificationArchive(self.config.get(CONF_ARCHIVE) or {}, hass_api)
         media_storage = MediaStorage(
             self.config.get(CONF_MEDIA_PATH),

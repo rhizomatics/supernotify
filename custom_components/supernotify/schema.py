@@ -123,8 +123,9 @@ from .const import (
     CONF_PTZ_PRESET_DEFAULT,
     CONF_RECIPIENTS,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_REFRESH,
     CONF_REFRESH_INTERVAL,
-    CONF_SCENARIO_STATE,
+    CONF_SCENARIO_CONTROL,
     CONF_SCENARIOS,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
@@ -285,10 +286,11 @@ LINK_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
-SCENARIO_STATE_SCHEMA = vol.Schema({
+# global scenario control options and defaults, advanced config, YAML only
+SCENARIO_CONTROL_SCHEMA = vol.Schema({
     # Evaluating scenario conditions to publish binary_sensor state costs whatever the
     # conditions cost, which for template-heavy scenarios is not free on small hardware.
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_REFRESH, default=False): cv.boolean,
     # Sweep every scenario this often, for conditions no entity change can announce (time
     # windows, sun, templates whose dependencies could not be extracted). 0 disables the
     # sweep and leaves state entirely event driven.
@@ -501,6 +503,7 @@ SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
         vol.Optional(CONF_TRANSPORTS, default=dict): {cv.string: TRANSPORT_SCHEMA},
         vol.Optional(CONF_CAMERAS, default=list): vol.All(cv.ensure_list, [CAMERA_SCHEMA]),
         vol.Optional(CONF_SNOOZE, default=dict): SNOOZE_SCHEMA,
+        vol.Optional(CONF_SCENARIO_CONTROL, default=dict): SCENARIO_CONTROL_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -522,7 +525,6 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
         vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
         vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
-        vol.Optional(CONF_SCENARIO_STATE, default=dict): SCENARIO_STATE_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )

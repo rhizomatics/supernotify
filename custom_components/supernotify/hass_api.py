@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
-from homeassistant.const import CONF_ACTION, CONF_DEVICE_ID
+from homeassistant.const import (
+    CONF_ACTION,
+    CONF_DEVICE_ID,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
 from homeassistant.util import slugify
@@ -121,6 +126,7 @@ class HomeAssistantAPI:
         self._device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
+        self.exposed_entities: list[str] = []
         self.mobile_apps_by_tracker: dict[str, DeviceInfo] = {}
         self.mobile_apps_by_app_id: dict[str, DeviceInfo] = {}
         self.mobile_apps_by_device_id: dict[str, DeviceInfo] = {}
@@ -198,6 +204,39 @@ class HomeAssistantAPI:
     def domain_entity(self, domain: str, entity_id: str) -> Entity | None:
         # TODO: must be a better hass method than this
         return self._hass.data.get(domain, {}).get_entity(entity_id)
+
+    def expose_entity(
+        self,
+        entity_name: str,
+        state: str,
+        attributes: dict[str, Any],
+        platform: str = Platform.BINARY_SENSOR,
+        original_name: str | None = None,
+        original_icon: str | None = None,
+    ) -> None:
+        """Expose a technical entity in Home Assistant representing internal state and attributes"""
+        entity_id: str
+        entity_registry = self.entity_registry()
+        if entity_registry is not None:
+            try:
+                entry: er.RegistryEntry = entity_registry.async_get_or_create(
+                    platform,
+                    DOMAIN,
+                    entity_name,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    original_name=original_name,
+                    original_icon=original_icon,
+                )
+                entity_id = entry.entity_id
+            except Exception as e:
+                _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_name, e)
+                # continue anyway even if not registered as state is independent of entity
+                entity_id = f"{platform}.{DOMAIN}_{entity_name}"
+        try:
+            self.set_state(entity_id, state, attributes)
+            self.exposed_entities.append(entity_id)
+        except Exception as e:
+            _LOGGER.error("SUPERNOTIFY Unable to set state for entity %s: %s", entity_id, e)
 
     def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
