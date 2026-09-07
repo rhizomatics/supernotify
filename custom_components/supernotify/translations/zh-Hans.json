@@ -1,5 +1,15 @@
 {
     "title": "Supernotify",
+    "entity": {
+        "sensor": {
+            "notifications": {
+                "name": "已发送通知"
+            },
+            "failures": {
+                "name": "通知失败"
+            }
+        }
+    },
     "services": {
         "notify": {
             "name": "通知",

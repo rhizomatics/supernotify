@@ -37,6 +37,12 @@ NOTIFY_SERVICE_NAME = "supernotify"
 # yet configurable via ConfigFlow). Populated by async_setup, read by _entry_full_config.
 KEY_YAML_CONFIG = "yaml_config"
 
+# NOTIFY carries the main notify.supernotify action and per-recipient notify entities.
+# BINARY_SENSOR/SENSOR carry the scenario/recipient state and notification/failure counters as
+# real entities (binary_sensor.py/sensor.py) - see issue #175 "Part B". Both platforms'
+# async_setup_entry read entry.runtime_data, so they must be forwarded to only after it's set.
+PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.BINARY_SENSOR, Platform.SENSOR]
+
 # Deferred import: schema.py imports ARCHIVE_DIR/MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.
 from .schema import SUPERNOTIFY_YAML_SCHEMA  # noqa: E402, RUF100, I001
@@ -131,7 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     async_register_supplemental_services(hass, service, full_config)
     entry.runtime_data = service
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -143,7 +149,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: SupernotifyConfigEn
 async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
     from .notify import async_unregister_supplemental_services
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     service: SupernotifyAction | None = getattr(entry, "runtime_data", None)
     if service is not None:
         await service.async_unregister_services()

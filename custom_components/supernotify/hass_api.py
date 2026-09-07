@@ -115,6 +115,17 @@ class DeviceInfo:
         return other is not None and callable(as_dict) and as_dict() == self.as_dict()
 
 
+def ha_device_info(entry_id: str) -> dr.DeviceInfo:
+    """Home Assistant device-registry DeviceInfo for the single 'SuperNotify' device.
+
+    Not to be confused with this module's own `DeviceInfo` dataclass above, which describes a
+    discovered mobile_app device for targeting - an unrelated, pre-existing concept. This one
+    groups the platform entities in binary_sensor.py/sensor.py (scenario/recipient state,
+    notification/failure counters) under one device in the HA device registry.
+    """
+    return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="SuperNotify", manufacturer="SuperNotify")
+
+
 class HomeAssistantAPI:
     def __init__(self, hass: HomeAssistant) -> None:
         self._hass: HomeAssistant = hass

@@ -80,7 +80,8 @@ def test_stateful_uses_neutral_condition_variables() -> None:
 
 
 def _registry_with_scenarios(names_to_entities: dict[str, set[str]], expose: dict[str, bool] | None = None) -> MagicMock:
-    """A mock ScenarioRegistry wired with scenarios and the entity index."""
+    """A mock ScenarioRegistry wired with scenarios, the entity index, and a registered
+    binary_sensor entity mock per scenario (as binary_sensor.py's async_setup_entry would)."""
     expose = expose or {}
     me = MagicMock()
     me._scenario_cond_entities = dict(names_to_entities)
@@ -95,6 +96,7 @@ def _registry_with_scenarios(names_to_entities: dict[str, set[str]], expose: dic
         scenario.attributes.return_value = {}
         scenarios[name] = scenario
     me.scenarios = scenarios
+    me._entities = {name: MagicMock() for name in names_to_entities}
     me._people_registry.determine_occupancy.return_value = {}
     me._scenario_by_entity = ScenarioRegistry._index_scenarios_by_entity(me)
     return me
@@ -118,7 +120,8 @@ def test_entity_index_skips_scenarios_opted_out() -> None:
 
 
 def _refreshed(me: MagicMock) -> set[str]:
-    return {call.args[0].rsplit("_", 1)[-1] for call in me._hass_api.set_state.call_args_list}
+    """Names of scenarios whose binary_sensor entity was told to refresh."""
+    return {name for name, entity in me._entities.items() if entity.async_write_ha_state.called}
 
 
 def test_state_change_refreshes_only_dependent_scenarios() -> None:
@@ -142,7 +145,7 @@ def test_state_change_for_unrelated_entity_does_nothing() -> None:
     event = MagicMock()
     event.data = {"entity_id": "light.kitchen"}
     ScenarioRegistry.async_refresh_scenario_states(me, event)
-    me._hass_api.set_state.assert_not_called()
+    assert _refreshed(me) == set()
 
 
 def test_periodic_sweep_refreshes_everything() -> None:
@@ -158,7 +161,7 @@ def test_refresh_is_a_no_op_when_disabled() -> None:
     me = _registry_with_scenarios({"dnd": {"input_boolean.dnd"}})
     me.scenario_state_enabled = False
     ScenarioRegistry.async_refresh_scenario_states(me)
-    me._hass_api.set_state.assert_not_called()
+    assert _refreshed(me) == set()
 
 
 def test_scenario_opted_out_of_state_stays_unknown() -> None:

@@ -15,7 +15,6 @@ from homeassistant.helpers import issue_registry as ir
 from custom_components.supernotify.people import PeopleRegistry
 
 from . import DOMAIN
-from .common import sanitize
 from .const import (
     ATTR_MEDIA,
     CONF_EXPOSE_STATE,
@@ -32,6 +31,7 @@ if TYPE_CHECKING:
     from homeassistant.core import State
     from homeassistant.helpers.typing import ConfigType
 
+    from .binary_sensor import SupernotifyScenarioBinarySensor
     from .delivery import Delivery, DeliveryRegistry
     from .hass_api import HomeAssistantAPI
     from .schema import ConditionsFunc
@@ -60,6 +60,11 @@ class ScenarioRegistry:
         self.scenarios: dict[str, Scenario] = {}
         self.scenario_control = scenario_control or {}
         self._people_registry: PeopleRegistry = people_registry
+        # Populated by binary_sensor.py's async_setup_entry once the platform is loaded (after
+        # initialize() below) - see register_entity/unregister_entity. Empty (and harmless to
+        # look up against) before then, e.g. during initialize()'s own expose_entities() call
+        # and in tests that build ScenarioRegistry directly without a config entry.
+        self._entities: dict[str, SupernotifyScenarioBinarySensor] = {}
 
     async def initialize(
         self,
@@ -92,15 +97,20 @@ class ScenarioRegistry:
             if self.scenario_state_interval:
                 hass_api.subscribe_interval(self.scenario_state_interval, self.async_refresh_scenario_states)
 
-    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
-        for scenario in self.scenarios.values():
-            hass_api.expose_entity(
-                f"scenario_{scenario.name}",
-                state=self._scenario_state(scenario),
-                attributes=sanitize(scenario.attributes(include_condition=False)),
-                original_name=f"{scenario.name} Scenario",
-                original_icon="mdi:clipboard-text",
-            )
+    def register_entity(self, name: str, entity: SupernotifyScenarioBinarySensor) -> None:
+        """Called by SupernotifyScenarioBinarySensor.async_added_to_hass()."""
+        self._entities[name] = entity
+
+    def unregister_entity(self, name: str) -> None:
+        """Called by SupernotifyScenarioBinarySensor.async_will_remove_from_hass()."""
+        self._entities.pop(name, None)
+
+    def scenario_is_on(self, scenario: Scenario) -> bool | None:
+        """`is_on` for SupernotifyScenarioBinarySensor - None maps to STATE_UNKNOWN."""
+        state = self._scenario_state(scenario)
+        if state == STATE_UNKNOWN:
+            return None
+        return state == STATE_ON
 
     def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
         """React to a scenario binary_sensor being toggled on/off.
@@ -112,17 +122,24 @@ class ScenarioRegistry:
         if not entity_id.startswith(prefix):
             return None
 
-        scenario = self.scenarios.get(entity_id.removeprefix(prefix))
+        name = entity_id.removeprefix(prefix)
+        scenario = self.scenarios.get(name)
         if scenario is None:
             _LOGGER.warning("SUPERNOTIFY Event for unknown scenario %s", entity_id)
             return False
         if new_state.state == STATE_OFF and scenario.enabled:
             scenario.enabled = False
             _LOGGER.info("SUPERNOTIFY Disabling scenario %s", scenario.name)
+            entity = self._entities.get(name)
+            if entity is not None:
+                entity.async_write_ha_state()
             return True
         if new_state.state == STATE_ON and not scenario.enabled:
             scenario.enabled = True
             _LOGGER.info("SUPERNOTIFY Enabling scenario %s", scenario.name)
+            entity = self._entities.get(name)
+            if entity is not None:
+                entity.async_write_ha_state()
             return True
         _LOGGER.info("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
         return False
@@ -191,12 +208,15 @@ class ScenarioRegistry:
 
     @callback
     def async_refresh_scenario_states(self, *args: Any) -> None:
-        """Re-evaluate and re-publish the state of every scenario binary_sensor.
+        """Ask each affected scenario's binary_sensor entity to re-read and re-publish its state.
 
         Triggered by the 1-minute timer (time/date scenarios and any dependency
         not captured by entity extraction) and by state changes of the scenarios'
-        condition entities (immediate reactivity). Pure in-memory evaluation over
-        cached states; no I/O.
+        condition entities (immediate reactivity). The entity's own `is_on`
+        property (via scenario_is_on() above) does the actual (pure, in-memory)
+        evaluation on read; this only decides which entities need to refresh, and
+        is a no-op for a scenario with no entity registered yet (e.g. before the
+        binary_sensor platform has finished loading).
         """
         if not self.scenario_state_enabled:
             return
@@ -209,16 +229,10 @@ class ScenarioRegistry:
                 if not names:
                     return
 
-        occupiers = self._people_registry.determine_occupancy()
-        cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
-        for name, scenario in self.scenarios.items():
-            if names is not None and name not in names:
-                continue
-            self._hass_api.set_state(
-                f"binary_sensor.{DOMAIN}_scenario_{name}",
-                self._scenario_state(scenario, cvars),
-                sanitize(scenario.attributes(include_condition=False)),
-            )
+        for name in self.scenarios if names is None else names:
+            entity = self._entities.get(name)
+            if entity is not None:
+                entity.async_write_ha_state()
 
 
 class Scenario:

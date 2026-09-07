@@ -3,9 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-)
 from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
@@ -22,13 +19,12 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
-    EntityCategory,
 )
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
-from .common import ensure_list, sanitize
+from .common import ensure_list
 from .const import (
     ATTR_ALIAS,
     ATTR_EMAIL,
@@ -58,6 +54,7 @@ from .model import DeliveryCustomization, NotifyEntityPlatform, Target
 if TYPE_CHECKING:
     from homeassistant.core import State
 
+    from .binary_sensor import SupernotifyRecipientBinarySensor
     from .hass_api import DeviceInfo, HomeAssistantAPI
 
 
@@ -105,13 +102,13 @@ class RecipientNotifyEntity(NotifyEntity):
 
 
 class Recipient:
-    """Recipient to distinguish from the native HA Person"""
+    """Recipient to distinguish from the native HA Person.
 
-    # for future native entity use
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Recipient"
-    _attr_icon = "mdi:account-arrow-left"
+    The "future native entity use" this class was once staged for (BinarySensorDeviceClass,
+    EntityCategory, etc.) has arrived as SupernotifyRecipientBinarySensor in binary_sensor.py -
+    a wrapper Entity holding a reference to a Recipient, the same composition already used for
+    RecipientNotifyEntity above, rather than this plain domain object inheriting from Entity.
+    """
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
@@ -261,6 +258,10 @@ class PeopleRegistry:
         self.device_registry = device_registry
         self.mobile_discovery = mobile_discovery
         self.discover = discover
+        # Populated by binary_sensor.py's async_setup_entry once the platform is loaded - see
+        # register_entity/unregister_entity. Empty (and harmless to look up against) before
+        # then, and in tests that build PeopleRegistry directly without a config entry.
+        self._entities: dict[str, SupernotifyRecipientBinarySensor] = {}
 
     def initialize(self) -> None:
         recipients: dict[str, dict[str, Any]] = {}
@@ -287,15 +288,17 @@ class PeopleRegistry:
 
             self.people[recipient.entity_id] = recipient
 
-    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
-        for recipient in self.people.values():
-            hass_api.expose_entity(
-                f"recipient_{recipient.name}",
-                state=STATE_ON if recipient.enabled else STATE_OFF,
-                attributes=sanitize(recipient.attributes()),
-                original_name=f"{recipient.name}",
-                original_icon="mdi:account-arrow-left",
-            )
+    def register_entity(self, name: str, entity: SupernotifyRecipientBinarySensor) -> None:
+        """Called by SupernotifyRecipientBinarySensor.async_added_to_hass()."""
+        self._entities[name] = entity
+
+    def unregister_entity(self, name: str) -> None:
+        """Called by SupernotifyRecipientBinarySensor.async_will_remove_from_hass()."""
+        self._entities.pop(name, None)
+
+    def recipient_entities(self) -> list[SupernotifyRecipientBinarySensor]:
+        """Every registered recipient binary_sensor - used by supernotify.refresh_entities."""
+        return list(self._entities.values())
 
     def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
         """React to a recipient binary_sensor being toggled on/off.
@@ -307,17 +310,24 @@ class PeopleRegistry:
         if not entity_id.startswith(prefix):
             return None
 
-        recipient = self.people.get("person." + entity_id.removeprefix(prefix))
+        name = entity_id.removeprefix(prefix)
+        recipient = self.people.get("person." + name)
         if recipient is None:
             _LOGGER.warning("SUPERNOTIFY Event for unknown recipient %s", entity_id)
             return False
         if new_state.state == STATE_OFF and recipient.enabled:
             recipient.enabled = False
             _LOGGER.info("SUPERNOTIFY Disabling recipient %s", recipient.entity_id)
+            entity = self._entities.get(name)
+            if entity is not None:
+                entity.async_write_ha_state()
             return True
         if new_state.state == STATE_ON and not recipient.enabled:
             recipient.enabled = True
             _LOGGER.info("SUPERNOTIFY Enabling recipient %s", recipient.entity_id)
+            entity = self._entities.get(name)
+            if entity is not None:
+                entity.async_write_ha_state()
             return True
         _LOGGER.info("SUPERNOTIFY No change to recipient %s, already %s", recipient.entity_id, new_state)
         return False
