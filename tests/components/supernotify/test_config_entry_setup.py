@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
@@ -316,3 +317,85 @@ async def test_unload_entry_removes_notify_action(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert not hass.services.has_service(DOMAIN, "notify")
+
+
+async def test_disable_then_enable_entry_rewires_notify_service(hass: HomeAssistant) -> None:
+    """Disabling from the UI unloads the entry same as any other unload (async_set_disabled_by
+    -> async_reload -> async_unload_entry), then re-enabling sets it up again. Both
+    notify.supernotify and the supernotify.* supplemental services must track that cycle -
+    not be left stale from before the disable, nor missing after the re-enable."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service("notify", "supernotify")
+    assert hass.services.has_service(DOMAIN, "enquire_configuration")
+
+    await hass.config_entries.async_set_disabled_by(entry.entry_id, ConfigEntryDisabler.USER)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.services.has_service("notify", "supernotify")
+    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+
+    await hass.config_entries.async_set_disabled_by(entry.entry_id, None)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.services.has_service("notify", "supernotify")
+    assert hass.services.has_service(DOMAIN, "enquire_configuration")
+
+    # confirm notify.supernotify now reaches the freshly re-enabled engine, not a stale one
+    await hass.services.async_call("notify", "supernotify", {"message": "post re-enable check"}, blocking=True)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.last_notification is not None
+    assert entry.runtime_data.last_notification.message == "post re-enable check"
+
+
+async def test_remove_then_readd_entry_recreates_notify_service(hass: HomeAssistant) -> None:
+    """Removing the integration from the UI unloads then deletes the entry. Re-adding it (a
+    fresh entry, since single_config_entry only blocks a second *simultaneous* entry) must not
+    be blocked by anything left behind by the removed one - notably notify.supernotify, which
+    a prior bug left registered forever once created, permanently blocking re-registration."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service("notify", "supernotify")
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.services.has_service("notify", "supernotify")
+    assert not hass.services.has_service(DOMAIN, "enquire_configuration")
+
+    new_entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    new_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(new_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.services.has_service("notify", "supernotify")
+
+    await hass.services.async_call("notify", "supernotify", {"message": "post re-add check"}, blocking=True)
+    await hass.async_block_till_done()
+    assert new_entry.runtime_data.last_notification is not None
+    assert new_entry.runtime_data.last_notification.message == "post re-add check"
+
+
+async def test_ha_shutdown_unsubscribes_engine_listeners(hass: HomeAssistant) -> None:
+    """HA shutting down doesn't call async_unload_entry (no config entry is unloaded, the
+    process is just exiting) - the engine relies on its own EVENT_HOMEASSISTANT_STOP
+    subscription, wired up in initialize(), to tear down its event/state/time listeners
+    before the process exits."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    engine = entry.runtime_data
+    assert engine.context.hass_api.unsubscribes
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    assert engine.context.hass_api.unsubscribes == []
+
+    # idempotent - the test fixture's own teardown calls hass.async_stop(force=True), which
+    # fires this same event a second time and must not raise on the already-empty list
+    engine.shutdown()

@@ -130,6 +130,14 @@ async def test_reload(hass: HomeAssistant) -> None:
 
     assert len(uut.context.delivery_registry.deliveries) == 15
 
+    # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
+    # over from before the reload (both would report True) - actually call it and confirm the
+    # delivery lands on this reloaded engine, not some earlier instance
+    await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"message": "post-reload delivery check"}, blocking=True)
+    await hass.async_block_till_done()
+    assert uut.last_notification is not None
+    assert uut.last_notification.message == "post-reload delivery check"
+
 
 async def test_call_action(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
