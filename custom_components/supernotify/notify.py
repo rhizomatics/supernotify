@@ -23,6 +23,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import (
+    Context as HAContext,
+)
+from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -103,7 +106,6 @@ from .transports.tts import TTSTransport
 if TYPE_CHECKING:
     import datetime as dt
 
-    from homeassistant.core import Context as HAContext
     from homeassistant.helpers import entity_registry as er
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
     from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -638,6 +640,13 @@ class SupernotifyAction(BaseNotificationService):
         data = kwargs.get(ATTR_DATA, {})
         notification = None
         _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
+
+        if context is None:
+            # the legacy notify.supernotify platform service never forwards the calling
+            # Context (HA core's BaseNotificationService doesn't pass it through), so
+            # without this every downstream service call for this notification would get
+            # its own unrelated Context, leaving them unlinked in the logbook/recorder
+            context = HAContext()
 
         try:
             notification = Notification(self.context, message, title, target, data, ha_context=context)

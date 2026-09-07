@@ -1,5 +1,5 @@
 # ty: ignore[unresolved-import]
-from unittest.mock import Mock, call
+from unittest.mock import ANY, Mock, call
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 
@@ -168,7 +168,7 @@ async def test_update_fixed_message(mock_hass) -> None:
         service_data={"message": "Alert Level 3"},
         blocking=False,
         target=None,
-        context=None,
+        context=ANY,
         return_response=False,
     )
 
@@ -193,7 +193,7 @@ async def test_update_equiv_domain(mock_hass) -> None:
         service_data={"value": "Alert Level 2"},
         blocking=False,
         target={"entity_id": ["text.esp_display"]},
-        context=None,
+        context=ANY,
         return_response=False,
     )
 

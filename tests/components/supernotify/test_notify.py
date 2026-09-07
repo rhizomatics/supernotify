@@ -1,5 +1,5 @@
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import ANY, AsyncMock, Mock
 
 from homeassistant.const import (
     CONF_ACTION,
@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TARGET,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
@@ -100,15 +100,19 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         data={"delivery": ["persistent"]},
     )
     # explicit delivery selection overrides everything else
+    # no explicit context was supplied, so async_send_message must have synthesized one
+    # rather than leaving it None, else this and any subsequent service call in the same
+    # notification would be unlinked in the logbook/recorder
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type: ignore
         "persistent_notification",
         "create",
         service_data={"title": "test_title", "message": "testing 123"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
+    assert isinstance(uut.context.hass_api._hass.services.async_call.call_args.kwargs["context"], Context)  # type: ignore
     uut.context.hass_api._hass.services.async_call.reset_mock()  # type: ignore
     await uut.async_send_message(
         title="test_title",
@@ -124,7 +128,7 @@ async def test_send_message_with_explicit_scenario_delivery(mock_hass: Mock) -> 
         "create",
         service_data={"title": "test_title", "message": "testing 123"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
@@ -169,15 +173,17 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     await uut.initialize()
     await uut.async_send_message(message="testing 123", data={"delivery": "text"})
     assert mock_hass.services.async_call.call_count == 1
+    # no explicit context supplied, so one was synthesized rather than left None
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "sms",
         service_data={"message": "testing 123", "target": ["+2301015050503", "+4489393013834"]},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
+    assert isinstance(mock_hass.services.async_call.call_args.kwargs["context"], Context)
     # contra-test
     mock_hass.services.async_call.reset_mock()
     await uut.async_send_message(message="testing 123")
@@ -379,7 +385,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         "dummy",
         service_data={"message": "just a test"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )
@@ -402,7 +408,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
         "dummy",
         service_data={"message": "just a test"},
         blocking=False,
-        context=None,
+        context=ANY,
         target=None,
         return_response=False,
     )

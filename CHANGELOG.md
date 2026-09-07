@@ -1,3 +1,9 @@
+## 2.3.2
+
+### Tracing Activities
+
+- If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
+
 ## 2.3.1
 
 ### Occupancy
