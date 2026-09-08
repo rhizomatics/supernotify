@@ -66,7 +66,7 @@ async def test_unload_entry_removes_notify_service(hass: HomeAssistant) -> None:
     assert not hass.services.has_service("notify", "supernotify")
 
 
-async def test_setup_entry_registers_supplemental_services(hass: HomeAssistant) -> None:
+async def test_setup_entry_registers_engine_actions(hass: HomeAssistant) -> None:
     """Config-entry setup exposes the same supernotify.* debug/admin services regardless of
     whether any YAML config exists."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
@@ -105,7 +105,7 @@ async def test_purge_media_raises_when_media_not_configured(hass: HomeAssistant)
         await hass.services.async_call(DOMAIN, "purge_media", blocking=True, return_response=True)
 
 
-async def test_unload_entry_removes_supplemental_services(hass: HomeAssistant) -> None:
+async def test_unload_entry_removes_engine_actions(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -200,7 +200,7 @@ async def test_notify_action_propagates_calling_context(hass: HomeAssistant) -> 
 async def test_notify_action_promotes_media_fields_into_media_block(hass: HomeAssistant) -> None:
     """camera_entity_id/snapshot_url/clip_url are top-level fields only on supernotify.notify
     (for their own selectors in the action UI), but Notification only understands them nested
-    under media: - supplemental_action_notify must fold them in before dispatch."""
+    under media: - action_notify must fold them in before dispatch."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -257,7 +257,7 @@ async def test_notify_action_top_level_media_field_overrides_nested_media_block(
 
 async def test_notify_action_merges_custom_target_into_dict_target(hass: HomeAssistant) -> None:
     """custom_target is a free-text escape hatch for identifiers the target: selector can't
-    produce - e-mail addresses, phone numbers, Slack ids etc. supplemental_action_notify must
+    produce - e-mail addresses, phone numbers, Slack ids etc. action_notify must
     merge it into target before Notification ever sees it, classifying recognisable identifiers
     (e-mail, phone) same as if they'd been typed into a flat target list, and leaving anything
     unrecognised (e.g. a Slack id) as an opaque custom target."""

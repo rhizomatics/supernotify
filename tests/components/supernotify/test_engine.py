@@ -40,7 +40,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.model import TargetRequired
-from custom_components.supernotify.notify_compatibility import SuperNotificationService
+from custom_components.supernotify.notify import SuperNotificationService
 from custom_components.supernotify.schema import DELIVERY_SCHEMA
 from tests.components.supernotify.doubles_lib import DummyTransport
 

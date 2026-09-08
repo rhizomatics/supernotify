@@ -609,10 +609,10 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Optional(CONF_TARGET): TARGET_SCHEMA,
         # the target selector behind CONF_TARGET can only produce entity/device/area/floor/label
         # ids, so custom_target is a free-text escape hatch for targets it can't - e-mail
-        # addresses, phone numbers, Slack ids etc. notify.py's supplemental_action_notify merges
+        # addresses, phone numbers, Slack ids etc. notify.py's action_notify merges
         # it back into target before Notification ever sees it
         vol.Optional(ATTR_CUSTOM_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        # promoted out of media: for their own selectors - notify.py's supplemental_action_notify
+        # promoted out of media: for their own selectors - notify.py's action_notify
         # merges them back into media before Notification ever sees them
         vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
         vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),

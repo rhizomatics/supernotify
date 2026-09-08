@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
     from homeassistant.helpers.typing import ConfigType
 
-    from .notify_compatibility import SuperNotificationService, SupernotifyEngine
+    from .notify import SuperNotificationService, SupernotifyEngine
 
     # entry.runtime_data is typed against the engine, not the legacy SuperNotificationService shim
     # (still used below to register/unregister notify.supernotify itself) - see SuperNotificationService's
@@ -103,10 +103,10 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
+    from .actions import async_register_engine_actions
     from .engine import build_supernotify_engine
     from .notification import set_version
-    from .notify import async_register_supplemental_services
-    from .notify_compatibility import SuperNotificationService
+    from .notify import SuperNotificationService
 
     integration: Integration = await async_get_integration(hass, DOMAIN)
     set_version(str(integration.version) if integration.version else "unknown")
@@ -119,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
         _LOGGER.exception("SUPERNOTIFY Failed to initialize, will retry")
         raise ConfigEntryNotReady(f"SUPERNOTIFY Failed to initialize: {err}") from err
 
-    async_register_supplemental_services(hass, engine, full_config)
+    async_register_engine_actions(hass, engine, full_config)
     entry.runtime_data = engine
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -159,11 +159,11 @@ async def _async_update_listener(hass: HomeAssistant, entry: SupernotifyConfigEn
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
-    from .notify import async_unregister_supplemental_services
+    from .actions import async_unregister_engine_actions
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
     engine: SupernotifyEngine | None = getattr(entry, "runtime_data", None)
     if engine is not None:
         engine.shutdown()
-        async_unregister_supplemental_services(hass)
+        async_unregister_engine_actions(hass)
     return unload_ok

@@ -17,9 +17,8 @@
 - Two messages with same title and message but different camera entities, or media URLs for attachments, will not be considered as dupes
 
 ### Technical
-- `notify.py` slimmed down, moving functionality out to the main registries
 - The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
-- `notify.py` slimmed down by moving main engine to `engine.py`, delivery/transport/people/scenario functionality out to registries, and the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
+- `notify.py` slimmed down by moving main engine to `engine.py`, delivery/transport/people/scenario functionality out to registries, actions out to `actions.py` leaving only the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
 
 
 ## 2.3.1

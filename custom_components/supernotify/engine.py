@@ -87,8 +87,6 @@ if TYPE_CHECKING:
 
     from .transport import Transport
 
-PARALLEL_UPDATES = 0
-
 _LOGGER = logging.getLogger(__name__)
 
 TRANSPORTS: list[type[Transport]] = [

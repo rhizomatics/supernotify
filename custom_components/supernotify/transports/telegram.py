@@ -183,7 +183,7 @@ class TelegramTransport(Transport):
         raw_data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
 
         # Pop Telegram-specific data keys
-        parse_mode = raw_data.pop("telegram_parse_mode", None)
+        parse_mode: str | None = raw_data.pop("telegram_parse_mode", None)
         disable_notification_override = raw_data.pop("telegram_disable_notification", None)
         # `telegram_protect_content` is accepted but currently NOT forwarded
         # because the HA telegram_bot service schema rejects it. Pop to keep
@@ -329,8 +329,7 @@ class TelegramTransport(Transport):
             action_data["file"] = str(image_path)
             if message_text:
                 action_data["caption"] = message_text[:_MAX_CAPTION_LENGTH]
-                if parse_mode:
-                    action_data["parse_mode"] = parse_mode
+                action_data["parse_mode"] = parse_mode
         elif image_path:
             # Send image as photo with caption (`file` is the schema field
             # name; the telegram_bot service infers content-type).
@@ -338,13 +337,11 @@ class TelegramTransport(Transport):
             action_data["file"] = str(image_path)
             if message_text:
                 action_data["caption"] = message_text[:_MAX_CAPTION_LENGTH]
-                if parse_mode:
-                    action_data["parse_mode"] = parse_mode
+                action_data["parse_mode"] = parse_mode
         else:
             # Send text message
             action_data["message"] = message_text
-            if parse_mode:
-                action_data["parse_mode"] = parse_mode
+            action_data["parse_mode"] = parse_mode
 
         # Add optional parameters
         if disable_notification:
