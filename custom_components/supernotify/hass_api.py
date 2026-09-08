@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -204,6 +205,22 @@ class HomeAssistantAPI:
     def domain_entity(self, domain: str, entity_id: str) -> Entity | None:
         # TODO: must be a better hass method than this
         return self._hass.data.get(domain, {}).get_entity(entity_id)
+
+    async def load_storage(self, key: str, version: int = 1) -> Any | None:  # ruff: ignore[any-type]
+        """Load integration state previously persisted to Home Assistant's .storage/ area,
+        via HA's own Store helper, or None if nothing has been persisted yet for this key."""
+        try:
+            return await Store[Any](self._hass, version, key).async_load()
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to load storage %s: %s", key, e)
+            return None
+
+    def save_storage(self, key: str, data: Any, version: int = 1) -> None:  # ruff: ignore[any-type]
+        """Persist integration state to Home Assistant's .storage/ area, via HA's own Store
+        helper. Fire-and-forget: the write happens in a tracked background task rather than
+        blocking the caller, since this is called from both sync and async contexts."""
+        store: Store[Any] = Store(self._hass, version, key)
+        self._hass.async_create_task(store.async_save(data), f"supernotify_save_{key}")
 
     def expose_entity(
         self,
