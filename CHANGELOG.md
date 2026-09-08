@@ -14,6 +14,7 @@
 
 ### Fixes
 - Notification with an unavailable attachment could fail, will now proceed with or without attachment
+- Two messages with same title and message but different camera entities, or media URLs for attachments, will not be considered as dupes
 
 ### Technical
 - `notify.py` slimmed down, moving functionality out to the main registries
