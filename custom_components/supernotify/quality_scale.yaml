@@ -224,9 +224,15 @@ rules:
     comment: This integration does not connect to any devices
 
   diagnostics:
-    status: todo
+    status: done
     comment: |
-      Need to create diagnostics.py module once config_entries introduced
+      diagnostics.py's async_get_config_entry_diagnostics surfaces the same operational state
+      already exposed piecemeal via the supernotify.enquire_* admin services (notify.py) -
+      recipients, scenario/delivery routing, snoozes, the last notification sent (in
+      diagnostics mode), and the sent/failure counters - through the standard Settings >
+      Devices & Services > Supernotify > Download diagnostics flow. Every Person.as_dict()
+      identifying field (email, phone_number, user_id, alias) is redacted via
+      homeassistant.components.diagnostics.async_redact_data, wherever it turns up nested.
 
   discovery:
     status: exempt
