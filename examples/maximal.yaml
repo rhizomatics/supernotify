@@ -316,6 +316,9 @@ supernotify:
             title_template: '<amazon:emotion name="excited" intensity="medium">{{notification_message}}</amazon:emotion>'
     ordinary_day:
       alias: nothing special
+      # opts this scenario out of publishing a binary_sensor.supernotify_scenario_ordinary_day
+      # state, saving the periodic re-evaluation cost for a scenario nothing else depends on
+      expose_state: false
       conditions:
           condition: and
           conditions:
@@ -355,6 +358,7 @@ supernotify:
       ptz_default_preset: 1
       ptz_method: frigate
       ptz_delay: 5
+      snap_wait: 30
     - camera: camera.front_garden
       alias: Front Garden
       device_tracker: device_tracker.cam_dah_garden
@@ -396,3 +400,7 @@ supernotify:
 
   snooze:
     snooze_time: 3600
+
+  scenario_control:
+    refresh: true
+    refresh_interval: 60

@@ -130,6 +130,7 @@ from .const import (
     CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_SIZE,
+    CONF_SNAP_WAIT,
     CONF_SNOOZE,
     CONF_SNOOZE_TIME,
     CONF_TARGET_REQUIRED,
@@ -157,6 +158,7 @@ from .const import (
     RESERVED_SCENARIO_NAMES,
     SCENARIO_STATE_REFRESH_DEFAULT,
     SELECTION_VALUES,
+    SNAP_WAIT_DEFAULT,
     TARGET_REQUIRE_ALWAYS,
     TARGET_REQUIRE_NEVER,
     TARGET_REQUIRE_OPTIONAL,
@@ -406,6 +408,7 @@ CAMERA_SCHEMA = vol.Schema({
     vol.Optional(CONF_PTZ_PRESET_DEFAULT, default=1): vol.Any(cv.positive_int, cv.string),
     vol.Optional(CONF_PTZ_DELAY, default=PTZ_DELAY_DEFAULT): int,
     vol.Optional(CONF_PTZ_METHOD, default=PTZ_METHOD_ONVIF): vol.In(PTZ_METHOD_VALUES),
+    vol.Optional(CONF_SNAP_WAIT, default=SNAP_WAIT_DEFAULT): int,
 })
 MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,

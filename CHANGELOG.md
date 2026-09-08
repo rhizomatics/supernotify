@@ -1,7 +1,14 @@
 ## 2.4.1
 
+### Camera
+- The previously hard-coded max wait time to snap an image of 20 seconds is now configurable with `snap_wait` in the camera configuration.
+  - This is different from the existing `camera_delay` and PTZ controls in that its not a pause. If the camera snap is instant, then the `snap_wait` time will never be used, its only an allowance for cameras that are slow to snapshot.
+
 ### Tracing Activities
 - Fixed missing contexts on downstream actions, a consequence of relying on code from the "legacy" Home Assistant Notification platform, which throws away context
+
+### Fixes
+- Notification with an unavailable attachment could fail, will now proceed with or without attachment
 
 ### Technical
 - The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
