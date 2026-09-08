@@ -90,13 +90,40 @@ class RecipientNotifyEntity(NotifyEntity):
         self._recipient = recipient
         self._platform = platform
         self.entity_id = f"notify.recipient_{recipient.name}"
+        # Populated by record_notification() below, and restored from the last run in
+        # async_added_to_hass() - deliberately NOT the entity's own native `state`. HA already
+        # timestamps `state` for us, but only for a direct notify.recipient_<name> service call;
+        # a message routed through supernotify.notify's main pipeline (the common case) never
+        # invokes this entity at all - see convert_notify_entities() in notification.py, which
+        # short-circuits that target straight to a person_id to avoid calling back into this
+        # same entity in a loop. Notification.record_result() calls record_notification()
+        # directly once delivery succeeds, regardless of which path the message came in on.
+        self._last_notified: str | None = None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose last_notified separately from the entity's own native `state` - see the
+        docstring on self._last_notified above for why the two can't be the same value."""
+        return {"last_notified": self._last_notified}
+
+    def record_notification(self, when: str) -> None:
+        """Record that this recipient was notified via supernotify.notify's main pipeline
+        (any target - person_id, email, mobile device...), not just via a direct call to
+        this notify.recipient_<name> entity. Called from Notification.record_result()."""
+        self._last_notified = when
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self._recipient.notify_entity_id = self.entity_id
+        self._recipient.notify_entity = self
+        last_state = await self.async_get_last_state()
+        if last_state is not None:
+            self._last_notified = last_state.attributes.get("last_notified")
 
     async def async_will_remove_from_hass(self) -> None:
         self._recipient.notify_entity_id = None
+        self._recipient.notify_entity = None
         await super().async_will_remove_from_hass()
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
@@ -117,6 +144,10 @@ class Recipient:
         config = config or {}
         self.entity_id: str = config[CONF_PERSON]
         self.notify_entity_id: str | None = None
+        # Set/cleared by RecipientNotifyEntity.async_added_to_hass()/async_will_remove_from_hass()
+        # - the live entity object itself, so record_notification() can be called directly from
+        # Notification.record_result() without a registry lookup by entity_id.
+        self.notify_entity: RecipientNotifyEntity | None = None
         self.name: str = self.entity_id.replace("person.", "")
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)

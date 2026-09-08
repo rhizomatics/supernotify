@@ -636,6 +636,7 @@ class Notification(ArchivableObject):
             if envelope.delivered:
                 self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
                 self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+                self._record_recipient_notifications(envelope)
             else:
                 if suppression_reason:
                     envelope.skip_reason = suppression_reason
@@ -666,6 +667,23 @@ class Notification(ArchivableObject):
             if suppression_reason == SuppressionReason.ERROR:
                 self.error_count += 1
                 self.failed += 1
+
+    def _record_recipient_notifications(self, envelope: Envelope) -> None:
+        """Update every involved recipient's notify.recipient_<name> entity (if it has one),
+        so its last_notified attribute reflects delivery regardless of which target form the
+        caller used - a plain person_id, an email/phone/mobile override, notify.recipient_<name>
+        itself, or anything else Recipient.initialize() folds into the same Target. Every
+        Recipient target always includes its own person_id (see Recipient.initialize()), so
+        that's the one reliable link back from an arbitrary envelope to the Recipient objects
+        it reached - see RecipientNotifyEntity.record_notification() for why this can't just be
+        left to HA's own NotifyEntity state tracking."""
+        if envelope.target is None:
+            return
+        when = dt_util.utcnow().isoformat()
+        for person_id in envelope.target.person_ids:
+            recipient = self.people_registry.people.get(person_id)
+            if recipient is not None and recipient.notify_entity is not None:
+                recipient.notify_entity.record_notification(when)
 
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""
