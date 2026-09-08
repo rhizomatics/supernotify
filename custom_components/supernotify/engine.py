@@ -121,7 +121,7 @@ class SupernotifyEngine:
 
     This is the shared engine behind every entrypoint - notify.supernotify (via the
     SuperNotificationService legacy shim), supernotify.notify, and the NotifyEntity platform
-    (SupernotifyEntity/RecipientNotifyEntity) - so it deliberately has no dependency on
+    (RecipientNotifyEntity) - so it deliberately has no dependency on
     BaseNotificationService or anything else specific to the legacy notify platform. If/when
     HA core drops BaseNotificationService, only SuperNotificationService and its wiring in
     __init__.py need to go; this class and everything else built on it are unaffected.

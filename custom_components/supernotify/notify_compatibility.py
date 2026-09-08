@@ -3,10 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.notify import (
-    NotifyEntity,
-    NotifyEntityFeature,
-)
 from homeassistant.components.notify.legacy import BaseNotificationService
 from homeassistant.const import (
     CONF_TARGET,
@@ -23,29 +19,6 @@ from .const import (
 from .engine import SupernotifyEngine
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class SupernotifyEntity(NotifyEntity):
-    """Implement supernotify as a NotifyEntity platform."""
-
-    _attr_has_entity_name = True
-    _attr_name = "supernotify"
-
-    def __init__(
-        self,
-        unique_id: str,
-        platform: SupernotifyEngine,
-    ) -> None:
-        """Initialize the SuperNotify entity."""
-        self._attr_unique_id = unique_id
-        self._attr_supported_features = NotifyEntityFeature.TITLE
-        self._platform = platform
-
-    async def async_send_message(
-        self, message: str, title: str | None = None, target: str | list[str] | None = None, data: dict[str, Any] | None = None
-    ) -> None:
-        """Send a message to a user."""
-        await self._platform.async_send_message(message, title=title, target=target, data=data, context=self._context)
 
 
 class SuperNotificationService(BaseNotificationService):
