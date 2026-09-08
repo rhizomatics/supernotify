@@ -227,7 +227,7 @@ class SupernotifyEngine:
         """Send a message via chosen transport."""
         data = kwargs.get(ATTR_DATA, {})
         notification = None
-        _LOGGER.debug("Message: %s, target: %s, data: %s", message, target, data)
+        _LOGGER.debug("SUPERNOTIFY Message: %s, target: %s, data: %s", message, target, data)
 
         if context is None:
             # only reachable when async_send_message is invoked directly rather than via a
@@ -235,10 +235,11 @@ class SupernotifyEngine:
             # supernotify.notify in async_setup_supplemental_actions) - without this fallback,
             # downstream service calls for this notification would each get their own
             # unrelated Context, leaving them unlinked in the logbook/recorder
+            _LOGGER.debug("SUPERNOTIFY No context supplied, generating new one")
             context = HAContext()
 
         try:
-            notification = Notification(self.context, message, title, target, data, ha_context=context)
+            notification = Notification(self.context, message, title, target, action_data=data, ha_context=context)
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1
