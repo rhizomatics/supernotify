@@ -122,6 +122,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     async_register_supplemental_services(hass, engine, full_config)
     entry.runtime_data = engine
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    # Add NotifyEntities via notify.py (script matches the platform name)
     await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
 
     ## Legacy Notification Service set-up
