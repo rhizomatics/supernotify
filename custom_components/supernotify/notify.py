@@ -1,4 +1,15 @@
 """Supernotify service, extending BaseNotificationService"""
+# CHANGELOG
+# 2026-09-08 (Claude): fix bug alta severità #1 dalla review multi-agente del branch
+# feat/native-entities-scenario-recipient-counters (vedi memoria di progetto
+# project_native_entities_review_202609.md), prima di proporlo come PR upstream:
+# - restore_sent()/restore_failures(): usa max(self.sent/failures, value) invece di
+#   assegnamento secco, cosi' un restore tardivo (async_added_to_hass del sensor arrivato
+#   dopo che una notifica ha gia' incrementato il contatore fallback) non sovrascrive
+#   silenziosamente un valore piu' alto e gia' corretto con quello vecchio persistito.
+# Backup: nessuno necessario, storia completa in git (branch locale, non ancora pushato upstream).
+# Verificato con CI replica completa (ruff/mypy/pytest py3.13+3.14, 1185 test verdi, 96% coverage)
+# e con nuovi test dedicati in tests/components/supernotify/test_native_entities_review_fixes.py.
 
 from __future__ import annotations
 
@@ -694,13 +705,21 @@ class SupernotifyAction(BaseNotificationService):
 
     def restore_sent(self, value: int) -> None:
         """Called once by SupernotifyCounterSensor.async_added_to_hass() with the value
-        restored from the last run, so the in-memory counter and the displayed one agree."""
-        self.sent = value
+        restored from the last run, so the in-memory counter and the displayed one agree.
+
+        max() guards against a notification landing on the pre-restore fallback counter (see
+        async_send_message's hass_api.set_state() branch) during the window between
+        async_register_services() and the sensor platform finishing its restore - without it,
+        a restore arriving after such an increment would silently overwrite the higher,
+        already-correct value with the older persisted one."""
+        self.sent = max(self.sent, value)
 
     def restore_failures(self, value: int) -> None:
         """Called once by SupernotifyCounterSensor.async_added_to_hass() with the value
-        restored from the last run, so the in-memory counter and the displayed one agree."""
-        self.failures = value
+        restored from the last run, so the in-memory counter and the displayed one agree.
+
+        See restore_sent() for why max() and not a plain assignment."""
+        self.failures = max(self.failures, value)
 
     def expose_entities(self) -> None:
         """Refresh every entity SuperNotify exposes for introspection/control.

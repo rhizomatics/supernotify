@@ -20,11 +20,22 @@ separate, larger conversion to switch entities (entity_id migration + repair) di
 same issue.
 """
 
+# CHANGELOG
+# 2026-09-08 (Claude): fix bug minore dalla review multi-agente del branch
+# feat/native-entities-scenario-recipient-counters (vedi memoria di progetto
+# project_native_entities_review_202609.md), prima di proporlo come PR upstream:
+# - SupernotifyRecipientBinarySensor: rimosso _attr_device_class = CONNECTIVITY, semanticamente
+#   sbagliato (indica online/offline del device, non "abilitato per la consegna") - un recipient
+#   disabilitato appariva come "Disconnected" in dashboard, fuorviante.
+# Backup: nessuno necessario, storia completa in git (branch locale, non ancora pushato upstream).
+# Verificato con CI replica completa (ruff/mypy/pytest py3.13+3.14, 1185 test verdi, 96% coverage)
+# e con nuovi test dedicati in tests/components/supernotify/test_native_entities_review_fixes.py.
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass, BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import EntityCategory
 
 from . import DOMAIN
@@ -112,7 +123,10 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    # No device_class: CONNECTIVITY (a previous version of this class) is semantically wrong
+    # here - it means online/offline device reachability, not "enabled for delivery", and made
+    # a disabled recipient show as "Disconnected" in the dashboard. Icon (see icons.json) and
+    # translation_key below already carry the meaning without borrowing a misleading one.
     # Icon only (see icons.json) - _attr_name is set per-instance below from user config, so
     # translation_key never drives the displayed name, only the icon lookup.
     _attr_translation_key = "recipient"

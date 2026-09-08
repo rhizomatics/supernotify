@@ -1,3 +1,22 @@
+# CHANGELOG
+# 2026-09-08 (Claude): fix bug alta severità #2 e #3 + bug medio dalla review multi-agente del
+# branch feat/native-entities-scenario-recipient-counters (vedi memoria di progetto
+# project_native_entities_review_202609.md), prima di proporlo come PR upstream:
+# - ScenarioRegistry._pending_first_publish (nuovo): il primo stato pubblicato da un'entita'
+#   scenario appena registrata riflette la valutazione delle condizioni, non `enabled` - non va
+#   piu' interpretato da handle_entity_state_change come un disable manuale (bug #2: scenari con
+#   condizioni False al boot si autodisabilitavano permanentemente).
+# - handle_entity_state_change: rimossa la entity.async_write_ha_state() dopo un cambio di
+#   `enabled` (allineato al pattern gia' usato da people.py/delivery.py, che non la fanno) -
+#   quella write rileggeva subito le condizioni reali e poteva riportare `enabled` a False nello
+#   stesso tick (bug #3: la riabilitazione manuale da Developer Tools si autoannullava).
+# - ScenarioRegistry._batch_cvars (nuovo) + scenario_is_on(): l'occupancy/ConditionVariables per
+#   un batch refresh e' calcolata una volta sola per l'intero giro invece che per ogni scenario
+#   (bug medio: determine_occupancy() richiamato N volte invece di 1 per refresh).
+# Backup: nessuno necessario, storia completa in git (branch locale, non ancora pushato upstream).
+# Verificato con CI replica completa (ruff/mypy/pytest py3.13+3.14, 1185 test verdi, 96% coverage)
+# e con nuovi test dedicati in tests/components/supernotify/test_native_entities_review_fixes.py.
+
 from __future__ import annotations
 
 import logging
@@ -65,6 +84,17 @@ class ScenarioRegistry:
         # look up against) before then, e.g. during initialize()'s own expose_entities() call
         # and in tests that build ScenarioRegistry directly without a config entry.
         self._entities: dict[str, SupernotifyScenarioBinarySensor] = {}
+        # Scenario names whose binary_sensor has been registered but hasn't yet published its
+        # own first state. Populated by register_entity(), consumed by
+        # handle_entity_state_change() - see that method for why the first publish must be
+        # told apart from a real manual toggle.
+        self._pending_first_publish: set[str] = set()
+        # Shared occupancy/ConditionVariables snapshot for the scenario currently being batch
+        # refreshed - set for the duration of async_refresh_scenario_states()'s loop, read by
+        # scenario_is_on() so determine_occupancy() runs once per refresh instead of once per
+        # scenario. None outside of a batch refresh (each scenario_is_on() call then computes
+        # its own, e.g. a single entity being read on demand).
+        self._batch_cvars: ConditionVariables | None = None
 
     async def initialize(
         self,
@@ -100,14 +130,19 @@ class ScenarioRegistry:
     def register_entity(self, name: str, entity: SupernotifyScenarioBinarySensor) -> None:
         """Called by SupernotifyScenarioBinarySensor.async_added_to_hass()."""
         self._entities[name] = entity
+        # Registering happens just before HA publishes this entity's first state (see
+        # handle_entity_state_change) - mark it so that first publish isn't mistaken for a
+        # manual toggle.
+        self._pending_first_publish.add(name)
 
     def unregister_entity(self, name: str) -> None:
         """Called by SupernotifyScenarioBinarySensor.async_will_remove_from_hass()."""
         self._entities.pop(name, None)
+        self._pending_first_publish.discard(name)
 
     def scenario_is_on(self, scenario: Scenario) -> bool | None:
         """`is_on` for SupernotifyScenarioBinarySensor - None maps to STATE_UNKNOWN."""
-        state = self._scenario_state(scenario)
+        state = self._scenario_state(scenario, self._batch_cvars)
         if state == STATE_UNKNOWN:
             return None
         return state == STATE_ON
@@ -127,19 +162,34 @@ class ScenarioRegistry:
         if scenario is None:
             _LOGGER.warning("SUPERNOTIFY Event for unknown scenario %s", entity_id)
             return False
+        if name in self._pending_first_publish:
+            # A scenario's binary_sensor state reflects its *condition evaluation*, not
+            # `enabled` (unlike delivery/recipient, where the published state IS the enabled
+            # flag - see people.py/delivery.py's own handle_entity_state_change). So the very
+            # first state this entity ever publishes, right after being added to hass, must
+            # not be mistaken for someone having manually toggled it off - e.g. a "sera"
+            # scenario evaluating False at boot, in daylight, is normal and not a disable.
+            # Only that first publish is suppressed; every later state change is a real event.
+            self._pending_first_publish.discard(name)
+            _LOGGER.debug("SUPERNOTIFY Ignoring initial state publish for scenario %s", scenario.name)
+            return False
         if new_state.state == STATE_OFF and scenario.enabled:
             scenario.enabled = False
             _LOGGER.info("SUPERNOTIFY Disabling scenario %s", scenario.name)
-            entity = self._entities.get(name)
-            if entity is not None:
-                entity.async_write_ha_state()
             return True
         if new_state.state == STATE_ON and not scenario.enabled:
             scenario.enabled = True
             _LOGGER.info("SUPERNOTIFY Enabling scenario %s", scenario.name)
-            entity = self._entities.get(name)
-            if entity is not None:
-                entity.async_write_ha_state()
+            # Deliberately no entity.async_write_ha_state() here, unlike an earlier version of
+            # this method (and unlike people.py/delivery.py, where it would be safe): a
+            # scenario's is_on re-evaluates its conditions from scratch on every read (see
+            # scenario_is_on/_scenario_state), which can still be False right now - e.g.
+            # re-enabling a "sera" scenario in daylight. Writing immediately would read that
+            # back, publish OFF, and the resulting state-change event would flip `enabled`
+            # back off in the same tick, before the manual toggle was ever visible. Leaving the
+            # entity alone here means the manually-set state holds until the next real refresh
+            # (reactive condition-entity change or periodic sweep), same as before this was a
+            # real Entity.
             return True
         _LOGGER.info("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
         return False
@@ -229,10 +279,19 @@ class ScenarioRegistry:
                 if not names:
                     return
 
-        for name in self.scenarios if names is None else names:
-            entity = self._entities.get(name)
-            if entity is not None:
-                entity.async_write_ha_state()
+        # Computed once for the whole batch (see _batch_cvars/scenario_is_on) rather than once
+        # per scenario below - determine_occupancy() is only dict lookups, not real I/O, but
+        # doing it once per refresh instead of once per scenario is the correct scale for a
+        # mechanism meant to run on every relevant state change and every periodic sweep.
+        occupiers = self._people_registry.determine_occupancy()
+        self._batch_cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        try:
+            for name in self.scenarios if names is None else names:
+                entity = self._entities.get(name)
+                if entity is not None:
+                    entity.async_write_ha_state()
+        finally:
+            self._batch_cvars = None
 
 
 class Scenario:
