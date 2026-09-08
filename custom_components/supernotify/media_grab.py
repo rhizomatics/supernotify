@@ -4,7 +4,6 @@ import asyncio
 import datetime as dt
 import io
 import logging
-import time
 from enum import StrEnum, auto
 from http import HTTPStatus
 from io import BytesIO
@@ -46,7 +45,6 @@ from custom_components.supernotify.const import (
 from .common import int_or_none
 
 if TYPE_CHECKING:
-    from homeassistant.components.image import ImageEntity
     from homeassistant.core import Context as HAContext
     from homeassistant.core import State
 
@@ -158,16 +156,14 @@ async def snap_image_entity(
     """Read an image entity and save raw bytes. No reprocessing."""
     raw_path: Path | None = None
     try:
-        image_entity: ImageEntity | None = cast("ImageEntity|None", hass_api.domain_entity("image", entity_id))
-        if image_entity:
-            bitmap: bytes | None = await image_entity.async_image()
-            if bitmap:
-                raw_dir: Path = Path(media_path) / "raw"
-                await raw_dir.mkdir(parents=True, exist_ok=True)
-                ext = await _detect_image_ext(hass_api, bitmap)
-                raw_path = raw_dir / f"{notification_id}.{ext}"
-                async with aiofiles.open(raw_path, "wb") as f:
-                    await f.write(bitmap)
+        image = await hass_api.async_get_image_entity_image(entity_id)
+        if image and image.content:
+            raw_dir: Path = Path(media_path) / "raw"
+            await raw_dir.mkdir(parents=True, exist_ok=True)
+            ext = await _detect_image_ext(hass_api, image.content)
+            raw_path = raw_dir / f"{notification_id}.{ext}"
+            async with aiofiles.open(raw_path, "wb") as f:
+                await f.write(image.content)
     except Exception as e:
         _LOGGER.warning("SUPERNOTIFY Unable to snap image %s: %s", entity_id, e)
     if raw_path is None:
@@ -181,36 +177,29 @@ async def snap_camera(
     notification_id: str,
     media_path: Path,
     max_camera_wait: int = 20,
-    ha_context: HAContext | None = None,
 ) -> Path | None:
-    """Snap a camera and save the raw image. No reprocessing."""
+    """Snap a camera and save the raw image. No reprocessing.
+
+    Fetches the still directly from the camera entity via HA's own camera component API,
+    rather than triggering the camera.snapshot service and polling the filesystem for the
+    resulting file to appear.
+    """
     if not camera_entity_id:
         _LOGGER.warning("SUPERNOTIFY Empty camera entity id for snap")
         return None
 
     raw_path: Path | None = None
     try:
-        raw_dir: Path = Path(media_path) / "raw"
-        await raw_dir.mkdir(parents=True, exist_ok=True)
-        raw_path = raw_dir / f"{notification_id}.jpg"
-        share_root = Path(media_path)
-        share_path = share_root / raw_path.relative_to(Path(media_path))
-        await hass_api.call_service(
-            "camera",
-            "snapshot",
-            service_data={"entity_id": camera_entity_id, "filename": str(share_path)},
-            return_response=False,
-            blocking=True,
-            context=ha_context,
-        )
-
-        cutoff_time = time.time() + max_camera_wait
-        while time.time() < cutoff_time and not await raw_path.exists():
-            _LOGGER.info("Image file not available yet at %s, pausing", raw_path)
-            await asyncio.sleep(1)
-
+        image = await hass_api.async_get_camera_image(camera_entity_id, timeout=max_camera_wait)
+        if image and image.content:
+            raw_dir: Path = Path(media_path) / "raw"
+            await raw_dir.mkdir(parents=True, exist_ok=True)
+            ext = await _detect_image_ext(hass_api, image.content)
+            raw_path = raw_dir / f"{notification_id}.{ext}"
+            async with aiofiles.open(raw_path, "wb") as f:
+                await f.write(image.content)
     except Exception as e:
-        _LOGGER.warning("Failed to snap avail camera %s to %s: %s", camera_entity_id, raw_path, e)
+        _LOGGER.warning("Failed to snap avail camera %s: %s", camera_entity_id, e)
         raw_path = None
 
     return raw_path
@@ -375,7 +364,6 @@ async def snap_notification_image(
                 notification.id,
                 media_path=media_path,
                 max_camera_wait=max_camera_wait,
-                ha_context=ha_context,
             )
             if camera_ptz_preset and camera_ptz_preset_default:
                 await move_camera_to_ptz_preset(

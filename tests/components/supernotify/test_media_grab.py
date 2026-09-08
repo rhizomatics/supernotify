@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import io
-import json
 import time
 from contextlib import chdir
 from io import BytesIO
 from os import fspath
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
@@ -16,8 +15,6 @@ from anyio import Path
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
 from homeassistant.core import (
     HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
     State,
 )
 from homeassistant.exceptions import ServiceValidationError
@@ -123,36 +120,21 @@ async def test_snapshot_url_with_broken_url(unmocked_hass_api: HomeAssistantAPI,
     assert retrieved_image_path is None
 
 
-async def test_snap_camera(unmocked_hass_api, tmp_aiopath: Path) -> None:
-    called_entity: str | None = None
-    fixture_image_path: Path = IMAGE_PATH / "example_image.jpeg"
-
-    async def dummy_snapshot(call: ServiceCall, **kwargs: Any) -> ServiceResponse | None:
-        nonlocal called_entity
-        called_entity = call.data["entity_id"]
-        # recorder serialises call_service events to JSON; a pathlib.Path filename breaks that silently
-        json.dumps(call.data)
-        async with await anyio.Path(fixture_image_path).open("rb") as f:
-            image = Image.open(io.BytesIO(await f.read()))
-            buffer = BytesIO()
-            image.save(buffer, "jpeg", comment="Original Comment")
-        async with aiofiles.open(call.data["filename"], "wb") as file:
-            await file.write(buffer.getbuffer())
-        return None
-
-    unmocked_hass_api._hass.services.async_register("camera", "snapshot", dummy_snapshot)
+async def test_snap_camera(hass_api_with_camera: HomeAssistantAPI, sample_image: TestImage, tmp_aiopath: Path) -> None:
+    """snap_camera fetches the still directly from the camera entity's async_camera_image(),
+    via HA's own camera.async_get_image() helper - no camera.snapshot service call, no polling."""
     image_path: anyio.Path | None = await snap_camera(
-        unmocked_hass_api,
+        hass_api_with_camera,
         "camera.xunit",
         "notify-uuid-1",
         media_path=tmp_aiopath,
         max_camera_wait=1,
     )
-    assert called_entity == "camera.xunit"
     assert image_path is not None
-    # raw snap preserves original metadata; reprocessing happens in grab_image
-    raw_image: Image.Image = Image.open(str(image_path))
-    assert raw_image.info.get("comment") == b"Original Comment"
+    retrieved_image = Image.open(fspath(image_path))
+    original_image = Image.open(fspath(sample_image.path))
+    # raw snap preserves original bytes; size should match
+    assert retrieved_image.size == original_image.size
 
 
 @pytest.mark.parametrize(
@@ -490,9 +472,7 @@ async def test_snap_image_entity_no_entity(unmocked_hass_api: HomeAssistantAPI, 
 
 
 async def test_snap_image_entity_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    mock_entity = AsyncMock()
-    mock_entity.async_image.side_effect = RuntimeError("boom")
-    mock_hass_api.domain_entity.return_value = mock_entity  # type: ignore
+    mock_hass_api.async_get_image_entity_image.side_effect = RuntimeError("boom")  # type: ignore[attr-defined]
     result = await snap_image_entity(mock_hass_api, "image.broken", tmp_aiopath, "n1")
     assert result is None
 
@@ -505,12 +485,16 @@ async def test_snap_camera_empty_entity_id(unmocked_hass_api: HomeAssistantAPI, 
     assert result is None
 
 
-async def test_snap_camera_service_exception(unmocked_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    async def raising_snapshot(call: ServiceCall) -> ServiceResponse | None:
-        raise OSError("camera not responding")
-
-    unmocked_hass_api._hass.services.async_register("camera", "snapshot", raising_snapshot)
+async def test_snap_camera_no_camera_component(unmocked_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    """No camera integration set up at all -> async_get_camera_image raises HomeAssistantError,
+    caught by HomeAssistantAPI and turned into a None result."""
     result = await snap_camera(unmocked_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
+    assert result is None
+
+
+async def test_snap_camera_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]
+    result = await snap_camera(mock_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
     assert result is None
 
 
