@@ -1,4 +1,8 @@
-## 2.4.1
+## 2.4.0
+
+### Live Scenarios
+- Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
+- New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 
 ### Camera
 - The previously hard-coded max wait time to snap an image of 20 seconds is now configurable with `snap_wait` in the camera configuration.
@@ -6,26 +10,16 @@
 
 ### Tracing Activities
 - Fixed missing contexts on downstream actions, a consequence of relying on code from the "legacy" Home Assistant Notification platform, which throws away context
+- If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
 
 ### Fixes
 - Notification with an unavailable attachment could fail, will now proceed with or without attachment
 
 ### Technical
-- The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
-- `notify.py` further slimmed down by moving main engine to `engine.py` and the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
-
-## 2.4.0
-
-### Live Scenarios
-- Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
-- New **Scenario Control** configuration added, with initial usage for controlling live scenario state
-
-### Tracing Activities
-
-- If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
-
-### Technical
 - `notify.py` slimmed down, moving functionality out to the main registries
+- The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
+- `notify.py` slimmed down by moving main engine to `engine.py`, delivery/transport/people/scenario functionality out to registries, and the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
+
 
 ## 2.3.1
 
