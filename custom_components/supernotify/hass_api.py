@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ACTION,
     CONF_DEVICE_ID,
     EntityCategory,
@@ -41,6 +42,7 @@ from typing import TYPE_CHECKING, cast
 import homeassistant.components.camera as ha_camera
 import homeassistant.components.image as ha_image
 import homeassistant.components.trace
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
@@ -428,6 +430,36 @@ class HomeAssistantAPI:
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         return expand_entity_ids(self._hass, entity_ids)
+
+    def group_members(self, entity_id: str, _seen: set[str] | None = None) -> list[str] | None:
+        """Fully expanded members of a `group.*` helper or a platform group (media_player, light... groups
+        created by the group integration expose members in an `entity_id` state attribute). None if not a group.
+
+        Other entities, e.g. `scene.*` or min/max `sensor.*`, also expose an `entity_id` attribute, so anything
+        outside the `group` domain is only treated as a group if the entity registry says its platform is `group`.
+        """
+        if not self.hass_avail("states"):
+            return None
+        state = self._hass.states.get(entity_id)
+        members = state.attributes.get(ATTR_ENTITY_ID) if state else None
+        if not isinstance(members, (list, tuple)):
+            return None
+        if entity_id.partition(".")[0] != GROUP_DOMAIN:
+            ent_reg = self.entity_registry()
+            entry = ent_reg.async_get(entity_id) if ent_reg else None
+            if entry is None or entry.platform != GROUP_DOMAIN:
+                return None
+        seen: set[str] = _seen if _seen is not None else set()
+        seen.add(entity_id)
+        expanded: list[str] = []
+        for member in members:
+            if member in seen:
+                continue
+            nested = self.group_members(member, seen)
+            for e in nested if nested is not None else [member]:
+                if e not in expanded:
+                    expanded.append(e)
+        return expanded
 
     def template(self, template_format: str) -> Template:
         return Template(template_format, self._hass)

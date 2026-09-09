@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
-from homeassistant.const import CONF_ACTION, CONF_CONDITIONS
+import pytest
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION, CONF_CONDITIONS
+from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
@@ -16,10 +18,13 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import DeviceInfo
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
+from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.media_player import MediaPlayerTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
-from .hass_setup_lib import TestingContext
+from .hass_setup_lib import MockGroup, TestingContext
 
 if TYPE_CHECKING:
     from custom_components.supernotify.context import Context
@@ -30,6 +35,108 @@ async def test_target_selection() -> None:
     await ctx.test_initialize()
     uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
     assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])) == Target(["notify.pong"])
+
+
+async def test_target_selection_expands_group_and_filters_members() -> None:
+    ctx = TestingContext(
+        transport_types=[NotifyEntityTransport],
+        entities={"group.mixed": MockGroup(["notify.phone_1", "switch.bell", "notify.phone_2"])},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
+    assert uut.select_targets(Target(["group.mixed"])).entity_ids == ["notify.phone_1", "notify.phone_2"]
+
+
+async def test_target_selection_expands_platform_group() -> None:
+    ctx = TestingContext(
+        transport_types=[MediaPlayerTransport],
+        entities={"media_player.all_speakers": MockGroup(["media_player.kitchen", "media_player.hall"])},
+        entity_platforms={"media_player.all_speakers": "group"},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, MediaPlayerTransport(ctx, {}))
+    assert uut.select_targets(Target(["media_player.all_speakers"])).entity_ids == ["media_player.kitchen", "media_player.hall"]
+
+
+async def test_target_selection_doesnt_expand_non_group_entities_with_members() -> None:
+    """scene.* and min/max sensor.* also expose an entity_id attribute, but are not groups"""
+    ctx = TestingContext(
+        transport_types=[GenericTransport],
+        entities={
+            "scene.movie_time": MockGroup(["light.lamp", "media_player.tv"]),
+            "media_player.not_registered": MockGroup(["media_player.kitchen"]),
+        },
+        entity_platforms={"scene.movie_time": "homeassistant"},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {CONF_ACTION: "notify.custom"}, GenericTransport(ctx, {}))
+    assert uut.select_targets(Target(["scene.movie_time", "media_player.not_registered"])).entity_ids == [
+        "scene.movie_time",
+        "media_player.not_registered",
+    ]
+
+
+async def test_target_selection_keeps_group_id_when_selector_accepts_it_but_not_members() -> None:
+    ctx = TestingContext(
+        transport_types=[AlexaDevicesTransport],
+        entities={"group.alexa": MockGroup(["media_player.echo_1", "media_player.echo_2"])},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, AlexaDevicesTransport(ctx, {}))
+    assert uut.select_targets(Target(["group.alexa", "media_player.echo_3"])).entity_ids == ["group.alexa"]
+
+
+async def test_target_selection_propagates_group_data_to_members() -> None:
+    ctx = TestingContext(
+        transport_types=[NotifyEntityTransport],
+        entities={"group.phones": MockGroup(["notify.phone_1", "notify.phone_2"])},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
+    target = Target(["group.phones"], target_data={"ttl": 5}, target_specific_data=True)
+    selected = uut.select_targets(target)
+    assert selected.entity_ids == ["notify.phone_1", "notify.phone_2"]
+    assert selected.target_specific_data == {
+        (ATTR_ENTITY_ID, "notify.phone_1"): {"ttl": 5},
+        (ATTR_ENTITY_ID, "notify.phone_2"): {"ttl": 5},
+    }
+
+
+@pytest.mark.parametrize("group_first", [True, False], ids=["group_first", "member_first"])
+async def test_target_selection_member_data_wins_over_group_data(group_first: bool) -> None:
+    ctx = TestingContext(
+        transport_types=[NotifyEntityTransport],
+        entities={"group.phones": MockGroup(["notify.phone_1", "notify.phone_2"])},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
+    group = Target(["group.phones"], target_data={"ttl": 5}, target_specific_data=True)
+    member = Target(["notify.phone_2"], target_data={"ttl": 99}, target_specific_data=True)
+    target = group + member if group_first else member + group
+    selected = uut.select_targets(target)
+    assert selected.entity_ids == unordered("notify.phone_1", "notify.phone_2")
+    assert selected.target_specific_data == {
+        (ATTR_ENTITY_ID, "notify.phone_1"): {"ttl": 5},
+        (ATTR_ENTITY_ID, "notify.phone_2"): {"ttl": 99},
+    }
+
+
+async def test_target_selection_leaves_unknown_group_alone() -> None:
+    ctx = TestingContext(transport_types=[NotifyEntityTransport, ChimeTransport])
+    await ctx.test_initialize()
+    # group has no state so cannot be expanded, ordinary selector rules apply
+    assert Delivery("a", {}, NotifyEntityTransport(ctx, {})).select_targets(Target(["group.nowhere"])).entity_ids == []
+    assert Delivery("b", {}, ChimeTransport(ctx, {})).select_targets(Target(["group.nowhere"])).entity_ids == ["group.nowhere"]
+
+
+async def test_target_selection_dedupes_member_and_group() -> None:
+    ctx = TestingContext(
+        transport_types=[NotifyEntityTransport],
+        entities={"group.phones": MockGroup(["notify.phone_1", "notify.phone_2"])},
+    )
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
+    assert uut.select_targets(Target(["notify.phone_2", "group.phones"])).entity_ids == ["notify.phone_2", "notify.phone_1"]
 
 
 async def test_simple_create(mock_context: Context) -> None:

@@ -181,6 +181,7 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked._hass = mock_hass
     mocked._hass.get_state = Mock(return_value=Mock(spec=State))
     mocked.template = Mock(return_value=Mock(spec=Template))
+    mocked.group_members = Mock(return_value=None)
     mock_http_session: AsyncMock = AsyncMock(spec=aiohttp.ClientSession)
     mock_http_session.get = AsyncMock()
     mocked.http_session.return_value = mock_http_session
