@@ -1,3 +1,7 @@
+## 2.4.1
+
+- New *Repair* raised if running under Python 3.13, to warn about support dropping with the HA 2026.10 release.
+
 ## 2.4.0
 
 ### Live Scenarios

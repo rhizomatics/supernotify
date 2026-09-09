@@ -292,6 +292,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "Supernotify 的 YAML 配置需要手动迁移",
             "description": "自动迁移到顶级 `supernotify:` YAML 键未能完成：{reason}。请自行将推送、传输方式、场景、收件人、摄像头、操作组、链接和打盹设置从 `notify: - platform: supernotify` 块迁移到顶级 `supernotify:` 键中（例如 `supernotify: !include supernotify.yaml`），然后删除旧块并重启 Home Assistant。"
+        },
+        "python_313_deprecated": {
+            "title": "Python 3.13 支持即将结束",
+            "description": "此 Home Assistant 实例正在运行 Python {python_version}。当 Home Assistant 2026.10 发布后，Supernotify 将不再支持 Python 3.13(以及 2026.3.0 之前的 Home Assistant 版本)——此后，除非将底层 Python 环境升级到 Python 3.14 或更高版本，否则该实例将无法安装 Supernotify 的后续更新。"
         }
     },
     "options": {

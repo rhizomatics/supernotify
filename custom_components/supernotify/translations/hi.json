@@ -292,6 +292,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "Supernotify YAML कॉन्फ़िगरेशन को मैन्युअल रूप से माइग्रेट किया जाना आवश्यक है",
             "description": "एक टॉप-लेवल `supernotify:` YAML कुंजी में स्वचालित माइग्रेशन पूरा नहीं हो सका: {reason}। डिलीवरी, परिवहन, परिदृश्य, प्राप्तकर्ता, कैमरा, क्रिया समूह, लिंक और स्नूज़ सेटिंग्स को `notify: - platform: supernotify` ब्लॉक से स्वयं एक टॉप-लेवल `supernotify:` कुंजी में ले जाएं (उदाहरण के लिए `supernotify: !include supernotify.yaml`), फिर पुराने ब्लॉक को हटा दें और Home Assistant को पुनः आरंभ करें।"
+        },
+        "python_313_deprecated": {
+            "title": "Python 3.13 का समर्थन जल्द ही समाप्त हो रहा है",
+            "description": "यह Home Assistant इंस्टेंस Python {python_version} पर चल रहा है। जब Home Assistant 2026.10 जारी होगा, तब Supernotify Python 3.13 (और 2026.3.0 से पहले के Home Assistant संस्करणों) के लिए समर्थन समाप्त कर देगा - उसके बाद, अंतर्निहित Python वातावरण को Python 3.14 या उससे नए संस्करण में अपग्रेड किए बिना इस इंस्टेंस पर Supernotify के आगे के अपडेट इंस्टॉल नहीं किए जा सकेंगे।"
         }
     },
     "options": {

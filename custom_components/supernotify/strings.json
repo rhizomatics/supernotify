@@ -347,6 +347,10 @@
             "title": "Supernotify YAML configuration must be migrated manually",
             "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
         },
+        "python_313_deprecated": {
+            "title": "Python 3.13 support ending soon",
+            "description": "This Home Assistant instance is running Python {python_version}. Supernotify drops support for Python 3.13 (and Home Assistant versions before 2026.3.0) once Home Assistant 2026.10 is released - after that, this instance won't be able to install further Supernotify updates until the underlying Python environment is upgraded to Python 3.14 or later."
+        },
         "scenario_delivery": {
             "title": "Invalid Delivery for Scenario",
             "description": "Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration"

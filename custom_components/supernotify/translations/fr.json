@@ -292,6 +292,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "La configuration YAML de Supernotify doit être migrée manuellement",
             "description": "La migration automatique vers une clé YAML de premier niveau `supernotify:` n'a pas pu aboutir : {reason}. Déplacez vous-même les paramètres de livraison, transports, scénarios, destinataires, caméras, groupes d'action, liens et snooze du bloc `notify: - platform: supernotify` vers une clé de premier niveau `supernotify:` (par exemple `supernotify: !include supernotify.yaml`), puis supprimez l'ancien bloc et redémarrez Home Assistant."
+        },
+        "python_313_deprecated": {
+            "title": "La prise en charge de Python 3.13 prend bientôt fin",
+            "description": "Cette instance de Home Assistant exécute Python {python_version}. Supernotify abandonnera la prise en charge de Python 3.13 (et des versions de Home Assistant antérieures à 2026.3.0) dès la sortie de Home Assistant 2026.10 - après quoi cette instance ne pourra plus installer de nouvelles mises à jour de Supernotify tant que l'environnement Python sous-jacent n'aura pas été mis à niveau vers Python 3.14 ou une version ultérieure."
         }
     },
     "options": {

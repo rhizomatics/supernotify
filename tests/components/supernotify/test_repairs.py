@@ -15,7 +15,9 @@ from custom_components.supernotify.notify import async_get_service
 from custom_components.supernotify.repairs import (
     ISSUE_ID,
     MANUAL_MIGRATION_ISSUE_ID,
+    PYTHON_313_DEPRECATED_ISSUE_ID,
     SupernotifyLegacyYamlRepairFlow,
+    async_check_python_version,
     async_create_fix_flow,
 )
 
@@ -498,3 +500,29 @@ async def test_fix_flow_merges_archive_options_onto_existing_entry(hass: HomeAss
     assert entry.options["archive"]["enabled"] is True
     assert entry.options["archive"]["file_path"] == "/config/supernotify_archive"
     assert entry.options["dupe_check"]["ttl"] == 120
+
+
+async def test_python_313_raises_deprecation_issue(hass: HomeAssistant) -> None:
+    """Running under Python 3.13 raises a non-fixable warning about the upcoming drop of
+    Python 3.13 support (see README.md's "MAJOR CHANGE v2" section)."""
+    with patch("sys.version_info", (3, 13, 2, "final", 0)):
+        async_check_python_version(hass)
+
+    issue = ir.async_get(hass).async_get_issue(DOMAIN, PYTHON_313_DEPRECATED_ISSUE_ID)
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"python_version": "3.13.2"}
+
+
+async def test_python_314_clears_deprecation_issue(hass: HomeAssistant) -> None:
+    """Upgrading the underlying Python interpreter to 3.14 clears a previously raised issue
+    without needing a fix flow."""
+    with patch("sys.version_info", (3, 13, 2, "final", 0)):
+        async_check_python_version(hass)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, PYTHON_313_DEPRECATED_ISSUE_ID) is not None
+
+    with patch("sys.version_info", (3, 14, 2, "final", 0)):
+        async_check_python_version(hass)
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, PYTHON_313_DEPRECATED_ISSUE_ID) is None
