@@ -17,7 +17,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_PERSISTENT,
 )
 from custom_components.supernotify.diagnostics import async_get_config_entry_diagnostics
-from custom_components.supernotify.notify import SupernotifyAction
+from custom_components.supernotify.engine import SupernotifyEngine
 
 if TYPE_CHECKING:
     from unittest.mock import Mock
@@ -36,7 +36,7 @@ RECIPIENTS: list[dict] = [
 ]
 
 
-def _entry(hass: HomeAssistant, service: SupernotifyAction) -> MockConfigEntry:
+def _entry(hass: HomeAssistant, service: SupernotifyEngine) -> MockConfigEntry:
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
     entry.add_to_hass(hass)
     entry.runtime_data = service
@@ -50,7 +50,7 @@ async def test_diagnostics_redacts_recipient_pii(hass: HomeAssistant, mock_hass:
     mock_hass.states.async_entity_ids (conftest.py) otherwise feeds two extra auto-discovered
     people into the mix, which is irrelevant to what this test is checking.
     """
-    service = SupernotifyAction(mock_hass, deliveries=DELIVERY, recipients=RECIPIENTS, recipients_discovery=False)
+    service = SupernotifyEngine(mock_hass, deliveries=DELIVERY, recipients=RECIPIENTS, recipients_discovery=False)
     await service.initialize()
 
     diagnostics = await async_get_config_entry_diagnostics(hass, _entry(hass, service))
@@ -67,7 +67,7 @@ async def test_diagnostics_redacts_recipient_pii(hass: HomeAssistant, mock_hass:
 
 async def test_diagnostics_no_last_notification_before_any_send(hass: HomeAssistant, mock_hass: Mock) -> None:
     """last_notification is None until something has actually been sent."""
-    service = SupernotifyAction(mock_hass, deliveries=DELIVERY, recipients=[], recipients_discovery=False)
+    service = SupernotifyEngine(mock_hass, deliveries=DELIVERY, recipients=[], recipients_discovery=False)
     await service.initialize()
 
     diagnostics = await async_get_config_entry_diagnostics(hass, _entry(hass, service))
@@ -85,7 +85,7 @@ async def test_diagnostics_includes_last_notification(hass: HomeAssistant, mock_
     auto-generated `.contents` attribute - sanitize() calls it like the real thing, producing
     a coroutine nothing awaits. Doesn't happen against a real HomeAssistant instance.
     """
-    service = SupernotifyAction(
+    service = SupernotifyEngine(
         mock_hass,
         deliveries=DELIVERY,
         recipients=[],

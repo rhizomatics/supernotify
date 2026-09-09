@@ -18,6 +18,7 @@
 ### Fixes
 - Notification with an unavailable attachment could fail, will now proceed with or without attachment
 - Two messages with same title and message but different camera entities, or media URLs for attachments, will not be considered as dupes
+- Additional actions now have documented options with translations, provided by [@lollox80](https://github.com/lollox80)
 
 ### Technical
 - The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
