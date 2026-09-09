@@ -29,6 +29,7 @@ from .const import (
 from .schema import DeliveryOutcome, OutcomeSelection
 
 if TYPE_CHECKING:
+    from homeassistant.core import Context as HAContext
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.hass_api import HomeAssistantAPI
@@ -41,6 +42,8 @@ WRITE_TEST = ".startup"
 
 
 class ArchivableObject:
+    ha_context: HAContext | None = None
+
     @abstractmethod
     def base_filename(self) -> str:
         pass
@@ -103,7 +106,7 @@ class EventArchiver(ArchiveDestination):
     async def archive(self, archive_object: ArchivableObject) -> bool:
         try:
             payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
-            self.hass_api.fire_event(self.event_name, payload)
+            self.hass_api.fire_event(self.event_name, payload, context=archive_object.ha_context)
             return True
         except Exception:
             _LOGGER.warning(f"SUPERNOTIFY Failed to archive to event {self.event_name}")

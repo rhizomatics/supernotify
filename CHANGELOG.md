@@ -1,6 +1,11 @@
 ## 2.4.1
 
-- New *Repair* raised if running under Python 3.13, to warn about support dropping with the HA 2026.10 release.
+### Tracing Activities
+- Home Assistant context added to state changes and events driven by notifications.
+### Home Assistant Compatibility
+- New *Repair* raised if running under Python 3.13, to warn about support dropping with the HA 2026.10 release. Note that 2026.3.0 is the first Home Assistant release to require Python 3.14.
+### Testing
+- Automated testing of 6 month prior Home Assistant release added, and versions will be rolled to maintain compatibility check.
 
 ## 2.4.0
 
