@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_common_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-09 17:12 +0000
+            created at 2026-09-09 17:42 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -322,7 +322,7 @@
     <p class="pln"><span class="n"><a id="t240" href="#t240">240</a></span><span class="t">                    <span class="com"># written once and never modified afterwards, so ctime reflects creation time</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t241" href="#t241">241</a></span><span class="t">                    <span class="com"># on the platforms this integration targets; st_birthtime is not guaranteed to</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t242" href="#t242">242</a></span><span class="t">                    <span class="com"># be available on all Linux filesystems.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t243" href="#t243">243</a></span><span class="t">                    <span class="key">if</span> <span class="nam">dt_util</span><span class="op">.</span><span class="nam">utc_from_timestamp</span><span class="op">(</span><span class="nam">entry</span><span class="op">.</span><span class="nam">stat</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">st_ctime</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="nam">cutoff</span><span class="op">:</span>  <span class="com"># ty: ignore[deprecated]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t243" href="#t243">243</a></span><span class="t">                    <span class="key">if</span> <span class="nam">dt_util</span><span class="op">.</span><span class="nam">utc_from_timestamp</span><span class="op">(</span><span class="nam">entry</span><span class="op">.</span><span class="nam">stat</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">st_ctime</span><span class="op">)</span> <span class="op">&lt;=</span> <span class="nam">cutoff</span><span class="op">:</span>  <span class="com"># ty: ignore[deprecated,unused-ignore-comment]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t244" href="#t244">244</a></span><span class="t">                        <span class="nam">_LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">&quot;SUPERNOTIFY Purging %s&quot;</span><span class="op">,</span> <span class="nam">entry</span><span class="op">.</span><span class="nam">path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t245" href="#t245">245</a></span><span class="t">                        <span class="key">await</span> <span class="nam">aiofiles</span><span class="op">.</span><span class="nam">os</span><span class="op">.</span><span class="nam">unlink</span><span class="op">(</span><span class="nam">entry</span><span class="op">.</span><span class="nam">path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t">                        <span class="nam">purged</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
@@ -402,7 +402,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_common_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-09 17:12 +0000
+            created at 2026-09-09 17:42 +0000
         </p>
     </div>
 </footer>
