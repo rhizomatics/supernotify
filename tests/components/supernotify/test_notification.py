@@ -617,7 +617,10 @@ async def test_record_result_ignores_envelope_with_no_target() -> None:
     delivery = Delivery("simple", {}, generic)
     uut = Notification(ctx, "testing 123")
     envelope = Envelope(delivery)
-    envelope.target = None
+    # Envelope.target is always a Target by construction (see Envelope.__init__); this
+    # deliberately violates that to exercise _record_recipient_notifications()'s defensive
+    # `if envelope.target is None` branch.
+    envelope.target = None  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     envelope.delivered = 1
 
     uut.record_result(delivery, envelope)

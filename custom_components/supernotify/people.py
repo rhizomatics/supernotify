@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
@@ -90,36 +91,59 @@ class RecipientNotifyEntity(NotifyEntity):
         self._recipient = recipient
         self._engine = engine
         self.entity_id = f"notify.recipient_{recipient.name}"
-        # Populated by record_notification() below, and restored from the last run in
-        # async_added_to_hass() - deliberately NOT the entity's own native `state`. HA already
-        # timestamps `state` for us, but only for a direct notify.recipient_<name> service call;
-        # a message routed through supernotify.notify's main pipeline (the common case) never
-        # invokes this entity at all - see convert_notify_entities() in notification.py, which
-        # short-circuits that target straight to a person_id to avoid calling back into this
-        # same entity in a loop. Notification.record_result() calls record_notification()
-        # directly once delivery succeeds, regardless of which path the message came in on.
+        # Fallback attribute for HA < 2026.3 (python_full_version < '3.14.2' in pyproject.toml
+        # pins homeassistant==2026.2.3) - NotifyEntity there has no _async_record_notification()
+        # and no other supported way to set its native `state` from outside a direct
+        # notify.recipient_<name> service call (the logic lives in the @final, HA-framework-only
+        # _async_send_message()). Left unused - and extra_state_attributes returns None - once
+        # running against a HA version that has _async_record_notification(); see
+        # record_notification() below for the runtime hasattr() check that picks a path. Support
+        # for the pre-2026.3 lane is time-limited: see the "python_313_deprecated" repair issue,
+        # dropped when HA 2026.10 ships - this whole fallback (and the property below) can go
+        # once that lane is gone.
         self._last_notified: str | None = None
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Expose last_notified separately from the entity's own native `state` - see the
-        docstring on self._last_notified above for why the two can't be the same value."""
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Only populated on the pre-2026.3 fallback path - see record_notification()."""
+        if hasattr(self, "_async_record_notification"):
+            return None
         return {"last_notified": self._last_notified}
 
-    def record_notification(self, when: str) -> None:
+    def record_notification(self) -> None:
         """Record that this recipient was notified via supernotify.notify's main pipeline
         (any target - person_id, email, mobile device...), not just via a direct call to
-        this notify.recipient_<name> entity. Called from Notification.record_result()."""
-        self._last_notified = when
-        self.async_write_ha_state()
+        this notify.recipient_<name> entity. Called from Notification.record_result().
+
+        Delegates to NotifyEntity._async_record_notification() when available - the same
+        HA-native method html5/mobile_app call on a direct notify.recipient_<name> service
+        call - so `state` reflects the most recent delivery via either path. On HA versions
+        before 2026.3 that method doesn't exist (see the docstring on self._last_notified in
+        __init__), so this falls back to the pre-refactor design: a separate extra_state_attributes
+        attribute, restored manually in async_added_to_hass() below. Either way, a message routed
+        through supernotify.notify's main pipeline (the common case) never invokes this entity's
+        own async_send_message() - see convert_notify_entities() in notification.py, which
+        short-circuits that target straight to a person_id to avoid calling back into this same
+        entity in a loop - so without this explicit call, delivery via that pipeline would never
+        be reflected here at all."""
+        if hasattr(self, "_async_record_notification"):
+            self._async_record_notification()
+        else:
+            self._last_notified = dt_util.utcnow().isoformat()
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self._recipient.notify_entity_id = self.entity_id
         self._recipient.notify_entity = self
-        last_state = await self.async_get_last_state()
-        if last_state is not None:
-            self._last_notified = last_state.attributes.get("last_notified")
+        # Restoring `state` after a restart is handled for us by
+        # NotifyEntity.async_internal_added_to_hass() when _async_record_notification() is
+        # available. On the pre-2026.3 fallback path there's no such restore, so do it manually
+        # here, same as before the refactor.
+        if not hasattr(self, "_async_record_notification"):
+            last_state = await self.async_get_last_state()
+            if last_state is not None:
+                self._last_notified = last_state.attributes.get("last_notified")
 
     async def async_will_remove_from_hass(self) -> None:
         self._recipient.notify_entity_id = None
