@@ -150,15 +150,12 @@ async def move_camera_to_ptz_preset(
 
 
 async def snap_image_entity(
-    hass_api: HomeAssistantAPI,
-    entity_id: str,
-    media_path: Path,
-    notification_id: str,
+    hass_api: HomeAssistantAPI, entity_id: str, media_path: Path, notification_id: str, max_image_wait: int = 30
 ) -> Path | None:
     """Read an image entity and save raw bytes. No reprocessing."""
     raw_path: Path | None = None
     try:
-        image = await hass_api.async_get_image_entity_image(entity_id)
+        image = await hass_api.async_get_image_entity_image(entity_id, timeout=max_image_wait)
         if image and image.content:
             raw_dir: Path = Path(media_path) / "raw"
             await raw_dir.mkdir(parents=True, exist_ok=True)
@@ -323,7 +320,9 @@ async def snap_notification_image(
             context.hass_api, snapshot_url, notification.id, media_path, context.hass_api.internal_url
         )
     elif camera_entity_id.startswith("image."):
-        raw_path = await snap_image_entity(context.hass_api, camera_entity_id, media_path, notification.id)
+        raw_path = await snap_image_entity(
+            context.hass_api, camera_entity_id, media_path, notification.id, max_image_wait=SNAP_WAIT_DEFAULT
+        )
     else:
         active_camera_entity_id = select_avail_camera(context.hass_api, context.cameras, camera_entity_id)
         if active_camera_entity_id:

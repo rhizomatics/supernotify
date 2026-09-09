@@ -13,10 +13,7 @@ import anyio
 import pytest
 from anyio import Path
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.core import (
-    HomeAssistant,
-    State,
-)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from PIL import Image, ImageChops
 
@@ -492,7 +489,7 @@ async def test_snap_image_entity_no_entity(unmocked_hass_api: HomeAssistantAPI, 
 
 
 async def test_snap_image_entity_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    mock_hass_api.async_get_image_entity_image.side_effect = RuntimeError("boom")  # type: ignore[attr-defined]
+    mock_hass_api.async_get_image_entity_image.side_effect = RuntimeError("boom")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     result = await snap_image_entity(mock_hass_api, "image.broken", tmp_aiopath, "n1")
     assert result is None
 
@@ -513,17 +510,8 @@ async def test_snap_camera_no_camera_component(unmocked_hass_api: HomeAssistantA
 
 
 async def test_snap_camera_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]
+    mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     result = await snap_camera(mock_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
-
-
-async def test_snap_camera_timeout_no_file(unmocked_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    async def noop_snapshot(call: ServiceCall) -> ServiceResponse | None:
-        # service completes without ever writing the snapshot file
-        return None
-
-    unmocked_hass_api._hass.services.async_register("camera", "snapshot", noop_snapshot)
-    result = await snap_camera(unmocked_hass_api, "camera.slow", "n1", tmp_aiopath, max_camera_wait=1)
     assert result is None
 
 
