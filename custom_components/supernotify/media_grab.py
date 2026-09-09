@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 import aiofiles
 import aiofiles.os
+import homeassistant.components.camera as ha_camera
+import homeassistant.components.image as ha_image
 import homeassistant.util.dt as dt_util
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from anyio import Path
@@ -155,11 +157,11 @@ async def snap_image_entity(
     """Read an image entity and save raw bytes. No reprocessing."""
     raw_path: Path | None = None
     try:
-        image = await hass_api.async_get_image_entity_image(entity_id, timeout=max_image_wait)
+        image: ha_image.Image | None = await hass_api.async_get_image_entity_image(entity_id, timeout=max_image_wait)
         if image and image.content:
             raw_dir: Path = Path(media_path) / "raw"
             await raw_dir.mkdir(parents=True, exist_ok=True)
-            ext = await _detect_image_ext(hass_api, image.content)
+            ext: str = await _detect_image_ext(hass_api, image.content)
             raw_path = raw_dir / f"{notification_id}.{ext}"
             async with aiofiles.open(raw_path, "wb") as f:
                 await f.write(image.content)
@@ -189,11 +191,11 @@ async def snap_camera(
 
     raw_path: Path | None = None
     try:
-        image = await hass_api.async_get_camera_image(camera_entity_id, timeout=max_camera_wait)
+        image: ha_camera.Image | None = await hass_api.async_get_camera_image(camera_entity_id, timeout=max_camera_wait)
         if image and image.content:
             raw_dir: Path = Path(media_path) / "raw"
             await raw_dir.mkdir(parents=True, exist_ok=True)
-            ext = await _detect_image_ext(hass_api, image.content)
+            ext: str = await _detect_image_ext(hass_api, image.content)
             raw_path = raw_dir / f"{notification_id}.{ext}"
             async with aiofiles.open(raw_path, "wb") as f:
                 await f.write(image.content)
