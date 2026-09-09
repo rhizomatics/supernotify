@@ -1,4 +1,4 @@
-"""Reproduction tests for GitHub issue #10 - some transports won't select group entity ids.
+r"""Reproduction tests for GitHub issue #10 - some transports won't select group entity ids.
 
 2026-09-09: written as FAILING regression tests before the fix. Every assertion below describes
 the EXPECTED (fixed) behaviour, so these tests fail on current main and must pass once the fix lands.
@@ -90,7 +90,7 @@ async def test_select_targets_keeps_group_entity_id(transport_class: type[Transp
     """EXPECTED: a group.* entity id is expanded into its members by the transport default target
     selection, alongside a directly matching entity id. CURRENT: the default target_select regex only
     admits the transport's own domain, so the group id is silently dropped."""
-    domain = member.split(".")[0]
+    domain = member.partition(".")[0]
     members = [f"{domain}.grouped_1", f"{domain}.grouped_2"]
     ctx = TestingContext(transport_types=[transport_class], entities={group_id: MockGroup(members)})
     await ctx.test_initialize()

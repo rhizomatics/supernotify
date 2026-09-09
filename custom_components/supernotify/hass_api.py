@@ -42,6 +42,7 @@ from typing import TYPE_CHECKING, cast
 import homeassistant.components.camera as ha_camera
 import homeassistant.components.image as ha_image
 import homeassistant.components.trace
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
@@ -432,13 +433,22 @@ class HomeAssistantAPI:
 
     def group_members(self, entity_id: str, _seen: set[str] | None = None) -> list[str] | None:
         """Fully expanded members of a `group.*` helper or a platform group (media_player, light... groups
-        expose members in an `entity_id` state attribute). None if not a group."""
+        created by the group integration expose members in an `entity_id` state attribute). None if not a group.
+
+        Other entities, e.g. `scene.*` or min/max `sensor.*`, also expose an `entity_id` attribute, so anything
+        outside the `group` domain is only treated as a group if the entity registry says its platform is `group`.
+        """
         if not self.hass_avail("states"):
             return None
         state = self._hass.states.get(entity_id)
         members = state.attributes.get(ATTR_ENTITY_ID) if state else None
-        if not isinstance(members, list):
+        if not isinstance(members, (list, tuple)):
             return None
+        if entity_id.partition(".")[0] != GROUP_DOMAIN:
+            ent_reg = self.entity_registry()
+            entry = ent_reg.async_get(entity_id) if ent_reg else None
+            if entry is None or entry.platform != GROUP_DOMAIN:
+                return None
         seen: set[str] = _seen if _seen is not None else set()
         seen.add(entity_id)
         expanded: list[str] = []

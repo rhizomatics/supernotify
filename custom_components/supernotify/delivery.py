@@ -196,6 +196,7 @@ class Delivery(DeliveryConfig):
         """Filter targets by category and target_select, expanding HA groups (`group.*` helpers and platform
         groups such as media player groups) into their members before the selector is applied"""
         expansions: dict[tuple[str, str], list[str]] = {}
+        groups: set[tuple[str, str]] = set()
 
         def selected(category: str, targets: list[str]) -> list[str]:
             if OPTION_TARGET_CATEGORIES in self.options and category not in self.options[OPTION_TARGET_CATEGORIES]:
@@ -206,6 +207,7 @@ class Delivery(DeliveryConfig):
                 if members is None:
                     matched = [t] if self.target_selector is None or self.target_selector.match(t) else []
                 else:
+                    groups.add((category, t))
                     matched = [m for m in members if self.target_selector is None or self.target_selector.match(m)]
                     if not matched and self.target_selector is not None and self.target_selector.match(t):
                         # group members unusable but group id itself accepted, e.g. alexa_devices, so pass through
@@ -217,9 +219,16 @@ class Delivery(DeliveryConfig):
         filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
         # TODO: in model class
         if target.target_specific_data:
-            filtered_target.target_specific_data = {
-                (c, m): data for (c, t), data in target.target_specific_data.items() for m in expansions.get((c, t), [])
-            }
+            # data inherited from a group first, so data explicitly attached to a member always wins
+            specific_data: dict[tuple[str, str], dict[str, Any]] = {}
+            for (c, t), data in target.target_specific_data.items():
+                if (c, t) in groups:
+                    for m in expansions.get((c, t), []):
+                        specific_data[(c, m)] = data
+            for (c, t), data in target.target_specific_data.items():
+                if (c, t) not in groups and expansions.get((c, t)):
+                    specific_data[(c, t)] = data
+            filtered_target.target_specific_data = specific_data
         return filtered_target
 
     def evaluate_conditions(self, condition_variables: ConditionVariables) -> bool | None:

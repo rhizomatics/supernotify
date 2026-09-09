@@ -20,6 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import (
     ATTR_APP_VERSION,
     ATTR_OS_NAME,
@@ -29,7 +30,8 @@ from custom_components.supernotify.hass_api import (
     HomeAssistantAPI,
     force_strict_template_mode,
 )
-from custom_components.supernotify.model import ConditionVariables, SelectionRule
+from custom_components.supernotify.model import ConditionVariables, SelectionRule, Target
+from custom_components.supernotify.transports.media_player import MediaPlayerTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 from .hass_setup_lib import register_device, register_mobile_app
@@ -160,6 +162,9 @@ def test_async_roundtrips_entity_state(hass: HomeAssistant) -> None:
 
 def test_group_members(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
+    ent_reg = hass_api.entity_registry()
+    assert ent_reg is not None
+    ent_reg.async_get_or_create("media_player", "group", "all_speakers_uid", suggested_object_id="all_speakers")
     hass_api.set_state("media_player.kitchen", "off")
     hass_api.set_state("media_player.all_speakers", "off", {ATTR_ENTITY_ID: ["media_player.kitchen", "media_player.hall"]})
     hass_api.set_state(
@@ -173,6 +178,45 @@ def test_group_members(hass: HomeAssistant) -> None:
     # nested, cyclic and self referencing groups flattened and deduped
     assert hass_api.group_members("group.downstairs") == ["media_player.kitchen", "media_player.hall", "switch.bell"]
     assert hass_api.group_members("group.upstairs") == ["media_player.kitchen", "media_player.hall", "switch.bell"]
+
+
+async def test_group_members_of_real_group(hass: HomeAssistant) -> None:
+    """Real group.* entities store members as a tuple, see homeassistant/components/group/entity.py"""
+    hass.states.async_set("media_player.a", "off")
+    hass.states.async_set("media_player.b", "off")
+    assert await async_setup_component(
+        hass, "group", {"group": {"speakers": {"entities": ["media_player.a", "media_player.b"]}}}
+    )
+    await hass.async_block_till_done()
+    group_state = hass.states.get("group.speakers")
+    assert group_state is not None
+    assert isinstance(group_state.attributes[ATTR_ENTITY_ID], tuple)
+
+    hass_api = HomeAssistantAPI(hass)
+    assert hass_api.group_members("group.speakers") == ["media_player.a", "media_player.b"]
+
+    ctx = TestingContext(transport_types=[MediaPlayerTransport], homeassistant=hass)
+    await ctx.test_initialize()
+    uut = Delivery("unit_testing", {}, MediaPlayerTransport(ctx, {}))
+    assert uut.select_targets(Target(["group.speakers"])).entity_ids == ["media_player.a", "media_player.b"]
+
+
+def test_group_members_outside_group_domain_needs_group_platform(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    ent_reg = hass_api.entity_registry()
+    assert ent_reg is not None
+    platform_group = ent_reg.async_get_or_create("media_player", "group", "speakers_uid").entity_id
+    scene = ent_reg.async_get_or_create("scene", "homeassistant", "movie_uid").entity_id
+    members = ("media_player.a", "media_player.b")
+    hass_api.set_state(platform_group, "off", {ATTR_ENTITY_ID: members})
+    hass_api.set_state(scene, "unknown", {ATTR_ENTITY_ID: list(members)})
+    hass_api.set_state("media_player.unregistered", "off", {ATTR_ENTITY_ID: members})
+
+    assert hass_api.group_members(platform_group) == list(members)
+    # scene exposes an entity_id attribute but is not a group
+    assert hass_api.group_members(scene) is None
+    # entity not in registry, so platform unknown, left alone
+    assert hass_api.group_members("media_player.unregistered") is None
 
 
 def test_group_members_without_hass_states() -> None:
