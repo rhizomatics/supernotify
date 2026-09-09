@@ -11,7 +11,7 @@
 
 ## 2.4.0
 
-### Live Scenarios
+### Live Scenarios
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
 - New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 
