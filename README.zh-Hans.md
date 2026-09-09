@@ -1,4 +1,4 @@
-![Supernotify](../assets/images/dark_icon.png){ align=left }
+![Supernotify](https://supernotify.rhizomatics.org.uk/dev/assets/images/dark_icon.png){ align=left }
 
 # Supernotify
 
@@ -21,13 +21,17 @@
 
 **Home Assistant 统一通知系统**
 
-### 重大变更 v2.0.0
+### 重大变更 v2
+
+>> 当 Home Assistant 2026.10 发布后，将不再支持 Python 3.13 以及 2026.3.0（首个仅支持 v3.14 的版本）之前的 Home Assistant 版本。Supernotify 将继续针对较旧的兼容 Home Assistant 版本进行测试。
 
 >> SuperNotify 的 `2.0.0` 版本迁移到了原生的 Home Assistant UI 配置方式（"ConfigFlow"）。如果你已经使用简单配置，系统会自动为你完成迁移，无需任何 YAML。
 
 >> 如果你使用的是高级配置（推送、场景、摄像头、人员、操作等），系统会发起一个*修复*，将这些内容迁移到新的 `supernotify.yaml` 文件中，并在你的 `configuration.yaml` 中添加一条 `include` 语句。你也可以选择按自己喜欢的方式，手动将配置从 `notify` 块中移出。
 
 >> 无论哪种方式，都不会删除或注释掉任何内容，因此很容易撤销此更改。当你确认新版本对你可以正常工作后，再删除旧配置。这也会从日志中移除来自旧版 notify 实现的 `[homeassistant.components.notify] Failed to initialize notification service supernotify` 警告。
+
+>> 现在还提供了一个替代操作 `supernotify.notify`，从自动化中配置要简单得多，其行为与现有操作完全相同。
 
 基于 Home Assistant 内置 `notify` 平台构建的**统一通知接口**，大幅简化多通知渠道和复杂场景的管理——包括多渠道通知、条件通知、移动操作、摄像头快照、门铃音效和基于模板的 HTML 邮件。
 
@@ -37,7 +41,7 @@ Supernotify 只有一个目标——**用最简单的通知触发尽可能多的
 
 仅通过 UI 配置，即可向家中所有人发送移动推送通知，无需配置移动应用名称。
 
-![通知操作示例](assets/images/notification.png){width=500}
+![通知操作示例](https://supernotify.rhizomatics.org.uk/dev/assets/images/notification.png){width=500}
 
 ## 分发方式
 
@@ -105,6 +109,11 @@ Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置�
         message: 你好！这是 Supernotify 的测试，正在向所有人的移动应用发送通知
 ```
 
+
+## 已知限制
+
+- **链接（Links）**可以配置，但目前尚未使用。
+- 推送、传输、收件人、操作等仍需要 YAML
 
 ##  面向 Home Assistant 的 Rhizomatics 开源项目
 

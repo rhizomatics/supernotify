@@ -129,6 +129,7 @@ A lot can be done with the simple non-YAML configuration, including automation o
 
 - **Links** can be configured but not currently used.
 - YAML still required for Delivery, Transport, Recipient, Action etc
+- Versions of Home Assistant more than 6 major releases ( usually 6 months ) aren't tested against Supernotify
 
 ##  Rhizomatics Open Source for Home Assistant
 

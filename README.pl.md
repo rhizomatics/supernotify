@@ -1,4 +1,4 @@
-![Supernotify](../assets/images/dark_icon.png){ align=left }
+![Supernotify](https://supernotify.rhizomatics.org.uk/dev/assets/images/dark_icon.png){ align=left }
 
 # Supernotify
 
@@ -21,13 +21,17 @@
 
 **Ujednolicone Powiadomienia dla Home Assistant**
 
-### DUŻA ZMIANA v2.0.0
+### DUŻA ZMIANA v2
+
+>> Wsparcie dla Pythona 3.13 oraz wersji Home Assistant starszych niż 2026.3.0 (pierwszej obsługującej wyłącznie v3.14) zostanie wycofane wraz z wydaniem Home Assistant 2026.10. Supernotify będzie nadal testowany ze starszymi, zgodnymi wersjami Home Assistant.
 
 >> Wersja `2.0.0` SuperNotify przechodzi na natywną konfigurację przez interfejs Home Assistant ('ConfigFlow'). Jeśli masz już prostą konfigurację, wszystko zostanie automatycznie zmigrowane, a YAML nie będzie potrzebny.
 
 >> Jeśli masz zaawansowaną konfigurację (dostarczenia, scenariusze, kamery, osoby, akcje itp.), zostanie zgłoszona *naprawa*, która przeniesie je do nowego pliku `supernotify.yaml` i doda instrukcję `include` do Twojego `configuration.yaml`. Możesz też ręcznie przenieść konfigurację z bloku `notify`, jak Ci wygodnie.
 
 >> W obu przypadkach nic nie zostanie usunięte ani zakomentowane, więc łatwo będzie cofnąć zmianę. Usuń starą konfigurację, gdy upewnisz się, że nowa wersja działa poprawnie. Usunie to również ostrzeżenie `[homeassistant.components.notify] Failed to initialize notification service supernotify` z dziennika, które pochodzi ze starej implementacji notify.
+
+>> Dostępna jest teraz alternatywna akcja `supernotify.notify`, znacznie łatwiejsza do skonfigurowania z poziomu automatyzacji, działająca identycznie jak dotychczasowe akcje.
 
 **Ujednolicony interfejs powiadomień** zbudowany na wbudowanej platformie `notify` Home Assistant, który znacznie upraszcza obsługę wielu kanałów powiadomień i złożonych scenariuszy — w tym powiadomień wielokanałowych, warunkowych, akcji mobilnych, zdjęć z kamer, dzwonków i szablonowych e-maili HTML.
 
@@ -37,7 +41,7 @@ Dzięki temu automatyzacje, skrypty i aplikacje AppDaemon pozostają proste i ł
 
 Wystarczy sama konfiguracja z poziomu interfejsu, aby rozpocząć wysyłanie powiadomień push do wszystkich zarejestrowanych w domu, bez konfigurowania nazw aplikacji mobilnych.
 
-![Przykładowa akcja powiadomienia](assets/images/notification.png){width=500}
+![Przykładowa akcja powiadomienia](https://supernotify.rhizomatics.org.uk/dev/assets/images/notification.png){width=500}
 
 ## Dystrybucja
 
@@ -105,6 +109,11 @@ Wiele można osiągnąć dzięki prostej konfiguracji bez YAML, w tym automatyza
         message: Cześć! Test Supernotify wysyłający do aplikacji mobilnych wszystkich
 ```
 
+
+## Znane ograniczenia
+
+- **Linki (Links)** można skonfigurować, ale obecnie nie są używane.
+- YAML jest nadal wymagany dla dostarczenia, transportu, odbiorcy, akcji itp.
 
 ##  Rhizomatics Open Source dla Home Assistant
 
