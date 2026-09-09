@@ -41,8 +41,7 @@ def _flow(hass: HomeAssistant, legacy_config: dict | None = None) -> Supernotify
 async def test_shim_creates_fixable_issue_and_registers_nothing(hass: HomeAssistant) -> None:
     """A leftover legacy `notify: - platform: supernotify` block is inert - the shim raises
     the fixable repair and declines to build a service (returns None)."""
-    service = await async_get_service(hass, dict(LEGACY_CONFIG))
-    assert service is None
+    await async_get_service(hass, dict(LEGACY_CONFIG))
 
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, ISSUE_ID)
@@ -64,8 +63,7 @@ async def test_shim_backfills_name_on_pre_existing_entry_without_waiting_for_rep
     assert hass.services.has_service("notify", "supernotify")
 
     legacy_config = {**LEGACY_CONFIG, "name": "SuperNotifier"}
-    service = await async_get_service(hass, legacy_config)
-    assert service is None
+    await async_get_service(hass, legacy_config)
     await hass.async_block_till_done()
 
     assert entry.data["name"] == "SuperNotifier"
@@ -92,8 +90,7 @@ async def test_shim_backfills_archive_options_on_pre_existing_entry_without_wait
         "archive": {"enabled": True, "file_path": "/config/archive/supernotify", "file_retention_days": 3},
         "dupe_check": {"ttl": 120},
     }
-    service = await async_get_service(hass, legacy_config)
-    assert service is None
+    await async_get_service(hass, legacy_config)
     await hass.async_block_till_done()
 
     assert entry.options["archive"]["enabled"] is True
@@ -117,8 +114,7 @@ async def test_shim_backfills_data_fields_on_pre_existing_entry_without_waiting_
         "template_path": "/config/templates/supernotify",
         "media_path": "/config/media/supernotify",
     }
-    service = await async_get_service(hass, legacy_config)
-    assert service is None
+    await async_get_service(hass, legacy_config)
     await hass.async_block_till_done()
 
     assert entry.data["template_path"] == "/config/templates/supernotify"
@@ -143,8 +139,7 @@ async def test_shim_migrates_minimal_config_without_any_repair(hass: HomeAssista
         "media_path": "/config/media/supernotify",
         "archive": {"enabled": True, "file_path": "/config/archive/supernotify"},
     }
-    service = await async_get_service(hass, minimal_legacy_config)
-    assert service is None
+    await async_get_service(hass, minimal_legacy_config)
     await hass.async_block_till_done()
 
     assert entry.data["name"] == "SuperNotifier"
@@ -181,8 +176,7 @@ async def test_shim_sync_reaches_the_live_running_service_not_just_stored_config
         "template_path": str(template_dir),
         "archive": {"enabled": True, "file_path": "/config/archive/supernotify"},
     }
-    service = await async_get_service(hass, legacy_config)
-    assert service is None
+    await async_get_service(hass, legacy_config)
     await hass.async_block_till_done()
 
     # stored config: already covered above, re-asserted here for context

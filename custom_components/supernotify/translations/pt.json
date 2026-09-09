@@ -1,6 +1,10 @@
 {
     "title": "Supernotify",
     "services": {
+        "reload": {
+            "name": "Recarregar",
+            "description": "Recarrega os serviços do Supernotify."
+        },
         "notify": {
             "name": "Notificar",
             "description": "Envia uma notificação através do SuperNotify para uma ou mais plataformas de notificação por meio de uma única interface unificada.",
@@ -101,13 +105,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Recarregar",
-            "description": "Recarrega os serviços do Supernotify."
+        "enquire_configuration": {
+            "name": "Consultar configuração",
+            "description": "Assistente de depuração para mostrar a configuração do SuperNotify atualmente carregada"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Consultar entregas por cenário",
             "description": "Assistente de depuração para mostrar a lista de entregas para cada cenário, incluindo o uso padrão"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Consultar entregas implícitas",
+            "description": "Assistente de depuração para mostrar as entregas usadas automaticamente por predefinição para cada transporte"
+        },
+        "enquire_last_notification": {
+            "name": "Consultar última notificação",
+            "description": "Assistente de depuração para mostrar o conteúdo da última notificação enviada",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnóstico",
+                    "description": "Incluir o detalhe completo ao nível de diagnóstico em vez de apenas um resumo"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Consultar destinatários",
+            "description": "Assistente de depuração para mostrar os destinatários atualmente configurados"
+        },
+        "enquire_scenarios": {
+            "name": "Consultar cenários",
+            "description": "Assistente de depuração para mostrar os cenários atualmente configurados e os seus atributos"
+        },
+        "enquire_active_scenarios": {
+            "name": "Consultar cenários ativos",
+            "description": "Assistente de depuração para mostrar quais cenários estão atualmente ativos",
+            "fields": {
+                "trace": {
+                    "name": "Rastreio",
+                    "description": "Incluir o rastreio de avaliação de condições para cada cenário ativo"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Consultar ocupação",
+            "description": "Assistente de depuração para mostrar o estado de ocupação atual usado para a definição de destino das entregas"
+        },
+        "enquire_snoozes": {
+            "name": "Consultar snoozes",
+            "description": "Assistente de depuração para mostrar os snoozes atualmente ativos"
+        },
+        "refresh_entities": {
+            "name": "Atualizar entidades",
+            "description": "Atualiza todas as entidades expostas pelo SuperNotify para inspeção e controlo"
+        },
+        "clear_snoozes": {
+            "name": "Limpar snoozes",
+            "description": "Limpa todos os snoozes atualmente ativos"
+        },
+        "purge_media": {
+            "name": "Purgar multimédia",
+            "description": "Elimina ficheiros multimédia armazenados mais antigos do que o número de dias configurado (ou indicado)",
+            "fields": {
+                "days": {
+                    "name": "Dias",
+                    "description": "Substitui o período de retenção configurado para esta purga, em dias"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Purgar arquivo",
+            "description": "Elimina registos de notificações arquivadas mais antigos do que o número de dias configurado (ou indicado)",
+            "fields": {
+                "days": {
+                    "name": "Dias",
+                    "description": "Substitui o período de retenção configurado para esta purga, em dias"
+                }
+            }
         }
     },
     "config": {

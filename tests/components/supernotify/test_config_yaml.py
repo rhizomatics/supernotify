@@ -22,12 +22,12 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceResponse, State
     from homeassistant.util.json import JsonObjectType
 
-    from custom_components.supernotify.notify import SupernotifyAction
+    from custom_components.supernotify.engine import SupernotifyEngine
 
 FIXTURE = pathlib.Path(__file__).parent.joinpath("..", "..", "..", "examples", "maximal.yaml")
 
 
-async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyAction:
+async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyEngine:
     """Set up supernotify from a top-level `supernotify:` YAML config and return the live
     service - the config entry (bootstrapped automatically) is the sole owner of it now, so
     there's no more hass.data["notify_services"][DOMAIN] legacy-platform bucket to read."""
@@ -129,6 +129,14 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
     assert len(uut.context.delivery_registry.deliveries) == 15
+
+    # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
+    # over from before the reload (both would report True) - actually call it and confirm the
+    # delivery lands on this reloaded engine, not some earlier instance
+    await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"message": "post-reload delivery check"}, blocking=True)
+    await hass.async_block_till_done()
+    assert uut.last_notification is not None
+    assert uut.last_notification.message == "post-reload delivery check"
 
 
 async def test_call_action(hass: HomeAssistant) -> None:

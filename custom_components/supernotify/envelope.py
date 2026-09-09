@@ -15,6 +15,9 @@ from jinja2 import TemplateError
 from .common import DupeCheckable
 from .const import (
     ATTR_MEDIA,
+    ATTR_MEDIA_CAMERA_ENTITY_ID,
+    ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
     ATTR_PRIORITY,
     ATTR_SPOKEN_MESSAGE,
@@ -296,7 +299,17 @@ class Envelope(DupeCheckable):
             return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
 
         message: str | None = self._spoken_message() or self._message
-        return hash((alphaize(message), alphaize(self.delivery.name), self.target.hash_resolved(), alphaize(self._title)))
+        media = self.media or {}
+        camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+        media_url = media.get(ATTR_MEDIA_CLIP_URL) or media.get(ATTR_MEDIA_SNAPSHOT_URL)
+        return hash((
+            alphaize(message),
+            alphaize(self.delivery.name),
+            self.target.hash_resolved(),
+            alphaize(self._title),
+            camera_entity_id,
+            media_url,
+        ))
 
     def _resolve_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
         """Resolve Jinja2 templates in data dict for archive readability.

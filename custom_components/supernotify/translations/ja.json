@@ -1,6 +1,10 @@
 {
     "title": "Supernotify",
     "services": {
+        "reload": {
+            "name": "リロード",
+            "description": "Supernotifyサービスを再読み込みします。"
+        },
         "notify": {
             "name": "通知",
             "description": "SuperNotify を介して、単一の統一されたインターフェースで1つ以上の通知プラットフォームに通知を送信します。",
@@ -101,13 +105,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "リロード",
-            "description": "Supernotifyサービスを再読み込みします。"
+        "enquire_configuration": {
+            "name": "設定の照会",
+            "description": "現在読み込まれているSuperNotifyの設定を表示するデバッグアシスタント"
         },
         "enquire_deliveries_by_scenario": {
             "name": "シナリオ別配信の照会",
             "description": "デフォルトの使用法を含め、各シナリオの配信リストを表示するデバッグアシスタント"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "暗黙的配信の照会",
+            "description": "各トランスポートでデフォルトで自動的に使用される配信を表示するデバッグアシスタント"
+        },
+        "enquire_last_notification": {
+            "name": "最終通知の照会",
+            "description": "最後に送信された通知の内容を表示するデバッグアシスタント",
+            "fields": {
+                "diagnostics": {
+                    "name": "診断",
+                    "description": "概要だけでなく、より詳細な診断レベルの情報を含めます"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "受信者の照会",
+            "description": "現在設定されている受信者を表示するデバッグアシスタント"
+        },
+        "enquire_scenarios": {
+            "name": "シナリオの照会",
+            "description": "現在設定されているシナリオとその属性を表示するデバッグアシスタント"
+        },
+        "enquire_active_scenarios": {
+            "name": "アクティブなシナリオの照会",
+            "description": "現在アクティブなシナリオを表示するデバッグアシスタント",
+            "fields": {
+                "trace": {
+                    "name": "トレース",
+                    "description": "各アクティブなシナリオの条件評価のトレースを含めます"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "在室状況の照会",
+            "description": "配信の対象決定に使用される現在の在室状況を表示するデバッグアシスタント"
+        },
+        "enquire_snoozes": {
+            "name": "スヌーズの照会",
+            "description": "現在アクティブなスヌーズを表示するデバッグアシスタント"
+        },
+        "refresh_entities": {
+            "name": "エンティティの更新",
+            "description": "SuperNotifyが公開するすべてのエンティティを、確認と制御のために更新します"
+        },
+        "clear_snoozes": {
+            "name": "スヌーズのクリア",
+            "description": "現在アクティブなすべてのスヌーズをクリアします"
+        },
+        "purge_media": {
+            "name": "メディアのパージ",
+            "description": "設定された(または指定された)日数より古い保存済みメディアファイルを削除します",
+            "fields": {
+                "days": {
+                    "name": "日数",
+                    "description": "このパージの保持期間を、日数単位で上書きします"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "アーカイブのパージ",
+            "description": "設定された(または指定された)日数より古いアーカイブ済み通知レコードを削除します",
+            "fields": {
+                "days": {
+                    "name": "日数",
+                    "description": "このパージの保持期間を、日数単位で上書きします"
+                }
+            }
         }
     },
     "config": {

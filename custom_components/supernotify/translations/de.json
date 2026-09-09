@@ -1,6 +1,10 @@
 {
     "title": "Supernotify",
     "services": {
+        "reload": {
+            "name": "Neu laden",
+            "description": "Lädt die Supernotify-Dienste neu."
+        },
         "notify": {
             "name": "Benachrichtigen",
             "description": "Sendet über SuperNotify eine Benachrichtigung an eine oder mehrere Benachrichtigungsplattformen über eine einzige, einheitliche Schnittstelle.",
@@ -101,13 +105,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Neu laden",
-            "description": "Lädt die Supernotify-Dienste neu."
+        "enquire_configuration": {
+            "name": "Konfiguration abfragen",
+            "description": "Debug-Assistent zur Anzeige der aktuell geladenen SuperNotify-Konfiguration"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Lieferungen nach Szenario abfragen",
             "description": "Debug-Assistent zur Anzeige der Lieferungsliste für jedes Szenario, einschließlich Standardnutzung"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Implizite Lieferungen abfragen",
+            "description": "Debug-Assistent zur Anzeige der für jeden Transport standardmäßig automatisch verwendeten Lieferungen"
+        },
+        "enquire_last_notification": {
+            "name": "Letzte Benachrichtigung abfragen",
+            "description": "Debug-Assistent zur Anzeige des Inhalts der zuletzt gesendeten Benachrichtigung",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnose",
+                    "description": "Die ausführlicheren Diagnosedetails statt nur einer Zusammenfassung einschließen"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Empfänger abfragen",
+            "description": "Debug-Assistent zur Anzeige der aktuell konfigurierten Empfänger"
+        },
+        "enquire_scenarios": {
+            "name": "Szenarien abfragen",
+            "description": "Debug-Assistent zur Anzeige der aktuell konfigurierten Szenarien und ihrer Attribute"
+        },
+        "enquire_active_scenarios": {
+            "name": "Aktive Szenarien abfragen",
+            "description": "Debug-Assistent zur Anzeige der derzeit aktiven Szenarien",
+            "fields": {
+                "trace": {
+                    "name": "Ablaufverfolgung",
+                    "description": "Die Bedingungsauswertung für jedes aktive Szenario einschließen"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Belegung abfragen",
+            "description": "Debug-Assistent zur Anzeige des aktuellen, für die Lieferungsauswahl verwendeten Belegungsstatus"
+        },
+        "enquire_snoozes": {
+            "name": "Snooze abfragen",
+            "description": "Debug-Assistent zur Anzeige der aktuell aktiven Snoozes"
+        },
+        "refresh_entities": {
+            "name": "Entitäten aktualisieren",
+            "description": "Aktualisiert alle von SuperNotify bereitgestellten Entitäten zur Überprüfung und Steuerung"
+        },
+        "clear_snoozes": {
+            "name": "Snooze löschen",
+            "description": "Löscht alle aktuell aktiven Snoozes"
+        },
+        "purge_media": {
+            "name": "Medien bereinigen",
+            "description": "Löscht gespeicherte Mediendateien, die älter als die konfigurierte (oder angegebene) Anzahl von Tagen sind",
+            "fields": {
+                "days": {
+                    "name": "Tage",
+                    "description": "Überschreibt die konfigurierte Aufbewahrungsdauer für diese Bereinigung, in Tagen"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Archiv bereinigen",
+            "description": "Löscht archivierte Benachrichtigungsdatensätze, die älter als die konfigurierte (oder angegebene) Anzahl von Tagen sind",
+            "fields": {
+                "days": {
+                    "name": "Tage",
+                    "description": "Überschreibt die konfigurierte Aufbewahrungsdauer für diese Bereinigung, in Tagen"
+                }
+            }
         }
     },
     "config": {
