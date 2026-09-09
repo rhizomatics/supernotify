@@ -8,6 +8,9 @@
 - The previously hard-coded max wait time to snap an image of 20 seconds is now configurable with `snap_wait` in the camera configuration.
   - This is different from the existing `camera_delay` and PTZ controls in that its not a pause. If the camera snap is instant, then the `snap_wait` time will never be used, its only an allowance for cameras that are slow to snapshot.
 
+### Diagnostics
+- Integration now has a standard Home Assistant *Diagnostics* option, gathering info previously provided by multiple diagnostics actions, provided by [@lollox80](https://github.com/lollox80)
+
 ### Tracing Activities
 - Fixed missing contexts on downstream actions, a consequence of relying on code from the "legacy" Home Assistant Notification platform, which throws away context
 - If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
