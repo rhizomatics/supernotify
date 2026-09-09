@@ -10,10 +10,10 @@ from homeassistant.core import HomeAssistant, SupportsResponse
 
 from custom_components.supernotify.const import CONF_DELIVERY_DEFAULTS, TRANSPORT_GENERIC
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DeliveryConfig, Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .doubles_lib import DummyService

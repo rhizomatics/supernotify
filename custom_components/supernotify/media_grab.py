@@ -33,6 +33,7 @@ from custom_components.supernotify.const import (
     CONF_PTZ_DELAY,
     CONF_PTZ_METHOD,
     CONF_PTZ_PRESET_DEFAULT,
+    CONF_SNAP_WAIT,
     MEDIA_OPTION_REPROCESS,
     OPTION_JPEG,
     OPTION_PNG,
@@ -40,6 +41,7 @@ from custom_components.supernotify.const import (
     PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
+    SNAP_WAIT_DEFAULT,
 )
 
 from .common import int_or_none
@@ -267,7 +269,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
             return alt_cam[CONF_CAMERA]
 
     if avail_camera_entity_id is None:
-        _LOGGER.warning("%s not available, finding best alternative available", camera_entity_id)
+        _LOGGER.warning("SUPERNOTIFY %s not available, finding best alternative available", camera_entity_id)
         if camera_available(hass_api, preferred_cam, non_entity=True):
             _LOGGER.info("SUPERNOTIFY Selecting camera %s with no known entity", camera_entity_id)
             return camera_entity_id
@@ -354,7 +356,7 @@ async def snap_notification_image(
                 _LOGGER.debug("SUPERNOTIFY Waiting %s secs before snapping", camera_delay)
                 await asyncio.sleep(camera_delay)
 
-            max_camera_wait: int = 15
+            max_camera_wait: int = camera_config.get(CONF_SNAP_WAIT, SNAP_WAIT_DEFAULT)
             _LOGGER.debug(
                 "SUPERNOTIFY Snapping camera %s, max_wait: %s, to: %s", active_camera_entity_id, max_camera_wait, media_path
             )
@@ -433,8 +435,12 @@ async def grab_image(
     if await processed_path.exists():
         return await processed_path.resolve()
 
-    async with await raw_path.open("rb") as f:
-        bitmap: bytes = await f.read()
+    try:
+        async with await raw_path.open("rb") as f:
+            bitmap: bytes = await f.read()
+    except OSError as e:
+        _LOGGER.warning("SUPERNOTIFY Unable to read raw image %s: %s", raw_path, e)
+        return None
     return await write_image_from_bitmap(
         context.hass_api, bitmap, processed_path, reprocess=reprocess, jpeg_opts=jpeg_opts, png_opts=png_opts
     )
