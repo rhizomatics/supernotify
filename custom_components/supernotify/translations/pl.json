@@ -1,6 +1,10 @@
 {
     "title": "Supernotify",
     "services": {
+        "reload": {
+            "name": "Przeładuj",
+            "description": "Ponownie ładuje usługi Supernotify."
+        },
         "notify": {
             "name": "Powiadom",
             "description": "Wysyła powiadomienie za pośrednictwem SuperNotify do jednej lub kilku platform powiadomień poprzez pojedynczy, ujednolicony interfejs.",
@@ -101,13 +105,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Przeładuj",
-            "description": "Ponownie ładuje usługi Supernotify."
+        "enquire_configuration": {
+            "name": "Zapytaj o konfigurację",
+            "description": "Asystent debugowania do wyświetlania aktualnie wczytanej konfiguracji SuperNotify"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Zapytaj o dostarczenia według scenariusza",
             "description": "Asystent debugowania do wyświetlania listy dostarczeń dla każdego scenariusza, w tym domyślnego użycia"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Zapytaj o dostarczenia domyślne",
+            "description": "Asystent debugowania do wyświetlania dostarczeń używanych automatycznie domyślnie dla każdego transportu"
+        },
+        "enquire_last_notification": {
+            "name": "Zapytaj o ostatnie powiadomienie",
+            "description": "Asystent debugowania do wyświetlania zawartości ostatnio wysłanego powiadomienia",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnostyka",
+                    "description": "Uwzględnij pełniejsze szczegóły na poziomie diagnostyki zamiast samego podsumowania"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Zapytaj o odbiorców",
+            "description": "Asystent debugowania do wyświetlania aktualnie skonfigurowanych odbiorców"
+        },
+        "enquire_scenarios": {
+            "name": "Zapytaj o scenariusze",
+            "description": "Asystent debugowania do wyświetlania aktualnie skonfigurowanych scenariuszy i ich atrybutów"
+        },
+        "enquire_active_scenarios": {
+            "name": "Zapytaj o aktywne scenariusze",
+            "description": "Asystent debugowania do wyświetlania, które scenariusze są aktualnie aktywne",
+            "fields": {
+                "trace": {
+                    "name": "Śledzenie",
+                    "description": "Uwzględnij śledzenie oceny warunków dla każdego aktywnego scenariusza"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Zapytaj o obłożenie",
+            "description": "Asystent debugowania do wyświetlania aktualnego stanu obłożenia używanego do kierowania dostarczeń"
+        },
+        "enquire_snoozes": {
+            "name": "Zapytaj o snooze",
+            "description": "Asystent debugowania do wyświetlania aktualnie aktywnych snooze"
+        },
+        "refresh_entities": {
+            "name": "Odśwież encje",
+            "description": "Odświeża każdą encję udostępnianą przez SuperNotify do wglądu i sterowania"
+        },
+        "clear_snoozes": {
+            "name": "Wyczyść snooze",
+            "description": "Czyści wszystkie aktualnie aktywne snooze"
+        },
+        "purge_media": {
+            "name": "Usuń media",
+            "description": "Usuwa zapisane pliki multimedialne starsze niż skonfigurowana (lub podana) liczba dni",
+            "fields": {
+                "days": {
+                    "name": "Dni",
+                    "description": "Zastępuje skonfigurowany okres przechowywania dla tego czyszczenia, w dniach"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Usuń archiwum",
+            "description": "Usuwa zarchiwizowane rekordy powiadomień starsze niż skonfigurowana (lub podana) liczba dni",
+            "fields": {
+                "days": {
+                    "name": "Dni",
+                    "description": "Zastępuje skonfigurowany okres przechowywania dla tego czyszczenia, w dniach"
+                }
+            }
         }
     },
     "config": {

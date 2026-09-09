@@ -30,7 +30,7 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
 )
-from custom_components.supernotify.notify import SupernotifyAction
+from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome, OutcomeSelection
 
 if TYPE_CHECKING:
@@ -54,7 +54,7 @@ class ArchiveCrashDummy(ArchivableObject):
 )
 async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: OutcomeSelection) -> None:
     with tempfile.TemporaryDirectory() as archive:
-        uut = SupernotifyAction(
+        uut = SupernotifyEngine(
             mock_hass,
             scenarios={
                 "critical": SCENARIO_SCHEMA({
@@ -96,7 +96,7 @@ async def test_integration_archive_with_ha_context(mock_hass: HomeAssistant) -> 
     crash archiving since Context.as_dict() doesn't accept the occupancy_only kwarg
     that Notification.contents() passes to every non-excluded attribute."""
     with tempfile.TemporaryDirectory() as archive:
-        uut = SupernotifyAction(
+        uut = SupernotifyEngine(
             mock_hass,
             scenarios={},
             deliveries={"chime": {"transport": "chime"}},

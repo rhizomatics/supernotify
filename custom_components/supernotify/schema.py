@@ -130,6 +130,7 @@ from .const import (
     CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_SIZE,
+    CONF_SNAP_WAIT,
     CONF_SNOOZE,
     CONF_SNOOZE_TIME,
     CONF_TARGET_REQUIRED,
@@ -157,6 +158,7 @@ from .const import (
     RESERVED_SCENARIO_NAMES,
     SCENARIO_STATE_REFRESH_DEFAULT,
     SELECTION_VALUES,
+    SNAP_WAIT_DEFAULT,
     TARGET_REQUIRE_ALWAYS,
     TARGET_REQUIRE_NEVER,
     TARGET_REQUIRE_OPTIONAL,
@@ -406,6 +408,7 @@ CAMERA_SCHEMA = vol.Schema({
     vol.Optional(CONF_PTZ_PRESET_DEFAULT, default=1): vol.Any(cv.positive_int, cv.string),
     vol.Optional(CONF_PTZ_DELAY, default=PTZ_DELAY_DEFAULT): int,
     vol.Optional(CONF_PTZ_METHOD, default=PTZ_METHOD_ONVIF): vol.In(PTZ_METHOD_VALUES),
+    vol.Optional(CONF_SNAP_WAIT, default=SNAP_WAIT_DEFAULT): int,
 })
 MEDIA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
@@ -606,10 +609,10 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Optional(CONF_TARGET): TARGET_SCHEMA,
         # the target selector behind CONF_TARGET can only produce entity/device/area/floor/label
         # ids, so custom_target is a free-text escape hatch for targets it can't - e-mail
-        # addresses, phone numbers, Slack ids etc. notify.py's supplemental_action_notify merges
+        # addresses, phone numbers, Slack ids etc. notify.py's action_notify merges
         # it back into target before Notification ever sees it
         vol.Optional(ATTR_CUSTOM_TARGET): vol.All(cv.ensure_list, [cv.string]),
-        # promoted out of media: for their own selectors - notify.py's supplemental_action_notify
+        # promoted out of media: for their own selectors - notify.py's action_notify
         # merges them back into media before Notification ever sees them
         vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
         vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),

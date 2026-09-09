@@ -19,11 +19,11 @@ from custom_components.supernotify.const import (
     PRIORITY_MEDIUM,
 )
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import ConditionVariables, TargetRequired
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.scenario import Scenario
 from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome
 

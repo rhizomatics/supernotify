@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import mkdocs_gen_files
 
-from custom_components.supernotify.notify import TRANSPORTS
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
 
