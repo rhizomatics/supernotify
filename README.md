@@ -22,7 +22,9 @@
 
 **Unified Notification for Home Assistant**
 
-### MAJOR CHANGE v2.0.0
+### MAJOR CHANGE v2
+
+>> Support for Python 3.13 and versions of Home Assistant prior to 2026.3.0 (the first to support v3.14 only) will be dropped when Home Assistant 2026.10 is released. Supernotify will continue to be tested against older compatible versions of Home Assistant.
 
 >> `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
 
