@@ -515,6 +515,8 @@ async def test_snap_camera_no_camera_component(unmocked_hass_api: HomeAssistantA
 async def test_snap_camera_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
     mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]
     result = await snap_camera(mock_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
+
+
 async def test_snap_camera_timeout_no_file(unmocked_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
     async def noop_snapshot(call: ServiceCall) -> ServiceResponse | None:
         # service completes without ever writing the snapshot file
