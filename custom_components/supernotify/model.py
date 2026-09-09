@@ -258,8 +258,23 @@ class Target:
     def has_targets(self) -> bool:
         return any(targets for targets in self.targets.values())
 
-    def has_resolved_target(self) -> bool:
-        return any(targets for category, targets in self.targets.items() if category not in self.INDIRECT_CATEGORIES)
+    def has_resolved_target(self, include_selectors: bool = False) -> bool:
+        """True if any target remains after removing the indirect ones, optionally counting
+        area/floor/label selectors as resolved when they pass through to the action natively"""
+        return any(
+            targets
+            for category, targets in self.targets.items()
+            if category not in self.INDIRECT_CATEGORIES or (include_selectors and category in self.EXPLICIT_INDIRECT_CATEGORIES)
+        )
+
+    def has_selectors(self) -> bool:
+        return any(self.targets.get(category) for category in self.EXPLICIT_INDIRECT_CATEGORIES)
+
+    def selector_data(self) -> dict[str, list[str]]:
+        """area_id/floor_id/label_id targets in the shape of an HA action target block"""
+        return {
+            category: list(targets) for category in self.EXPLICIT_INDIRECT_CATEGORIES if (targets := self.targets.get(category))
+        }
 
     def has_unknown_targets(self) -> bool:
         return len(self.targets.get(self.UNKNOWN_CUSTOM_CATEGORY, [])) > 0
@@ -285,13 +300,18 @@ class Target:
     def direct_categories(self) -> list[str]:
         return self.DIRECT_CATEGORIES + [cat for cat in self.targets if cat not in self.CATEGORIES]
 
-    def direct(self) -> Target:
+    def direct(self, keep_selectors: bool = False) -> Target:
+        """Narrow to the direct targets, optionally keeping area/floor/label selectors for actions
+        that resolve them natively"""
+        categories: list[str] = self.direct_categories
+        if keep_selectors:
+            categories = categories + self.EXPLICIT_INDIRECT_CATEGORIES
         t = Target(
-            {cat: targets for cat, targets in self.targets.items() if cat in self.direct_categories},
+            {cat: targets for cat, targets in self.targets.items() if cat in categories},
             target_data=self.target_data,
         )
         if self.target_specific_data:
-            t.target_specific_data = {k: v for k, v in self.target_specific_data.items() if k[0] in self.direct_categories}
+            t.target_specific_data = {k: v for k, v in self.target_specific_data.items() if k[0] in categories}
         return t
 
     def extend(self, category: str, targets: list[str] | str) -> None:

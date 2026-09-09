@@ -67,13 +67,12 @@ class AlexaDevicesTransport(Transport):
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)
 
-        targets = envelope.target.entity_ids or []
+        target_data: dict[str, Any] = self.action_target(envelope, envelope.target.entity_ids or None)
 
-        if not targets:
+        if not self.has_action_target(target_data):
             _LOGGER.debug("SUPERNOTIFY Skipping alexa devices, no targets")
             return False
 
         action_data: dict[str, Any] = {ATTR_MESSAGE: envelope.message or ""}
-        target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets}
 
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)

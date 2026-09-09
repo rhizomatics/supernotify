@@ -212,7 +212,7 @@ class HTML5Transport(Transport):
 
         # Resolve and pre-validate notify entity targets
         targets = self.select_targets(envelope)
-        if not targets:
+        if not targets and not self.has_action_target(self.action_target(envelope)):
             _LOGGER.warning("SUPERNOTIFY html5: no valid targets (expected notify.* entities)")
             self.record_error("no valid html5 notify entity targets", "deliver")
             return False
@@ -303,5 +303,5 @@ class HTML5Transport(Transport):
                 sorted(raw_data),
             )
 
-        target_data = {ATTR_ENTITY_ID: targets}
+        target_data = self.action_target(envelope, targets)
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)

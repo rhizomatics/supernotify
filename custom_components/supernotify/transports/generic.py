@@ -163,20 +163,20 @@ class GenericTransport(Transport):
             if qualified_action == "notify.send_message":
                 # amongst the wild west of notifty handling, at least care for the modern core one
                 action_data = core_action_data
-                target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+                target_data = self.action_target(envelope, envelope.target.domain_entity_ids(domain))
                 prune_data = False
             else:
                 action_data = core_action_data
                 action_data[ATTR_DATA] = data
                 build_targets = True
         elif equiv_domain == "input_text":
-            target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+            target_data = self.action_target(envelope, envelope.target.domain_entity_ids(domain))
             if "value" in data:
                 action_data = {"value": data["value"]}
             else:
                 action_data = {"value": core_action_data[ATTR_MESSAGE]}
         elif equiv_domain == "switch":
-            target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+            target_data = self.action_target(envelope, envelope.target.domain_entity_ids(domain))
         elif equiv_domain == "mqtt":
             action_data = data
             if "payload" not in action_data:
@@ -191,7 +191,7 @@ class GenericTransport(Transport):
         elif qualified_action == "ntfy.publish":
             mini_envelopes.extend(ntfy(core_action_data, data, envelope.target, envelope.delivery, self.hass_api))
         elif equiv_domain in ("siren", "light"):
-            target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
+            target_data = self.action_target(envelope, envelope.target.domain_entity_ids(domain))
             action_data = data
         elif equiv_domain == "rest_command":
             action_data = data

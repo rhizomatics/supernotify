@@ -208,7 +208,7 @@ class KodiTransport(Transport):
 
         # Resolve and pre-validate media_player targets
         targets = self.select_targets(envelope)
-        if not targets:
+        if not targets and not self.has_action_target(self.action_target(envelope)):
             _LOGGER.warning("SUPERNOTIFY kodi: no valid media_player targets")
             self.record_error("no valid Kodi media_player targets", "deliver")
             return False
@@ -264,5 +264,5 @@ class KodiTransport(Transport):
         return await self.call_action(
             envelope,
             action_data=action_data,
-            target_data={ATTR_ENTITY_ID: targets},
+            target_data=self.action_target(envelope, targets),
         )

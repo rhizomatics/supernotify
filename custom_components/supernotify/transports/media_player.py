@@ -50,9 +50,9 @@ class MediaPlayerTransport(Transport):
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)
 
         data: dict[str, Any] = envelope.data or {}
-        media_players: list[str] = envelope.target.entity_ids or []
+        target_data: dict[str, Any] = self.action_target(envelope, envelope.target.entity_ids or None)
         media_type: str = data.get("media_content_type", "image")
-        if not media_players:
+        if not self.has_action_target(target_data):
             _LOGGER.debug("SUPERNOTIFY Skipping media show, no targets")
             return False
 
@@ -72,4 +72,4 @@ class MediaPlayerTransport(Transport):
         if data and data.get("enqueue"):
             action_data["enqueue"] = data.get("enqueue")
 
-        return await self.call_action(envelope, action_data=action_data, target_data={ATTR_ENTITY_ID: media_players})
+        return await self.call_action(envelope, action_data=action_data, target_data=target_data)

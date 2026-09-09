@@ -67,14 +67,10 @@ class NotifyEntityTransport(Transport):
         return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
-        targets = envelope.target.entity_ids or []
-        if not targets:
+        target_data: dict[str, Any] = self.action_target(envelope, envelope.target.entity_ids or None)
+        if not self.has_action_target(target_data):
             _LOGGER.warning("SUPERNOTIFY notify_entity: no targets")
             return False
-        target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets}
-        # area_id
-        # device_id
-        # label_id
         action_data = envelope.core_action_data()
 
         return await self.call_action(envelope, FIXED_ACTION, action_data=action_data, target_data=target_data)

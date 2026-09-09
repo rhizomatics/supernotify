@@ -129,6 +129,20 @@ class Transport:
 
         """
 
+    def action_target(self, envelope: Envelope, entity_ids: list[str] | None = None) -> dict[str, Any]:  # type: ignore # noqa: F821
+        """Build the target block of an action call from entity ids, plus any area/floor/label
+        selectors the delivery passes through natively to the action"""
+        target_data: dict[str, Any] = {}
+        if entity_ids is not None:
+            target_data[ATTR_ENTITY_ID] = entity_ids
+        if envelope.delivery.passes_target_selectors and envelope.target is not None:
+            target_data.update(envelope.target.selector_data())
+        return target_data
+
+    @staticmethod
+    def has_action_target(target_data: dict[str, Any]) -> bool:
+        return any(target_data.values())
+
     def set_action_data(self, action_data: dict[str, Any], key: str, data: Any | None) -> dict[str, Any]:  # ruff: ignore[any-type]
         if data is not None:
             action_data[key] = data

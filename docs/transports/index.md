@@ -51,6 +51,7 @@ All of these set by passing an `options` block in Delivery config or Transport d
 | strip_urls                 | bool      | all        | Remove URLs from message and title                                           |
 | target_categories          | list      | all        | Which targets to pass, e.g. `entity_id`,`email`,`device_id`                  |
 | target_select              | Selection | all        | Only use targets fully matching these regular expressions                    |
+| target_selectors           | str       | all        | `auto`,`native` or `resolve` for how `area_id`,`floor_id`,`label_id` targets are handled |
 | unique_targets             | bool      | all        | Don't pass targets already used in this notification                         |
 | data_keys_select           | Selection | generic    | Prune `data` block by including/excluding values or by regex pattern.        |
 | handle_as_domain           | bool      | generic    | Treat the action call in same way as a known domain                          |
