@@ -233,7 +233,11 @@ class ArchiveDirectory(ArchiveDestination):
                 for entry in archive:
                     if entry.name == ".startup":
                         continue
-                    if dt_util.utc_from_timestamp(entry.stat().st_ctime) <= cutoff:
+                    # st_ctime is used deliberately here (not st_birthtime): archive files are
+                    # written once and never modified afterwards, so ctime reflects creation time
+                    # on the platforms this integration targets; st_birthtime is not guaranteed to
+                    # be available on all Linux filesystems.
+                    if dt_util.utc_from_timestamp(entry.stat().st_ctime) <= cutoff:  # ty: ignore[deprecated]
                         _LOGGER.debug("SUPERNOTIFY Purging %s", entry.path)
                         await aiofiles.os.unlink(entry.path)
                         purged += 1
