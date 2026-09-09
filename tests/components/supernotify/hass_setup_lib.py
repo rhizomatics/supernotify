@@ -15,7 +15,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.core import (
     EventBus,
     HomeAssistant,
@@ -135,6 +135,14 @@ def assert_clean_notification(
 
     assert notobj["skipped"] == expected_skipped + ignore_skipped
     assert notobj["suppressed"] == expected_suppressed
+
+
+class MockGroup:
+    """Minimal stand-in for a HA group state, exposing members in the entity_id attribute"""
+
+    def __init__(self, entities: list[str]) -> None:
+        self.state = "on"
+        self.attributes = {ATTR_ENTITY_ID: entities}
 
 
 class MockableHomeAssistant(HomeAssistant):

@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import SupportsResponse
 from homeassistant.exceptions import (
     ConditionErrorContainer,
@@ -155,6 +156,30 @@ def test_async_roundtrips_entity_state(hass: HomeAssistant) -> None:
     state = hass_api.get_state("entity.testablity")
     assert state is not None
     assert state.state == "off"
+
+
+def test_group_members(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    hass_api.set_state("media_player.kitchen", "off")
+    hass_api.set_state("media_player.all_speakers", "off", {ATTR_ENTITY_ID: ["media_player.kitchen", "media_player.hall"]})
+    hass_api.set_state(
+        "group.downstairs", "on", {ATTR_ENTITY_ID: ["media_player.all_speakers", "switch.bell", "group.upstairs"]}
+    )
+    hass_api.set_state("group.upstairs", "on", {ATTR_ENTITY_ID: ["media_player.kitchen", "group.downstairs", "group.upstairs"]})
+
+    assert hass_api.group_members("media_player.kitchen") is None
+    assert hass_api.group_members("media_player.no_such_thing") is None
+    assert hass_api.group_members("media_player.all_speakers") == ["media_player.kitchen", "media_player.hall"]
+    # nested, cyclic and self referencing groups flattened and deduped
+    assert hass_api.group_members("group.downstairs") == ["media_player.kitchen", "media_player.hall", "switch.bell"]
+    assert hass_api.group_members("group.upstairs") == ["media_player.kitchen", "media_player.hall", "switch.bell"]
+
+
+def test_group_members_without_hass_states() -> None:
+    fake_hass = Mock()
+    fake_hass.states = None
+    hass_api = HomeAssistantAPI(fake_hass)  # type: ignore[arg-type]
+    assert hass_api.group_members("group.anything") is None
 
 
 def test_discover_devices_finds_nothing(hass: HomeAssistant) -> None:

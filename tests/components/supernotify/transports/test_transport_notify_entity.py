@@ -17,7 +17,8 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.doubles_lib import service_call
+from tests.components.supernotify.hass_setup_lib import MockGroup, TestingContext
 
 
 async def test_deliver(mock_hass, unmocked_config) -> None:  # type: ignore
@@ -77,8 +78,28 @@ async def test_deliver_no_targets(mock_hass, unmocked_config) -> None:  # type: 
 
 
 async def test_selects_group_targets() -> None:
-    pass
-    # TODO: write when groups handled
+    context = TestingContext(
+        deliveries={"phones": {CONF_TRANSPORT: TRANSPORT_NOTIFY_ENTITY}},
+        transport_types=[NotifyEntityTransport],
+        entities={"group.phones": MockGroup(["notify.phone_1", "switch.not_a_notifier", "notify.phone_2"])},
+    )
+    await context.test_initialize()
+
+    notification = Notification(context, message="hello there", title="testing", target=["group.phones", "notify.phone_2"])
+    await notification.initialize()
+    await notification.deliver()
+
+    assert len(notification.delivered_envelopes) == 1
+    assert notification.delivered_envelopes[0].target.entity_ids == unordered("notify.phone_1", "notify.phone_2")
+    context.hass.services.async_call.assert_has_calls([  # type: ignore[attr-defined]
+        service_call(
+            "notify",
+            "send_message",
+            service_data={ATTR_MESSAGE: "hello there", ATTR_TITLE: "testing"},
+            target={ATTR_ENTITY_ID: unordered("notify.phone_1", "notify.phone_2")},
+        )
+    ])
+    assert context.hass.services.async_call.call_count == 1  # type: ignore[attr-defined]
 
 
 async def test_doesnt_double_deliver() -> None:

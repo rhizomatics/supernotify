@@ -2,7 +2,6 @@ from typing import cast
 
 import pytest
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEBUG,
 )
 from homeassistant.core import SupportsResponse
@@ -28,7 +27,7 @@ from custom_components.supernotify.transports.chime import (
     ScriptChimeTransport,
 )
 from tests.components.supernotify.doubles_lib import service_call
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import MockGroup, TestingContext
 
 
 async def test_deliver() -> None:
@@ -264,11 +263,6 @@ async def test_default_discovery_inheritance():
     assert len(ctx.delivery_registry.deliveries) == 3
     for delivery in ctx.delivery_registry.deliveries.values():
         assert delivery.option_bool(OPTION_DEVICE_DISCOVERY)
-
-
-class MockGroup:
-    def __init__(self, entities: list[str]) -> None:
-        self.attributes = {ATTR_ENTITY_ID: entities}
 
 
 async def test_deliver_to_group() -> None:

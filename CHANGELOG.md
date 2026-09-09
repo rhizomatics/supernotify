@@ -1,3 +1,8 @@
+## 2.4.2
+
+### Targets
+- Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied. Previously only Chime expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
+
 ## 2.4.1
 
 ## Data Templates

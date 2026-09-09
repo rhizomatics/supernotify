@@ -48,7 +48,8 @@ e-mail address, phone number, or some custom ID for a specialist transport like 
 although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id`
 and `area_id`.
 - There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify
-    will exploded these for the *Chime* integration, but otherwise ignore them.
+    will explode Home Assistant groups (`group.*` helpers and platform groups, such as media player groups)
+    into their member entities before each delivery selects its targets.
 
 ## Recipient
 - Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
