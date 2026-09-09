@@ -101,11 +101,11 @@ rules:
     comment: |
       Reviewed: the four subscriptions (mobile_app_notification_action, exposed_entities
       state tracking, nightly housekeeping timer, EVENT_HOMEASSISTANT_STOP - all wired in
-      SupernotifyAction.initialize(), notify.py) are inherently orchestration-level, not
+      SupernotifyEngine.initialize(), notify.py) are inherently orchestration-level, not
       scoped to any single entity - they act across all recipients/deliveries. Neither
       SupernotifyEntity nor the per-recipient RecipientNotifyEntity (notify.py, added via the
       notify platform's async_setup_entry) owns any of them - each just delegates
-      async_send_message back to the shared SupernotifyAction.
+      async_send_message back to the shared SupernotifyEngine.
 
   entity-unique-id:
     status: done
@@ -120,9 +120,11 @@ rules:
   runtime-data:
     status: done
     comment: |
-      __init__.py:73 sets entry.runtime_data = service (the SupernotifyAction, which owns
-      the Context/registries/transports). async_setup_entry/async_unload_entry are typed
-      against a SupernotifyConfigEntry = ConfigEntry[SupernotifyAction] alias.
+      __init__.py:73 sets entry.runtime_data = service (a SuperNotificationService, which owns
+      the Context/registries/transports as a SupernotifyEngine). async_setup_entry/
+      async_unload_entry are typed against a SupernotifyConfigEntry = ConfigEntry[
+      SupernotifyEngine] alias, decoupled from the legacy BaseNotificationService-derived
+      SuperNotificationService shim - see SuperNotificationService's docstring in notify.py.
 
   test-before-configure:
     status: done
@@ -226,9 +228,15 @@ rules:
       not yet on this device - a separate, larger conversion (issue #175).
 
   diagnostics:
-    status: todo
+    status: done
     comment: |
-      Need to create diagnostics.py module once config_entries introduced
+      diagnostics.py's async_get_config_entry_diagnostics surfaces the same operational state
+      already exposed piecemeal via the supernotify.enquire_* admin services (notify.py) -
+      recipients, scenario/delivery routing, snoozes, the last notification sent (in
+      diagnostics mode), and the sent/failure counters - through the standard Settings >
+      Devices & Services > Supernotify > Download diagnostics flow. Every Person.as_dict()
+      identifying field (email, phone_number, user_id, alias) is redacted via
+      homeassistant.components.diagnostics.async_redact_data, wherever it turns up nested.
 
   discovery:
     status: exempt
@@ -253,8 +261,8 @@ rules:
       covers similar ground informally but isn't in blueprint-exchange format.
 
   docs-known-limitations:
-    status: todo
-    comment: No "## Known limitations" section found under docs/.
+    status: done
+    comment: README.md has known limitations section
 
   docs-supported-devices:
     status: exempt
@@ -292,12 +300,13 @@ rules:
       entities not yet reviewed.
 
   entity-device-class:
-    status: done
+    status: exempt
     comment: |
-      Renamed from device-class. binary_sensor.py's
-      SupernotifyRecipientBinarySensor sets
-      BinarySensorDeviceClass.CONNECTIVITY on each recipient's entity;
-      no other entity has an applicable standard device_class.
+      Renamed from device-class. No entity currently sets a standard
+      device_class: binary_sensor.py's SupernotifyRecipientBinarySensor
+      deliberately does not (CONNECTIVITY was tried and dropped - see its
+      docstring - it means online/offline reachability, not "enabled for
+      delivery", and made a disabled recipient show as "Disconnected").
 
   entity-disabled-by-default:
     status: todo

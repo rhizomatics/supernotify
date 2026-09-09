@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -25,7 +26,6 @@ if TYPE_CHECKING:
     import aiohttp
     from anyio import Path
     from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service, ServiceResponse, State
-    from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_registry import EntityRegistry
     from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.event_type import EventType
@@ -38,6 +38,8 @@ from contextlib import contextmanager
 from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
+import homeassistant.components.camera as ha_camera
+import homeassistant.components.image as ha_image
 import homeassistant.components.trace
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
@@ -45,7 +47,7 @@ from homeassistant.components.trace.models import ActionTrace
 from homeassistant.components.trace.util import async_store_trace
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import HomeAssistant, SupportsResponse
-from homeassistant.exceptions import ConditionError, ConditionErrorContainer, IntegrationError
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer, HomeAssistantError, IntegrationError
 from homeassistant.helpers import condition as condition_helper
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -200,11 +202,17 @@ class HomeAssistantAPI:
     def is_state(self, entity_id: str, state: str) -> bool:
         return self._hass.states.is_state(entity_id, state)
 
-    def set_state(self, entity_id: str, state: str | int | bool, attributes: dict[str, Any] | None = None) -> None:
+    def set_state(
+        self,
+        entity_id: str,
+        state: str | int | bool,
+        attributes: dict[str, Any] | None = None,
+        context: HomeAssistantContext | None = None,
+    ) -> None:
         if self.in_hass_loop():
-            self._hass.states.async_set(entity_id, str(state), attributes=attributes)
+            self._hass.states.async_set(entity_id, str(state), attributes=attributes, context=context)
         else:
-            self._hass.states.set(entity_id, str(state), attributes=attributes)
+            self._hass.states.set(entity_id, str(state), attributes=attributes, context=context)
 
     def has_service(self, domain: str, service: str) -> bool:
         return self._hass.services.has_service(domain, service)
@@ -212,9 +220,39 @@ class HomeAssistantAPI:
     def entity_ids_for_domain(self, domain: str) -> list[str]:
         return self._hass.states.async_entity_ids(domain)
 
-    def domain_entity(self, domain: str, entity_id: str) -> Entity | None:
-        # TODO: must be a better hass method than this
-        return self._hass.data.get(domain, {}).get_entity(entity_id)
+    async def async_get_camera_image(self, entity_id: str, timeout: int = 10) -> ha_camera.Image | None:
+        """Fetch a still image directly from a camera entity, via HA's own camera component API,
+        rather than triggering the camera.snapshot service and polling the filesystem for the
+        resulting file to appear."""
+        try:
+            return await ha_camera.async_get_image(self._hass, entity_id, timeout=timeout)
+        except HomeAssistantError as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get camera image for %s: %s", entity_id, e)
+            return None
+
+    async def async_get_image_entity_image(self, entity_id: str, timeout: int = 10) -> ha_image.Image | None:
+        """Fetch a still image directly from an image entity, via HA's own image component API."""
+        try:
+            return await ha_image.async_get_image(self._hass, entity_id, timeout=timeout)
+        except HomeAssistantError as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get image from entity %s: %s", entity_id, e)
+            return None
+
+    async def load_storage(self, key: str, version: int = 1) -> Any | None:  # ruff: ignore[any-type]
+        """Load integration state previously persisted to Home Assistant's .storage/ area,
+        via HA's own Store helper, or None if nothing has been persisted yet for this key."""
+        try:
+            return await Store[Any](self._hass, version, key).async_load()
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to load storage %s: %s", key, e)
+            return None
+
+    def save_storage(self, key: str, data: Any, version: int = 1) -> None:  # ruff: ignore[any-type]
+        """Persist integration state to Home Assistant's .storage/ area, via HA's own Store
+        helper. Fire-and-forget: the write happens in a tracked background task rather than
+        blocking the caller, since this is called from both sync and async contexts."""
+        store: Store[Any] = Store(self._hass, version, key)
+        self._hass.async_create_task(store.async_save(data), f"supernotify_save_{key}")
 
     def expose_entity(
         self,
@@ -253,8 +291,10 @@ class HomeAssistantAPI:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
         return self._hass.async_add_executor_job(func, *args)
 
-    def fire_event(self, event_name: str, event_data: dict[str, Any] | None = None) -> None:
-        self._hass.bus.async_fire(event_name, event_data)
+    def fire_event(
+        self, event_name: str, event_data: dict[str, Any] | None = None, context: HomeAssistantContext | None = None
+    ) -> None:
+        self._hass.bus.async_fire(event_name, event_data, context=context)
 
     async def call_service(
         self,

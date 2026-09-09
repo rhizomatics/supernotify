@@ -1,3 +1,14 @@
+## 2.4.1
+
+## Data Templates
+- Templated `data` sections now rendered prior to downstream transport being called, e.g. if Alexa volume computed. Provided by [@lollox80](https://github.com/lollox80)
+### Tracing Activities
+- Home Assistant context added to state changes and events driven by notifications.
+### Home Assistant Compatibility
+- New *Repair* raised if running under Python 3.13, to warn about support dropping with the HA 2026.10 release. Note that 2026.3.0 is the first Home Assistant release to require Python 3.14.
+### Testing
+- Automated testing of 6 month prior Home Assistant release added, and versions will be rolled to maintain compatibility check.
+
 ## 2.4.0
 
 ### Native Entities
@@ -10,12 +21,30 @@
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
 - New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 
-### Tracing Activities
+### Snoozes
+- Active snoozes are now persisted across Home Assistant restarts, using standard Home Assistant storage for integrations, provided by [@lollox80](https://github.com/lollox80)
 
+### Camera
+- Camera and image snapping now uses direct entity calls rather than Home Assistant actions and polling for results, provided by [@lollox80](https://github.com/lollox80)
+- The previously hard-coded max wait time to snap an image of 20 seconds is now configurable with `snap_wait` in the camera configuration.
+  - This is different from the existing `camera_delay` and PTZ controls in that its not a pause. If the camera snap is instant, then the `snap_wait` time will never be used, its only an allowance for cameras that are slow to snapshot.
+
+### Diagnostics
+- Integration now has a standard Home Assistant *Diagnostics* option, gathering info previously provided by multiple diagnostics actions, provided by [@lollox80](https://github.com/lollox80)
+
+### Tracing Activities
+- Fixed missing contexts on downstream actions, a consequence of relying on code from the "legacy" Home Assistant Notification platform, which throws away context
 - If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
 
+### Fixes
+- Notification with an unavailable attachment could fail, will now proceed with or without attachment
+- Two messages with same title and message but different camera entities, or media URLs for attachments, will not be considered as dupes
+- Additional actions now have documented options with translations, provided by [@lollox80](https://github.com/lollox80)
+
 ### Technical
-- `notify.py` slimmed down, moving functionality out to the main registries
+- The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
+- `notify.py` slimmed down by moving main engine to `engine.py`, delivery/transport/people/scenario functionality out to registries, actions out to `actions.py` leaving only the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
+
 
 ## 2.3.1
 
@@ -147,7 +176,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](docs/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](./roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
   - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
   - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.
@@ -661,8 +690,8 @@ is archived for debug purposes ( and supports the new unique target value functi
 
 ## 1.1.6
 - HomeAssistant logic moved from `Context` to `HomeAssistantAPI`
-- Initialization logic moved from `Context` to `SupernotifyAction`
-- References to `SupernotifyAction` now consistent rather than `SuperNotificationAction`
+- Initialization logic moved from `Context` to `SuperNotificationService`
+- References to `SuperNotificationService` now consistent rather than `SuperNotificationAction`
 - Move camera PTZ and image handling from `Notification` to `media_grab.py`
 
 ## 1.1.5

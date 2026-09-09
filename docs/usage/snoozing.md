@@ -5,7 +5,7 @@ tags:
 ---
 # Snoozing
 
-Snoozing can be selected from a mobile action, and made for a set time, or notifications can be silenced until further notice ( or currently until reboot, there is no persistence yet ).
+Snoozing can be selected from a mobile action, and made for a set time, or notifications can be silenced until further notice. Snoozes are persisted to Home Assistant's integration storage, so will be reactivated after Home Assistant restarts, and included in backups.
 
 Two HomeAssistant actions ( previously known as "services") are available to manage snoozes:
 

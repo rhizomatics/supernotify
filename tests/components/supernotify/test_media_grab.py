@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import io
-import json
 import time
 from contextlib import chdir
 from io import BytesIO
 from os import fspath
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiofiles
@@ -14,12 +13,7 @@ import anyio
 import pytest
 from anyio import Path
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    State,
-)
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from PIL import Image, ImageChops
 
@@ -29,10 +23,12 @@ from custom_components.supernotify.const import (
     CONF_CAMERA,
     CONF_PTZ_DELAY,
     CONF_PTZ_PRESET_DEFAULT,
+    CONF_SNAP_WAIT,
     MEDIA_OPTION_REPROCESS,
     PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
+    SNAP_WAIT_DEFAULT,
 )
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.media_grab import (
@@ -123,36 +119,21 @@ async def test_snapshot_url_with_broken_url(unmocked_hass_api: HomeAssistantAPI,
     assert retrieved_image_path is None
 
 
-async def test_snap_camera(unmocked_hass_api, tmp_aiopath: Path) -> None:
-    called_entity: str | None = None
-    fixture_image_path: Path = IMAGE_PATH / "example_image.jpeg"
-
-    async def dummy_snapshot(call: ServiceCall, **kwargs: Any) -> ServiceResponse | None:
-        nonlocal called_entity
-        called_entity = call.data["entity_id"]
-        # recorder serialises call_service events to JSON; a pathlib.Path filename breaks that silently
-        json.dumps(call.data)
-        async with await anyio.Path(fixture_image_path).open("rb") as f:
-            image = Image.open(io.BytesIO(await f.read()))
-            buffer = BytesIO()
-            image.save(buffer, "jpeg", comment="Original Comment")
-        async with aiofiles.open(call.data["filename"], "wb") as file:
-            await file.write(buffer.getbuffer())
-        return None
-
-    unmocked_hass_api._hass.services.async_register("camera", "snapshot", dummy_snapshot)
+async def test_snap_camera(hass_api_with_camera: HomeAssistantAPI, sample_image: TestImage, tmp_aiopath: Path) -> None:
+    """snap_camera fetches the still directly from the camera entity's async_camera_image(),
+    via HA's own camera.async_get_image() helper - no camera.snapshot service call, no polling."""
     image_path: anyio.Path | None = await snap_camera(
-        unmocked_hass_api,
+        hass_api_with_camera,
         "camera.xunit",
         "notify-uuid-1",
         media_path=tmp_aiopath,
         max_camera_wait=1,
     )
-    assert called_entity == "camera.xunit"
     assert image_path is not None
-    # raw snap preserves original metadata; reprocessing happens in grab_image
-    raw_image: Image.Image = Image.open(str(image_path))
-    assert raw_image.info.get("comment") == b"Original Comment"
+    retrieved_image = Image.open(fspath(image_path))
+    original_image = Image.open(fspath(sample_image.path))
+    # raw snap preserves original bytes; size should match
+    assert retrieved_image.size == original_image.size
 
 
 @pytest.mark.parametrize(
@@ -226,6 +207,24 @@ async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> No
     assert result is not None
     retrieved_image = Image.open(str(result))
     assert retrieved_image is not None  # images tested by lower funcs
+
+
+@pytest.mark.enable_socket
+async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sample_image) -> None:
+    """grab_image must not raise if the raw snap has vanished by the time it's read back."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+
+    snapshot_url = local_server.url_for("/snapshot_image")
+    local_server.expect_request("/snapshot_image").respond_with_data(sample_image.contents, content_type=sample_image.mime_type)
+
+    notification = Notification(ctx, "Test Me 123", action_data={"media": {"snapshot_url": snapshot_url}})
+    raw_path = await snap_notification_image(notification, ctx)
+    assert raw_path is not None
+    await raw_path.unlink()
+
+    result = await grab_image(notification, ctx.delivery("mail"), ctx)
+    assert result is None
 
 
 @pytest.mark.enable_socket
@@ -490,9 +489,7 @@ async def test_snap_image_entity_no_entity(unmocked_hass_api: HomeAssistantAPI, 
 
 
 async def test_snap_image_entity_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    mock_entity = AsyncMock()
-    mock_entity.async_image.side_effect = RuntimeError("boom")
-    mock_hass_api.domain_entity.return_value = mock_entity  # type: ignore
+    mock_hass_api.async_get_image_entity_image.side_effect = RuntimeError("boom")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     result = await snap_image_entity(mock_hass_api, "image.broken", tmp_aiopath, "n1")
     assert result is None
 
@@ -505,12 +502,16 @@ async def test_snap_camera_empty_entity_id(unmocked_hass_api: HomeAssistantAPI, 
     assert result is None
 
 
-async def test_snap_camera_service_exception(unmocked_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
-    async def raising_snapshot(call: ServiceCall) -> ServiceResponse | None:
-        raise OSError("camera not responding")
-
-    unmocked_hass_api._hass.services.async_register("camera", "snapshot", raising_snapshot)
+async def test_snap_camera_no_camera_component(unmocked_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    """No camera integration set up at all -> async_get_camera_image raises HomeAssistantError,
+    caught by HomeAssistantAPI and turned into a None result."""
     result = await snap_camera(unmocked_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
+    assert result is None
+
+
+async def test_snap_camera_exception(mock_hass_api: HomeAssistantAPI, tmp_aiopath: Path) -> None:
+    mock_hass_api.async_get_camera_image.side_effect = RuntimeError("camera not responding")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    result = await snap_camera(mock_hass_api, "camera.broken", "n1", tmp_aiopath, max_camera_wait=1)
     assert result is None
 
 
@@ -669,6 +670,29 @@ async def test_grab_image_with_camera(hass: HomeAssistant, tmp_aiopath: Path) ->
             notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
             await snap_notification_image(notification, ctx)
     mock_snap.assert_called_once()
+
+
+async def test_grab_image_with_camera_uses_configured_snap_wait(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A camera's snap_wait config should be passed through as max_camera_wait to snap_camera."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    ctx.cameras = {"camera.front": {CONF_CAMERA: "camera.front", CONF_SNAP_WAIT: 5}}
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None) as mock_snap:
+            notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
+            await snap_notification_image(notification, ctx)
+    assert mock_snap.call_args.kwargs["max_camera_wait"] == 5
+
+
+async def test_grab_image_with_camera_defaults_snap_wait(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """When snap_wait isn't configured for a camera, SNAP_WAIT_DEFAULT should be used."""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    with patch("custom_components.supernotify.media_grab.select_avail_camera", return_value="camera.front"):
+        with patch("custom_components.supernotify.media_grab.snap_camera", return_value=None) as mock_snap:
+            notification = Notification(ctx, "Test", action_data={"media": {"camera_entity_id": "camera.front"}})
+            await snap_notification_image(notification, ctx)
+    assert mock_snap.call_args.kwargs["max_camera_wait"] == SNAP_WAIT_DEFAULT
 
 
 async def test_grab_image_with_camera_no_ptz_skips_delay(hass: HomeAssistant, tmp_aiopath: Path) -> None:

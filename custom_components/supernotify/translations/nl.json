@@ -11,6 +11,10 @@
         }
     },
     "services": {
+        "reload": {
+            "name": "Herladen",
+            "description": "Herlaadt Supernotify-diensten."
+        },
         "notify": {
             "name": "Melden",
             "description": "Verstuurt via SuperNotify een melding naar een of meer meldingsplatforms via één uniforme interface.",
@@ -111,13 +115,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Herladen",
-            "description": "Herlaadt Supernotify-diensten."
+        "enquire_configuration": {
+            "name": "Configuratie opvragen",
+            "description": "Foutopsporingsassistent om de momenteel geladen SuperNotify-configuratie te tonen"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Bezorgingen per scenario opvragen",
             "description": "Foutopsporingsassistent om de lijst met bezorgingen voor elk scenario te tonen, inclusief standaardgebruik"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Impliciete bezorgingen opvragen",
+            "description": "Foutopsporingsassistent om de standaard automatisch gebruikte bezorgingen voor elk transport te tonen"
+        },
+        "enquire_last_notification": {
+            "name": "Laatste melding opvragen",
+            "description": "Foutopsporingsassistent om de inhoud van de laatst verzonden melding te tonen",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnostiek",
+                    "description": "Neem het volledigere diagnostische detailniveau op in plaats van alleen een samenvatting"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Ontvangers opvragen",
+            "description": "Foutopsporingsassistent om de momenteel geconfigureerde ontvangers te tonen"
+        },
+        "enquire_scenarios": {
+            "name": "Scenario's opvragen",
+            "description": "Foutopsporingsassistent om de momenteel geconfigureerde scenario's en hun kenmerken te tonen"
+        },
+        "enquire_active_scenarios": {
+            "name": "Actieve scenario's opvragen",
+            "description": "Foutopsporingsassistent om te tonen welke scenario's momenteel actief zijn",
+            "fields": {
+                "trace": {
+                    "name": "Traceergegevens",
+                    "description": "Neem het traceren van de voorwaarde-evaluatie voor elk actief scenario op"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Bezetting opvragen",
+            "description": "Foutopsporingsassistent om de huidige bezettingsstatus te tonen die wordt gebruikt voor het richten van bezorgingen"
+        },
+        "enquire_snoozes": {
+            "name": "Snoozes opvragen",
+            "description": "Foutopsporingsassistent om de momenteel actieve snoozes te tonen"
+        },
+        "refresh_entities": {
+            "name": "Entiteiten vernieuwen",
+            "description": "Vernieuwt elke entiteit die SuperNotify blootstelt voor inspectie en controle"
+        },
+        "clear_snoozes": {
+            "name": "Snoozes wissen",
+            "description": "Wist alle momenteel actieve snoozes"
+        },
+        "purge_media": {
+            "name": "Media opschonen",
+            "description": "Verwijdert opgeslagen mediabestanden die ouder zijn dan het geconfigureerde (of opgegeven) aantal dagen",
+            "fields": {
+                "days": {
+                    "name": "Dagen",
+                    "description": "Overschrijft de geconfigureerde bewaarperiode voor deze opschoning, in dagen"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Archief opschonen",
+            "description": "Verwijdert gearchiveerde meldingsrecords die ouder zijn dan het geconfigureerde (of opgegeven) aantal dagen",
+            "fields": {
+                "days": {
+                    "name": "Dagen",
+                    "description": "Overschrijft de geconfigureerde bewaarperiode voor deze opschoning, in dagen"
+                }
+            }
         }
     },
     "config": {
@@ -230,6 +302,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "Supernotify YAML-configuratie moet handmatig worden gemigreerd",
             "description": "De automatische migratie naar een toplevel `supernotify:` YAML-sleutel kon niet worden voltooid: {reason}. Verplaats bezorging-, transport-, scenario-, ontvanger-, camera-, actiegroep-, links- en snooze-instellingen zelf uit het `notify: - platform: supernotify`-blok naar een toplevel `supernotify:`-sleutel (bijvoorbeeld `supernotify: !include supernotify.yaml`), verwijder daarna het oude blok en start Home Assistant opnieuw."
+        },
+        "python_313_deprecated": {
+            "title": "Ondersteuning voor Python 3.13 stopt binnenkort",
+            "description": "Deze Home Assistant-installatie draait op Python {python_version}. Supernotify laat de ondersteuning voor Python 3.13 (en Home Assistant-versies ouder dan 2026.3.0) vallen zodra Home Assistant 2026.10 wordt uitgebracht - daarna kan deze installatie geen verdere Supernotify-updates meer installeren totdat de onderliggende Python-omgeving is bijgewerkt naar Python 3.14 of hoger."
         }
     },
     "options": {

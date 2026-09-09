@@ -11,7 +11,7 @@ File path in the package: tests/components/supernotify/test_scenario_state.py
 The method is called unbound with a mock `self` so the test needs no running HA;
 the refresh wiring (timer + state-change tracking) is an integration concern.
 
-This logic used to live on `SupernotifyAction` in notify.py; it has since moved
+This logic used to live on `SuperNotificationService` in notify.py; it has since moved
 to `ScenarioRegistry` in scenario.py.
 """
 

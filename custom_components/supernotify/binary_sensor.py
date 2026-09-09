@@ -1,6 +1,6 @@
 """Binary sensor platform: scenario and recipient state as real Home Assistant entities.
 
-Forwarded to from async_setup_entry in __init__.py once the SupernotifyAction (entry.
+Forwarded to from async_setup_entry in __init__.py once the SupernotifyEngine (entry.
 runtime_data) is fully initialized - scenario_registry.scenarios and people_registry.people are
 already populated by then, mirroring notify.py's own async_setup_entry for recipient notify
 entities.

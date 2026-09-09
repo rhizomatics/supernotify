@@ -11,6 +11,10 @@
         }
     },
     "services": {
+        "reload": {
+            "name": "Reload",
+            "description": "Reloads supernotify services."
+        },
         "notify": {
             "name": "Notify",
             "description": "Send a notification via SuperNotify to one or more notification platforms via a single, unified interface.",
@@ -111,13 +115,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Reload",
-            "description": "Reloads supernotify services."
+        "enquire_configuration": {
+            "name": "Enquire Configuration",
+            "description": "Debugging assistant to show the currently loaded SuperNotify configuration"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Enquire Deliveries By Scenario",
             "description": "Debugging assistant to show list of deliveries for each scenario, including default usage"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Enquire Implicit Deliveries",
+            "description": "Debugging assistant to show the deliveries used automatically by default for each transport"
+        },
+        "enquire_last_notification": {
+            "name": "Enquire Last Notification",
+            "description": "Debugging assistant to show the contents of the last notification sent",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnostics",
+                    "description": "Include the fuller diagnostics-level detail rather than just a summary"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Enquire Recipients",
+            "description": "Debugging assistant to show the currently configured recipients"
+        },
+        "enquire_scenarios": {
+            "name": "Enquire Scenarios",
+            "description": "Debugging assistant to show the currently configured scenarios and their attributes"
+        },
+        "enquire_active_scenarios": {
+            "name": "Enquire Active Scenarios",
+            "description": "Debugging assistant to show which scenarios are currently active",
+            "fields": {
+                "trace": {
+                    "name": "Trace",
+                    "description": "Include the condition evaluation trace for each active scenario"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Enquire Occupancy",
+            "description": "Debugging assistant to show the current occupancy status used for delivery targeting"
+        },
+        "enquire_snoozes": {
+            "name": "Enquire Snoozes",
+            "description": "Debugging assistant to show the currently active snoozes"
+        },
+        "refresh_entities": {
+            "name": "Refresh Entities",
+            "description": "Refresh every entity SuperNotify exposes for introspection and control"
+        },
+        "clear_snoozes": {
+            "name": "Clear Snoozes",
+            "description": "Clear all currently active snoozes"
+        },
+        "purge_media": {
+            "name": "Purge Media",
+            "description": "Delete stored media files older than the configured (or given) number of days",
+            "fields": {
+                "days": {
+                    "name": "Days",
+                    "description": "Override the configured retention period for this purge, in days"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Purge Archive",
+            "description": "Delete archived notification records older than the configured (or given) number of days",
+            "fields": {
+                "days": {
+                    "name": "Days",
+                    "description": "Override the configured retention period for this purge, in days"
+                }
+            }
         }
     },
     "config": {
@@ -284,6 +356,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "Supernotify YAML configuration must be migrated manually",
             "description": "The automated migration to a top-level `supernotify:` YAML key could not complete: {reason}. Move delivery, transports, scenarios, recipients, cameras, action groups, links and snooze settings out of the `notify: - platform: supernotify` block into a top-level `supernotify:` key yourself (for example `supernotify: !include supernotify.yaml`), then remove the old block and restart Home Assistant."
+        },
+        "python_313_deprecated": {
+            "title": "Python 3.13 support ending soon",
+            "description": "This Home Assistant instance is running Python {python_version}. Supernotify drops support for Python 3.13 (and Home Assistant versions before 2026.3.0) once Home Assistant 2026.10 is released - after that, this instance won't be able to install further Supernotify updates until the underlying Python environment is upgraded to Python 3.14 or later."
         },
         "scenario_delivery": {
             "title": "Invalid Delivery for Scenario",

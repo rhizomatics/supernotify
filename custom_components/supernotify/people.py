@@ -78,14 +78,14 @@ class RecipientNotifyEntity(NotifyEntity):
         self,
         unique_id: str,
         recipient: Recipient,
-        platform: NotifyEntityPlatform,
+        engine: NotifyEntityPlatform,
     ) -> None:
         """Initialize the recipient notify entity."""
         self._attr_unique_id = unique_id
         self._attr_name = recipient.alias or recipient.name
         self._attr_supported_features = NotifyEntityFeature.TITLE
         self._recipient = recipient
-        self._platform = platform
+        self._engine = engine
         self.entity_id = f"notify.recipient_{recipient.name}"
 
     async def async_added_to_hass(self) -> None:
@@ -98,7 +98,7 @@ class RecipientNotifyEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to this recipient."""
-        await self._platform.async_send_message(message, title=title, target=self.entity_id, context=self._context)
+        await self._engine.async_send_message(message, title=title, target=self.entity_id, context=self._context)
 
 
 class Recipient:

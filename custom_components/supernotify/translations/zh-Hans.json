@@ -11,6 +11,10 @@
         }
     },
     "services": {
+        "reload": {
+            "name": "重新加载",
+            "description": "重新加载 Supernotify 服务。"
+        },
         "notify": {
             "name": "通知",
             "description": "通过 SuperNotify，使用单一、统一的接口向一个或多个通知平台发送通知。",
@@ -111,13 +115,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "重新加载",
-            "description": "重新加载 Supernotify 服务。"
+        "enquire_configuration": {
+            "name": "查询配置",
+            "description": "调试助手，用于显示当前加载的 SuperNotify 配置"
         },
         "enquire_deliveries_by_scenario": {
             "name": "按场景查询推送",
             "description": "调试助手，用于显示每个场景的推送列表，包括默认使用情况"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "查询隐式推送",
+            "description": "调试助手，用于显示每种传输方式默认自动使用的推送"
+        },
+        "enquire_last_notification": {
+            "name": "查询最后一条通知",
+            "description": "调试助手，用于显示最后发送的通知内容",
+            "fields": {
+                "diagnostics": {
+                    "name": "诊断",
+                    "description": "包含更完整的诊断级别详情，而不仅仅是摘要"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "查询接收人",
+            "description": "调试助手，用于显示当前配置的接收人"
+        },
+        "enquire_scenarios": {
+            "name": "查询场景",
+            "description": "调试助手，用于显示当前配置的场景及其属性"
+        },
+        "enquire_active_scenarios": {
+            "name": "查询活动场景",
+            "description": "调试助手，用于显示当前哪些场景处于活动状态",
+            "fields": {
+                "trace": {
+                    "name": "追踪",
+                    "description": "包含每个活动场景的条件评估追踪"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "查询占用状态",
+            "description": "调试助手，用于显示当前用于推送目标定位的占用状态"
+        },
+        "enquire_snoozes": {
+            "name": "查询打盹",
+            "description": "调试助手，用于显示当前处于活动状态的打盹"
+        },
+        "refresh_entities": {
+            "name": "刷新实体",
+            "description": "刷新 SuperNotify 公开的所有实体，以便查看和控制"
+        },
+        "clear_snoozes": {
+            "name": "清除打盹",
+            "description": "清除所有当前处于活动状态的打盹"
+        },
+        "purge_media": {
+            "name": "清理媒体",
+            "description": "删除早于配置(或指定)天数的已存储媒体文件",
+            "fields": {
+                "days": {
+                    "name": "天数",
+                    "description": "覆盖此次清理的配置保留期限，以天为单位"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "清理存档",
+            "description": "删除早于配置(或指定)天数的已存档通知记录",
+            "fields": {
+                "days": {
+                    "name": "天数",
+                    "description": "覆盖此次清理的配置保留期限，以天为单位"
+                }
+            }
         }
     },
     "config": {
@@ -230,6 +302,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "Supernotify 的 YAML 配置需要手动迁移",
             "description": "自动迁移到顶级 `supernotify:` YAML 键未能完成：{reason}。请自行将推送、传输方式、场景、收件人、摄像头、操作组、链接和打盹设置从 `notify: - platform: supernotify` 块迁移到顶级 `supernotify:` 键中（例如 `supernotify: !include supernotify.yaml`），然后删除旧块并重启 Home Assistant。"
+        },
+        "python_313_deprecated": {
+            "title": "Python 3.13 支持即将结束",
+            "description": "此 Home Assistant 实例正在运行 Python {python_version}。当 Home Assistant 2026.10 发布后，Supernotify 将不再支持 Python 3.13(以及 2026.3.0 之前的 Home Assistant 版本)——此后，除非将底层 Python 环境升级到 Python 3.14 或更高版本，否则该实例将无法安装 Supernotify 的后续更新。"
         }
     },
     "options": {

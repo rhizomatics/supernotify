@@ -11,6 +11,10 @@
         }
     },
     "services": {
+        "reload": {
+            "name": "Ricarica",
+            "description": "Ricarica i servizi di supernotify."
+        },
         "notify": {
             "name": "Notifica",
             "description": "Invia una notifica tramite SuperNotify a una o più piattaforme di notifica attraverso un'unica interfaccia unificata.",
@@ -111,13 +115,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Ricarica",
-            "description": "Ricarica i servizi di supernotify."
+        "enquire_configuration": {
+            "name": "Richiedi Configurazione",
+            "description": "Strumento di debug per visualizzare la configurazione di SuperNotify attualmente caricata"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Richiedi Consegne per Scenario",
             "description": "Strumento di debug per visualizzare la lista delle consegne per ogni scenario, incluso l'utilizzo predefinito."
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Richiedi Consegne Implicite",
+            "description": "Strumento di debug per visualizzare le consegne utilizzate automaticamente per impostazione predefinita per ogni trasporto"
+        },
+        "enquire_last_notification": {
+            "name": "Richiedi Ultima Notifica",
+            "description": "Strumento di debug per visualizzare il contenuto dell'ultima notifica inviata",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnostica",
+                    "description": "Includi il dettaglio completo a livello di diagnostica anziché solo un riepilogo"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Richiedi Destinatari",
+            "description": "Strumento di debug per visualizzare i destinatari attualmente configurati"
+        },
+        "enquire_scenarios": {
+            "name": "Richiedi Scenari",
+            "description": "Strumento di debug per visualizzare gli scenari attualmente configurati e i loro attributi"
+        },
+        "enquire_active_scenarios": {
+            "name": "Richiedi Scenari Attivi",
+            "description": "Strumento di debug per visualizzare quali scenari sono attualmente attivi",
+            "fields": {
+                "trace": {
+                    "name": "Traccia",
+                    "description": "Includi la traccia di valutazione delle condizioni per ogni scenario attivo"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Richiedi Occupazione",
+            "description": "Strumento di debug per visualizzare lo stato di occupazione attuale utilizzato per l'indirizzamento delle consegne"
+        },
+        "enquire_snoozes": {
+            "name": "Richiedi Snooze",
+            "description": "Strumento di debug per visualizzare gli snooze attualmente attivi"
+        },
+        "refresh_entities": {
+            "name": "Aggiorna Entità",
+            "description": "Aggiorna tutte le entità esposte da SuperNotify per l'introspezione e il controllo"
+        },
+        "clear_snoozes": {
+            "name": "Cancella Snooze",
+            "description": "Cancella tutti gli snooze attualmente attivi"
+        },
+        "purge_media": {
+            "name": "Elimina Media",
+            "description": "Elimina i file multimediali memorizzati più vecchi del numero di giorni configurato (o specificato)",
+            "fields": {
+                "days": {
+                    "name": "Giorni",
+                    "description": "Sovrascrivi il periodo di conservazione configurato per questa eliminazione, in giorni"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Elimina Archivio",
+            "description": "Elimina i record delle notifiche archiviate più vecchi del numero di giorni configurato (o specificato)",
+            "fields": {
+                "days": {
+                    "name": "Giorni",
+                    "description": "Sovrascrivi il periodo di conservazione configurato per questa eliminazione, in giorni"
+                }
+            }
         }
     },
     "config": {
@@ -230,6 +302,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "La configurazione YAML di Supernotify deve essere migrata manualmente",
             "description": "La migrazione automatica a una chiave YAML di primo livello `supernotify:` non è riuscita: {reason}. Sposta tu stesso le impostazioni di consegna, trasporti, scenari, destinatari, telecamere, gruppi di azione, link e snooze dal blocco `notify: - platform: supernotify` a una chiave di primo livello `supernotify:` (ad esempio `supernotify: !include supernotify.yaml`), quindi rimuovi il vecchio blocco e riavvia Home Assistant."
+        },
+        "python_313_deprecated": {
+            "title": "Il supporto per Python 3.13 terminerà a breve",
+            "description": "Questa istanza di Home Assistant sta eseguendo Python {python_version}. Supernotify interromperà il supporto per Python 3.13 (e per le versioni di Home Assistant precedenti alla 2026.3.0) al rilascio di Home Assistant 2026.10 - da quel momento, questa istanza non potrà più installare aggiornamenti di Supernotify finché l'ambiente Python sottostante non verrà aggiornato a Python 3.14 o successivo."
         }
     },
     "options": {

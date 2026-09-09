@@ -1,15 +1,15 @@
 """Sensor platform: the notification/failure counters as real, restorable entities.
 
-Forwarded to from async_setup_entry in __init__.py once the SupernotifyAction (entry.
+Forwarded to from async_setup_entry in __init__.py once the SupernotifyEngine (entry.
 runtime_data) is fully initialized. Replaces the two raw `hass.states.async_set()` writes
-SupernotifyAction previously made directly for "sensor.supernotify_notifications" /
+SupernotifyEngine previously made directly for "sensor.supernotify_notifications" /
 "sensor.supernotify_failures" - those had no entity_registry entry at all, so there is no
 pre-existing unique_id/entity_id to preserve here beyond keeping the same entity_id string.
 
 Being a real RestoreSensor also fixes a real bug: the old counters were plain ints on
-SupernotifyAction (self.sent / self.failures) with no persistence, so they silently reset to 0
+SupernotifyEngine (self.sent / self.failures) with no persistence, so they silently reset to 0
 on every Home Assistant restart. async_added_to_hass() below restores the last known value (and
-feeds it back into SupernotifyAction so in-memory and displayed counts stay consistent) before
+feeds it back into SupernotifyEngine so in-memory and displayed counts stay consistent) before
 either counter increments again.
 """
 
@@ -57,9 +57,9 @@ async def async_setup_entry(
         device_info=device_info,
         restore_callback=service.restore_failures,
     )
-    # SupernotifyAction keeps these to push future increments straight to the entity
+    # SupernotifyEngine keeps these to push future increments straight to the entity
     # (set_value()); see notify.py async_send_message/expose_entities. Falls back to the old
-    # raw hass_api.set_state() when unset - e.g. tests that build SupernotifyAction directly
+    # raw hass_api.set_state() when unset - e.g. tests that build SupernotifyEngine directly
     # without going through a config entry, so no platform is ever set up.
     service._notifications_entity = notifications_entity
     service._failures_entity = failures_entity
@@ -98,7 +98,7 @@ class SupernotifyCounterSensor(RestoreSensor):
             self._restore_callback(restored)
 
     def set_value(self, value: int) -> None:
-        """Called by SupernotifyAction whenever the underlying counter changes."""
+        """Called by SupernotifyEngine whenever the underlying counter changes."""
         self._attr_native_value = value
         if self.hass is not None:
             self.async_write_ha_state()

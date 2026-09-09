@@ -1,4 +1,4 @@
-![Supernotify](../assets/images/dark_icon.png){ align=left }
+![Supernotify](https://supernotify.rhizomatics.org.uk/dev/assets/images/dark_icon.png){ align=left }
 
 # Supernotify
 
@@ -21,13 +21,17 @@
 
 **Home Assistant向け統合通知システム**
 
-### 重要な変更 v2.0.0
+### 重要な変更 v2
+
+>> Python 3.13 および Home Assistant 2026.3.0（v3.14のみをサポートする最初のバージョン）より前のバージョンのサポートは、Home Assistant 2026.10 のリリースに伴い終了します。Supernotifyは引き続き、互換性のある古いバージョンのHome Assistantに対してテストされます。
 
 >> SuperNotify の `2.0.0` は、ネイティブの Home Assistant UI 設定（「ConfigFlow」）に移行します。既存のシンプルな設定がある場合、すべて自動的に移行され、YAML は不要になります。
 
 >> 高度な設定（配信、シナリオ、カメラ、人物、アクションなど）がある場合は、それらを新しい `supernotify.yaml` ファイルに移動し、`configuration.yaml` に `include` ステートメントを追加するための*修正*が発行されます。または、`notify` ブロックから設定を好きな方法で手動で移動することもできます。
 
 >> いずれの場合も、何も削除やコメントアウトはされないため、変更を簡単に元に戻せます。新しいバージョンが問題なく動作していると確信できたら、古い設定を削除してください。これにより、古いnotify実装由来のログ警告 `[homeassistant.components.notify] Failed to initialize notification service supernotify` も削除されます。
+
+>> オートメーションからの設定がはるかに簡単な代替アクション `supernotify.notify` が新たに利用可能になりました。既存のアクションと同じ動作をします。
 
 Home Assistantの組み込み`notify`プラットフォームの上に構築された**統合通知インターフェース**で、複数の通知チャネルや複雑なシナリオを大幅に簡素化します。マルチチャネル通知、条件付き通知、モバイルアクション、カメラスナップショット、チャイム、テンプレートベースのHTMLメールに対応しています。
 
@@ -37,7 +41,7 @@ Supernotifyの目標はひとつ——**コードなし、最小限の設定で�
 
 UI設定だけで、モバイルアプリ名を設定することなく、家全員へのモバイルプッシュ通知を開始できます。
 
-![通知アクションの例](assets/images/notification.png){width=500}
+![通知アクションの例](https://supernotify.rhizomatics.org.uk/dev/assets/images/notification.png){width=500}
 
 ## 配布
 
@@ -105,6 +109,11 @@ Supernotifyは現在、基本設定には標準のHome Assistant UI設定、高�
         message: こんにちは！全員のモバイルアプリに送信するSupernotifyのテストです
 ```
 
+
+## 既知の制限事項
+
+- **リンク（Links）**は設定可能ですが、現在は使用されません。
+- 配信、トランスポート、受信者、アクションなどには引き続きYAMLが必要です
 
 ##  Home Assistant向けRhizomatics Open Source
 

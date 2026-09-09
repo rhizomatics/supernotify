@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call
 
 import aiofiles
-from homeassistant.components import image
+from homeassistant.components import camera, image
 from homeassistant.core import Context as HAContext
 from homeassistant.core import (
     HomeAssistant,
@@ -16,8 +16,8 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.const import CONF_TRANSPORT
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.model import TargetRequired, TransportConfig
-from custom_components.supernotify.notify import TRANSPORTS
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -172,6 +172,21 @@ class MockImageEntity(image.ImageEntity):
         self._attr_image_last_updated = dt_util.utcnow()
 
     async def async_image(self) -> bytes | None:
+        return self.bytes
+
+
+class MockCameraEntity(camera.Camera):
+    _attr_name = "Test"
+
+    def __init__(self, filename: Path) -> None:
+        super().__init__()
+        self.filename = filename
+
+    async def load(self) -> None:
+        async with aiofiles.open(self.filename, "rb") as f:
+            self.bytes = await f.read()
+
+    async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
         return self.bytes
 
 

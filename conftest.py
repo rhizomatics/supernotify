@@ -40,7 +40,7 @@ from custom_components.supernotify.transport import Transport
 from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
-from tests.components.supernotify.doubles_lib import MockImageEntity
+from tests.components.supernotify.doubles_lib import MockCameraEntity, MockImageEntity
 from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
 
 if TYPE_CHECKING:
@@ -167,6 +167,15 @@ async def hass_api_with_image(hass_api: HomeAssistantAPI, sample_image: TestImag
 
 
 @pytest.fixture
+async def hass_api_with_camera(hass_api: HomeAssistantAPI, sample_image: TestImage) -> HomeAssistantAPI:
+    camera_entity = MockCameraEntity(sample_image.path)
+    await camera_entity.load()
+    hass_api._hass.data["camera"] = Mock(spec=EntityComponent)  # type: ignore[attr-defined,union-attr]
+    hass_api._hass.data["camera"].get_entity = Mock(return_value=camera_entity)  # type: ignore[attr-defined,union-attr]
+    return hass_api
+
+
+@pytest.fixture
 def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked = AsyncMock(spec=HomeAssistantAPI)
     mocked._hass = mock_hass
@@ -230,10 +239,7 @@ def sample_jpeg(request) -> TestImage:
 
 
 @pytest.fixture
-async def sample_image_entity_id(mock_hass_api: HomeAssistantAPI, sample_image: TestImage) -> str:
-    image_entity = MockImageEntity(sample_image.path)
-    await image_entity.load()
-    mock_hass_api.domain_entity.return_value = Mock(return_value=image_entity)  # type: ignore[attr-defined]
+def sample_image_entity_id() -> str:
     return "image.testing"
 
 

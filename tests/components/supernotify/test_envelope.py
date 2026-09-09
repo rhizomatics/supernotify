@@ -243,3 +243,81 @@ async def test_resolve_data_templates_keeps_raw_value_on_render_exception() -> N
         resolved = uut._resolve_data_templates({"greeting": "{{ 1 + 1 }}"})
     assert resolved["greeting"] == "{{ 1 + 1 }}"
     assert "greeting_template" not in resolved
+
+
+async def test_envelope_data_templates_rendered_before_transport() -> None:
+    """Regression test for #64: scenario/delivery `data` templates (e.g. a
+    scenario-driven alexa_announce volume) must be resolved on envelope.data
+    itself - what transports actually read - not only in the archive copy."""
+    context = TestingContext()
+    await context.test_initialize()
+    uut = Envelope(
+        context.delivery("DEFAULT_notify_entity"),
+        Notification(context, message="hello there"),
+        data={"volume": "{{ 1 + 1 }}", "plain": "unchanged"},
+        context=context,
+    )
+    assert uut.data["volume"] == "2"
+    assert uut.data["plain"] == "unchanged"
+    # transport payloads must not be polluted with debug breadcrumbs
+    assert "volume_template" not in uut.data
+
+
+async def test_envelope_data_template_render_exception_keeps_raw_value() -> None:
+    context = TestingContext()
+    await context.test_initialize()
+    with patch.object(context.hass_api, "template", side_effect=Exception("boom")):
+        uut = Envelope(
+            context.delivery("DEFAULT_notify_entity"),
+            Notification(context, message="hello there"),
+            data={"volume": "{{ 1 + 1 }}"},
+            context=context,
+        )
+    assert uut.data["volume"] == "{{ 1 + 1 }}"
+
+
+async def test_envelope_contents_still_shows_raw_template_breadcrumb() -> None:
+    """contents() (archive/diagnostics) should still show the raw template
+    alongside the resolved value, even though envelope.data itself is now
+    pre-resolved for the transport call."""
+    context = TestingContext()
+    await context.test_initialize()
+    uut = Envelope(
+        context.delivery("DEFAULT_notify_entity"),
+        Notification(context, message="hello there"),
+        data={"volume": "{{ 1 + 1 }}"},
+        context=context,
+    )
+    contents = uut.contents(minimal=False)
+    assert contents["data"]["volume"] == "2"
+    assert contents["data"]["volume_template"] == "{{ 1 + 1 }}"
+
+
+async def test_envelope_data_leaves_scenario_template_directives_unrendered() -> None:
+    """message_template/title_template are directives consumed separately by
+    _render_scenario_templates() with its own chained render context - they
+    must not be re-rendered here against the wrong (stale) context."""
+    context = TestingContext()
+    await context.test_initialize()
+    uut = Envelope(
+        context.delivery("DEFAULT_notify_entity"),
+        Notification(context, message="hello there"),
+        data={"message_template": "{{ notification_message }} EXTRA", "title_template": "{{ notification_title }}"},
+        context=context,
+    )
+    assert uut.data["message_template"] == "{{ notification_message }} EXTRA"
+    assert uut.data["title_template"] == "{{ notification_title }}"
+
+
+async def test_envelope_data_without_context_left_unrendered() -> None:
+    """No template.hass_api context available (no `context=` passed): data is
+    left as-is rather than raising, matching pre-existing behaviour for
+    message/title rendering."""
+    context = TestingContext()
+    await context.test_initialize()
+    uut = Envelope(
+        context.delivery("DEFAULT_notify_entity"),
+        Notification(context, message="hello there"),
+        data={"volume": "{{ 1 + 1 }}"},
+    )
+    assert uut.data["volume"] == "{{ 1 + 1 }}"

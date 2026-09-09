@@ -28,14 +28,14 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
-from custom_components.supernotify.notify import SupernotifyAction
+from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.scenario import ScenarioRegistry
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
-async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyAction:
+async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyEngine:
     """Same helper as test_config_yaml.py: bootstrap supernotify from a top-level
     `supernotify:` YAML config and return the live service."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
@@ -72,7 +72,7 @@ def test_restore_sent_does_not_regress_a_higher_in_memory_value() -> None:
     silently erased by a restore() call carrying the older, pre-increment value."""
     action = MagicMock()
     action.sent = 5
-    SupernotifyAction.restore_sent(action, 2)
+    SupernotifyEngine.restore_sent(action, 2)
     assert action.sent == 5
 
 
@@ -80,21 +80,21 @@ def test_restore_sent_applies_the_restored_value_when_higher() -> None:
     """The normal case: nothing incremented the fallback yet, so the restored value wins."""
     action = MagicMock()
     action.sent = 0
-    SupernotifyAction.restore_sent(action, 7)
+    SupernotifyEngine.restore_sent(action, 7)
     assert action.sent == 7
 
 
 def test_restore_failures_does_not_regress_a_higher_in_memory_value() -> None:
     action = MagicMock()
     action.failures = 3
-    SupernotifyAction.restore_failures(action, 1)
+    SupernotifyEngine.restore_failures(action, 1)
     assert action.failures == 3
 
 
 def test_restore_failures_applies_the_restored_value_when_higher() -> None:
     action = MagicMock()
     action.failures = 0
-    SupernotifyAction.restore_failures(action, 4)
+    SupernotifyEngine.restore_failures(action, 4)
     assert action.failures == 4
 
 

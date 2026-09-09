@@ -11,6 +11,10 @@
         }
     },
     "services": {
+        "reload": {
+            "name": "Recargar",
+            "description": "Recarga los servicios de Supernotify."
+        },
         "notify": {
             "name": "Notificar",
             "description": "Envía una notificación a través de SuperNotify a una o más plataformas de notificación mediante una única interfaz unificada.",
@@ -111,13 +115,81 @@
                 }
             }
         },
-        "reload": {
-            "name": "Recargar",
-            "description": "Recarga los servicios de Supernotify."
+        "enquire_configuration": {
+            "name": "Consultar configuración",
+            "description": "Asistente de depuración para mostrar la configuración de SuperNotify actualmente cargada"
         },
         "enquire_deliveries_by_scenario": {
             "name": "Consultar entregas por escenario",
             "description": "Asistente de depuración para mostrar la lista de entregas para cada escenario, incluyendo el uso predeterminado"
+        },
+        "enquire_implicit_deliveries": {
+            "name": "Consultar entregas implícitas",
+            "description": "Asistente de depuración para mostrar las entregas usadas automáticamente por defecto para cada transporte"
+        },
+        "enquire_last_notification": {
+            "name": "Consultar última notificación",
+            "description": "Asistente de depuración para mostrar el contenido de la última notificación enviada",
+            "fields": {
+                "diagnostics": {
+                    "name": "Diagnóstico",
+                    "description": "Incluir el detalle completo a nivel de diagnóstico en lugar de solo un resumen"
+                }
+            }
+        },
+        "enquire_recipients": {
+            "name": "Consultar destinatarios",
+            "description": "Asistente de depuración para mostrar los destinatarios actualmente configurados"
+        },
+        "enquire_scenarios": {
+            "name": "Consultar escenarios",
+            "description": "Asistente de depuración para mostrar los escenarios actualmente configurados y sus atributos"
+        },
+        "enquire_active_scenarios": {
+            "name": "Consultar escenarios activos",
+            "description": "Asistente de depuración para mostrar qué escenarios están actualmente activos",
+            "fields": {
+                "trace": {
+                    "name": "Traza",
+                    "description": "Incluir la traza de evaluación de condiciones para cada escenario activo"
+                }
+            }
+        },
+        "enquire_occupancy": {
+            "name": "Consultar ocupación",
+            "description": "Asistente de depuración para mostrar el estado de ocupación actual usado para la asignación de entregas"
+        },
+        "enquire_snoozes": {
+            "name": "Consultar snooze",
+            "description": "Asistente de depuración para mostrar los snooze actualmente activos"
+        },
+        "refresh_entities": {
+            "name": "Actualizar entidades",
+            "description": "Actualiza todas las entidades que expone SuperNotify para inspección y control"
+        },
+        "clear_snoozes": {
+            "name": "Borrar snooze",
+            "description": "Borra todos los snooze actualmente activos"
+        },
+        "purge_media": {
+            "name": "Purgar medios",
+            "description": "Elimina los archivos multimedia almacenados más antiguos que el número de días configurado (o indicado)",
+            "fields": {
+                "days": {
+                    "name": "Días",
+                    "description": "Anula el período de retención configurado para esta purga, en días"
+                }
+            }
+        },
+        "purge_archive": {
+            "name": "Purgar archivo",
+            "description": "Elimina los registros de notificaciones archivadas más antiguos que el número de días configurado (o indicado)",
+            "fields": {
+                "days": {
+                    "name": "Días",
+                    "description": "Anula el período de retención configurado para esta purga, en días"
+                }
+            }
         }
     },
     "config": {
@@ -230,6 +302,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "La configuración YAML de Supernotify debe migrarse manualmente",
             "description": "La migración automática a una clave YAML de nivel superior `supernotify:` no pudo completarse: {reason}. Mueve tú mismo la configuración de entregas, transportes, escenarios, destinatarios, cámaras, grupos de acción, enlaces y snooze del bloque `notify: - platform: supernotify` a una clave de nivel superior `supernotify:` (por ejemplo, `supernotify: !include supernotify.yaml`), luego elimina el bloque antiguo y reinicia Home Assistant."
+        },
+        "python_313_deprecated": {
+            "title": "El soporte de Python 3.13 finaliza pronto",
+            "description": "Esta instancia de Home Assistant está ejecutando Python {python_version}. Supernotify eliminará el soporte para Python 3.13 (y versiones de Home Assistant anteriores a 2026.3.0) cuando se publique Home Assistant 2026.10 - a partir de entonces, esta instancia no podrá instalar más actualizaciones de Supernotify hasta que el entorno de Python subyacente se actualice a Python 3.14 o posterior."
         }
     },
     "options": {
