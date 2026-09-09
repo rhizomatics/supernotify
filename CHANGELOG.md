@@ -1,5 +1,7 @@
 ## 2.4.1
 
+## Data Templates
+- Templated `data` sections now rendered prior to downstream transport being called, e.g. if Alexa volume computed. Provided by [@lollox80](https://github.com/lollox80)
 ### Tracing Activities
 - Home Assistant context added to state changes and events driven by notifications.
 ### Home Assistant Compatibility

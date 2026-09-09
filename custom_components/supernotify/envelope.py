@@ -59,6 +59,8 @@ HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation +
 class Envelope(DupeCheckable):
     """Wrap a notification with a specific set of targets and service data possibly customized for those targets"""
 
+    _SCENARIO_TEMPLATE_DIRECTIVE_KEYS = frozenset({"message_template", "title_template"})
+
     def __init__(
         self,
         delivery: Delivery,
@@ -336,7 +338,13 @@ class Envelope(DupeCheckable):
         context_vars = cast("dict[str, Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
         rendered: dict[str, Any] = {}
         for key, value in data.items():
-            if isinstance(value, str) and "{{" in value:
+            if key in self._SCENARIO_TEMPLATE_DIRECTIVE_KEYS:
+                # message_template/title_template are directives consumed by
+                # _render_scenario_templates() with its own chained render
+                # context, not literal data values - rendering them here
+                # would use the wrong (stale) context and produce unused junk.
+                rendered[key] = value
+            elif isinstance(value, str) and "{{" in value:
                 try:
                     rendered[key] = self.context.hass_api.template(value).async_render(variables=context_vars)
                 except Exception as e:

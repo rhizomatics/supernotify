@@ -293,6 +293,22 @@ async def test_envelope_contents_still_shows_raw_template_breadcrumb() -> None:
     assert contents["data"]["volume_template"] == "{{ 1 + 1 }}"
 
 
+async def test_envelope_data_leaves_scenario_template_directives_unrendered() -> None:
+    """message_template/title_template are directives consumed separately by
+    _render_scenario_templates() with its own chained render context - they
+    must not be re-rendered here against the wrong (stale) context."""
+    context = TestingContext()
+    await context.test_initialize()
+    uut = Envelope(
+        context.delivery("DEFAULT_notify_entity"),
+        Notification(context, message="hello there"),
+        data={"message_template": "{{ notification_message }} EXTRA", "title_template": "{{ notification_title }}"},
+        context=context,
+    )
+    assert uut.data["message_template"] == "{{ notification_message }} EXTRA"
+    assert uut.data["title_template"] == "{{ notification_title }}"
+
+
 async def test_envelope_data_without_context_left_unrendered() -> None:
     """No template.hass_api context available (no `context=` passed): data is
     left as-is rather than raising, matching pre-existing behaviour for
