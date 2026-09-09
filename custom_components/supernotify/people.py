@@ -110,7 +110,6 @@ class Recipient:
     # for future native entity use
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_name = "Recipient"
     _attr_icon = "mdi:account-arrow-left"
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:

@@ -309,7 +309,23 @@ rules:
     status: todo
     comment: |
       No "entity" section in strings.json and no _attr_translation_key usage
-      found - not started, not partial as previously noted.
+      anywhere. Two entity surfaces, and they differ:
+
+      - Recipient entities (people.py: RecipientNotifyEntity's _attr_name,
+        and the recipient binary_sensor's original_name via
+        PeopleRegistry.expose_entities) are exempt - the name is entirely
+        the user's own person name/alias, not fixed vocabulary, so there's
+        nothing to translate.
+      - Scenario binary_sensors (scenario.py ScenarioRegistry.expose_entities)
+        are NOT exempt: original_name glues the fixed English word "Scenario"
+        onto the user's scenario name. Both entity types are created via
+        entity_registry.async_get_or_create() + hass.states.async_set()
+        rather than real Entity subclasses, so there's no has_entity_name/
+        translation_key mechanism to hang a translation on without a
+        redesign (e.g. giving each scenario a device to anchor a generic
+        translated name against the specific one). Still to do: either
+        restructure scenario exposure through a proper entity platform, or
+        explicitly accept "Scenario" staying untranslated.
 
   exception-translations:
     status: todo
