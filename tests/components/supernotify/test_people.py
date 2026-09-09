@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
+import homeassistant.util.dt as dt_util
 from homeassistant.components import person
 from homeassistant.core import State
 from pytest_unordered import unordered
@@ -127,19 +128,39 @@ async def test_filter_recipients(hass: HomeAssistant) -> None:
 
 def test_recipient_notify_entity_record_notification(hass: HomeAssistant) -> None:
     """record_notification() is how Notification.record_result() reflects a delivery that went
-    through supernotify.notify's main pipeline rather than a direct notify.recipient_alice call -
-    see the docstring on RecipientNotifyEntity._last_notified for why it's a separate attribute
-    rather than the entity's own native `state`."""
+    through supernotify.notify's main pipeline rather than a direct notify.recipient_alice call.
+    On HA >= 2026.3 (where NotifyEntity._async_record_notification() exists) this uses the
+    entity's own native `state`; on HA < 2026.3 it falls back to a separate last_notified
+    attribute - see the docstring on RecipientNotifyEntity.record_notification() for why both
+    paths exist. This test runs unmodified on both lanes and checks whichever mechanism this HA
+    version actually provides."""
     recipient = Recipient({CONF_PERSON: "person.alice"})
     uut = RecipientNotifyEntity("entry123_recipient_alice", recipient, Mock())
     uut.hass = hass
+    native = hasattr(uut, "_async_record_notification")
 
-    assert uut.extra_state_attributes == {"last_notified": None}
+    if native:
+        assert uut.state is None
+    else:
+        assert uut.extra_state_attributes == {"last_notified": None}
 
-    uut.record_notification("2026-09-08T12:00:00+00:00")
+    before = dt_util.utcnow()
+    uut.record_notification()
+    after = dt_util.utcnow()
 
-    assert uut.extra_state_attributes == {"last_notified": "2026-09-08T12:00:00+00:00"}
-    assert hass.states.get("notify.recipient_alice").attributes["last_notified"] == "2026-09-08T12:00:00+00:00"
+    if native:
+        assert uut.state is not None
+        recorded = dt_util.parse_datetime(uut.state)
+        assert recorded is not None
+        assert before <= recorded <= after
+        assert hass.states.get("notify.recipient_alice").state == uut.state
+    else:
+        assert uut.extra_state_attributes is not None
+        last_notified = uut.extra_state_attributes["last_notified"]
+        recorded = dt_util.parse_datetime(last_notified)
+        assert recorded is not None
+        assert before <= recorded <= after
+        assert hass.states.get("notify.recipient_alice").attributes["last_notified"] == last_notified
 
 
 async def test_recipient_notify_entity_links_itself_to_recipient_on_added_to_hass(hass: HomeAssistant) -> None:
@@ -164,17 +185,31 @@ async def test_recipient_notify_entity_links_itself_to_recipient_on_added_to_has
 
 
 async def test_recipient_notify_entity_restores_last_notified_on_added_to_hass(hass: HomeAssistant) -> None:
-    """last_notified survives a restart via HA's own restore-state mechanism (NotifyEntity is
-    already a RestoreEntity), same as the notification/failure counters restore themselves via
-    SupernotifyCounterSensor."""
+    """The recorded notification timestamp survives a restart via HA's own restore-state
+    mechanism (NotifyEntity is already a RestoreEntity), same as the notification/failure
+    counters restore themselves via SupernotifyCounterSensor. On HA >= 2026.3 this restore is
+    native (NotifyEntity.async_internal_added_to_hass(), reading state.state); on HA < 2026.3 -
+    where there's no such native mechanism - RecipientNotifyEntity.async_added_to_hass() does it
+    manually from the last_notified attribute, same as before the refactor. This test runs
+    unmodified on both lanes."""
     recipient = Recipient({CONF_PERSON: "person.alice"})
     uut = RecipientNotifyEntity("entry123_recipient_alice", recipient, Mock())
     uut.hass = hass
-    restored_state = State(
-        "notify.recipient_alice", "2026-09-07T09:00:00+00:00", {"last_notified": "2026-09-07T09:00:00+00:00"}
-    )
-    uut.async_get_last_state = AsyncMock(return_value=restored_state)  # type: ignore[method-assign]
+    native = hasattr(uut, "_async_record_notification")
 
-    await uut.async_added_to_hass()
-
-    assert uut.extra_state_attributes == {"last_notified": "2026-09-07T09:00:00+00:00"}
+    if native:
+        restored_state = State("notify.recipient_alice", "2026-09-07T09:00:00+00:00")
+        uut.async_get_last_state = AsyncMock(return_value=restored_state)  # type: ignore[method-assign]
+        # async_internal_added_to_hass() (unlike async_added_to_hass()) is normally only called
+        # by the entity platform machinery, which sets self.platform first - stub the bit of it
+        # this method actually touches.
+        uut.platform = Mock(platform_name="notify", config_entry=None)
+        await uut.async_internal_added_to_hass()
+        assert uut.state == "2026-09-07T09:00:00+00:00"
+    else:
+        restored_state = State(
+            "notify.recipient_alice", "2026-09-07T09:00:00+00:00", {"last_notified": "2026-09-07T09:00:00+00:00"}
+        )
+        uut.async_get_last_state = AsyncMock(return_value=restored_state)  # type: ignore[method-assign]
+        await uut.async_added_to_hass()
+        assert uut.extra_state_attributes == {"last_notified": "2026-09-07T09:00:00+00:00"}
