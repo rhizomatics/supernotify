@@ -898,7 +898,7 @@ class Notification(ArchivableObject):
         split_targets: list[Target] = computed_target.split_by_target_data()
         self.debug_trace.record_target(delivery.name, "610_delivery_split_targets", split_targets)
 
-        direct_targets: list[Target] = [t.direct() for t in split_targets]
+        direct_targets: list[Target] = [t.direct(keep_selectors=delivery.passes_target_selectors) for t in split_targets]
         self.debug_trace.record_target(delivery.name, "620_narrow_to_direct", direct_targets)
 
         if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
@@ -943,6 +943,9 @@ class Notification(ArchivableObject):
         resolved: Target = Target()
         additional: list[Target] = []
 
+        if target.has_selectors():
+            resolved += self.resolve_target_selectors(target, delivery)
+
         for person_id in target.person_ids:
             recipient: Recipient | None = self.people_registry.people.get(person_id)
             if recipient and recipient.enabled:
@@ -956,13 +959,49 @@ class Notification(ArchivableObject):
 
         return [resolved, *additional]
 
+    def resolve_target_selectors(self, target: Target, delivery: Delivery) -> Target:
+        """Resolve area_id/floor_id/label_id targets to entity_ids, unless the delivery's action
+        accepts the selectors natively, in which case they are left in place to pass through.
+
+        Resolution goes through the same core helper as HA entity actions, so groups are expanded
+        and entities inherit the area of their device; the transport's target selection then narrows
+        the entities to the ones it can deliver to. Unknown areas/floors/labels are logged, since
+        otherwise a typo silently resolves to nothing.
+        """
+        resolution = self.context.hass_api.resolve_target_selectors(
+            area_ids=target.area_ids, floor_ids=target.floor_ids, label_ids=target.label_ids
+        )
+        if resolution.has_missing():
+            _LOGGER.warning(
+                "SUPERNOTIFY Unknown target selectors for delivery %s: areas %s, floors %s, labels %s",
+                delivery.name,
+                resolution.missing_areas,
+                resolution.missing_floors,
+                resolution.missing_labels,
+            )
+        if delivery.passes_target_selectors:
+            _LOGGER.debug(
+                "SUPERNOTIFY Delivery %s passes target selectors through to %s (%s entities referenced)",
+                delivery.name,
+                delivery.action,
+                len(resolution.entity_ids),
+            )
+            return Target()
+        _LOGGER.debug(
+            "SUPERNOTIFY Delivery %s resolved target selectors to %s entities", delivery.name, len(resolution.entity_ids)
+        )
+        return Target({ATTR_ENTITY_ID: resolution.entity_ids}) if resolution.entity_ids else Target()
+
     def generate_envelopes(self, delivery: Delivery, targets: list[Target]) -> list[Envelope]:
         # now the list of recipients determined, resolve this to target addresses or entities
 
         envelopes: list[Envelope] = []
         for target in targets:
             # a target is always generated, even if there are no recipients
-            if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
+            if (
+                target.has_resolved_target(include_selectors=delivery.passes_target_selectors)
+                or delivery.target_required != TargetRequired.ALWAYS
+            ):
                 envelope_data = {}
 
                 # least priority - delivery derived data

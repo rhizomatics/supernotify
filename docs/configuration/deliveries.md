@@ -115,6 +115,17 @@ are resolved as specific to it, for example based on the `target_categories` opt
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
+Home Assistant `area_id`, `floor_id` and `label_id` targets are handled according to the `target_selectors` option:
+
+- `auto` - the default, pass the selectors through untouched if the delivery's action declares that it accepts
+  targets ( as `notify.send_message` does ), otherwise resolve them within Supernotify
+- `native` - always pass the selectors through to the action, for example when the action is known to accept them but isn't described that way
+- `resolve` - always resolve the selectors to entities within Supernotify first, using the same core logic as
+  Home Assistant actions, so groups are expanded and entities inherit the area of their device, and then apply the
+  delivery's `target_categories` and `target_select` options to the result
+
+The `tts` and `chime` transports default to `resolve`, since their actions are targeted per entity rather than by the notification target.
+
 ## Delivery Selection
 
 A list of `selection` options controls how deliveries are selected, each delivery can have multiple

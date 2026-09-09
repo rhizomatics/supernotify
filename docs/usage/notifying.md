@@ -80,6 +80,30 @@ is most convenient
               - mobile_app.john_ipad
 ```
 
+## Area, Floor and Label Targets
+
+Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification
+can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id`
+and `label_id` keys as any other Home Assistant action:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            area_id: kitchen
+            floor_id: ground_floor
+            label_id:
+              - chime
+```
+
+For each delivery, Supernotify either passes the selectors straight through to the underlying action, where
+that action supports them (for example `notify.send_message` for notify entities), or resolves them to
+entities itself using the same core logic as Home Assistant actions, and then applies the delivery's usual
+target selection. This is decided automatically from the action definition, and can be forced with the
+`target_selectors` delivery option, see [Deliveries](../configuration/deliveries.md#controlling-targets).
+Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+
 ## Notification Priority
 
 Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or scenarios ( for example a siren to accompany 'critical' notifications).

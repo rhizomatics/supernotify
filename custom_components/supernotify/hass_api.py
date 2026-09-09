@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ACTION,
     CONF_DEVICE_ID,
     EntityCategory,
@@ -54,6 +57,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.service import async_get_all_descriptions, async_get_cached_service_description
+from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
@@ -117,6 +122,19 @@ class DeviceInfo:
         return other is not None and callable(as_dict) and as_dict() == self.as_dict()
 
 
+@dataclass
+class TargetSelectorResolution:
+    """Outcome of resolving area/floor/label selectors locally"""
+
+    entity_ids: list[str] = field(default_factory=list)
+    missing_areas: list[str] = field(default_factory=list)
+    missing_floors: list[str] = field(default_factory=list)
+    missing_labels: list[str] = field(default_factory=list)
+
+    def has_missing(self) -> bool:
+        return bool(self.missing_areas or self.missing_floors or self.missing_labels)
+
+
 class HomeAssistantAPI:
     def __init__(self, hass: HomeAssistant) -> None:
         self._hass: HomeAssistant = hass
@@ -127,6 +145,7 @@ class HomeAssistantAPI:
         self._entity_registry: er.EntityRegistry | None = None
         self._device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
+        self._service_descriptions: dict[str, dict[str, Any]] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
         self.mobile_apps_by_tracker: dict[str, DeviceInfo] = {}
@@ -389,6 +408,69 @@ class HomeAssistantAPI:
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
         return supports_response or SupportsResponse.NONE  # default to no response
+
+    async def load_service_descriptions(self) -> None:
+        """Cache the action descriptions (services.yaml) of every loaded integration.
+
+        Used to discover, without inspecting schemas, which actions accept the HA
+        target selectors (entity/device/area/floor/label), i.e. those declaring a
+        `target:` block in their description - the same signal the frontend uses.
+        """
+        if not self.hass_avail("services"):
+            return
+        try:
+            self._service_descriptions = await async_get_all_descriptions(self._hass)
+            _LOGGER.debug("SUPERNOTIFY Cached action descriptions for %s domains", len(self._service_descriptions))
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to load action descriptions: %s", e)
+
+    def service_accepts_target_selectors(self, qualified_action: str | None) -> bool | None:
+        """Discover whether an action accepts HA target selectors (area_id, floor_id, label_id)
+
+        Returns True if the action description declares a `target` block, False if the action is
+        known and doesn't, and None if the action is unknown or descriptions are unavailable.
+        """
+        if not qualified_action or "." not in qualified_action:
+            return None
+        domain, service = qualified_action.split(".", 1)
+        description: dict[str, Any] | None = self._service_descriptions.get(domain, {}).get(service)
+        if description is None and self.hass_avail("services"):
+            try:
+                description = async_get_cached_service_description(self._hass, domain, service)
+            except Exception as e:
+                _LOGGER.debug("SUPERNOTIFY Unable to get cached description for %s: %s", qualified_action, e)
+        if description is None:
+            return None
+        return description.get("target") is not None
+
+    def resolve_target_selectors(
+        self,
+        area_ids: list[str] | None = None,
+        floor_ids: list[str] | None = None,
+        label_ids: list[str] | None = None,
+    ) -> TargetSelectorResolution:
+        """Resolve HA area/floor/label selectors to the entities they reference, using the same
+        core helper as HA entity actions, so groups are expanded and device areas are honoured.
+        """
+        resolution = TargetSelectorResolution()
+        if not (area_ids or floor_ids or label_ids):
+            return resolution
+        selection: dict[str, list[str]] = {}
+        if area_ids:
+            selection[ATTR_AREA_ID] = list(area_ids)
+        if floor_ids:
+            selection[ATTR_FLOOR_ID] = list(floor_ids)
+        if label_ids:
+            selection[ATTR_LABEL_ID] = list(label_ids)
+        try:
+            selected = async_extract_referenced_entity_ids(self._hass, TargetSelection(selection), expand_group=True)
+            resolution.entity_ids = sorted(selected.referenced | selected.indirectly_referenced)
+            resolution.missing_areas = sorted(selected.missing_areas)
+            resolution.missing_floors = sorted(selected.missing_floors)
+            resolution.missing_labels = sorted(selected.missing_labels)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to resolve target selectors %s: %s", selection, e)
+        return resolution
 
     def find_service(self, domain: str, module: str) -> str | None:
         try:

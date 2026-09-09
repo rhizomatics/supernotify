@@ -198,6 +198,12 @@ OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_INCLUDE_RE = "target_include_re"  # deprecated v1.9.0
 OPTION_TARGET_SELECT = "target_select"
+# how area_id/floor_id/label_id targets are handled for a delivery
+OPTION_TARGET_SELECTORS = "target_selectors"
+TARGET_SELECTORS_AUTO = "auto"  # discover from the action description whether selectors pass through
+TARGET_SELECTORS_NATIVE = "native"  # pass selectors through to the underlying action untouched
+TARGET_SELECTORS_RESOLVE = "resolve"  # resolve selectors to entity_ids within supernotify
+TARGET_SELECTORS_VALUES = [TARGET_SELECTORS_AUTO, TARGET_SELECTORS_NATIVE, TARGET_SELECTORS_RESOLVE]
 OPTION_CHIME_ALIASES = "chime_aliases"
 OPTION_DATA_KEYS_SELECT = "data_keys_select"
 OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"  # deprecated v1.9.0
