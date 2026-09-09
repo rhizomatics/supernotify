@@ -59,6 +59,8 @@ HASH_PREP_TRANSLATION_TABLE = table = str.maketrans("", "", string.punctuation +
 class Envelope(DupeCheckable):
     """Wrap a notification with a specific set of targets and service data possibly customized for those targets"""
 
+    _SCENARIO_TEMPLATE_DIRECTIVE_KEYS = frozenset({"message_template", "title_template"})
+
     def __init__(
         self,
         delivery: Delivery,
@@ -112,6 +114,17 @@ class Envelope(DupeCheckable):
             self.condition_variables = notification.condition_variables
         else:
             self.condition_variables = ConditionVariables()
+
+        # Scenario/delivery overrides can express `data` values (e.g. volume,
+        # volume_level, method for alexa_announce) as Jinja2 templates. These
+        # must be resolved once, here, before any transport sees `self.data` -
+        # previously they were only rendered for the archive copy built in
+        # contents(), so the transport call itself received the raw template
+        # string (#64). Keep the pre-render copy so contents() can still show
+        # the raw template alongside the resolved value for debugging.
+        self._raw_data: dict[str, Any] = dict(self.data)
+        if self.context:
+            self.data = self._render_data_templates(self.data)
 
         self.message = self._compute_message()
         self.title = self._compute_title()
@@ -174,7 +187,7 @@ class Envelope(DupeCheckable):
                 exclude_attrs.append("target")
 
         json_ready = {k: v for k, v in self.__dict__.items() if k not in exclude_attrs and not k.startswith("_")}
-        json_ready["data"] = self._resolve_data_templates(self.data)
+        json_ready["data"] = self._resolve_data_templates(self._raw_data)
         json_ready["calls"] = [call.contents() for call in self.calls]
         json_ready["failedcalls"] = [call.contents() for call in self.failed_calls]
         return json_ready
@@ -310,6 +323,38 @@ class Envelope(DupeCheckable):
             camera_entity_id,
             media_url,
         ))
+
+    def _render_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Render Jinja2 templates in delivery `data` before the transport call.
+
+        Scenario or delivery-level overrides can set `data` values as Jinja2
+        template strings (see `_resolve_data_templates` for the archive/
+        diagnostics equivalent). Unlike that method, this returns a plain
+        resolved dict with no `<key>_template` breadcrumbs, so it is safe to
+        pass straight through to a transport's underlying HA service call.
+        """
+        if not data or not self.context:
+            return data
+        context_vars = cast("dict[str, Any]", self.condition_variables.as_dict()) if self.condition_variables else {}
+        rendered: dict[str, Any] = {}
+        for key, value in data.items():
+            if key in self._SCENARIO_TEMPLATE_DIRECTIVE_KEYS:
+                # message_template/title_template are directives consumed by
+                # _render_scenario_templates() with its own chained render
+                # context, not literal data values - rendering them here
+                # would use the wrong (stale) context and produce unused junk.
+                rendered[key] = value
+            elif isinstance(value, str) and "{{" in value:
+                try:
+                    rendered[key] = self.context.hass_api.template(value).async_render(variables=context_vars)
+                except Exception as e:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY Rendering delivery data template for %s.%s failed: %s", self.delivery_name, key, e
+                    )
+                    rendered[key] = value
+            else:
+                rendered[key] = value
+        return rendered
 
     def _resolve_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
         """Resolve Jinja2 templates in data dict for archive readability.

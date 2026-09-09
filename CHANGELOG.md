@@ -1,6 +1,13 @@
 ## 2.4.1
 
-- New *Repair* raised if running under Python 3.13, to warn about support dropping with the HA 2026.10 release.
+## Data Templates
+- Templated `data` sections now rendered prior to downstream transport being called, e.g. if Alexa volume computed. Provided by [@lollox80](https://github.com/lollox80)
+### Tracing Activities
+- Home Assistant context added to state changes and events driven by notifications.
+### Home Assistant Compatibility
+- New *Repair* raised if running under Python 3.13, to warn about support dropping with the HA 2026.10 release. Note that 2026.3.0 is the first Home Assistant release to require Python 3.14.
+### Testing
+- Automated testing of 6 month prior Home Assistant release added, and versions will be rolled to maintain compatibility check.
 
 ## 2.4.0
 
@@ -163,7 +170,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](docs/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](./roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
   - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
   - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.

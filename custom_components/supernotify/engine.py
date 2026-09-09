@@ -242,7 +242,7 @@ class SupernotifyEngine:
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1
-                self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
+                self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent, context=context)
             elif notification.failed:
                 _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.error_count)
             else:
@@ -264,7 +264,7 @@ class SupernotifyEngine:
             self.failures += 1
             if notification is not None:
                 notification._delivery_error = format_exception(err)
-            self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
+            self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures, context=context)
 
         if notification is None:
             _LOGGER.warning("SUPERNOTIFY NULL Notification, %s", message)

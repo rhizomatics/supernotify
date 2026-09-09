@@ -191,11 +191,17 @@ class HomeAssistantAPI:
     def is_state(self, entity_id: str, state: str) -> bool:
         return self._hass.states.is_state(entity_id, state)
 
-    def set_state(self, entity_id: str, state: str | int | bool, attributes: dict[str, Any] | None = None) -> None:
+    def set_state(
+        self,
+        entity_id: str,
+        state: str | int | bool,
+        attributes: dict[str, Any] | None = None,
+        context: HomeAssistantContext | None = None,
+    ) -> None:
         if self.in_hass_loop():
-            self._hass.states.async_set(entity_id, str(state), attributes=attributes)
+            self._hass.states.async_set(entity_id, str(state), attributes=attributes, context=context)
         else:
-            self._hass.states.set(entity_id, str(state), attributes=attributes)
+            self._hass.states.set(entity_id, str(state), attributes=attributes, context=context)
 
     def has_service(self, domain: str, service: str) -> bool:
         return self._hass.services.has_service(domain, service)
@@ -274,8 +280,10 @@ class HomeAssistantAPI:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
         return self._hass.async_add_executor_job(func, *args)
 
-    def fire_event(self, event_name: str, event_data: dict[str, Any] | None = None) -> None:
-        self._hass.bus.async_fire(event_name, event_data)
+    def fire_event(
+        self, event_name: str, event_data: dict[str, Any] | None = None, context: HomeAssistantContext | None = None
+    ) -> None:
+        self._hass.bus.async_fire(event_name, event_data, context=context)
 
     async def call_service(
         self,
