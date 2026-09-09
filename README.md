@@ -123,6 +123,10 @@ A lot can be done with the simple non-YAML configuration, including automation o
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```
 
+## Known Limitations
+
+- **Links** can be configured but not currently used.
+- YAML still required for Delivery, Transport, Recipient, Action etc
 
 ##  Rhizomatics Open Source for Home Assistant
 

@@ -257,8 +257,8 @@ rules:
       covers similar ground informally but isn't in blueprint-exchange format.
 
   docs-known-limitations:
-    status: todo
-    comment: No "## Known limitations" section found under docs/.
+    status: done
+    comment: README.md has known limitations section
 
   docs-supported-devices:
     status: exempt
