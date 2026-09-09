@@ -66,6 +66,14 @@ def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) ->
                 node[key].validators: list[FunctionType] = [defuncify(v) for v in node[key].validators]  # ty:ignore[possibly-missing-attribute]
 
 
+def unwrap_schema(vol_schema: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
+    """vol.All(...) chains deprecation/migration validators onto the real vol.Schema,
+    which is always the last validator - unwrap down to that."""
+    while not hasattr(vol_schema, "schema") and hasattr(vol_schema, "validators"):
+        vol_schema = vol_schema.validators[-1]
+    return vol_schema
+
+
 def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -> None:
     tune_schema(schema)
     if isinstance(schema, dict):
@@ -83,7 +91,7 @@ def schema_doc() -> None:
     v_schemas = {s: getattr(custom_components.supernotify.schema, s) for s in TOP_LEVEL_SCHEMAS}
     for vol_schema in v_schemas.values():
         try:
-            walk_schema(vol_schema.schema)
+            walk_schema(unwrap_schema(vol_schema).schema)
         except Exception:
             _LOGGER.exception("Failed on %s", vol_schema)
     j_schemas = {s[0]: (TOP_LEVEL_SCHEMAS[s[0]], convert(s[1])) for s in v_schemas.items()}

@@ -2944,11 +2944,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/22/5b/dbc6a8cddc9cfa9c4971d59fb12bb8d42e161b7e7f8cc89e49137c5b279c/mkdocs-1.6.1-py3-none-any.whl", hash = "sha256:db91759624d1647f3f34aa0c3f327dd2601beae39a366d6e064c03468d35c20e", size = 3864451, upload-time = "2024-08-30T12:24:05.054Z" },
 ]
 
-[package.optional-dependencies]
-i18n = [
-    { name = "babel" },
-]
-
 [[package]]
 name = "mkdocs-autorefs"
 version = "1.4.4"
@@ -3952,6 +3947,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ec/29/f27a4e1eddf72ed3db6e47818fbafe6debbf09fd7051f9c1a007239b46ef/properdocs-1.6.7.tar.gz", hash = "sha256:adc7b16e562890af0e098a7e5b02e3a81c20894a87d6a28d345c9300de73c26e", size = 276141, upload-time = "2026-03-20T20:07:48.167Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bd/4d/fc923f5c85318ee8cc903566dc4e0ebe41b2dfc1d2ecf5546db232397ed6/properdocs-1.6.7-py3-none-any.whl", hash = "sha256:6fa0cfa2e01bf338f684892c8a506cf70ea88ae7f3479c933b6fa20168101cbd", size = 225406, upload-time = "2026-03-20T20:07:46.875Z" },
+]
+
+[package.optional-dependencies]
+i18n = [
+    { name = "babel" },
 ]
 
 [[package]]
@@ -5497,7 +5497,6 @@ dev = [
 docs = [
     { name = "json-schema-for-humans" },
     { name = "mike" },
-    { name = "mkdocs", extra = ["i18n"] },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-coverage" },
     { name = "mkdocs-gen-files" },
@@ -5511,7 +5510,7 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
-    { name = "properdocs" },
+    { name = "properdocs", extra = ["i18n"] },
     { name = "pymdown-extensions" },
     { name = "voluptuous-openapi", version = "0.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
     { name = "voluptuous-openapi", version = "0.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
@@ -5563,7 +5562,6 @@ dev = [
 docs = [
     { name = "json-schema-for-humans" },
     { name = "mike" },
-    { name = "mkdocs", extras = ["i18n"] },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-coverage" },
     { name = "mkdocs-gen-files" },
@@ -5577,7 +5575,7 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
-    { name = "properdocs" },
+    { name = "properdocs", extras = ["i18n"] },
     { name = "pymdown-extensions" },
     { name = "voluptuous-openapi", marker = "python_full_version < '3.14.2'", specifier = "==0.2.0" },
     { name = "voluptuous-openapi", marker = "python_full_version >= '3.14.2'", specifier = ">=0.3.0" },

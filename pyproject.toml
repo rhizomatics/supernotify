@@ -84,7 +84,7 @@ docs=[
     "mkdocs-autorefs",
     "mkdocs-coverage",
     "mkdocs-pagetree-plugin",
-    "properdocs",
+    "properdocs[i18n]",
     "json-schema-for-humans",
     "mkdocs-gen-files",
     "voluptuous-openapi==0.2.0; python_full_version < '3.14.2'",
@@ -93,8 +93,7 @@ docs=[
     "mkdocs-minify-html-plugin",
     "mkdocs-meta-descriptions-plugin",
     "mike",
-    "mkdocs-htmlproofer-plugin",
-    "mkdocs[i18n]"
+    "mkdocs-htmlproofer-plugin"
 ]
 
 [project.optional-dependencies]
