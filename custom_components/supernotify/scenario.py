@@ -124,7 +124,7 @@ class ScenarioRegistry:
             scenario.enabled = True
             _LOGGER.info("SUPERNOTIFY Enabling scenario %s", scenario.name)
             return True
-        _LOGGER.info("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
+        _LOGGER.debug("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
         return False
 
     def _collect_scenario_condition_entities(self) -> dict[str, set[str]]:
