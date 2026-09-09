@@ -4,6 +4,9 @@
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
 - New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 
+### Snoozes
+- Active snoozes are now persisted across Home Assistant restarts, using standard Home Assistant storage for integrations, provided by [@lollox80](https://github.com/lollox80)
+
 ### Camera
 - The previously hard-coded max wait time to snap an image of 20 seconds is now configurable with `snap_wait` in the camera configuration.
   - This is different from the existing `camera_delay` and PTZ controls in that its not a pause. If the camera snap is instant, then the `snap_wait` time will never be used, its only an allowance for cameras that are slow to snapshot.

@@ -188,6 +188,7 @@ class SupernotifyEngine:
         )
         await self.context.archive.initialize()
         await self.context.media_storage.initialize(self.context.hass_api)
+        await self.context.snoozer.initialize(self.context.hass_api)
 
         self.expose_entities()
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
