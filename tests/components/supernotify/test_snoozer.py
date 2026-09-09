@@ -12,11 +12,14 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target
-from custom_components.supernotify.snoozer import Snooze, Snoozer
+from custom_components.supernotify.snoozer import STORAGE_KEY, STORAGE_VERSION, Snooze, Snoozer
 from custom_components.supernotify.transports.email import EmailTransport
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from custom_components.supernotify.context import Context
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
     from custom_components.supernotify.people import PeopleRegistry
 
 
@@ -170,3 +173,149 @@ def test_current_snoozes_unhandled_target_type(mock_context) -> None:
     snooze.target_type = "UNKNOWN_TYPE"  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
     uut.snoozes["test"] = snooze
     assert uut.current_snoozes(PRIORITY_MEDIUM, delivery) == []
+
+
+def test_snooze_to_storage_dict_round_trip_global() -> None:
+    snooze = Snooze(GlobalTargetType.NONCRITICAL, RecipientType.EVERYONE, snooze_for=timedelta(minutes=30), reason="quiet time")
+    restored = Snooze.from_storage_dict(snooze.to_storage_dict())
+    assert restored is not None
+    assert restored == snooze  # short_key() equality
+    assert restored.target_type == GlobalTargetType.NONCRITICAL
+    assert isinstance(restored.target_type, GlobalTargetType)
+    assert restored.recipient_type == RecipientType.EVERYONE
+    assert restored.reason == "quiet time"
+    assert restored.snoozed_at == snooze.snoozed_at
+    assert restored.snooze_until == snooze.snooze_until
+
+
+def test_snooze_to_storage_dict_round_trip_qualified_with_recipient() -> None:
+    snooze = Snooze(
+        QualifiedTargetType.CAMERA,
+        RecipientType.USER,
+        target="Yard",
+        recipient="person.bidey_in",
+        reason="User command",
+    )
+    restored = Snooze.from_storage_dict(snooze.to_storage_dict())
+    assert restored is not None
+    assert restored == snooze
+    assert isinstance(restored.target_type, QualifiedTargetType)
+    assert restored.target_type == QualifiedTargetType.CAMERA
+    assert restored.target == "Yard"
+    assert restored.recipient == "person.bidey_in"
+    assert restored.recipient_type == RecipientType.USER
+    # a snooze without snooze_for never expires
+    assert restored.snooze_until is None
+    assert restored.active()
+
+
+def test_snooze_from_storage_dict_malformed_returns_none() -> None:
+    assert Snooze.from_storage_dict({}) is None
+    assert Snooze.from_storage_dict({"target_type_class": "GlobalTargetType", "target_type": "NOT_A_REAL_VALUE"}) is None
+
+
+def test_snoozer_persist_is_noop_without_hass_api() -> None:
+    """Snoozer() constructed bare (as every pre-existing test in this module does) must not
+    attempt to persist - hass_api is None until initialize() is called."""
+    uut = Snoozer()
+    assert uut.hass_api is None
+    uut.register_snooze(
+        CommandType.SNOOZE, GlobalTargetType.EVERYTHING, None, RecipientType.EVERYONE, None, timedelta(minutes=5)
+    )
+    assert len(uut.snoozes) == 1  # no exception raised trying to persist
+
+
+async def test_snoozer_initialize_with_no_prior_storage(unmocked_hass_api: HomeAssistantAPI, hass_storage: dict) -> None:
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+    assert uut.hass_api is unmocked_hass_api
+    assert uut.snoozes == {}
+    assert STORAGE_KEY not in hass_storage
+
+
+async def test_snoozer_initialize_restores_active_and_skips_expired_snoozes(
+    unmocked_hass_api: HomeAssistantAPI, hass_storage: dict
+) -> None:
+    active = Snooze(GlobalTargetType.EVERYTHING, RecipientType.EVERYONE, snooze_for=timedelta(hours=1))
+    expired = Snooze(QualifiedTargetType.CAMERA, RecipientType.EVERYONE, target="Yard", snooze_for=timedelta(seconds=-1))
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "data": [active.to_storage_dict(), expired.to_storage_dict()],
+    }
+
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+
+    assert list(uut.snoozes.values()) == [active]
+
+
+async def test_snoozer_initialize_discards_malformed_entries(unmocked_hass_api: HomeAssistantAPI, hass_storage: dict) -> None:
+    good = Snooze(GlobalTargetType.EVERYTHING, RecipientType.EVERYONE)
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "data": [good.to_storage_dict(), {"garbage": True}],
+    }
+
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+
+    assert list(uut.snoozes.values()) == [good]
+
+
+async def test_snoozer_register_snooze_persists_and_survives_reload(
+    hass: HomeAssistant, unmocked_hass_api: HomeAssistantAPI, hass_storage: dict
+) -> None:
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+    uut.register_snooze(
+        CommandType.SNOOZE,
+        QualifiedTargetType.DELIVERY,
+        "email",
+        RecipientType.EVERYONE,
+        None,
+        timedelta(hours=1),
+        reason="test persistence",
+    )
+    await hass.async_block_till_done()  # let the fire-and-forget Store.async_save complete
+
+    assert STORAGE_KEY in hass_storage
+    assert len(hass_storage[STORAGE_KEY]["data"]) == 1
+
+    # simulate a Home Assistant restart: a fresh Snoozer restores from the same storage
+    reloaded = Snoozer()
+    await reloaded.initialize(unmocked_hass_api)
+    assert len(reloaded.snoozes) == 1
+    restored_snooze = next(iter(reloaded.snoozes.values()))
+    assert restored_snooze.target_type == QualifiedTargetType.DELIVERY
+    assert restored_snooze.target == "email"
+    assert restored_snooze.reason == "test persistence"
+
+
+async def test_snoozer_clear_persists_empty_state(
+    hass: HomeAssistant, unmocked_hass_api: HomeAssistantAPI, hass_storage: dict
+) -> None:
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+    uut.register_snooze(CommandType.SNOOZE, GlobalTargetType.EVERYTHING, None, RecipientType.EVERYONE, None, None)
+    await hass.async_block_till_done()
+    assert hass_storage[STORAGE_KEY]["data"]
+
+    assert uut.clear() == 1
+    await hass.async_block_till_done()
+    assert hass_storage[STORAGE_KEY]["data"] == []
+
+
+async def test_snoozer_purge_snoozes_persists_after_removal(
+    hass: HomeAssistant, unmocked_hass_api: HomeAssistantAPI, hass_storage: dict
+) -> None:
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+    uut.register_snooze(
+        CommandType.SNOOZE, GlobalTargetType.EVERYTHING, None, RecipientType.EVERYONE, None, timedelta(seconds=-1)
+    )
+    await hass.async_block_till_done()
+    assert len(hass_storage[STORAGE_KEY]["data"]) == 1
+
+    uut.purge_snoozes()
+    await hass.async_block_till_done()
+    assert hass_storage[STORAGE_KEY]["data"] == []

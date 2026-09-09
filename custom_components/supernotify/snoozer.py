@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.util import dt as dt_util
 
+from . import DOMAIN
 from .const import ATTR_ACTION, ATTR_MOBILE_APP_ID, ATTR_PERSON_ID, CONF_SNOOZE_TIME, PRIORITY_CRITICAL, PRIORITY_MEDIUM
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
 
@@ -14,9 +15,13 @@ if TYPE_CHECKING:
     from homeassistant.core import Event
 
     from .delivery import Delivery
+    from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry, Recipient
 
 _LOGGER = logging.getLogger(__name__)
+
+STORAGE_VERSION = 1
+STORAGE_KEY = f"{DOMAIN}.snoozes"
 
 
 class Snooze:
@@ -80,6 +85,44 @@ class Snooze:
             "snooze_until": dt_util.as_local(self.snooze_until).strftime("%H:%M:%S") if self.snooze_until else None,
         }
 
+    def to_storage_dict(self) -> dict[str, Any]:
+        """Full-fidelity serialization for persistence (unlike export(), which is a display
+        summary that loses the date part of timestamps)."""
+        return {
+            "target_type_class": "GlobalTargetType"
+            if isinstance(self.target_type, GlobalTargetType)
+            else "QualifiedTargetType",
+            "target_type": str(self.target_type),
+            "target": self.target,
+            "recipient_type": str(self.recipient_type),
+            "recipient": self.recipient,
+            "reason": self.reason,
+            "snoozed_at": self.snoozed_at.isoformat() if self.snoozed_at else None,
+            "snooze_until": self.snooze_until.isoformat() if self.snooze_until else None,
+        }
+
+    @classmethod
+    def from_storage_dict(cls, data: dict[str, Any]) -> Snooze | None:
+        try:
+            target_type_cls = GlobalTargetType if data["target_type_class"] == "GlobalTargetType" else QualifiedTargetType
+            snooze = cls(
+                target_type_cls(data["target_type"]),
+                RecipientType(data["recipient_type"]),
+                data.get("target"),
+                data.get("recipient"),
+                reason=data.get("reason"),
+            )
+            if data.get("snoozed_at"):
+                snoozed_at = dt_util.parse_datetime(data["snoozed_at"])
+                if snoozed_at:
+                    snooze.snoozed_at = snoozed_at
+            snooze.snooze_until = dt_util.parse_datetime(data["snooze_until"]) if data.get("snooze_until") else None
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Discarding invalid persisted snooze %s: %s", data, e)
+            return None
+        else:
+            return snooze
+
 
 class Snoozer:
     """Manage snoozing"""
@@ -89,6 +132,27 @@ class Snoozer:
         self.people_registry: PeopleRegistry | None = people_registry
         self.config = config or {}
         self.snooze_period = timedelta(seconds=self.config.get(CONF_SNOOZE_TIME, 60 * 60))
+        self.hass_api: HomeAssistantAPI | None = None
+
+    async def initialize(self, hass_api: HomeAssistantAPI) -> None:
+        """Restore any snoozes persisted from a previous run - HA restarts and reloads no
+        longer silently lose active snoozes/silences. Expired ones are dropped on restore."""
+        self.hass_api = hass_api
+        stored = await hass_api.load_storage(STORAGE_KEY, STORAGE_VERSION)
+        if not stored:
+            return
+        restored = 0
+        for entry in stored:
+            snooze = Snooze.from_storage_dict(entry)
+            if snooze and snooze.active():
+                self.snoozes[snooze.short_key()] = snooze
+                restored += 1
+        if restored:
+            _LOGGER.info("SUPERNOTIFY Restored %s snooze(s) from storage", restored)
+
+    def _persist(self) -> None:
+        if self.hass_api is not None:
+            self.hass_api.save_storage(STORAGE_KEY, [s.to_storage_dict() for s in self.snoozes.values()], STORAGE_VERSION)
 
     def handle_command_event(self, event: Event, people: list[Recipient] | None = None) -> None:
         people = people or []
@@ -171,14 +235,18 @@ class Snoozer:
         if cmd == CommandType.SNOOZE:
             snooze = Snooze(target_type, recipient_type, target, recipient, snooze_for, reason=reason)
             self.snoozes[snooze.short_key()] = snooze
+            self._persist()
         elif cmd == CommandType.SILENCE:
             snooze = Snooze(target_type, recipient_type, target, recipient, reason=reason)
             self.snoozes[snooze.short_key()] = snooze
+            self._persist()
         elif cmd == CommandType.NORMAL:
             anti_snooze = Snooze(target_type, recipient_type, target, recipient)
             to_del = [k for k, v in self.snoozes.items() if v.short_key() == anti_snooze.short_key()]
             for k in to_del:
                 del self.snoozes[k]
+            if to_del:
+                self._persist()
         else:
             _LOGGER.warning(  # type: ignore
                 "SUPERNOTIFY Invalid mobile cmd %s (target_type: %s, target: %s, recipient_type: %s)",
@@ -192,10 +260,14 @@ class Snoozer:
         to_del = [k for k, v in self.snoozes.items() if not v.active()]
         for k in to_del:
             del self.snoozes[k]
+        if to_del:
+            self._persist()
 
     def clear(self) -> int:
         cleared = len(self.snoozes)
         self.snoozes.clear()
+        if cleared:
+            self._persist()
         return cleared
 
     def export(self) -> list[dict[str, Any]]:
