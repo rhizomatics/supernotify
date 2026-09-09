@@ -1,5 +1,15 @@
 {
     "title": "Supernotify",
+    "entity": {
+        "sensor": {
+            "notifications": {
+                "name": "Notificações enviadas"
+            },
+            "failures": {
+                "name": "Falhas de notificação"
+            }
+        }
+    },
     "services": {
         "reload": {
             "name": "Recarregar",

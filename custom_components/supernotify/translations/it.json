@@ -1,5 +1,15 @@
 {
     "title": "Supernotify",
+    "entity": {
+        "sensor": {
+            "notifications": {
+                "name": "Notifiche inviate"
+            },
+            "failures": {
+                "name": "Notifiche fallite"
+            }
+        }
+    },
     "services": {
         "reload": {
             "name": "Ricarica",

@@ -85,6 +85,7 @@ from .transports.tts import TTSTransport
 if TYPE_CHECKING:
     import datetime as dt
 
+    from .sensor import SupernotifyCounterSensor
     from .transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
@@ -151,6 +152,11 @@ class SupernotifyEngine:
         self.failures: int = 0
         self.housekeeping: dict[str, Any] = housekeeping or {}
         self.sent: int = 0
+        # Set by sensor.py's async_setup_entry once the sensor platform has loaded; None until
+        # then (e.g. during initialize(), and in tests that build SupernotifyEngine directly
+        # without a config entry) - see restore_sent/restore_failures and expose_entities().
+        self._notifications_entity: SupernotifyCounterSensor | None = None
+        self._failures_entity: SupernotifyCounterSensor | None = None
         hass_api = HomeAssistantAPI(hass)
 
         people_registry = PeopleRegistry(
@@ -190,9 +196,25 @@ class SupernotifyEngine:
         await self.context.media_storage.initialize(self.context.hass_api)
         await self.context.snoozer.initialize(self.context.hass_api)
 
-        self.expose_entities()
+        # Delivery/transport binary_sensors are still raw hass_api.expose_entity() writes (a
+        # separate, larger conversion - see issue #175); scenario/recipient binary_sensors and
+        # the counters are real entities now and self-initialize when their platforms load
+        # (after this method returns - see __init__.py), so expose_entities() itself is only
+        # needed on demand (supernotify.refresh_entities), not eagerly here.
+        self.context.delivery_registry.expose_entities(self.context.hass_api)
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
-        self.context.hass_api.subscribe_state(self.context.hass_api.exposed_entities, self._entity_state_change_listener)
+
+        # Entities to watch for an external toggle (Developer Tools, an automation) via
+        # _entity_state_change_listener below. Delivery/transport entity_ids come from
+        # hass_api.exposed_entities (populated by expose_entity() just above); scenario and
+        # recipient entity_ids are computed directly since those are real entities that never
+        # call expose_entity() - see binary_sensor.py for the same entity_id scheme.
+        watched_entities = [
+            *self.context.hass_api.exposed_entities,
+            *(f"binary_sensor.{DOMAIN}_scenario_{name}" for name in self.context.scenario_registry.scenarios),
+            *(f"binary_sensor.{DOMAIN}_recipient_{r.name}" for r in self.context.people_registry.people.values()),
+        ]
+        self.context.hass_api.subscribe_state(watched_entities, self._entity_state_change_listener)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -242,7 +264,10 @@ class SupernotifyEngine:
             await notification.initialize()
             if await notification.deliver():
                 self.sent += 1
-                self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent, context=context)
+                if self._notifications_entity is not None:
+                    self._notifications_entity.set_value(self.sent)
+                else:
+                    self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent, context=context)
             elif notification.failed:
                 _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.error_count)
             else:
@@ -264,7 +289,10 @@ class SupernotifyEngine:
             self.failures += 1
             if notification is not None:
                 notification._delivery_error = format_exception(err)
-            self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures, context=context)
+            if self._failures_entity is not None:
+                self._failures_entity.set_value(self.failures)
+            else:
+                self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures, context=context)
 
         if notification is None:
             _LOGGER.warning("SUPERNOTIFY NULL Notification, %s", message)
@@ -297,19 +325,48 @@ class SupernotifyEngine:
                 return
         _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
 
+    def restore_sent(self, value: int) -> None:
+        """Called once by SupernotifyCounterSensor.async_added_to_hass() with the value
+        restored from the last run, so the in-memory counter and the displayed one agree.
+
+        max() guards against a notification landing on the pre-restore fallback counter (see
+        async_send_message's hass_api.set_state() branch) during the window between
+        async_register_services() and the sensor platform finishing its restore - without it,
+        a restore arriving after such an increment would silently overwrite the higher,
+        already-correct value with the older persisted one."""
+        self.sent = max(self.sent, value)
+
+    def restore_failures(self, value: int) -> None:
+        """Called once by SupernotifyCounterSensor.async_added_to_hass() with the value
+        restored from the last run, so the in-memory counter and the displayed one agree.
+
+        See restore_sent() for why max() and not a plain assignment."""
+        self.failures = max(self.failures, value)
+
     def expose_entities(self) -> None:
-        # Create on the fly entities for key internal config and state
+        """Refresh every entity SuperNotify exposes for introspection/control.
 
-        # pseudo-entities, no more than states
-        self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
-        self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
+        Scenario and recipient binary_sensors, and the notification/failure counters, are real
+        platform entities (binary_sensor.py/sensor.py) added via async_forward_entry_setups and
+        keep themselves current; refreshing them here is a safe no-op before those platforms
+        have loaded (e.g. during initialize(), and in tests that build SupernotifyEngine
+        directly without a config entry - see the entity-less fallbacks below and in
+        async_send_message). Delivery/transport entities are still raw hass_api writes, pending
+        a separate, larger conversion to switch entities (see issue #175).
+        """
+        if self._notifications_entity is not None:
+            self._notifications_entity.set_value(self.sent)
+        else:
+            self.context.hass_api.set_state(f"sensor.{DOMAIN}_notifications", self.sent)
+        if self._failures_entity is not None:
+            self._failures_entity.set_value(self.failures)
+        else:
+            self.context.hass_api.set_state(f"sensor.{DOMAIN}_failures", self.failures)
 
-        # actual entities
-        self.context.scenario_registry.expose_entities(self.context.hass_api)
+        self.context.scenario_registry.async_refresh_scenario_states()
+        for entity in self.context.people_registry.recipient_entities():
+            entity.async_write_ha_state()
         self.context.delivery_registry.expose_entities(self.context.hass_api)
-        self.context.people_registry.expose_entities(self.context.hass_api)
-
-        # people registry also creates recipients as entities
 
     def enquire_implicit_deliveries(self) -> dict[str, Any]:
         v: dict[str, list[str]] = {}
