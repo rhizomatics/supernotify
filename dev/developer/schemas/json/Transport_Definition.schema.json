@@ -23,11 +23,11 @@
       }
     },
     "device_discovery": {
-      "type": "string"
+      "type": "boolean"
     },
     "enabled": {
-      "default": true,
-      "type": "string"
+      "type": "boolean",
+      "default": true
     },
     "delivery_defaults": {
       "type": "object",
@@ -127,7 +127,9 @@
         },
         "target_required": {
           "anyOf": [
-            {},
+            {
+              "type": "boolean"
+            },
             {
               "type": "string",
               "enum": [

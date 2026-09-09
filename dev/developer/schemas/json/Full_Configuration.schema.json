@@ -10,7 +10,7 @@
             "type": "string"
           },
           "debug": {
-            "type": "string"
+            "type": "boolean"
           },
           "options": {
             "type": "object",
@@ -101,7 +101,9 @@
           },
           "target_required": {
             "anyOf": [
-              {},
+              {
+                "type": "boolean"
+              },
               {
                 "type": "string",
                 "enum": [
@@ -199,15 +201,15 @@
             "type": "string"
           },
           "message": {
-            "nullable": true,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "title": {
-            "nullable": true,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "enabled": {
-            "type": "string"
+            "type": "boolean"
           },
           "occupancy": {
             "type": "string",
@@ -481,8 +483,8 @@
                   ]
                 },
                 "enabled": {
-                  "nullable": true,
-                  "type": "string"
+                  "type": "boolean",
+                  "nullable": true
                 },
                 "data": {
                   "type": "object",
@@ -537,12 +539,12 @@
             "type": "string"
           },
           "enabled": {
-            "default": true,
-            "type": "string"
+            "type": "boolean",
+            "default": true
           },
           "expose_state": {
-            "default": true,
-            "type": "string"
+            "type": "boolean",
+            "default": true
           },
           "conditions": {
             "type": "array",
@@ -681,8 +683,8 @@
                   ]
                 },
                 "enabled": {
-                  "nullable": true,
-                  "type": "string"
+                  "type": "boolean",
+                  "nullable": true
                 },
                 "data": {
                   "type": "object",
@@ -726,11 +728,11 @@
             }
           },
           "device_discovery": {
-            "type": "string"
+            "type": "boolean"
           },
           "enabled": {
-            "default": true,
-            "type": "string"
+            "type": "boolean",
+            "default": true
           },
           "delivery_defaults": {
             "type": "object",
@@ -830,7 +832,9 @@
               },
               "target_required": {
                 "anyOf": [
-                  {},
+                  {
+                    "type": "boolean"
+                  },
                   {
                     "type": "string",
                     "enum": [

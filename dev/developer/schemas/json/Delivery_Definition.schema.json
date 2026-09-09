@@ -5,7 +5,7 @@
       "type": "string"
     },
     "debug": {
-      "type": "string"
+      "type": "boolean"
     },
     "options": {
       "type": "object",
@@ -96,7 +96,9 @@
     },
     "target_required": {
       "anyOf": [
-        {},
+        {
+          "type": "boolean"
+        },
         {
           "type": "string",
           "enum": [
@@ -194,15 +196,15 @@
       "type": "string"
     },
     "message": {
-      "nullable": true,
-      "type": "string"
+      "type": "string",
+      "nullable": true
     },
     "title": {
-      "nullable": true,
-      "type": "string"
+      "type": "string",
+      "nullable": true
     },
     "enabled": {
-      "type": "string"
+      "type": "boolean"
     },
     "occupancy": {
       "type": "string",

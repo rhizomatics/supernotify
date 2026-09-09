@@ -5,12 +5,12 @@
       "type": "string"
     },
     "enabled": {
-      "default": true,
-      "type": "string"
+      "type": "boolean",
+      "default": true
     },
     "expose_state": {
-      "default": true,
-      "type": "string"
+      "type": "boolean",
+      "default": true
     },
     "conditions": {
       "type": "array",
@@ -149,8 +149,8 @@
             ]
           },
           "enabled": {
-            "nullable": true,
-            "type": "string"
+            "type": "boolean",
+            "nullable": true
           },
           "data": {
             "type": "object",
