@@ -63,17 +63,15 @@ For multi-step tasks, state a brief plan:
 3. [Step] → verify: [check]
 ```
 
-Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
-
 For code reviews, produce a single list of findings, graded by risk.
 
 
 ## Project Context
 
 The project uses Ruff for formatting and linting, uv for dependency management,
-mypy for type checking, pytest for unit and integration testing, and codespell for spell checking. It is anticipated that type checking will move to [ty](https://github.com/astral-sh/ty) when it is production ready.
+mypy for type checking (with experimental use of ty), pytest for unit and integration testing, and codespell for spell checking.
 
-Documentation uses mkdocs with the Material theme, and is published using Github Pages with a
+Documentation uses properdocs with the Material theme, and is published using Github Pages with a
 custom domain of supernotify.rhizomatics.org.
 
 While this is a HACS component, it should be built wherever possible to adhere to the [Home Assistant Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at the highest level. This also means all dependencies must be

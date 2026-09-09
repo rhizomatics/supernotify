@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import Mock
 
-import aiofiles
 from homeassistant.core import Context
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 
+from .doubles_lib import MockCameraEntity
 from .hass_setup_lib import register_mobile_app
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
 
-    from conftest import DummyNotificationService
+    from conftest import DummyNotificationService, TestImage
 
 
 async def test_notification_fires_from_event_triggered_automation(
@@ -51,7 +53,7 @@ async def test_notification_fires_from_event_triggered_automation(
     assert message == "Someone is at the door"
 
 
-async def test_context_propagates_to_camera_ptz_and_mobile_push(hass: HomeAssistant) -> None:
+async def test_context_propagates_to_camera_ptz_and_mobile_push(hass: HomeAssistant, sample_jpeg: TestImage) -> None:
     """An automation-triggered supernotify.notify call must propagate the automation's Context
     all the way down to the individual Home Assistant service calls it fans out to - both the
     camera PTZ movement and the mobile push notification. notify.supernotify can't do this (see
@@ -71,14 +73,14 @@ async def test_context_propagates_to_camera_ptz_and_mobile_push(hass: HomeAssist
     async def fake_push(call: ServiceCall) -> None:
         push_calls.append(call)
 
-    async def fake_snapshot(call: ServiceCall) -> None:
-        # a real snapshot file so the raw image is cached and only fetched once - a failed/
-        # unregistered `camera.snapshot` would leave it uncached and the PTZ move repeated
-        async with aiofiles.open(call.data["filename"], "wb") as file:
-            await file.write(b"fake-jpeg-bytes")
+    # a real camera entity so the raw image is fetched successfully and cached on the
+    # notification - an unavailable camera would leave it uncached and the PTZ move repeated
+    camera_entity = MockCameraEntity(sample_jpeg.path)
+    await camera_entity.load()
+    hass.data["camera"] = Mock(spec=EntityComponent)
+    hass.data["camera"].get_entity = Mock(return_value=camera_entity)
 
     hass.services.async_register("onvif", "ptz", fake_ptz)
-    hass.services.async_register("camera", "snapshot", fake_snapshot)
     hass.services.async_remove("notify", "mobile_app_test_iphone")
     hass.services.async_register("notify", "mobile_app_test_iphone", fake_push)
 

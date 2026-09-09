@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -57,6 +58,7 @@ ISSUE_ID = "legacy_yaml_config"
 # survives closing the confirm-step dialog, distinct from ISSUE_ID (which stays fixable/
 # retryable - e.g. after the user manually clears whatever blocked the automated attempt).
 MANUAL_MIGRATION_ISSUE_ID = "legacy_yaml_manual_migration_required"
+PYTHON_313_DEPRECATED_ISSUE_ID = "python_313_deprecated"
 SUPERNOTIFY_YAML_FILENAME = "supernotify.yaml"
 CONFIGURATION_YAML_FILENAME = "configuration.yaml"
 
@@ -140,6 +142,30 @@ def async_create_legacy_yaml_issue(hass: HomeAssistant, legacy_config: dict[str,
         # so it's carried through as a JSON string and decoded back in async_create_fix_flow.
         data={"legacy_config": json.dumps(legacy_config, default=str)},
     )
+
+
+def async_check_python_version(hass: HomeAssistant) -> None:
+    """Raise (or clear) a non-fixable warning once Python 3.13 support is on borrowed time.
+
+    Support for Python 3.13 (and Home Assistant versions before 2026.3.0) is dropped when
+    Home Assistant 2026.10 is released - see README.md's "MAJOR CHANGE v2" section. Called from
+    async_setup on every start, so upgrading the underlying Python interpreter clears the issue
+    automatically without needing a fix flow.
+    """
+    if sys.version_info >= (3, 14):
+        ir.async_delete_issue(hass, DOMAIN, PYTHON_313_DEPRECATED_ISSUE_ID)
+    else:
+        python_version = "{}.{}.{}".format(*sys.version_info[:3])
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            PYTHON_313_DEPRECATED_ISSUE_ID,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=PYTHON_313_DEPRECATED_ISSUE_ID,
+            translation_placeholders={"python_version": python_version},
+            learn_more_url="https://supernotify.rhizomatics.org.uk",
+        )
 
 
 def _extract_yaml_only_config(legacy_config: dict[str, Any]) -> dict[str, Any]:

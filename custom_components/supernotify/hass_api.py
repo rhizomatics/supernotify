@@ -26,7 +26,6 @@ if TYPE_CHECKING:
     import aiohttp
     from anyio import Path
     from homeassistant.core import CALLBACK_TYPE, HomeAssistant, Service, ServiceResponse, State
-    from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_registry import EntityRegistry
     from homeassistant.helpers.typing import ConfigType
     from homeassistant.util.event_type import EventType
@@ -39,6 +38,8 @@ from contextlib import contextmanager
 from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
+import homeassistant.components.camera as ha_camera
+import homeassistant.components.image as ha_image
 import homeassistant.components.trace
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
@@ -46,7 +47,7 @@ from homeassistant.components.trace.models import ActionTrace
 from homeassistant.components.trace.util import async_store_trace
 from homeassistant.core import Context as HomeAssistantContext
 from homeassistant.core import HomeAssistant, SupportsResponse
-from homeassistant.exceptions import ConditionError, ConditionErrorContainer, IntegrationError
+from homeassistant.exceptions import ConditionError, ConditionErrorContainer, HomeAssistantError, IntegrationError
 from homeassistant.helpers import condition as condition_helper
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -202,9 +203,23 @@ class HomeAssistantAPI:
     def entity_ids_for_domain(self, domain: str) -> list[str]:
         return self._hass.states.async_entity_ids(domain)
 
-    def domain_entity(self, domain: str, entity_id: str) -> Entity | None:
-        # TODO: must be a better hass method than this
-        return self._hass.data.get(domain, {}).get_entity(entity_id)
+    async def async_get_camera_image(self, entity_id: str, timeout: int = 10) -> ha_camera.Image | None:
+        """Fetch a still image directly from a camera entity, via HA's own camera component API,
+        rather than triggering the camera.snapshot service and polling the filesystem for the
+        resulting file to appear."""
+        try:
+            return await ha_camera.async_get_image(self._hass, entity_id, timeout=timeout)
+        except HomeAssistantError as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get camera image for %s: %s", entity_id, e)
+            return None
+
+    async def async_get_image_entity_image(self, entity_id: str, timeout: int = 10) -> ha_image.Image | None:
+        """Fetch a still image directly from an image entity, via HA's own image component API."""
+        try:
+            return await ha_image.async_get_image(self._hass, entity_id, timeout=timeout)
+        except HomeAssistantError as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to get image from entity %s: %s", entity_id, e)
+            return None
 
     async def load_storage(self, key: str, version: int = 1) -> Any | None:  # ruff: ignore[any-type]
         """Load integration state previously persisted to Home Assistant's .storage/ area,

@@ -292,6 +292,10 @@
         "legacy_yaml_manual_migration_required": {
             "title": "Supernotify の YAML 設定は手動で移行する必要があります",
             "description": "トップレベルの `supernotify:` YAML キーへの自動移行が完了できませんでした: {reason}。配信、トランスポート、シナリオ、受信者、カメラ、アクショングループ、リンク、スヌーズの設定を、`notify: - platform: supernotify` ブロックから自分でトップレベルの `supernotify:` キー（例: `supernotify: !include supernotify.yaml`）に移動し、その後古いブロックを削除して Home Assistant を再起動してください。"
+        },
+        "python_313_deprecated": {
+            "title": "Python 3.13 のサポートは間もなく終了します",
+            "description": "この Home Assistant インスタンスは Python {python_version} で実行されています。Home Assistant 2026.10 のリリースに伴い、Supernotify は Python 3.13（および 2026.3.0 より前の Home Assistant バージョン）のサポートを終了します。それ以降、基盤となる Python 環境を Python 3.14 以降にアップグレードしない限り、このインスタンスは Supernotify の今後のアップデートをインストールできなくなります。"
         }
     },
     "options": {

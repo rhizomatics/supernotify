@@ -71,6 +71,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """
     hass.data.setdefault(DOMAIN, {})[KEY_YAML_CONFIG] = config.get(DOMAIN, {})
 
+    from .repairs import async_check_python_version
+
+    async_check_python_version(hass)
+
     async def _async_reload(_call: ServiceCall) -> None:
         await async_reload_yaml_config_and_entries(hass)
 
