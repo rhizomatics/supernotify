@@ -63,6 +63,7 @@ CONF_MEDIA: Final[str] = "media"
 CONF_CAMERA: Final[str] = "camera"
 CONF_CLIP_URL: Final[str] = "clip_url"
 CONF_PTZ_DELAY: Final[str] = "ptz_delay"
+CONF_SNAP_WAIT: Final[str] = "snap_wait"
 CONF_PTZ_METHOD: Final[str] = "ptz_method"
 CONF_PTZ_CAMERA: Final[str] = "ptz_camera"
 CONF_PTZ_PRESET_DEFAULT: Final[str] = "ptz_default_preset"
@@ -138,6 +139,7 @@ PTZ_METHOD_ONVIF = "onvif"
 PTZ_METHOD_FRIGATE = "frigate"
 PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
 PTZ_DELAY_DEFAULT = 10
+SNAP_WAIT_DEFAULT = 15
 
 SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
 SELECTION_FALLBACK = "fallback"

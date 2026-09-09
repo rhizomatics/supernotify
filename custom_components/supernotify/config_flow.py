@@ -81,7 +81,7 @@ def _event_policy_str(value: Any) -> str:  # ruff: ignore[any-type]
 # 0). "No outcomes ticked" already means NONE, so it's excluded from the checkbox list.
 # Option values are lowercased since HA selector translation keys must match [a-z0-9-_]+ -
 # the stored/parsed policy strings stay uppercase (OutcomeSelection member names).
-_OUTCOME_OPTIONS = [flag.name.lower() for flag in OutcomeSelection if flag != OutcomeSelection.NONE and flag.name]
+_OUTCOME_OPTIONS = [flag.name.lower() for flag in OutcomeSelection if flag != OutcomeSelection.NONE and flag.name is not None]
 
 
 def _event_policy_to_list(value: str) -> list[str]:

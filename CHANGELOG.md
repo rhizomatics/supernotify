@@ -4,12 +4,22 @@
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
 - New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 
-### Tracing Activities
+### Camera
+- The previously hard-coded max wait time to snap an image of 20 seconds is now configurable with `snap_wait` in the camera configuration.
+  - This is different from the existing `camera_delay` and PTZ controls in that its not a pause. If the camera snap is instant, then the `snap_wait` time will never be used, its only an allowance for cameras that are slow to snapshot.
 
+### Tracing Activities
+- Fixed missing contexts on downstream actions, a consequence of relying on code from the "legacy" Home Assistant Notification platform, which throws away context
 - If no `context` is passed, Supernotify creates its own, so anything that happens thereafter has a trace
 
+### Fixes
+- Notification with an unavailable attachment could fail, will now proceed with or without attachment
+- Two messages with same title and message but different camera entities, or media URLs for attachments, will not be considered as dupes
+
 ### Technical
-- `notify.py` slimmed down, moving functionality out to the main registries
+- The main `SuperNotificationService` no longer inherits from `BaseNotificationClass` and the latter included only as a compatibility shim to ensure current usage as a Notification sub-platform doesn't break.
+- `notify.py` slimmed down by moving main engine to `engine.py`, delivery/transport/people/scenario functionality out to registries, actions out to `actions.py` leaving only the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
+
 
 ## 2.3.1
 
@@ -655,8 +665,8 @@ is archived for debug purposes ( and supports the new unique target value functi
 
 ## 1.1.6
 - HomeAssistant logic moved from `Context` to `HomeAssistantAPI`
-- Initialization logic moved from `Context` to `SupernotifyAction`
-- References to `SupernotifyAction` now consistent rather than `SuperNotificationAction`
+- Initialization logic moved from `Context` to `SuperNotificationService`
+- References to `SuperNotificationService` now consistent rather than `SuperNotificationAction`
 - Move camera PTZ and image handling from `Notification` to `media_grab.py`
 
 ## 1.1.5

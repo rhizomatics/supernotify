@@ -30,10 +30,10 @@ from custom_components.supernotify.const import (
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DataFilter, Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.notify import SupernotifyAction
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.generic import GenericTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
@@ -149,7 +149,7 @@ async def test_e2e_update_input_text(hass) -> None:
 
 
 async def test_update_fixed_message(mock_hass) -> None:
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries={
             "noticeboard": {
@@ -174,7 +174,7 @@ async def test_update_fixed_message(mock_hass) -> None:
 
 
 async def test_update_equiv_domain(mock_hass) -> None:
-    uut = SupernotifyAction(
+    uut = SupernotifyEngine(
         mock_hass,
         deliveries={
             "noticeboard": {

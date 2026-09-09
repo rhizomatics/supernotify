@@ -101,11 +101,11 @@ rules:
     comment: |
       Reviewed: the four subscriptions (mobile_app_notification_action, exposed_entities
       state tracking, nightly housekeeping timer, EVENT_HOMEASSISTANT_STOP - all wired in
-      SupernotifyAction.initialize(), notify.py) are inherently orchestration-level, not
+      SupernotifyEngine.initialize(), notify.py) are inherently orchestration-level, not
       scoped to any single entity - they act across all recipients/deliveries. Neither
       SupernotifyEntity nor the per-recipient RecipientNotifyEntity (notify.py, added via the
       notify platform's async_setup_entry) owns any of them - each just delegates
-      async_send_message back to the shared SupernotifyAction.
+      async_send_message back to the shared SupernotifyEngine.
 
   entity-unique-id:
     status: done
@@ -120,9 +120,11 @@ rules:
   runtime-data:
     status: done
     comment: |
-      __init__.py:73 sets entry.runtime_data = service (the SupernotifyAction, which owns
-      the Context/registries/transports). async_setup_entry/async_unload_entry are typed
-      against a SupernotifyConfigEntry = ConfigEntry[SupernotifyAction] alias.
+      __init__.py:73 sets entry.runtime_data = service (a SuperNotificationService, which owns
+      the Context/registries/transports as a SupernotifyEngine). async_setup_entry/
+      async_unload_entry are typed against a SupernotifyConfigEntry = ConfigEntry[
+      SupernotifyEngine] alias, decoupled from the legacy BaseNotificationService-derived
+      SuperNotificationService shim - see SuperNotificationService's docstring in notify.py.
 
   test-before-configure:
     status: done

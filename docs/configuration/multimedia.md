@@ -103,6 +103,8 @@ Home Assistant default camera entities have built-in device tracking, so the ent
 * Link an alternative `device_tracker` to the camera
   * Notifications will first check its online, then use an alternative if primary is down
 * Define alternative cameras to use if first fails using `alt_camera`
+* How long to wait for a snapshot file to appear after requesting one can be set using `snap_wait`
+  * Defaults to `15` seconds if not provided
 * For ONVIF or Frigate cameras set up for PTZ
   * Home preset can be defined using `ptz_default_preset` so camera can be reset after taking a snapshot
   * Delay between PTZ command and snapshot can be defined using `ptz_delay`
@@ -122,6 +124,7 @@ Home Assistant default camera entities have built-in device tracking, so the ent
         - camera.doorbell
         - camera.courtyard
       device_tracker: device_tracker.driveway_camera
+      snap_wait: 30
       ptz_method: frigate
       ptz_delay: 10
       ptz_default_preset: Front Door

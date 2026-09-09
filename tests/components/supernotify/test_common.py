@@ -115,6 +115,45 @@ def test_dupe_policy_mt_allows_different_message() -> None:
     assert uut.check(e2) is False
 
 
+def test_dupe_check_allows_different_camera_entity_same_message() -> None:
+    delivery = Mock(name="tester")
+    uut = DupeChecker({})
+    e1 = Envelope(
+        delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
+    )
+    assert uut.check(e1) is False
+    e2 = Envelope(
+        delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.b"}})
+    )
+    assert uut.check(e2) is False
+
+
+def test_dupe_check_suppresses_same_camera_entity_and_message() -> None:
+    delivery = Mock(name="tester")
+    uut = DupeChecker({})
+    e1 = Envelope(
+        delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
+    )
+    assert uut.check(e1) is False
+    e2 = Envelope(
+        delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
+    )
+    assert uut.check(e2) is True
+
+
+def test_dupe_check_allows_different_clip_url_same_message() -> None:
+    delivery = Mock(name="tester")
+    uut = DupeChecker({})
+    e1 = Envelope(
+        delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"clip_url": "http://cam/1.mp4"}})
+    )
+    assert uut.check(e1) is False
+    e2 = Envelope(
+        delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"clip_url": "http://cam/2.mp4"}})
+    )
+    assert uut.check(e2) is False
+
+
 def test_dupe_policy_none_never_suppresses() -> None:
     delivery = Mock(name="tester")
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE})
