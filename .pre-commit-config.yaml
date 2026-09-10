@@ -56,7 +56,7 @@ repos:
           - pytest_mock
           - pytest_httpserver
   - repo: https://github.com/astral-sh/ty-pre-commit
-    rev: v0.0.79
+    rev: v0.0.80
     hooks:
       - id: ty
 

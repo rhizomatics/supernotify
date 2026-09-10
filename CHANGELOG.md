@@ -1,3 +1,8 @@
+## 2.4.2
+
+### Fixes
+- Automation editor could leave `data` fields at `null`, for example `constrain_scenarios` which got rejected by schema validator. Null values now explicitly allowed, and handled as unset for optional values.
+
 ## 2.4.1
 
 ## Data Templates
