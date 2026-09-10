@@ -10,6 +10,10 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `alexa_media_player` | :material-github:[`alexa_media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/alexa_media_player.py) | :simple-homeassistantcommunitystore: [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player) | - |
 
+## Discovery
+
+**Not auto-detected.** This is an unofficial HACS integration, so SuperNotify can't reliably
+discover it — add an `alexa_media_player` delivery in `delivery.yaml` to use it.
 
 Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
 

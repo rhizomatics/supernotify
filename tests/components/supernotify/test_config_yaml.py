@@ -127,8 +127,10 @@ async def test_reload(hass: HomeAssistant) -> None:
     })
     assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
+    assert "persistent" in uut.context.delivery_registry.deliveries
+    assert "persistent" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    assert len(uut.context.delivery_registry.deliveries) == 15
+    assert len(uut.context.delivery_registry.deliveries) == 16
 
     # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
     # over from before the reload (both would report True) - actually call it and confirm the

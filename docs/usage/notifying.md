@@ -167,14 +167,12 @@ In this case `plain_email` will be chosen even if the delivery `condition` or `p
 ```
 
 !!! info "Two different things are both called `selection`"
-    `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for
-    this one notification. It's a different mechanism from a delivery's own config-time
+    `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time
     `selection` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` -
     see [Delivery Selection](../configuration/deliveries.md#delivery-selection)), which decides
-    whether that delivery is a candidate for implicit selection at all. The two happen to share
-    the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action
-    call; a delivery with `selection: [explicit]` is excluded from implicit selection, as does
-    any other value other than `default` (or left unstated, which is equivalent to `default`).
+    whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `selection: explicit` is excluded from implicit selection, as does
+    any other value other than `default` (or left unstated, which is equivalent to `default`). `selection: explicit` is identical in all respects to `selection: scenario`, and which one you use is what makes
+    most sense for you in describing the configuration.
 
 ### When Scenarios Disagree
 

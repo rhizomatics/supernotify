@@ -11,6 +11,11 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `mobile_push` | :material-github:[`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | :material-home-assistant: [Companion App Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic) | - |
 
+## Discovery
+
+**Default delivery.** Always available, since targets are resolved per-recipient from the HA
+Companion App at delivery time. If no `mobile_push` delivery is configured, a `DEFAULT_mobile_push`
+delivery is generated automatically and fires on every notification.
 
 Send a push message out, with option for camera integration, mobile actions, and
 translate general priority to Apple specific push priority.

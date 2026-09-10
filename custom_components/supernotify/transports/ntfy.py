@@ -38,15 +38,19 @@ from homeassistant.const import ATTR_DEVICE_ID
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
+    SELECTION_EXPLICIT,
     TRANSPORT_NTFY,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+HA_NTFY_DOMAIN = "ntfy"
 
 _PRIORITY_MAP = {
     "critical": 5,  # urgent/max
@@ -121,6 +125,15 @@ class NtfyTransport(Transport):
         config.delivery_defaults.action = "ntfy.publish"
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if hass_api.find_config_entry_data(HA_NTFY_DOMAIN) is None:
+            return None
+        # ntfy_device_id has no positively-identifiable mapping to a recipient/entity, so
+        # don't fire this on every notification - require it to be selected explicitly
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY ntfy %s", envelope.message)

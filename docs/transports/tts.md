@@ -15,6 +15,11 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `tts` | :material-github:[`tts.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/tts.py) | :material-home-assistant: [TTS Integration](https://www.home-assistant.io/integrations/tts/) | - |
 
+## Discovery
+
+**Not auto-detected.** TTS spans many engines and `media_player` targets, so there's no single
+integration for SuperNotify to detect — add a `tts` delivery in `delivery.yaml` to use it.
+
 Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 
 ## Text-to-Speech Integration

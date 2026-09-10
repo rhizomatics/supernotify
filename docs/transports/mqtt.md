@@ -9,6 +9,12 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `mqtt` | :material-github:[`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | :material-home-assistant: [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | - |
 
+## Discovery
+
+**Not auto-detected.** MQTT devices that already expose themselves as notify entities are
+covered automatically by the [`notify_entity`](notify_entity.md) transport's default delivery —
+calling `mqtt.publish` directly is treated as a deliberate, manual choice, so add an `mqtt`
+delivery in `delivery.yaml` to use it.
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, the specific MQTT integration can be easier to use.
 

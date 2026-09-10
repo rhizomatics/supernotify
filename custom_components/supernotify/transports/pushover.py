@@ -61,6 +61,7 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_PUSHOVER
 from custom_components.supernotify.model import (
     DebugTrace,
+    DeliveryConfig,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -69,6 +70,7 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +108,14 @@ class PushoverTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.NEVER
         # No default action — user MUST specify action: notify.<name> in delivery.yaml
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        action: str | None = hass_api.find_service("notify", "homeassistant.components.pushover.notify")
+        if action:
+            delivery_config: DeliveryConfig = self.delivery_defaults
+            delivery_config.action = action
+            return delivery_config
+        return None
 
     def validate_action(self, action: str | None) -> bool:
         if action and action.startswith("notify."):

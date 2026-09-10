@@ -50,7 +50,7 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
             data:
               priority: critical
 """,
-        services={"notify": ["send_message", "smtp", "4g_modem", "mobile_app_iphone"]},
+        services={"notify": ["send_message", "smtp", "4g_modem", "mobile_app_iphone"], "persistent_notification": ["create"]},
     )
     await ctx.test_initialize()
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_away")
@@ -66,7 +66,9 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["high_alert"]
-    assert list(uut.selected_deliveries) == unordered("plain_email", "apple_push", "sms")
+    # the scenario's wildcard `.*` delivery override also sweeps in "persistent", an
+    # explicit-selection-only auto-configured delivery that otherwise wouldn't fire
+    assert list(uut.selected_deliveries) == unordered("plain_email", "apple_push", "sms", "persistent")
     assert cast("Envelope", uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0]).priority == "critical"  # type: ignore
 
 

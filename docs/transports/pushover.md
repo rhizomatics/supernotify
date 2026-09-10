@@ -5,6 +5,13 @@ tags:
 ---
 # Pushover Transport Adaptor
 
+## Discovery
+
+**Default delivery.** If the official Pushover integration is already configured and no
+`pushover` delivery is defined, a `DEFAULT_pushover` delivery is generated automatically and
+fires on every notification — once discovered, the `notify.pushover_*` service is fully
+self-contained (it already knows its own recipients), so no extra per-delivery data is needed.
+
 ## Motivation
 
 Provides a native SuperNotify transport for [Pushover](https://pushover.net/), the

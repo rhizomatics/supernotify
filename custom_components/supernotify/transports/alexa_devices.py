@@ -17,6 +17,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    DeliveryConfig,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -27,8 +28,11 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+HA_ALEXA_DEVICES_DOMAIN = "alexa_devices"
 
 
 class AlexaDevicesTransport(Transport):
@@ -63,6 +67,11 @@ class AlexaDevicesTransport(Transport):
             OPTION_TARGET_SELECT: [r"notify\.[a-z0-9_]+\_(speak|announce)", r"group\.[a-z0-9_]+"],
         }
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if hass_api.find_config_entry_data(HA_ALEXA_DEVICES_DOMAIN) is not None:
+            return self.delivery_defaults
+        return None
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)

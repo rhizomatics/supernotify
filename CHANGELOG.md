@@ -1,3 +1,11 @@
+## 2.5.0
+
+### Deliveries
+- Automatic default deliveries extended now to Alexa Devices, Discord, Kodi, Lametri, Ntfy, Persistent, Pushover, SMS and Telegram.
+  - These are all defined with `selection` as `explicit` so they won't be automatically used unless selected on a notification
+  - These deliveries don't have a `default_` prefix since default only in the sense they are defined if no explicit delivery configured
+  - SMS auto discovery works for Twilio and Mikrotik SMS integrations
+
 ## 2.4.2
 
 ### Fixes

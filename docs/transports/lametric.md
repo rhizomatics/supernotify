@@ -6,6 +6,14 @@ tags:
 ---
 # LaMetric TIME Transport Adaptor
 
+## Discovery
+
+**Delivery (explicit selection).** If the `lametric` integration is already configured and no
+`lametric` delivery is defined, a `lametric` delivery is generated automatically — but since
+`device_id` has no automatic mapping to a recipient or entity, it only fires when selected
+explicitly (`data: {data: {delivery: [lametric]}}` or a scenario), not by default. You'll still
+need to supply `device_id` yourself.
+
 ## Motivation
 
 

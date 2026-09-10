@@ -5,6 +5,12 @@ tags:
 ---
 # Matrix Transport Adaptor
 
+## Discovery
+
+**Not auto-detected.** The HA `matrix` integration has no config flow (YAML-only setup), so
+SuperNotify has no config entry to detect it by — add a `matrix` delivery in `delivery.yaml`
+to use it.
+
 ## Motivation
 
 Sends messages to [Matrix](https://matrix.org/) rooms through the Home Assistant

@@ -14,6 +14,22 @@ Place a notification on Home Assistant application screen.
 
 Pass a notification ID, either fixed in the transport or delivery configuration, or passed in the action `data`.
 
+## Example
+
+Persistent notification has a Delivery automatically discovered where the integration is available, called `persistent`, so send like:
+
+```yaml
+  - action: supernotify.notify
+    target:
+      - homeowner@24acaciaavenue.com
+    data:
+        message: Testing an e-mail that also shows as persistent notification
+        data:
+          delivery:
+            - DEFAULT_email
+            - persistent
+```
+
 
 ## References
 

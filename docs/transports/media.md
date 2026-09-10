@@ -10,6 +10,10 @@ tags:
 | -------------------- | ----------- | ------------ | -------- |
 | `media` | :material-github:[`media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/media_player.py) | - | :simple-homeassistantcommunitystore: [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player), other :material-home-assistant: [Media Player Integration](https://www.home-assistant.io/integrations/?cat=media-player) |
 
+## Discovery
+
+**Not auto-detected.** `media_player` targets vary too much between devices to safely assume a
+default — add a `media` delivery in `delivery.yaml` to use it.
 
 Show an image or other content on a media player, e.g. for an example an Amazon Echo Show device.
 

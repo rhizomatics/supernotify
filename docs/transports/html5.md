@@ -5,6 +5,12 @@ tags:
 ---
 # HTML5 Browser Push Transport Adaptor
 
+## Discovery
+
+**Not auto-detected.** The HA `html5` integration is still mid-migration between the legacy
+`notify.html5` platform and the modern `html5.send_message` entity service, so SuperNotify
+doesn't attempt to discover it yet — add an `html5` delivery in `delivery.yaml` to use it.
+
 ## Motivation
 
 Provides a native SuperNotify transport for browser web push through the Home Assistant

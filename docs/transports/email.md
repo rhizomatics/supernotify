@@ -12,7 +12,13 @@ tags:
 | `email`      | :material-github:[`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | -            | :material-home-assistant: [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), :material-home-assistant: [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |
 
 
-Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML. Automatically configured if there's already an SMTP integration.
+Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
+
+## Discovery
+
+**Default delivery.** If an HA `smtp` (or compatible notify-platform) integration is already
+configured and no `email` delivery is defined, a `DEFAULT_email` delivery is generated
+automatically and fires on every notification.
 
 !!! note
     The Home Assistant [SMTP](https://www.home-assistant.io/integrations/smtp/) integration for e-mail doesn't allow priority to be set.

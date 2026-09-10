@@ -5,6 +5,14 @@ tags:
 ---
 # ntfy Transport Adaptor
 
+## Discovery
+
+**Delivery (explicit selection).** If the `ntfy` integration is already configured and no
+`ntfy` delivery is defined, an `ntfy` delivery is generated automatically — but since
+`ntfy_device_id` has no automatic mapping to a recipient or entity, it only fires when
+selected explicitly (`data: {data: {delivery: [ntfy]}}` or a scenario), not by default.
+You'll still need to supply `ntfy_device_id` yourself.
+
 ## Motivation
 
 ntfy became an official Home Assistant integration in version 2025.5. It provides

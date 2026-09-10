@@ -65,13 +65,16 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_SELECT,
     TRANSPORT_KODI,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+HA_KODI_DOMAIN = "kodi"
 
 RE_VALID_KODI = r"media_player\.[A-Za-z0-9_]+"
 
@@ -130,6 +133,11 @@ class KodiTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if hass_api.find_config_entry_data(HA_KODI_DOMAIN) is not None:
+            return self.delivery_defaults
+        return None
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the kodi call_method service."""

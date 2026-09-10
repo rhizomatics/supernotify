@@ -5,6 +5,12 @@ tags:
 ---
 # Gotify Transport Adaptor
 
+## Discovery
+
+**Not auto-detected.** This is an unofficial HACS integration whose notify service name depends
+on your own configuration, so SuperNotify can't discover it — add a `gotify` delivery with an
+explicit `action:` in `delivery.yaml` (see [Notes](#notes) below).
+
 ## Motivation
 
 Access Gotify's richer features: click-through URLs, `bigImageUrl` (expanded image on notification tap), Markdown rendering, and Android intent actions on receive. Requires

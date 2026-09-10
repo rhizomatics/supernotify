@@ -13,13 +13,14 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.model import DebugTrace, MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, MessageOnlyPolicy, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import (
     Transport,
 )
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 
@@ -47,6 +48,19 @@ class SMSTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_PHONE],
         }
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        """Discover the notify service registered by a supported SMS gateway integration, if installed."""
+        for module in (
+            "homeassistant.components.twilio_sms.notify",
+            "custom_components.mikrotik_sms.notify",
+        ):
+            action: str | None = hass_api.find_service("notify", module)
+            if action:
+                delivery_config: DeliveryConfig = self.delivery_defaults
+                delivery_config.action = action
+                return delivery_config
+        return None
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

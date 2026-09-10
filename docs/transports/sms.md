@@ -17,6 +17,15 @@ This can work with any SMS integration that follows Home Assistant Notification 
 
 Configure which one by setting the `action` value to match, for example `action: notify.mikrotik_sms`
 
+## Discovery
+
+**Default delivery.** SuperNotify auto-detects the official Twilio SMS integration or the
+[Mikrotik SMS](https://github.com/jeyrb/hass_mikrotik_sms) HACS integration (Twilio preferred if
+both are present). If no `sms` delivery is defined, a `DEFAULT_sms` delivery is generated
+automatically and fires on every notification, since the target phone number is positively
+identified from the recipient's registered `phone` attribute — same as with `email`. Any other
+SMS integration still needs a manually configured `action`.
+
 Uses the `phone_number` attribute of recipient, and truncates message to fit in an SMS.
 
 Since SMS sends a single message with no title, by default the message and title are combined into a single string prior to truncation. Use `message_usage` in an `options` section to change the behaviour, either message only or using the title in place of the message.
