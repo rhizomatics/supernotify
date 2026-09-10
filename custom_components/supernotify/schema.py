@@ -250,7 +250,7 @@ TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into firs
     list[str],
 )
 
-DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
+DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(None, str, int, bool, float, dict, list)})
 
 MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MANUFACTURER): cv.string,
