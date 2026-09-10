@@ -1,6 +1,6 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,6 +10,7 @@ from pytest_unordered import unordered
 from custom_components.supernotify.const import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
+    ATTR_PERSON_ID,
     ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     CONF_DATA,
@@ -568,6 +569,63 @@ async def test_convert_notify_entities_resolves_recipient_notify_entity_in_dict_
     converted = uut.convert_notify_entities({"entity_id": ["notify.recipient_alice", "notify.some_other_integration"]})
 
     assert converted == {"entity_id": ["notify.some_other_integration"], "person_id": ["person.alice"]}
+
+
+async def test_record_result_notifies_recipient_notify_entity_on_delivery() -> None:
+    """A successful envelope delivery updates the involved recipient's notify.recipient_<name>
+    entity (record_notification()), regardless of what target form got it there - a plain
+    person_id, an email/phone/mobile override, or notify.recipient_<name> itself (converted to
+    person_id by convert_notify_entities() before delivery). Every Recipient's Target always
+    includes its own person_id (Recipient.initialize()), so that's the reliable link back from
+    an arbitrary envelope to the Recipient objects it reached."""
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    notify_entity = Mock()
+    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
+    generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = Delivery("simple", {}, generic)
+    uut = Notification(ctx, "testing 123")
+    envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
+    envelope.delivered = 1
+
+    uut.record_result(delivery, envelope)
+
+    notify_entity.record_notification.assert_called_once()
+
+
+async def test_record_result_skips_recipients_without_a_notify_entity() -> None:
+    """A recipient with no notify_entity set (e.g. the notify platform hasn't loaded yet, or
+    tests building SupernotifyAction directly without a config entry) is silently skipped -
+    same tolerant fallback pattern used elsewhere for entity-less operation."""
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = Delivery("simple", {}, generic)
+    uut = Notification(ctx, "testing 123")
+    envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
+    envelope.delivered = 1
+
+    uut.record_result(delivery, envelope)  # must not raise
+
+
+async def test_record_result_ignores_envelope_with_no_target() -> None:
+    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
+    await ctx.test_initialize()
+    notify_entity = Mock()
+    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
+    generic = ctx.transport(TRANSPORT_GENERIC)
+    delivery = Delivery("simple", {}, generic)
+    uut = Notification(ctx, "testing 123")
+    envelope = Envelope(delivery)
+    # Envelope.target is always a Target by construction (see Envelope.__init__); this
+    # deliberately violates that to exercise _record_recipient_notifications()'s defensive
+    # `if envelope.target is None` branch.
+    envelope.target = None  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
+    envelope.delivered = 1
+
+    uut.record_result(delivery, envelope)
+
+    notify_entity.record_notification.assert_not_called()
 
 
 async def test_notification_accepts_dict_shaped_target_without_crashing() -> None:
