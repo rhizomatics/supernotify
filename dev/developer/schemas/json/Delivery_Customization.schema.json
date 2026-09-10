@@ -86,7 +86,11 @@
     },
     "data": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "nullable": true
+      }
     }
   },
   "required": [],
