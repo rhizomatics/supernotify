@@ -5507,10 +5507,9 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
-    { name = "probatio", marker = "python_full_version >= '3.14.2'" },
+    { name = "probatio" },
     { name = "properdocs", extra = ["i18n"] },
     { name = "pymdown-extensions" },
-    { name = "voluptuous-openapi", marker = "python_full_version < '3.14.2'" },
 ]
 
 [package.metadata]
@@ -5572,10 +5571,9 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
-    { name = "probatio", marker = "python_full_version >= '3.14.2'" },
+    { name = "probatio" },
     { name = "properdocs", extras = ["i18n"] },
     { name = "pymdown-extensions" },
-    { name = "voluptuous-openapi", marker = "python_full_version < '3.14.2'", specifier = "==0.2.0" },
 ]
 
 [[package]]
