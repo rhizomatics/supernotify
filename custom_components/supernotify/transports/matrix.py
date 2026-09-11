@@ -46,12 +46,13 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, TRANSPORT_MATRIX
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_DATA, SELECTION_EXPLICIT, TRANSPORT_MATRIX
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +93,17 @@ class MatrixTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the matrix send_message service."""
         return action == "matrix.send_message"
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        # matrix is YAML-configured (no config entry); the service only registers once
+        # the bot has connected, so check for it directly
+        if not hass_api.has_service("matrix", "send_message"):
+            return None
+        # a room ID/alias has no positively-identifiable mapping to a recipient/entity,
+        # so don't fire this on every notification - require it to be selected explicitly
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     def select_rooms(self, envelope: Envelope) -> list[str]:
         """Filter envelope targets down to valid Matrix room IDs or aliases.

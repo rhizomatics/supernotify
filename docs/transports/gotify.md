@@ -7,9 +7,11 @@ tags:
 
 ## Discovery
 
-**Not auto-detected.** This is an unofficial HACS integration whose notify service name depends
-on your own configuration, so SuperNotify can't discover it — add a `gotify` delivery with an
-explicit `action:` in `delivery.yaml` (see [Notes](#notes) below).
+**Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the
+`custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is
+defined, a `DEFAULT_gotify` delivery is generated automatically using that service and fires on
+every notification. Manually configuring your own `gotify` delivery with an explicit `action:`
+(see [Notes](#notes) below) still works and takes precedence.
 
 ## Motivation
 
@@ -120,11 +122,11 @@ notify:
     url: http://gotify.local
     token: !secret gotify_token
 
-# supernotify/delivery.yaml
+# supernotify delivery config
 deliveries:
   gotify_allarme:
     transport: gotify
-    action: notify.gotify          # REQUIRED
+    action: notify.gotify          # only needed if auto-discovery doesn't find your service
     priority: high
     data:
       gotify_click: "https://ha.local:8123/lovelace/sicurezza"
@@ -147,9 +149,10 @@ deliberately omitted — the HACS service has a fixed schema and unknown top-lev
 keys cause silent failures or HTTP 400s on future integration updates. This
 decision is documented with an inline comment in `deliver()`.
 
-**No default `action:`**: All other transports set `config.delivery_defaults.action`.
-Gotify cannot because the service name is user-controlled. `validate_action()`
-provides a clear warning when `action:` is missing.
+**No static default `action:`**: `default_config` sets no fixed `action`, since the HACS
+service name is user-controlled. `auto_configure()` fills it in dynamically once discovered
+(see [Discovery](#discovery)); `validate_action()` still provides a clear warning when a
+manually configured delivery omits `action:`.
 
 ---
 

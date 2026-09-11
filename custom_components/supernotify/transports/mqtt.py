@@ -4,14 +4,24 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
-from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
-from custom_components.supernotify.model import DebugTrace, Target, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_TOPIC, SELECTION_EXPLICIT, TRANSPORT_MQTT
+from custom_components.supernotify.model import (
+    DebugTrace,
+    DeliveryConfig,
+    Target,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import (
     Transport,
 )
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+HA_MQTT_DOMAIN = "mqtt"
 
 RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
 
@@ -39,6 +49,15 @@ class MQTTTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.delivery_defaults.action
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if hass_api.find_config_entry_data(HA_MQTT_DOMAIN) is None:
+            return None
+        # a topic has no positively-identifiable mapping to a recipient/entity, so
+        # don't fire this on every notification - require it to be selected explicitly
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         return None

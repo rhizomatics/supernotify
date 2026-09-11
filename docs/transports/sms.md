@@ -33,3 +33,13 @@ Since SMS sends a single message with no title, by default the message and title
 !!! tip
     SMS is also available without having a 4G modem by using the Home Assistant [AWS SNS Integration](https://www.home-assistant.io/integrations/aws/#sns-notify-usage/) and setting up
     SNS with [SMS destinations](https://docs.aws.amazon.com/sns/latest/dg/sns-mobile-phone-number-as-subscriber.html).
+
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+    target:
+        - person.house_owner
+```

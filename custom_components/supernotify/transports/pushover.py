@@ -10,7 +10,7 @@ Requires the official HA Pushover integration configured in configuration.yaml:
         user_key: YOUR_PUSHOVER_USER_KEY
 
 The notify service name (e.g. notify.pushover_home) MUST be specified as
-`action:` in delivery.yaml — there is no default, since the name depends on
+`action:` on the delivery - there is no default, since the name depends on
 the user's configuration.yaml entry.
 
 Priority mapping (SuperNotify -> Pushover integer):
@@ -106,7 +106,8 @@ class PushoverTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
-        # No default action — user MUST specify action: notify.<name> in delivery.yaml
+        # No static default action - auto_configure() discovers it, or a manually configured
+        # delivery can set action: notify.<name> directly
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:

@@ -36,7 +36,6 @@ from .const import (
     CONF_TEMPLATE,
     CONF_TITLE,
     CONF_TRANSPORT,
-    OCCUPANCY_ALL,
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
     OPTION_DATA_KEYS_SELECT,
@@ -75,16 +74,10 @@ class Delivery(DeliveryConfig):
     def __init__(self, name: str, conf: ConfigType, transport: Transport) -> None:
         conf = conf or {}
         self.name: str = name
-        self.alias: str | None = conf.get(CONF_ALIAS)
         self.transport: Transport = transport
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
         super().__init__(conf, delivery_defaults=transport_defaults)
-        self.template: str | None = conf.get(CONF_TEMPLATE)
-        self.message: str | None = conf.get(CONF_MESSAGE)
-        self.title: str | None = conf.get(CONF_TITLE)
         self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
-        self.occupancy: str = conf.get(CONF_OCCUPANCY, OCCUPANCY_ALL)
-        self.conditions_config: list[ConfigType] | None = conf.get(CONF_CONDITIONS)
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
         if self.options.get(OPTION_TARGET_SELECT):
@@ -303,6 +296,13 @@ class DeliveryRegistry:
 
     def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
         for transport in self.transports.values():
+            # only expose a switch for a transport that's actually usable: either it has an
+            # explicitly configured delivery, or it can auto-configure one - checked directly
+            # (not via transport.enabled or self._deliveries) so a transport with real
+            # prerequisites still gets a switch even while toggled off in config
+            has_explicit_delivery = any(dc.get(CONF_TRANSPORT) == transport.name for dc in self._config_deliveries.values())
+            if not has_explicit_delivery and transport.auto_configure(hass_api) is None:
+                continue
             hass_api.expose_entity(
                 f"transport_{transport.name}",
                 state=STATE_ON if transport.enabled else STATE_OFF,
@@ -388,6 +388,14 @@ class DeliveryRegistry:
     @property
     def deliveries(self) -> dict[str, Delivery]:
         return dict(self._deliveries.items())
+
+    def resolve_name(self, name: str) -> str:
+        """Backward compatibility for the original 'DEFAULT_x' auto-configured naming:
+        a bare transport name (e.g. 'email') resolves to its 'DEFAULT_email' delivery
+        when that exists and no delivery is named 'email' itself directly."""
+        if name not in self._deliveries and f"DEFAULT_{name}" in self._deliveries:
+            return f"DEFAULT_{name}"
+        return name
 
     @property
     def enabled_deliveries(self) -> dict[str, Delivery]:

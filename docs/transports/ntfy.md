@@ -69,7 +69,7 @@ to a self-hosted ntfy instance (ntfy v2.x).
 **Example configuration:**
 
 ```yaml
-# delivery.yaml — minimal
+# example delivery config — minimal
 ntfy_home:
   transport: ntfy
   selection: default
@@ -77,7 +77,7 @@ ntfy_home:
     ntfy_device_id: "abc123def456"
     ntfy_click: "http://homeassistant.local:8123"
 
-# delivery.yaml — security channel with camera snapshot
+# example delivery config — security channel with camera snapshot
 ntfy_security:
   transport: ntfy
   selection: default
@@ -89,7 +89,7 @@ ntfy_security:
       - house
       - rotating_light
 
-# delivery.yaml — alarm channel with action buttons
+# example delivery config — alarm channel with action buttons
 ntfy_alarms:
   transport: ntfy
   selection: scenario

@@ -142,6 +142,8 @@ class MobilePushTransport(Transport):
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if hass_api.find_config_entry_data("mobile_app") is None:
+            return None
         return self.delivery_defaults
 
     def validate_action(self, action: str | None) -> bool:

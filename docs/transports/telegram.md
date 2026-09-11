@@ -82,13 +82,13 @@ data:
 3. Find "chat" → "id" in the response
 
 Or use the `telegram_bot.send_message` service from HA Developer Tools to test
-with your chat_id before committing it to `delivery.yaml`
+with your chat_id before committing it to your delivery configuration
 
 
 ## Notes
 
 * `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target`
-(configured in `delivery.yaml`) or from the `telegram_chat_id` data key.
+or from the `telegram_chat_id` data key.
 * Direct `hass_api.call_service()` is used instead of `call_action()` because the
 service name switches dynamically between `send_message`, `send_photo`, and
 `send_document` depending on whether a snapshot is attached.

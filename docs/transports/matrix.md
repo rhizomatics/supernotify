@@ -7,9 +7,12 @@ tags:
 
 ## Discovery
 
-**Not auto-detected.** The HA `matrix` integration has no config flow (YAML-only setup), so
-SuperNotify has no config entry to detect it by — add a `matrix` delivery in `delivery.yaml`
-to use it.
+**Delivery (explicit selection).** The HA `matrix` integration has no config flow (YAML-only
+setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether
+the `matrix.send_message` service is registered (which only happens once the bot has connected).
+If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically —
+but since a room ID/alias has no automatic mapping to a recipient or entity, it only fires when
+selected explicitly (`data: {data: {delivery: [matrix]}}` or a scenario), not by default.
 
 ## Motivation
 

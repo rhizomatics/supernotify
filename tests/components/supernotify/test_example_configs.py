@@ -45,6 +45,10 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         return
     config_path: Path = Path(EXAMPLES_ROOT) / config_name
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
+    # a typical house has at least one notify entity (e.g. a companion app), so
+    # notify_entity's auto_configure (gated on the "notify" domain having an entity)
+    # behaves the same as it would in a real house
+    hass.states.async_set("notify.mock_notify_target", "unknown")
     config = await hass.async_add_executor_job(load_yaml_config_file, str(config_path))
 
     if config_name in LEGACY_SHAPE_EXAMPLES:

@@ -3,14 +3,14 @@
 Sends push notifications via Gotify (self-hosted, privacy-first push server).
 Requires the HACS custom integration 1RandomDev/homeassistant-gotify installed
 and configured in configuration.yaml. The notify service name (e.g. notify.gotify)
-depends on the user's HACS configuration - it MUST be specified as `action:` in
-delivery.yaml (no default exists).
+depends on the user's HACS configuration - auto_configure() discovers it via the
+registered service's module, or it can be set manually as `action:` on a delivery.
 
 Prerequisites:
     - Gotify server running and reachable
     - HACS integration 1RandomDev/homeassistant-gotify installed
     - Application token configured in configuration.yaml
-    - `action: notify.<name>` set in delivery.yaml (REQUIRED)
+    - `action: notify.<name>` set on a delivery only if auto-discovery doesn't apply
 
 For snapshot camera / bigImageUrl:
     - `media_web_path` must be configured (PLATFORM_SCHEMA) for grab_image to produce a URL.
@@ -49,6 +49,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    DeliveryConfig,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -57,6 +58,10 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+# Gotify's HACS notify platform module (no longer bundled with HA core)
+HA_GOTIFY_MODULE = "custom_components.gotify.notify"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,8 +116,17 @@ class GotifyTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
-        # No default action - user MUST specify action: notify.<name> in delivery.yaml
+        # No static default action - auto_configure() discovers it, or a manually configured
+        # delivery can set action: notify.<name> directly
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        action: str | None = hass_api.find_service("notify", HA_GOTIFY_MODULE)
+        if action:
+            delivery_config: DeliveryConfig = self.delivery_defaults
+            delivery_config.action = action
+            return delivery_config
+        return None
 
     def validate_action(self, action: str | None) -> bool:
         if action and action.startswith("notify."):

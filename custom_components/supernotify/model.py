@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ACTION,
     CONF_ALIAS,
+    CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_ENABLED,
     CONF_OPTIONS,
@@ -45,11 +46,16 @@ from .const import (
     CONF_DEVICE_DOMAIN,
     CONF_DEVICE_MODEL_EXCLUDE,
     CONF_DEVICE_MODEL_INCLUDE,
+    CONF_MESSAGE,
+    CONF_OCCUPANCY,
     CONF_PRIORITY,
     CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
+    CONF_TEMPLATE,
+    CONF_TITLE,
+    OCCUPANCY_ALL,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
@@ -624,6 +630,12 @@ class DeliveryConfig:
             if isinstance(delivery_defaults.options, dict):
                 for opt in delivery_defaults.options:
                     self.options.setdefault(opt, delivery_defaults.options[opt])
+            self.alias: str | None = conf.get(CONF_ALIAS, delivery_defaults.alias)
+            self.template: str | None = conf.get(CONF_TEMPLATE, delivery_defaults.template)
+            self.message: str | None = conf.get(CONF_MESSAGE, delivery_defaults.message)
+            self.title: str | None = conf.get(CONF_TITLE, delivery_defaults.title)
+            self.occupancy: str = conf.get(CONF_OCCUPANCY, delivery_defaults.occupancy)
+            self.conditions_config: list[ConfigType] | None = conf.get(CONF_CONDITIONS, delivery_defaults.conditions_config)
         else:
             # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
@@ -636,6 +648,12 @@ class DeliveryConfig:
             self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, list(PRIORITY_VALUES.keys()))
             self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
+            self.alias = conf.get(CONF_ALIAS)
+            self.template = conf.get(CONF_TEMPLATE)
+            self.message = conf.get(CONF_MESSAGE)
+            self.title = conf.get(CONF_TITLE)
+            self.occupancy = conf.get(CONF_OCCUPANCY, OCCUPANCY_ALL)
+            self.conditions_config = conf.get(CONF_CONDITIONS)
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
         return {
@@ -648,6 +666,12 @@ class DeliveryConfig:
             CONF_SELECTION_RANK: str(self.selection_rank),
             CONF_TARGET_REQUIRED: str(self.target_required),
             CONF_TARGET_USAGE: self.target_usage,
+            CONF_ALIAS: self.alias,
+            CONF_TEMPLATE: self.template,
+            CONF_MESSAGE: self.message,
+            CONF_TITLE: self.title,
+            CONF_OCCUPANCY: self.occupancy,
+            CONF_CONDITIONS: self.conditions_config,
         }
 
     def __repr__(self) -> str:

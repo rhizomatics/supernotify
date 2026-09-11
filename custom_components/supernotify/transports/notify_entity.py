@@ -64,6 +64,8 @@ class NotifyEntityTransport(Transport):
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if not hass_api.entity_ids_for_domain("notify"):
+            return None
         return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

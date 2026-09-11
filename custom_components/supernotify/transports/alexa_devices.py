@@ -13,6 +13,7 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
+    SELECTION_EXPLICIT,
     TRANSPORT_ALEXA,
 )
 from custom_components.supernotify.model import (
@@ -33,6 +34,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 HA_ALEXA_DEVICES_DOMAIN = "alexa_devices"
+# alandtse/alexa_media_player HACS integration's notify platform module - kept in sync
+# with the constant of the same name in alexa_media_player.py
+HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
 
 
 class AlexaDevicesTransport(Transport):
@@ -69,9 +73,14 @@ class AlexaDevicesTransport(Transport):
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if hass_api.find_config_entry_data(HA_ALEXA_DEVICES_DOMAIN) is not None:
-            return self.delivery_defaults
-        return None
+        if hass_api.find_config_entry_data(HA_ALEXA_DEVICES_DOMAIN) is None:
+            return None
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        if hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE):
+            # Alexa Media Player is also available - stay explicit-only so the same
+            # physical Echo devices aren't double-notified by both integrations
+            delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)

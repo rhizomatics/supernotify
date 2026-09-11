@@ -56,10 +56,9 @@ async def test_mobile_push_only_when_no_explicit_delivery(support_case_fixture, 
     await uut.initialize()
     await uut.deliver()
 
-    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
+    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push")
     assert len(uut.deliveries["DEFAULT_mobile_push"][EnvelopeOutcome.SUCCESS]) == 1
     assert len(uut.deliveries["signal"][EnvelopeOutcome.SUCCESS]) == 1
-    assert len(uut.deliveries["DEFAULT_notify_entity"].get(EnvelopeOutcome.SUCCESS, [])) == 0
 
 
 async def test_explicit_delivery_and_mobile_and_explicit_selection(support_case_fixture, hass: HomeAssistant):
@@ -78,10 +77,9 @@ async def test_explicit_delivery_and_mobile_and_implicit_selection(support_case_
     await uut.initialize()
     await uut.deliver()
 
-    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
+    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push")
     assert len(uut.deliveries["signal"][EnvelopeOutcome.SUCCESS]) == 1
     assert len(uut.deliveries["DEFAULT_mobile_push"][EnvelopeOutcome.SUCCESS]) == 1
-    assert len(uut.deliveries["DEFAULT_notify_entity"].get(EnvelopeOutcome.SUCCESS, [])) == 0
 
 
 async def test_explicit_delivery_no_mobile(support_case_fixture, hass: HomeAssistant):
@@ -90,7 +88,6 @@ async def test_explicit_delivery_no_mobile(support_case_fixture, hass: HomeAssis
     await uut.initialize()
     await uut.deliver()
 
-    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
+    assert list(uut.deliveries.keys()) == unordered("signal", "DEFAULT_mobile_push")
     assert len(uut.deliveries["signal"][EnvelopeOutcome.SUCCESS]) == 1
     assert len(uut.deliveries["DEFAULT_mobile_push"].get(EnvelopeOutcome.SUCCESS, [])) == 0
-    assert len(uut.deliveries["DEFAULT_notify_entity"].get(EnvelopeOutcome.SUCCESS, [])) == 0

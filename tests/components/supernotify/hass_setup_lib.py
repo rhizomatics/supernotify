@@ -234,6 +234,10 @@ class TestingContext(Context):
             _LOGGER.debug("TESTCONTEXT Mock HomeAssistant")
             self.hass = Mock(spec=MockableHomeAssistant)
             self.hass.states = Mock(StateMachine)
+            # a typical test install has a phone with a notify entity registered, so
+            # notify_entity's auto_configure (gated on the "notify" domain having at least
+            # one entity) behaves the same as it would in a real house by default
+            self.hass.states.async_entity_ids = lambda domain=None: ["notify.mock_notify_target"] if domain == "notify" else []
             self.hass.services = Mock(ServiceRegistry)
             self.hass.services.async_call = AsyncMock()
             self.hass.services.async_services_for_domain = lambda domain: self.services.get(domain, {})
@@ -254,6 +258,10 @@ class TestingContext(Context):
             self.hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
             self.hass.data[DATA_MQTT].client.connected = True
             self.hass.config_entries._entries = ConfigEntryItems(self.hass)
+            # a typical test install has a paired companion app, so mobile_push's
+            # auto_configure (gated on a mobile_app config entry existing) behaves the same
+            # as it would in a real house by default
+            self.hass.config_entries.async_entries = lambda domain, **_kwargs: [Mock(data={})] if domain == "mobile_app" else []
             self.hass.loop_thread_id = 0
             self.hass.loop.time.return_value = 0.0
 

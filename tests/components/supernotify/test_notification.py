@@ -84,6 +84,23 @@ async def test_simple_create() -> None:
     assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
 
 
+async def test_explicit_delivery_by_bare_transport_name_resolves_to_default() -> None:
+    """Backward compatibility: 'delivery: notify_entity' still selects the delivery
+    that's actually named 'DEFAULT_notify_entity' once auto-configured."""
+    ctx = TestingContext(
+        deliveries={
+            "mobile": {CONF_TITLE: "mobile notification", CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
+            "plain_email": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: TRANSPORT_EMAIL},
+        },
+    )
+    await ctx.test_initialize()
+    assert "DEFAULT_notify_entity" in ctx.delivery_registry.deliveries
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "notify_entity"})
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == ["DEFAULT_notify_entity"]
+
+
 async def test_explicit_delivery() -> None:
     ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
     await ctx.test_initialize()

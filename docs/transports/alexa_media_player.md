@@ -12,8 +12,23 @@ tags:
 
 ## Discovery
 
-**Not auto-detected.** This is an unofficial HACS integration, so SuperNotify can't reliably
-discover it — add an `alexa_media_player` delivery in `delivery.yaml` to use it.
+**Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*`
+service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player`
+delivery is generated automatically — but since a target has no automatic mapping to a
+recipient or entity, it only fires when selected explicitly (`data: {data: {delivery:
+[alexa_media_player]}}` or a scenario), not by default.
+
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+    delivery:
+        alexa_media_player:
+            target:
+                - media_player.kitchen_echo
+```
 
 Announce a message on an Alexa Echo device using the [`alexa_media_player`](https://github.com/alandtse/alexa_media_player) integration available via [HACS](https://www.hacs.xyz).
 

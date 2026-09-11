@@ -15,14 +15,30 @@ This transport uses the new style Home Assistant notify entities, so accepts onl
 
 Targets for Notify Entities can be broader than `entity_id`, and can also be a `device`, `label` or `area`, the latter also being an alternate way of calling multiple notify entities at once.
 
+## Discovery
+
+**Default delivery.** If at least one `notify.*` entity exists in the house and no
+`notify_entity` delivery is configured, a `DEFAULT_notify_entity` delivery is generated
+automatically and fires on every notification, since this is the standard Home Assistant
+notification provider.
+
 ## Default Delivery
 
-A default Delivery called `DEFAULT_notify_entity` will be automatically generated for Notify Entity transport if no explicit ones
-created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then
+If you don't want to use the automatically generated default delivery, then
 use configuration as below, or configure your own delivery for the transport.
 
 ```yaml
 transports:
   notify_entity:
     disabled: false
+```
+
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+    target:
+        - notify.mobile_app_pixel
 ```

@@ -135,6 +135,10 @@ def mock_hass(
     hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
     hass.data[DATA_MQTT].client.connected = True
     hass.config_entries._entries = ConfigEntryItems(hass)
+    # a typical test install has a paired companion app, so mobile_push's auto_configure
+    # (gated on a mobile_app config entry existing) behaves the same as it would in a real
+    # house by default
+    hass.config_entries.async_entries = lambda domain, **_kwargs: [Mock(data={})] if domain == "mobile_app" else []
     hass.loop_thread_id = "99999"
     hass.loop.time.return_value = 0.0  # timers (async_track_time_interval) do arithmetic on loop.time()
     return hass

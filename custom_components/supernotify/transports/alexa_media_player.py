@@ -75,10 +75,12 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
+    SELECTION_EXPLICIT,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    DeliveryConfig,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -90,6 +92,10 @@ if TYPE_CHECKING:
     from homeassistant.core import Context as HAContext
 
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+# alandtse/alexa_media_player HACS integration's notify platform module
+HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
 
 RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
 
@@ -162,6 +168,16 @@ class AlexaMediaPlayerTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is not None
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        action = hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
+        if not action:
+            return None
+        # Alexa targets need explicit selection to avoid firing on every notification
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.action = action
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     async def _safe_service(
         self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None

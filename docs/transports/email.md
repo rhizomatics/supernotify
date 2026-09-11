@@ -23,6 +23,16 @@ automatically and fires on every notification.
 !!! note
     The Home Assistant [SMTP](https://www.home-assistant.io/integrations/smtp/) integration for e-mail doesn't allow priority to be set.
 
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+    target:
+        - homeowner@example.com
+```
+
 ## Pre-generated HTML
 
 The `data` section of the notification can have a `message_html` supplied for html that will be used in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the end to include any attached images. The `data` can be configured as part of the fixed configuration, or in the `data` of the action call.

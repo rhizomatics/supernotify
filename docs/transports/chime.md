@@ -19,9 +19,11 @@ tags:
 
 ## Discovery
 
-**Not auto-detected.** Chime is a composite of several underlying mechanisms (switch, siren,
-script, rest_command, media_player) with no single integration to discover — add a `chime`
-delivery in `delivery.yaml` to use it.
+**Not auto-detected, unless `chime_aliases` is configured.** Chime is a composite of several
+underlying mechanisms (switch, siren, script, rest_command, media_player) with no single
+integration to discover, so it stays unconfigured until a transport-level `chime_aliases`
+option is set (see [Aliases](#aliases) below) — otherwise add a `chime` delivery of your own
+to use it directly.
 
 Notify using a sound of your choosing - for example a doorbell, barking dog, siren or recording.
 This works with a variety of devices, from cheap 433Mhz doorbell units to Amazon Echo devices.

@@ -8,7 +8,10 @@ from custom_components.supernotify.const import (
     CONF_CONNECTION,
     CONF_DATA,
     CONF_DELIVERY_DEFAULTS,
+    CONF_OCCUPANCY,
     CONF_OPTIONS,
+    CONF_TEMPLATE,
+    OCCUPANCY_ALL_IN,
     OPTION_SENDER,
 )
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA, TARGET_SCHEMA, TRANSPORT_SCHEMA
@@ -26,6 +29,17 @@ def test_transport_schema_sender_stays_a_string() -> None:
     })
     assert isinstance(validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER], str)
     assert validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER] == "hass@example.com"
+
+
+def test_transport_delivery_defaults_accepts_delivery_only_fields() -> None:
+    """delivery_defaults can now set template/message/title/alias/occupancy/conditions -
+    fields previously only valid on an explicit Delivery - so a Transport alone can carry
+    them without needing a Delivery to be defined."""
+    validated = TRANSPORT_SCHEMA({
+        CONF_DELIVERY_DEFAULTS: {CONF_TEMPLATE: "transport_template", CONF_OCCUPANCY: OCCUPANCY_ALL_IN},
+    })
+    assert validated[CONF_DELIVERY_DEFAULTS][CONF_TEMPLATE] == "transport_template"
+    assert validated[CONF_DELIVERY_DEFAULTS][CONF_OCCUPANCY] == OCCUPANCY_ALL_IN
 
 
 def test_target_schema_email_list_stays_strings() -> None:

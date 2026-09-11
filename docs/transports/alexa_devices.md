@@ -13,8 +13,21 @@ tags:
 
 ## Discovery
 
-**Default delivery.** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, a `DEFAULT_alexa_devices` delivery is generated automatically and fires on every notification, targeting any matching `notify.*_speak` /
-`notify.*_announce` entities present.
+**Default delivery, unless Alexa Media Player is also available.** If the Alexa Devices
+integration is already configured and no `alexa_devices` delivery is defined, an
+`alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` /
+`notify.*_announce` entities present. If the [Alexa Media Player](alexa_media_player.md) HACS
+integration is *also* detected, it backs off to explicit-selection only
+(`DEFAULT_alexa_devices` is not generated) so the same physical Echo devices aren't
+double-notified by both integrations — otherwise it fires on every notification by default.
+
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+```
 
 Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.
 

@@ -34,6 +34,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    DeliveryConfig,
     SelectionRule,
     Target,
     TargetRequired,
@@ -47,6 +48,7 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
 
@@ -288,6 +290,13 @@ class ChimeTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        # with no chime_aliases configured, there's nothing to map a tune/priority to
+        # a target, so treat Chime like an unconfigured integration
+        if OPTION_CHIME_ALIASES not in self.delivery_defaults.options:
+            return None
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data: dict[str, Any] = {}

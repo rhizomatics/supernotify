@@ -849,11 +849,13 @@ def test_supported_features_exclude_actions_and_spoken() -> None:
 
 
 def test_default_config_no_default_action() -> None:
-    """Gotify non ha un'azione di default -- l'utente DEVE specificarla in delivery.yaml."""
+    """Gotify non ha un'azione statica di default -- viene scoperta da auto_configure(),
+    o specificata manualmente sulla delivery."""
     ctx = _ctx()
     uut = GotifyTransport(ctx)
     assert uut.default_config.delivery_defaults.action is None, (
-        "Gotify non ha default action -- richiede action: notify.<name> in delivery.yaml"
+        "Gotify non ha default action statica -- auto_configure() la scopre, oppure va "
+        "specificata come action: notify.<name> sulla delivery"
     )
 
 

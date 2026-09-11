@@ -1,10 +1,16 @@
 ## 2.5.0
 
 ### Deliveries
-- Automatic default deliveries extended now to Alexa Devices, Discord, Kodi, Lametri, Ntfy, Persistent, Pushover, SMS and Telegram.
-  - These are all defined with `selection` as `explicit` so they won't be automatically used unless selected on a notification
-  - These deliveries don't have a `default_` prefix since default only in the sense they are defined if no explicit delivery configured
+- Every transport that is available to use is automatically available as a delivery with the same name.
+  - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
+  - Deliveries no longer have a `default_` prefix, although existing automations which use these will automatically be switched to `email`,`notify_entity` etc
   - SMS auto discovery works for Twilio and Mikrotik SMS integrations
+- Creating `Delivery` objects now only necessary if there's more than one Delivery for the same transport, like `plain_email` and `html_email`, different Telegram channels etc
+    - Everything that can be done with a `Delivery` configuration can be done with the `delivery_defaults:` section of a `Transport` object
+    - Its also possible to avoid creating Delivery objects in YAML by defining the relevant `data:` items in a notification action, although this gets unwieldy (the whole point of Delivery objects is to define this stuff once and not across many notifications).
+- Switch entities are only published for Transport objects that are available
+  - So you won't get clutter for things like `ntfy`,`gotfy`,`alexa_media_player` if those are not installed
+- Default delivery creation tightened for Notify Entity and Mobile Push, so these Delivery objects don't get created if there are no mobile apps or notify entities on the Home Assistant instance.
 
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`

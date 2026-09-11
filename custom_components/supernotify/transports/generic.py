@@ -35,6 +35,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DataFilter,
     DebugTrace,
+    DeliveryConfig,
     MessageOnlyPolicy,
     Target,
     TargetRequired,
@@ -129,6 +130,14 @@ class GenericTransport(Transport):
             return True
         _LOGGER.warning("SUPERNOTIFY Generic transport must have a qualified action name, e.g. notify.foo")
         return False
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        # with no action configured, there's nothing this transport can call, so treat
+        # it like an unconfigured integration rather than autogenerate a broken delivery
+        action = self.delivery_defaults.action
+        if action is None or "." not in action:
+            return None
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         # inputs

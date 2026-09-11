@@ -372,6 +372,11 @@ class Notification(ArchivableObject):
             self.action_groups = action_groups
 
     def select_deliveries(self) -> dict[str, DeliveryTargetOverride | None]:
+        # 'DEFAULT_x' backward compatibility: a delivery referenced by its bare
+        # transport name resolves to the auto-configured 'DEFAULT_x', if that's what
+        # actually exists in the registry.
+        resolve_name = self.context.delivery_registry.resolve_name
+
         scenario_enable_deliveries: list[str] = []
         scenario_disable_deliveries: list[str] = []
         default_enable_deliveries: list[str] = []
@@ -381,17 +386,17 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(scenario.enabling_deliveries())
+                scenario_enable_deliveries.extend(resolve_name(d) for d in scenario.enabling_deliveries())
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(scenario.disabling_deliveries())
+                scenario_disable_deliveries.extend(resolve_name(d) for d in scenario.disabling_deliveries())
 
             scenario_enable_deliveries = list(set(scenario_enable_deliveries))
             scenario_disable_deliveries = list(set(scenario_disable_deliveries))
 
             for recipient in all_recipients:
-                recipients_enable_deliveries.extend(recipient.enabling_delivery_names())
+                recipients_enable_deliveries.extend(resolve_name(d) for d in recipient.enabling_delivery_names())
                 # See also Recipient.target() for the disabled cases
-                recipients_disable_deliveries.extend(recipient.disabling_delivery_names())
+                recipients_disable_deliveries.extend(resolve_name(d) for d in recipient.disabling_delivery_names())
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
                 # all deliveries with SELECTION_DEFAULT in CONF_SELECTION
                 default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
@@ -405,7 +410,8 @@ class Notification(ArchivableObject):
         override_disable_deliveries: list[str] = []
 
         # apply the deliveries defined in the notification action call
-        for delivery, delivery_override in self.delivery_overrides.items():
+        for delivery_name, delivery_override in self.delivery_overrides.items():
+            delivery = resolve_name(delivery_name)
             if (
                 (delivery_override is None or delivery_override.enabled is not False)
                 and delivery in self.context.delivery_registry.enabled_deliveries
@@ -449,14 +455,14 @@ class Notification(ArchivableObject):
             include_targets: list[str] = []
             exclude_targets: list[str] = []
             for recipient in all_recipients:
-                if personal_delivery in recipient.enabling_delivery_names():
+                if personal_delivery in (resolve_name(d) for d in recipient.enabling_delivery_names()):
                     if personal_delivery in all_global_enabled:
                         # delivery already selected, make sure this recipient also included
                         include_targets.append(recipient.entity_id)
                     else:
                         # this delivery has been explicitly enabled for individual recipients
                         fixed_targets.append(recipient.entity_id)
-                elif personal_delivery in recipient.disabling_delivery_names():
+                elif personal_delivery in (resolve_name(d) for d in recipient.disabling_delivery_names()):
                     exclude_targets.append(recipient.entity_id)
             selected_deliveries[personal_delivery] = DeliveryTargetOverride(
                 fixed=fixed_targets, exclude=exclude_targets, include=include_targets

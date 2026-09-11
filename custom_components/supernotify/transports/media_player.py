@@ -13,13 +13,15 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
+    SELECTION_EXPLICIT,
     TRANSPORT_MEDIA,
 )
-from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 
@@ -45,6 +47,16 @@ class MediaPlayerTransport(Transport):
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
         return config
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if not hass_api.entity_ids_for_domain("media_player"):
+            return None
+        # a media_player target is required per notification, not positively identifiable
+        # ahead of time, so don't fire this on every notification - require it to be
+        # selected explicitly
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

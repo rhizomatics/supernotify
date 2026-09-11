@@ -52,7 +52,7 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
     `switch.delivery_email` switches off only the default delivery.
     For most people, these will equivalent, if they have 0 or 1 explicitly configured deliveries
 
-    The enabled/disabled state should in future persist across restarts
+    The enabled/disabled state should in future persist across restarts.
 
     Don't generate switches for transports that can't be used, e.g. Telegram if there's no Telegram integration in the home
 
@@ -69,7 +69,11 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
     Alexa Devices - make the autogen delivery default disabled if there's an Alexa Media Player transport available so there's not double notification to same devices
     Chime/Generic - everything possible can be defined under transport without creating an Delivery config item. `chime_aliases` needs to be defined for an autogen Delivery otherwise treated like unconfigured integration. Similar for generic without action defined.
 
+## Future Changes
 
+1. Storage of switch enable/disable, so choices persist across restarts
+2. Domain qualified targets, e.g. media:media_player.kitchen, tts:media_player.kitchen, discord:8943493434
+3. Enable `mobile_push` if mobile apps / users defined in Home Assistant (this is dynamic config, so doesn't have a restart associated with it ) and also update any recipient and device config
 
 ## Example
 

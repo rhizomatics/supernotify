@@ -87,13 +87,17 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
+    SELECTION_EXPLICIT,
     TRANSPORT_HTML5,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+HA_HTML5_DOMAIN = "html5"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -147,6 +151,15 @@ class HTML5Transport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the html5 send_message service."""
         return action == "html5.send_message"
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if hass_api.find_config_entry_data(HA_HTML5_DOMAIN) is None:
+            return None
+        # a browser's notify.* entity isn't associated with a recipient automatically,
+        # so don't fire this on every notification - require it to be selected explicitly
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     def select_targets(self, envelope: Envelope) -> list[str]:
         """Filter envelope targets down to html5 `notify.*` entity ids.

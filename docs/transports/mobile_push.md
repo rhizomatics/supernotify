@@ -13,9 +13,10 @@ tags:
 
 ## Discovery
 
-**Default delivery.** Always available, since targets are resolved per-recipient from the HA
-Companion App at delivery time. If no `mobile_push` delivery is configured, a `DEFAULT_mobile_push`
-delivery is generated automatically and fires on every notification.
+**Default delivery.** If at least one Companion App device is registered (a `mobile_app` config
+entry exists) and no `mobile_push` delivery is configured, a `DEFAULT_mobile_push` delivery is
+generated automatically and fires on every notification, with targets resolved per-recipient
+from the HA Companion App at delivery time.
 
 Send a push message out, with option for camera integration, mobile actions, and
 translate general priority to Apple specific push priority.

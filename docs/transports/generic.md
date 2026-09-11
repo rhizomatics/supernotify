@@ -29,8 +29,11 @@ tags:
 
 ## Discovery
 
-**Not auto-detected.** Generic is a catch-all for user-defined actions, so there's nothing for
-SuperNotify to discover — add a `generic` delivery in `delivery.yaml` with your chosen `action:`.
+**Not auto-detected, unless an `action` is set at transport level.** Generic is a catch-all
+for user-defined actions, so there's nothing for SuperNotify to discover on its own — either
+set `action:` under `transports: generic: delivery_defaults:` (from which a `generic` delivery
+is generated automatically once selected), or add a `generic` delivery of your own with your
+chosen `action:` directly.
 
 Use this transport to call *any* action, including 'legacy' Notification actions (previously known in Home Assistant as 'service' ) and scripts, REST commands, or anything else Home Assistant can call. It can be used for simple calls, where all you need to do is plug in an action, or as a "toolbox" for more complex needs.
 

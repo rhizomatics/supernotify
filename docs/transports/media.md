@@ -12,12 +12,28 @@ tags:
 
 ## Discovery
 
-**Not auto-detected.** `media_player` targets vary too much between devices to safely assume a
-default — add a `media` delivery in `delivery.yaml` to use it.
+**Delivery (explicit selection).** If at least one `media_player` entity exists in the house and
+no `media` delivery is defined, a `media` delivery is generated automatically — but since
+`media_player` targets vary too much between devices to safely assume a default, it only fires
+when selected explicitly (`data: {data: {delivery: [media]}}` or a scenario), not by default.
 
 Show an image or other content on a media player, e.g. for an example an Amazon Echo Show device.
 
 Pass the content link in using the `snapshot_url` value in the notification `data` section. Message and title fields will be ignored. Override the `image` value by also setting `media_content_type` in `data`.
+
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: ""
+    delivery:
+        media:
+            target:
+                - media_player.kitchen_alexa
+            data:
+                snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
+```
 
 The resulting action call from the adaptor looks like:
 

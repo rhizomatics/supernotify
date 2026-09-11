@@ -325,6 +325,14 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         SelectionRank.FIRST,
         SelectionRank.LAST,
     ]),
+    # also settable at Delivery level - a Transport's delivery_defaults let these be
+    # configured once for its auto-generated delivery, without needing an explicit Delivery
+    vol.Optional(CONF_ALIAS): cv.string,
+    vol.Optional(CONF_TEMPLATE): cv.string,
+    vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
+    vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
+    vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
+    vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
 })
 
 
@@ -341,13 +349,7 @@ DELIVERY_SCHEMA = vol.All(
     _migrate_condition,
     DELIVERY_CONFIG_SCHEMA.extend({
         vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_TEMPLATE): cv.string,
-        vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
-        vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
         vol.Optional(CONF_ENABLED): cv.boolean,
-        vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
-        vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
     }),
 )
 

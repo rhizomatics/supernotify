@@ -230,6 +230,9 @@ async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
 
 
 async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
+    # mobile_push/notify_entity only auto-configure once their prerequisites exist
+    MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
+    hass.states.async_set("notify.mock_notify_target", "unknown")
     await _setup_supernotify(hass, SIMPLE_CONFIG)
     hass.states.async_set("binary_sensor.supernotify_delivery_testing", "off")
     await hass.async_block_till_done()

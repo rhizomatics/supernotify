@@ -20,10 +20,12 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_SELECT,
     OPTION_TTS_ENTITY_ID,
     SELECT_EXCLUDE,
+    SELECTION_EXPLICIT,
     TRANSPORT_TTS,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    DeliveryConfig,
     MessageOnlyPolicy,
     SelectionRule,
     Target,
@@ -36,7 +38,7 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import DeviceInfo
+    from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
@@ -64,6 +66,20 @@ class TTSTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Allow default action to be overridden, such as tts.say or tts.cloud_speak"""
         return action is not None
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        if not hass_api.has_service("tts", "speak"):
+            _LOGGER.debug("SUPERNOTIFY No tts.speak action available, `tts` transport not configured")
+            return None
+        if not hass_api.entity_ids_for_domain("media_player"):
+            _LOGGER.debug("SUPERNOTIFY No media players available, `tts` transport not configured")
+            return None
+        # a media_player target is required per notification, not positively identifiable
+        # ahead of time, so don't fire this on every notification - require it to be
+        # selected explicitly
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        delivery_config.selection = [SELECTION_EXPLICIT]
+        return delivery_config
 
     @property
     def default_config(self) -> TransportConfig:

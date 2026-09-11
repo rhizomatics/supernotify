@@ -10,8 +10,11 @@ from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
+    CONF_OCCUPANCY,
+    CONF_TEMPLATE,
     CONF_TRANSPORT,
     OCCUPANCY_ALL,
+    OCCUPANCY_ALL_IN,
     PRIORITY_VALUES,
     SELECTION_DEFAULT,
     TRANSPORT_GENERIC,
@@ -93,6 +96,39 @@ async def test_repair_for_bad_conditions(mock_context: Context) -> None:
         issue_map={"delivery": "generic", "condition": "[{'condition': 'xor'}]", "exception": "integrations"},
         learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
     )
+
+
+async def test_delivery_inherits_transport_delivery_defaults(mock_context: Context) -> None:
+    transport = GenericTransport(
+        mock_context,
+        {
+            CONF_DELIVERY_DEFAULTS: {
+                CONF_ACTION: "notify.notify",
+                CONF_TEMPLATE: "transport_template",
+                CONF_OCCUPANCY: OCCUPANCY_ALL_IN,
+            }
+        },
+    )
+    uut = Delivery("generic", {}, transport)
+    assert uut.template == "transport_template"
+    assert uut.occupancy == OCCUPANCY_ALL_IN
+
+
+async def test_delivery_overrides_transport_delivery_defaults(mock_context: Context) -> None:
+    transport = GenericTransport(
+        mock_context,
+        {
+            CONF_DELIVERY_DEFAULTS: {
+                CONF_ACTION: "notify.notify",
+                CONF_TEMPLATE: "transport_template",
+                CONF_OCCUPANCY: OCCUPANCY_ALL_IN,
+            }
+        },
+    )
+    uut = Delivery("generic", {CONF_TEMPLATE: "delivery_template"}, transport)
+    assert uut.template == "delivery_template"
+    # not overridden at delivery level, so still inherited from the transport
+    assert uut.occupancy == OCCUPANCY_ALL_IN
 
 
 async def test_autogenerate_default_vs_explicit_naming(hass: HomeAssistant) -> None:
