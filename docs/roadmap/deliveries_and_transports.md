@@ -1,17 +1,16 @@
-# Roadmap
+# Deliveries and Transports
 
 See also [Principles](./principles.md).
 
-## Deliveries and Transports
+## Context
 
-This is typical trade-off between ease of use and flexibility.
+This is a typical trade-off between ease of use and flexibility.
 
 For convenience, Transports should be as automated as possible and Deliveries only a thing for advanced users  - in my notification, if I want to deliver to email, mobile push and Ntfy then all I should have to do is list the names of those transports, simple names like `email`,`mobile_push` and `ntft`.
 
 Delivery was the original configuration object, Transport only got delivery config to centralize common config across multiple Deliveries, yet Transport is the 'obvious' object, and the only one necessary.
 
 Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that gap, so for example a purely UI configured Supernotify can easily send out notifications to mobile push and email. 2.5.0 beta added more, however this feels like coping with an underlying issue rather than making the necessary simplifications. The 1:M delivery:transport relationship which is very flexible but a barrier for newcomers or less technical, especially when there's no ConfigFlow for Delivery yet.
-
 
 ## Design Decisions
 
