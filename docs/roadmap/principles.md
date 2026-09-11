@@ -1,4 +1,4 @@
-## Principles
+# Principles
 
 1. There is no configuration unless configuration is necessary.
 
