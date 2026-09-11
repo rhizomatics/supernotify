@@ -201,6 +201,41 @@
             "FIRST",
             "LAST"
           ]
+        },
+        "alias": {
+          "type": "string"
+        },
+        "template": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "nullable": true
+        },
+        "title": {
+          "type": "string",
+          "nullable": true
+        },
+        "occupancy": {
+          "type": "string",
+          "enum": [
+            "all_in",
+            "all_out",
+            "any_in",
+            "any_out",
+            "only_in",
+            "only_out",
+            "all",
+            "none"
+          ],
+          "default": "all"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "nullable": true,
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false
