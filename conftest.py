@@ -34,10 +34,18 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import get_scheduled_timer_handles
 from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
     INSTANCES,
-    HASocketBlockedError,
     long_repr_strings,
 )
 from pytest_httpserver import HTTPServer
+
+try:
+    # Only present on pytest-homeassistant-custom-component>=0.13.348 (our python>=3.14.2 pin).
+    # Older pins (python<3.14.2) don't check socket usage in verify_cleanup at all.
+    from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
+        HASocketBlockedError,
+    )
+except ImportError:
+    HASocketBlockedError = None
 
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.common import DupeChecker
@@ -353,7 +361,13 @@ def skip_notifications_fixture() -> Generator[None]:
         yield
 
 
-@pytest_asyncio.fixture(autouse=True)  # type: ignore[type-var]  # sync generator, deliberately: see docstring
+# pytest-homeassistant-custom-component>=0.13.348 decorates this with @pytest_asyncio.fixture
+# instead of @pytest.fixture, "to make sure the correct event loop is set"; match whichever
+# variant this environment's pin uses rather than picking one for both.
+_verify_cleanup_fixture = pytest_asyncio.fixture if HASocketBlockedError is not None else pytest.fixture
+
+
+@_verify_cleanup_fixture(autouse=True)  # type: ignore[type-var]  # sync generator, deliberately: see docstring
 def verify_cleanup(
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
@@ -429,13 +443,14 @@ def verify_cleanup(
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
 
-    try:
-        # Verify no socket connections were attempted
-        assert not HASocketBlockedError.instances, "the test opens sockets"
-    except AssertionError:
-        for instance in HASocketBlockedError.instances:
-            _LOGGER.exception("Socket opened during test", exc_info=instance)
-        raise
-    finally:
-        # Reset socket connection instance count to not break subsequent tests
-        HASocketBlockedError.instances = []
+    if HASocketBlockedError is not None:
+        try:
+            # Verify no socket connections were attempted
+            assert not HASocketBlockedError.instances, "the test opens sockets"
+        except AssertionError:
+            for instance in HASocketBlockedError.instances:
+                _LOGGER.exception("Socket opened during test", exc_info=instance)
+            raise
+        finally:
+            # Reset socket connection instance count to not break subsequent tests
+            HASocketBlockedError.instances = []
