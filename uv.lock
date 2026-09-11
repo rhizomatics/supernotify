@@ -17,8 +17,8 @@ exclude-newer-span = "P5D"
 
 [options.exclude-newer-package]
 homeassistant = false
-ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 homeassistant-stubs = false
+ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
 
 [manifest]
 overrides = [
@@ -2376,7 +2376,7 @@ dependencies = [
     { name = "urllib3" },
     { name = "uv", version = "0.9.26", source = { registry = "https://pypi.org/simple" } },
     { name = "voluptuous", version = "0.15.2", source = { registry = "https://pypi.org/simple" } },
-    { name = "voluptuous-openapi", version = "0.2.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "voluptuous-openapi" },
     { name = "voluptuous-serialize" },
     { name = "webrtc-models" },
     { name = "yarl", version = "1.22.0", source = { registry = "https://pypi.org/simple" } },
@@ -5507,10 +5507,10 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
+    { name = "probatio", marker = "python_full_version >= '3.14.2'" },
     { name = "properdocs", extra = ["i18n"] },
     { name = "pymdown-extensions" },
-    { name = "voluptuous-openapi", version = "0.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
-    { name = "voluptuous-openapi", version = "0.4.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+    { name = "voluptuous-openapi", marker = "python_full_version < '3.14.2'" },
 ]
 
 [package.metadata]
@@ -5572,10 +5572,10 @@ docs = [
     { name = "mkdocs-pagetree-plugin" },
     { name = "mkdocstrings" },
     { name = "mkdocstrings-python" },
+    { name = "probatio", marker = "python_full_version >= '3.14.2'" },
     { name = "properdocs", extras = ["i18n"] },
     { name = "pymdown-extensions" },
     { name = "voluptuous-openapi", marker = "python_full_version < '3.14.2'", specifier = "==0.2.0" },
-    { name = "voluptuous-openapi", marker = "python_full_version >= '3.14.2'", specifier = ">=0.3.0" },
 ]
 
 [[package]]
@@ -5942,31 +5942,12 @@ wheels = [
 name = "voluptuous-openapi"
 version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.14'",
-]
 dependencies = [
     { name = "voluptuous", version = "0.15.2", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a3/15/ac7a98afd478e9afc804354fe9d9715e0e560a590fdd425b22b65a152bb3/voluptuous_openapi-0.2.0.tar.gz", hash = "sha256:2366be934c37bb5fd8ed6bd5a2a46b1079b57dfbdf8c6c02e88f4ca13e975073", size = 15789, upload-time = "2025-08-21T04:49:16.755Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/72/eb/2ae58431a078318f03267f196137282ea6f01ea7f7e0fcba2b25a30b0bf2/voluptuous_openapi-0.2.0-py3-none-any.whl", hash = "sha256:d51f07be8af44b11570b7366785d90daa716b7fd11ea2845803763ae551f35cf", size = 10180, upload-time = "2025-08-21T04:49:15.885Z" },
-]
-
-[[package]]
-name = "voluptuous-openapi"
-version = "0.4.1"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.15'",
-    "python_full_version >= '3.14.2' and python_full_version < '3.15'",
-]
-dependencies = [
-    { name = "voluptuous", version = "0.16.0", source = { registry = "https://pypi.org/simple" } },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/60/a5/517c143607fd82cfc8842fcdccf5cf2c07cdd96528c936bde196e05dece3/voluptuous_openapi-0.4.1.tar.gz", hash = "sha256:745d0d60940a851d9a90c87eebf659c57072c9ef305c0f6f04f4fd7c063dc0ac", size = 21432, upload-time = "2026-06-26T13:31:35.924Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/bb/64db054ad3852e3b63841a570942d3ce29e6b44979d5ac4be806973a2338/voluptuous_openapi-0.4.1-py3-none-any.whl", hash = "sha256:b30abc527c622cd62dba1269a05099e6b6170678c2838908d347fa85ab0cdb44", size = 12824, upload-time = "2026-06-26T13:31:35.126Z" },
 ]
 
 [[package]]

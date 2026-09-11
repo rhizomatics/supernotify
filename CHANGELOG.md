@@ -6,6 +6,9 @@
   - These deliveries don't have a `default_` prefix since default only in the sense they are defined if no explicit delivery configured
   - SMS auto discovery works for Twilio and Mikrotik SMS integrations
 
+### Technical
+- Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
+
 ## 2.4.2
 
 ### Fixes

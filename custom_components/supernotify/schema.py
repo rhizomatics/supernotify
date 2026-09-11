@@ -368,14 +368,15 @@ TRANSPORT_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEVICE_MODEL_EXCLUDE),  # deprecated v1.9.0
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
         vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
         # only meaningful for transports (eg smtp) that own their own network connection
         vol.Optional(CONF_CONNECTION): CONNECTION_SCHEMA,
+        # deprecated, replaced by options usage
+        vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
     }),
 )
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check

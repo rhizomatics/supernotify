@@ -5,19 +5,43 @@ import typing
 from pathlib import Path
 from types import FunctionType
 
-# Home Assistant aliases the `voluptuous` module to its `probatio` replacement in
-# sys.modules (see homeassistant/__init__.py's install_as_voluptuous()), but only if
-# that happens before anything else imports the real `voluptuous`. voluptuous_openapi
-# imports the real voluptuous at module load time, so homeassistant has to be imported
-# first here, or its convert() can't recognize schemas built from Home Assistant's
-# cv.* validators (which are probatio's, not real voluptuous's) - it doesn't fail
-# cleanly either, since probatio's Schema is unhashable where convert() expects a
-# hashable type to check against a dict of known validator types.
+# Home Assistant 2026.9+ (which requires Python 3.14.2+) aliases the `voluptuous`
+# module to its `probatio` replacement in sys.modules (see homeassistant/__init__.py's
+# install_as_voluptuous()), but only if that happens before anything else imports the
+# real `voluptuous`. On older Home Assistant/Python this aliasing doesn't happen, and
+# voluptuous_openapi imports the real voluptuous at module load time, so homeassistant
+# has to be imported first either way.
 import homeassistant  # noqa: F401
 import mkdocs_gen_files
 from json_schema_for_humans.generate import generate_from_schema  # type: ignore
 from json_schema_for_humans.generation_configuration import GenerationConfiguration  # type: ignore
-from voluptuous_openapi import convert  # type: ignore
+
+# Python 3.14.2+ pulls in a Home Assistant version built on probatio rather than real
+# voluptuous. probatio ships its own OpenAPI codec (matching voluptuous_openapi's
+# output), so voluptuous_openapi - which chokes on probatio's unhashable Schema - is
+# neither needed nor installed there.
+_USE_PROBATIO = sys.version_info >= (3, 14, 2)
+
+if _USE_PROBATIO:
+    from probatio import UNSUPPORTED, to_openapi
+
+    def _fixup_ha_validators(node: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
+        """Home Assistant's cv.url/string/boolean are plain functions typed to accept
+        Any, so probatio can't infer a JSON type from their signature; recognize them
+        by name instead, the same fixup voluptuous_openapi needed on the pre-probatio
+        path below."""
+        if isinstance(node, FunctionType):
+            if node.__name__ in ("url", "string"):
+                return {"type": "string"}
+            if node.__name__ == "boolean":
+                return {"type": "boolean"}
+        return UNSUPPORTED
+
+    def convert(schema: typing.Any) -> dict[str, typing.Any]:  # ruff: ignore[any-type]
+        return to_openapi(schema, custom_serializer=_fixup_ha_validators)
+
+else:
+    from voluptuous_openapi import convert  # type: ignore
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # import must come after sys.path append
@@ -40,7 +64,9 @@ TOP_LEVEL_SCHEMAS = {
     "CHIME_ALIASES_SCHEMA": "Chime Aliases Definition",
 }
 
-# some hacks to stop voluptuous_openapi generating broken schemas
+# some hacks to stop voluptuous_openapi generating broken schemas - only needed on
+# the pre-probatio path; probatio's own codec handles vol.All natively and takes the
+# same FunctionType fixup as a custom_serializer instead of a pre-mutation pass.
 
 
 def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) -> None:
@@ -89,11 +115,12 @@ def schema_doc() -> None:
     Path("docs/developer/schemas/js").mkdir(exist_ok=True)
 
     v_schemas = {s: getattr(custom_components.supernotify.schema, s) for s in TOP_LEVEL_SCHEMAS}
-    for vol_schema in v_schemas.values():
-        try:
-            walk_schema(unwrap_schema(vol_schema).schema)
-        except Exception:
-            _LOGGER.exception("Failed on %s", vol_schema)
+    if not _USE_PROBATIO:
+        for vol_schema in v_schemas.values():
+            try:
+                walk_schema(unwrap_schema(vol_schema).schema)
+            except Exception:
+                _LOGGER.exception("Failed on %s", vol_schema)
     j_schemas = {s[0]: (TOP_LEVEL_SCHEMAS[s[0]], convert(s[1])) for s in v_schemas.items()}
     config = GenerationConfiguration(
         examples_as_yaml=True,

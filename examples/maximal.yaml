@@ -157,7 +157,7 @@ supernotify:
   transports:
     email:
       # connection is only used by deliveries that set the mode option to direct - other email
-      # deliveries go via the `action` below instead
+      # deliveries go via the `action` below instead to reuse the Home Assistant SMTP integration
       connection:
         host: smtp.local.net
         port: 587
