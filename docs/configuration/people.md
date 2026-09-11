@@ -97,7 +97,6 @@ target list with email addresses, notify entities, or direct mobile actions ).
          - person.johnny_mctest
          - person.jeanie_mctest
          - person.jolly_mctest
-
 ```
 ## Entities
 
@@ -215,7 +214,7 @@ One good reason for manual device registration is that adding devices to the Per
 
 So adding these devices to the `recipients` section of Supernotify configuration will mean they get included in notifications, but won't be used for occupancy, by Supernotify or other integrations.
 
-```title="Simple Example"
+```yaml title="Simple Example"
 recipients:
     - person: person.new_home_owner
       mobile_devices:

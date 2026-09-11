@@ -25,35 +25,38 @@ Tested on Home Assistant 2026.3.4 with `telegram_bot` platform: polling
 ## Example configuration
 
 ```yaml title="Basic Configuration"
-telegram_home:
-  transport: telegram
-  selection: default
-  data:
-    telegram_chat_id: 123456789
+delivery:
+  telegram_home:
+    transport: telegram
+    selection: default
+    data:
+      telegram_chat_id: 123456789
 ```
 
 ```yaml title="security channel with camera snapshot"
-telegram_security:
-  transport: telegram
-  selection: default
-  data:
-    telegram_chat_id: 123456789
-    telegram_attach_image: true
-    telegram_parse_mode: "HTML"
+delivery:
+  telegram_security:
+    transport: telegram
+    selection: default
+    data:
+      telegram_chat_id: 123456789
+      telegram_attach_image: true
+      telegram_parse_mode: "HTML"
 ```
 
 ```yaml title="Alarm channel with inline buttons"
-telegram_alarms:
-  transport: telegram
-  selection: scenario
-  data:
-    telegram_chat_id: 123456789
-    telegram_attach_image: true
-    telegram_inline_keyboard:
-      - - text: "✅ Acknowledge"
-          callback_data: "ack_alarm"
-        - text: "🔇 Snooze"
-          callback_data: "snooze_alarm"
+delivery:
+  telegram_alarms:
+    transport: telegram
+    selection: scenario
+    data:
+      telegram_chat_id: 123456789
+      telegram_attach_image: true
+      telegram_inline_keyboard:
+        - - text: "✅ Acknowledge"
+            callback_data: "ack_alarm"
+          - text: "🔇 Snooze"
+            callback_data: "snooze_alarm"
 ```
 ## Example call
 

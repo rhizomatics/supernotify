@@ -1,0 +1,88 @@
+# Roadmap
+
+See also [Principles](./principles.md).
+
+## Deliveries and Transports
+
+This is typical trade-off between ease of use and flexibility.
+
+For convenience, Transports should be as automated as possible and Deliveries only a thing for advanced users  - in my notification, if I want to deliver to email, mobile push and Ntfy then all I should have to do is list the names of those transports, simple names like `email`,`mobile_push` and `ntft`.
+
+Delivery was the original configuration object, Transport only got delivery config to centralize common config across multiple Deliveries, yet Transport is the 'obvious' object, and the only one necessary.
+
+Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that gap, so for example a purely UI configured Supernotify can easily send out notifications to mobile push and email. 2.5.0 beta added more, however this feels like coping with an underlying issue rather than making the necessary simplifications. The 1:M delivery:transport relationship which is very flexible but a barrier for newcomers or less technical, especially when there's no ConfigFlow for Delivery yet.
+
+
+## Design Decisions
+
+1. Every Transport is also a Delivery if it can be auto-configured, with the same name.
+
+    This implies merging back the extensions of `DELIVERY_SCHEMA` back into `DELIVERY_CONFIG_SCHEMA`
+
+2. Nobody needs a Delivery unless they need more than 1 pre-set config for the same transport
+
+    Do everything possible on the Transport level, so no reason to create Delivery until 2 flavours needed, like a low priority and high prioroty, or occupied and unoccupied.
+
+    Transport is still simpler than Scenario, so maximize what can be done with just Transport
+
+3. Transports with unambiguous targets are selected by default, and the target list makes the decision of which deliveries to use.
+
+    Exception to this is Mobile Push, where zero targets and zero explicit deliveries implies 'push this to all the mobile apps'
+
+    The scope of this can be extended by use of qualified targets, e.g. `discord:5893434344` as an option
+
+4. Transports with ambiguous or no targets can be explicitly selected by name but aren't included by default
+
+5. Transports that cannot be auto-configured are ignored unless explicitly configured at Transport or Delivery level
+
+    No `binary_sensor` or similar entity created for transports which have a module supplied with Supernotify but never used in the home
+
+    This also implies that each Transport knows its minimum viable configuration
+
+6. Delivery selection in notification only needed in notification to switch off implicit or switch on explicit
+
+    Otherwise everything left up to target selection. Limiting deliveries useful where there's auto discovered mobile devices, or emails / SMS numbers provided for Recipients.
+
+7. A little repetition is more tolerable than understanding an individual integrations unique abstractions
+
+    Most of the transports would be usable with zero YAML, albeit there might be some more repetitive data elements, like telegram/slack IDs that could be simplified into a Delivery object, though for some people repetition simpler than abstract concepts, and learning YAML and Studio Code Server
+
+8. Switch entities continue with delivery and transport
+
+    `switch.transport_email` switches off all email deliveries, including the default
+    `switch.delivery_email` switches off only the default delivery.
+    For most people, these will equivalent, if they have 0 or 1 explicitly configured deliveries
+
+    The enabled/disabled state should in future persist across restarts
+
+    Don't generate switches for transports that can't be used, e.g. Telegram if there's no Telegram integration in the home
+
+9. Backward compatibility for original `DEFAULT_email` style
+
+    If there's no delivery called `DEFAULT_email` then notification handling will try `email`
+    This won't extend to re-creating binary sensors or other diagnostic artefacts under those names
+
+## Example
+
+```yaml:
+- action: supernotify.notify
+    data:
+        title: Multi modal notification
+        message: Sending to email, SMS, telegram and however Billy is configured
+        target:
+         - johnny@43acacia.avenue.com
+         - +4304283883222
+         - person.billy_mctest
+         - telegram: 123456789
+```
+
+```yaml:
+- action: supernotify.notify
+    data:
+        title: Email notification
+        message: Sending to parents, email only
+        target:
+         - person.billy_mctest
+         - person.sally_mctest
+        delivery: email
+```

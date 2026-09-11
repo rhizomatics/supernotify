@@ -15,16 +15,14 @@ You'll still need to supply `ntfy_device_id` yourself.
 
 ## Motivation
 
-ntfy became an official Home Assistant integration in version 2025.5. It provides
-a privacy-first, self-hostable push notification service with a rich action API:
-priority levels, action buttons, scheduled delivery, image attachments, and
-message update/cancellation via `sequence_id`.
+ntfy became an official Home Assistant integration in version 2025.5. It provides a privacy-first, self-hostable push notification service with a rich action API, priority levels, action buttons, scheduled delivery, image attachments, and message update/cancellation via `sequence_id`.
 
 The existing `generic` transport can call `ntfy.publish`, but it cannot:
-- map SuperNotify's 5-level priority to ntfy's integer scale (1–5)
-- validate action button payloads before sending
-- attach camera snapshots via HA's `camera.snapshot` service
-- apply `boolify()` for YAML boolean strings
+
+  - map SuperNotify's 5-level priority to ntfy's integer scale (1–5)
+  - validate action button payloads before sending
+  - attach camera snapshots via HA's `camera.snapshot` service
+  - apply `boolify()` for YAML boolean strings
 
 ## Data keys
 
@@ -54,19 +52,19 @@ Tested on Home Assistant 2026.3.4 with the ntfy official integration connected
 to a self-hosted ntfy instance (ntfy v2.x).
 
 **Functional tests performed:**
-- [x] Base delivery: message and title appear correctly in ntfy app
-- [x] Priority mapping: `critical` triggers urgent priority (bypasses DND)
-- [x] Priority mapping: `minimum` delivers silently with no vibration
-- [x] `ntfy_tags`: emoji tags visible in notification
-- [x] `ntfy_click`: tap opens correct URL
-- [x] `ntfy_attach_image: true` + `camera.ezviz_ingresso` → snapshot attached
-- [x] `ntfy_actions` with 3 buttons: `view`, `http` (webhook), `http` (snooze)
-- [x] `ntfy_delay: "30m"` — notification delivered after 30 minutes
-- [x] `ntfy_sequence_id` — second call with same ID updates the notification
-- [x] `ntfy_device_id` missing → `return False` with warning in log
-- [x] `ntfy_actions` with malformed entry → entry skipped, valid ones delivered
-- [x] YAML boolean strings `"true"` / `"false"` for `ntfy_attach_image`, `ntfy_markdown` — `boolify()` handles correctly
-- [x] `ntfy_priority: 99` out of range → fallback to automatic mapping, warning logged
+  - [x] Base delivery: message and title appear correctly in ntfy app
+  - [x] Priority mapping: `critical` triggers urgent priority (bypasses DND)
+  - [x] Priority mapping: `minimum` delivers silently with no vibration
+  - [x] `ntfy_tags`: emoji tags visible in notification
+  - [x] `ntfy_click`: tap opens correct URL
+  - [x] `ntfy_attach_image: true` + `camera.ezviz_ingresso` → snapshot attached
+  - [x] `ntfy_actions` with 3 buttons: `view`, `http` (webhook), `http` (snooze)
+  - [x] `ntfy_delay: "30m"` — notification delivered after 30 minutes
+  - [x] `ntfy_sequence_id` — second call with same ID updates the notification
+  - [x] `ntfy_device_id` missing → `return False` with warning in log
+  - [x] `ntfy_actions` with malformed entry → entry skipped, valid ones delivered
+  - [x] YAML boolean strings `"true"` / `"false"` for `ntfy_attach_image`, `ntfy_markdown` — `boolify()` handles correctly
+  - [x] `ntfy_priority: 99` out of range → fallback to automatic mapping, warning logged
 
 **Example configuration:**
 
