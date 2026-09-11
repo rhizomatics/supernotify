@@ -32,6 +32,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+      pages: write
+      id-token: write
 
     strategy:
       fail-fast: false
@@ -126,3 +128,28 @@ jobs:
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Export docs site for Pages artifact
+      if: ${{ github.event_name != 'pull_request' }}
+      run: |
+        mkdir site-export
+        git archive gh-pages | tar -x -C site-export
+    - name: Upload Pages artifact
+      if: ${{ github.event_name != 'pull_request' }}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: site-export
+
+  deploy-pages:
+    needs: build
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
