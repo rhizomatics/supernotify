@@ -16,19 +16,17 @@ description: Core Concepts of Supernotify for Home Assistant, including Transpor
 - *Transport* is the underlying platform that performs notifications, either out of the box from Home Assistant, or another custom component
 - *Transport Adaptors* are what make the difference between regular Notify Groups and Supernotify. While a Notify Group seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`!
 - Supernotify comes out the box with adaptors for common transports, like e-mail, mobile push, SMS, and Alexa, and a *Generic* transport adaptor that can be used to wrap any other Home Assistant action
-- The transport adaptor allows a single notification to be sent to many platforms, even
-when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
+- The transport adaptor allows a single notification to be sent to many platforms, even when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
 - Transport Adaptors can optionally be defined in the Supernotify config with defaults
+- Each transport has a default configuration, which allows lots of fine tuning and defaults to be made, saving need to add the same values into every notification.
 - See [Transports](transports/index.md) for more detail
 
 ## Delivery
 
 - A **Delivery** defines each notification channel you want to use
-- While Supernotify comes with many transports, only the ones you define with a Delivery will
-get used to send notifications, with the exception of *Notify Entity* transport which is
-always on unless switched off.
-- Deliveries allow lots of fine tuning and defaults to be made, and you can also have multiple
-deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
+- Every configured Transport is available as a Delivery with the same name as the transport, so for example `email` or `mobile_push`.
+- Transports which can definitively select targets, like Email or Notify Entity, are always enabled by default. Others can be selected in configuration, by using Scenarios or switching them on in a notification
+- You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
 - See [Deliveries](configuration/deliveries.md) and [Recipes](recipes/index.md) for more detail
 
 ## Scenario

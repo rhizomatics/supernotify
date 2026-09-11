@@ -13,9 +13,7 @@ tags:
 
 ## Discovery
 
-**Default delivery.** If the Alexa Devices integration is already configured and no
-`alexa_devices` delivery is defined, a `DEFAULT_alexa_devices` delivery is generated
-automatically and fires on every notification, targeting any matching `notify.*_speak` /
+**Default delivery.** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, a `DEFAULT_alexa_devices` delivery is generated automatically and fires on every notification, targeting any matching `notify.*_speak` /
 `notify.*_announce` entities present.
 
 Announce, or speak, a notification using Home Assistant's built-in *Alexa Devices* integration.

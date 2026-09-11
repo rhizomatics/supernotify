@@ -6,25 +6,18 @@ tags:
 ---
 # Deliveries
 
-*Delivery* is how the different available notifications are defined.
+*Delivery* is a pre-set configuration for a specific transport - it controls the configuration and can set values that would otherwise have to be repeated in every notification.
 
-You should create a Delivery only for the [transports](../transports/index.md)
-you want to use, though sometimes you may want to create multiple Deliveries for the same channel, for example a `plain_email` and `html_email` delivery, or different custom notification platforms using the `generic` transport.
+A Delivery gets configured automatically for every available [transports](../transports/index.md). Set the transport `enabled` field to `false` to disable these. For example, if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) an `email` Delivery will be set up, with the SMTP `action`.
 
-Three of the transports will automatically create these deliveries where there is not an explicit delivery defined (if you really don't want a default delivery, set its transport `enabled` to `false`):
+You may want to create multiple Deliveries for the same channel, for example a `plain_email` and `html_email` delivery, or different custom notification platforms using the `generic` transport.
 
-- `DEFAULT_email`
- - Only if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) already configured ( it picks the first available one as the `action`, if you want another one then define the delivery explicitly)
-- `DEFAULT_mobile_push`
-- `DEFAULT_notify_entity`
 
 ```yaml title="Example of switching off a default delivery
 transports:
   mobile_push:
     disabled: true
 ```
-
-All other transport adaptors will not do anything unless there is a Delivery configured in the `delivery:` section of the Supernotify config.
 
 ## Simple Example
 
@@ -63,7 +56,7 @@ There are two main ways:
 
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
 - Use [Scenarios](../usage/scenarios.md) to apply common chunks of config
-- Move to a scenario-only configuration (recommended) by setting `selection` to `scenario` for every delivery
+- Move to a scenario-only configuration (recommended) by setting `selection` to `scenario` (or `explicit`, these do the same thing) for every delivery
   - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
 In this snippet, all Delivery configurations for `alexa_devices` will use the defined target group.
@@ -76,8 +69,7 @@ In this snippet, all Delivery configurations for `alexa_devices` will use the de
 ```
 ## Overriding Message and Title
 
-If your downstream transport has specific needs for the `message` and/or `title` then
-these can be overridden or amended for only the deliveries that need them.
+If your downstream transport has specific needs for the `message` and/or `title` then these can be overridden or amended for only the deliveries that need them.
 
 ```yaml title="Override Message"
 delivery:
@@ -87,8 +79,7 @@ delivery:
     message: HOME ASSISTANT NOTIFICATION
 ```
 
-For this delivery, whatever the `message` on the notification, it will be replaced by
-"HOME ASSISTANT NOTIFICATION" when delivered to the custom notification.
+For this delivery, whatever the `message` on the notification, it will be replaced by "HOME ASSISTANT NOTIFICATION" when delivered to the custom notification.
 
 !!! info
     `message` and `title` are the two special cases where the values in the configuration
@@ -98,8 +89,7 @@ For amending rather than overriding, see the [Alexa Whisper Recipe](../recipes/a
 
 ## Controlling Targets
 
-For fine-grained control over how any targets pre-defined in a delivery are treated, for example when explicit
-targets provided in a notification action call, Delivery has an optional `target_usage` key, taking values of:
+For fine-grained control over how any targets pre-defined in a delivery are treated, for example when explicit targets provided in a notification action call, Delivery has an optional `target_usage` key, taking values of:
 
 - `no_action` - Only uses the Delivery target if there's no target on the notification action call
 - `no_delivery` - Only uses the Delivery target if there's no target applicable to this delivery
@@ -117,8 +107,7 @@ are resolved as specific to it, for example based on the `target_categories` opt
 
 ## Delivery Selection
 
-A list of `selection` options controls how deliveries are selected, each delivery can have multiple
-options selected, though some of them are mutually impossible, like `default` and `explicit`
+A list of `selection` options controls how deliveries are selected, each delivery can have multiple options selected, though some of them are mutually impossible, like `default` and `explicit`
 
 | Option              | Default | Usage                                                                                        |
 |---------------------|---------|----------------------------------------------------------------------------------------------|

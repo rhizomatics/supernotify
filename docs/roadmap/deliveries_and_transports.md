@@ -46,7 +46,7 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
 
     Most of the transports would be usable with zero YAML, albeit there might be some more repetitive data elements, like telegram/slack IDs that could be simplified into a Delivery object, though for some people repetition simpler than abstract concepts, and learning YAML and Studio Code Server
 
-8. Switch entities continue with delivery and transport
+8. Switch entities continue as they are with delivery and transport
 
     `switch.transport_email` switches off all email deliveries, including the default
     `switch.delivery_email` switches off only the default delivery.
@@ -60,6 +60,16 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
 
     If there's no delivery called `DEFAULT_email` then notification handling will try `email`
     This won't extend to re-creating binary sensors or other diagnostic artefacts under those names
+
+10. Transport Specific
+
+    TTS - Only make this transport available if there is a suitable service available and at least one media_player defined
+    Media Player - autogen delivery needs explicit selection
+    HACS integrations, e.g. Alexa Media Player - detect these using find_service
+    Alexa Devices - make the autogen delivery default disabled if there's an Alexa Media Player transport available so there's not double notification to same devices
+    Chime/Generic - everything possible can be defined under transport without creating an Delivery config item. `chime_aliases` needs to be defined for an autogen Delivery otherwise treated like unconfigured integration. Similar for generic without action defined.
+
+
 
 ## Example
 
