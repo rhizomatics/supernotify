@@ -17,8 +17,8 @@ exclude-newer-span = "P5D"
 
 [options.exclude-newer-package]
 homeassistant = false
-homeassistant-stubs = false
 ruff = { timestamp = "0001-01-01T00:00:00Z", span = "P2D" }
+homeassistant-stubs = false
 
 [manifest]
 overrides = [
@@ -4702,7 +4702,7 @@ wheels = [
 
 [[package]]
 name = "pytest-homeassistant-custom-component"
-version = "0.13.363"
+version = "0.13.364"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -4739,9 +4739,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "unidiff" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/98/e60618f170a96650e1c6bcb78a2525b356f0067c2434972110b29bcf985e/pytest_homeassistant_custom_component-0.13.363.tar.gz", hash = "sha256:e14868eab5258b341493460317f7473ac4cb20d847e24cf3e78b8c4b7a5614fd", size = 78536, upload-time = "2026-09-03T09:21:58.346Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/57/4a030891a51ee9b67c04aeb642fcc4f6a0aabc8f0ea9520c9bedaf552251/pytest_homeassistant_custom_component-0.13.364.tar.gz", hash = "sha256:28d7de7c94b380a5668654efdb498e1dab4242bf23498bb23456f19a2e965fca", size = 78496, upload-time = "2026-09-06T09:07:10.562Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/1f/4a8d7796d3d9cd6a81ae2c155f8358f70800115e3695e1f85f2b441b933b/pytest_homeassistant_custom_component-0.13.363-py3-none-any.whl", hash = "sha256:5437a1371bb1643973f4e0ebe8aa573b45fc589ec402a82f744d9bd9fb47e88f", size = 84452, upload-time = "2026-09-03T09:21:57.081Z" },
+    { url = "https://files.pythonhosted.org/packages/35/3b/78be2438f25c117d1b3dbd9f598f7b5a4f63c965990e72dea73a6d04385b/pytest_homeassistant_custom_component-0.13.364-py3-none-any.whl", hash = "sha256:47b0a3545b32521e151ad5cf4a9a11033395f0f13215854006bec1070fd18e1d", size = 84452, upload-time = "2026-09-06T09:07:09.597Z" },
 ]
 
 [[package]]
@@ -5474,7 +5474,7 @@ dev = [
     { name = "pytest-cov", version = "7.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
     { name = "pytest-cov", version = "7.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
     { name = "pytest-homeassistant-custom-component", version = "0.13.316", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.14.2'" },
-    { name = "pytest-homeassistant-custom-component", version = "0.13.363", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
+    { name = "pytest-homeassistant-custom-component", version = "0.13.364", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.14.2'" },
     { name = "pytest-httpserver" },
     { name = "pytest-icdiff" },
     { name = "pytest-mock" },

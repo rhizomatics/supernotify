@@ -1,13 +1,19 @@
 from __future__ import annotations
 
+import asyncio
+import datetime
 import io
+import logging
 import pathlib
+import threading
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
+import pytest_asyncio
+import respx
 from anyio import Path
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
@@ -18,12 +24,19 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import HomeAssistant, ServiceRegistry, State, StateMachine, SupportsResponse, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceRegistry, State, StateMachine, SupportsResponse, callback
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.helpers.template import Template
+from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import get_scheduled_timer_handles
+from pytest_homeassistant_custom_component.plugins import (  # type: ignore[import-untyped]
+    INSTANCES,
+    HASocketBlockedError,
+    long_repr_strings,
+)
 from pytest_httpserver import HTTPServer
 
 from custom_components.supernotify.archive import NotificationArchive
@@ -46,6 +59,8 @@ from tests.components.supernotify.hass_setup_lib import MockableHomeAssistant
 if TYPE_CHECKING:
     from collections.abc import Generator
     from ssl import SSLContext
+
+_LOGGER = logging.getLogger(__name__)
 
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 
@@ -336,3 +351,91 @@ def skip_notifications_fixture() -> Generator[None]:
         patch("homeassistant.components.persistent_notification.async_dismiss"),
     ):
         yield
+
+
+@pytest_asyncio.fixture(autouse=True)  # type: ignore[type-var]  # sync generator, deliberately: see docstring
+def verify_cleanup(
+    expected_lingering_tasks: bool,
+    expected_lingering_timers: bool,
+) -> Generator[None]:
+    """Verify that the test has cleaned up resources correctly.
+
+    Copied from pytest_homeassistant_custom_component.plugins.verify_cleanup, with
+    "AnyIO worker thread" added to the set of benign thread names. Supernotify uses
+    anyio.Path for async filesystem I/O; anyio's worker-thread pool signals shutdown
+    by queueing a sentinel rather than joining, so the Python thread object can still
+    be alive - briefly and harmlessly - by the time this check runs. The upstream
+    fixture has no awareness of anyio and treats that as a leaked thread.
+    """
+    event_loop = asyncio.get_event_loop()
+    threads_before = frozenset(threading.enumerate())
+    tasks_before = asyncio.all_tasks(event_loop)
+    yield
+
+    event_loop.run_until_complete(event_loop.shutdown_default_executor())
+
+    if len(INSTANCES) >= 2:
+        count = len(INSTANCES)
+        for inst in INSTANCES:
+            inst.stop()
+        pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
+
+    # Warn and clean-up lingering tasks and timers
+    # before moving on to the next test.
+    tasks = asyncio.all_tasks(event_loop) - tasks_before
+    for task in tasks:
+        if expected_lingering_tasks:
+            _LOGGER.warning("Lingering task after test %r", task)
+        else:
+            pytest.fail(f"Lingering task after test {task!r}")
+        task.cancel()
+    if tasks:
+        event_loop.run_until_complete(asyncio.wait(tasks))
+
+    for handle in get_scheduled_timer_handles(event_loop):
+        if not handle.cancelled():
+            with long_repr_strings():
+                if expected_lingering_timers:
+                    _LOGGER.warning("Lingering timer after test %r", handle)
+                elif handle._args and isinstance(job := handle._args[-1], HassJob):
+                    if job.cancel_on_shutdown:
+                        continue
+                    pytest.fail(f"Lingering timer after job {job!r}")
+                else:
+                    pytest.fail(f"Lingering timer after test {handle!r}")
+                handle.cancel()
+
+    # Verify no threads where left behind.
+    threads = frozenset(threading.enumerate()) - threads_before
+    for thread in threads:
+        assert (
+            isinstance(thread, threading._DummyThread)
+            or thread.name.startswith("waitpid-")
+            or "_run_safe_shutdown_loop" in thread.name
+            or thread.name == "AnyIO worker thread"
+        )
+
+    try:
+        # Verify the default time zone has been restored
+        assert dt_util.DEFAULT_TIME_ZONE is datetime.UTC
+    finally:
+        # Restore the default time zone to not break subsequent tests
+        dt_util.DEFAULT_TIME_ZONE = datetime.UTC
+
+    try:
+        # Verify respx.mock has been cleaned up
+        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+    finally:
+        # Clear mock routes not break subsequent tests
+        respx.mock.clear()
+
+    try:
+        # Verify no socket connections were attempted
+        assert not HASocketBlockedError.instances, "the test opens sockets"
+    except AssertionError:
+        for instance in HASocketBlockedError.instances:
+            _LOGGER.exception("Socket opened during test", exc_info=instance)
+        raise
+    finally:
+        # Reset socket connection instance count to not break subsequent tests
+        HASocketBlockedError.instances = []
