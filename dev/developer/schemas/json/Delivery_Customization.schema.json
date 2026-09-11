@@ -61,7 +61,6 @@
               }
             }
           },
-          "required": [],
           "additionalProperties": {
             "type": "array",
             "items": {
@@ -87,13 +86,39 @@
     "data": {
       "type": "object",
       "additionalProperties": {
-        "type": "object",
-        "additionalProperties": true,
-        "nullable": true
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object",
+            "nullable": true,
+            "description": "Must be null"
+          }
+        ]
       }
     }
   },
-  "required": [],
+  "additionalProperties": false,
   "title": "Delivery Customization",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Delivery_Customization.json",
   "description": "Voluptuous validation schema for Delivery_Customization",

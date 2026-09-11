@@ -4,27 +4,6 @@
     "alias": {
       "type": "string"
     },
-    "device_domain": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "device_model_include": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "device_model_exclude": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "device_discovery": {
-      "type": "boolean"
-    },
     "enabled": {
       "type": "boolean",
       "default": true
@@ -36,7 +15,7 @@
           "type": "string"
         },
         "debug": {
-          "type": "string"
+          "type": "boolean"
         },
         "options": {
           "type": "object",
@@ -45,9 +24,35 @@
         "data": {
           "type": "object",
           "additionalProperties": {
-            "type": "object",
-            "additionalProperties": true,
-            "nullable": true
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "object",
+                "nullable": true,
+                "description": "Must be null"
+              }
+            ]
           }
         },
         "target": {
@@ -110,7 +115,6 @@
                   }
                 }
               },
-              "required": [],
               "additionalProperties": {
                 "type": "array",
                 "items": {
@@ -199,7 +203,7 @@
           ]
         }
       },
-      "required": []
+      "additionalProperties": false
     },
     "connection": {
       "type": "object",
@@ -234,16 +238,38 @@
           "default": 5
         },
         "verify_ssl": {
-          "default": true,
-          "type": "string"
+          "type": "boolean",
+          "default": true
         }
       },
       "required": [
         "host"
-      ]
+      ],
+      "additionalProperties": false
+    },
+    "device_domain": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "device_model_include": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "device_model_exclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "device_discovery": {
+      "type": "boolean"
     }
   },
-  "required": [],
+  "additionalProperties": false,
   "title": "Transport Definition",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Transport_Definition.json",
   "description": "Voluptuous validation schema for Transport_Definition",

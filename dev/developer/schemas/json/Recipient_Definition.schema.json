@@ -74,7 +74,6 @@
               }
             }
           },
-          "required": [],
           "additionalProperties": {
             "type": "array",
             "items": {
@@ -121,11 +120,11 @@
             "type": "string"
           },
           "enabled": {
-            "default": true,
-            "type": "string"
+            "type": "boolean",
+            "default": true
           }
         },
-        "required": []
+        "additionalProperties": false
       },
       "default": []
     },
@@ -194,7 +193,6 @@
                     }
                   }
                 },
-                "required": [],
                 "additionalProperties": {
                   "type": "array",
                   "items": {
@@ -220,13 +218,39 @@
           "data": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": true,
-              "nullable": true
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "object",
+                  "nullable": true,
+                  "description": "Must be null"
+                }
+              ]
             }
           }
         },
-        "required": []
+        "additionalProperties": false
       },
       "default": {}
     }
@@ -234,6 +258,7 @@
   "required": [
     "person"
   ],
+  "additionalProperties": false,
   "title": "Recipient Definition",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Recipient_Definition.json",
   "description": "Voluptuous validation schema for Recipient_Definition",

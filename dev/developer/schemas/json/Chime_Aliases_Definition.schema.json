@@ -7,7 +7,9 @@
         "type": "object",
         "additionalProperties": {
           "anyOf": [
-            {},
+            {
+              "type": "string"
+            },
             {
               "type": "string",
               "enum": [
@@ -34,9 +36,35 @@
                 "data": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "nullable": true
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Must be null"
+                      }
+                    ]
                   }
                 },
                 "volume": {
@@ -102,7 +130,6 @@
                           }
                         }
                       },
-                      "required": [],
                       "additionalProperties": {
                         "type": "array",
                         "items": {
@@ -126,10 +153,14 @@
                   "minimum": 0
                 }
               },
-              "required": []
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "nullable": true,
+              "description": "Must be null"
             }
-          ],
-          "nullable": true
+          ]
         }
       },
       "default": {}
@@ -138,6 +169,7 @@
   "required": [
     "chime_aliases"
   ],
+  "additionalProperties": false,
   "title": "Chime Aliases Definition",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Chime_Aliases_Definition.json",
   "description": "Voluptuous validation schema for Chime_Aliases_Definition",

@@ -34,7 +34,9 @@
               "type": "integer",
               "minimum": 0
             },
-            {}
+            {
+              "type": "string"
+            }
           ]
         },
         "clip_url": {
@@ -52,7 +54,7 @@
           "additionalProperties": true
         }
       },
-      "required": []
+      "additionalProperties": false
     },
     "action_groups": {
       "type": "array",
@@ -129,7 +131,6 @@
                     }
                   }
                 },
-                "required": [],
                 "additionalProperties": {
                   "type": "array",
                   "items": {
@@ -155,19 +156,45 @@
           "data": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": true,
-              "nullable": true
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "object",
+                  "nullable": true,
+                  "description": "Must be null"
+                }
+              ]
             }
           }
         },
-        "required": [],
+        "additionalProperties": false,
         "nullable": true
       },
       "default": {}
     }
   },
-  "required": [],
+  "additionalProperties": false,
   "title": "Scenario Definition",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Scenario_Definition.json",
   "description": "Voluptuous validation schema for Scenario_Definition",

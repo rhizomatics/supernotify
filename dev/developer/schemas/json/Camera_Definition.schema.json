@@ -54,6 +54,7 @@
   "required": [
     "camera"
   ],
+  "additionalProperties": false,
   "title": "Camera Definition",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Camera_Definition.json",
   "description": "Voluptuous validation schema for Camera_Definition",

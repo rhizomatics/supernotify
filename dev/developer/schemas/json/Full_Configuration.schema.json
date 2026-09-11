@@ -19,9 +19,35 @@
           "data": {
             "type": "object",
             "additionalProperties": {
-              "type": "object",
-              "additionalProperties": true,
-              "nullable": true
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "object",
+                  "nullable": true,
+                  "description": "Must be null"
+                }
+              ]
             }
           },
           "target": {
@@ -84,7 +110,6 @@
                     }
                   }
                 },
-                "required": [],
                 "additionalProperties": {
                   "type": "array",
                   "items": {
@@ -239,7 +264,8 @@
         },
         "required": [
           "transport"
-        ]
+        ],
+        "additionalProperties": false
       },
       "default": {}
     },
@@ -263,7 +289,6 @@
               "type": "string"
             }
           },
-          "required": [],
           "additionalProperties": true
         }
       },
@@ -347,7 +372,6 @@
                     }
                   }
                 },
-                "required": [],
                 "additionalProperties": {
                   "type": "array",
                   "items": {
@@ -394,11 +418,11 @@
                   "type": "string"
                 },
                 "enabled": {
-                  "default": true,
-                  "type": "string"
+                  "type": "boolean",
+                  "default": true
                 }
               },
-              "required": []
+              "additionalProperties": false
             },
             "default": []
           },
@@ -467,7 +491,6 @@
                           }
                         }
                       },
-                      "required": [],
                       "additionalProperties": {
                         "type": "array",
                         "items": {
@@ -493,20 +516,47 @@
                 "data": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "nullable": true
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Must be null"
+                      }
+                    ]
                   }
                 }
               },
-              "required": []
+              "additionalProperties": false
             },
             "default": {}
           }
         },
         "required": [
           "person"
-        ]
+        ],
+        "additionalProperties": false
       },
       "default": []
     },
@@ -534,7 +584,8 @@
         "required": [
           "url",
           "description"
-        ]
+        ],
+        "additionalProperties": false
       },
       "default": []
     },
@@ -576,7 +627,9 @@
                     "type": "integer",
                     "minimum": 0
                   },
-                  {}
+                  {
+                    "type": "string"
+                  }
                 ]
               },
               "clip_url": {
@@ -594,7 +647,7 @@
                 "additionalProperties": true
               }
             },
-            "required": []
+            "additionalProperties": false
           },
           "action_groups": {
             "type": "array",
@@ -671,7 +724,6 @@
                           }
                         }
                       },
-                      "required": [],
                       "additionalProperties": {
                         "type": "array",
                         "items": {
@@ -697,19 +749,45 @@
                 "data": {
                   "type": "object",
                   "additionalProperties": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "nullable": true
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Must be null"
+                      }
+                    ]
                   }
                 }
               },
-              "required": [],
+              "additionalProperties": false,
               "nullable": true
             },
             "default": {}
           }
         },
-        "required": []
+        "additionalProperties": false
       },
       "default": {}
     },
@@ -720,27 +798,6 @@
         "properties": {
           "alias": {
             "type": "string"
-          },
-          "device_domain": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "device_model_include": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "device_model_exclude": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "device_discovery": {
-            "type": "boolean"
           },
           "enabled": {
             "type": "boolean",
@@ -753,7 +810,7 @@
                 "type": "string"
               },
               "debug": {
-                "type": "string"
+                "type": "boolean"
               },
               "options": {
                 "type": "object",
@@ -762,9 +819,35 @@
               "data": {
                 "type": "object",
                 "additionalProperties": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "nullable": true
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Must be null"
+                    }
+                  ]
                 }
               },
               "target": {
@@ -827,7 +910,6 @@
                         }
                       }
                     },
-                    "required": [],
                     "additionalProperties": {
                       "type": "array",
                       "items": {
@@ -916,7 +998,7 @@
                 ]
               }
             },
-            "required": []
+            "additionalProperties": false
           },
           "connection": {
             "type": "object",
@@ -951,16 +1033,38 @@
                 "default": 5
               },
               "verify_ssl": {
-                "default": true,
-                "type": "string"
+                "type": "boolean",
+                "default": true
               }
             },
             "required": [
               "host"
-            ]
+            ],
+            "additionalProperties": false
+          },
+          "device_domain": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_model_include": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_model_exclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_discovery": {
+            "type": "boolean"
           }
         },
-        "required": []
+        "additionalProperties": false
       },
       "default": {}
     },
@@ -1021,7 +1125,8 @@
         },
         "required": [
           "camera"
-        ]
+        ],
+        "additionalProperties": false
       },
       "default": []
     },
@@ -1034,15 +1139,15 @@
           "default": 3600
         }
       },
-      "required": [],
+      "additionalProperties": false,
       "default": {}
     },
     "scenario_control": {
       "type": "object",
       "properties": {
         "refresh": {
-          "default": false,
-          "type": "string"
+          "type": "boolean",
+          "default": false
         },
         "refresh_interval": {
           "type": "integer",
@@ -1050,7 +1155,7 @@
           "default": 60
         }
       },
-      "required": [],
+      "additionalProperties": false,
       "default": {}
     },
     "template_path": {
@@ -1073,8 +1178,8 @@
           "type": "string"
         },
         "enabled": {
-          "default": false,
-          "type": "string"
+          "type": "boolean",
+          "default": false
         },
         "file_retention_days": {
           "type": "integer",
@@ -1090,8 +1195,8 @@
           "default": 0
         },
         "mqtt_retain": {
-          "default": true,
-          "type": "string"
+          "type": "boolean",
+          "default": true
         },
         "purge_interval": {
           "type": "integer",
@@ -1099,8 +1204,8 @@
           "default": 60
         },
         "event_name": {
-          "default": "supernotification",
-          "type": "string"
+          "type": "string",
+          "default": "supernotification"
         },
         "event_selection": {
           "type": "object",
@@ -1113,11 +1218,11 @@
           "default": 16
         },
         "debug": {
-          "default": false,
-          "type": "string"
+          "type": "boolean",
+          "default": false
         }
       },
-      "required": [],
+      "additionalProperties": false,
       "default": {
         "enabled": false
       }
@@ -1135,7 +1240,7 @@
           "default": 7
         }
       },
-      "required": [],
+      "additionalProperties": false,
       "default": {}
     },
     "dupe_check": {
@@ -1161,7 +1266,7 @@
           "default": "dupe_policy_message_title_same_or_lower_priority"
         }
       },
-      "required": [],
+      "additionalProperties": false,
       "default": {}
     },
     "mobile_discovery": {
@@ -1173,7 +1278,6 @@
       "default": true
     }
   },
-  "required": [],
   "additionalProperties": true,
   "title": "Full Configuration",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Full_Configuration.json",
