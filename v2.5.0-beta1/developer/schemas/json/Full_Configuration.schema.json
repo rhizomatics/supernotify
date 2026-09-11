@@ -1,0 +1,1321 @@
+{
+  "type": "object",
+  "properties": {
+    "delivery": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "debug": {
+            "type": "boolean"
+          },
+          "options": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "object",
+                  "nullable": true,
+                  "description": "Must be null"
+                }
+              ]
+            }
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "entity_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "device_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "area_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "floor_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "label_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "email": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "phone": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mobile_app_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "person_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "target_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "always",
+                  "never",
+                  "optional"
+                ]
+              }
+            ]
+          },
+          "target_usage": {
+            "type": "string",
+            "enum": [
+              "no_delivery",
+              "no_action",
+              "merge_delivery",
+              "merge_always",
+              "fixed"
+            ]
+          },
+          "selection": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "fallback_on_error",
+                "explicit",
+                "scenario",
+                "default",
+                "fallback"
+              ]
+            }
+          },
+          "priority": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "minimum",
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ]
+                }
+              ]
+            }
+          },
+          "selection_rank": {
+            "type": "string",
+            "enum": [
+              "ANY",
+              "FIRST",
+              "LAST"
+            ]
+          },
+          "alias": {
+            "type": "string"
+          },
+          "template": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "occupancy": {
+            "type": "string",
+            "enum": [
+              "all_in",
+              "all_out",
+              "any_in",
+              "any_out",
+              "only_in",
+              "only_out",
+              "all",
+              "none"
+            ],
+            "default": "all"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "transport": {
+            "type": "string",
+            "enum": [
+              "sms",
+              "mqtt",
+              "alexa_devices",
+              "alexa_media_player",
+              "mobile_push",
+              "chime",
+              "email",
+              "media",
+              "persistent",
+              "tts",
+              "generic",
+              "notify_entity",
+              "ntfy",
+              "gotify",
+              "telegram",
+              "lametric",
+              "pushover",
+              "html5",
+              "matrix",
+              "kodi",
+              "discord"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "transport"
+        ],
+        "additionalProperties": false
+      },
+      "default": {}
+    },
+    "action_groups": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "uri": {
+              "type": "string"
+            },
+            "icon": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        }
+      },
+      "default": {}
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "person": {
+            "type": "string"
+          },
+          "alias": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "entity_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "device_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "area_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "floor_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "label_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "email": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "phone": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "mobile_app_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "person_id": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "phone_number": {
+            "type": "string"
+          },
+          "mobile_discovery": {
+            "type": "boolean",
+            "default": true
+          },
+          "mobile_devices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "manufacturer": {
+                  "type": "string"
+                },
+                "model": {
+                  "type": "string"
+                },
+                "class": {
+                  "type": "string"
+                },
+                "mobile_app_id": {
+                  "type": "string"
+                },
+                "device_tracker": {
+                  "type": "string"
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "default": true
+                }
+              },
+              "additionalProperties": false
+            },
+            "default": []
+          },
+          "delivery": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "entity_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "device_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "area_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "floor_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "label_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "email": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "phone": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "mobile_app_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "person_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "nullable": true
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Must be null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "default": {}
+          }
+        },
+        "required": [
+          "person"
+        ],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "description"
+        ],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "scenarios": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "expose_state": {
+            "type": "boolean",
+            "default": true
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          "media": {
+            "type": "object",
+            "properties": {
+              "camera_entity_id": {
+                "type": "string"
+              },
+              "camera_delay": {
+                "type": "integer"
+              },
+              "camera_ptz_preset": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "clip_url": {
+                "type": "string"
+              },
+              "snapshot_url": {
+                "type": "string"
+              },
+              "jpeg_opts": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "png_opts": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "action_groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "delivery_selection": {
+            "type": "string"
+          },
+          "delivery": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "target": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "entity_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "device_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "area_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "floor_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "label_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "email": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "phone": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "mobile_app_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "person_id": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "nullable": true
+                },
+                "data": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "object",
+                        "nullable": true,
+                        "description": "Must be null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "nullable": true
+            },
+            "default": {}
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": {}
+    },
+    "transports": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "delivery_defaults": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string"
+              },
+              "debug": {
+                "type": "boolean"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "data": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Must be null"
+                    }
+                  ]
+                }
+              },
+              "target": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "entity_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "device_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "area_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "floor_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "label_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "email": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "phone": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "mobile_app_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "person_id": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              },
+              "target_required": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "always",
+                      "never",
+                      "optional"
+                    ]
+                  }
+                ]
+              },
+              "target_usage": {
+                "type": "string",
+                "enum": [
+                  "no_delivery",
+                  "no_action",
+                  "merge_delivery",
+                  "merge_always",
+                  "fixed"
+                ]
+              },
+              "selection": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "fallback_on_error",
+                    "explicit",
+                    "scenario",
+                    "default",
+                    "fallback"
+                  ]
+                }
+              },
+              "priority": {
+                "type": "array",
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string",
+                      "enum": [
+                        "minimum",
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "selection_rank": {
+                "type": "string",
+                "enum": [
+                  "ANY",
+                  "FIRST",
+                  "LAST"
+                ]
+              },
+              "alias": {
+                "type": "string"
+              },
+              "template": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true
+              },
+              "title": {
+                "type": "string",
+                "nullable": true
+              },
+              "occupancy": {
+                "type": "string",
+                "enum": [
+                  "all_in",
+                  "all_out",
+                  "any_in",
+                  "any_out",
+                  "only_in",
+                  "only_out",
+                  "all",
+                  "none"
+                ],
+                "default": "all"
+              },
+              "conditions": {
+                "type": "array",
+                "items": {
+                  "nullable": true,
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "connection": {
+            "type": "object",
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "port": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535,
+                "default": 587
+              },
+              "encryption": {
+                "type": "string",
+                "enum": [
+                  "tls",
+                  "starttls",
+                  "none"
+                ],
+                "default": "starttls"
+              },
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "timeout": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 5
+              },
+              "verify_ssl": {
+                "type": "boolean",
+                "default": true
+              }
+            },
+            "required": [
+              "host"
+            ],
+            "additionalProperties": false
+          },
+          "device_domain": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_model_include": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_model_exclude": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "device_discovery": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "default": {}
+    },
+    "cameras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "camera": {
+            "type": "string"
+          },
+          "alt_camera": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "alias": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "device_tracker": {
+            "type": "string"
+          },
+          "ptz_camera": {
+            "type": "string"
+          },
+          "ptz_default_preset": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "default": 1
+          },
+          "ptz_delay": {
+            "type": "integer",
+            "default": 10
+          },
+          "ptz_method": {
+            "type": "string",
+            "enum": [
+              "onvif",
+              "frigate"
+            ],
+            "default": "onvif"
+          },
+          "snap_wait": {
+            "type": "integer",
+            "default": 15
+          }
+        },
+        "required": [
+          "camera"
+        ],
+        "additionalProperties": false
+      },
+      "default": []
+    },
+    "snooze": {
+      "type": "object",
+      "properties": {
+        "snooze_time": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3600
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "scenario_control": {
+      "type": "object",
+      "properties": {
+        "refresh": {
+          "type": "boolean",
+          "default": false
+        },
+        "refresh_interval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "template_path": {
+      "default": "supernotify/templates",
+      "type": "string"
+    },
+    "media_path": {
+      "default": "supernotify/media",
+      "type": "string"
+    },
+    "media_url_prefix": {
+      "type": "string",
+      "default": "/supernotify/media"
+    },
+    "archive": {
+      "type": "object",
+      "properties": {
+        "file_path": {
+          "default": "supernotify/archive",
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "file_retention_days": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        },
+        "mqtt_topic": {
+          "type": "string"
+        },
+        "mqtt_qos": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "mqtt_retain": {
+          "type": "boolean",
+          "default": true
+        },
+        "purge_interval": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 60
+        },
+        "event_name": {
+          "type": "string",
+          "default": "supernotification"
+        },
+        "event_selection": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": 0
+        },
+        "diagnostics": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": 16
+        },
+        "debug": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false,
+      "default": {
+        "enabled": false
+      }
+    },
+    "housekeeping": {
+      "type": "object",
+      "properties": {
+        "housekeeping_time": {
+          "default": "00:00:01",
+          "type": "string"
+        },
+        "media_storage_days": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 7
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "dupe_check": {
+      "type": "object",
+      "properties": {
+        "ttl": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 120
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 100
+        },
+        "dupe_policy": {
+          "type": "string",
+          "enum": [
+            "dupe_policy_message_title_same_or_lower_priority",
+            "dupe_policy_message_title_same",
+            "dupe_policy_none"
+          ],
+          "default": "dupe_policy_message_title_same_or_lower_priority"
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "mobile_discovery": {
+      "type": "boolean",
+      "default": true
+    },
+    "recipients_discovery": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "additionalProperties": true,
+  "title": "Full Configuration",
+  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Full_Configuration.json",
+  "description": "Voluptuous validation schema for Full_Configuration",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
