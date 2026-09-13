@@ -101,7 +101,9 @@ from .const import (
     CONF_EXPOSE_STATE,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
+    CONF_INCLUSION,
     CONF_LINKS,
+    CONF_LOAD,
     CONF_MANUFACTURER,
     CONF_MEDIA,
     CONF_MEDIA_PATH,
@@ -146,6 +148,7 @@ from .const import (
     CONF_URI,
     CONF_VOLUME,
     DELIVERY_SELECTION_VALUES,
+    INCLUSION_VALUES,
     OCCUPANCY_ALL,
     OCCUPANCY_VALUES,
     OPTION_CHIME_ALIASES,
@@ -157,7 +160,6 @@ from .const import (
     RESERVED_DATA_KEYS,
     RESERVED_SCENARIO_NAMES,
     SCENARIO_STATE_REFRESH_DEFAULT,
-    SELECTION_VALUES,
     SNAP_WAIT_DEFAULT,
     TARGET_REQUIRE_ALWAYS,
     TARGET_REQUIRE_NEVER,
@@ -318,7 +320,7 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         TARGET_USE_MERGE_ALWAYS,
         TARGET_USE_FIXED,
     ]),
-    vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
+    vol.Optional(CONF_INCLUSION): vol.All(cv.ensure_list, [vol.In(INCLUSION_VALUES)]),
     vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys())))]),
     vol.Optional(CONF_SELECTION_RANK): vol.In([
         SelectionRank.ANY,
@@ -347,6 +349,7 @@ def _migrate_condition(config: dict) -> dict:
 
 DELIVERY_SCHEMA = vol.All(
     _migrate_condition,
+    cv.deprecated(key=CONF_SELECTION, replacement_key=CONF_INCLUSION),
     DELIVERY_CONFIG_SCHEMA.extend({
         vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
         vol.Optional(CONF_ENABLED): cv.boolean,
@@ -370,8 +373,11 @@ TRANSPORT_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEVICE_MODEL_EXCLUDE),  # deprecated v1.9.0
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_LOAD, default=True): cv.boolean,
         vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
+        vol.Optional(CONF_DELIVERY_DEFAULTS): vol.All(
+            cv.deprecated(key=CONF_SELECTION, replacement_key=CONF_INCLUSION), DELIVERY_CONFIG_SCHEMA
+        ),
         # only meaningful for transports (eg smtp) that own their own network connection
         vol.Optional(CONF_CONNECTION): CONNECTION_SCHEMA,
         # deprecated, replaced by options usage

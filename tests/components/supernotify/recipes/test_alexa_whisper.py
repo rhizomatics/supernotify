@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers import entity_registry as er
+
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
 from tests.components.supernotify.hass_setup_lib import TestingContext
@@ -12,6 +14,10 @@ if TYPE_CHECKING:
 
 async def test_alexa_whispering(hass: HomeAssistant):
     """https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/"""
+    # Pretend there's an Alexa Devices integration entity called kitchen_alexa_speak
+    er.async_get(hass).async_get_or_create(
+        "notify", "alexa_device", "kitchen_echo_unique_id", suggested_object_id="kitchen_alexa_speak"
+    )
     ctx = TestingContext(
         homeassistant=hass,
         yaml="""

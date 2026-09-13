@@ -38,7 +38,6 @@ from homeassistant.const import ATTR_DEVICE_ID
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
-    SELECTION_EXPLICIT,
     TRANSPORT_NTFY,
 )
 from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
@@ -123,17 +122,14 @@ class NtfyTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "ntfy.publish"
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data(HA_NTFY_DOMAIN) is None:
             return None
-        # ntfy_device_id has no positively-identifiable mapping to a recipient/entity, so
-        # don't fire this on every notification - require it to be selected explicitly
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY ntfy %s", envelope.message)

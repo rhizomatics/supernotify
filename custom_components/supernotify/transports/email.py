@@ -40,6 +40,7 @@ from custom_components.supernotify.const import (
     CONF_TEMPLATE,
     EMAIL_OPTION_MODE_DIRECT,
     EMAIL_OPTION_MODE_HA_SMTP,
+    INCLUSION_DEFAULT,
     OPTION_DEFAULT_TITLE,
     OPTION_JPEG,
     OPTION_MESSAGE_USAGE,
@@ -218,12 +219,32 @@ class EmailTransport(Transport):
         return action is not None or bool(self.host and self.sender)
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        delivery_config: DeliveryConfig = self.delivery_defaults
+        # always discover the native action, even if direct sending wins by default below -
+        # a specific delivery can still override OPTION_MODE back to 'ha_smtp' at merge
+        # time, and needs an action already sitting in these transport defaults to inherit
         action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if action:
-            delivery_config: DeliveryConfig = self.delivery_defaults
             delivery_config.action = action
+        if (
+            delivery_config.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
+            and self.host
+            and self.sender
+        ):
+            # usable direct SMTP connection is configured
+            # (explicit `connection:` on this transport, or reused from the
+            # HA smtp integration's own connection details) - auto-configure for that
+            delivery_config.options[OPTION_MODE] = EMAIL_OPTION_MODE_DIRECT
+            return delivery_config
+        if action:
             return delivery_config
         return None
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # email addresses map cleanly to recipients, so it's reasonable to fire on
+        # every notification by default
+        return [INCLUSION_DEFAULT]
 
     @property
     def supported_features(self) -> TransportFeature:
@@ -246,6 +267,7 @@ class EmailTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,

@@ -265,6 +265,10 @@
             "title": "La livraison a une condition invalide",
             "description": "La livraison {delivery} a une condition invalide {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "La livraison n'est plus incluse par défaut",
+            "description": "La livraison {delivery} ne définit pas son propre inclusion, et le transport {transport} n'utilise plus 'default' par défaut - cette livraison ne se déclenchera plus à chaque notification. Ajoutez inclusion: [default] à la livraison si vous souhaitez conserver ce comportement."
+        },
         "legacy_yaml_config": {
             "title": "La configuration YAML de Supernotify doit être déplacée",
             "fix_flow": {

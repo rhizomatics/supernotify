@@ -46,15 +46,16 @@ from .const import (
     CONF_DEVICE_DOMAIN,
     CONF_DEVICE_MODEL_EXCLUDE,
     CONF_DEVICE_MODEL_INCLUDE,
+    CONF_INCLUSION,
     CONF_MESSAGE,
     CONF_OCCUPANCY,
     CONF_PRIORITY,
-    CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
     CONF_TEMPLATE,
     CONF_TITLE,
+    INCLUSION_DEFAULT,
     OCCUPANCY_ALL,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
@@ -64,7 +65,6 @@ from .const import (
     RE_DEVICE_ID,
     SELECT_EXCLUDE,
     SELECT_INCLUDE,
-    SELECTION_DEFAULT,
     TARGET_USE_ON_NO_ACTION_TARGETS,
 )
 from .schema import SelectionRank, phone
@@ -89,6 +89,7 @@ class TransportFeature(IntFlag):
     TEMPLATE_FILE = 32
     SNAPSHOT_IMAGE = 64  # transports will be deferred if a camera PTZ is defined
     SPOKEN = 128
+    SOUND = 256  # sirens, chimes, buzzers, all non-spoken audio
 
 
 class Target:
@@ -622,7 +623,7 @@ class DeliveryConfig:
 
             self.data: ConfigType = dict(delivery_defaults.data) if isinstance(delivery_defaults.data, dict) else {}
             self.data.update(conf.get(CONF_DATA, {}))
-            self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
+            self.inclusion: list[str] = conf.get(CONF_INCLUSION, delivery_defaults.inclusion)
             self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
             self.selection_rank: SelectionRank = conf.get(CONF_SELECTION_RANK, delivery_defaults.selection_rank)
             self.options: ConfigType = conf.get(CONF_OPTIONS, {})
@@ -645,7 +646,7 @@ class DeliveryConfig:
             self.debug = conf.get(CONF_DEBUG, False)
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})
-            self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
+            self.inclusion = conf.get(CONF_INCLUSION, [INCLUSION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, list(PRIORITY_VALUES.keys()))
             self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
             self.alias = conf.get(CONF_ALIAS)
@@ -661,7 +662,7 @@ class DeliveryConfig:
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_DATA: self.data,
-            CONF_SELECTION: self.selection,
+            CONF_INCLUSION: self.inclusion,
             CONF_PRIORITY: self.priority,
             CONF_SELECTION_RANK: str(self.selection_rank),
             CONF_TARGET_REQUIRED: str(self.target_required),

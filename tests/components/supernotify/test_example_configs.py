@@ -16,12 +16,17 @@ from homeassistant.setup import async_setup_component
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_NOTIFY,
-    CONF_SELECTION,
     CONF_TRANSPORT,
-    SELECTION_DEFAULT,
+    INCLUSION_DEFAULT,
+    INCLUSION_EXPLICIT,
+    TRANSPORT_ALEXA,
+    TRANSPORT_EMAIL,
+    TRANSPORT_HTML5,
     TRANSPORT_MOBILE_PUSH,
     TRANSPORT_NOTIFY_ENTITY,
+    TRANSPORT_SMS,
 )
 from custom_components.supernotify.repairs import ISSUE_ID
 
@@ -36,6 +41,18 @@ examples = [str(p.name) for p in pathlib.Path(EXAMPLES_ROOT).iterdir() if p.name
 # migration fixture. Should only exercise the legacy shim (notify.py's async_get_service), not
 # a real service.
 LEGACY_SHAPE_EXAMPLES = {"unmigrated.yaml"}
+
+# transports whose Transport.inclusion_mode defaults to INCLUSION_DEFAULT - a delivery for
+# one of these that doesn't set its own `inclusion:` inherits that, everything else inherits
+# INCLUSION_EXPLICIT (see Transport.inclusion_mode/Delivery.initialize's repair warning)
+DEFAULT_INCLUSION_TRANSPORTS = {
+    TRANSPORT_EMAIL,
+    TRANSPORT_ALEXA,
+    TRANSPORT_MOBILE_PUSH,
+    TRANSPORT_NOTIFY_ENTITY,
+    TRANSPORT_SMS,
+    TRANSPORT_HTML5,
+}
 
 
 @pytest.mark.parametrize("config_name", examples)
@@ -63,8 +80,8 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
     assert hass.services.has_service(NOTIFY_DOMAIN, service_name)
     deliveries = await hass.services.async_call(DOMAIN, "enquire_implicit_deliveries", blocking=True, return_response=True)
     expected_defaults: dict[str, list[str]] = {
-        TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"],
-        TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
+        TRANSPORT_NOTIFY_ENTITY: ["notify_entity"],
+        TRANSPORT_MOBILE_PUSH: ["mobile_push"],
     }
     optional_defaults: dict[str, list[str]] = {}
 
@@ -74,7 +91,10 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         if dc.get(CONF_ENABLED, True):
             configured.setdefault(dc[CONF_TRANSPORT], [])
             configured[dc[CONF_TRANSPORT]].append(d)
-            if SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
+            inherited_inclusion = (
+                [INCLUSION_DEFAULT] if dc[CONF_TRANSPORT] in DEFAULT_INCLUSION_TRANSPORTS else [INCLUSION_EXPLICIT]
+            )
+            if INCLUSION_DEFAULT in dc.get(CONF_INCLUSION, inherited_inclusion):
                 expected.setdefault(dc[CONF_TRANSPORT], [])
                 expected[dc[CONF_TRANSPORT]].append(d)
     for tname, tdef in expected_defaults.items():

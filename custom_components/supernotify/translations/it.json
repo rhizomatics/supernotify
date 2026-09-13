@@ -265,6 +265,10 @@
             "title": "La Consegna Ha una Condizione Non Valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "La Consegna Non È Più Inclusa Per Impostazione Predefinita",
+            "description": "La consegna {delivery} non imposta un proprio inclusion, e il trasporto {transport} non usa più 'default' come predefinito - questa consegna non verrà più attivata su ogni notifica. Aggiungi inclusion: [default] alla consegna se desideri mantenere questo comportamento."
+        },
         "legacy_yaml_config": {
             "title": "La configurazione YAML di Supernotify deve essere spostata",
             "fix_flow": {

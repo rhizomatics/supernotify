@@ -43,10 +43,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.notify.const import ATTR_DATA
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import (
-    ATTR_MEDIA_SNAPSHOT_URL,
-    TRANSPORT_GOTIFY,
-)
+from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL, TRANSPORT_GOTIFY
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
@@ -116,6 +113,7 @@ class GotifyTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.inclusion = self.inclusion_mode
         # No static default action - auto_configure() discovers it, or a manually configured
         # delivery can set action: notify.<name> directly
         return config
@@ -123,9 +121,8 @@ class GotifyTransport(Transport):
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action: str | None = hass_api.find_service("notify", HA_GOTIFY_MODULE)
         if action:
-            delivery_config: DeliveryConfig = self.delivery_defaults
-            delivery_config.action = action
-            return delivery_config
+            self.delivery_defaults.action = action
+            return self.delivery_defaults
         return None
 
     def validate_action(self, action: str | None) -> bool:

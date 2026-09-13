@@ -51,7 +51,7 @@ delivery:
       - "123456789012345678"
     data:
       discord_priority_prefix: true
-    selection: explicit
+    inclusion: explicit
 ```
 
 For camera snapshots (`discord_attach_image`) the `discord` integration checks local paths

@@ -61,7 +61,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import SELECTION_EXPLICIT, TRANSPORT_LAMETRIC
+from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
@@ -146,16 +146,13 @@ class LaMetricTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data(HA_LAMETRIC_DOMAIN) is None:
             return None
-        # device_id has no positively-identifiable mapping to a recipient/entity, so don't
-        # fire this on every notification - require it to be selected explicitly
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+        return self.delivery_defaults
 
     def validate_action(self, action: str | None) -> bool:
         # No external action required - transport uses lametric.message / lametric.chart directly

@@ -21,15 +21,18 @@ Path in upstream repo:
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from custom_components.supernotify.const import (
+    RE_NOTIFY_ENTITY_ID,
+)
 from custom_components.supernotify.model import TargetRequired, TransportFeature
 from custom_components.supernotify.transports.html5 import (
-    _HTML5_TARGET_RE,
     _URGENCY_BY_PRIORITY,
     HTML5Transport,
 )
@@ -156,7 +159,7 @@ def test_transport_name() -> None:
     ],
 )
 def test_target_regex_valid(target: str) -> None:
-    assert _HTML5_TARGET_RE.match(target)
+    assert re.match(RE_NOTIFY_ENTITY_ID, target)
 
 
 @pytest.mark.parametrize(
@@ -171,38 +174,7 @@ def test_target_regex_valid(target: str) -> None:
     ],
 )
 def test_target_regex_invalid(target: str) -> None:
-    assert not _HTML5_TARGET_RE.match(target)
-
-
-def test_select_targets_filters_and_dedupes() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope(targets=[BROWSER_1, "bogus", BROWSER_2, BROWSER_1, "media_player.tv"])
-    assert uut.select_targets(envelope) == [BROWSER_1, BROWSER_2]
-
-
-def test_select_targets_non_string_skipped() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope(targets=[12345, None, BROWSER_1])
-    assert uut.select_targets(envelope) == [BROWSER_1]
-
-
-def test_select_targets_no_target_object() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope()
-    envelope.target = None
-    assert uut.select_targets(envelope) == []
-
-
-@pytest.mark.asyncio
-async def test_deliver_no_valid_targets_fails() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope(targets=["bogus", "media_player.tv"])
-
-    result = await uut.deliver(envelope)
-
-    assert result is False
-    uut.record_error.assert_called_once()
-    uut.call_action.assert_not_awaited()
+    assert not re.match(RE_NOTIFY_ENTITY_ID, target)
 
 
 @pytest.mark.asyncio
@@ -219,8 +191,10 @@ async def test_deliver_empty_target_list_fails() -> None:
 
 @pytest.mark.asyncio
 async def test_deliver_targets_forwarded_as_entity_ids() -> None:
+    # deliver() trusts the envelope's targets are already valid notify.* entities -
+    # that filtering happens upstream in Delivery.select_targets()
     uut = _make_transport()
-    envelope = _make_envelope(targets=["bogus", BROWSER_1, BROWSER_2])
+    envelope = _make_envelope(targets=[BROWSER_1, BROWSER_2])
 
     result = await uut.deliver(envelope)
 

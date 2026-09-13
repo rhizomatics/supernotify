@@ -30,6 +30,7 @@ from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
+    INCLUSION_EXPLICIT,
 )
 from .model import DeliveryConfig, SuppressionReason
 
@@ -91,6 +92,21 @@ class Transport:
     @property
     def default_config(self) -> TransportConfig:
         return TransportConfig()
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        """The `inclusion` an auto-configured delivery for this transport should use.
+
+        Explicit-only by default: most transports need a chat_id/channel/device_id the
+        notification author must supply, have targets too opaque or ambiguous to map to
+        a recipient/entity, or a channel too intrusive to fire on every notification.
+        Override to return `[INCLUSION_DEFAULT]` for the few transports that can
+        reasonably fire on every notification out of the box (e.g. email, mobile_push).
+
+        Pulled out as a separate property so can be reported in the Transport Configuration
+        section of the Developer documentation
+        """
+        return [INCLUSION_EXPLICIT]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return None

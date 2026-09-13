@@ -28,7 +28,7 @@ Tested on Home Assistant 2026.3.4 with `telegram_bot` platform: polling
 delivery:
   telegram_home:
     transport: telegram
-    selection: default
+    inclusion: default
     data:
       telegram_chat_id: 123456789
 ```
@@ -37,7 +37,7 @@ delivery:
 delivery:
   telegram_security:
     transport: telegram
-    selection: default
+    inclusion: default
     data:
       telegram_chat_id: 123456789
       telegram_attach_image: true
@@ -48,7 +48,7 @@ delivery:
 delivery:
   telegram_alarms:
     transport: telegram
-    selection: scenario
+    inclusion: scenario
     data:
       telegram_chat_id: 123456789
       telegram_attach_image: true

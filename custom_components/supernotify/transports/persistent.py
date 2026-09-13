@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.const import (
     ATTR_NOTIFICATION_ID,
-    SELECTION_EXPLICIT,
     TRANSPORT_PERSISTENT,
 )
 from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
@@ -33,14 +32,13 @@ class PersistentTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "persistent_notification.create"
         config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         # persistent_notification is always available in HA core, no integration to discover -
         # but a UI popup on every single notification would be intrusive, so require opt-in
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data = envelope.data or {}

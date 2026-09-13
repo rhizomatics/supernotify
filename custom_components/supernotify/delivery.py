@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.group.const import DOMAIN as HA_GROUP_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_FRIENDLY_NAME,
@@ -28,14 +29,19 @@ from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
     CONF_DATA,
+    CONF_INCLUSION,
+    CONF_LOAD,
     CONF_MESSAGE,
     CONF_OCCUPANCY,
-    CONF_SELECTION,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
     CONF_TEMPLATE,
     CONF_TITLE,
     CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
+    INCLUSION_EXPLICIT,
+    INCLUSION_FALLBACK,
+    INCLUSION_FALLBACK_ON_ERROR,
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
     OPTION_DATA_KEYS_SELECT,
@@ -48,13 +54,11 @@ from .const import (
     OPTION_DEVICE_OS_SELECT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
+    OPTION_TARGET_PLATFORM_SELECT,
     OPTION_TARGET_SELECT,
     RESERVED_DELIVERY_NAMES,
     SELECT_EXCLUDE,
     SELECT_INCLUDE,
-    SELECTION_DEFAULT,
-    SELECTION_FALLBACK,
-    SELECTION_FALLBACK_ON_ERROR,
 )
 
 if TYPE_CHECKING:
@@ -75,6 +79,7 @@ class Delivery(DeliveryConfig):
         conf = conf or {}
         self.name: str = name
         self.transport: Transport = transport
+        self._raw_conf: ConfigType = conf
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
         super().__init__(conf, delivery_defaults=transport_defaults)
         self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
@@ -84,10 +89,27 @@ class Delivery(DeliveryConfig):
             self.target_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_SELECT))
         else:
             self.target_selector = None
+        if self.options.get(OPTION_TARGET_PLATFORM_SELECT):
+            self.platform_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_PLATFORM_SELECT))
+        else:
+            self.platform_selector = None
         self.upgrade_deprecations(conf)
 
     async def initialize(self, context: Context) -> bool:
         errors = 0
+        if CONF_INCLUSION not in self._raw_conf and INCLUSION_DEFAULT not in self.inclusion:
+            _LOGGER.warning(
+                "SUPERNOTIFY Delivery %s has no explicit inclusion, but transport %s no longer defaults to "
+                "'default' - it will not fire implicitly",
+                self.name,
+                self.transport.name,
+            )
+            context.hass_api.raise_issue(
+                f"delivery_{self.name}_lost_implicit_inclusion",
+                issue_key="delivery_lost_implicit_inclusion",
+                issue_map={"delivery": self.name, "transport": self.transport.name},
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+            )
         if self.name in RESERVED_DELIVERY_NAMES:
             _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", self.name)
             context.hass_api.raise_issue(
@@ -184,12 +206,25 @@ class Delivery(DeliveryConfig):
 
                 _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")
 
-    def select_targets(self, target: Target) -> Target:
+    def select_targets(self, target: Target, hass_api: HomeAssistantAPI | None = None) -> Target:
         def selected(category: str, targets: list[str]) -> list[str]:
             if OPTION_TARGET_CATEGORIES in self.options and category not in self.options[OPTION_TARGET_CATEGORIES]:
                 return []
+            if self.target_selector and self.platform_selector and hass_api:
+                # a target must satisfy both - except an HA group, which is exempted from
+                # the platform check entirely: group membership/expansion isn't handled
+                # here yet (only chime.py does that), and a group's registry platform is
+                # unreliable anyway (YAML-defined vs UI-defined groups differ)
+                return [
+                    t
+                    for t in targets
+                    if t.split(".", 1)[0] == HA_GROUP_DOMAIN
+                    or (self.target_selector.match(t) and self.platform_selector.match(hass_api.platform_for_entity(t)))
+                ]
             if self.target_selector:
-                return [t for t in targets if self.target_selector.match(t)]
+                targets = [t for t in targets if self.target_selector.match(t)]
+            if self.platform_selector and hass_api:
+                targets = [t for t in targets if self.platform_selector.match(hass_api.platform_for_entity(t))]
             return targets
 
         filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
@@ -251,7 +286,7 @@ class Delivery(DeliveryConfig):
             CONF_TRANSPORT: self.transport.name,
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
-            CONF_SELECTION: self.selection,
+            CONF_INCLUSION: self.inclusion,
             CONF_TARGET: self.target,
             CONF_TARGET_REQUIRED: self.target_required,
             CONF_TARGET_USAGE: self.target_usage,
@@ -359,15 +394,15 @@ class DeliveryRegistry:
     def initialize_deliveries(self) -> None:
         for delivery in self._deliveries.values():
             if delivery.enabled:
-                if SELECTION_FALLBACK_ON_ERROR in delivery.selection:
+                if INCLUSION_FALLBACK_ON_ERROR in delivery.inclusion:
                     self._fallback_on_error.append(delivery)
-                if SELECTION_FALLBACK in delivery.selection:
+                if INCLUSION_FALLBACK in delivery.inclusion:
                     self._fallback_by_default.append(delivery)
-                if SELECTION_DEFAULT in delivery.selection:
+                if INCLUSION_DEFAULT in delivery.inclusion:
                     self._implicit_deliveries.append(delivery)
-                # delivery.selection can also be SELECTION_BY_SCENARIO
-                # or SELECTION_EXPLICIT to have it only used where asked for
-                # default is SELECTION_DEFAULT so every delivery used implicitly
+                # delivery.inclusion can also be INCLUSION_BY_SCENARIO
+                # or INCLUSION_EXPLICIT to have it only used where asked for
+                # default is INCLUSION_DEFAULT so every delivery used implicitly
 
     def enable(self, delivery_name: str) -> bool:
         delivery = self._deliveries.get(delivery_name)
@@ -390,11 +425,13 @@ class DeliveryRegistry:
         return dict(self._deliveries.items())
 
     def resolve_name(self, name: str) -> str:
-        """Backward compatibility for the original 'DEFAULT_x' auto-configured naming:
-        a bare transport name (e.g. 'email') resolves to its 'DEFAULT_email' delivery
-        when that exists and no delivery is named 'email' itself directly."""
-        if name not in self._deliveries and f"DEFAULT_{name}" in self._deliveries:
-            return f"DEFAULT_{name}"
+        """Backward compatibility for the original 'DEFAULT_x' auto-configured naming,
+        long since replaced by plain transport names: a reference to the old 'DEFAULT_x'
+        form resolves to the current 'x' delivery, if that's what actually exists now."""
+        if name not in self._deliveries and name.startswith("DEFAULT_"):
+            plain_name = name.removeprefix("DEFAULT_")
+            if plain_name in self._deliveries:
+                return plain_name
         return name
 
     @property
@@ -415,7 +452,7 @@ class DeliveryRegistry:
 
     @property
     def implicit_deliveries(self) -> list[Delivery]:
-        """Deliveries switched on all the time for implicit selection"""
+        """Deliveries switched on all the time via implicit inclusion"""
         return [d for d in self._implicit_deliveries if d.enabled]
 
     async def initialize_transports(self, context: Context) -> None:
@@ -428,6 +465,9 @@ class DeliveryRegistry:
         if self._transport_types:
             for transport_class, kwargs in self._transport_types.items():
                 transport_config: ConfigType = self._transport_configs.get(transport_class.name, {})
+                if not transport_config.get(CONF_LOAD, True):
+                    # not just disabled: excluded entirely, so no deliveries or entities either
+                    continue
                 transport = transport_class(context, transport_config, **kwargs)
                 self.transports[transport_class.name] = transport
                 await transport.initialize()
@@ -469,15 +509,14 @@ class DeliveryRegistry:
         )
 
     async def autogenerate_deliveries(self, context: Context) -> None:
-        # If the config has no deliveries, check if a default delivery should be auto-generated
-        # where there is a empty config, supernotify can at least handle NotifyEntities sensibly
+        # Every loaded, viable transport gets an auto-configured delivery, whether or not
+        # explicit deliveries also exist for it - so supernotify can at least handle
+        # notifications sensibly out of the box even with an otherwise empty config
 
         autogenerated: dict[str, Delivery] = {}
         for transport in self.transports.values():
-            if any(dc.get(CONF_TRANSPORT) == transport.name for dc in self._config_deliveries.values()):
-                # don't auto-configure if there's an explicit delivery configured for this transport
-                continue
-
+            # auto-configure regardless of any explicit delivery already configured for this
+            # transport - the two coexist, only a direct name collision (below) is skipped
             transport_definition: DeliveryConfig | None = transport.auto_configure(context.hass_api)
             if transport_definition:
                 _LOGGER.debug(
@@ -487,21 +526,46 @@ class DeliveryRegistry:
                 )
                 # belt and braces transport checking its own discovery
                 if transport.validate_action(transport_definition.action):
-                    if SELECTION_DEFAULT in transport_definition.selection:
-                        # implicitly selected on every notification, so keep it visibly distinct
-                        generated_name = f"DEFAULT_{transport.name}"
-                    else:
-                        # explicit-selection only (e.g. needs a chat_id/channel/device_id the
-                        # notification author must supply) - name it plainly so it's the obvious
-                        # thing to reference by name in a delivery: list
-                        generated_name = transport.name
-                    if generated_name in self._deliveries:
-                        _LOGGER.warning(
-                            "SUPERNOTIFY Skipping auto-configured delivery for %s, name %s already in use",
-                            transport.name,
-                            generated_name,
-                        )
+                    # every transport is available as a delivery of the same name - no
+                    # 'DEFAULT_x' prefix (that's legacy naming, see resolve_name())
+                    generated_name = transport.name
+                    existing_delivery = self._deliveries.get(generated_name)
+                    if existing_delivery is not None:
+                        if existing_delivery.transport is transport:
+                            # the explicit delivery already configured under this exact name
+                            # IS this transport's own delivery - rebuild it now that discovery
+                            # has updated transport.delivery_defaults, so its explicit config
+                            # overrides the auto-configured defaults rather than being skipped;
+                            # still only one Delivery object results
+                            merged_delivery = Delivery(
+                                generated_name, self._config_deliveries.get(generated_name, {}), transport
+                            )
+                            await merged_delivery.initialize(context)
+                            autogenerated[merged_delivery.name] = merged_delivery
+                            _LOGGER.info(
+                                "SUPERNOTIFY Merged auto-configured defaults into explicit delivery %s for %s",
+                                generated_name,
+                                transport.name,
+                            )
+                        else:
+                            _LOGGER.warning(
+                                "SUPERNOTIFY Skipping auto-configured delivery for %s, name %s already in use",
+                                transport.name,
+                                generated_name,
+                            )
                         continue
+
+                    # a *different*-named explicit delivery already covers implicit
+                    # inclusion for this transport - don't also fire this one on every
+                    # notification, just leave it addressable by transport name
+                    has_explicit_delivery = any(
+                        dc.get(CONF_TRANSPORT) == transport.name for dc in self._config_deliveries.values()
+                    )
+                    if has_explicit_delivery and INCLUSION_DEFAULT in transport_definition.inclusion:
+                        transport_definition.inclusion = [s for s in transport_definition.inclusion if s != INCLUSION_DEFAULT]
+                        if INCLUSION_EXPLICIT not in transport_definition.inclusion:
+                            transport_definition.inclusion.append(INCLUSION_EXPLICIT)
+
                     generated_delivery = Delivery(generated_name, transport_definition.as_dict(), transport)
                     await generated_delivery.initialize(context)
                     generated_delivery.enabled = transport.enabled

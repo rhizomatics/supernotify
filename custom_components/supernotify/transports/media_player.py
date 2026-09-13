@@ -13,7 +13,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
-    SELECTION_EXPLICIT,
+    RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_MEDIA,
 )
 from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TransportConfig, TransportFeature
@@ -22,8 +22,6 @@ from custom_components.supernotify.transport import Transport
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
     from custom_components.supernotify.hass_api import HomeAssistantAPI
-
-RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,27 +34,23 @@ class MediaPlayerTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature.IMAGES | TransportFeature.VIDEO
+        return TransportFeature.IMAGES | TransportFeature.VIDEO | TransportFeature.SOUND
 
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "media_player.play_media"
         config.delivery_defaults.options = {
-            OPTION_TARGET_SELECT: [RE_VALID_MEDIA_PLAYER],
+            OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if not hass_api.entity_ids_for_domain("media_player"):
             return None
-        # a media_player target is required per notification, not positively identifiable
-        # ahead of time, so don't fire this on every notification - require it to be
-        # selected explicitly
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

@@ -42,7 +42,7 @@ delivery:
       - media_player.kodi_living_room
     data:
       kodi_displaytime: 8000
-    selection: explicit
+    inclusion: explicit
 ```
 
 The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.10:8123`) rather

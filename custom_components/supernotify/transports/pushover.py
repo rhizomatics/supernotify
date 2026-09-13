@@ -106,6 +106,7 @@ class PushoverTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.inclusion = self.inclusion_mode
         # No static default action - auto_configure() discovers it, or a manually configured
         # delivery can set action: notify.<name> directly
         return config
@@ -113,9 +114,8 @@ class PushoverTransport(Transport):
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action: str | None = hass_api.find_service("notify", "homeassistant.components.pushover.notify")
         if action:
-            delivery_config: DeliveryConfig = self.delivery_defaults
-            delivery_config.action = action
-            return delivery_config
+            self.delivery_defaults.action = action
+            return self.delivery_defaults
         return None
 
     def validate_action(self, action: str | None) -> bool:

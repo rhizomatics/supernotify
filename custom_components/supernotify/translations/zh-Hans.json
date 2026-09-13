@@ -265,6 +265,10 @@
             "title": "推送的条件无效",
             "description": "推送 {delivery} 包含无效条件 {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "推送不再默认包含",
+            "description": "推送 {delivery} 未设置自己的 inclusion,且传输方式 {transport} 不再默认使用 'default' - 该推送将不再在每次通知时触发。如果仍需要此行为,请在推送中添加 inclusion: [default]。"
+        },
         "legacy_yaml_config": {
             "title": "Supernotify 的 YAML 配置需要迁移",
             "fix_flow": {

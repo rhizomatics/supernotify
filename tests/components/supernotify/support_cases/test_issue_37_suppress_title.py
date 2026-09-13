@@ -24,6 +24,7 @@ async def support_case_fixture(hass: HomeAssistant):
       tts:
         transport: generic
         action: tts.cloud_say
+        inclusion: default
         options:
           data_keys_exclude_re: title
     transport:

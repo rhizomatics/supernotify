@@ -13,13 +13,7 @@ tags:
 
 ## Discovery
 
-**Default delivery, unless Alexa Media Player is also available.** If the Alexa Devices
-integration is already configured and no `alexa_devices` delivery is defined, an
-`alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` /
-`notify.*_announce` entities present. If the [Alexa Media Player](alexa_media_player.md) HACS
-integration is *also* detected, it backs off to explicit-selection only
-(`DEFAULT_alexa_devices` is not generated) so the same physical Echo devices aren't
-double-notified by both integrations — otherwise it fires on every notification by default.
+**Default delivery, unless Alexa Media Player is also available.** If the Alexa Devices integration is already configured and no `alexa_devices` delivery is defined, an `alexa_devices` delivery is generated automatically, targeting any matching `notify.*_speak` / `notify.*_announce` entities present. If the [Alexa Media Player](alexa_media_player.md) HACS integration is *also* detected, it backs off to explicit-selection only (`DEFAULT_alexa_devices` is not generated) so the same physical Echo devices aren't double-notified by both integrations — otherwise it fires on every notification by default.
 
 ## Example
 

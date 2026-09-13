@@ -217,11 +217,9 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
     )
 
 
-async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass)
-
+async def _setup_ha_smtp_notify(hass: HomeAssistant, extra_config: dict | None = None) -> None:
     config = {
-        "notify_events": {"token": "ABC"},
+        **(extra_config or {}),
         "notify": [
             {
                 "name": "mailservice",
@@ -231,10 +229,10 @@ async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
                 "sender": "hass@localhost.org",
                 "recipient": ["tester@localhost.org"],
             },
-            {"name": "eventer", "platform": "notify_events"},
         ],
     }
-    assert await async_setup_component(hass, "notify_events", config)
+    if extra_config:
+        assert await async_setup_component(hass, next(iter(extra_config)), config)
 
     with ExitStack() as stack:
         if importlib.util.find_spec("homeassistant.components.smtp.config_flow"):
@@ -246,12 +244,61 @@ async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
             stack.enter_context(patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"))
         assert await async_setup_component(hass, "notify", config)
         await hass.async_block_till_done()
-
     await hass.async_block_till_done()
 
+
+async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
+    """With the HA smtp integration present and no explicit OPTION_MODE, the
+    auto-configured delivery prefers direct sending (reusing the integration's own
+    connection details) over the native notify.smtp action - the legacy notify-platform
+    action path only wins if a delivery explicitly asks for EMAIL_OPTION_MODE_HA_SMTP."""
+    ctx = TestingContext(homeassistant=hass)
+    await _setup_ha_smtp_notify(hass, {"notify_events": {"token": "ABC"}})
+
     await ctx.test_initialize()
-    assert "DEFAULT_email" in ctx.delivery_registry.deliveries
-    assert ctx.delivery_registry.deliveries["DEFAULT_email"].action == "notify.mailservice"
+    assert "email" in ctx.delivery_registry.deliveries
+    delivery = ctx.delivery_registry.deliveries["email"]
+    assert delivery.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+    assert uut.host == "localhost"
+    assert uut.sender == "hass@localhost.org"
+
+
+async def test_discover_smtp_integration_explicit_ha_smtp_mode(hass: HomeAssistant) -> None:
+    """A delivery that explicitly asks for EMAIL_OPTION_MODE_HA_SMTP still gets the
+    discovered native notify.smtp action, even though a direct connection is also
+    available (reused from the HA smtp integration)."""
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={
+            "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_HA_SMTP}},
+        },
+    )
+    await _setup_ha_smtp_notify(hass)
+
+    await ctx.test_initialize()
+    assert ctx.delivery_registry.deliveries["email"].action == "notify.mailservice"
+
+
+async def test_explicit_delivery_named_like_transport_absorbs_discovery(hass: HomeAssistant) -> None:
+    """An explicit delivery literally named after its transport doesn't need its own
+    connection details - it's merged with (and overrides) the auto-configured/discovered
+    defaults, rather than being skipped in favour of a separate DEFAULT_email delivery."""
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={"email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_TEMPLATE: "minimal_test.html.j2"}},
+    )
+    await _setup_ha_smtp_notify(hass)
+
+    await ctx.test_initialize()
+    # merged into the explicit "email" delivery - no separate DEFAULT_email is created
+    assert "DEFAULT_email" not in ctx.delivery_registry.deliveries
+    assert "email" in ctx.delivery_registry.deliveries
+    merged = ctx.delivery_registry.deliveries["email"]
+    # discovered direct-mode connection fills the gap the explicit config left open
+    assert merged.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+    # explicit config is still honoured
+    assert merged.template == "minimal_test.html.j2"
 
 
 async def test_discover_no_smtp_integration(hass: HomeAssistant) -> None:
@@ -368,6 +415,20 @@ async def test_email_auto_configure_no_smtp(hass: HomeAssistant) -> None:
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
     result = uut.auto_configure(ctx.hass_api)
     assert result is None
+
+
+async def test_email_auto_configure_direct_connection_no_ha_smtp(hass: HomeAssistant) -> None:
+    """No HA smtp notify service is registered, but a direct SMTP connection is
+    configured on the transport - auto_configure() should still produce a usable
+    delivery, sending direct rather than via a (non-existent) HA notify action."""
+    ctx = TestingContext(homeassistant=hass, transports={TRANSPORT_EMAIL: SMTP_TRANSPORT_CONFIG})
+    await ctx.test_initialize()
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+    result = uut.auto_configure(ctx.hass_api)
+    assert result is not None
+    assert result.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+    assert "email" in ctx.delivery_registry.deliveries
+    assert ctx.delivery_registry.deliveries["email"].options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
 
 
 async def test_deliver_with_template_and_image_path(hass: HomeAssistant, tmp_aiopath: Path) -> None:

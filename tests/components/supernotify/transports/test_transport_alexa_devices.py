@@ -61,6 +61,18 @@ async def test_notify_alexa_no_targets(mock_hass, unmocked_config) -> None:
 
 
 def test_alexa_transport_selects_targets(mock_hass, unmocked_config) -> None:  # type: ignore
+    """Targets are selected by registry platform (this integration's own notify
+    entities), not by an entity_id naming convention - so a genuine alexa_device entity
+    with no "_speak"/"_announce" suffix is still selected, and another integration's
+    notify entity (e.g. alexa_media_player) is correctly excluded even if named similarly.
+    An HA group target is selected too, since it isn't owned by any platform."""
+    platforms = {
+        "notify.bedroom_echo_announce": "alexa_device",
+        "notify.living_room_echo_2_speak": "alexa_device",
+        "notify.kitchen_echo": "alexa_device",
+        "notify.alexa_media_player_announce": "alexa_media_player",
+    }
+    unmocked_config.hass_api.platform_for_entity = lambda entity_id: platforms.get(entity_id)  # type: ignore
 
     uut = Delivery("unit_testing", {}, AlexaDevicesTransport(unmocked_config, {}))
     assert uut.select_targets(
@@ -71,9 +83,12 @@ def test_alexa_transport_selects_targets(mock_hass, unmocked_config) -> None:  #
             "notify.living_room_echo_2_speak",
             "notify.kitchen_echo",
             "notify.alexa_media_player_announce",
-        ])
+            "group.family_room",
+        ]),
+        unmocked_config.hass_api,
     ).entity_ids == unordered([
         "notify.living_room_echo_2_speak",
         "notify.bedroom_echo_announce",
-        "notify.alexa_media_player_announce",
+        "notify.kitchen_echo",
+        "group.family_room",
     ])

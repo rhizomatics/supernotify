@@ -84,7 +84,7 @@ This example presumes Supernotify configured with this delivery.
 ```yaml title="Supernotify configuration snippet"
 lametric_test:
   transport: lametric
-  selection: explicit
+  inclusion: explicit
   data:
     device_id: "<lametric-device-uuid>"
     lametric_icon: "i2867"

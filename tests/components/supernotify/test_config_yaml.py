@@ -39,7 +39,12 @@ async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyEn
 
 SIMPLE_CONFIG = {
     "delivery": {
-        "testing": {"transport": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
+        "testing": {
+            "transport": "generic",
+            "target": ["testy.testy"],
+            "action": "notify.send_message",
+            "inclusion": ["default"],
+        },
         "plain_email": {"transport": "email"},
         "chime_person": {"transport": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
     },
@@ -107,7 +112,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     uut = entry.runtime_data
     assert len(uut.context.people_registry.people) == 3
 
-    assert "DEFAULT_notify_entity" in uut.context.delivery_registry.deliveries
+    assert "notify_entity" in uut.context.delivery_registry.deliveries
     assert "html_email" in uut.context.delivery_registry.deliveries
     assert "backup_mail" in uut.context.delivery_registry.deliveries
     assert "backup_mail" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
@@ -130,7 +135,12 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "persistent" in uut.context.delivery_registry.deliveries
     assert "persistent" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    assert len(uut.context.delivery_registry.deliveries) == 16
+    # +4 vs explicit deliveries: "chime", "email", "persistent" and "notify_entity" are all
+    # auto-configured alongside the fixture's own explicitly-named deliveries for those same
+    # transports (e.g. "chime" alongside play_chimes/doorbell_chime_alexa/sleigh_bells, "email"
+    # alongside html_email/backup_mail/direct_mail) - every loadable, viable transport gets its
+    # own auto-configured delivery regardless of what else is explicitly configured for it
+    assert len(uut.context.delivery_registry.deliveries) == 18
 
     # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
     # over from before the reload (both would report True) - actually call it and confirm the
@@ -187,7 +197,7 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
     )
     await hass.async_block_till_done()
 
-    assert_clean_notification(notification, expected_deliveries={"DEFAULT_notify_entity": 1})
+    assert_clean_notification(notification, expected_deliveries={"notify_entity": 1})
 
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
     notification = await hass.services.async_call(
@@ -240,7 +250,7 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_implicit_deliveries", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"mobile_push": ["DEFAULT_mobile_push"], "notify_entity": ["DEFAULT_notify_entity"]}
+    assert response == {"mobile_push": ["mobile_push"], "notify_entity": ["notify_entity"]}
     hass.states.async_set("binary_sensor.supernotify_delivery_testing", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
@@ -249,8 +259,8 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert response == {
         "generic": ["testing"],
-        "mobile_push": ["DEFAULT_mobile_push"],
-        "notify_entity": ["DEFAULT_notify_entity"],
+        "mobile_push": ["mobile_push"],
+        "notify_entity": ["notify_entity"],
     }
 
 

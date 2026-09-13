@@ -23,7 +23,7 @@ async def test_notification_fires_from_event_triggered_automation(
     hass: HomeAssistant, dummy_notify: DummyNotificationService
 ) -> None:
     """An E2E real Home Assistant automation, triggered by an event, calling supernotify.notify"""
-    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy"}}}
+    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy", "inclusion": ["default"]}}}
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     assert await async_setup_component(
         hass,
@@ -134,7 +134,7 @@ async def test_legacy_notification_fires_from_event_triggered_automation(
 ) -> None:
     """A real Home Assistant automation, triggered by an event, calling notify.supernotify -
     the actual path used in practice, rather than a test calling notify.supernotify directly."""
-    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy"}}}
+    config = {"delivery": {"dummy": {"transport": "generic", "action": "notify.dummy", "inclusion": ["default"]}}}
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     assert await async_setup_component(
         hass,

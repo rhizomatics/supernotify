@@ -169,8 +169,7 @@ The list of sounds can be found on the [Alexa API](https://developer.amazon.com/
 
 One oddity of this integration is that although it generates traditional entity IDs for notifying Alexa devices,
 sending a sound ( or command ) requires a long and obscure `device_id` (a 32 character random hexadecimal pseudo-UUID). While you can find these from the *Devices* section of the *Alexa Devices* integration config, or using the *Action*
-feature of *Developer Tools* and switching to yaml mode, by default Supernotify **automatically register** all Alexa devices -
-if you don't want this, switch off `device_discovery` at the transport or delivery level.
+feature of *Developer Tools* and switching to yaml mode, by default Supernotify **automatically register** all Alexa devices - if you don't want this, switch off `device_discovery` at the transport or delivery level.
 
 Sometimes you may end up with odd devices like headphones or firesticks that Alexa knows about but don't make sense for HomeAssistant usage, and also may have duplication if a group has been created inside the Alexa app ( which then appears to Home Assistant as another Alexa device even though its really a group of them. The weird devices can be disabled from the *Alexa Devices* integration config. Within Supernotify, you can use `device_model_select` and `device_manufacturer_select` to control the list - these take a single value, list of values, or `include` and `exclude` mappings, where values are plain strings or regular expressions. Chime transport has a default exclusion for Alexa Groups, specifying either an include or exclude list will switch off defaulting for both values.
 

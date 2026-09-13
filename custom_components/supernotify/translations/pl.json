@@ -265,6 +265,10 @@
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Dostarczenie nie jest już domyślnie uwzględniane",
+            "description": "Dostarczenie {delivery} nie ustawia własnego inclusion, a transport {transport} nie używa już domyślnie 'default' - to dostarczenie nie będzie już uruchamiane przy każdym powiadomieniu. Dodaj inclusion: [default] do dostarczenia, jeśli nadal chcesz zachować to zachowanie."
+        },
         "legacy_yaml_config": {
             "title": "Konfigurację YAML Supernotify trzeba przenieść",
             "fix_flow": {

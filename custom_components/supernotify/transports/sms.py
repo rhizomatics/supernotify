@@ -7,6 +7,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
 
 from custom_components.supernotify.const import (
     ATTR_PHONE,
+    INCLUSION_DEFAULT,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -39,8 +40,15 @@ class SMSTransport(Transport):
         return TransportFeature.MESSAGE | TransportFeature.TITLE
 
     @property
+    def inclusion_mode(self) -> list[str]:
+        # a phone number maps cleanly to a recipient, so it's reasonable to fire on
+        # every notification by default
+        return [INCLUSION_DEFAULT]
+
+    @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: False,

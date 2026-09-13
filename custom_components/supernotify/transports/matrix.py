@@ -46,7 +46,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, SELECTION_EXPLICIT, TRANSPORT_MATRIX
+from custom_components.supernotify.const import ATTR_DATA, TRANSPORT_MATRIX
 from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
@@ -88,6 +88,7 @@ class MatrixTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "matrix.send_message"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     def validate_action(self, action: str | None) -> bool:
@@ -99,11 +100,7 @@ class MatrixTransport(Transport):
         # the bot has connected, so check for it directly
         if not hass_api.has_service("matrix", "send_message"):
             return None
-        # a room ID/alias has no positively-identifiable mapping to a recipient/entity,
-        # so don't fire this on every notification - require it to be selected explicitly
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+        return self.delivery_defaults
 
     def select_rooms(self, envelope: Envelope) -> list[str]:
         """Filter envelope targets down to valid Matrix room IDs or aliases.

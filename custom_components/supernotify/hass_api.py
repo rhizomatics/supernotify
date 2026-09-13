@@ -209,6 +209,23 @@ class HomeAssistantAPI:
     def entity_ids_for_domain(self, domain: str) -> list[str]:
         return self._hass.states.async_entity_ids(domain)
 
+    def platform_for_entity(self, entity_id: str) -> str | None:
+        """The integration that registered this entity (RegistryEntry.platform), if any."""
+        ent_reg = self.entity_registry()
+        reg_entry = ent_reg.async_get(entity_id) if ent_reg else None
+        return reg_entry.platform if reg_entry else None
+
+    def entity_ids_for_platform(self, domain: str, platform: str) -> list[str]:
+        """entity_ids in `domain` (e.g. "notify") registered by a specific integration.
+
+        Reads the entity registry directly (not the state machine), so a freshly
+        registered entity counts even before it has reported a first state.
+        """
+        ent_reg = self.entity_registry()
+        if not ent_reg:
+            return []
+        return [e.entity_id for e in ent_reg.entities.values() if e.domain == domain and e.platform == platform]
+
     async def async_get_camera_image(self, entity_id: str, timeout: int = 10) -> ha_camera.Image | None:
         """Fetch a still image directly from a camera entity, via HA's own camera component API,
         rather than triggering the camera.snapshot service and polling the filesystem for the
