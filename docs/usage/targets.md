@@ -139,6 +139,11 @@ scenarios:
         camera_entity_id: camera.porch
 ```
 
+## Debugging
+
+In the archived JSON, each delivery has an `envelope` with the targets assigned to it.
+There's also a field `uncategorized_targets` that lists ones that couldn't be understood and were ignored, and a field `unassigned_targets` for those that could be categorized but didn't get selected by a delivery.
+
 ## Not All Transports Have Targets
 
 Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](../developer/transports.md)

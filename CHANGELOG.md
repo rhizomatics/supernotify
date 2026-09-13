@@ -25,6 +25,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 
 - A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
 - Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](usage/targets.md)
+- Archive message now has `uncategorized_targets` and `unassigned_targets` to help un debugging delivery issues
 - New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
 - A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
 - An error will be raised logged if there any targets that can't be mapped to a category - this won't stop the rest of the notification working, but will make it visible

@@ -722,6 +722,7 @@ class Notification(ArchivableObject):
             for k in preferred_order
             if k in self.__dict__
         })
+        result["unassigned_targets"] = self._unassigned_targets()
         # all the rest not explicitly excluded
         result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
@@ -943,6 +944,27 @@ class Notification(ArchivableObject):
         if target.has_unknown_targets():
             self.uncategorized_targets.setdefault(delivery.name, [])
             self.uncategorized_targets[delivery.name].extend(target.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY))
+
+    def _unassigned_targets(self) -> dict[str, list[str]]:
+        """Archive-only diagnostic: requested target values with a recognisable category
+
+        (entity_id, email, phone, mobile_app_id, device_id, or an explicit custom category)
+        that never ended up in any envelope across the whole notification - as opposed to
+        `uncategorized_targets`, which tracks values with no recognisable shape at all.
+        Grouped by category, like `uncategorized_targets`, so a gap is easy to place when
+        debugging. Computed here rather than tracked as an instance attribute, since it's
+        only ever needed for the archive.
+        """
+        if not self._target:
+            return {}
+        result: dict[str, list[str]] = {}
+        for category, targets in self._target.direct().targets.items():
+            if category == Target.UNKNOWN_CUSTOM_CATEGORY:
+                continue
+            unassigned = [t for t in targets if t not in self._already_selected.targets.get(category, [])]
+            if unassigned:
+                result[category] = unassigned
+        return result
 
     def all_recipients(self) -> list[Recipient]:
         recipients: list[Recipient] = []

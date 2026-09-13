@@ -189,6 +189,28 @@ async def test_channel_transport_override() -> None:
     assert email_envelope.title is None
 
 
+async def test_unassigned_targets_reported_in_archive() -> None:
+    """A target value with a recognisable shape (phone) that no configured delivery
+
+    declares (plain_email wants email, mobile wants mobile_app_id, chime wants entities/
+    device_id) never lands in any envelope - it should show up as `unassigned_targets`
+    in the archived contents, grouped by category, distinct from `uncategorized_targets`
+    (which is for values with no recognisable shape at all).
+    """
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        recipients=RECIPIENTS,
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", target=["+3294924848"])
+    await uut.initialize()
+    await uut.deliver()
+
+    assert uut.contents()["unassigned_targets"] == {"phone": ["+3294924848"]}
+
+
 async def test_call_transport_records_delivery_exception() -> None:
     ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
     await ctx.test_initialize()
