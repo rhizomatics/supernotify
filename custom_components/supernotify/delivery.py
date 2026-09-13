@@ -3,9 +3,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.group.const import DOMAIN as HA_GROUP_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     CONF_ACTION,
@@ -21,10 +21,10 @@ from homeassistant.const import (
 )
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, SelectionRule, Target
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, EntitySelector, SelectionRule, Target
 
 from . import DOMAIN
-from .common import sanitize
+from .common import ensure_list, sanitize
 from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
@@ -54,7 +54,6 @@ from .const import (
     OPTION_DEVICE_OS_SELECT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
-    OPTION_TARGET_PLATFORM_SELECT,
     OPTION_TARGET_SELECT,
     RESERVED_DELIVERY_NAMES,
     SELECT_EXCLUDE,
@@ -82,6 +81,11 @@ class Delivery(DeliveryConfig):
         self._raw_conf: ConfigType = conf
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
         super().__init__(conf, delivery_defaults=transport_defaults)
+        if self.target is not None:
+            # a value set directly on this delivery's own `target:` is exclusively scoped to
+            # it - unlike a blended notification-level target list - so it's safe to claim an
+            # unqualified value (no shape a validator recognises) for this transport
+            self.target = self.transport.resolve_unqualified_targets(self.target)
         self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
@@ -89,10 +93,6 @@ class Delivery(DeliveryConfig):
             self.target_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_SELECT))
         else:
             self.target_selector = None
-        if self.options.get(OPTION_TARGET_PLATFORM_SELECT):
-            self.platform_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_PLATFORM_SELECT))
-        else:
-            self.platform_selector = None
         self.upgrade_deprecations(conf)
 
     async def initialize(self, context: Context) -> bool:
@@ -207,24 +207,43 @@ class Delivery(DeliveryConfig):
                 _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")
 
     def select_targets(self, target: Target, hass_api: HomeAssistantAPI | None = None) -> Target:
+        declared_categories = self.transport.target_categories
+        plain_categories = {c for c in declared_categories if isinstance(c, str)}
+        entity_selectors = [c for c in declared_categories if isinstance(c, EntitySelector)]
+        configured_categories = ensure_list(self.options.get(OPTION_TARGET_CATEGORIES))
+
         def selected(category: str, targets: list[str]) -> list[str]:
-            if OPTION_TARGET_CATEGORIES in self.options and category not in self.options[OPTION_TARGET_CATEGORIES]:
-                return []
-            if self.target_selector and self.platform_selector and hass_api:
-                # a target must satisfy both - except an HA group, which is exempted from
-                # the platform check entirely: group membership/expansion isn't handled
-                # here yet (only chime.py does that), and a group's registry platform is
-                # unreliable anyway (YAML-defined vs UI-defined groups differ)
-                return [
-                    t
-                    for t in targets
-                    if t.split(".", 1)[0] == HA_GROUP_DOMAIN
-                    or (self.target_selector.match(t) and self.platform_selector.match(hass_api.platform_for_entity(t)))
-                ]
+            # a target category named after this delivery, or after its transport, is always
+            # destined here. The two serve different purposes and both stay available:
+            #  - the TRANSPORT name (`sms:value`) reaches every delivery of that transport, so
+            #    scenario/time/occupancy selection logic can still decide which one actually
+            #    fires - the same as it would for a plain, auto-matched value
+            #  - a specific DELIVERY name (`shortcode_sms:value`) pins the target to just that
+            #    one delivery, for when two deliveries of the same transport must stay distinct
+            #    (e.g. `email` vs `html_email`)
+            if category != self.name and category != self.transport.name:
+                if entity_selectors and category == ATTR_ENTITY_ID:
+                    targets = [
+                        t
+                        for t in targets
+                        if any(
+                            sel.matches(t, hass_api.platform_for_entity(t) if hass_api else None, check_platform=bool(hass_api))
+                            for sel in entity_selectors
+                        )
+                    ]
+                    if not targets:
+                        return []
+                elif plain_categories or configured_categories:
+                    # the transport declares fixed categories, and/or this delivery's own
+                    # config extends/overrides them (e.g. the bring-your-own-categories
+                    # `generic` transport) - anything outside that combined set is rejected
+                    allowed = plain_categories | (set(configured_categories) if configured_categories else set())
+                    if category not in allowed:
+                        return []
+                # else: neither the transport nor this delivery declares any categories at
+                # all (e.g. `generic` with no config) - nothing to restrict against
             if self.target_selector:
                 targets = [t for t in targets if self.target_selector.match(t)]
-            if self.platform_selector and hass_api:
-                targets = [t for t in targets if self.platform_selector.match(hass_api.platform_for_entity(t))]
             return targets
 
         filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)

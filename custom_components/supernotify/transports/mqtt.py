@@ -8,6 +8,7 @@ from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     Target,
     TargetRequired,
     TransportConfig,
@@ -23,8 +24,6 @@ if TYPE_CHECKING:
 
 HA_MQTT_DOMAIN = "mqtt"
 
-RE_VALID_PHONE = r"^(\+\d{1,3})?\s?\(?\d{1,4}\)?[\s.-]?\d{3}[\s.-]?\d{4}$"
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -36,16 +35,27 @@ class MQTTTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature.MESSAGE | TransportFeature.TITLE
+        return TransportFeature.MESSAGE
 
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "mqtt.publish"
-        config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.options = {}
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        # `topic` is a clean, dedicated category name for the mapping form (`target: {topic:
+        # ...}`), distinct from overloading the transport's own name (`target: {mqtt: ...}`,
+        # still handled separately by Delivery.select_targets()). A bare, unqualified
+        # `target: <topic>` set directly on the mqtt delivery block also reaches here - not
+        # via this list, but because it's the sole plain-string entry `Transport.
+        # resolve_unqualified_targets()` falls back to for a delivery-scoped value with no
+        # shape a validator recognises.
+        return [ATTR_TOPIC]
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
@@ -62,11 +72,29 @@ class MQTTTransport(Transport):
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_mqtt: %s", envelope.delivery_name)
 
-        if not envelope.data or ATTR_TOPIC not in envelope.data:
+        data: dict[str, Any] = dict(envelope.data) if envelope.data else {}
+        # envelope.target is already scoped to this transport by delivery.select_targets()
+        # (see target_categories above), so any resolved target here is a topic
+        topics: list[str] = envelope.target.resolved_targets() if envelope.target else []
+        if topics:
+            data.pop(ATTR_TOPIC, None)
+        else:
+            topic = data.pop(ATTR_TOPIC, None)
+            if topic:
+                topics = [topic]
+
+        if not topics:
             _LOGGER.warning("SUPERNOTIFY notify_mqtt: No topic for publication")
             return False
 
-        action_data: dict[str, Any] = dict(envelope.data)
-        if isinstance(action_data.get("payload"), dict):
-            action_data["payload"] = json.dumps(action_data["payload"])
-        return await self.call_action(envelope, action_data=action_data)
+        if isinstance(data.get("payload"), dict):
+            data["payload"] = json.dumps(data["payload"])
+        else:
+            data["payload"] = envelope.message
+
+        success = True
+        for topic in topics:
+            action_data: dict[str, Any] = dict(data)
+            action_data[ATTR_TOPIC] = topic
+            success = await self.call_action(envelope, action_data=action_data) and success
+        return success

@@ -46,8 +46,15 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, TRANSPORT_MATRIX
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_DATA, ATTR_MATRIX_ROOM, TRANSPORT_MATRIX
+from custom_components.supernotify.model import (
+    DebugTrace,
+    DeliveryConfig,
+    EntitySelector,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -90,6 +97,14 @@ class MatrixTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        # a Matrix room ID/alias has no shape distinct enough for automatic matching, so
+        # it's only ever reachable here via explicit qualification (prefix, mapping, or
+        # this transport's/a delivery's own name) - select_rooms() below still validates
+        # the shape itself once it arrives
+        return [ATTR_MATRIX_ROOM]
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the matrix send_message service."""

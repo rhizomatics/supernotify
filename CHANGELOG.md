@@ -16,8 +16,19 @@
 - Auto-configure for `email` will respect the direct mode if connection details present
 - Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the
 notification. The older keyword is still supported but deprecated.
-- Target selection for entities can now select on Home Assistant domain that provided the entity
-  - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with `notify_entity` as a back stop
+
+### Targets
+- A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
+- Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](usage/targets.md)
+- New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
+- A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
+
+### Notify Entity
+- Target selection for notify entities now uses Home Assistant domain that provided the entity
+  - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with the very basic `notify_entity` as a back stop
+
+### MQTT
+- Delivery now accepts a topic as a target, and takes payload from message. Previous behaviour remains supported.
 
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`

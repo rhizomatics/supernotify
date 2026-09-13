@@ -10,7 +10,6 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
     RE_NOTIFY_ENTITY_ID,
@@ -19,6 +18,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     MessageOnlyPolicy,
     TransportConfig,
     TransportFeature,
@@ -61,10 +61,16 @@ class NotifyEntityTransport(Transport):
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY_ID],
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        # no platform restriction - the generic catch-all for any notify.* entity not
+        # claimed by a more specific transport (html5, alexa_devices); selection_rank=LAST
+        # ensures those get first refusal
+        return [EntitySelector(domain="notify")]
 
     @property
     def inclusion_mode(self) -> list[str]:

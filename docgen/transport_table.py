@@ -5,12 +5,28 @@ from unittest.mock import Mock
 import mkdocs_gen_files
 
 from custom_components.supernotify.engine import TRANSPORTS
+from custom_components.supernotify.model import EntitySelector, Target
 
 
 def esc(v: Any) -> str:  # ruff: ignore[any-type]
     v = "-" if v is None else v
     v = str(v) if not isinstance(v, str) else v
     return v.replace("|", "&#124;")
+
+
+def format_selector_value(value: str | list[str]) -> str:
+    return value if isinstance(value, str) else "/".join(value)
+
+
+def format_category(category: str | EntitySelector) -> str:
+    if isinstance(category, str):
+        return "unqualified" if category == Target.UNKNOWN_CUSTOM_CATEGORY else esc(category)
+    constraints = []
+    if category.domain is not None:
+        constraints.append(f"domain={format_selector_value(category.domain)}")
+    if category.platform is not None:
+        constraints.append(f"platform={format_selector_value(category.platform)}")
+    return esc(f"entity_id ({', '.join(constraints)})" if constraints else "entity_id")
 
 
 def transport_doc() -> None:
@@ -40,6 +56,21 @@ def transport_doc() -> None:
             df.write(f"|{transport.default_config.delivery_defaults.target_required}")
             df.write(f"|{', '.join(transport.inclusion_mode)}")
             df.write(f"|{', '.join(features)}|\n")
+
+        df.write("\n")
+        df.write("## Target Categories\n")
+        df.write(
+            "Which target categories each transport accepts - see [Targets](../usage/targets.md) for how to "
+            "qualify a target with one. A transport with none listed relies entirely on its own name, its "
+            "deliveries' names, or a delivery's `target_categories` option (e.g. `generic`).\n\n"
+        )
+
+        df.write("|Transport|Target Categories|\n")
+        df.write("|---------|------------------|\n")
+        for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
+            transport = transport_class(mock_context)
+            categories = ", ".join(format_category(c) for c in transport.target_categories) or "-"
+            df.write(f"|[{transport.name}](../transports/{transport.name}.md)|{categories}|\n")
 
         df.write("\n")
         df.write("## Default Options\n")

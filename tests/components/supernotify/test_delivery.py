@@ -26,7 +26,9 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import DeviceInfo
 from custom_components.supernotify.model import Target
+from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.mqtt import MQTTTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 
 from .hass_setup_lib import TestingContext
@@ -42,6 +44,101 @@ async def test_target_selection() -> None:
     await ctx.test_initialize()
     uut = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
     assert uut.select_targets(Target(["notify.pong", "weird_generic_a", "notify"])) == Target(["notify.pong"])
+
+
+async def test_target_selection_always_allows_own_delivery_or_transport_name() -> None:
+    """A target category matching either the delivery's own name or its transport's name
+
+    always survives selection, even though neither is in the transport's own
+    OPTION_TARGET_CATEGORIES. The two serve different purposes and both stay available:
+    - the TRANSPORT name (`notify_entity:value`) reaches every delivery of that transport,
+      so scenario/time/occupancy selection logic can still decide which one actually fires
+    - a specific DELIVERY name (`unit_testing:value`) pins the target to just that one
+      delivery, for when two deliveries of the same transport must stay distinct
+
+    Note: `Target.__eq__` only compares the fixed standard categories (entity_id, email,
+    etc.), silently ignoring custom ones - so assertions here must use `for_category()`,
+    not `==`, to actually exercise custom-category filtering.
+    """
+    ctx = TestingContext(transport_types=[NotifyEntityTransport])
+    await ctx.test_initialize()
+
+    # a custom-named delivery still gets its transport's name for free (broadcast)
+    custom_named = Delivery("unit_testing", {}, NotifyEntityTransport(ctx, {}))
+    assert custom_named.select_targets(Target({"notify_entity": ["notify.freeform"]})).for_category("notify_entity") == [
+        "notify.freeform"
+    ]
+
+    # ...and also gets through when the category matches its own (delivery) name
+    assert custom_named.select_targets(Target({"unit_testing": ["notify.freeform"]})).for_category("unit_testing") == [
+        "notify.freeform"
+    ]
+
+    # a delivery named after its transport (the auto-configured/default case) still works
+    default_named = Delivery("notify_entity", {}, NotifyEntityTransport(ctx, {}))
+    assert default_named.select_targets(Target({"notify_entity": ["notify.freeform"]})).for_category("notify_entity") == [
+        "notify.freeform"
+    ]
+
+
+async def test_target_selection_delivery_scoped_value_reaches_only_that_delivery() -> None:
+    """A value qualified with a custom delivery's own name survives selection for exactly
+
+    that delivery, and does not leak into a differently-named delivery of the same
+    transport (unlike a category matching the transport's own name, which is meant to
+    reach every delivery of that transport). Transports read `resolved_targets()` rather
+    than a typed getter like `.email`, so this doesn't depend on the value being
+    reclassified into a standard category - it survives under its own qualified name.
+    """
+    ctx = TestingContext(transport_types=[EmailTransport])
+    await ctx.test_initialize()
+    transport = EmailTransport(ctx, {})
+
+    html_email = Delivery("html_email", {CONF_ACTION: "notify.smtp"}, transport)
+    result = html_email.select_targets(Target({"html_email": ["bigdave@34acacia.avenue.com"]}))
+    assert result.resolved_targets() == ["bigdave@34acacia.avenue.com"]
+
+    plain_email = Delivery("email", {CONF_ACTION: "notify.smtp"}, transport)
+    leaked = plain_email.select_targets(Target({"html_email": ["bigdave@34acacia.avenue.com"]}))
+    assert leaked.resolved_targets() == []
+
+
+async def test_resolve_unqualified_targets_falls_back_to_primary_category() -> None:
+    """A value with no shape any validator recognises (e.g. an MQTT topic) still reaches
+
+    its transport when set directly on a delivery's own `target:` - `Transport.
+    resolve_unqualified_targets()` reclassifies it into the transport's first plain-string
+    `target_categories` entry, since there's no ambiguity about which transport a
+    delivery-scoped value belongs to (unlike a blended, notification-level target list).
+    """
+    ctx = TestingContext(transport_types=[MQTTTransport])
+    await ctx.test_initialize()
+    transport = MQTTTransport(ctx, {})
+
+    unqualified = Target(["notify/queue/1"])
+    assert unqualified.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY) == ["notify/queue/1"]
+
+    resolved = transport.resolve_unqualified_targets(unqualified)
+    assert resolved.custom_ids("topic") == ["notify/queue/1"]
+    assert resolved.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY) == []
+
+    # a value that already matches a real category (or a transport with no plain-string
+    # category declared at all) passes through unchanged
+    already_categorised = Target(["me@house.org"])
+    assert transport.resolve_unqualified_targets(already_categorised).email == ["me@house.org"]
+
+
+async def test_delivery_config_level_target_reclassified_to_transport_category() -> None:
+    """A bare, unqualified `target:` set directly in a delivery's own YAML config is
+
+    reclassified at `Delivery` construction time, so it survives `select_targets()`
+    without needing the transport to special-case the uncategorised bucket.
+    """
+    ctx = TestingContext(transport_types=[MQTTTransport])
+    await ctx.test_initialize()
+    uut = Delivery("broker", {CONF_ACTION: "mqtt.publish", "target": "notify/queue/1"}, MQTTTransport(ctx, {}))
+    assert uut.target is not None
+    assert uut.target.custom_ids("topic") == ["notify/queue/1"]
 
 
 async def test_simple_create(mock_context: Context) -> None:

@@ -11,10 +11,16 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     TRANSPORT_SMS,
 )
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, MessageOnlyPolicy, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    DeliveryConfig,
+    EntitySelector,
+    MessageOnlyPolicy,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -53,9 +59,12 @@ class SMSTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
-            OPTION_TARGET_CATEGORIES: [ATTR_PHONE],
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [ATTR_PHONE]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         """Discover the notify service registered by a supported SMS gateway integration, if installed."""
@@ -78,7 +87,11 @@ class SMSTransport(Transport):
         _LOGGER.debug("SUPERNOTIFY notify_sms: %s", envelope.delivery_name)
 
         data: dict[str, Any] = envelope.data or {}
-        mobile_numbers = envelope.target.phone or []
+        # resolved_targets(), not the typed `.phone` getter: envelope.target is already
+        # scoped to this delivery by Delivery.select_targets(), so this also picks up a
+        # `sms:`/`{sms: ...}`-qualified number that isn't shaped like a validated one
+        # (e.g. a short code)
+        mobile_numbers = envelope.target.resolved_targets() if envelope.target else []
 
         if not envelope.message:
             _LOGGER.warning("SUPERNOTIFY notify_sms: No message to send")

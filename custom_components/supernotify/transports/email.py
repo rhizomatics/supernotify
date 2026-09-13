@@ -51,12 +51,12 @@ from custom_components.supernotify.const import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRICT_TEMPLATE,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     MessageOnlyPolicy,
     SuppressionReason,
     TransportConfig,
@@ -272,7 +272,6 @@ class EmailTransport(Transport):
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_EMAIL],
             # use sensible defaults for image attachments
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
             OPTION_PNG: {"optimize": "true"},
@@ -285,14 +284,21 @@ class EmailTransport(Transport):
         }
         return config
 
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [ATTR_EMAIL]
+
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
-        _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)
+        # resolved_targets(), not the typed `.email` getter: envelope.target is already
+        # scoped to this delivery by Delivery.select_targets(), so this also picks up a
+        # `email:`/`{email: ...}`-qualified address that isn't shaped like a validated one
+        addresses: list[str] = envelope.target.resolved_targets() if envelope.target else []
+        _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, addresses)
 
         data: dict[str, Any] = envelope.data or {}
         html: str | None = data.get("html")
         template_name: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
         strict_template: bool = envelope.delivery.options.get(OPTION_STRICT_TEMPLATE, False)
-        addresses: list[str] = envelope.target.email or []
         snapshot_url: str | None = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is None:
             # older location for backward compatibility

@@ -68,13 +68,13 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
@@ -142,12 +142,15 @@ class MobilePushTransport(Transport):
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_MOBILE_APP_ID],
             OPTION_DEVICE_DISCOVERY: False,
             OPTION_DATA_KEYS_SELECT: None,
             OPTION_DEVICE_DOMAIN: ["mobile_app"],
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [ATTR_MOBILE_APP_ID]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data("mobile_app") is None:

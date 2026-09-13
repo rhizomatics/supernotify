@@ -65,6 +65,7 @@ from .const import (
     RE_DEVICE_ID,
     SELECT_EXCLUDE,
     SELECT_INCLUDE,
+    TARGET_CATEGORY_VALUES,
     TARGET_USE_ON_NO_ACTION_TARGETS,
 )
 from .schema import SelectionRank, phone
@@ -90,6 +91,32 @@ class TransportFeature(IntFlag):
     SNAPSHOT_IMAGE = 64  # transports will be deferred if a camera PTZ is defined
     SPOKEN = 128
     SOUND = 256  # sirens, chimes, buzzers, all non-spoken audio
+
+
+@dataclass(frozen=True)
+class EntitySelector:
+    """Declares which entities a transport accepts for the `entity_id` target category.
+
+    Used in a `Transport.target_categories` list in place of a plain category name, since
+    "any entity_id" is too broad - most entity-based transports only want entities of a
+    particular domain (or domains), or ones registered by a particular platform/integration
+    (or both). `domain`/`platform` may each be a single value or a list; `None` means
+    "don't filter on this".
+    """
+
+    domain: str | list[str] | None = None
+    platform: str | list[str] | None = None
+
+    def matches(self, entity_id: str, platform: str | None, *, check_platform: bool = True) -> bool:
+        if self.domain is not None:
+            domains = [self.domain] if isinstance(self.domain, str) else self.domain
+            if entity_id.split(".", 1)[0] not in domains:
+                return False
+        if check_platform and self.platform is not None:
+            platforms = [self.platform] if isinstance(self.platform, str) else self.platform
+            if platform not in platforms:
+                return False
+        return True
 
 
 class Target:
@@ -132,6 +159,22 @@ class Target:
         elif isinstance(target, list):
             # simplified and legacy way of assuming list of entities that can be discriminated by validator
             targets = list(target)
+            # "<category>:<value>" entries scope a custom target without needing the full
+            # mapping form - only recognised here, in the flat list/scalar form, so the mapping
+            # form (`target: {category: value}`) stays available verbatim for any value that
+            # collides with this syntax (e.g. one already containing a colon). A prefix is always
+            # a target *category* (e.g. `topic:`, `email:`), never a transport or delivery name
+            # directly - those are dynamic and only addressable via the mapping form.
+            unprefixed: list[str] = []
+            for t in targets:
+                prefix, sep, rest = t.partition(":") if isinstance(t, str) else ("", "", "")
+                if sep and rest and prefix in TARGET_CATEGORY_VALUES:
+                    self.targets.setdefault(prefix, [])
+                    if rest not in self.targets[prefix]:
+                        self.targets[prefix].append(rest)
+                else:
+                    unprefixed.append(t)
+            targets = unprefixed
             for category in self.AUTO_CATEGORIES:
                 matched = self._filter_by_category(category, targets)
                 if matched:

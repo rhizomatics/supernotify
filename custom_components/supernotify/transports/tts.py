@@ -16,7 +16,6 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_TTS_ENTITY_ID,
     RE_MEDIA_PLAYER_ENTITY_ID,
@@ -26,6 +25,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     MessageOnlyPolicy,
     SelectionRule,
     Target,
@@ -87,7 +87,6 @@ class TTSTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_MOBILE_APP_ID],
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
             OPTION_DEVICE_DISCOVERY: False,
@@ -95,6 +94,10 @@ class TTSTransport(Transport):
             OPTION_DEVICE_MANUFACTURER_SELECT: {SELECT_EXCLUDE: [MANUFACTURER_APPLE]},
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [EntitySelector(domain="media_player"), ATTR_MOBILE_APP_ID]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY tts: %s", envelope.message)

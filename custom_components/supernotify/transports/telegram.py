@@ -212,6 +212,7 @@ class TelegramTransport(Transport):
         # Also accept legacy raw shapes: dict, list, or scalar string/int.
         raw_target: Any = chat_id_override
         if not raw_target and envelope.delivery:
+            # TODO: this should probably be envelope.target like all the other transports
             raw_target = envelope.delivery.target
 
         # Target object: extract first id from preferred categories

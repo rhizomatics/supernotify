@@ -3,7 +3,9 @@
 from typing import Final
 
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     ATTR_SERVICE,
 )
 
@@ -113,6 +115,8 @@ ATTR_MEDIA_CAMERA_PTZ_PRESET = "camera_ptz_preset"
 ATTR_MEDIA_CLIP_URL = "clip_url"
 ATTR_MEDIA_SNAPSHOT_PATH = "snapshot_image_path"
 ATTR_TOPIC = "topic"
+ATTR_DISCORD_CHANNEL = "discord_channel"
+ATTR_MATRIX_ROOM = "matrix_room"
 ATTR_ACTION_GROUPS = "action_groups"
 CONF_ACTION_GROUP_NAMES = "action_groups"
 ATTR_ACTION_CATEGORY = "action_category"
@@ -200,7 +204,6 @@ OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_INCLUDE_RE = "target_include_re"  # deprecated v1.9.0
 OPTION_TARGET_SELECT = "target_select"
-OPTION_TARGET_PLATFORM_SELECT = "target_platform_select"
 OPTION_CHIME_ALIASES = "chime_aliases"
 OPTION_DATA_KEYS_SELECT = "data_keys_select"
 OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"  # deprecated v1.9.0
@@ -306,6 +309,21 @@ TRANSPORT_VALUES = [
     TRANSPORT_MATRIX,
     TRANSPORT_KODI,
     TRANSPORT_DISCORD,
+]
+
+# The master list of target category names, independent of any one transport - both
+# `Target` (for qualifying a target, e.g. `topic:my/topic` or `target: {topic: ...}`)
+# and `Transport.target_categories` (for declaring which categories a transport accepts)
+# reference this same list, rather than transports and targets each keeping their own.
+TARGET_CATEGORY_VALUES = [
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_EMAIL,
+    ATTR_PHONE,
+    ATTR_MOBILE_APP_ID,
+    ATTR_TOPIC,
+    ATTR_DISCORD_CHANNEL,
+    ATTR_MATRIX_ROOM,
 ]
 
 

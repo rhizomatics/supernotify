@@ -40,7 +40,7 @@ This notification will go out to all the implicit deliveries. If there's no conf
 
 ## Adding Targets
 
-Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications.
+Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications, and [Targets](../usage/targets.md) for more in general about how to use them.
 
 ```yaml title="Example Message to All Devices"
   - action: supernotify.notify
@@ -64,8 +64,7 @@ Both these examples had a single target. The `target` field will work with a sin
 
 ## Complex Targets
 
-This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever
-is most convenient
+This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever is most convenient
 
 ```yaml
   - action: supernotify.notify
@@ -79,6 +78,26 @@ is most convenient
               - mobile_app.john_phone
               - mobile_app.john_ipad
 ```
+
+## Category-Prefixed Targets
+
+For a target with no address type Supernotify can auto-detect (e.g. an MQTT topic or a
+Discord channel ID), a plain flat list of targets can tag an entry with its *category* name
+and a colon, instead of switching to the dictionary form above:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target:
+            - john@mcdoe.co.bn
+            - +4398708123987
+            - discord_channel:9585
+            - topic:security/basement/alert
+```
+
+See [Targets](./targets.md) for the full list of category names and the other ways to
+qualify a target (a mapping, or setting it directly on a delivery).
 
 ## Notification Priority
 

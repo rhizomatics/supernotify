@@ -40,13 +40,12 @@ and are the key to making notification calls in your automations radically simpl
 
 ## Target
 - The target of a notification.
-- This could be a *direct* target, like an `entity_id`, `device_id`,
-e-mail address, phone number, or some custom ID for a specialist transport like Telegram or API calls.
-- It also has some support, more to come, for *indirect* targets. The primary one is `person_id`,
-although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id`
-and `area_id`.
-- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify
-    will exploded these for the *Chime* integration, but otherwise ignore them.
+- This could be a *direct* target, like an `entity_id`, `device_id`, e-mail address, phone number, or some custom ID for a specialist transport like Telegram or API calls.
+- It also has some support, more to come, for *indirect* targets. The primary one is `person_id`, although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id` and `area_id`.
+- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify will exploded these for the *Chime* integration, but otherwise ignore them.
+- Targets can be qualified for a specific delivery, like `discord:839439434`
+- Targets for Notify Entity, Email and SMS are automatically routed to first available delivery for the appropriate transport
+- See [Targets](./usage/targets.md) for more information
 
 ## Recipient
 - Define a person, with optional e-mail address, phone number, mobile devices or custom targets.

@@ -57,8 +57,15 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, TRANSPORT_DISCORD
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
+from custom_components.supernotify.model import (
+    DebugTrace,
+    DeliveryConfig,
+    EntitySelector,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -98,6 +105,14 @@ class DiscordTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        # a numeric channel/user snowflake ID has no shape distinct enough for automatic
+        # matching, so it's only ever reachable here via explicit qualification (prefix,
+        # mapping, or this transport's/a delivery's own name) - select_channels() below
+        # still validates the shape itself once it arrives
+        return [ATTR_DISCORD_CHANNEL]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action: str | None = hass_api.find_service("notify", "homeassistant.components.discord.notify")

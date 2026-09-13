@@ -31,13 +31,25 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
     message: ""
     delivery:
         mqtt:
+            target: notify/queue/1
             data:
-                topic: notify/queue/1
                 payload:
                   warning:
                     duration: 30
                     mode: emergency
                     level: low
+```
+
+The topic can also be supplied as a `target` instead of `data.topic` - useful for
+selecting the topic per scenario or recipient rather than hard-coding it into the
+delivery. If both are given, `target` takes precedence. Multiple targets publish the
+same payload to each topic in turn.
+
+```yaml title="Example Notification with topic as target"
+- action: supernotify.notify
+  data:
+    message: "this will be the MQTT payload"
+    target: topic:notify/queue/1
 ```
 
 ## Reference

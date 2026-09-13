@@ -896,7 +896,8 @@ class Notification(ArchivableObject):
             # if override doesn't use a valid delivery name, try a transport name instead
             delivery_override = self.delivery_overrides.get(delivery.transport.name)
         if delivery_override and delivery_override.target and delivery_override.target.has_targets():
-            override_target = delivery_override.target
+            # exclusively scoped to this one delivery, so safe to claim an unqualified value
+            override_target = delivery.transport.resolve_unqualified_targets(delivery_override.target)
             # handle and resolve indirect targets, like person->mobile device or email
             for indirect_target in self.resolve_indirect_targets(override_target, delivery):
                 override_target += indirect_target
@@ -922,7 +923,8 @@ class Notification(ArchivableObject):
         for scenario in self.enabled_scenarios.values():
             customization: DeliveryCustomization | None = scenario.delivery_customization(delivery.name)
             if customization and customization.target and customization.target.has_targets():
-                resolved += customization.target
+                # exclusively scoped to this one delivery, so safe to claim an unqualified value
+                resolved += delivery.transport.resolve_unqualified_targets(customization.target)
         return resolved
 
     def all_recipients(self) -> list[Recipient]:

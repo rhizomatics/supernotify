@@ -72,7 +72,6 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
     RE_MEDIA_PLAYER_ENTITY_ID,
@@ -81,6 +80,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -96,6 +96,8 @@ if TYPE_CHECKING:
 
 # alandtse/alexa_media_player HACS integration's notify platform module
 HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
+# the entity registry platform for the media_player entities this integration creates
+HA_ALEXA_MEDIA_PLAYER_PLATFORM = "alexa_media"
 
 
 RE_SSML_TAG = re.compile(r"<[^>]+>")
@@ -159,11 +161,14 @@ class AlexaMediaPlayerTransport(Transport):
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
             OPTION_MEDIA_AUTO_PAUSE: True,
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [EntitySelector(domain="media_player", platform=HA_ALEXA_MEDIA_PLAYER_PLATFORM)]
 
     def validate_action(self, action: str | None) -> bool:
         return action is not None

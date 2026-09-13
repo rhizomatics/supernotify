@@ -20,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntitySelector,
     Target,
     TargetRequired,
     TransportConfig,
@@ -88,6 +89,44 @@ class Transport:
     @property
     def targets(self) -> Target:
         return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        """The target categories this transport understands, independent of any delivery.
+
+        A plain string names a category directly (e.g. `ATTR_EMAIL`); an `EntitySelector`
+        declares that the `entity_id` category is accepted, but only for entities matching
+        its domain/platform constraints. Empty by default - a transport that doesn't declare
+        anything here relies entirely on `Delivery.select_targets()`'s other qualification
+        paths (its own name, its transport's name, or a delivery's own `OPTION_TARGET_CATEGORIES`
+        override), which is the deliberate design for `generic`, a bring-your-own-categories
+        transport.
+        """
+        return []
+
+    def resolve_unqualified_targets(self, target: Target) -> Target:
+        """Reclassify a delivery-scoped target's uncategorised values into this transport's
+
+        own primary target category (its first plain-string `target_categories` entry),
+        since a value with no distinguishing shape (e.g. an MQTT topic or Discord channel
+        ID) would otherwise never survive `Delivery.select_targets()` on its own.
+
+        Only safe to call on a `Target` that is exclusively scoped to a single delivery of
+        this transport - a delivery's own configured `target:`, or a per-delivery override -
+        never on a blended, notification-level target list. There, an unqualified value must
+        stay unclaimed rather than being guessed at: it could belong to a different transport
+        entirely, and claiming it here would leak it away from wherever it actually belongs.
+        """
+        unqualified = target.targets.get(Target.UNKNOWN_CUSTOM_CATEGORY)
+        if not unqualified:
+            return target
+        primary = next((c for c in self.target_categories if isinstance(c, str)), None)
+        if primary is None:
+            return target
+        result = target.safe_copy()
+        result.targets.pop(Target.UNKNOWN_CUSTOM_CATEGORY, None)
+        result.extend(primary, unqualified)
+        return result
 
     @property
     def default_config(self) -> TransportConfig:

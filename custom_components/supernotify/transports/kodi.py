@@ -60,12 +60,18 @@ from homeassistant.const import ATTR_ENTITY_ID
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_KODI,
 )
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    DeliveryConfig,
+    EntitySelector,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -126,10 +132,13 @@ class KodiTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.options = {
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [EntitySelector(domain="media_player")]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data(HA_KODI_DOMAIN) is not None:

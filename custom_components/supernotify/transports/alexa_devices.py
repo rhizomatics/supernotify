@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.group.const import DOMAIN as HA_GROUP_DOMAIN
 from homeassistant.components.notify.const import ATTR_MESSAGE
 from homeassistant.const import ATTR_ENTITY_ID
 
@@ -12,17 +13,15 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_PLATFORM_SELECT,
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
     RE_NOTIFY_ENTITY_ID,
-    SELECT_INCLUDE,
     TRANSPORT_ALEXA,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -81,13 +80,20 @@ class AlexaDevicesTransport(Transport):
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
             # an HA group (not owned by any platform) or one of this integration's own
             # notify entities (identified by platform, not just its entity_id shape)
             OPTION_TARGET_SELECT: [r"group\.[a-z0-9_]+", RE_NOTIFY_ENTITY_ID],
-            OPTION_TARGET_PLATFORM_SELECT: {SELECT_INCLUDE: [HA_ALEXA_DEVICES_PLATFORM]},
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [
+            EntitySelector(domain="notify", platform=HA_ALEXA_DEVICES_PLATFORM),
+            # an HA group isn't owned by any platform - membership/expansion isn't handled
+            # here yet (only chime.py does that), so it's accepted at face value
+            EntitySelector(domain=HA_GROUP_DOMAIN),
+        ]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data(HA_ALEXA_DEVICES_DOMAIN) is None:

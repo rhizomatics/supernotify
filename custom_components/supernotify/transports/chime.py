@@ -25,7 +25,6 @@ from custom_components.supernotify.const import (
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
@@ -35,6 +34,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
+    EntitySelector,
     SelectionRule,
     Target,
     TargetRequired,
@@ -50,6 +50,8 @@ if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
     from custom_components.supernotify.hass_api import HomeAssistantAPI
 
+# kept in sync with RE_VALID_CHIME below and this transport's target_categories property
+CHIME_ENTITY_DOMAINS = ["switch", "script", "group", "rest_command", "siren", "media_player"]
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
 
 _LOGGER = logging.getLogger(__name__)
@@ -281,13 +283,16 @@ class ChimeTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,
             OPTION_DEVICE_MODEL_SELECT: {SELECT_EXCLUDE: ["Speaker Group"]},
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [EntitySelector(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
 
     def validate_action(self, action: str | None) -> bool:
         return action is None

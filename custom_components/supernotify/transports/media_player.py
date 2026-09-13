@@ -11,12 +11,11 @@ from homeassistant.const import (
 from custom_components.supernotify.const import (
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_MEDIA,
 )
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, EntitySelector, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -42,10 +41,13 @@ class MediaPlayerTransport(Transport):
         config.delivery_defaults.action = "media_player.play_media"
         config.delivery_defaults.options = {
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
         }
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntitySelector]:
+        return [EntitySelector(domain="media_player")]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if not hass_api.entity_ids_for_domain("media_player"):
