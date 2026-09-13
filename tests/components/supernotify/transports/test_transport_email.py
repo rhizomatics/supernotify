@@ -314,7 +314,8 @@ async def test_explicit_delivery_named_like_transport_absorbs_discovery(hass: Ho
     else:
         # legacy discovered notify platform, no config entry to reuse a connection from
         assert merged.options.get(OPTION_MODE) is None
-    # explicit config is still honoured
+    # explicit config is still honoured, regardless of whether the transport itself had
+    # a usable connection/action at the time this delivery was first validated
     assert merged.template == "minimal_test.html.j2"
 
 

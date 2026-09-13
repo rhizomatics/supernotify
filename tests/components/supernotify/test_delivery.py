@@ -5,8 +5,10 @@ from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_ACTION, CONF_CONDITIONS
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
+from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
@@ -19,6 +21,7 @@ from custom_components.supernotify.const import (
     OCCUPANCY_ALL_IN,
     PRIORITY_VALUES,
     TRANSPORT_GENERIC,
+    TRANSPORT_NTFY,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import DeviceInfo
@@ -150,6 +153,10 @@ async def test_autogenerate_default_vs_explicit_selection(hass: HomeAssistant) -
 
 
 async def test_autogenerate_skips_on_name_collision(hass: HomeAssistant) -> None:
+    """A transport's name is reserved for its own delivery - a delivery configured for a
+    *different* transport can't also use it. The misnamed delivery is rejected (with a
+    repair issue raised) and the auto-configured delivery for the actual "ntfy" transport
+    takes the name instead."""
     MockConfigEntry(domain="ntfy", data={}).add_to_hass(hass)
 
     ctx = TestingContext(
@@ -158,9 +165,9 @@ async def test_autogenerate_skips_on_name_collision(hass: HomeAssistant) -> None
     )
     await ctx.test_initialize()
 
-    # the user's own "ntfy" delivery (for an unrelated transport) must not be clobbered by
-    # the auto-generated ntfy-transport delivery, which would otherwise collide on the name
-    assert ctx.delivery_registry.deliveries["ntfy"].transport.name == TRANSPORT_GENERIC
+    assert ctx.delivery_registry.deliveries["ntfy"].transport.name == TRANSPORT_NTFY
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, "delivery_ntfy_reserved_name") is not None
 
 
 def test_device_discovery(unmocked_config: Context) -> None:
