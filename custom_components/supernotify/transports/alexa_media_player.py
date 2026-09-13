@@ -80,7 +80,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -167,8 +167,8 @@ class AlexaMediaPlayerTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
-        return [EntitySelector(domain="media_player", platform=HA_ALEXA_MEDIA_PLAYER_PLATFORM)]
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player", platform=HA_ALEXA_MEDIA_PLAYER_PLATFORM)]
 
     def validate_action(self, action: str | None) -> bool:
         return action is not None

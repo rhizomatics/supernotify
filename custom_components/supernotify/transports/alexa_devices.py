@@ -21,7 +21,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -87,12 +87,12 @@ class AlexaDevicesTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
+    def target_categories(self) -> list[str | EntityCategory]:
         return [
-            EntitySelector(domain="notify", platform=HA_ALEXA_DEVICES_PLATFORM),
+            EntityCategory(domain="notify", platform=HA_ALEXA_DEVICES_PLATFORM),
             # an HA group isn't owned by any platform - membership/expansion isn't handled
             # here yet (only chime.py does that), so it's accepted at face value
-            EntitySelector(domain=HA_GROUP_DOMAIN),
+            EntityCategory(domain=HA_GROUP_DOMAIN),
         ]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:

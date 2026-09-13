@@ -61,7 +61,7 @@ from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL,
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -107,7 +107,7 @@ class DiscordTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
+    def target_categories(self) -> list[str | EntityCategory]:
         # a numeric channel/user snowflake ID has no shape distinct enough for automatic
         # matching, so it's only ever reachable here via explicit qualification (prefix,
         # mapping, or this transport's/a delivery's own name) - select_channels() below

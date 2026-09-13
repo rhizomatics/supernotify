@@ -8,7 +8,7 @@ from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     Target,
     TargetRequired,
     TransportConfig,
@@ -47,13 +47,13 @@ class MQTTTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
+    def target_categories(self) -> list[str | EntityCategory]:
         # `topic` is a clean, dedicated category name for the mapping form (`target: {topic:
         # ...}`), distinct from overloading the transport's own name (`target: {mqtt: ...}`,
         # still handled separately by Delivery.select_targets()). A bare, unqualified
         # `target: <topic>` set directly on the mqtt delivery block also reaches here - not
-        # via this list, but because it's the sole plain-string entry `Transport.
-        # resolve_unqualified_targets()` falls back to for a delivery-scoped value with no
+        # via this list, but because it's the sole plain-string entry `Delivery.
+        # reclassify_unqualified_target()` falls back to for a delivery-scoped value with no
         # shape a validator recognises.
         return [ATTR_TOPIC]
 

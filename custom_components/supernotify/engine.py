@@ -53,6 +53,7 @@ from .const import (
 )
 from .context import Context
 from .delivery import DeliveryRegistry
+from .exceptions import UncategorizedTargetError
 from .hass_api import HomeAssistantAPI
 from .media_grab import MediaStorage
 from .model import ConditionVariables, SuppressionReason
@@ -278,6 +279,11 @@ class SupernotifyEngine:
                 notification.skipped,
                 notification.suppressed,
             )
+            if notification.uncategorized_targets:
+                # raised only now, at the very end - every target that could be delivered
+                # already has been, so one uncategorized target must never get in the way
+                # of the rest of the notification going out
+                raise UncategorizedTargetError(notification.delivered, notification.uncategorized_targets)
 
     async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
         if event is None:

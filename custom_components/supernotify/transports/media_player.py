@@ -15,7 +15,7 @@ from custom_components.supernotify.const import (
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_MEDIA,
 )
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, EntitySelector, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, DeliveryConfig, EntityCategory, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -46,8 +46,8 @@ class MediaPlayerTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
-        return [EntitySelector(domain="media_player")]
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player")]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if not hass_api.entity_ids_for_domain("media_player"):

@@ -388,6 +388,11 @@
             "description": "Delivery {delivery} does not set its own inclusion, and transport {transport} no longer defaults to 'default' - this delivery will not fire on every notification any more. Add inclusion: [default] to the delivery if you still want that."
         }
     },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Notification delivered ({delivered_count} delivery/deliveries sent), but {uncategorized_count} target(s) could not be matched to any delivery and were dropped: {uncategorized_targets} (deliveries checked: {deliveries})"
+        }
+    },
     "selector": {
         "dupe_policy": {
             "options": {

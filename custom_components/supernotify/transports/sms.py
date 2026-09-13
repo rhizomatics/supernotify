@@ -16,7 +16,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     MessageOnlyPolicy,
     TransportConfig,
     TransportFeature,
@@ -63,7 +63,7 @@ class SMSTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
+    def target_categories(self) -> list[str | EntityCategory]:
         return [ATTR_PHONE]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:

@@ -147,6 +147,7 @@ class Notification(ArchivableObject):
         self.dupe: bool = False
         self.deliveries: dict[DeliveryName, dict[EnvelopeOutcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
         self.delivery_exceptions: dict[DeliveryName, list[str]] = {}
+        self.uncategorized_targets: dict[DeliveryName, list[str]] = {}
         self._skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
@@ -700,6 +701,7 @@ class Notification(ArchivableObject):
             "skipped",
             "error_count",
             "delivery_exceptions",
+            "uncategorized_targets",
             "deliveries",
         ]
         # preferred fields
@@ -897,7 +899,8 @@ class Notification(ArchivableObject):
             delivery_override = self.delivery_overrides.get(delivery.transport.name)
         if delivery_override and delivery_override.target and delivery_override.target.has_targets():
             # exclusively scoped to this one delivery, so safe to claim an unqualified value
-            override_target = delivery.transport.resolve_unqualified_targets(delivery_override.target)
+            override_target = delivery.reclassify_unqualified_target(delivery_override.target)
+            self._record_uncategorized(delivery, override_target)
             # handle and resolve indirect targets, like person->mobile device or email
             for indirect_target in self.resolve_indirect_targets(override_target, delivery):
                 override_target += indirect_target
@@ -924,8 +927,22 @@ class Notification(ArchivableObject):
             customization: DeliveryCustomization | None = scenario.delivery_customization(delivery.name)
             if customization and customization.target and customization.target.has_targets():
                 # exclusively scoped to this one delivery, so safe to claim an unqualified value
-                resolved += delivery.transport.resolve_unqualified_targets(customization.target)
+                reclassified = delivery.reclassify_unqualified_target(customization.target)
+                self._record_uncategorized(delivery, reclassified)
+                resolved += reclassified
         return resolved
+
+    def _record_uncategorized(self, delivery: Delivery, target: Target) -> None:
+        """Track a delivery-scoped target's leftover uncategorised values, once
+
+        `Delivery.reclassify_unqualified_target()` has had its one chance to place them (it
+        already logs a warning) - collected here so the caller (`SupernotifyEngine.
+        async_send_message()`) can raise a single `UncategorizedTargetError` for the whole
+        notification, once delivery has fully finished and everything deliverable is sent.
+        """
+        if target.has_unknown_targets():
+            self.uncategorized_targets.setdefault(delivery.name, [])
+            self.uncategorized_targets[delivery.name].extend(target.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY))
 
     def all_recipients(self) -> list[Recipient]:
         recipients: list[Recipient] = []

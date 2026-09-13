@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, EntitySelector, SelectionRule, Target
+from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, EntityCategory, SelectionRule, Target
 
 from . import DOMAIN
 from .common import ensure_list, sanitize
@@ -81,11 +81,13 @@ class Delivery(DeliveryConfig):
         self._raw_conf: ConfigType = conf
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
         super().__init__(conf, delivery_defaults=transport_defaults)
-        if self.target is not None:
+        if isinstance(self.target, Target):
             # a value set directly on this delivery's own `target:` is exclusively scoped to
             # it - unlike a blended notification-level target list - so it's safe to claim an
-            # unqualified value (no shape a validator recognises) for this transport
-            self.target = self.transport.resolve_unqualified_targets(self.target)
+            # unqualified value (no shape a validator recognises) for this transport. (The
+            # isinstance check, not just a None check, is deliberate: a test double `Mock()`
+            # transport can leave `self.target` as an auto-mocked attribute rather than None.)
+            self.target = self.reclassify_unqualified_target(self.target)
         self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
@@ -206,11 +208,69 @@ class Delivery(DeliveryConfig):
 
                 _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")
 
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        """The target categories this delivery accepts - the query point for "what does this
+
+        delivery support", so callers never need to look at `Transport` and `OPTION_TARGET_
+        CATEGORIES` separately. For every transport other than `generic`, this is direct
+        delegation to `self.transport.target_categories` (a delivery rarely needs to widen
+        what its transport understands). `generic` is the bring-your-own-categories
+        transport - it declares nothing itself, so a delivery's own `OPTION_TARGET_CATEGORIES`
+        (e.g. a made-up "slack_channel" category) is what actually defines its categories.
+
+        The configured list is listed first, so it takes precedence as the reclassification
+        fallback in `reclassify_unqualified_target()` when both are present.
+        """
+        configured = ensure_list(self.options.get(OPTION_TARGET_CATEGORIES))
+        return [*configured, *self.transport.target_categories]
+
+    def reclassify_unqualified_target(self, target: Target) -> Target:
+        """Reclassify this delivery's uncategorised target values into its primary target
+
+        category, since a value with no distinguishing shape (e.g. an MQTT topic, a Discord
+        channel ID, or a made-up category for `generic`, like a Slack channel) would
+        otherwise never survive `select_targets()` on its own. Left alone if this delivery's
+        `target_categories` explicitly lists the uncategorised bucket itself - that's a
+        deliberate choice to accept unqualified values exactly as they are - or if it has no
+        plain-string category to fall back to at all.
+
+        Only safe to call on a `Target` that is exclusively scoped to this one delivery - its
+        own configured `target:`, or a per-delivery override - never on a blended,
+        notification-level target list. There, an unqualified value must stay unclaimed
+        rather than being guessed at: it could belong to a different delivery entirely, and
+        claiming it here would leak it away from wherever it actually belongs.
+        """
+        unqualified = target.targets.get(Target.UNKNOWN_CUSTOM_CATEGORY)
+        if not unqualified:
+            return target
+        declared = self.target_categories
+        if Target.UNKNOWN_CUSTOM_CATEGORY in declared:
+            return target
+        primary = next((c for c in declared if isinstance(c, str)), None)
+        if primary is None:
+            # this target is exclusively scoped to this delivery (the safety precondition
+            # above), so if there's genuinely nowhere for it to go, it's not a value meant
+            # for a different delivery - it's just unmappable, and would otherwise be
+            # dropped with no visible explanation
+            _LOGGER.warning(
+                "SUPERNOTIFY Delivery %s (%s) has no target category to accept unqualified target(s) %s - "
+                "dropping. Known categories for this delivery: %s",
+                self.name,
+                self.transport.name,
+                unqualified,
+                [c if isinstance(c, str) else "entity_id" for c in declared] or "none",
+            )
+            return target
+        result = target.safe_copy()
+        result.targets.pop(Target.UNKNOWN_CUSTOM_CATEGORY, None)
+        result.extend(primary, unqualified)
+        return result
+
     def select_targets(self, target: Target, hass_api: HomeAssistantAPI | None = None) -> Target:
-        declared_categories = self.transport.target_categories
+        declared_categories = self.target_categories
         plain_categories = {c for c in declared_categories if isinstance(c, str)}
-        entity_selectors = [c for c in declared_categories if isinstance(c, EntitySelector)]
-        configured_categories = ensure_list(self.options.get(OPTION_TARGET_CATEGORIES))
+        entity_selectors = [c for c in declared_categories if isinstance(c, EntityCategory)]
 
         def selected(category: str, targets: list[str]) -> list[str]:
             # a target category named after this delivery, or after its transport, is always
@@ -233,15 +293,13 @@ class Delivery(DeliveryConfig):
                     ]
                     if not targets:
                         return []
-                elif plain_categories or configured_categories:
-                    # the transport declares fixed categories, and/or this delivery's own
-                    # config extends/overrides them (e.g. the bring-your-own-categories
-                    # `generic` transport) - anything outside that combined set is rejected
-                    allowed = plain_categories | (set(configured_categories) if configured_categories else set())
-                    if category not in allowed:
+                elif plain_categories:
+                    # this delivery declares fixed categories (from its transport, its own
+                    # config, or both) - anything outside that set is rejected
+                    if category not in plain_categories:
                         return []
-                # else: neither the transport nor this delivery declares any categories at
-                # all (e.g. `generic` with no config) - nothing to restrict against
+                # else: this delivery declares no categories at all (e.g. `generic` with no
+                # config) - nothing to restrict against
             if self.target_selector:
                 targets = [t for t in targets if self.target_selector.match(t)]
             return targets

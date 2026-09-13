@@ -18,7 +18,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     MessageOnlyPolicy,
     TransportConfig,
     TransportFeature,
@@ -66,11 +66,11 @@ class NotifyEntityTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
+    def target_categories(self) -> list[str | EntityCategory]:
         # no platform restriction - the generic catch-all for any notify.* entity not
         # claimed by a more specific transport (html5, alexa_devices); selection_rank=LAST
         # ensures those get first refusal
-        return [EntitySelector(domain="notify")]
+        return [EntityCategory(domain="notify")]
 
     @property
     def inclusion_mode(self) -> list[str]:

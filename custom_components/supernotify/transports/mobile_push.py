@@ -74,7 +74,7 @@ from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
@@ -149,7 +149,7 @@ class MobilePushTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
+    def target_categories(self) -> list[str | EntityCategory]:
         return [ATTR_MOBILE_APP_ID]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:

@@ -109,10 +109,7 @@ This can also be used in a notification call:
 
 ### Known Integrations
 
-Generic isn't completely a blank slate - it knows about the most common integration domains and will
-build a compatible Action call for them. These have a lot of variation because Home Assistant actions
-have a lot of variation! Generic Transports handling of these means you can create multi-channel
-notifications without worrying too much about the variety of `data` mappings etc.
+Generic isn't completely a blank slate - it knows about the most common integration domains and will build a compatible Action call for them. These have a lot of variation because Home Assistant actions have a lot of variation! Generic Transports handling of these means you can create multi-channel notifications without worrying too much about the variety of `data` mappings etc.
 
 | Domain                        | Action Data                                                                                                                                                 | Target Data             |
 |-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|

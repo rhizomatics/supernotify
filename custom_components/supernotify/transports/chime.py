@@ -34,7 +34,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     SelectionRule,
     Target,
     TargetRequired,
@@ -291,8 +291,8 @@ class ChimeTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
-        return [EntitySelector(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
 
     def validate_action(self, action: str | None) -> bool:
         return action is None

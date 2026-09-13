@@ -25,7 +25,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     MessageOnlyPolicy,
     SelectionRule,
     Target,
@@ -96,8 +96,8 @@ class TTSTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
-        return [EntitySelector(domain="media_player"), ATTR_MOBILE_APP_ID]
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player"), ATTR_MOBILE_APP_ID]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY tts: %s", envelope.message)

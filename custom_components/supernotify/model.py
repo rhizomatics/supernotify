@@ -94,7 +94,7 @@ class TransportFeature(IntFlag):
 
 
 @dataclass(frozen=True)
-class EntitySelector:
+class EntityCategory:
     """Declares which entities a transport accepts for the `entity_id` target category.
 
     Used in a `Transport.target_categories` list in place of a plain category name, since

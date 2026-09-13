@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
+import pytest
 from homeassistant.const import CONF_ACTION, CONF_CONDITIONS
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
@@ -103,29 +105,47 @@ async def test_target_selection_delivery_scoped_value_reaches_only_that_delivery
     assert leaked.resolved_targets() == []
 
 
-async def test_resolve_unqualified_targets_falls_back_to_primary_category() -> None:
+async def test_reclassify_unqualified_target_falls_back_to_primary_category() -> None:
     """A value with no shape any validator recognises (e.g. an MQTT topic) still reaches
 
-    its transport when set directly on a delivery's own `target:` - `Transport.
-    resolve_unqualified_targets()` reclassifies it into the transport's first plain-string
-    `target_categories` entry, since there's no ambiguity about which transport a
+    its transport when set directly on a delivery's own `target:` - `Delivery.
+    reclassify_unqualified_target()` reclassifies it into the delivery's first plain-string
+    `target_categories` entry, since there's no ambiguity about which delivery a
     delivery-scoped value belongs to (unlike a blended, notification-level target list).
     """
     ctx = TestingContext(transport_types=[MQTTTransport])
     await ctx.test_initialize()
-    transport = MQTTTransport(ctx, {})
+    uut = Delivery("broker", {CONF_ACTION: "mqtt.publish"}, MQTTTransport(ctx, {}))
 
     unqualified = Target(["notify/queue/1"])
     assert unqualified.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY) == ["notify/queue/1"]
 
-    resolved = transport.resolve_unqualified_targets(unqualified)
+    resolved = uut.reclassify_unqualified_target(unqualified)
     assert resolved.custom_ids("topic") == ["notify/queue/1"]
     assert resolved.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY) == []
 
-    # a value that already matches a real category (or a transport with no plain-string
-    # category declared at all) passes through unchanged
+    # a value that already matches a real category (or a delivery with no plain-string
+    # category to fall back on at all) passes through unchanged
     already_categorised = Target(["me@house.org"])
-    assert transport.resolve_unqualified_targets(already_categorised).email == ["me@house.org"]
+    assert uut.reclassify_unqualified_target(already_categorised).email == ["me@house.org"]
+
+
+async def test_reclassify_unqualified_target_warns_when_genuinely_unmappable(caplog: pytest.LogCaptureFixture) -> None:
+    """A delivery with only `EntityCategory`-constrained categories (no plain-string one to
+
+    fall back on) has nowhere to put an unqualified value - since it's already established
+    as exclusively scoped to this one delivery, this is a real, actionable warning, not a
+    false positive from a value meant for a different delivery.
+    """
+    ctx = TestingContext(transport_types=[NotifyEntityTransport])
+    await ctx.test_initialize()
+    uut = Delivery("notify_entity", {CONF_ACTION: "notify.send_message"}, NotifyEntityTransport(ctx, {}))
+
+    with caplog.at_level(logging.WARNING):
+        resolved = uut.reclassify_unqualified_target(Target(["not_an_entity_id"]))
+
+    assert resolved.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY) == ["not_an_entity_id"]
+    assert any("no target category" in r.message for r in caplog.records)
 
 
 async def test_delivery_config_level_target_reclassified_to_transport_category() -> None:
@@ -139,6 +159,49 @@ async def test_delivery_config_level_target_reclassified_to_transport_category()
     uut = Delivery("broker", {CONF_ACTION: "mqtt.publish", "target": "notify/queue/1"}, MQTTTransport(ctx, {}))
     assert uut.target is not None
     assert uut.target.custom_ids("topic") == ["notify/queue/1"]
+
+
+async def test_delivery_config_level_target_reclassified_to_configured_category() -> None:
+    """A delivery's own `OPTION_TARGET_CATEGORIES` (e.g. a made-up category for the
+
+    bring-your-own-categories `generic` transport) takes precedence over the transport's
+    own declared primary category (`generic` has none at all) when reclassifying a bare,
+    unqualified `target:` set directly on the delivery.
+    """
+    ctx = TestingContext(transport_types=[GenericTransport])
+    await ctx.test_initialize()
+    uut = Delivery(
+        "slack",
+        {
+            CONF_ACTION: "notify.my_slack_service",
+            "target": "A20H2AN55DX",
+            "options": {"target_categories": "slack_channel"},
+        },
+        GenericTransport(ctx, {}),
+    )
+    assert uut.target is not None
+    assert uut.target.custom_ids("slack_channel") == ["A20H2AN55DX"]
+
+
+async def test_delivery_config_level_target_left_unqualified_when_explicitly_configured() -> None:
+    """If a delivery's own `OPTION_TARGET_CATEGORIES` explicitly lists the uncategorised
+
+    bucket itself, that's a deliberate choice to accept unqualified values as-is - a bare
+    `target:` must NOT be relabelled into some other configured category instead.
+    """
+    ctx = TestingContext(transport_types=[GenericTransport])
+    await ctx.test_initialize()
+    uut = Delivery(
+        "chatty",
+        {
+            CONF_ACTION: "notify.slackity",
+            "target": ["chan1", "chan2"],
+            "options": {"target_categories": ["entity_id", Target.UNKNOWN_CUSTOM_CATEGORY]},
+        },
+        GenericTransport(ctx, {}),
+    )
+    assert uut.target is not None
+    assert uut.target.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY) == ["chan1", "chan2"]
 
 
 async def test_simple_create(mock_context: Context) -> None:

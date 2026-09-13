@@ -1,6 +1,9 @@
 ## 2.5.0
 
 ### Deliveries
+
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](roadmap/deliveries_and_transports.md).
+
 - Every transport that is available to use is automatically available as a delivery with the same name.
   - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
   - Deliveries no longer have a `default_` prefix, although existing automations which use these will automatically be switched to `email`,`notify_entity` etc
@@ -14,14 +17,17 @@
 - Default delivery creation tightened for Notify Entity and Mobile Push, so these Delivery objects don't get created if there are no mobile apps or notify entities on the Home Assistant instance.
 - Transports have a `load` control, switching this off means there's no attempt to auto-discover it, and it never has a Delivery or Home Assistant entities created for it
 - Auto-configure for `email` will respect the direct mode if connection details present
-- Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the
-notification. The older keyword is still supported but deprecated.
+- Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the notification. The older keyword is still supported but deprecated.
 
 ### Targets
+
+There has a wide overhaul of how targets are categorized and tied back to transports - this has simplified the code, and should make it simpler to configure and more predictable in how it will behave. Regression tests and migration code has been used to keep it backward compatible with existing configurations. There's also a new documentation page for [Target Usage](usage/targets.md).
+
 - A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
 - Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](usage/targets.md)
 - New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
 - A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
+- An error will be raised logged if there any targets that can't be mapped to a category - this won't stop the rest of the notification working, but will make it visible
 
 ### Notify Entity
 - Target selection for notify entities now uses Home Assistant domain that provided the entity

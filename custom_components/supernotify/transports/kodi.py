@@ -67,7 +67,7 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
-    EntitySelector,
+    EntityCategory,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -137,8 +137,8 @@ class KodiTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntitySelector]:
-        return [EntitySelector(domain="media_player")]
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player")]
 
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data(HA_KODI_DOMAIN) is not None:
