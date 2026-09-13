@@ -14,18 +14,19 @@ from custom_components.supernotify.const import (
     ATTR_SCENARIOS_APPLY,
     CONF_DATA,
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_MEDIA,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_OPTIONS,
     CONF_PERSON,
-    CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_USAGE,
     CONF_TITLE,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
+    INCLUSION_DEFAULT,
     OPTION_TARGET_CATEGORIES,
     TRANSPORT_EMAIL,
     TRANSPORT_GENERIC,
@@ -48,6 +49,8 @@ mobile:
     transport: mobile_push
 chime:
     transport: chime
+    inclusion:
+    - default
 """
 TRANSPORTS = """
 notify_entity:
@@ -81,12 +84,12 @@ async def test_simple_create() -> None:
     assert uut.priority == "medium"
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
+    assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "notify_entity"])
 
 
-async def test_explicit_delivery_by_bare_transport_name_resolves_to_default() -> None:
-    """Backward compatibility: 'delivery: notify_entity' still selects the delivery
-    that's actually named 'DEFAULT_notify_entity' once auto-configured."""
+async def test_legacy_default_prefixed_delivery_name_resolves_to_current() -> None:
+    """Backward compatibility: an old automation referencing 'delivery: DEFAULT_notify_entity'
+    (the pre-rename auto-configured name) still resolves to the current 'notify_entity'."""
     ctx = TestingContext(
         deliveries={
             "mobile": {CONF_TITLE: "mobile notification", CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
@@ -94,11 +97,11 @@ async def test_explicit_delivery_by_bare_transport_name_resolves_to_default() ->
         },
     )
     await ctx.test_initialize()
-    assert "DEFAULT_notify_entity" in ctx.delivery_registry.deliveries
+    assert "notify_entity" in ctx.delivery_registry.deliveries
 
-    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "notify_entity"})
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "DEFAULT_notify_entity"})
     await uut.initialize()
-    assert list(uut.selected_deliveries) == ["DEFAULT_notify_entity"]
+    assert list(uut.selected_deliveries) == ["notify_entity"]
 
 
 async def test_explicit_delivery() -> None:
@@ -333,7 +336,7 @@ async def test_select_recipient_deliveries() -> None:
                 CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_kidphone"}],
             },
         ],
-        deliveries={"chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_SELECTION: ["explicit"]}},
+        deliveries={"chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_INCLUSION: ["explicit"]}},
         services={"notify": ["smtp", "mobile_app_kidphone", "mobile_app_joephone"]},
     )
     await ctx.test_initialize()
@@ -341,7 +344,7 @@ async def test_select_recipient_deliveries() -> None:
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
     await uut.deliver()
-    assert first_envelope(uut, "DEFAULT_mobile_push").target.mobile_app_ids == ["mobile_app_joephone", "mobile_app_kidphone"]
+    assert first_envelope(uut, "mobile_push").target.mobile_app_ids == ["mobile_app_joephone", "mobile_app_kidphone"]
     assert first_envelope(uut, "chatty").target.email == ["owner@mctest.org"]  # type: ignore
 
 
@@ -497,24 +500,28 @@ async def test_delivery_selection_order() -> None:
                 CONF_TARGET: ["custom.light"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.LAST,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "eager": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light1"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.FIRST,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "whatever": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light2"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.ANY,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "or_whatever": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light3"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.ANY,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "naturally_last": {CONF_TARGET: ["notify.me"], CONF_TRANSPORT: "notify_entity"},
         }
@@ -526,7 +533,7 @@ async def test_delivery_selection_order() -> None:
     assert len(list(uut.selected_deliveries)) == 6
     assert next(iter(uut.selected_deliveries)) == "eager"
     assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
-    assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
+    assert list(uut.selected_deliveries)[1:4] == unordered("mobile_push", "whatever", "or_whatever")
 
 
 async def test_convert_notify_entities() -> None:

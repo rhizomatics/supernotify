@@ -270,7 +270,7 @@ class ChimeTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature(0)
+        return TransportFeature.SOUND
 
     def extra_attributes(self) -> dict[str, Any]:
         return {"mini_transports": [t.domain for t in self.mini_transports.values()]}
@@ -279,6 +279,7 @@ class ChimeTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],

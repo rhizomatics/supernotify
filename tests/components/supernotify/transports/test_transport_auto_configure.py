@@ -4,11 +4,12 @@ alexa_devices), a dynamically-named notify service (discord, pushover, sms), or
 unconditionally (persistent).
 
 Transports whose target is positively identifiable (an HA entity_id, or a
-recipient's email/phone) generate a "DEFAULT_" delivery that fires on every
-notification. Transports that need an opaque per-delivery identifier the
-notification author must still supply (chat_id, channel/user ID, device_id) -
-or where firing unprompted would simply be unwelcome (persistent) - generate a
-plain, explicit-selection-only delivery instead, named after the transport.
+recipient's email/phone) generate a delivery, named plainly after the
+transport, that fires on every notification. Transports that need an opaque
+per-delivery identifier the notification author must still supply (chat_id,
+channel/user ID, device_id) - or where firing unprompted would simply be
+unwelcome (persistent) - generate the same plainly-named delivery, but
+explicit-selection-only instead.
 
 Path in upstream repo:
     tests/components/supernotify/transports/test_transport_auto_configure.py
@@ -19,19 +20,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 import pytest
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify.const import (
+    INCLUSION_DEFAULT,
+    INCLUSION_EXPLICIT,
     OPTION_CHIME_ALIASES,
-    SELECTION_DEFAULT,
-    SELECTION_EXPLICIT,
     TRANSPORT_ALEXA,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
     TRANSPORT_DISCORD,
     TRANSPORT_GENERIC,
     TRANSPORT_GOTIFY,
-    TRANSPORT_HTML5,
     TRANSPORT_KODI,
     TRANSPORT_LAMETRIC,
     TRANSPORT_MATRIX,
@@ -52,44 +53,26 @@ from tests.components.supernotify.hass_setup_lib import TestingContext
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-# transport name -> HA config entry domain it should discover, for transports whose
-# target is positively identifiable (an entity_id) and so fire by default once found
-CONFIG_ENTRY_DEFAULT = {
-    TRANSPORT_KODI: "kodi",
-    TRANSPORT_ALEXA: "alexa_devices",
-}
-
 # transport name -> HA config entry domain it should discover, for transports that
-# need an opaque per-delivery identifier (chat_id/device_id) and so stay explicit-only
+# need an opaque per-delivery identifier (chat_id/device_id) and so stay explicit-only.
+# alexa_devices and html5 are tested separately (test_transport_alexa_devices.py /
+# test_transport_html5.py) - both also require an actual registered notify entity with
+# a matching platform, not just the config entry, to auto-configure as `default`.
 CONFIG_ENTRY_EXPLICIT = {
+    TRANSPORT_KODI: "kodi",
     TRANSPORT_TELEGRAM: "telegram_bot",
     TRANSPORT_NTFY: "ntfy",
     TRANSPORT_LAMETRIC: "lametric",
     TRANSPORT_MQTT: "mqtt",
-    TRANSPORT_HTML5: "html5",
 }
 
 
-@pytest.mark.parametrize(("transport_name", "domain"), {**CONFIG_ENTRY_DEFAULT, **CONFIG_ENTRY_EXPLICIT}.items())
+@pytest.mark.parametrize(("transport_name", "domain"), CONFIG_ENTRY_EXPLICIT.items())
 async def test_auto_configure_no_config_entry(hass: HomeAssistant, transport_name: str, domain: str) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = ctx.transport(transport_name)
     assert uut.auto_configure(ctx.hass_api) is None
-
-
-@pytest.mark.parametrize(("transport_name", "domain"), CONFIG_ENTRY_DEFAULT.items())
-async def test_auto_configure_with_config_entry_stays_default(hass: HomeAssistant, transport_name: str, domain: str) -> None:
-    entry = MockConfigEntry(domain=domain, data={})
-    entry.add_to_hass(hass)
-
-    ctx = TestingContext(homeassistant=hass)
-    await ctx.test_initialize()
-    uut = ctx.transport(transport_name)
-
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert SELECTION_DEFAULT in result.selection
 
 
 @pytest.mark.parametrize(("transport_name", "domain"), CONFIG_ENTRY_EXPLICIT.items())
@@ -103,7 +86,7 @@ async def test_auto_configure_with_config_entry_is_explicit(hass: HomeAssistant,
 
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_discord_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -128,7 +111,7 @@ async def test_discord_auto_configure_discovers_service(hass: HomeAssistant) -> 
     assert result is not None
     assert result.action == "notify.discord_2"
     # a discord channel/user ID isn't positively identifiable, so explicit-only
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_pushover_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -152,8 +135,8 @@ async def test_pushover_auto_configure_discovers_service(hass: HomeAssistant) ->
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
     assert result.action == "notify.pushover_home"
-    # once discovered the service is fully self-contained (target_required=NEVER), so default
-    assert SELECTION_DEFAULT in result.selection
+    # a pushover device/group isn't positively identifiable, so explicit-only
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_sms_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -178,7 +161,7 @@ async def test_sms_auto_configure_discovers_twilio_service(hass: HomeAssistant) 
     assert result is not None
     assert result.action == "notify.twilio_sms"
     # phone number is positively identified via the recipient's registered phone, so default
-    assert SELECTION_DEFAULT in result.selection
+    assert INCLUSION_DEFAULT in result.inclusion
 
 
 async def test_sms_auto_configure_discovers_mikrotik_service(hass: HomeAssistant) -> None:
@@ -195,7 +178,7 @@ async def test_sms_auto_configure_discovers_mikrotik_service(hass: HomeAssistant
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
     assert result.action == "notify.mikrotik_sms"
-    assert SELECTION_DEFAULT in result.selection
+    assert INCLUSION_DEFAULT in result.inclusion
 
 
 async def test_sms_auto_configure_prefers_twilio_over_mikrotik(hass: HomeAssistant) -> None:
@@ -228,7 +211,7 @@ async def test_persistent_auto_configure_always_available_but_explicit(hass: Hom
     assert result is not None
     # persistent_notification is always available in HA core, no integration to discover,
     # but a UI popup on every notification would be intrusive, so it's explicit-only
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_tts_auto_configure_no_service_no_media_player(hass: HomeAssistant) -> None:
@@ -267,7 +250,7 @@ async def test_tts_auto_configure_service_and_media_player_is_explicit(hass: Hom
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
     # a media_player target is required per notification, so explicit-only
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_media_player_auto_configure_no_media_players(hass: HomeAssistant) -> None:
@@ -287,7 +270,7 @@ async def test_media_player_auto_configure_with_media_player_is_explicit(hass: H
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
     # a media_player target is required per notification, so explicit-only
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_alexa_media_player_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -312,11 +295,12 @@ async def test_alexa_media_player_auto_configure_discovers_service(hass: HomeAss
     assert result is not None
     assert result.action == "notify.alexa_media"
     # a channel/device ID isn't positively identifiable, so explicit-only
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_alexa_devices_stays_default_without_alexa_media_player(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_device", "bedroom_echo_unique_id")
 
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
@@ -324,7 +308,7 @@ async def test_alexa_devices_stays_default_without_alexa_media_player(hass: Home
 
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
-    assert SELECTION_DEFAULT in result.selection
+    assert INCLUSION_DEFAULT in result.inclusion
 
 
 async def test_alexa_devices_goes_explicit_alongside_alexa_media_player(hass: HomeAssistant) -> None:
@@ -332,6 +316,7 @@ async def test_alexa_devices_goes_explicit_alongside_alexa_media_player(hass: Ho
     Player is also available, Alexa Devices backs off to explicit-only to avoid
     double-notifying the same targets."""
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_device", "bedroom_echo_unique_id")
 
     def _send_message(call: object) -> None:
         return None
@@ -345,7 +330,7 @@ async def test_alexa_devices_goes_explicit_alongside_alexa_media_player(hass: Ho
 
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_chime_auto_configure_no_aliases(hass: HomeAssistant) -> None:
@@ -387,8 +372,7 @@ async def test_gotify_auto_configure_discovers_service(hass: HomeAssistant) -> N
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
     assert result.action == "notify.gotify"
-    # once discovered the service is fully self-contained (target_required=NEVER), so default
-    assert SELECTION_DEFAULT in result.selection
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_matrix_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -408,7 +392,7 @@ async def test_matrix_auto_configure_service_registered_is_explicit(hass: HomeAs
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
     # a room ID/alias isn't positively identifiable, so explicit-only
-    assert result.selection == [SELECTION_EXPLICIT]
+    assert result.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_mobile_push_auto_configure_no_config_entry(hass: HomeAssistant) -> None:
@@ -427,7 +411,7 @@ async def test_mobile_push_auto_configure_with_config_entry_stays_default(hass: 
 
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
-    assert SELECTION_DEFAULT in result.selection
+    assert INCLUSION_DEFAULT in result.inclusion
 
 
 async def test_notify_entity_auto_configure_no_notify_entities(hass: HomeAssistant) -> None:
@@ -446,7 +430,7 @@ async def test_notify_entity_auto_configure_with_notify_entity_stays_default(has
 
     result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
     assert result is not None
-    assert SELECTION_DEFAULT in result.selection
+    assert INCLUSION_DEFAULT in result.inclusion
 
 
 async def test_generic_auto_configure_no_action(hass: HomeAssistant) -> None:

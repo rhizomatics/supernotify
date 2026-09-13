@@ -265,6 +265,10 @@
             "title": "La entrega tiene una condición no válida",
             "description": "La entrega {delivery} tiene una condición no válida {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "La entrega ya no se incluye de forma predeterminada",
+            "description": "La entrega {delivery} no define su propio inclusion, y el transporte {transport} ya no usa 'default' de forma predeterminada - esta entrega ya no se activará en cada notificación. Añada inclusion: [default] a la entrega si aún desea ese comportamiento."
+        },
         "legacy_yaml_config": {
             "title": "La configuración YAML de Supernotify debe moverse",
             "fix_flow": {

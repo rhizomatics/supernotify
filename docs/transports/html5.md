@@ -49,7 +49,7 @@ delivery:
     data:
       html5_tag: supernotify
       html5_renotify: true
-    selection: explicit
+    inclusion: explicit
 ```
 
 ## HTML5 Data Keys

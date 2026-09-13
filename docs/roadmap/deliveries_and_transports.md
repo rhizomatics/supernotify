@@ -69,11 +69,53 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
     Alexa Devices - make the autogen delivery default disabled if there's an Alexa Media Player transport available so there's not double notification to same devices
     Chime/Generic - everything possible can be defined under transport without creating an Delivery config item. `chime_aliases` needs to be defined for an autogen Delivery otherwise treated like unconfigured integration. Similar for generic without action defined.
 
+11. Default vs Explicit
+
+This is partly a judgement call - email and mobile push are the 'obvious' ways to deliver notification, and partly about revealed intention in config - which was the original rationale for making Delivery inclusion `default` by default.
+
+This also intersects with target generation, and conditional deliveries.
+
+One idea is making delivery `inclusion` a mandatory field, since its a minefield for defaulting.
+
+Reasons to make a Delivery included in selection by default:
+
+1. Its "obvious" - really only mobile push or e-mail
+2. There are already conditions applied to Delivery - priority, occupancy or condition. These imply that the delivery inclusion is default, since otherwise the conditions would never be tested.
+3. Delivery will only happen if a matching target is unambiguously provided, AND the delivery does not generate its own targets.
+
+On the other hand, if a delivery is explicitly configured, and given no targets, it is reasonable to auto generate a target list, since it was implied.
+
+The worst case for a new user is that a notification gets over-delivered, including every voice assistant in the house reading out a long message, or mobile charges unexpectedly rung up sending SMS.
+
+
+One solution is making delivery `inclusion` a mandatory field, since its a minefield for defaulting.
+
 ## Future Changes
 
 1. Storage of switch enable/disable, so choices persist across restarts
 2. Domain qualified targets, e.g. media:media_player.kitchen, tts:media_player.kitchen, discord:8943493434
 3. Enable `mobile_push` if mobile apps / users defined in Home Assistant (this is dynamic config, so doesn't have a restart associated with it ) and also update any recipient and device config
+
+### Target Driven Selection
+
+There are categories and sub-categories of target that could be used to better automate selection
+
+- Simple - an e-mail address. If multiple integrations support e-mail, top priority one wins
+- Complicated - Notify Entity - multiple things handle these, including the bare bones Notify Entity service plus things like html5 that work around its limitations. In effect there are sub-classes of Notify Entity that are tricky to identify
+- None - persistent has no target, generic could have anything
+
+The same target could also be used for different things, such as a media player used for both chime and announcement.
+
+One step up is notifying a Person, and doing that in some order - for example, send each Recipient exactly one notification, in the first working form for them.
+
+Target types differ also in being completely ephemeral - a chime, partially ephmeral like a mobile notification, or persistent, like an e-mail, SMS or indeed Persistent Message.
+
+Use cases could be:
+
+- Send an announcement preceded by a chime
+- Send everyone their preferred persistent message and preferred push alert
+- Its critical, so contact someone by any means possible
+
 
 ## Example
 

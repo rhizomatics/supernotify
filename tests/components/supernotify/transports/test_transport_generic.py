@@ -18,8 +18,10 @@ from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_OPTIONS,
     CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
     OPTION_DATA_KEYS_SELECT,
@@ -156,6 +158,7 @@ async def test_update_fixed_message(mock_hass) -> None:
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "text.set_value",
                 CONF_DATA: {"message": "Alert Level 3"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             }
         },
     )
@@ -181,6 +184,7 @@ async def test_update_equiv_domain(mock_hass) -> None:
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "text.set_value",
                 CONF_OPTIONS: {OPTION_GENERIC_DOMAIN_STYLE: "input_text"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             }
         },
     )

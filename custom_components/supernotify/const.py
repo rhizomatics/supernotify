@@ -29,8 +29,10 @@ CONF_LINKS: Final[str] = "links"
 CONF_PERSON: Final[str] = "person"
 CONF_TRANSPORT: Final[str] = "transport"
 CONF_TRANSPORTS: Final[str] = "transports"
+CONF_LOAD: Final[str] = "load"
 CONF_DELIVERY: Final[str] = "delivery"
-CONF_SELECTION: Final[str] = "selection"
+CONF_INCLUSION: Final[str] = "inclusion"
+CONF_SELECTION: Final[str] = "selection"  # deprecated, use CONF_INCLUSION
 CONF_SELECTION_RANK: Final[str] = "selection_rank"
 
 
@@ -141,17 +143,17 @@ PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
 PTZ_DELAY_DEFAULT = 10
 SNAP_WAIT_DEFAULT = 15
 
-SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
-SELECTION_FALLBACK = "fallback"
-SELECTION_BY_SCENARIO = "scenario"
-SELECTION_DEFAULT = "default"
-SELECTION_EXPLICIT = "explicit"
-SELECTION_VALUES = [
-    SELECTION_FALLBACK_ON_ERROR,
-    SELECTION_EXPLICIT,
-    SELECTION_BY_SCENARIO,
-    SELECTION_DEFAULT,
-    SELECTION_FALLBACK,
+INCLUSION_FALLBACK_ON_ERROR = "fallback_on_error"
+INCLUSION_FALLBACK = "fallback"
+INCLUSION_BY_SCENARIO = "scenario"
+INCLUSION_DEFAULT = "default"
+INCLUSION_EXPLICIT = "explicit"
+INCLUSION_VALUES = [
+    INCLUSION_FALLBACK_ON_ERROR,
+    INCLUSION_EXPLICIT,
+    INCLUSION_BY_SCENARIO,
+    INCLUSION_DEFAULT,
+    INCLUSION_FALLBACK,
 ]
 
 OCCUPANCY_VALUES = [
@@ -198,6 +200,7 @@ OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_INCLUDE_RE = "target_include_re"  # deprecated v1.9.0
 OPTION_TARGET_SELECT = "target_select"
+OPTION_TARGET_PLATFORM_SELECT = "target_platform_select"
 OPTION_CHIME_ALIASES = "chime_aliases"
 OPTION_DATA_KEYS_SELECT = "data_keys_select"
 OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"  # deprecated v1.9.0
@@ -219,6 +222,8 @@ EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
 
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
+RE_MEDIA_PLAYER_ENTITY_ID = r"^media_player\.[A-Za-z0-9_]+$"
+RE_NOTIFY_ENTITY_ID = r"^notify\.[A-Za-z0-9_]+$"
 
 RESERVED_DELIVERY_NAMES: list[str] = ["ALL"]
 RESERVED_SCENARIO_NAMES: list[str] = ["NO_SCENARIO", "NULL"]

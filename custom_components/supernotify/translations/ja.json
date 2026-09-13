@@ -265,6 +265,10 @@
             "title": "配信の条件が無効です",
             "description": "配信 {delivery} には無効な条件 {condition} があります"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "配信がデフォルトで含まれなくなりました",
+            "description": "配信 {delivery} は独自の inclusion を設定しておらず、トランスポート {transport} はもはや 'default' をデフォルトとしません。この配信は今後、通知のたびには発火しません。この動作を維持したい場合は、配信に inclusion: [default] を追加してください。"
+        },
         "legacy_yaml_config": {
             "title": "Supernotify の YAML 設定を移動する必要があります",
             "fix_flow": {

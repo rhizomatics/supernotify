@@ -265,6 +265,10 @@
             "title": "Bezorging heeft een ongeldige voorwaarde",
             "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Bezorging wordt niet meer standaard opgenomen",
+            "description": "Bezorging {delivery} stelt geen eigen inclusion in, en transport {transport} gebruikt niet meer standaard 'default' - deze bezorging wordt niet meer bij elke melding geactiveerd. Voeg inclusion: [default] toe aan de bezorging als u dit gedrag wilt behouden."
+        },
         "legacy_yaml_config": {
             "title": "Supernotify YAML-configuratie moet worden verplaatst",
             "fix_flow": {

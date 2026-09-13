@@ -11,6 +11,10 @@
 - Switch entities are only published for Transport objects that are available
   - So you won't get clutter for things like `ntfy`,`gotfy`,`alexa_media_player` if those are not installed
 - Default delivery creation tightened for Notify Entity and Mobile Push, so these Delivery objects don't get created if there are no mobile apps or notify entities on the Home Assistant instance.
+- Transports have a `load` control, switching this off means there's no attempt to auto-discover it, and it never has a Delivery or Home Assistant entities created for it
+- Auto-configure for `email` will respect the direct mode if connection details present
+- Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the
+notification. The older keyword is still supported but deprecated.
 
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`

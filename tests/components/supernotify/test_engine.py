@@ -23,17 +23,18 @@ from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DUPE_POLICY,
+    CONF_INCLUSION,
     CONF_OPTIONS,
     CONF_PHONE_NUMBER,
     CONF_PRIORITY,
-    CONF_SELECTION,
     CONF_TARGET_REQUIRED,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
+    INCLUSION_BY_SCENARIO,
+    INCLUSION_DEFAULT,
+    INCLUSION_FALLBACK,
+    INCLUSION_FALLBACK_ON_ERROR,
     PRIORITY_CRITICAL,
-    SELECTION_BY_SCENARIO,
-    SELECTION_FALLBACK,
-    SELECTION_FALLBACK_ON_ERROR,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
     TRANSPORT_EMAIL,
@@ -50,11 +51,19 @@ from tests.components.supernotify.doubles_lib import DummyTransport
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
     "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
-    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "target": ["switch.bell_1", "script.siren_2"]},
-    "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
-    "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
-    "dummy": {CONF_TRANSPORT: "dummy"},
+    "chime": {
+        CONF_TRANSPORT: TRANSPORT_CHIME,
+        "target": ["switch.bell_1", "script.siren_2"],
+        CONF_INCLUSION: [INCLUSION_DEFAULT],
+    },
+    "alexa_media_player": {
+        CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER,
+        CONF_ACTION: "notify.alexa_media_player",
+        CONF_INCLUSION: [INCLUSION_DEFAULT],
+    },
+    "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server", CONF_INCLUSION: [INCLUSION_DEFAULT]},
+    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_INCLUSION: [INCLUSION_BY_SCENARIO]},
+    "dummy": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: [INCLUSION_DEFAULT]},
 }
 SCENARIOS: dict[str, dict] = {
     "scenario1": {CONF_DELIVERY: {"persistent": {}}},
@@ -405,7 +414,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         deliveries={
             "generic": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
-                CONF_SELECTION: [SELECTION_FALLBACK_ON_ERROR],
+                CONF_INCLUSION: [INCLUSION_FALLBACK_ON_ERROR],
                 CONF_ACTION: "notify.dummy",
             },
             "failing": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.make_fail"},
@@ -435,7 +444,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
     uut = SupernotifyEngine(
         mock_hass,
         deliveries={
-            "generic": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_SELECTION: [SELECTION_FALLBACK], CONF_ACTION: "notify.dummy"},
+            "generic": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_INCLUSION: [INCLUSION_FALLBACK], CONF_ACTION: "notify.dummy"},
             "failing": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.make_fail", CONF_PRIORITY: PRIORITY_CRITICAL},
         },
         transport_configs=TRANSPORT_DEFAULTS,

@@ -59,6 +59,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MOBILE_APP_ID,
     ATTR_VIDEO,
+    INCLUSION_DEFAULT,
     MANUFACTURER_APPLE,
     OPTION_DATA_KEYS_SELECT,
     OPTION_DEVICE_DISCOVERY,
@@ -127,9 +128,16 @@ class MobilePushTransport(Transport):
         return {"action_titles": self.action_titles, "action_title_failures": self.action_title_failures}
 
     @property
+    def inclusion_mode(self) -> list[str]:
+        # a mobile device maps cleanly to a recipient, so it's reasonable to fire on
+        # every notification by default
+        return [INCLUSION_DEFAULT]
+
+    @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,

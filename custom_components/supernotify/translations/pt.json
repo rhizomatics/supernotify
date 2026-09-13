@@ -265,6 +265,10 @@
             "title": "A entrega tem uma condição inválida",
             "description": "A entrega {delivery} tem uma condição inválida {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "A entrega não é mais incluída por padrão",
+            "description": "A entrega {delivery} não define seu próprio inclusion, e o transporte {transport} não usa mais 'default' por padrão - esta entrega não será mais acionada em todas as notificações. Adicione inclusion: [default] à entrega se ainda quiser esse comportamento."
+        },
         "legacy_yaml_config": {
             "title": "A configuração YAML do Supernotify precisa de ser movida",
             "fix_flow": {

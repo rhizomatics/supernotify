@@ -19,8 +19,8 @@ from custom_components.supernotify.const import (
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_TTS_ENTITY_ID,
+    RE_MEDIA_PLAYER_ENTITY_ID,
     SELECT_EXCLUDE,
-    SELECTION_EXPLICIT,
     TRANSPORT_TTS,
 )
 from custom_components.supernotify.model import (
@@ -41,7 +41,6 @@ if TYPE_CHECKING:
     from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
-RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"  # mypy flags up import from tts
 
@@ -74,12 +73,8 @@ class TTSTransport(Transport):
         if not hass_api.entity_ids_for_domain("media_player"):
             _LOGGER.debug("SUPERNOTIFY No media players available, `tts` transport not configured")
             return None
-        # a media_player target is required per notification, not positively identifiable
-        # ahead of time, so don't fire this on every notification - require it to be
-        # selected explicitly
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+
+        return self.delivery_defaults
 
     @property
     def default_config(self) -> TransportConfig:
@@ -87,12 +82,13 @@ class TTSTransport(Transport):
         config.delivery_defaults.action = "tts.speak"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.selection_rank = SelectionRank.FIRST
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_MOBILE_APP_ID],
-            OPTION_TARGET_SELECT: [RE_VALID_MEDIA_PLAYER, RE_MOBILE_APP],
+            OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
             OPTION_DEVICE_DISCOVERY: False,
             OPTION_DEVICE_DOMAIN: ["mobile_app"],

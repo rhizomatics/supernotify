@@ -265,6 +265,10 @@
             "title": "डिलीवरी की शर्त अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "डिलीवरी अब डिफ़ॉल्ट रूप से शामिल नहीं है",
+            "description": "डिलीवरी {delivery} अपना स्वयं का inclusion सेट नहीं करती, और परिवहन {transport} अब डिफ़ॉल्ट रूप से 'default' का उपयोग नहीं करता - यह डिलीवरी अब हर सूचना पर सक्रिय नहीं होगी। यदि आप यह व्यवहार बनाए रखना चाहते हैं, तो डिलीवरी में inclusion: [default] जोड़ें।"
+        },
         "legacy_yaml_config": {
             "title": "Supernotify YAML कॉन्फ़िगरेशन को स्थानांतरित करना आवश्यक है",
             "fix_flow": {

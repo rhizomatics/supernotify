@@ -11,8 +11,10 @@ from homeassistant.exceptions import NoEntitySpecifiedError
 from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DEVICE_DISCOVERY,
+    CONF_INCLUSION,
     CONF_OPTIONS,
     CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
     OPTION_DEVICE_DISCOVERY,
     TRANSPORT_CHIME,
 )
@@ -132,7 +134,13 @@ async def test_deliver_alias() -> None:
             }
         },
         transport_types=[ChimeTransport],
-        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "doorbell"}}},
+        deliveries={
+            "chimes": {
+                CONF_TRANSPORT: TRANSPORT_CHIME,
+                CONF_DATA: {"chime_tune": "doorbell"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            }
+        },
     )
 
     await ctx.test_initialize()
@@ -261,7 +269,9 @@ async def test_default_discovery_inheritance():
         transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
-    assert len(ctx.delivery_registry.deliveries) == 3
+    # "chime_1"/"chime_2"/"chime_3" are explicit; "chime" is also auto-configured for the
+    # same transport, explicit-only since the others already cover implicit selection
+    assert len(ctx.delivery_registry.deliveries) == 4
     for delivery in ctx.delivery_registry.deliveries.values():
         assert delivery.option_bool(OPTION_DEVICE_DISCOVERY)
 
@@ -587,7 +597,7 @@ def test_chime_supported_features_and_extra_attributes() -> None:
     uut = ChimeTransport(ctx)
     from custom_components.supernotify.model import TransportFeature
 
-    assert uut.supported_features == TransportFeature(0)
+    assert uut.supported_features == TransportFeature.SOUND
     attrs = uut.extra_attributes()
     assert "mini_transports" in attrs
 

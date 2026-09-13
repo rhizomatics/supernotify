@@ -4,7 +4,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
-from custom_components.supernotify.const import ATTR_TOPIC, SELECTION_EXPLICIT, TRANSPORT_MQTT
+from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
 from custom_components.supernotify.model import (
     DebugTrace,
     DeliveryConfig,
@@ -44,6 +44,7 @@ class MQTTTransport(Transport):
         config.delivery_defaults.action = "mqtt.publish"
         config.delivery_defaults.target_required = TargetRequired.NEVER
         config.delivery_defaults.options = {}
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     def validate_action(self, action: str | None) -> bool:
@@ -53,11 +54,7 @@ class MQTTTransport(Transport):
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         if hass_api.find_config_entry_data(HA_MQTT_DOMAIN) is None:
             return None
-        # a topic has no positively-identifiable mapping to a recipient/entity, so
-        # don't fire this on every notification - require it to be selected explicitly
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        delivery_config.selection = [SELECTION_EXPLICIT]
-        return delivery_config
+        return self.delivery_defaults
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         return None

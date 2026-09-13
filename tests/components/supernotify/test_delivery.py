@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
 from homeassistant.const import CONF_ACTION, CONF_CONDITIONS
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify.const import (
@@ -13,10 +14,10 @@ from custom_components.supernotify.const import (
     CONF_OCCUPANCY,
     CONF_TEMPLATE,
     CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
     OCCUPANCY_ALL,
     OCCUPANCY_ALL_IN,
     PRIORITY_VALUES,
-    SELECTION_DEFAULT,
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -52,7 +53,7 @@ async def test_simple_create(mock_context: Context) -> None:
     assert uut.alias is None
     assert uut.conditions is None
     assert uut.priority == list(PRIORITY_VALUES.keys())
-    assert uut.selection == [SELECTION_DEFAULT]
+    assert uut.inclusion == [INCLUSION_DEFAULT]
     assert uut.transport.name == "notify_entity"
     assert uut.data == {}
     assert uut.options == uut.transport.delivery_defaults.options
@@ -131,17 +132,19 @@ async def test_delivery_overrides_transport_delivery_defaults(mock_context: Cont
     assert uut.occupancy == OCCUPANCY_ALL_IN
 
 
-async def test_autogenerate_default_vs_explicit_naming(hass: HomeAssistant) -> None:
-    MockConfigEntry(domain="kodi", data={}).add_to_hass(hass)
+async def test_autogenerate_default_vs_explicit_selection(hass: HomeAssistant) -> None:
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_device", "bedroom_echo_unique_id")
     MockConfigEntry(domain="ntfy", data={}).add_to_hass(hass)
 
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
 
-    # positively-identifiable target (entity_id) -> fires by default, kept visibly distinct
-    assert "DEFAULT_kodi" in ctx.delivery_registry.deliveries
-    assert "DEFAULT_kodi" in [d.name for d in ctx.delivery_registry.implicit_deliveries]
-    # opaque per-delivery identifier (ntfy_device_id) -> explicit-only, named plainly
+    # both are named plainly after their transport, regardless of selection
+    # an Alexa device target is well-defined enough to fire by default
+    assert "alexa_devices" in ctx.delivery_registry.deliveries
+    assert "alexa_devices" in [d.name for d in ctx.delivery_registry.implicit_deliveries]
+    # opaque per-delivery identifier (ntfy_device_id) -> explicit-only
     assert "ntfy" in ctx.delivery_registry.deliveries
     assert "ntfy" not in [d.name for d in ctx.delivery_registry.implicit_deliveries]
 

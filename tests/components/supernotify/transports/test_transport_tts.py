@@ -4,7 +4,15 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import CONF_ACTION, CONF_OPTIONS, CONF_TARGET
 
-from custom_components.supernotify.const import ATTR_SPOKEN_MESSAGE, CONF_DATA, CONF_DELIVERY, CONF_TRANSPORT, TRANSPORT_TTS
+from custom_components.supernotify.const import (
+    ATTR_SPOKEN_MESSAGE,
+    CONF_DATA,
+    CONF_DELIVERY,
+    CONF_INCLUSION,
+    CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
+    TRANSPORT_TTS,
+)
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
@@ -86,7 +94,10 @@ def test_tts_transport_selects_targets() -> None:
 
 async def test_override_to_legacy_action() -> None:
     ctx = TestingContext(
-        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_ACTION: "tts.say"}}, services={"tts": ["speak"]}
+        deliveries={
+            "all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_ACTION: "tts.say", CONF_INCLUSION: [INCLUSION_DEFAULT]}
+        },
+        services={"tts": ["speak"]},
     )
     await ctx.test_initialize()
     n = Notification(ctx, "testing 123", target="media_player.kitchen_speakers")
@@ -106,7 +117,13 @@ async def test_override_to_legacy_action() -> None:
 
 async def test_alt_tts_provider() -> None:
     ctx = TestingContext(
-        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_OPTIONS: {"tts_entity_id": "tts.google_ai_tts"}}},
+        deliveries={
+            "all_speakers": {
+                CONF_TRANSPORT: TRANSPORT_TTS,
+                CONF_OPTIONS: {"tts_entity_id": "tts.google_ai_tts"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            }
+        },
         services={"tts": ["speak"]},
     )
     await ctx.test_initialize()
@@ -150,7 +167,7 @@ async def test_manual_android_tts_provider(hass: HomeAssistant) -> None:
 
 async def test_multiple_media_player_targets() -> None:
     ctx = TestingContext(
-        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS}},
+        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_INCLUSION: [INCLUSION_DEFAULT]}},
         services={"tts": ["speak"]},
     )
     await ctx.test_initialize()
@@ -174,7 +191,13 @@ async def test_multiple_media_player_targets() -> None:
 
 async def test_tts_with_language_option() -> None:
     ctx = TestingContext(
-        deliveries={"all_speakers": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_DATA: {"language": "fr-FR"}}},
+        deliveries={
+            "all_speakers": {
+                CONF_TRANSPORT: TRANSPORT_TTS,
+                CONF_DATA: {"language": "fr-FR"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            }
+        },
         services={"tts": ["speak"]},
     )
     await ctx.test_initialize()
@@ -214,7 +237,13 @@ async def test_mobile_tts_with_media_stream(hass: HomeAssistant) -> None:
 async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS, CONF_OPTIONS: {"device_discovery": True}}},
+        deliveries={
+            "phone_tts": {
+                CONF_TRANSPORT: TRANSPORT_TTS,
+                CONF_OPTIONS: {"device_discovery": True},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            }
+        },
         transport_types=[TTSTransport],
     )
     register_mobile_app(ctx.hass_api, device_name="jeans_phone", manufacturer="Apple")

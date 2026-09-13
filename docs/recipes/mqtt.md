@@ -24,7 +24,7 @@ delivery:
   downstairs_siren:
       transport: generic
       action: mqtt.publish
-      selection: scenario
+      inclusion: scenario
       priority:
         - critical
       data:

@@ -52,51 +52,6 @@ if TYPE_CHECKING:
     from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
-"""
-Replaced by reuse of original service schema to prune out fields
-
-DATA_FIELDS_ALLOWED_BY_DOMAIN = {
-    "light": [
-        "transition",
-        "rgb_color",
-        "color_temp_kelvin",
-        "brightness_pct",
-        "brightness_step_pct",
-        "effect",
-        "rgbw_color",
-        "rgbww_color",
-        "color_name",
-        "hs_color",
-        "xy_color",
-        "color_temp",
-        "brightness",
-        "brightness_step",
-        "white",
-        "profile",
-        "flash",
-    ],
-    "siren": ["tone", "duration", "volume_level"],
-    "mqtt": ["topic", "payload", "evaluate_payload", "qos", "retain"],
-    "script": ["variables", "wait", "wait_template"],
-    "ntfy": [
-        "title",
-        "message",
-        "markdown",
-        "tags",
-        "priority",
-        "click",
-        "delay",
-        "attach",
-        "attach_file",
-        "filename",
-        "email",
-        "call",
-        "icon",
-        "action",
-        "sequence_id",
-    ],
-    "tts": ["cache", "options", "message", "language", "media_player_entity_id", "entity_id", "target"],
-} """
 
 
 class GenericTransport(Transport):
@@ -115,6 +70,7 @@ class GenericTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,

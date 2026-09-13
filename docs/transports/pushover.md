@@ -67,7 +67,7 @@ notify:
 pushover_home:
   transport: pushover
   action: notify.pushover_home   # REQUIRED — must match configuration.yaml name
-  selection: default
+  inclusion: default
 ```
 
 #### Maxmimal
@@ -76,7 +76,7 @@ pushover_home:
 pushover_home:
   transport: pushover
   action: notify.pushover_home
-  selection: default
+  inclusion: default
   data:
     pushover_sound: "siren"
     pushover_url: "https://homeassistant.local:8123"
@@ -94,7 +94,7 @@ Activates when priority=critical or via scenario
 pushover_emergency:
   transport: pushover
   action: notify.pushover_home
-  selection: scenario
+  inclusion: scenario
   data:
     pushover_sound: "siren"
     pushover_retry: 60               # repeat every 60s (min 30)

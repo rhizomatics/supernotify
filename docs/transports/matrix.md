@@ -41,7 +41,7 @@ delivery:
       - "!roomid:matrix.org"
     data:
       matrix_priority_prefix: true
-    selection: explicit
+    inclusion: explicit
 ```
 
 For snapshots the integration checks local paths with `is_allowed_path`, so the SuperNotify media

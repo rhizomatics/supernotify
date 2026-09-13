@@ -2,7 +2,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from custom_components.supernotify.const import CONF_DATA, CONF_TRANSPORT, TRANSPORT_MQTT
+from custom_components.supernotify.const import CONF_DATA, CONF_INCLUSION, CONF_TRANSPORT, INCLUSION_DEFAULT, TRANSPORT_MQTT
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
@@ -21,6 +21,7 @@ async def test_deliver(mock_hass, mock_scenario_registry, uninitialized_unmocked
                     "warning": {"duration": 30, "mode": "emergency", "level": "low", "strobe": "true", "strobe_duty_cycle": 10}
                 },
             },
+            CONF_INCLUSION: [INCLUSION_DEFAULT],
         }
     }
     context = uninitialized_unmocked_config

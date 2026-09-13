@@ -398,7 +398,7 @@ class Notification(ArchivableObject):
                 # See also Recipient.target() for the disabled cases
                 recipients_disable_deliveries.extend(resolve_name(d) for d in recipient.disabling_delivery_names())
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                # all deliveries with SELECTION_DEFAULT in CONF_SELECTION
+                # all deliveries with INCLUSION_DEFAULT in CONF_INCLUSION
                 default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
 
         self.debug_trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
@@ -774,7 +774,9 @@ class Notification(ArchivableObject):
         delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery.name)
         if delivery_override is None:
             delivery_override = self.delivery_overrides.get(delivery.transport.name)
-        return delivery_override.data if delivery_override and delivery_override.data else {}
+        # a copy: callers (Envelope.__init__) pop message/title out of this, and the same
+        # override can now be shared by more than one delivery on the same transport
+        return dict(delivery_override.data) if delivery_override and delivery_override.data else {}
 
     @property
     def delivered_envelopes(self) -> list[Envelope]:
@@ -805,7 +807,7 @@ class Notification(ArchivableObject):
         self.debug_trace.record_target(delivery.name, stages[1], computed_target)
         computed_target += self.resolve_scenario_targets(delivery)
         self.debug_trace.record_target(delivery.name, stages[2], computed_target)
-        computed_target = delivery.select_targets(computed_target)
+        computed_target = delivery.select_targets(computed_target, self.context.hass_api)
         self.debug_trace.record_target(delivery.name, stages[3], computed_target)
         return computed_target
 
@@ -898,7 +900,7 @@ class Notification(ArchivableObject):
             # handle and resolve indirect targets, like person->mobile device or email
             for indirect_target in self.resolve_indirect_targets(override_target, delivery):
                 override_target += indirect_target
-            computed_target = delivery.select_targets(override_target)
+            computed_target = delivery.select_targets(override_target, self.context.hass_api)
             self.debug_trace.record_target(delivery.name, "600_delivery_override_target", computed_target)
 
         split_targets: list[Target] = computed_target.split_by_target_data()

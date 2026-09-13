@@ -51,6 +51,7 @@ dev=[
     "pytest-mock",
     "pytest-xdist",
     "pytest-icdiff",
+    "icdiff",
     "types-aiofiles",
     "types-cachetools",
     "pre-commit",
@@ -227,5 +228,6 @@ addopts = [
     "--cov-report=term-missing",
     "--cov=custom_components.supernotify",
     "--cov-fail-under=80",
+    "--verbosity=2",
     "--allow-hosts=127.0.0.1,127.0.1.1,localhost,::1",
 ]

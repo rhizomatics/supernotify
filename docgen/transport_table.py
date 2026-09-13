@@ -5,7 +5,6 @@ from unittest.mock import Mock
 import mkdocs_gen_files
 
 from custom_components.supernotify.engine import TRANSPORTS
-from custom_components.supernotify.transport import Transport
 
 
 def esc(v: Any) -> str:  # ruff: ignore[any-type]
@@ -29,17 +28,17 @@ def transport_doc() -> None:
         df.write("# Transport Configuration\n\n")
         df.write("See the [Options Table](../transports/index.md/#table-of-options) for a description of each option.\n\n")
 
-        df.write("## Default Selection\n")
+        df.write("## Default Inclusion\n")
 
-        df.write("|Transport|Rank|Target Required|Auto Default Delivery|Features|\n")
-        df.write("|---------|----|---------------|---------------------|--------|\n")
+        df.write("|Transport|Rank|Target Required|Inclusion|Features|\n")
+        df.write("|---------|----|---------------|---------|--------|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
             transport = transport_class(mock_context)
             features: list[str] = [f.name for f in transport.supported_features]
             df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
             df.write(f"|{transport.default_config.delivery_defaults.selection_rank}")
             df.write(f"|{transport.default_config.delivery_defaults.target_required}")
-            df.write(f"|{transport.auto_configure.__func__ != Transport.auto_configure}")
+            df.write(f"|{', '.join(transport.inclusion_mode)}")
             df.write(f"|{', '.join(features)}|\n")
 
         df.write("\n")

@@ -265,6 +265,10 @@
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Lieferung wird nicht mehr standardmäßig eingeschlossen",
+            "description": "Die Lieferung {delivery} legt kein eigenes inclusion fest, und der Transport {transport} verwendet 'default' nicht mehr als Standard - diese Lieferung wird nicht mehr bei jeder Benachrichtigung ausgelöst. Fügen Sie inclusion: [default] zur Lieferung hinzu, wenn Sie dieses Verhalten weiterhin möchten."
+        },
         "legacy_yaml_config": {
             "title": "Supernotify-YAML-Konfiguration muss verschoben werden",
             "fix_flow": {

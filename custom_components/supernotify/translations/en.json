@@ -382,6 +382,10 @@
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",
             "description": "The {delivery} delivery has an invalid condition {condition}"
+        },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Delivery No Longer Included By Default",
+            "description": "Delivery {delivery} does not set its own inclusion, and transport {transport} no longer defaults to 'default' - this delivery will not fire on every notification any more. Add inclusion: [default] to the delivery if you still want that."
         }
     },
     "selector": {

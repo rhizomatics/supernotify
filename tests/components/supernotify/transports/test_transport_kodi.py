@@ -176,32 +176,6 @@ def test_coerce_int(value: Any, expected: int | None) -> None:  # ruff: ignore[a
 
 
 # ---------------------------------------------------------------------------
-# Target entity filtering
-# ---------------------------------------------------------------------------
-
-
-def test_select_targets_filters_and_dedupes() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope(
-        targets=[KODI_ENTITY, "light.kitchen", KODI_ENTITY_2, KODI_ENTITY, "!room:server"],
-    )
-    assert uut.select_targets(envelope) == [KODI_ENTITY, KODI_ENTITY_2]
-
-
-def test_select_targets_non_string_target_skipped() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope(targets=[12345, None, KODI_ENTITY])
-    assert uut.select_targets(envelope) == [KODI_ENTITY]
-
-
-def test_select_targets_no_target_object() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope()
-    envelope.target = None
-    assert uut.select_targets(envelope) == []
-
-
-# ---------------------------------------------------------------------------
 # Happy path delivery
 # ---------------------------------------------------------------------------
 
@@ -537,18 +511,6 @@ async def test_deliver_attach_image_boolify_yaml_strings(yaml_value: str, expect
 
 
 @pytest.mark.asyncio
-async def test_deliver_no_valid_targets_fails() -> None:
-    uut = _make_transport()
-    envelope = _make_envelope(targets=["light.kitchen", "notify.mobile_app_phone"])
-
-    result = await uut.deliver(envelope)
-
-    assert result is False
-    uut.record_error.assert_called_once()
-    uut.call_action.assert_not_awaited()
-
-
-@pytest.mark.asyncio
 async def test_deliver_empty_target_list_fails() -> None:
     uut = _make_transport()
     envelope = _make_envelope(targets=[])
@@ -562,8 +524,10 @@ async def test_deliver_empty_target_list_fails() -> None:
 
 @pytest.mark.asyncio
 async def test_deliver_mixed_targets_only_valid_forwarded() -> None:
+    # deliver() trusts the envelope's targets are already valid media_player entities -
+    # that filtering happens upstream in Delivery.select_targets()
     uut = _make_transport()
-    envelope = _make_envelope(targets=["light.kitchen", KODI_ENTITY, "sensor.x", KODI_ENTITY_2])
+    envelope = _make_envelope(targets=[KODI_ENTITY, KODI_ENTITY_2])
 
     result = await uut.deliver(envelope)
 
