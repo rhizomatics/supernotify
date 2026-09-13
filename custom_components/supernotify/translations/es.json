@@ -302,6 +302,11 @@
             "description": "Esta instancia de Home Assistant está ejecutando Python {python_version}. Supernotify eliminará el soporte para Python 3.13 (y versiones de Home Assistant anteriores a 2026.3.0) cuando se publique Home Assistant 2026.10 - a partir de entonces, esta instancia no podrá instalar más actualizaciones de Supernotify hasta que el entorno de Python subyacente se actualice a Python 3.14 o posterior."
         }
     },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Notificación entregada ({delivered_count} entrega(s) enviada(s)), pero {uncategorized_count} destino(s) no se pudieron asociar a ninguna entrega y fueron descartados: {uncategorized_targets} (entregas comprobadas: {deliveries})"
+        }
+    },
     "options": {
         "step": {
             "init": {
