@@ -148,7 +148,7 @@
         "fixed"
       ]
     },
-    "selection": {
+    "inclusion": {
       "type": "array",
       "items": {
         "type": "string",

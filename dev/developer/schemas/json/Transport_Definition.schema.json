@@ -4,6 +4,10 @@
     "alias": {
       "type": "string"
     },
+    "load": {
+      "type": "boolean",
+      "default": true
+    },
     "enabled": {
       "type": "boolean",
       "default": true
@@ -158,7 +162,7 @@
             "fixed"
           ]
         },
-        "selection": {
+        "inclusion": {
           "type": "array",
           "items": {
             "type": "string",
