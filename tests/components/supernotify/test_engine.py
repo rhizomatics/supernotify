@@ -298,9 +298,10 @@ async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> N
 async def test_uncategorized_target_raises_after_delivery_completes(mock_hass: HomeAssistant) -> None:
     """A target set via `data: {delivery: {<name>: {target: ...}}}` that can't be matched to
 
-    any category raises `UncategorizedTargetError` - but only once every deliverable target
-    has already gone out (here, the "email" delivery on the same call still fires and is
-    counted), matching the "one uncategorized target must not block the rest" intent.
+    any category is still tracked and raised as `UncategorizedTargetError` - but only after
+    delivery has fully completed (the value still reaches `dummy`'s permissive delivery, since
+    a transport that declares no categories at all doesn't restrict on category either),
+    matching the "one uncategorized target must not block the rest" intent.
     """
     uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS)
     dummy = DummyTransport(uut.context)
@@ -312,14 +313,14 @@ async def test_uncategorized_target_raises_after_delivery_completes(mock_hass: H
             message="hello",
             data={
                 "delivery_selection": DELIVERY_SELECTION_EXPLICIT,
-                "delivery": {"dummy": {"target": "not_a_recognisable_target"}, "email": {"target": "me@test.com"}},
+                "delivery": {"dummy": {"target": "not_a_recognisable_target"}},
             },
         )
 
     assert exc_info.value.translation_key == "uncategorized_target"
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_placeholders == {
-        "delivered_count": "2",
+        "delivered_count": "1",
         "uncategorized_count": "1",
         "uncategorized_targets": "not_a_recognisable_target",
         "deliveries": "dummy",
