@@ -87,7 +87,9 @@ from custom_components.supernotify.const import (
     INCLUSION_DEFAULT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_PLATFORM_SELECT,
+    OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
+    RE_NOTIFY_ENTITY_ID,
     SELECT_INCLUDE,
     TRANSPORT_HTML5,
 )
@@ -152,6 +154,7 @@ class HTML5Transport(Transport):
         config.delivery_defaults.options = {
             OPTION_UNIQUE_TARGETS: True,  # stop Notify Entity also trying to handle these
             OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY_ID],
             # a notify.* entity's registered platform identifies it as this integration's
             # own, unlike the generic notify_entity transport which has no such distinction
             OPTION_TARGET_PLATFORM_SELECT: {SELECT_INCLUDE: [HA_HTML5_DOMAIN]},

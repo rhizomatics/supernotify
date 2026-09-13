@@ -95,6 +95,7 @@ One solution is making delivery `inclusion` a mandatory field, since its a minef
 1. Storage of switch enable/disable, so choices persist across restarts
 2. Domain qualified targets, e.g. media:media_player.kitchen, tts:media_player.kitchen, discord:8943493434
 3. Enable `mobile_push` if mobile apps / users defined in Home Assistant (this is dynamic config, so doesn't have a restart associated with it ) and also update any recipient and device config
+4. Alexa Devices should pre-populate with all the `announce` devices if no target given, and be an explicit inclusion for delivery. This is in-line with being maximally useful for minimal UI only config
 
 ### Target Driven Selection
 
