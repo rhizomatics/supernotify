@@ -217,6 +217,13 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
     )
 
 
+def _smtp_uses_config_entry() -> bool:
+    """Whether the installed HA version sets up smtp notify via a config entry import
+    flow (and so a direct SMTP connection can be reused from it), rather than as a
+    legacy discovered notify platform with no config entry to reuse."""
+    return importlib.util.find_spec("homeassistant.components.smtp.config_flow") is not None
+
+
 async def _setup_ha_smtp_notify(hass: HomeAssistant, extra_config: dict | None = None) -> None:
     config = {
         **(extra_config or {}),
@@ -235,7 +242,7 @@ async def _setup_ha_smtp_notify(hass: HomeAssistant, extra_config: dict | None =
         assert await async_setup_component(hass, next(iter(extra_config)), config)
 
     with ExitStack() as stack:
-        if importlib.util.find_spec("homeassistant.components.smtp.config_flow"):
+        if _smtp_uses_config_entry():
             # HA >= 2026.x: smtp notify is set up via a config entry import flow
             stack.enter_context(patch("homeassistant.components.smtp.config_flow.validate_input", return_value={}))
             stack.enter_context(patch("homeassistant.components.smtp.helpers.SmtpClient.connect"))
@@ -258,10 +265,16 @@ async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
     await ctx.test_initialize()
     assert "email" in ctx.delivery_registry.deliveries
     delivery = ctx.delivery_registry.deliveries["email"]
-    assert delivery.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
-    assert uut.host == "localhost"
-    assert uut.sender == "hass@localhost.org"
+    if _smtp_uses_config_entry():
+        # a config entry exists to reuse a direct SMTP connection from
+        assert delivery.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+        assert uut.host == "localhost"
+        assert uut.sender == "hass@localhost.org"
+    else:
+        # legacy discovered notify platform, no config entry to reuse a connection from
+        assert delivery.options.get(OPTION_MODE) is None
+        assert uut.host is None
 
 
 async def test_discover_smtp_integration_explicit_ha_smtp_mode(hass: HomeAssistant) -> None:
@@ -295,8 +308,12 @@ async def test_explicit_delivery_named_like_transport_absorbs_discovery(hass: Ho
     assert "DEFAULT_email" not in ctx.delivery_registry.deliveries
     assert "email" in ctx.delivery_registry.deliveries
     merged = ctx.delivery_registry.deliveries["email"]
-    # discovered direct-mode connection fills the gap the explicit config left open
-    assert merged.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+    if _smtp_uses_config_entry():
+        # discovered direct-mode connection fills the gap the explicit config left open
+        assert merged.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+    else:
+        # legacy discovered notify platform, no config entry to reuse a connection from
+        assert merged.options.get(OPTION_MODE) is None
     # explicit config is still honoured
     assert merged.template == "minimal_test.html.j2"
 
