@@ -302,6 +302,11 @@
             "description": "Deze Home Assistant-installatie draait op Python {python_version}. Supernotify laat de ondersteuning voor Python 3.13 (en Home Assistant-versies ouder dan 2026.3.0) vallen zodra Home Assistant 2026.10 wordt uitgebracht - daarna kan deze installatie geen verdere Supernotify-updates meer installeren totdat de onderliggende Python-omgeving is bijgewerkt naar Python 3.14 of hoger."
         }
     },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Melding verzonden ({delivered_count} bezorging(en) verstuurd), maar {uncategorized_count} doel(en) konden niet aan een bezorging worden gekoppeld en zijn genegeerd: {uncategorized_targets} (gecontroleerde bezorgingen: {deliveries})"
+        }
+    },
     "options": {
         "step": {
             "init": {
