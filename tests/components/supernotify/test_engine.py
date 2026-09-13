@@ -1,6 +1,7 @@
 from typing import Any, cast
 from unittest.mock import ANY, AsyncMock, Mock
 
+import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     CONF_ACTION,
@@ -43,6 +44,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.engine import SupernotifyEngine
+from custom_components.supernotify.exceptions import UncategorizedTargetError
 from custom_components.supernotify.model import TargetRequired
 from custom_components.supernotify.notify import SuperNotificationService
 from custom_components.supernotify.schema import DELIVERY_SCHEMA
@@ -291,6 +293,38 @@ async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> N
     assert dummy.service.calls[1].data["_UNKNOWN_"] == ["abc789"]
     assert dummy.service.calls[1].data["email"] == ["me@tester.net"]
     assert dummy.service.calls[1].data["mobile_app_id"] == ["mobile_app_new_iphone"]
+
+
+async def test_uncategorized_target_raises_after_delivery_completes(mock_hass: HomeAssistant) -> None:
+    """A target set via `data: {delivery: {<name>: {target: ...}}}` that can't be matched to
+
+    any category raises `UncategorizedTargetError` - but only once every deliverable target
+    has already gone out (here, the "email" delivery on the same call still fires and is
+    counted), matching the "one uncategorized target must not block the rest" intent.
+    """
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    with pytest.raises(UncategorizedTargetError) as exc_info:
+        await uut.async_send_message(
+            message="hello",
+            data={
+                "delivery_selection": DELIVERY_SELECTION_EXPLICIT,
+                "delivery": {"dummy": {"target": "not_a_recognisable_target"}, "email": {"target": "me@test.com"}},
+            },
+        )
+
+    assert exc_info.value.translation_key == "uncategorized_target"
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_placeholders == {
+        "delivered_count": "2",
+        "uncategorized_count": "1",
+        "uncategorized_targets": "not_a_recognisable_target",
+        "deliveries": "dummy",
+    }
+    assert len(dummy.service.calls) == 1
 
 
 async def test_recipient_can_disable_a_globally_enabled_delivery(mock_hass: HomeAssistant) -> None:
