@@ -15,6 +15,8 @@
 - Auto-configure for `email` will respect the direct mode if connection details present
 - Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the
 notification. The older keyword is still supported but deprecated.
+- Target selection for entities can now select on Home Assistant domain that provided the entity
+  - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with `notify_entity` as a back stop
 
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`

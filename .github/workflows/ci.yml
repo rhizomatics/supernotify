@@ -54,7 +54,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --python ${{ matrix.python-version }}
+        run: |
+          sudo apt-get install -y libturbojpeg
+          uv sync --python ${{ matrix.python-version }}
 
       - name: mypy
         run: uv run mypy custom_components/supernotify
