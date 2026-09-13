@@ -686,6 +686,7 @@ class Notification(ArchivableObject):
             "id",
             "created",
             "message",
+            "stats",
             "applied_scenario_names",
             "constrain_scenario_names",
             "required_scenario_names",
@@ -702,9 +703,15 @@ class Notification(ArchivableObject):
             "error_count",
             "delivery_exceptions",
             "uncategorized_targets",
+            "unassigned_targets",
+            "original_context",
             "deliveries",
         ]
         # preferred fields
+        raw: dict[str, Any] = dict(self.__dict__)
+        raw["unassigned_targets"] = self._unassigned_targets()
+        raw["stats"] = self._delivery_stats()
+
         result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
         if self.ha_context is not None:
             # Context.as_dict() takes no kwargs, so it can't go through sanitize() like everything else
@@ -714,19 +721,17 @@ class Notification(ArchivableObject):
                 user_name = self.people_registry.name_for_user_id(user_id)
                 if user_name:
                     original_context["user"] = user_name
-            result["original_context"] = original_context
+            raw["original_context"] = original_context
         result.update({
-            k: sanitize(
-                self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
-            )
+            k: sanitize(raw[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only))
             for k in preferred_order
-            if k in self.__dict__
+            if k in raw
         })
-        result["unassigned_targets"] = self._unassigned_targets()
+
         # all the rest not explicitly excluded
         result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
-            for k, v in self.__dict__.items()
+            for k, v in raw.items()
             if k not in result
             and k not in exposed_if_populated
             and k not in object_refs
@@ -735,12 +740,12 @@ class Notification(ArchivableObject):
             and (not minimal or k not in debug_only)
         })
         # the exposed only if populated fields
-        result.update({
-            k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
-            for k in exposed_if_populated
-            if self.__dict__.get(k)
-        })
+        result.update({k: sanitize(raw[k], minimal=minimal, occupancy_only=True) for k in exposed_if_populated if raw.get(k)})
+        return result
+
+    def _delivery_stats(self) -> dict[str, Any]:
         # delivery_stats: aggregate delivery metrics
+        result: dict[str, Any] = {}
         try:
             all_durations: dict[str, float] = {}
             total_ok = 0
@@ -757,7 +762,7 @@ class Notification(ArchivableObject):
                 if outcomes.get(EnvelopeOutcome.SKIPPED):
                     total_all += 1
             if all_durations:
-                result["stats"] = {
+                result = {
                     "total_duration_ms": round(sum(all_durations.values()), 1),
                     "slowest_delivery": max(all_durations, key=lambda k: all_durations[k]),
                     "fastest_delivery": min(all_durations, key=lambda k: all_durations[k]),

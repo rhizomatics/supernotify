@@ -39,6 +39,8 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
+- Improved order of fields in archive for most useful to top, and related together
+- HomeAssistant compatibility moved to 2026.9.2
 
 ## 2.4.2
 
