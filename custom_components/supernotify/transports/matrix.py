@@ -110,11 +110,12 @@ class MatrixTransport(Transport):
         """Validate that action is the matrix send_message service."""
         return action == "matrix.send_message"
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # matrix is YAML-configured (no config entry); the service only registers once
         # the bot has connected, so check for it directly
-        if not hass_api.has_service("matrix", "send_message"):
-            return None
+        return hass_api.has_service("matrix", "send_message")
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return self.delivery_defaults
 
     def select_rooms(self, envelope: Envelope) -> list[str]:

@@ -49,9 +49,10 @@ class MediaPlayerTransport(Transport):
     def target_categories(self) -> list[str | EntityCategory]:
         return [EntityCategory(domain="media_player")]
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return bool(hass_api.entity_ids_for_domain("media_player"))
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if not hass_api.entity_ids_for_domain("media_player"):
-            return None
         return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

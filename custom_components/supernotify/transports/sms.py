@@ -66,6 +66,13 @@ class SMSTransport(Transport):
     def target_categories(self) -> list[str | EntityCategory]:
         return [ATTR_PHONE]
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() below, an explicit delivery can supply its own action
+        # regardless of whether a gateway service is discoverable here - is_viable() can't
+        # see delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
+        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         """Discover the notify service registered by a supported SMS gateway integration, if installed."""
         for module in (

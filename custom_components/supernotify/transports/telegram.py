@@ -171,9 +171,10 @@ class TelegramTransport(Transport):
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_TELEGRAM_BOT_DOMAIN) is not None
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if hass_api.find_config_entry_data(HA_TELEGRAM_BOT_DOMAIN) is None:
-            return None
         return self.delivery_defaults
 
     def validate_action(self, action: str | None) -> bool:

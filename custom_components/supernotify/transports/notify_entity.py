@@ -78,9 +78,10 @@ class NotifyEntityTransport(Transport):
         # every notification by default
         return [INCLUSION_DEFAULT]
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return bool(hass_api.entity_ids_for_domain("notify"))
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if not hass_api.entity_ids_for_domain("notify"):
-            return None
         return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

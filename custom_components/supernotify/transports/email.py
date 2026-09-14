@@ -218,6 +218,14 @@ class EmailTransport(Transport):
         deliveries that set OPTION_MODE to 'direct'."""
         return action is not None or bool(self.host and self.sender)
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() above, an explicit delivery can supply its own action
+        # (or connection details) regardless of whether the native smtp integration or a
+        # transport-level host/sender is discoverable - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
+        # once it's confirmed no delivery (explicit or auto) actually uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         delivery_config: DeliveryConfig = self.delivery_defaults
         # always discover the native action, even if direct sending wins by default below -

@@ -34,7 +34,6 @@ from custom_components.supernotify import ARCHIVE_DIR, MEDIA_DIR, TEMPLATE_DIR
 
 from .const import (
     ATTR_ACTION,
-    ATTR_ACTION_CATEGORY,
     ATTR_ACTION_GROUPS,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
@@ -454,16 +453,20 @@ def _mobile_action_uri(value: str) -> str:
     return value
 
 
-MOBILE_ACTION_CALL_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ACTION): cv.string,
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_ACTION_CATEGORY): cv.string,
-        vol.Optional(ATTR_ACTION_URL): cv.url,
-        vol.Optional(ATTR_ACTION_URL_TITLE): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
+MOBILE_ACTION_CALL_SCHEMA = vol.All(
+    cv.deprecated(key="action_category"),  # deprecated v2.5.0
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ACTION): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional("action_category"): cv.string,
+            vol.Optional(ATTR_ACTION_URL): cv.url,
+            vol.Optional(ATTR_ACTION_URL_TITLE): cv.string,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
+
 MOBILE_ACTION_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_ACTION, CONF_ACTION_TEMPLATE): cv.string,

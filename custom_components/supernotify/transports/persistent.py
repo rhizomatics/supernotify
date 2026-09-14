@@ -35,9 +35,12 @@ class PersistentTransport(Transport):
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # persistent_notification is always available in HA core, no integration to discover -
         # but a UI popup on every single notification would be intrusive, so require opt-in
+        return True
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

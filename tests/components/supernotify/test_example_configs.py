@@ -10,8 +10,10 @@ from homeassistant.config import (
     load_yaml_config_file,
 )
 from homeassistant.const import CONF_ENABLED
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
@@ -66,6 +68,11 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
     # notify_entity's auto_configure (gated on the "notify" domain having an entity)
     # behaves the same as it would in a real house
     hass.states.async_set("notify.mock_notify_target", "unknown")
+    # ... and, for these examples specifically, an Alexa Devices integration entity and a
+    # paired mobile_app companion app too
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_device", "kitchen_echo_unique_id")
+    MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
     config = await hass.async_add_executor_job(load_yaml_config_file, str(config_path))
 
     if config_name in LEGACY_SHAPE_EXAMPLES:

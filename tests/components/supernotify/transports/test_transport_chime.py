@@ -133,7 +133,7 @@ async def test_deliver_alias() -> None:
                 },
             }
         },
-        transport_types=[ChimeTransport],
+        viable_transport_types=[ChimeTransport],
         deliveries={
             "chimes": {
                 CONF_TRANSPORT: TRANSPORT_CHIME,
@@ -266,7 +266,7 @@ async def test_default_discovery_inheritance():
             "chime_2": {CONF_TRANSPORT: TRANSPORT_CHIME},
             "chime_3": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_duration": 10}},
         },
-        transport_types=[ChimeTransport],
+        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
     # "chime_1"/"chime_2"/"chime_3" are explicit; "chime" is also auto-configured for the
@@ -516,7 +516,7 @@ def test_rest_command_mini_transport_no_entity_name() -> None:
 
 
 def test_script_mini_transport_no_entity_name() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     mini = ScriptChimeTransport()
     result = mini.build(
         ChimeTargetConfig(entity_id="script.foo"),
@@ -537,7 +537,7 @@ def test_media_player_mini_transport_with_enqueue_and_announce() -> None:
 
 
 async def test_analyze_target_no_entity_or_device() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     await ctx.test_initialize()
     uut = cast("ChimeTransport", ctx.transport(TRANSPORT_CHIME))
 
@@ -550,7 +550,7 @@ async def test_analyze_target_no_entity_or_device() -> None:
 
 
 async def test_analyze_target_unknown_domain() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     await ctx.test_initialize()
     uut = cast("ChimeTransport", ctx.transport(TRANSPORT_CHIME))
 
@@ -561,7 +561,7 @@ async def test_analyze_target_unknown_domain() -> None:
 
 
 async def test_analyze_target_no_matching_mini_transport() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     await ctx.test_initialize()
     uut = cast("ChimeTransport", ctx.transport(TRANSPORT_CHIME))
 
@@ -572,7 +572,7 @@ async def test_analyze_target_no_matching_mini_transport() -> None:
 
 
 async def test_deliver_exception_in_analyze_target() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_CHIME)
 
@@ -593,7 +593,7 @@ async def test_deliver_exception_in_analyze_target() -> None:
 
 
 def test_chime_supported_features_and_extra_attributes() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     uut = ChimeTransport(ctx)
     from custom_components.supernotify.model import TransportFeature
 
@@ -603,7 +603,7 @@ def test_chime_supported_features_and_extra_attributes() -> None:
 
 
 async def test_deliver_with_unrecognized_domain() -> None:
-    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}})
+    ctx = TestingContext(deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME}}, viable_transport_types=[ChimeTransport])
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_CHIME)
 

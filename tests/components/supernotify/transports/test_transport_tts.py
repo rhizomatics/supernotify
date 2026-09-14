@@ -146,7 +146,11 @@ async def test_alt_tts_provider() -> None:
 
 
 async def test_manual_android_tts_provider(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS}})
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS}},
+        viable_transport_types=[TTSTransport],
+    )
     register_mobile_app(ctx.hass_api, device_name="jeans_phone", manufacturer="Apple")
     register_mobile_app(ctx.hass_api, device_name="bobs_phone", manufacturer="Xiaomi")
     await ctx.test_initialize()
@@ -217,7 +221,11 @@ async def test_tts_with_language_option() -> None:
 
 
 async def test_mobile_tts_with_media_stream(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS}})
+    ctx = TestingContext(
+        homeassistant=hass,
+        deliveries={"phone_tts": {CONF_TRANSPORT: TRANSPORT_TTS}},
+        viable_transport_types=[TTSTransport],
+    )
     register_mobile_app(ctx.hass_api, device_name="bobs_phone", manufacturer="Xiaomi")
     await ctx.test_initialize()
     n = Notification(
@@ -244,7 +252,7 @@ async def test_auto_android_tts_provider(hass: HomeAssistant) -> None:
                 CONF_INCLUSION: [INCLUSION_DEFAULT],
             }
         },
-        transport_types=[TTSTransport],
+        viable_transport_types=[TTSTransport],
     )
     register_mobile_app(ctx.hass_api, device_name="jeans_phone", manufacturer="Apple")
     register_mobile_app(ctx.hass_api, device_name="bobs_phone", manufacturer="Xiaomi")

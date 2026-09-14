@@ -126,9 +126,10 @@ class NtfyTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_NTFY_DOMAIN) is not None
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if hass_api.find_config_entry_data(HA_NTFY_DOMAIN) is None:
-            return None
         return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

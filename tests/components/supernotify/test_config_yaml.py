@@ -8,6 +8,7 @@ from unittest.mock import patch
 from homeassistant import config as hass_config
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
@@ -91,6 +92,13 @@ async def test_transport_setup(hass: HomeAssistant) -> None:
 
 async def test_reload(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.home_alarm_control", "")
+    # FIXTURE (maximal.yaml) has "alexa_announce"/"mobile_push"/"alexa_show" deliveries with
+    # no action override, for alexa_devices/mobile_push/media_player respectively - each
+    # needs its own real discovery signal to register
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_device", "kitchen_echo_unique_id")
+    MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
+    hass.states.async_set("media_player.kitchen_2", "idle")
 
     await _setup_supernotify(hass, SIMPLE_CONFIG)
 
@@ -135,12 +143,15 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert "persistent" in uut.context.delivery_registry.deliveries
     assert "persistent" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    # +4 vs explicit deliveries: "chime", "email", "persistent" and "notify_entity" are all
-    # auto-configured alongside the fixture's own explicitly-named deliveries for those same
-    # transports (e.g. "chime" alongside play_chimes/doorbell_chime_alexa/sleigh_bells, "email"
-    # alongside html_email/backup_mail/direct_mail) - every loadable, viable transport gets its
-    # own auto-configured delivery regardless of what else is explicitly configured for it
-    assert len(uut.context.delivery_registry.deliveries) == 18
+    # +6 vs explicit deliveries: "chime", "email", "persistent", "notify_entity",
+    # "alexa_devices" and "media" are all auto-configured alongside the fixture's own
+    # explicitly-named deliveries for those same transports (e.g. "chime" alongside
+    # play_chimes/doorbell_chime_alexa/sleigh_bells, "email" alongside
+    # html_email/backup_mail/direct_mail) - every loadable, viable transport gets its own
+    # auto-configured delivery regardless of what else is explicitly configured for it.
+    # "mobile_push" doesn't add one of its own on top: its explicit delivery is itself
+    # named "mobile_push" (same as the transport), so the auto-config merges into it instead
+    assert len(uut.context.delivery_registry.deliveries) == 20
 
     # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
     # over from before the reload (both would report True) - actually call it and confirm the

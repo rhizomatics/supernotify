@@ -173,6 +173,13 @@ class AlexaMediaPlayerTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         return action is not None
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() above, an explicit delivery can supply its own action
+        # regardless of whether the service is discoverable here - is_viable() can't see
+        # delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
+        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action = hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
         if not action:

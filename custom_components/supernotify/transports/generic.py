@@ -87,9 +87,16 @@ class GenericTransport(Transport):
         _LOGGER.warning("SUPERNOTIFY Generic transport must have a qualified action name, e.g. notify.foo")
         return False
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # entirely delivery-driven (bring-your-own-action) - there's no transport-level
+        # prerequisite to check. A transport-level default action still gates whether
+        # auto_configure() below produces something usable; if not, DeliveryRegistry prunes
+        # this transport entirely once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        # with no action configured, there's nothing this transport can call, so treat
-        # it like an unconfigured integration rather than autogenerate a broken delivery
+        # with no default action configured, there's nothing to auto-generate a delivery
+        # from - validate_action()/Delivery.initialize() reject it before it's ever used
         action = self.delivery_defaults.action
         if action is None or "." not in action:
             return None

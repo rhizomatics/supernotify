@@ -170,7 +170,7 @@ def _ctx(delivery_data: dict | None = None, action: str = "notify.gotify") -> Te
         delivery_cfg["gotify_test"]["data"] = delivery_data  # ty: ignore[invalid-assignment]
     return TestingContext(
         deliveries=delivery_cfg,
-        transport_types=[GotifyTransport],
+        viable_transport_types=[GotifyTransport],
     )
 
 

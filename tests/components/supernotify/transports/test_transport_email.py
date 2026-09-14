@@ -430,7 +430,7 @@ def test_email_custom_template_path_exception() -> None:
 async def test_email_auto_configure_no_smtp(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+    uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL, force=True))
     result = uut.auto_configure(ctx.hass_api)
     assert result is None
 
@@ -827,7 +827,9 @@ async def test_deliver_direct_smtp_skips_without_connection() -> None:
         transports={TRANSPORT_EMAIL: {}},
     )
     await context.test_initialize()
-    uut = context.transport(TRANSPORT_EMAIL)
+    # the "direct_smtp" delivery fails validate_action() (no action, no host/sender), so
+    # never registers - force a bare instance to unit-test deliver()'s own graceful skip
+    uut = context.transport(TRANSPORT_EMAIL, force=True)
 
     envelope = Envelope(
         Delivery("direct_smtp", context.delivery_config("direct_smtp"), uut),

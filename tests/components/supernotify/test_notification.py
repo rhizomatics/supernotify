@@ -33,11 +33,13 @@ from custom_components.supernotify.const import (
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import TRANSPORTS as ALL_TRANSPORT_TYPES
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
+from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
@@ -105,7 +107,12 @@ async def test_legacy_default_prefixed_delivery_name_resolves_to_current() -> No
 
 
 async def test_explicit_delivery() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     # string forces explicit selection
@@ -212,7 +219,12 @@ async def test_unassigned_targets_reported_in_archive() -> None:
 
 
 async def test_call_transport_records_delivery_exception() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
@@ -228,7 +240,12 @@ async def test_call_transport_records_delivery_exception() -> None:
 
 
 async def test_custom_priority() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: "most_urgent"})
@@ -237,7 +254,12 @@ async def test_custom_priority() -> None:
 
 
 async def test_bad_priority() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     with pytest.raises(vol.Invalid):
@@ -245,7 +267,13 @@ async def test_bad_priority() -> None:
 
 
 async def test_scenario_delivery_no_change() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {}})
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
@@ -266,7 +294,11 @@ async def test_scenario_delivery_disable() -> None:
 
 async def test_scenario_delivery_enable() -> None:
     ctx = TestingContext(
-        deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}}
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
     ctx.delivery_registry.deliveries["chime"].enabled = False
@@ -277,7 +309,12 @@ async def test_scenario_delivery_enable() -> None:
 
 
 async def test_explicit_list_of_deliveries() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
     await uut.initialize()
@@ -285,7 +322,13 @@ async def test_explicit_list_of_deliveries() -> None:
 
 
 async def test_action_data_disable_delivery() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {}})
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(
@@ -413,7 +456,7 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
 async def test_build_targets_for_simple_case() -> None:
     ctx = TestingContext()
     await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
+    generic = ctx.transport(TRANSPORT_GENERIC, force=True)
     delivery = Delivery("simple", {}, generic)
 
     uut = Notification(ctx, "testing 123")
@@ -423,7 +466,12 @@ async def test_build_targets_for_simple_case() -> None:
 
 
 async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
@@ -432,7 +480,12 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
 
 
 async def test_snapshot_url() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -453,7 +506,12 @@ async def test_snapshot_url() -> None:
 
 
 async def test_camera_entity() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -477,7 +535,12 @@ async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
     """Capturing an image has real overhead (a service call, then polling for the file
     to appear) that must not be paid when no selected delivery would even use it — here
     only chime (no SNAPSHOT_IMAGE feature) is selected, despite camera media being present."""
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -496,7 +559,12 @@ async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
 async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
     """mobile (mobile_push) supports SNAPSHOT_IMAGE, so with camera media present the
     image grab must be kicked off."""
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,

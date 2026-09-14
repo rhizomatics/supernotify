@@ -4,8 +4,11 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers import entity_registry as er
 
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -20,6 +23,8 @@ async def test_alexa_whispering(hass: HomeAssistant):
     )
     ctx = TestingContext(
         homeassistant=hass,
+        transport_types=TRANSPORTS,
+        viable_transport_types=[AlexaDevicesTransport, MobilePushTransport],  # make sure is_viable forced
         yaml="""
   name: Supernotify
   platform: supernotify

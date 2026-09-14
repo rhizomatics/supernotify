@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, cast
 
 from pytest_unordered import unordered
 
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import DummyTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -19,6 +21,8 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     ctx = TestingContext(
         homeassistant=hass,
         transports={"notify_entity": {"enabled": False}},
+        transport_types=TRANSPORTS,
+        viable_transport_types=[MobilePushTransport],
         deliveries="""
         plain_email:
           transport: email

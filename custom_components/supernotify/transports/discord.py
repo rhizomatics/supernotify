@@ -114,6 +114,13 @@ class DiscordTransport(Transport):
         # still validates the shape itself once it arrives
         return [ATTR_DISCORD_CHANNEL]
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() below, an explicit delivery can supply its own notify.*
+        # action regardless of whether the service is discoverable here - is_viable() can't
+        # see delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
+        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action: str | None = hass_api.find_service("notify", "homeassistant.components.discord.notify")
         if action:

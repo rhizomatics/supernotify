@@ -17,6 +17,7 @@ from homeassistant.util import dt as dt_util
 from custom_components.supernotify.const import CONF_TRANSPORT
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import TRANSPORTS
+from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.model import TargetRequired, TransportConfig
 from custom_components.supernotify.transport import Transport
 
@@ -140,6 +141,9 @@ class DummyTransport(Transport):
 
     def validate_action(self, action: str | None) -> bool:
         return action is None
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return True
 
     @property
     def default_config(self) -> TransportConfig:

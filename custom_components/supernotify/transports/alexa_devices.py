@@ -9,7 +9,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.supernotify.const import (
     INCLUSION_DEFAULT,
-    INCLUSION_EXPLICIT,
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
@@ -64,8 +63,7 @@ class AlexaDevicesTransport(Transport):
 
     @property
     def inclusion_mode(self) -> list[str]:
-        # an Alexa device target is well-defined enough to fire on every notification
-        # by default, unless alexa_media_player is also present (see auto_configure())
+        # Notify Entity based
         return [INCLUSION_DEFAULT]
 
     @property
@@ -95,18 +93,14 @@ class AlexaDevicesTransport(Transport):
             EntityCategory(domain=HA_GROUP_DOMAIN),
         ]
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         if hass_api.find_config_entry_data(HA_ALEXA_DEVICES_DOMAIN) is None:
-            return None
-        if not hass_api.entity_ids_for_platform("notify", HA_ALEXA_DEVICES_PLATFORM):
-            # integration installed but no Alexa device has registered a notify entity yet
-            return None
-        delivery_config: DeliveryConfig = self.delivery_defaults
-        if hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE):
-            # Alexa Media Player is also available - stay explicit-only so the same
-            # physical Echo devices aren't double-notified by both integrations
-            delivery_config.inclusion = [INCLUSION_EXPLICIT]
-        return delivery_config
+            return False
+        # integration installed but no Alexa device has registered a notify entity yet
+        return bool(hass_api.entity_ids_for_platform("notify", HA_ALEXA_DEVICES_PLATFORM))
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        return self.delivery_defaults
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_alexa_devices: %s", envelope.message)

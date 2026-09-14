@@ -66,14 +66,16 @@ class TTSTransport(Transport):
         """Allow default action to be overridden, such as tts.say or tts.cloud_speak"""
         return action is not None
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         if not hass_api.has_service("tts", "speak"):
             _LOGGER.debug("SUPERNOTIFY No tts.speak action available, `tts` transport not configured")
-            return None
+            return False
         if not hass_api.entity_ids_for_domain("media_player"):
             _LOGGER.debug("SUPERNOTIFY No media players available, `tts` transport not configured")
-            return None
+            return False
+        return True
 
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return self.delivery_defaults
 
     @property

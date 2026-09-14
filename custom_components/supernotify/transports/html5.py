@@ -171,12 +171,13 @@ class HTML5Transport(Transport):
         """Validate that action is the html5 send_message service."""
         return action == "html5.send_message"
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         if hass_api.find_config_entry_data(HA_HTML5_DOMAIN) is None:
-            return None
-        if not hass_api.entity_ids_for_platform("notify", HA_HTML5_DOMAIN):
-            # integration installed but no browser has registered a push subscription yet
-            return None
+            return False
+        # integration installed but no browser has registered a push subscription yet
+        return bool(hass_api.entity_ids_for_platform("notify", HA_HTML5_DOMAIN))
+
+    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         return self.delivery_defaults
 
     async def _resolve_image_url(self, envelope: Envelope) -> str | None:

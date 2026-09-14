@@ -61,9 +61,10 @@ class MQTTTransport(Transport):
         """Override in subclass if transport has fixed action or doesn't require one"""
         return action == self.delivery_defaults.action
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_MQTT_DOMAIN) is not None
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if hass_api.find_config_entry_data(HA_MQTT_DOMAIN) is None:
-            return None
         return self.delivery_defaults
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:

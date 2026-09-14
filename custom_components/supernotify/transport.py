@@ -124,7 +124,32 @@ class Transport:
         """
         return [INCLUSION_EXPLICIT]
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        """Whether this transport currently has what it needs to auto-configure a delivery.
+
+        Default implementation just defers to `auto_configure()` and checks for None -
+        correct for any transport, but rebuilds (and discards) a `DeliveryConfig` to answer
+        what's otherwise a yes/no question. Override with a standalone check (matching
+        `auto_configure()`'s own condition) in a transport where that's cheap and doesn't
+        require mutating `self.delivery_defaults` to find out - most transports that gate
+        purely on hass_api state (a config entry, a registered service, discovered entities)
+        can. Skip the override where viability can only be discovered by doing the same
+        service/entity lookup `auto_configure()` itself needs to build the config (e.g.
+        `discord`, `pushover`, `sms` - discovering *which* service is available - or `email`,
+        which also decides *how* to send based on what's found).
+        """
+        return self.auto_configure(hass_api) is not None
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+        """Build the delivery config to auto-generate for this transport.
+
+        Only ever called once `is_viable()` has returned True for the same `hass_api` -
+        callers must check that first. Most overrides trust this and skip re-checking
+        their own viability condition; the exception is a transport whose viability can
+        only be discovered by doing the very lookup this method needs anyway (see
+        `is_viable()`'s docstring) - those keep their own guard and still return None,
+        simply because there's nothing to gain by trusting the caller there.
+        """
         return None
 
     def validate_action(self, action: str | None) -> bool:

@@ -54,6 +54,28 @@ its also possible to directly set them, as in this example:
     This has not been tested with Android, although both Apple and Android devices share same
     common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
 
+## Notification Grouping
+
+Set `mobile_push_group` in `data:` to visually stack notifications together on the device
+(iOS thread-id / Android notification group):
+
+```yaml
+  - action: supernotify.notify
+    data:
+      message: Someone is at the front door
+      data:
+        mobile_push_group: security
+```
+
+If left unset, a notification with `media.camera_entity_id` is grouped under that camera's
+entity id automatically; otherwise it's left ungrouped, so it appears on its own rather than
+being stacked with unrelated notifications. Critical-priority notifications are never grouped -
+iOS doesn't support it for them.
+
+!!! note
+    Don't confuse this with [Action Groups](../usage/mobile_actions.md#action-groups) - `action_groups:`
+    is Supernotify's own unrelated concept for reusable sets of actionable-notification buttons. The name clash is with the Companion App's own `group` attribute, not with Supernotify's action groups.
+
 ## Default Delivery
 
 A default Delivery called `DEFAULT_mobile_push` will be automatically generated for Mobile Push transport if no explicit ones

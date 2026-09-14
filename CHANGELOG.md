@@ -37,6 +37,12 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 ### MQTT
 - Delivery now accepts a topic as a target, and takes payload from message. Previous behaviour remains supported.
 
+### Mobile Actions
+- Exposed `group` on mobile actions as `mobile_push_group` (previously undocumented and mis-named `action_category`)
+- Fixed problem with `action_template` and `title_template` producing broken buttons
+- Stop forcing mobile notifications into 'general' or 'appd' group
+- New doc page on how they work
+
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
 - Improved order of fields in archive for most useful to top, and related together

@@ -18,6 +18,9 @@ New data keys (all optional):
                                       Auto-set to 0 for critical priority if not set.
     mobile_push_critical_priority   int  Android FCM priority override (1=min, 5=max).
     mobile_push_subtitle            str   iOS subtitle (line between title and message, iOS 10+)
+    mobile_push_group               str   Notification group for visual stacking (iOS thread-id / Android group).
+                                      Falls back to the camera entity id if there's a camera image,
+                                      otherwise left unset (notification appears individually).
     mobile_push_notification_tag    str   Notification tag for replacement (iOS) / grouping (Android)
     mobile_push_clear_notification  bool  Send clear_notification to dismiss previous same-tag notification.
                                       Requires push_notification_tag to be set.
@@ -49,7 +52,6 @@ from homeassistant.components.notify.const import ATTR_DATA
 
 from custom_components.supernotify import const
 from custom_components.supernotify.const import (
-    ATTR_ACTION_CATEGORY,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
     ATTR_DEFAULT,
@@ -152,9 +154,10 @@ class MobilePushTransport(Transport):
     def target_categories(self) -> list[str | EntityCategory]:
         return [ATTR_MOBILE_APP_ID]
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data("mobile_app") is not None
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        if hass_api.find_config_entry_data("mobile_app") is None:
-            return None
         return self.delivery_defaults
 
     def validate_action(self, action: str | None) -> bool:
@@ -187,6 +190,7 @@ class MobilePushTransport(Transport):
             "command_dnd": raw_data.pop("mobile_push_command_dnd", None),
             "command_ringer_mode": raw_data.pop("mobile_push_command_ringer_mode", None),
             # Cross-platform
+            "group": raw_data.pop("mobile_push_group", None),
             "notification_tag": raw_data.pop("mobile_push_notification_tag", None),
             "clear_notification": raw_data.pop("mobile_push_clear_notification", False),
         }
@@ -281,8 +285,6 @@ class MobilePushTransport(Transport):
         data: dict[str, Any] = dict(raw_data)
         ios_data: dict[str, Any] = {}
 
-        category = data.get(ATTR_ACTION_CATEGORY, "general")
-
         ios_data.setdefault("push", {})
         ios_data["push"]["interruption-level"] = ios_level
 
@@ -295,7 +297,11 @@ class MobilePushTransport(Transport):
         else:
             media = envelope.media or {}
             camera_entity_id_for_group = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
-            data.setdefault("group", category or camera_entity_id_for_group or "appd")
+            group = push_data["group"] or camera_entity_id_for_group
+            # unlike `tag`, an unset `group` leaves notifications ungrouped on the device
+            # (companion app default) rather than forcing them all into a shared bucket
+            if group:
+                data.setdefault("group", group)
 
         # 4. iOS extra fields
 
@@ -337,7 +343,14 @@ class MobilePushTransport(Transport):
             data[ATTR_IMAGE] = snapshot_url
 
         # 8. Actions: URL-title fetching, snooze action, action groups (unchanged)
-        data.setdefault("actions", [])
+        if "actions" in data and not isinstance(data["actions"], list):
+            _LOGGER.warning(
+                "SUPERNOTIFY mobile_push: data.actions must be a list of action objects, ignoring invalid value %s",
+                data["actions"],
+            )
+            data["actions"] = []
+        else:
+            data.setdefault("actions", [])
         for action in envelope.actions:
             app_url: str | None = self.hass_api.abs_url(action.get(ATTR_ACTION_URL))
             if app_url:
@@ -359,8 +372,6 @@ class MobilePushTransport(Transport):
             del data["actions"]
 
         # 9. Dispatch to each mobile target
-        action_data = envelope.core_action_data()
-        action_data[ATTR_DATA] = data
         clear_notification = bool(push_data["clear_notification"] and notification_tag)
         model_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MODEL_SELECT))
         hits = 0
@@ -371,14 +382,21 @@ class MobilePushTransport(Transport):
             if mobile_info is not None and not model_filter.match(mobile_info.model):
                 _LOGGER.debug("SUPERNOTIFY Skipping %s, model %s excluded by delivery filter", mobile_target, mobile_info.model)
                 continue
-            if mobile_info is None:
-                action_data[ATTR_DATA].update(android_data)
-                action_data[ATTR_DATA].update(ios_data)
-            elif mobile_info.manufacturer != MANUFACTURER_APPLE:
-                action_data[ATTR_DATA].update(android_data)
-            else:
-                action_data[ATTR_DATA].update(ios_data)
 
+            # fresh copy per target - customize_data below may prune `data` down to nothing
+            # (e.g. an Android target with no android/ios fields to merge in), and that must
+            # not carry over and clobber the next target's action_data
+            target_data = dict(data)
+            if mobile_info is None:
+                target_data.update(android_data)
+                target_data.update(ios_data)
+            elif mobile_info.manufacturer != MANUFACTURER_APPLE:
+                target_data.update(android_data)
+            else:
+                target_data.update(ios_data)
+
+            action_data = envelope.core_action_data()
+            action_data[ATTR_DATA] = target_data
             action_data = envelope.customize_data(action_data)
 
             if clear_notification:

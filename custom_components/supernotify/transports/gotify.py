@@ -118,6 +118,13 @@ class GotifyTransport(Transport):
         # delivery can set action: notify.<name> directly
         return config
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # a manually configured delivery can set its own action: notify.<name> regardless
+        # of whether the service is discoverable here - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
+        # once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         action: str | None = hass_api.find_service("notify", HA_GOTIFY_MODULE)
         if action:

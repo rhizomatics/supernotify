@@ -26,6 +26,7 @@ from custom_components.supernotify.model import ConditionVariables, TargetRequir
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.scenario import Scenario
 from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome
+from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
 
 from .doubles_lib import DummyTransport
 from .hass_setup_lib import TestingContext
@@ -189,6 +190,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
         },
         deliveries={"smtp": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}},
         transport_types=TRANSPORTS,
+        viable_transport_types=[AlexaDevicesTransport],
     )
     await ctx.test_initialize()
 

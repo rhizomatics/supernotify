@@ -297,9 +297,16 @@ class ChimeTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         return action is None
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # an explicit delivery can supply its own chime_aliases regardless of whether the
+        # transport-level default is configured - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport
+        # entirely once it's confirmed no delivery (explicit or auto) actually uses it
+        return True
+
     def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
         # with no chime_aliases configured, there's nothing to map a tune/priority to
-        # a target, so treat Chime like an unconfigured integration
+        # a target, so there's nothing to auto-generate a delivery from
         if OPTION_CHIME_ALIASES not in self.delivery_defaults.options:
             return None
         return self.delivery_defaults

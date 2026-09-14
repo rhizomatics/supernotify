@@ -116,12 +116,13 @@ For fine-grained control over how any targets pre-defined in a delivery are trea
   no target on the notification, it defaults to the Delivery target
 - `fixed` - Only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
 
-Additionally, `target_required` defines if this delivery needs targets to work, and should be skipped if no targets
-are resolved as specific to it, for example based on the `target_categories` option to select by category. This has values:
+Additionally, `target_required` defines if this delivery needs targets to work, and should be skipped if no targets are resolved as specific to it, for example based on the `target_categories` option to select by category. This has values:
 
 - `always` - Targets are mandatory, skip this delivery if no targets identified for it
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
+
+See [Targets](../usage/targets.md) for more info on how to use them.
 
 ## Delivery Inclusion
 
@@ -149,7 +150,7 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 
 Deliveries are exposed as `binary_sensor.supernotify_delivery_XXXX` entities in Home Assistant, with the configuration and current state. They can be enabled or disabled like any other entities, for run-time control of notifications. The transport is also exposed, as `binary_sensor.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled.
 
-## Completely Removing Deliveries
+## Removing
 
 Its also possible to completely switch off transports, so that they don't show up anywhere in Home Assistant, and there's no Delivery option, and no ability to dynamically switch them back on.
 
