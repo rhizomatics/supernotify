@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">132 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">129<span class="text"> run</span></button>
+            <span class="text">133 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">130<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">3<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">3<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_bf2512bcd384b419_kodi_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-14 11:43 +0000
+            created at 2026-09-14 23:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -161,20 +161,20 @@
     <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t"><span class="key">from</span> <span class="nam">typing</span> <span class="key">import</span> <span class="nam">TYPE_CHECKING</span><span class="op">,</span> <span class="nam">Any</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">const</span> <span class="key">import</span> <span class="nam">ATTR_ENTITY_ID</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">common</span> <span class="key">import</span> <span class="nam">boolify</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">const</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t">    <span class="nam">ATTR_DATA</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">    <span class="nam">ATTR_MEDIA_SNAPSHOT_URL</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">INCLUSION_DEFAULT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="nam">OPTION_TARGET_SELECT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">    <span class="nam">OPTION_UNIQUE_TARGETS</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">    <span class="nam">RE_NOTIFY_ENTITY_ID</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">    <span class="nam">TRANSPORT_HTML5</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">model</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">    <span class="nam">DebugTrace</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">    <span class="nam">DeliveryConfig</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t82" href="#t82">82</a></span><span class="t"><span class="key">from</span> <span class="nam">homeassistant</span><span class="op">.</span><span class="nam">helpers</span><span class="op">.</span><span class="nam">typing</span> <span class="key">import</span> <span class="nam">ConfigType</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t83" href="#t83">83</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t84" href="#t84">84</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">common</span> <span class="key">import</span> <span class="nam">boolify</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t85" href="#t85">85</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">const</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t86" href="#t86">86</a></span><span class="t">    <span class="nam">ATTR_DATA</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t87" href="#t87">87</a></span><span class="t">    <span class="nam">ATTR_MEDIA_SNAPSHOT_URL</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t88" href="#t88">88</a></span><span class="t">    <span class="nam">INCLUSION_DEFAULT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t89" href="#t89">89</a></span><span class="t">    <span class="nam">OPTION_TARGET_SELECT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">    <span class="nam">OPTION_UNIQUE_TARGETS</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">    <span class="nam">RE_NOTIFY_ENTITY_ID</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">    <span class="nam">TRANSPORT_HTML5</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t"><span class="key">from</span> <span class="nam">custom_components</span><span class="op">.</span><span class="nam">supernotify</span><span class="op">.</span><span class="nam">model</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">    <span class="nam">DebugTrace</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">    <span class="nam">EntityCategory</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t97" href="#t97">97</a></span><span class="t">    <span class="nam">SelectionRank</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t98" href="#t98">98</a></span><span class="t">    <span class="nam">TargetRequired</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -259,8 +259,8 @@
     <p class="pln"><span class="n"><a id="t177" href="#t177">177</a></span><span class="t">        <span class="com"># integration installed but no browser has registered a push subscription yet</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t178" href="#t178">178</a></span><span class="t">        <span class="key">return</span> <span class="nam">bool</span><span class="op">(</span><span class="nam">hass_api</span><span class="op">.</span><span class="nam">entity_ids_for_platform</span><span class="op">(</span><span class="str">&quot;notify&quot;</span><span class="op">,</span> <span class="nam">HA_HTML5_DOMAIN</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t179" href="#t179">179</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">    <span class="key">def</span> <span class="nam">auto_configure</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">hass_api</span><span class="op">:</span> <span class="nam">HomeAssistantAPI</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">DeliveryConfig</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">        <span class="key">return</span> <span class="nam">self</span><span class="op">.</span><span class="nam">delivery_defaults</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t180" href="#t180">180</a></span><span class="t">    <span class="key">def</span> <span class="nam">build_standard_deliveries</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">hass_api</span><span class="op">:</span> <span class="nam">HomeAssistantAPI</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">ConfigType</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t181" href="#t181">181</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="nam">self</span><span class="op">.</span><span class="nam">name</span><span class="op">:</span> <span class="op">{</span><span class="op">}</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t182" href="#t182">182</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t183" href="#t183">183</a></span><span class="t">    <span class="key">async</span> <span class="key">def</span> <span class="nam">_resolve_image_url</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">envelope</span><span class="op">:</span> <span class="nam">Envelope</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t184" href="#t184">184</a></span><span class="t">        <span class="str">&quot;&quot;&quot;Resolve a browser-reachable snapshot URL.</span>&nbsp;</span><span class="r"></span></p>
@@ -411,7 +411,7 @@
             <a class="nav" href="z_bf2512bcd384b419_kodi_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-14 11:43 +0000
+            created at 2026-09-14 23:16 +0000
         </p>
     </div>
 </footer>
