@@ -608,6 +608,8 @@ class DeliveryRegistry:
         configured_deliveries: dict[str, ConfigType] = {
             d: dc for d, dc in self._config_deliveries.items() if dc.get(CONF_TRANSPORT) == transport.name
         }
+        # hackily put here, since build_standard_deliveries can have side-effect of updating default deliveries
+        standard_deliveries: dict[str, ConfigType] = transport.build_standard_deliveries(context.hass_api)
 
         for d, dc in configured_deliveries.items():
             # don't care about ENABLED here since disabled deliveries can be overridden later
@@ -617,11 +619,10 @@ class DeliveryRegistry:
             else:
                 validated_deliveries[d] = delivery
 
-        # merge in standard deliveries but allow local override
-        standard_deliveries: dict[str, ConfigType] = transport.build_standard_deliveries(context.hass_api)
+        # merge in remaining standard deliveries but allow local override
         for d, dc in standard_deliveries.items():
             if d in configured_deliveries:
-                _LOGGER.info("SUPERNOTIFY Default standard delivery %s overridden by config")
+                _LOGGER.info("SUPERNOTIFY Default standard delivery %s overridden by config", d)
             else:
                 provenance = DeliveryProvenance.DEFAULT_STANDARD if d == transport.name else DeliveryProvenance.EXTRA_STANDARD
                 delivery = Delivery(d, dc, transport, provenance=provenance)

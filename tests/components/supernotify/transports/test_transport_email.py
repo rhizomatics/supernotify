@@ -297,7 +297,7 @@ async def test_discover_smtp_integration_explicit_ha_smtp_mode(hass: HomeAssista
     assert ctx.delivery_registry.deliveries["email"].action == "notify.gmail"
 
 
-async def test_explicit_delivery_named_like_transport_absorbs_discovery(hass: HomeAssistant) -> None:
+async def test_explicit_delivery_named_like_transport_overrides_discovery(hass: HomeAssistant) -> None:
     """An explicit delivery literally named after its transport doesn't need its own
     connection details - it's overrides the auto-configured/discovered delivery"""
 

@@ -97,7 +97,7 @@ async def test_resolve_name_leaves_existing_name_unchanged() -> None:
     ctx.add_delivery("notify_entity", TRANSPORT_NOTIFY_ENTITY)
     await ctx.test_initialize()
 
-    # the explicit "notify_entity" delivery absorbs the auto-configured defaults (merge),
+    # the explicit "notify_entity" delivery overrides the auto-configured defaults,
     # so there's only ever the one delivery to resolve to
     assert "notify_entity" in ctx.delivery_registry.deliveries
     assert ctx.delivery_registry.resolve_name("notify_entity") == "notify_entity"

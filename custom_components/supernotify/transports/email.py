@@ -20,7 +20,6 @@ from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
 from homeassistant.const import (
-    CONF_ACTION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -236,11 +235,8 @@ class EmailTransport(Transport):
         return True
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-
         # always discover the native action, even if direct sending wins by default below -
         # a specific delivery can still override OPTION_MODE back to 'ha_smtp' at merge
-        # time, and needs an action already sitting in these transport defaults to inherit
-        action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if (
             self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
             and self.host
@@ -250,8 +246,14 @@ class EmailTransport(Transport):
             # (explicit `connection:` on this transport, or reused from the
             # HA smtp integration's own connection details) - auto-configure for that
             return {self.name: {CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}}
+            # time, and needs an action already sitting in these transport defaults to inherit
+
+        action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if action:
-            return {self.name: {CONF_ACTION: action}}
+            # this should get computed directly in default_config(), however that doesn't have API access
+            self.delivery_defaults.action = action
+        if action:
+            return {self.name: {}}
         return {}
 
     @property
