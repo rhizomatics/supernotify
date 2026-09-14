@@ -4,10 +4,11 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     Target,
     TargetRequired,
@@ -64,8 +65,8 @@ class MQTTTransport(Transport):
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_MQTT_DOMAIN) is not None
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def recipient_target(self, recipient: dict[str, Any]) -> Target | None:
         return None

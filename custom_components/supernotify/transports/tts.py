@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.components.tts.const import ATTR_CACHE, ATTR_LANGUAGE, ATTR_OPTIONS
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     ATTR_MOBILE_APP_ID,
@@ -24,7 +25,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     MessageOnlyPolicy,
     SelectionRule,
@@ -75,8 +75,8 @@ class TTSTransport(Transport):
             return False
         return True
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     @property
     def default_config(self) -> TransportConfig:

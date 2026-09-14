@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     ATTR_MEDIA,
@@ -15,7 +16,7 @@ from custom_components.supernotify.const import (
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_MEDIA,
 )
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, EntityCategory, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, EntityCategory, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -52,8 +53,8 @@ class MediaPlayerTransport(Transport):
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return bool(hass_api.entity_ids_for_domain("media_player"))
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)

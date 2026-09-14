@@ -12,7 +12,7 @@ from custom_components.supernotify.const import CONF_DELIVERY_DEFAULTS, TRANSPOR
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import DeliveryConfig, Target, TransportConfig, TransportFeature
+from custom_components.supernotify.model import Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.generic import GenericTransport
 
@@ -162,7 +162,7 @@ async def test_common_features(mock_hass: HomeAssistant, mock_hass_api: HomeAssi
     assert attrs[ATTR_NAME] == transport_type.name
     assert isinstance(attrs[CONF_ENABLED], bool)
     assert attrs[CONF_DELIVERY_DEFAULTS] == transport.delivery_defaults
-    assert isinstance(transport.auto_configure(mock_hass_api), (DeliveryConfig, type(None)))
+    assert isinstance(transport.build_standard_deliveries(mock_hass_api), dict)
 
 
 async def test_transport_base_supported_features_and_default_config(mock_hass: HomeAssistant) -> None:

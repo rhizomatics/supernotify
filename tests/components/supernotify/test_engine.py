@@ -52,7 +52,7 @@ from tests.components.supernotify.doubles_lib import DummyTransport
 
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
-    "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
+    "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
     "chime": {
         CONF_TRANSPORT: TRANSPORT_CHIME,
         "target": ["switch.bell_1", "script.siren_2"],
@@ -164,7 +164,7 @@ async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mo
     )
     await uut.initialize()
     caller_context = Context()
-    await uut.async_send_message(message="testing 123", data={"delivery": "text"}, context=caller_context)
+    await uut.async_send_message(message="testing 123", data={"delivery": "sms"}, context=caller_context)
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "sms",
@@ -197,7 +197,7 @@ async def test_legacy_notify_service_call_propagates_context(mock_hass: Mock) ->
         mock_hass,
         "notify",
         "supernotify",
-        data={"message": "testing 123", "data": {"delivery": "text"}},
+        data={"message": "testing 123", "data": {"delivery": "sms"}},
         context=caller_context,
     )
     await uut._async_notify_message_service(call)
@@ -222,7 +222,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
         dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
     )
     await uut.initialize()
-    await uut.async_send_message(message="testing 123", data={"delivery": "text"})
+    await uut.async_send_message(message="testing 123", data={"delivery": "sms"})
     assert mock_hass.services.async_call.call_count == 1
     # no explicit context supplied, so one was synthesized rather than left None
     mock_hass.services.async_call.assert_called_with(
@@ -237,7 +237,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     assert isinstance(mock_hass.services.async_call.call_args.kwargs["context"], Context)
     # contra-test
     mock_hass.services.async_call.reset_mock()
-    await uut.async_send_message(message="testing 123")
+    await uut.async_send_message(message="testing 456")
     assert mock_hass.services.async_call.call_count == 6  # SMS + 2 notify + 2 chime + 1 mobile_push
 
 

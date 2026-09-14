@@ -35,12 +35,13 @@ from typing import TYPE_CHECKING, Any, cast
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_TELEGRAM
-from custom_components.supernotify.model import DebugTrace, DeliveryConfig, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
     from custom_components.supernotify.hass_api import HomeAssistantAPI
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,8 +175,8 @@ class TelegramTransport(Transport):
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_TELEGRAM_BOT_DOMAIN) is not None
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is one of the supported telegram_bot services."""

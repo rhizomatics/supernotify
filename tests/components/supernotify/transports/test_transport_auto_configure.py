@@ -1,5 +1,5 @@
-"""Tests for auto_configure() across transports that can be auto-discovered from
-an existing Home Assistant config entry (telegram, ntfy, kodi, lametric,
+"""Tests for build_standard_deliveries() across transports that can be auto-discovered
+from an existing Home Assistant config entry (telegram, ntfy, kodi, lametric,
 alexa_devices), a dynamically-named notify service (discord, pushover, sms), or
 unconditionally (persistent).
 
@@ -17,11 +17,12 @@ Path in upstream repo:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import pytest
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
+from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
     INCLUSION_DEFAULT,
@@ -48,6 +49,11 @@ from custom_components.supernotify.const import (
     TRANSPORT_TTS,
 )
 from custom_components.supernotify.model import DeliveryConfig
+from custom_components.supernotify.transports.alexa_devices import (
+    STANDARD_DELIVERY_ANNOUNCE_ALL,
+    STANDARD_DELIVERY_SPEAK_ALL,
+)
+from custom_components.supernotify.transports.chime import STANDARD_DELIVERY_SIREN_ALL
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -84,16 +90,17 @@ async def test_auto_configure_with_config_entry_is_explicit(hass: HomeAssistant,
     await ctx.test_initialize()
     uut = ctx.transport(transport_name)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert transport_name in result
+    dc = DeliveryConfig(result[transport_name], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_discord_auto_configure_no_service(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_DISCORD, force=True)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert uut.build_standard_deliveries(ctx.hass_api) == {}
 
 
 async def test_discord_auto_configure_discovers_service(hass: HomeAssistant) -> None:
@@ -107,18 +114,19 @@ async def test_discord_auto_configure_discovers_service(hass: HomeAssistant) -> 
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_DISCORD)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.discord_2"
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_DISCORD in result
+    dc = DeliveryConfig(result["discord"], uut.delivery_defaults)
+    assert dc.action == "notify.discord_2"
     # a discord channel/user ID isn't positively identifiable, so explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_pushover_auto_configure_no_service(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_PUSHOVER, force=True)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert uut.build_standard_deliveries(ctx.hass_api) == {}
 
 
 async def test_pushover_auto_configure_discovers_service(hass: HomeAssistant) -> None:
@@ -132,18 +140,19 @@ async def test_pushover_auto_configure_discovers_service(hass: HomeAssistant) ->
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_PUSHOVER)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.pushover_home"
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_PUSHOVER in result
+    dc = DeliveryConfig(result["pushover"], uut.delivery_defaults)
+    assert dc.action == "notify.pushover_home"
     # a pushover device/group isn't positively identifiable, so explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_sms_auto_configure_no_service(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS, force=True)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert uut.build_standard_deliveries(ctx.hass_api) == {}
 
 
 async def test_sms_auto_configure_discovers_twilio_service(hass: HomeAssistant) -> None:
@@ -157,11 +166,12 @@ async def test_sms_auto_configure_discovers_twilio_service(hass: HomeAssistant) 
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.twilio_sms"
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_SMS in result
+    dc = DeliveryConfig(result["sms"], uut.delivery_defaults)
+    assert dc.action == "notify.twilio_sms"
     # phone number is positively identified via the recipient's registered phone, so default
-    assert INCLUSION_DEFAULT in result.inclusion
+    assert INCLUSION_DEFAULT in dc.inclusion
 
 
 async def test_sms_auto_configure_discovers_mikrotik_service(hass: HomeAssistant) -> None:
@@ -175,10 +185,11 @@ async def test_sms_auto_configure_discovers_mikrotik_service(hass: HomeAssistant
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.mikrotik_sms"
-    assert INCLUSION_DEFAULT in result.inclusion
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_SMS in result
+    dc = DeliveryConfig(result["sms"], uut.delivery_defaults)
+    assert dc.action == "notify.mikrotik_sms"
+    assert INCLUSION_DEFAULT in dc.inclusion
 
 
 async def test_sms_auto_configure_prefers_twilio_over_mikrotik(hass: HomeAssistant) -> None:
@@ -197,9 +208,10 @@ async def test_sms_auto_configure_prefers_twilio_over_mikrotik(hass: HomeAssista
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.twilio_sms"
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_SMS in result
+    dc = DeliveryConfig(result["sms"], uut.delivery_defaults)
+    assert dc.action == "notify.twilio_sms"
 
 
 async def test_persistent_auto_configure_always_available_but_explicit(hass: HomeAssistant) -> None:
@@ -207,11 +219,12 @@ async def test_persistent_auto_configure_always_available_but_explicit(hass: Hom
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_PERSISTENT)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_PERSISTENT in result
     # persistent_notification is always available in HA core, no integration to discover,
     # but a UI popup on every notification would be intrusive, so it's explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    dc = DeliveryConfig(result["persistent"], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_tts_auto_configure_no_service_no_media_player(hass: HomeAssistant) -> None:
@@ -247,10 +260,11 @@ async def test_tts_auto_configure_service_and_media_player_is_explicit(hass: Hom
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_TTS)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_TTS in result
     # a media_player target is required per notification, so explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    dc = DeliveryConfig(result["tts"], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_media_player_auto_configure_no_media_players(hass: HomeAssistant) -> None:
@@ -267,17 +281,18 @@ async def test_media_player_auto_configure_with_media_player_is_explicit(hass: H
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MEDIA)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_MEDIA in result
     # a media_player target is required per notification, so explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    dc = DeliveryConfig(result["media"], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_alexa_media_player_auto_configure_no_service(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_ALEXA_MEDIA_PLAYER, force=True)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert uut.build_standard_deliveries(ctx.hass_api) == {}
 
 
 async def test_alexa_media_player_auto_configure_discovers_service(hass: HomeAssistant) -> None:
@@ -291,11 +306,12 @@ async def test_alexa_media_player_auto_configure_discovers_service(hass: HomeAss
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_ALEXA_MEDIA_PLAYER)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.alexa_media"
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_ALEXA_MEDIA_PLAYER in result
+    dc = DeliveryConfig(result["alexa_media_player"], uut.delivery_defaults)
+    assert dc.action == "notify.alexa_media"
     # a channel/device ID isn't positively identifiable, so explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_alexa_devices_stays_default_without_alexa_media_player(hass: HomeAssistant) -> None:
@@ -306,9 +322,48 @@ async def test_alexa_devices_stays_default_without_alexa_media_player(hass: Home
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_ALEXA)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert INCLUSION_DEFAULT in result.inclusion
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_ALEXA in result
+    dc = DeliveryConfig(result["alexa_devices"], uut.delivery_defaults)
+    assert INCLUSION_DEFAULT in dc.inclusion
+
+
+async def test_alexa_devices_speak_all_and_announce_all_conditional(hass: HomeAssistant) -> None:
+    """The extra "..._speak_all"/"..._announce_all" standard deliveries only appear when
+    at least one notify entity matches the naming convention, and only include the
+    matching entities - not every alexa_devices notify entity."""
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    ent_reg = er.async_get(hass)
+    ent_reg.async_get_or_create("notify", "alexa_device", "bedroom_speak_id", suggested_object_id="bedroom_echo_speak")
+    ent_reg.async_get_or_create("notify", "alexa_device", "kitchen_announce_id", suggested_object_id="kitchen_echo_announce")
+    ent_reg.async_get_or_create("notify", "alexa_device", "hall_id", suggested_object_id="hall_echo")
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_ALEXA)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    speak = DeliveryConfig(result["alexa_devices_speak_all"], uut.delivery_defaults)
+    assert speak.target is not None
+    assert speak.target.entity_ids == ["notify.bedroom_echo_speak"]
+    assert speak.inclusion == [INCLUSION_EXPLICIT]
+    announce = DeliveryConfig(result["alexa_devices_announce_all"], uut.delivery_defaults)
+    assert announce.target is not None
+    assert announce.target.entity_ids == ["notify.kitchen_echo_announce"]
+    assert announce.inclusion == [INCLUSION_EXPLICIT]
+
+
+async def test_alexa_devices_no_speak_or_announce_extras_without_matching_entities(hass: HomeAssistant) -> None:
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_device", "hall_id", suggested_object_id="hall_echo")
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_ALEXA)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert STANDARD_DELIVERY_SPEAK_ALL not in result
+    assert STANDARD_DELIVERY_ANNOUNCE_ALL not in result
 
 
 async def test_chime_auto_configure_no_aliases(hass: HomeAssistant) -> None:
@@ -318,7 +373,7 @@ async def test_chime_auto_configure_no_aliases(hass: HomeAssistant) -> None:
     # transport-level default, there's nothing to auto-generate a delivery from
     uut = ctx.transport(TRANSPORT_CHIME, force=True)
     assert uut.is_viable(ctx.hass_api)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert TRANSPORT_CHIME not in uut.build_standard_deliveries(ctx.hass_api)
 
 
 async def test_chime_auto_configure_with_aliases_configured(hass: HomeAssistant) -> None:
@@ -327,16 +382,40 @@ async def test_chime_auto_configure_with_aliases_configured(hass: HomeAssistant)
     uut = ctx.transport(TRANSPORT_CHIME, force=True)
     uut.delivery_defaults.options[OPTION_CHIME_ALIASES] = {"alexa_devices": "bell01"}
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result is uut.delivery_defaults
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_CHIME in result
+    assert result[TRANSPORT_CHIME] == {}
+
+
+async def test_chime_siren_all_created_when_sirens_exist(hass: HomeAssistant) -> None:
+    hass.states.async_set("siren.hallway", "off")
+    hass.states.async_set("siren.garage", "off")
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_CHIME, force=True)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    dc = DeliveryConfig(result["chime_siren_all"], uut.delivery_defaults)
+    assert dc.target is not None
+    assert dc.target.entity_ids == unordered(["siren.hallway", "siren.garage"])
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
+
+
+async def test_chime_no_siren_all_without_sirens(hass: HomeAssistant) -> None:
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_CHIME, force=True)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert STANDARD_DELIVERY_SIREN_ALL not in result
 
 
 async def test_gotify_auto_configure_no_service(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_GOTIFY, force=True)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert uut.build_standard_deliveries(ctx.hass_api) == {}
 
 
 async def test_gotify_auto_configure_discovers_service(hass: HomeAssistant) -> None:
@@ -350,10 +429,11 @@ async def test_gotify_auto_configure_discovers_service(hass: HomeAssistant) -> N
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_GOTIFY)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result.action == "notify.gotify"
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_GOTIFY in result
+    dc = DeliveryConfig(result["gotify"], uut.delivery_defaults)
+    assert dc.action == "notify.gotify"
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_matrix_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -370,10 +450,11 @@ async def test_matrix_auto_configure_service_registered_is_explicit(hass: HomeAs
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MATRIX)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_MATRIX in result
     # a room ID/alias isn't positively identifiable, so explicit-only
-    assert result.inclusion == [INCLUSION_EXPLICIT]
+    dc = DeliveryConfig(result, uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
 async def test_mobile_push_auto_configure_no_config_entry(hass: HomeAssistant) -> None:
@@ -390,9 +471,10 @@ async def test_mobile_push_auto_configure_with_config_entry_stays_default(hass: 
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert INCLUSION_DEFAULT in result.inclusion
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_MOBILE_PUSH in result
+    dc = DeliveryConfig(result, uut.delivery_defaults)
+    assert INCLUSION_DEFAULT in dc.inclusion
 
 
 async def test_notify_entity_auto_configure_no_notify_entities(hass: HomeAssistant) -> None:
@@ -409,9 +491,10 @@ async def test_notify_entity_auto_configure_with_notify_entity_stays_default(has
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_NOTIFY_ENTITY)
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert INCLUSION_DEFAULT in result.inclusion
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_NOTIFY_ENTITY in result
+    dc = DeliveryConfig(result, uut.delivery_defaults)
+    assert INCLUSION_DEFAULT in dc.inclusion
 
 
 async def test_generic_auto_configure_no_action(hass: HomeAssistant) -> None:
@@ -421,7 +504,7 @@ async def test_generic_auto_configure_no_action(hass: HomeAssistant) -> None:
     # no default action, there's nothing to auto-generate a delivery from
     uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     assert uut.is_viable(ctx.hass_api)
-    assert uut.auto_configure(ctx.hass_api) is None
+    assert TRANSPORT_GENERIC not in uut.build_standard_deliveries(ctx.hass_api)
 
 
 async def test_generic_auto_configure_with_action_configured(hass: HomeAssistant) -> None:
@@ -430,6 +513,6 @@ async def test_generic_auto_configure_with_action_configured(hass: HomeAssistant
     uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     uut.delivery_defaults.action = "notify.my_chat_server"
 
-    result = cast("DeliveryConfig", uut.auto_configure(ctx.hass_api))
-    assert result is not None
-    assert result is uut.delivery_defaults
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_GENERIC in result
+    assert result[TRANSPORT_GENERIC] == {}

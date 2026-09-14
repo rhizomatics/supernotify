@@ -4,6 +4,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     INCLUSION_DEFAULT,
@@ -17,7 +18,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     MessageOnlyPolicy,
     TransportConfig,
@@ -81,8 +81,8 @@ class NotifyEntityTransport(Transport):
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return bool(hass_api.entity_ids_for_domain("notify"))
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         targets = envelope.target.entity_ids or []

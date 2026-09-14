@@ -41,12 +41,15 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.const import (
+    CONF_ACTION,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL, TRANSPORT_GOTIFY
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -125,12 +128,11 @@ class GotifyTransport(Transport):
         # once it's confirmed no delivery (explicit or auto) uses it
         return True
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         action: str | None = hass_api.find_service("notify", HA_GOTIFY_MODULE)
         if action:
-            self.delivery_defaults.action = action
-            return self.delivery_defaults
-        return None
+            return {self.name: {CONF_ACTION: action}}
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         if action and action.startswith("notify."):

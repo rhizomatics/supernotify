@@ -67,6 +67,7 @@ class DummyService:
         schema: vol.Schema | None = None,
         response: ServiceResponse | None = None,
         exception: Exception | None = None,
+        module: str | None = None,
     ) -> None:
         self.hass = hass
         self.calls: list[ServiceCall] = []
@@ -76,6 +77,9 @@ class DummyService:
         self.domain: str = domain
         self.schema = schema
         self.response: ServiceResponse | None = response
+        self.job = Mock()
+        self.job.target = Mock()
+        self.job.target.__module__ = module  # type: ignore
         if hass is not None:
             if isinstance(hass, Mock):
                 DummyService.MOCKED_SERVICES[domain, action] = self.mocked_service_call

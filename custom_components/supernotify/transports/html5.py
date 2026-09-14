@@ -79,6 +79,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
@@ -92,7 +93,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     SelectionRank,
     TargetRequired,
@@ -177,8 +177,8 @@ class HTML5Transport(Transport):
         # integration installed but no browser has registered a push subscription yet
         return bool(hass_api.entity_ids_for_platform("notify", HA_HTML5_DOMAIN))
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def _resolve_image_url(self, envelope: Envelope) -> str | None:
         """Resolve a browser-reachable snapshot URL.

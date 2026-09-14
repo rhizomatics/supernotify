@@ -60,11 +60,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -152,8 +153,8 @@ class LaMetricTransport(Transport):
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_LAMETRIC_DOMAIN) is not None
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def validate_action(self, action: str | None) -> bool:
         # No external action required - transport uses lametric.message / lametric.chart directly

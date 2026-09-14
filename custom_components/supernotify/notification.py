@@ -14,6 +14,7 @@ from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import ATTR_ENTITY_ID
 from voluptuous import humanize
 
+from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
 
 from .archive import ArchivableObject
@@ -391,8 +392,8 @@ class Notification(ArchivableObject):
             for scenario in self.enabled_scenarios.values():
                 scenario_disable_deliveries.extend(resolve_name(d) for d in scenario.disabling_deliveries())
 
-            scenario_enable_deliveries = list(set(scenario_enable_deliveries))
-            scenario_disable_deliveries = list(set(scenario_disable_deliveries))
+            scenario_enable_deliveries = list(dict.fromkeys(scenario_enable_deliveries))
+            scenario_disable_deliveries = list(dict.fromkeys(scenario_disable_deliveries))
 
             for recipient in all_recipients:
                 recipients_enable_deliveries.extend(resolve_name(d) for d in recipient.enabling_delivery_names())
@@ -425,7 +426,7 @@ class Notification(ArchivableObject):
                 override_disable_deliveries.append(delivery)
 
         all_global_enabled: list[str] = list(
-            set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
+            dict.fromkeys(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
         )
         all_enabled: list[str] = all_global_enabled + recipients_enable_deliveries
         # override_enable_deliveries takes precedence: if the action call explicitly
@@ -433,7 +434,7 @@ class Notification(ArchivableObject):
         all_disabled: list[str] = [
             d for d in scenario_disable_deliveries + override_disable_deliveries if d not in override_enable_deliveries
         ]
-        override_enabled: list[str] = list(set(scenario_enable_deliveries + override_enable_deliveries))
+        override_enabled: list[str] = list(dict.fromkeys(scenario_enable_deliveries + override_enable_deliveries))
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
@@ -445,8 +446,17 @@ class Notification(ArchivableObject):
         ]
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
-        last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]
-        selected: list[str] = first + anywhere + last
+        config_last: list[str] = [
+            d.name
+            for d in unsorted_objs
+            if d.selection_rank == SelectionRank.LAST and d.provenance == DeliveryProvenance.CONFIG
+        ]
+        auto_last: list[str] = [
+            d.name
+            for d in unsorted_objs
+            if d.selection_rank == SelectionRank.LAST and d.provenance != DeliveryProvenance.CONFIG
+        ]
+        selected: list[str] = first + anywhere + config_last + auto_last
         self.debug_trace.record_delivery_selection("ranked", selected)
 
         selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)

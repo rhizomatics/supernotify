@@ -20,7 +20,9 @@ from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA,
     ATTR_PRIORITY,
+    CONF_INCLUSION,
     CONF_TUNE,
+    INCLUSION_EXPLICIT,
     OPTION_CHIME_ALIASES,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
@@ -33,7 +35,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     SelectionRule,
     Target,
@@ -53,6 +54,9 @@ if TYPE_CHECKING:
 # kept in sync with RE_VALID_CHIME below and this transport's target_categories property
 CHIME_ENTITY_DOMAINS = ["switch", "script", "group", "rest_command", "siren", "media_player"]
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
+
+# extra standard delivery grouping every siren - see build_standard_deliveries() below
+STANDARD_DELIVERY_SIREN_ALL = f"{TRANSPORT_CHIME}_siren_all"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -304,12 +308,23 @@ class ChimeTransport(Transport):
         # entirely once it's confirmed no delivery (explicit or auto) actually uses it
         return True
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        # with no chime_aliases configured, there's nothing to map a tune/priority to
-        # a target, so there's nothing to auto-generate a delivery from
-        if OPTION_CHIME_ALIASES not in self.delivery_defaults.options:
-            return None
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        """Its own default (only if chime_aliases is configured - with none, there's
+        nothing to map a tune/priority to a target), plus "..._siren_all" - all siren.*
+        entities, regardless of chime_aliases: unlike the other chime domains,
+        SirenChimeTransport.build() doesn't need a tune/alias mapping to call
+        siren.turn_on, so this extra doesn't share the alias requirement."""
+        deliveries: dict[str, ConfigType] = {}
+        if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
+            deliveries[self.name] = {}
+        siren_entity_ids = hass_api.entity_ids_for_domain("siren")
+        if siren_entity_ids:
+            deliveries[STANDARD_DELIVERY_SIREN_ALL] = {
+                CONF_TARGET: {ATTR_ENTITY_ID: siren_entity_ids},
+                CONF_INCLUSION: [INCLUSION_EXPLICIT],
+            }
+
+        return deliveries
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data: dict[str, Any] = {}

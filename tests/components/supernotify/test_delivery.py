@@ -312,7 +312,7 @@ async def test_autogenerate_default_vs_explicit_selection(hass: HomeAssistant) -
     assert "ntfy" not in [d.name for d in ctx.delivery_registry.implicit_deliveries]
 
 
-async def test_autogenerate_skips_on_name_collision(hass: HomeAssistant) -> None:
+async def test_autogenerate_skips_on_name_collision(hass: HomeAssistant, mock_context: Context) -> None:
     """A transport's name is reserved for its own delivery - a delivery configured for a
     *different* transport can't also use it. The misnamed delivery is rejected (with a
     repair issue raised) and the auto-configured delivery for the actual "ntfy" transport
@@ -324,7 +324,9 @@ async def test_autogenerate_skips_on_name_collision(hass: HomeAssistant) -> None
         deliveries={"ntfy": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.notify"}},
     )
     await ctx.test_initialize()
+    uut = Delivery("ntfy", {}, GenericTransport(mock_context))
 
+    await uut.initialize(ctx)
     assert ctx.delivery_registry.deliveries["ntfy"].transport.name == TRANSPORT_NTFY
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "delivery_ntfy_reserved_name") is not None

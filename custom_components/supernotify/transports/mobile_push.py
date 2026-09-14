@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING, Any
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify import const
 from custom_components.supernotify.const import (
@@ -70,12 +71,12 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     MessageOnlyPolicy,
     QualifiedTargetType,
@@ -143,6 +144,7 @@ class MobilePushTransport(Transport):
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
+            OPTION_UNIQUE_TARGETS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_DEVICE_DISCOVERY: False,
             OPTION_DATA_KEYS_SELECT: None,
@@ -157,8 +159,8 @@ class MobilePushTransport(Transport):
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data("mobile_app") is not None
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def validate_action(self, action: str | None) -> bool:
         return action is None

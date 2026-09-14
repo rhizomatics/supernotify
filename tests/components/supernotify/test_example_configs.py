@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
+from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
@@ -68,6 +69,13 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
     # notify_entity's auto_configure (gated on the "notify" domain having an entity)
     # behaves the same as it would in a real house
     hass.states.async_set("notify.mock_notify_target", "unknown")
+
+    def sms(call: object) -> None:
+        return None
+
+    sms.__module__ = "homeassistant.components.twilio_sms.notify"
+    hass.services.async_register("notify", "twilio_sms", sms)
+
     # ... and, for these examples specifically, an Alexa Devices integration entity and a
     # paired mobile_app companion app too
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
@@ -90,7 +98,6 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         TRANSPORT_NOTIFY_ENTITY: ["notify_entity"],
         TRANSPORT_MOBILE_PUSH: ["mobile_push"],
     }
-    optional_defaults: dict[str, list[str]] = {}
 
     expected: dict[str, list[str]] = {}
     configured: dict[str, list[str]] = {}
@@ -104,15 +111,16 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
             if INCLUSION_DEFAULT in dc.get(CONF_INCLUSION, inherited_inclusion):
                 expected.setdefault(dc[CONF_TRANSPORT], [])
                 expected[dc[CONF_TRANSPORT]].append(d)
+                if dc[CONF_TRANSPORT] not in expected[dc[CONF_TRANSPORT]]:
+                    expected[dc[CONF_TRANSPORT]].append(dc[CONF_TRANSPORT])  # auto-gen defaults
     for tname, tdef in expected_defaults.items():
         if tname not in configured:
             expected.setdefault(tname, tdef)
-    for tname, tdef in optional_defaults.items():
-        if tname in deliveries:
-            expected.setdefault(tname, tdef)
 
     assert deliveries is not None
-    assert deliveries == expected
+
+    for t in expected:  # ruff: ignore[dict-index-missing-items]
+        assert deliveries[t] == unordered(expected[t])
 
     recipients = deliveries = await hass.services.async_call(DOMAIN, "enquire_recipients", blocking=True, return_response=True)
     assert recipients is not None

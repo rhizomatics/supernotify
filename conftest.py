@@ -212,6 +212,8 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mock_http_session.get = AsyncMock()
     mocked.http_session.return_value = mock_http_session
     mocked.create_job = AsyncMock()
+    mocked.entity_ids_for_domain.return_value = []
+    mocked.entity_ids_for_platform.return_value = []
     return mocked
 
 

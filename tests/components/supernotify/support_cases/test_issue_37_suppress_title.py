@@ -21,7 +21,7 @@ async def support_case_fixture(hass: HomeAssistant):
     name: Supernotify
     platform: supernotify
     delivery:
-      tts:
+      cloud_tts:
         transport: generic
         action: tts.cloud_say
         inclusion: default
@@ -45,8 +45,8 @@ async def test_title_not_passed_to_action(support_case_fixture, hass: HomeAssist
     await uut.initialize()
     await uut.deliver()
 
-    assert list(uut.deliveries.keys()) == ["tts"]
-    envelope = uut.deliveries["tts"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
+    assert list(uut.deliveries.keys()) == ["cloud_tts"]
+    envelope = uut.deliveries["cloud_tts"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     service_call = envelope.calls[0]  # type: ignore
     assert service_call.action_data == {"message": "testing 123"}
     assert service_call.domain == "tts"

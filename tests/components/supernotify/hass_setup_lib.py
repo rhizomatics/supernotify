@@ -70,7 +70,6 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.model import DeliveryConfig
     from custom_components.supernotify.transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
@@ -178,18 +177,23 @@ def _force_viable_class(cls: type[Transport]) -> type[Transport]:
     is_viable() docstrings in production for the general shape of this problem). It must
     NOT also fabricate an auto-generated delivery out of nothing: most transports (per the
     contract in transport.py) trust is_viable() was already checked and no longer re-verify
-    real discovery signals in auto_configure() themselves. So auto_configure() here re-checks
-    the class's *real*, un-forced is_viable() first - a genuinely configured transport (real
-    chime_aliases, a real direct-SMTP connection, ...) still auto-generates normally; one
-    that only passes because of the forcing above does not.
+    real discovery signals in build_standard_deliveries() themselves. So
+    build_standard_deliveries() here re-checks the class's *real*, un-forced is_viable()
+    first - a genuinely configured transport (real chime_aliases, a real direct-SMTP
+    connection, ...) still auto-generates normally; one that only passes because of the
+    forcing above does not.
     """
 
-    def _auto_configure(self: Transport, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def _build_standard_deliveries(self: Transport, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         if cls.is_viable(self, hass_api):
-            return cls.auto_configure(self, hass_api)
-        return None
+            return cls.build_standard_deliveries(self, hass_api)
+        return {}
 
-    return type(cls.__name__, (cls,), {"is_viable": lambda self, hass_api: True, "auto_configure": _auto_configure})
+    return type(
+        cls.__name__,
+        (cls,),
+        {"is_viable": lambda self, hass_api: True, "build_standard_deliveries": _build_standard_deliveries},
+    )
 
 
 def _resolve_transport_types(
@@ -361,7 +365,7 @@ class TestingContext(Context):
                 self.services.setdefault(domain, {})
                 for action_or_action_kwargs in actions:
                     if isinstance(action_or_action_kwargs, dict):
-                        action = action_or_action_kwargs.pop("action")
+                        action = action_or_action_kwargs.pop("action", "test_action")
                         self.services[domain][action] = DummyService(self.hass, domain, action, **action_or_action_kwargs)
                     else:
                         self.services[domain][action_or_action_kwargs] = DummyService(
@@ -415,7 +419,7 @@ class TestingContext(Context):
 
     async def test_initialize(self, transport_instances: list[Transport] | None = None) -> None:
         if transport_instances:
-            self.delivery_registry._transport_instances = transport_instances
+            super().configure_for_tests(transport_instances)
         await self.initialize()
         self.hass_api.initialize()
         if self.hass_external_url:

@@ -284,19 +284,23 @@ async def test_discover_smtp_integration_explicit_ha_smtp_mode(hass: HomeAssista
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={
-            "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_HA_SMTP}},
+            "email": {
+                CONF_TRANSPORT: TRANSPORT_EMAIL,
+                CONF_ACTION: "notify.gmail",
+                CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_HA_SMTP},
+            },
         },
     )
     await _setup_ha_smtp_notify(hass)
 
     await ctx.test_initialize()
-    assert ctx.delivery_registry.deliveries["email"].action == "notify.mailservice"
+    assert ctx.delivery_registry.deliveries["email"].action == "notify.gmail"
 
 
 async def test_explicit_delivery_named_like_transport_absorbs_discovery(hass: HomeAssistant) -> None:
     """An explicit delivery literally named after its transport doesn't need its own
-    connection details - it's merged with (and overrides) the auto-configured/discovered
-    defaults, rather than being skipped in favour of a separate DEFAULT_email delivery."""
+    connection details - it's overrides the auto-configured/discovered delivery"""
+
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={"email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_TEMPLATE: "minimal_test.html.j2"}},
@@ -304,19 +308,9 @@ async def test_explicit_delivery_named_like_transport_absorbs_discovery(hass: Ho
     await _setup_ha_smtp_notify(hass)
 
     await ctx.test_initialize()
-    # merged into the explicit "email" delivery - no separate DEFAULT_email is created
-    assert "DEFAULT_email" not in ctx.delivery_registry.deliveries
     assert "email" in ctx.delivery_registry.deliveries
-    merged = ctx.delivery_registry.deliveries["email"]
-    if _smtp_uses_config_entry():
-        # discovered direct-mode connection fills the gap the explicit config left open
-        assert merged.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
-    else:
-        # legacy discovered notify platform, no config entry to reuse a connection from
-        assert merged.options.get(OPTION_MODE) is None
-    # explicit config is still honoured, regardless of whether the transport itself had
-    # a usable connection/action at the time this delivery was first validated
-    assert merged.template == "minimal_test.html.j2"
+    delivery = ctx.delivery_registry.deliveries["email"]
+    assert delivery.template == "minimal_test.html.j2"
 
 
 async def test_discover_no_smtp_integration(hass: HomeAssistant) -> None:
@@ -431,20 +425,20 @@ async def test_email_auto_configure_no_smtp(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL, force=True))
-    result = uut.auto_configure(ctx.hass_api)
-    assert result is None
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert result == {}
 
 
 async def test_email_auto_configure_direct_connection_no_ha_smtp(hass: HomeAssistant) -> None:
     """No HA smtp notify service is registered, but a direct SMTP connection is
-    configured on the transport - auto_configure() should still produce a usable
-    delivery, sending direct rather than via a (non-existent) HA notify action."""
+    configured on the transport - build_standard_deliveries() should still produce a
+    usable delivery, sending direct rather than via a (non-existent) HA notify action."""
     ctx = TestingContext(homeassistant=hass, transports={TRANSPORT_EMAIL: SMTP_TRANSPORT_CONFIG})
     await ctx.test_initialize()
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
-    result = uut.auto_configure(ctx.hass_api)
-    assert result is not None
-    assert result.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_EMAIL in result
+    assert result[TRANSPORT_EMAIL].get(CONF_OPTIONS, {}).get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
     assert "email" in ctx.delivery_registry.deliveries
     assert ctx.delivery_registry.deliveries["email"].options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
 

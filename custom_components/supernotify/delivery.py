@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from enum import StrEnum, auto
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
@@ -20,9 +21,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from custom_components.supernotify.hass_api import HomeAssistantAPI
-from custom_components.supernotify.model import ConditionVariables, DeliveryConfig, EntityCategory, SelectionRule, Target
-
 from . import DOMAIN
 from .common import ensure_list, sanitize
 from .const import (
@@ -39,7 +37,6 @@ from .const import (
     CONF_TITLE,
     CONF_TRANSPORT,
     INCLUSION_DEFAULT,
-    INCLUSION_EXPLICIT,
     INCLUSION_FALLBACK,
     INCLUSION_FALLBACK_ON_ERROR,
     OPTION_DATA_KEYS_EXCLUDE_RE,
@@ -59,6 +56,9 @@ from .const import (
     SELECT_EXCLUDE,
     SELECT_INCLUDE,
 )
+from .hass_api import HomeAssistantAPI
+from .model import ConditionVariables, DeliveryConfig, EntityCategory, SelectionRule, Target
+from .static_config import TRANSPORT_NAMES
 
 if TYPE_CHECKING:
     from homeassistant.core import State
@@ -73,10 +73,19 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+class DeliveryProvenance(StrEnum):
+    DEFAULT_STANDARD = auto()
+    EXTRA_STANDARD = auto()
+    CONFIG = auto()
+
+
 class Delivery(DeliveryConfig):
-    def __init__(self, name: str, conf: ConfigType, transport: Transport) -> None:
+    def __init__(
+        self, name: str, conf: ConfigType, transport: Transport, provenance: DeliveryProvenance = DeliveryProvenance.CONFIG
+    ) -> None:
         conf = conf or {}
         self.name: str = name
+        self.provenance: DeliveryProvenance = provenance
         self.transport: Transport = transport
         self._raw_conf: ConfigType = conf
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
@@ -99,6 +108,16 @@ class Delivery(DeliveryConfig):
 
     async def initialize(self, context: Context) -> bool:
         errors = 0
+        if self.name in TRANSPORT_NAMES and self.transport.name != self.name:
+            _LOGGER.warning(
+                "SUPERNOTIFY Delivery %s is a reserved name for the standard delivery of %s transport", self.name, self.name
+            )
+            context.hass_api.raise_issue(
+                f"delivery_{self.name}_reserved_name",
+                issue_key="delivery_reserved_name",
+                issue_map={"delivery": self.name},
+                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+            )
         if CONF_INCLUSION not in self._raw_conf and INCLUSION_DEFAULT not in self.inclusion:
             _LOGGER.warning(
                 "SUPERNOTIFY Delivery %s has no explicit inclusion, but transport %s no longer defaults to "
@@ -393,25 +412,24 @@ class DeliveryRegistry:
         self._fallback_on_error: list[Delivery] = []
         self._fallback_by_default: list[Delivery] = []
         self._implicit_deliveries: list[Delivery] = []
-        # test harness support
+
         self._transport_types: dict[type[Transport], dict[str, Any]]
         if isinstance(transport_types, list):
             self._transport_types = {t: {} for t in transport_types}
         else:
             self._transport_types = transport_types or {}
+        # test harness support
         self._transport_instances: list[Transport] | None = transport_instances
 
     async def initialize(self, context: Context) -> None:
         await self.initialize_transports(context)
-        await self.autogenerate_deliveries(context)
-        self.unload_unused_transports()
-        self.initialize_deliveries()
+        await self.initialize_deliveries()
 
     def unload_unused_transports(self) -> None:
         """Drop any transport that ended up with no delivery at all - explicit or auto-generated.
 
         Deliberately deferred until both initialize_transport_deliveries() (explicit) and
-        autogenerate_deliveries() (implicit) have run, rather than decided per-transport up
+        build_standard_deliveries() (implicit) have run, rather than decided per-transport up
         front: whether a transport is worth having can only be known once the full, resolved
         set of deliveries exists - for a transport like `generic` (bring-your-own-action,
         entirely delivery-driven), there's no transport-level state to check in advance at all.
@@ -481,7 +499,8 @@ class DeliveryRegistry:
 
         return None
 
-    def initialize_deliveries(self) -> None:
+    async def initialize_deliveries(self) -> None:
+
         for delivery in self._deliveries.values():
             if delivery.enabled:
                 if INCLUSION_FALLBACK_ON_ERROR in delivery.inclusion:
@@ -546,13 +565,15 @@ class DeliveryRegistry:
         return [d for d in self._implicit_deliveries if d.enabled]
 
     async def initialize_transports(self, context: Context) -> None:
-        """Use configure_for_tests() to set transports to mocks or manually created fixtures"""
         if self._transport_instances:
+            """Used by configure_for_tests() and TestingContext to set transports to mocks or manually created fixtures"""
             for transport in self._transport_instances:
                 self.transports[transport.name] = transport
                 await transport.initialize()
                 await self.initialize_transport_deliveries(context, transport)
+
         if self._transport_types:
+            # production usage
             for transport_class, kwargs in self._transport_types.items():
                 transport_config: ConfigType = self._transport_configs.get(transport_class.name, {})
                 if not transport_config.get(CONF_LOAD, True):
@@ -577,27 +598,38 @@ class DeliveryRegistry:
                 issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
                 learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
+
+        self.unload_unused_transports()
         _LOGGER.info("SUPERNOTIFY Configured deliveries %s", "; ".join(self._deliveries.keys()))
 
     async def initialize_transport_deliveries(self, context: Context, transport: Transport) -> None:
         """Validate and initialize deliveries at startup for this transport"""
         validated_deliveries: dict[str, Delivery] = {}
-        deliveries_for_this_transport = {
+        configured_deliveries: dict[str, ConfigType] = {
             d: dc for d, dc in self._config_deliveries.items() if dc.get(CONF_TRANSPORT) == transport.name
         }
-        for d, dc in deliveries_for_this_transport.items():
-            if d == transport.name:
-                # an explicit delivery literally named after its own transport is
-                # validated later, in autogenerate_deliveries, once discovery has updated
-                # transport.delivery_defaults - validating it against the stale
-                # pre-discovery defaults here could reject it needlessly
-                continue
+
+        for d, dc in configured_deliveries.items():
             # don't care about ENABLED here since disabled deliveries can be overridden later
-            delivery = Delivery(d, dc, transport)
+            delivery = Delivery(d, dc, transport, DeliveryProvenance.CONFIG)
             if not await delivery.initialize(context):
                 _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
             else:
                 validated_deliveries[d] = delivery
+
+        # merge in standard deliveries but allow local override
+        standard_deliveries: dict[str, ConfigType] = transport.build_standard_deliveries(context.hass_api)
+        for d, dc in standard_deliveries.items():
+            if d in configured_deliveries:
+                _LOGGER.info("SUPERNOTIFY Default standard delivery %s overridden by config")
+            else:
+                provenance = DeliveryProvenance.DEFAULT_STANDARD if d == transport.name else DeliveryProvenance.EXTRA_STANDARD
+                delivery = Delivery(d, dc, transport, provenance=provenance)
+
+                if not await delivery.initialize(context):
+                    _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
+                else:
+                    validated_deliveries[d] = delivery
 
         self._deliveries.update(validated_deliveries)
 
@@ -607,111 +639,3 @@ class DeliveryRegistry:
             transport.delivery_defaults.action,
             [d for d in self._deliveries.values() if d.enabled and d.transport == transport],
         )
-
-    async def autogenerate_deliveries(self, context: Context) -> None:
-        # Every loaded, viable transport gets an auto-configured delivery, whether or not
-        # explicit deliveries also exist for it - so supernotify can at least handle
-        # notifications sensibly out of the box even with an otherwise empty config
-
-        autogenerated: dict[str, Delivery] = {}
-        for transport in self.transports.values():
-            # auto-configure regardless of any explicit delivery already configured for this
-            # transport - the two coexist, only a direct name collision (below) is skipped.
-            # is_viable() is the contract auto_configure() itself relies on - must be checked
-            # here, since most overrides trust it's already been done and skip their own
-            transport_definition: DeliveryConfig | None = (
-                transport.auto_configure(context.hass_api) if transport.is_viable(context.hass_api) else None
-            )
-
-            # every transport is available as a 'standard' delivery of the same name - no
-            # 'DEFAULT_x' prefix (that's legacy naming, see resolve_name())
-            generated_name = transport.name
-            own_named_config = self._config_deliveries.get(generated_name)
-            is_own_transport_delivery = own_named_config is not None and own_named_config.get(CONF_TRANSPORT) == transport.name
-            # non-None only once the transport itself confirms it's viable, so later checks
-            # can rely on it being set rather than re-deriving "viable" as a separate bool
-            viable_transport_definition = (
-                transport_definition
-                if transport_definition is not None and transport.validate_action(transport_definition.action)
-                else None
-            )
-            existing_delivery = self._deliveries.get(generated_name)
-            if existing_delivery is not None:
-                if viable_transport_definition is None:
-                    # this transport has nothing to auto-configure, so the delivery
-                    # already using its name (for a different transport) keeps it
-                    _LOGGER.warning(
-                        "SUPERNOTIFY Skipping auto-configured delivery for %s, name %s already in use",
-                        transport.name,
-                        generated_name,
-                    )
-                    continue
-                # a transport's name is reserved for its own delivery once that transport
-                # can actually auto-configure one - a delivery for a *different* transport
-                # can't also use the name, unlike above where there was nothing to reserve it for
-                _LOGGER.warning(
-                    "SUPERNOTIFY Delivery %s is a reserved name for transport %s",
-                    generated_name,
-                    existing_delivery.transport.name,
-                )
-                context.hass_api.raise_issue(
-                    f"delivery_{generated_name}_reserved_name",
-                    issue_key="delivery_reserved_name",
-                    issue_map={"delivery": generated_name},
-                    learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
-                )
-                del self._deliveries[generated_name]
-
-            if is_own_transport_delivery and own_named_config is not None:
-                # an explicit delivery literally named after its own transport doesn't
-                # need its own connection details - it's merged with (and overrides) the
-                # auto-configured/discovered defaults, now that transport.delivery_defaults
-                # has just been updated above, rather than being skipped in favour of a
-                # separate same-named delivery. Delivery.initialize() below is the
-                # authoritative validity check, independent of transport_definition.
-                merged_delivery = Delivery(generated_name, own_named_config, transport)
-                if await merged_delivery.initialize(context):
-                    autogenerated[merged_delivery.name] = merged_delivery
-                    _LOGGER.info(
-                        "SUPERNOTIFY Merged auto-configured defaults into explicit delivery %s for %s",
-                        generated_name,
-                        transport.name,
-                    )
-                else:
-                    _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {generated_name} with errors")
-                continue
-
-            if viable_transport_definition is None:
-                if transport_definition:
-                    _LOGGER.debug(
-                        "SUPERNOTIFY No auto-configured delivery for transport %s, action failed validation", transport.name
-                    )
-                continue
-            _LOGGER.debug(
-                "SUPERNOTIFY Building auto-configured delivery for %s from transport %s",
-                transport.name,
-                viable_transport_definition,
-            )
-
-            # a *different*-named explicit delivery already covers implicit
-            # inclusion for this transport - don't also fire this one on every
-            # notification, just leave it addressable by transport name
-            has_explicit_delivery = any(dc.get(CONF_TRANSPORT) == transport.name for dc in self._config_deliveries.values())
-            if has_explicit_delivery and INCLUSION_DEFAULT in viable_transport_definition.inclusion:
-                viable_transport_definition.inclusion = [
-                    s for s in viable_transport_definition.inclusion if s != INCLUSION_DEFAULT
-                ]
-                if INCLUSION_EXPLICIT not in viable_transport_definition.inclusion:
-                    viable_transport_definition.inclusion.append(INCLUSION_EXPLICIT)
-
-            generated_delivery = Delivery(generated_name, viable_transport_definition.as_dict(), transport)
-            await generated_delivery.initialize(context)
-            generated_delivery.enabled = transport.enabled
-            autogenerated[generated_delivery.name] = generated_delivery
-            _LOGGER.info(
-                "SUPERNOTIFY Setting up delivery %s, inclusion %s",
-                generated_name,
-                ",".join(generated_delivery.inclusion),
-            )
-        if autogenerated:
-            self._deliveries.update(autogenerated)

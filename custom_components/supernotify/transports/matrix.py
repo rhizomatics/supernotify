@@ -45,11 +45,12 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_DATA, ATTR_MATRIX_ROOM, TRANSPORT_MATRIX
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     TargetRequired,
     TransportConfig,
@@ -115,8 +116,8 @@ class MatrixTransport(Transport):
         # the bot has connected, so check for it directly
         return hass_api.has_service("matrix", "send_message")
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def select_rooms(self, envelope: Envelope) -> list[str]:
         """Filter envelope targets down to valid Matrix room IDs or aliases.

@@ -16,8 +16,10 @@ There's an explanation of the aims and design of deliveries, transports and targ
   - So you won't get clutter for things like `ntfy`,`gotfy`,`alexa_media_player` if those are not installed
 - Default delivery creation tightened for Notify Entity and Mobile Push, so these Delivery objects don't get created if there are no mobile apps or notify entities on the Home Assistant instance.
 - Transports have a `load` control, switching this off means there's no attempt to auto-discover it, and it never has a Delivery or Home Assistant entities created for it
+- Transports with no automatic or manual Delivery pre-sets get unloaded, so don't appear as entities
 - Auto-configure for `email` will respect the direct mode if connection details present
 - Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the notification. The older keyword is still supported but deprecated.
+- Auto generated deliveries give way to manually configured deliveries of the same name, and come last in any selection battle to handle unique targets
 
 ### Targets
 
@@ -29,6 +31,13 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
 - A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
 - An error will be raised logged if there any targets that can't be mapped to a category - this won't stop the rest of the notification working, but will make it visible
+
+### Alexa Devices
+- Three automatically generated standard deliveries
+  - `alexa_devices` - picks up on any Alexa notify entities in the target list, does nothing if no targets
+  - `alexa_devices_speak_all` - sends notification to all *speak* Alexa notify entities, takes no targets
+  - `alexa_devices_announce_all` - sends notification to all *announce* Alexa notify entities, takes no targets
+- This means that it is easy with a Zero YAML configuration to use Alexa announcements - just add `alexa_devices_announce_all` to the list of deliveries
 
 ### Notify Entity
 - Target selection for notify entities now uses Home Assistant domain that provided the entity
@@ -52,6 +61,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 
 ### Fixes
 - Automation editor could leave `data` fields at `null`, for example `constrain_scenarios` which got rejected by schema validator. Null values now explicitly allowed, and handled as unset for optional values.
+- Fixed an obscure set amalgamation bug in `notification.py` `select_deliveries()` that could cause different results for multiple deliveries
 
 ## 2.4.1
 

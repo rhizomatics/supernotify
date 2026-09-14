@@ -19,7 +19,16 @@ import aiofiles
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_TIMEOUT, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_ACTION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SENDER,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
@@ -51,11 +60,11 @@ from custom_components.supernotify.const import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRICT_TEMPLATE,
     OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     MessageOnlyPolicy,
     SuppressionReason,
@@ -226,27 +235,24 @@ class EmailTransport(Transport):
         # once it's confirmed no delivery (explicit or auto) actually uses it
         return True
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        delivery_config: DeliveryConfig = self.delivery_defaults
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+
         # always discover the native action, even if direct sending wins by default below -
         # a specific delivery can still override OPTION_MODE back to 'ha_smtp' at merge
         # time, and needs an action already sitting in these transport defaults to inherit
         action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
-        if action:
-            delivery_config.action = action
         if (
-            delivery_config.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
+            self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
             and self.host
             and self.sender
         ):
             # usable direct SMTP connection is configured
             # (explicit `connection:` on this transport, or reused from the
             # HA smtp integration's own connection details) - auto-configure for that
-            delivery_config.options[OPTION_MODE] = EMAIL_OPTION_MODE_DIRECT
-            return delivery_config
+            return {self.name: {CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}}
         if action:
-            return delivery_config
-        return None
+            return {self.name: {CONF_ACTION: action}}
+        return {}
 
     @property
     def inclusion_mode(self) -> list[str]:
@@ -276,6 +282,7 @@ class EmailTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.inclusion = self.inclusion_mode
+
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
@@ -286,6 +293,7 @@ class EmailTransport(Transport):
             OPTION_STRICT_TEMPLATE: False,
             OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;",
             OPTION_PREHEADER_LENGTH: 100,
+            OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same address
             # only used for deliveries with OPTION_MODE set to 'direct'
             OPTION_SENDER_NAME: "Home Assistant",
             OPTION_DEFAULT_TITLE: "Home Assistant Notification",

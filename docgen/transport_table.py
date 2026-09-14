@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 import mkdocs_gen_files
 
+from custom_components.supernotify.const import OPTION_UNIQUE_TARGETS
 from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.model import EntityCategory, Target
 
@@ -65,12 +66,14 @@ def transport_doc() -> None:
             "deliveries' names, or a delivery's `target_categories` option (e.g. `generic`).\n\n"
         )
 
-        df.write("|Transport|Target Categories|\n")
-        df.write("|---------|------------------|\n")
+        df.write("|Transport|Target Categories|Unique Targets|\n")
+        df.write("|---------|------------------|--------------|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
             transport = transport_class(mock_context)
             categories = ", ".join(format_category(c) for c in transport.target_categories) or "-"
-            df.write(f"|[{transport.name}](../transports/{transport.name}.md)|{categories}|\n")
+            df.write(
+                f"|[{transport.name}](../transports/{transport.name}.md)|{categories}|{transport.default_config.delivery_defaults.options.get(OPTION_UNIQUE_TARGETS, False)}|\n"
+            )
 
         df.write("\n")
         df.write("## Default Options\n")

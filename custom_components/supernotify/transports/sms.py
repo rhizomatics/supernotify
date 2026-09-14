@@ -4,6 +4,10 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
+from homeassistant.const import (
+    CONF_ACTION,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     ATTR_PHONE,
@@ -11,11 +15,11 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     MessageOnlyPolicy,
     TransportConfig,
@@ -58,6 +62,7 @@ class SMSTransport(Transport):
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: False,
+            OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same number
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
         }
         return config
@@ -73,7 +78,7 @@ class SMSTransport(Transport):
         # transport entirely once it's confirmed no delivery (explicit or auto) uses it
         return True
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         """Discover the notify service registered by a supported SMS gateway integration, if installed."""
         for module in (
             "homeassistant.components.twilio_sms.notify",
@@ -81,10 +86,8 @@ class SMSTransport(Transport):
         ):
             action: str | None = hass_api.find_service("notify", module)
             if action:
-                delivery_config: DeliveryConfig = self.delivery_defaults
-                delivery_config.action = action
-                return delivery_config
-        return None
+                return {self.name: {CONF_ACTION: action}}
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

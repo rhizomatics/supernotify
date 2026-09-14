@@ -281,6 +281,11 @@ class MockGroup:
         self.attributes = {ATTR_ENTITY_ID: entities}
 
 
+class MockSiren:
+    def __init__(self) -> None:
+        pass
+
+
 async def test_deliver_to_group() -> None:
     """Test on_notify_chime"""
     context = TestingContext(
@@ -391,6 +396,38 @@ async def test_deliver_rest_command() -> None:
         ],
         any_order=True,
     )
+
+
+async def test_deliver_sound_sirens() -> None:
+    context = TestingContext(
+        entities={"siren.upstairs": MockSiren(), "siren.porch": MockSiren(), "siren.shed": MockSiren()},
+        transports={
+            TRANSPORT_CHIME: {
+                "delivery_defaults": {
+                    "options": {
+                        "chime_aliases": {
+                            "red_alert": {
+                                "siren": {"tune": "emergency"},
+                            }
+                        }
+                    },
+                },
+            }
+        },
+        deliveries={"siren": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "red_alert"}}},
+    )
+
+    await context.test_initialize()
+    uut = context.transport("chime")
+    await uut.initialize()
+
+    await uut.deliver(
+        Envelope(
+            context.delivery("siren"),
+            Notification(context),
+        )
+    )
+    assert uut is not None
 
 
 async def test_documentation_example() -> None:

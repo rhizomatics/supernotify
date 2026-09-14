@@ -427,8 +427,12 @@ async def test_parallel_push() -> None:
   mobile_tts:
     transport: mobile_push
     message: "TTS"
+    options:
+        unique_targets: false
   mobile_push:
     transport: mobile_push
+    options:
+        unique_targets: false
         """,
         recipients=[
             {

@@ -64,7 +64,11 @@ import re
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ACTION,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
@@ -79,7 +83,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
     EntityCategory,
     MessageOnlyPolicy,
     TargetRequired,
@@ -180,12 +183,11 @@ class AlexaMediaPlayerTransport(Transport):
         # transport entirely once it's confirmed no delivery (explicit or auto) uses it
         return True
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         action = hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
         if not action:
-            return None
-        self.delivery_defaults.action = action
-        return self.delivery_defaults
+            return {}
+        return {self.name: {CONF_ACTION: action}}
 
     async def _safe_service(
         self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None
