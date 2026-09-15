@@ -301,7 +301,7 @@ class Target:
     @classmethod
     def is_email(cls, target: str) -> bool:
         try:
-            return vol.Email()(target) is not None  # type: ignore[call-arg]
+            return vol.Email()(target) is not None  # type: ignore[call-arg] # ty: ignore[missing-argument]
         except vol.Invalid:
             return False
 
