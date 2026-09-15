@@ -32,7 +32,7 @@ def format_category(category: str | EntityCategory) -> str:
 
 def transport_doc() -> None:
     doc_filename = "developer/transports.md"
-    option_keys = []
+    option_keys: list[str] = []
     mock_context = Mock(custom_template_path=Path())
     for transport_class in TRANSPORTS:
         transport = transport_class(mock_context)
@@ -51,7 +51,7 @@ def transport_doc() -> None:
         df.write("|---------|----|---------------|---------|--------|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
             transport = transport_class(mock_context)
-            features: list[str] = [f.name for f in transport.supported_features]
+            features: list[str] = [f.name for f in transport.supported_features if f.name]
             df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
             df.write(f"|{transport.default_config.delivery_defaults.selection_rank}")
             df.write(f"|{transport.default_config.delivery_defaults.target_required}")
