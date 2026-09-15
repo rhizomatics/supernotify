@@ -615,7 +615,7 @@ class DeliveryRegistry:
             # don't care about ENABLED here since disabled deliveries can be overridden later
             delivery = Delivery(d, dc, transport, DeliveryProvenance.CONFIG)
             if not await delivery.initialize(context):
-                _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
+                _LOGGER.error(f"SUPERNOTIFY Ignoring configured delivery {d} with errors")
             else:
                 validated_deliveries[d] = delivery
 
@@ -628,7 +628,7 @@ class DeliveryRegistry:
                 delivery = Delivery(d, dc, transport, provenance=provenance)
 
                 if not await delivery.initialize(context):
-                    _LOGGER.error(f"SUPERNOTIFY Ignoring delivery {d} with errors")
+                    _LOGGER.error(f"SUPERNOTIFY Ignoring standard delivery {d} with errors")
                 else:
                     validated_deliveries[d] = delivery
 
