@@ -75,6 +75,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
 - Improved order of fields in archive for most useful to top, and related together
 - HomeAssistant compatibility moved to 2026.9.2
+- Developer automated documentation for Transports expose the new target configurations they have
 - Manifest updated so Supernotify will wait for all its dependent integrations before starting up
 
 ## 2.4.2
