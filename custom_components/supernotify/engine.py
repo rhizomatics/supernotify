@@ -67,7 +67,6 @@ if TYPE_CHECKING:
     import datetime as dt
 
     from .sensor import SupernotifyCounterSensor
-    from .transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 
