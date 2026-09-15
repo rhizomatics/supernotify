@@ -1,5 +1,15 @@
 {
     "title": "Supernotify",
+    "entity": {
+        "sensor": {
+            "notifications": {
+                "name": "Verzonden meldingen"
+            },
+            "failures": {
+                "name": "Mislukte meldingen"
+            }
+        }
+    },
     "services": {
         "reload": {
             "name": "Herladen",
