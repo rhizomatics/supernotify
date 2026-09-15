@@ -694,35 +694,44 @@ class Notification(ArchivableObject):
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
             "id",
+            "outcome",
             "created",
             "message",
+            "priority",
             "stats",
+            "delivered",
+            "failed",
+            "suppressed",
+            "skipped",
+            "fallback",
+            "error_count",
+            "dupe",
+            "force_resend",
+            "delivery_selection",
+            "delivery_overrides",
+            "delivery_selection",
+            "selected_deliveries",
             "applied_scenario_names",
             "constrain_scenario_names",
             "required_scenario_names",
             "enabled_scenarios",
             "selected_scenario_names",
-            "delivery_selection",
-            "delivery_overrides",
-            "delivery_selection",
-            "selected_deliveries",
-            "delivered",
-            "failed",
-            "suppressed",
-            "skipped",
-            "error_count",
             "delivery_exceptions",
             "uncategorized_targets",
             "unassigned_targets",
-            "original_context",
             "deliveries",
+            "delivery_exceptions",
+            "original_context",
+            "version",
         ]
         # preferred fields
         raw: dict[str, Any] = dict(self.__dict__)
         raw["unassigned_targets"] = self._unassigned_targets()
         raw["stats"] = self._delivery_stats()
+        raw["version"] = _VERSION
+        raw["outcome"] = self.outcome()
 
-        result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
+        result: dict[str, Any] = {}
         if self.ha_context is not None:
             # Context.as_dict() takes no kwargs, so it can't go through sanitize() like everything else
             original_context = dict(self.ha_context.as_dict())
