@@ -90,6 +90,8 @@ plugins:
         - docgen/transport_table.py
         - docgen/render_templates.py
 
+hooks:
+  - docgen/optimize_social_cards.py
 
 watch:
   - custom_components/supernotify
