@@ -56,13 +56,22 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, TRANSPORT_DISCORD
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
+from custom_components.supernotify.model import (
+    DebugTrace,
+    EntityCategory,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,9 +102,30 @@ class DiscordTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.action = "notify.discord"
+        config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.discord.notify")
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        # a numeric channel/user snowflake ID has no shape distinct enough for automatic
+        # matching, so it's only ever reachable here via explicit qualification (prefix,
+        # mapping, or this transport's/a delivery's own name) - select_channels() below
+        # still validates the shape itself once it arrives
+        return [ATTR_DISCORD_CHANNEL]
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() below, an explicit delivery can supply its own notify.*
+        # action regardless of whether the service is discoverable here - is_viable() can't
+        # see delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
+        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        if self.delivery_defaults.action:
+            return {self.name: {}}
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is a notify.* service.

@@ -34,7 +34,6 @@ from custom_components.supernotify import ARCHIVE_DIR, MEDIA_DIR, TEMPLATE_DIR
 
 from .const import (
     ATTR_ACTION,
-    ATTR_ACTION_CATEGORY,
     ATTR_ACTION_GROUPS,
     ATTR_ACTION_URL,
     ATTR_ACTION_URL_TITLE,
@@ -101,7 +100,9 @@ from .const import (
     CONF_EXPOSE_STATE,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
+    CONF_INCLUSION,
     CONF_LINKS,
+    CONF_LOAD,
     CONF_MANUFACTURER,
     CONF_MEDIA,
     CONF_MEDIA_PATH,
@@ -146,6 +147,7 @@ from .const import (
     CONF_URI,
     CONF_VOLUME,
     DELIVERY_SELECTION_VALUES,
+    INCLUSION_VALUES,
     OCCUPANCY_ALL,
     OCCUPANCY_VALUES,
     OPTION_CHIME_ALIASES,
@@ -157,7 +159,6 @@ from .const import (
     RESERVED_DATA_KEYS,
     RESERVED_SCENARIO_NAMES,
     SCENARIO_STATE_REFRESH_DEFAULT,
-    SELECTION_VALUES,
     SNAP_WAIT_DEFAULT,
     TARGET_REQUIRE_ALWAYS,
     TARGET_REQUIRE_NEVER,
@@ -240,7 +241,7 @@ def validate_scenario_names(scenarios: dict) -> dict:
 TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into first it finds that works
     cv.TARGET_FIELDS
     | {
-        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),  # type: ignore[call-arg]
+        vol.Optional(ATTR_EMAIL): vol.All(cv.ensure_list, [vol.Email()]),  # type: ignore[call-arg] # ty: ignore[missing-argument]
         vol.Optional(ATTR_PHONE): vol.All(cv.ensure_list, [phone]),
         vol.Optional(ATTR_MOBILE_APP_ID): vol.All(cv.ensure_list, [cv.service]),
         vol.Optional(ATTR_PERSON_ID): vol.All(cv.ensure_list, [cv.entity_id]),
@@ -250,7 +251,7 @@ TARGET_SCHEMA = vol.Any(  # order of schema matters, voluptuous forces into firs
     list[str],
 )
 
-DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(str, int, bool, float, dict, list)})
+DATA_SCHEMA = vol.Schema({vol.NotIn(RESERVED_DATA_KEYS): vol.Any(None, str, int, bool, float, dict, list)})
 
 MOBILE_DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_MANUFACTURER): cv.string,
@@ -318,13 +319,21 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
         TARGET_USE_MERGE_ALWAYS,
         TARGET_USE_FIXED,
     ]),
-    vol.Optional(CONF_SELECTION): vol.All(cv.ensure_list, [vol.In(SELECTION_VALUES)]),
+    vol.Optional(CONF_INCLUSION): vol.All(cv.ensure_list, [vol.In(INCLUSION_VALUES)]),
     vol.Optional(CONF_PRIORITY): vol.All(cv.ensure_list, [vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys())))]),
     vol.Optional(CONF_SELECTION_RANK): vol.In([
         SelectionRank.ANY,
         SelectionRank.FIRST,
         SelectionRank.LAST,
     ]),
+    # also settable at Delivery level - a Transport's delivery_defaults let these be
+    # configured once for its auto-generated delivery, without needing an explicit Delivery
+    vol.Optional(CONF_ALIAS): cv.string,
+    vol.Optional(CONF_TEMPLATE): cv.string,
+    vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
+    vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
+    vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
+    vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
 })
 
 
@@ -339,15 +348,10 @@ def _migrate_condition(config: dict) -> dict:
 
 DELIVERY_SCHEMA = vol.All(
     _migrate_condition,
+    cv.deprecated(key=CONF_SELECTION, replacement_key=CONF_INCLUSION),
     DELIVERY_CONFIG_SCHEMA.extend({
         vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
-        vol.Optional(CONF_ALIAS): cv.string,
-        vol.Optional(CONF_TEMPLATE): cv.string,
-        vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
-        vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
         vol.Optional(CONF_ENABLED): cv.boolean,
-        vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
-        vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
     }),
 )
 
@@ -368,14 +372,18 @@ TRANSPORT_SCHEMA = vol.All(
     cv.deprecated(key=CONF_DEVICE_MODEL_EXCLUDE),  # deprecated v1.9.0
     vol.Schema({
         vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_LOAD, default=True): cv.boolean,
+        vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+        vol.Optional(CONF_DELIVERY_DEFAULTS): vol.All(
+            cv.deprecated(key=CONF_SELECTION, replacement_key=CONF_INCLUSION), DELIVERY_CONFIG_SCHEMA
+        ),
+        # only meaningful for transports (eg smtp) that own their own network connection
+        vol.Optional(CONF_CONNECTION): CONNECTION_SCHEMA,
+        # deprecated, replaced by options usage
         vol.Optional(CONF_DEVICE_DOMAIN): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEVICE_MODEL_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEVICE_MODEL_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DEVICE_DISCOVERY): cv.boolean,
-        vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-        vol.Optional(CONF_DELIVERY_DEFAULTS): DELIVERY_CONFIG_SCHEMA,
-        # only meaningful for transports (eg smtp) that own their own network connection
-        vol.Optional(CONF_CONNECTION): CONNECTION_SCHEMA,
     }),
 )
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
@@ -445,16 +453,20 @@ def _mobile_action_uri(value: str) -> str:
     return value
 
 
-MOBILE_ACTION_CALL_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ACTION): cv.string,
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_ACTION_CATEGORY): cv.string,
-        vol.Optional(ATTR_ACTION_URL): cv.url,
-        vol.Optional(ATTR_ACTION_URL_TITLE): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
+MOBILE_ACTION_CALL_SCHEMA = vol.All(
+    cv.deprecated(key="action_category"),  # deprecated v2.5.0
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ACTION): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional("action_category"): cv.string,
+            vol.Optional(ATTR_ACTION_URL): cv.url,
+            vol.Optional(ATTR_ACTION_URL_TITLE): cv.string,
+        },
+        extra=vol.ALLOW_EXTRA,
+    ),
 )
+
 MOBILE_ACTION_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_ACTION, CONF_ACTION_TEMPLATE): cv.string,

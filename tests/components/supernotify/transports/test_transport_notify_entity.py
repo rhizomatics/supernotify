@@ -5,7 +5,9 @@ from pytest_unordered import unordered
 from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     TRANSPORT_GENERIC,
@@ -88,6 +90,7 @@ async def test_doesnt_double_deliver() -> None:
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "notify.custom",
                 CONF_OPTIONS: {OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID], OPTION_TARGET_SELECT: [r".*(2|3)"]},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             }
         },
     )
@@ -101,16 +104,16 @@ async def test_doesnt_double_deliver() -> None:
     )
     await notification.initialize()
     await notification.deliver()
-    assert list(notification.selected_deliveries) == unordered("custom", "DEFAULT_mobile_push", "DEFAULT_notify_entity")
+    assert list(notification.selected_deliveries) == unordered("custom", "mobile_push", "notify_entity")
 
-    assert notification.deliveries.keys() == unordered("custom", "DEFAULT_notify_entity", "DEFAULT_mobile_push")
+    assert notification.deliveries.keys() == unordered("custom", "notify_entity", "mobile_push")
 
-    assert EnvelopeOutcome.SUCCESS not in notification.deliveries["DEFAULT_mobile_push"]
+    assert EnvelopeOutcome.SUCCESS not in notification.deliveries["mobile_push"]
 
     custom_envelope = notification.deliveries["custom"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     assert custom_envelope.delivery_name == "custom"  # type: ignore
     assert custom_envelope.target.entity_ids == ["notify.entity_2", "notify.entity_3"]  # type: ignore
 
-    assert len(notification.deliveries["DEFAULT_notify_entity"][EnvelopeOutcome.SUCCESS]) == 1
-    assert notification.deliveries["DEFAULT_notify_entity"][EnvelopeOutcome.SUCCESS][0].delivery_name == "DEFAULT_notify_entity"  # type: ignore
-    assert notification.deliveries["DEFAULT_notify_entity"][EnvelopeOutcome.SUCCESS][0].target.entity_ids == ["notify.entity_1"]  # type: ignore
+    assert len(notification.deliveries["notify_entity"][EnvelopeOutcome.SUCCESS]) == 1
+    assert notification.deliveries["notify_entity"][EnvelopeOutcome.SUCCESS][0].delivery_name == "notify_entity"  # type: ignore
+    assert notification.deliveries["notify_entity"][EnvelopeOutcome.SUCCESS][0].target.entity_ids == ["notify.entity_1"]  # type: ignore

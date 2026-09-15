@@ -275,6 +275,10 @@
             "title": "La livraison a une condition invalide",
             "description": "La livraison {delivery} a une condition invalide {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "La livraison n'est plus incluse par défaut",
+            "description": "La livraison {delivery} ne définit pas son propre inclusion, et le transport {transport} n'utilise plus 'default' par défaut - cette livraison ne se déclenchera plus à chaque notification. Ajoutez inclusion: [default] à la livraison si vous souhaitez conserver ce comportement."
+        },
         "legacy_yaml_config": {
             "title": "La configuration YAML de Supernotify doit être déplacée",
             "fix_flow": {
@@ -306,6 +310,11 @@
         "python_313_deprecated": {
             "title": "La prise en charge de Python 3.13 prend bientôt fin",
             "description": "Cette instance de Home Assistant exécute Python {python_version}. Supernotify abandonnera la prise en charge de Python 3.13 (et des versions de Home Assistant antérieures à 2026.3.0) dès la sortie de Home Assistant 2026.10 - après quoi cette instance ne pourra plus installer de nouvelles mises à jour de Supernotify tant que l'environnement Python sous-jacent n'aura pas été mis à niveau vers Python 3.14 ou une version ultérieure."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Notification envoyée ({delivered_count} livraison(s) effectuée(s)), mais {uncategorized_count} cible(s) n'ont pas pu être associées à une livraison et ont été ignorées : {uncategorized_targets} (livraisons vérifiées : {deliveries})"
         }
     },
     "options": {

@@ -5,6 +5,15 @@ tags:
 ---
 # Matrix Transport Adaptor
 
+## Discovery
+
+**Delivery (explicit selection).** The HA `matrix` integration has no config flow (YAML-only
+setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether
+the `matrix.send_message` service is registered (which only happens once the bot has connected).
+If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically —
+but since a room ID/alias has no automatic mapping to a recipient or entity, it only fires when
+selected explicitly (`data: {data: {delivery: [matrix]}}` or a scenario), not by default.
+
 ## Motivation
 
 Sends messages to [Matrix](https://matrix.org/) rooms through the Home Assistant
@@ -32,7 +41,7 @@ delivery:
       - "!roomid:matrix.org"
     data:
       matrix_priority_prefix: true
-    selection: explicit
+    inclusion: explicit
 ```
 
 For snapshots the integration checks local paths with `is_allowed_path`, so the SuperNotify media

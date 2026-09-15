@@ -20,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntityCategory,
     Target,
     TargetRequired,
     TransportConfig,
@@ -30,6 +31,7 @@ from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
+    INCLUSION_EXPLICIT,
 )
 from .model import DeliveryConfig, SuppressionReason
 
@@ -89,11 +91,68 @@ class Transport:
         return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
 
     @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        """The target categories this transport understands, independent of any delivery.
+
+        A plain string names a category directly (e.g. `ATTR_EMAIL`); an `EntityCategory`
+        declares that the `entity_id` category is accepted, but only for entities matching
+        its domain/platform constraints. Empty by default - a transport that doesn't declare
+        anything here relies entirely on `Delivery.select_targets()`'s other qualification
+        paths (its own name, its transport's name, or a delivery's own `OPTION_TARGET_CATEGORIES`
+        override), which is the deliberate design for `generic`, a bring-your-own-categories
+        transport. Queried via `Delivery.target_categories`, not directly - a `Transport`
+        never needs to know about delivery-level config, only the reverse.
+        """
+        return []
+
+    @property
     def default_config(self) -> TransportConfig:
         return TransportConfig()
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return None
+    @property
+    def inclusion_mode(self) -> list[str]:
+        """The `inclusion` an auto-configured delivery for this transport should use.
+
+        Explicit-only by default: most transports need a chat_id/channel/device_id the
+        notification author must supply, have targets too opaque or ambiguous to map to
+        a recipient/entity, or a channel too intrusive to fire on every notification.
+        Override to return `[INCLUSION_DEFAULT]` for the few transports that can
+        reasonably fire on every notification out of the box (e.g. email, mobile_push).
+
+        Pulled out as a separate property so can be reported in the Transport Configuration
+        section of the Developer documentation
+        """
+        return [INCLUSION_EXPLICIT]
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        """Whether this transport currently has what it needs to auto-configure a delivery.
+
+        Default implementation just defers to `build_standard_deliveries()` and checks for
+        a non-empty result - correct for any transport, but builds (and discards) the
+        `DeliveryConfig`s to answer what's otherwise a yes/no question. Override with a
+        standalone check (matching `build_standard_deliveries()`'s own condition) in a
+        transport where that's cheap and doesn't require mutating `self.delivery_defaults`
+        to find out - most transports that gate purely on hass_api state (a config entry, a
+        registered service, discovered entities) can. Skip the override where viability can
+        only be discovered by doing the same service/entity lookup
+        `build_standard_deliveries()` itself needs to build the config (e.g. `discord`,
+        `pushover`, `sms` - discovering *which* service is available - or `email`, which
+        also decides *how* to send based on what's found).
+        """
+        return bool(self.build_standard_deliveries(hass_api))
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        """Build every 'standard' (auto-generatable) delivery this transport contributes,
+        keyed by name: its own default (keyed by `self.name`) plus any extras.
+
+        Only ever called once `is_viable()` has returned True for the same `hass_api` -
+        callers must check that first. Most overrides trust this and skip re-checking
+        their own viability condition; the exception is a transport whose viability can
+        only be discovered by doing the very lookup this method needs anyway (see
+        `is_viable()`'s docstring) - those keep their own guard and still return an empty
+        dict, simply because there's nothing to gain by trusting the caller there.
+        """
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

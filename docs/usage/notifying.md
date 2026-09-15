@@ -40,7 +40,7 @@ This notification will go out to all the implicit deliveries. If there's no conf
 
 ## Adding Targets
 
-Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications.
+Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications, and [Targets](../usage/targets.md) for more in general about how to use them.
 
 ```yaml title="Example Message to All Devices"
   - action: supernotify.notify
@@ -64,8 +64,7 @@ Both these examples had a single target. The `target` field will work with a sin
 
 ## Complex Targets
 
-This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever
-is most convenient
+This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever is most convenient
 
 ```yaml
   - action: supernotify.notify
@@ -79,6 +78,26 @@ is most convenient
               - mobile_app.john_phone
               - mobile_app.john_ipad
 ```
+
+## Category-Prefixed Targets
+
+For a target with no address type Supernotify can auto-detect (e.g. an MQTT topic or a
+Discord channel ID), a plain flat list of targets can tag an entry with its *category* name
+and a colon, instead of switching to the dictionary form above:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target:
+            - john@mcdoe.co.bn
+            - +4398708123987
+            - discord_channel:9585
+            - topic:security/basement/alert
+```
+
+See [Targets](./targets.md) for the full list of category names and the other ways to
+qualify a target (a mapping, or setting it directly on a delivery).
 
 ## Notification Priority
 
@@ -121,7 +140,7 @@ See [Duplicate Configuration](../configuration/dupe_detection.md) for more infor
 Delivery selection can be passed in the `data` of an action call using the `delivery_selection` key, or implied from the *shape* of the `delivery:` key itself. It can be set to one of three values:
 
 * `implicit` - The default
-    - All deliveries whose own `selection` includes `default` are enabled, plus any switched on by an active scenario
+    - All deliveries whose own `inclusion` includes `default` are enabled, plus any switched on by an active scenario
     - This is implied if `delivery:` is a dictionary mapping, or is left out entirely
 * `explicit` - Switch off delivery defaulting
     - Only deliveries listed on the action call are enabled, *plus* ones switched on by a scenario
@@ -166,36 +185,22 @@ In this case `plain_email` will be chosen even if the delivery `condition` or `p
             - plain_email
 ```
 
-!!! info "Two different things are both called `selection`"
-    `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for
-    this one notification. It's a different mechanism from a delivery's own config-time
-    `selection` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` -
-    see [Delivery Selection](../configuration/deliveries.md#delivery-selection)), which decides
-    whether that delivery is a candidate for implicit selection at all. The two happen to share
-    the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action
-    call; a delivery with `selection: [explicit]` is excluded from implicit selection, as does
-    any other value other than `default` (or left unstated, which is equivalent to `default`).
+!!! info Delivery *Selection* vs *Inclusion*
+    `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](../configuration/deliveries.md#delivery-selection)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes
+    most sense for you in describing the configuration.
 
 ### When Scenarios Disagree
 
-Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see
-[Overriding Delivery Selection and Configuration](scenarios.md#overriding-delivery-selection-and-configuration).
+Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](scenarios.md#overriding-delivery-selection-and-configuration).
 
-If more than one scenario is active at once and they disagree on the same delivery, **`false`
-always wins**, regardless of how many other active scenarios enabled it - there's no priority
-or ordering between scenarios.
+If more than one scenario is active at once and they disagree on the same delivery, **`false` always wins**, regardless of how many other active scenarios enabled it - there's no priority or ordering between scenarios.
 
 The only way to override a scenario's `false` is for the action
-call itself to explicitly re-enable that delivery in its own `delivery:` data. This is a
-deliberate fail-safe default (a scenario that says "don't send this" is never silently
-overruled by another scenario), but it also means there's currently no way for a scenario
-author to mark their `enabled: true` as one that should win a conflict.
+call itself to explicitly re-enable that delivery in its own `delivery:` data. This is a deliberate fail-safe default (a scenario that says "don't send this" is never silently overruled by another scenario), but it also means there's currently no way for a scenario author to mark their `enabled: true` as one that should win a conflict.
 
 ## Using from an Automation
 
-In this example, when an Actionable Notification is sent with action `Red Alert`, a notification
-is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses
-sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`
+In this example, when an Actionable Notification is sent with action `Red Alert`, a notification is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`
 
 ```yaml
 - id: action_red_alert

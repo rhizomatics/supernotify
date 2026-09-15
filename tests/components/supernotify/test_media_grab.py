@@ -461,23 +461,18 @@ async def test_move_camera_unknown_ptz_method(mock_hass: HomeAssistant) -> None:
 
 
 def test_infer_ptz_method_frigate_platform(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="frigate")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
-    assert infer_ptz_method(mock_hass_api, "camera.frigate1") == PTZ_METHOD_FRIGATE
+    with patch.object(mock_hass_api, "platform_for_entity", return_value="frigate"):
+        assert infer_ptz_method(mock_hass_api, "camera.frigate1") == PTZ_METHOD_FRIGATE
 
 
 def test_infer_ptz_method_defaults_to_onvif_for_other_platforms(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value.async_get.return_value = Mock(platform="onvif")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
-    assert infer_ptz_method(mock_hass_api, "camera.onvif1") == PTZ_METHOD_ONVIF
+    with patch.object(mock_hass_api, "platform_for_entity", return_value="onvif"):
+        assert infer_ptz_method(mock_hass_api, "camera.onvif1") == PTZ_METHOD_ONVIF
 
 
 def test_infer_ptz_method_no_registry_entry(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value.async_get.return_value = None  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
-    assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
-
-
-def test_infer_ptz_method_no_entity_registry(mock_hass_api: HomeAssistantAPI) -> None:
-    mock_hass_api.entity_registry.return_value = None  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
-    assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
+    with patch.object(mock_hass_api, "platform_for_entity", return_value=None):
+        assert infer_ptz_method(mock_hass_api, "camera.unknown") == PTZ_METHOD_ONVIF
 
 
 # --- snap_image_entity ---

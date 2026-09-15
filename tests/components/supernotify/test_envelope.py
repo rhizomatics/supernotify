@@ -17,7 +17,7 @@ async def test_simple_core_action_data() -> None:
     await context.test_initialize()
 
     envelope = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         notification=Notification(
             context,
             message="Hello Test",
@@ -32,7 +32,7 @@ async def test_timestamp_core_action_data() -> None:
     await context.test_initialize()
 
     envelope = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         notification=Notification(context, message="Hello Test"),
         data={"timestamp": "%Y"},
     )
@@ -43,14 +43,14 @@ async def test_equality() -> None:
     context = TestingContext()
     await context.test_initialize()
     notification = Notification(context, message="Hello Test")
-    assert Envelope(context.delivery("DEFAULT_notify_entity"), notification=notification) == Envelope(
-        context.delivery("DEFAULT_notify_entity"), notification=notification
+    assert Envelope(context.delivery("notify_entity"), notification=notification) == Envelope(
+        context.delivery("notify_entity"), notification=notification
     )
-    assert Envelope(context.delivery("DEFAULT_notify_entity"), notification=notification) != Envelope(
-        context.delivery("DEFAULT_notify_entity"), notification=notification, data={"extra": "data"}
+    assert Envelope(context.delivery("notify_entity"), notification=notification) != Envelope(
+        context.delivery("notify_entity"), notification=notification, data={"extra": "data"}
     )
-    assert Envelope(context.delivery("DEFAULT_notify_entity"), notification=notification) != Envelope(
-        context.delivery("DEFAULT_notify_entity"), notification=Notification(context, message="Hello Test")
+    assert Envelope(context.delivery("notify_entity"), notification=notification) != Envelope(
+        context.delivery("notify_entity"), notification=Notification(context, message="Hello Test")
     )
 
 
@@ -58,8 +58,8 @@ async def test_repr() -> None:
     context = TestingContext()
     await context.test_initialize()
     notification = Notification(context, message="Hello Test")
-    envelope = Envelope(context.delivery("DEFAULT_notify_entity"), notification=notification)
-    assert repr(envelope) == "Envelope(message=Hello Test,title=None,delivery=DEFAULT_notify_entity)"
+    envelope = Envelope(context.delivery("notify_entity"), notification=notification)
+    assert repr(envelope) == "Envelope(message=Hello Test,title=None,delivery=notify_entity)"
 
 
 async def test_message_usage() -> None:
@@ -95,7 +95,7 @@ async def test_message_usage() -> None:
 async def test_envelope_without_notification() -> None:
     context = TestingContext()
     await context.test_initialize()
-    delivery = context.delivery("DEFAULT_notify_entity")
+    delivery = context.delivery("notify_entity")
     # Lines 82-84: no notification branch sets empty _enabled_scenarios and uuid id
     uut = Envelope(delivery)
     assert uut._enabled_scenarios == {}
@@ -107,7 +107,7 @@ async def test_core_action_data_no_message_no_force() -> None:
     context = TestingContext()
     await context.test_initialize()
     # Lines 129-130: message is None and force_message=False => no message key
-    uut = Envelope(context.delivery("DEFAULT_notify_entity"))
+    uut = Envelope(context.delivery("notify_entity"))
     data = uut.core_action_data(force_message=False)
     assert "message" not in data
 
@@ -116,7 +116,7 @@ async def test_grab_image_without_notification() -> None:
     context = TestingContext()
     await context.test_initialize()
     # Line 165: grab_image returns None when no notification
-    uut = Envelope(context.delivery("DEFAULT_notify_entity"))
+    uut = Envelope(context.delivery("notify_entity"))
     result = await uut.grab_image()
     assert result is None
 
@@ -124,14 +124,14 @@ async def test_grab_image_without_notification() -> None:
 async def test_customize_data_empty_input_short_circuits() -> None:
     context = TestingContext()
     await context.test_initialize()
-    uut = Envelope(context.delivery("DEFAULT_notify_entity"))
+    uut = Envelope(context.delivery("notify_entity"))
     assert uut.customize_data({}) == {}
 
 
 async def test_core_action_data_no_message_with_force() -> None:
     context = TestingContext()
     await context.test_initialize()
-    uut = Envelope(context.delivery("DEFAULT_notify_entity"))
+    uut = Envelope(context.delivery("notify_entity"))
     data = uut.core_action_data(force_message=True)
     assert data["message"] == ""
 
@@ -139,7 +139,7 @@ async def test_core_action_data_no_message_with_force() -> None:
 async def test_contents_excludes_target_when_never_required() -> None:
     context = TestingContext()
     await context.test_initialize()
-    delivery = context.delivery("DEFAULT_notify_entity")
+    delivery = context.delivery("notify_entity")
     delivery.target_required = TargetRequired.NEVER
     uut = Envelope(delivery, Notification(context, message="hello there"))
     assert "target" not in uut.contents(minimal=True)
@@ -148,7 +148,7 @@ async def test_contents_excludes_target_when_never_required() -> None:
 async def test_eq_against_non_envelope_and_none() -> None:
     context = TestingContext()
     await context.test_initialize()
-    uut = Envelope(context.delivery("DEFAULT_notify_entity"), Notification(context, message="hello there"))
+    uut = Envelope(context.delivery("notify_entity"), Notification(context, message="hello there"))
     none_value = None
     assert uut != none_value
     assert uut != "not an envelope"
@@ -158,7 +158,7 @@ async def test_compute_message_renders_template_string() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="{{ 1 + 1 }}"),
         context=context,
     )
@@ -170,7 +170,7 @@ async def test_compute_message_template_render_exception_keeps_raw_message() -> 
     await context.test_initialize()
     with patch.object(context.hass_api, "template", side_effect=Exception("boom")):
         uut = Envelope(
-            context.delivery("DEFAULT_notify_entity"),
+            context.delivery("notify_entity"),
             Notification(context, message="{{ 1 + 1 }}"),
             context=context,
         )
@@ -181,7 +181,7 @@ async def test_render_scenario_templates_missing_condition_variables_defaults_to
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         context=context,
     )
@@ -199,7 +199,7 @@ async def test_render_scenario_templates_template_error_is_caught() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         context=context,
     )
@@ -221,7 +221,7 @@ async def test_resolve_data_templates_renders_template_values() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         context=context,
     )
@@ -235,7 +235,7 @@ async def test_resolve_data_templates_keeps_raw_value_on_render_exception() -> N
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         context=context,
     )
@@ -252,7 +252,7 @@ async def test_envelope_data_templates_rendered_before_transport() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         data={"volume": "{{ 1 + 1 }}", "plain": "unchanged"},
         context=context,
@@ -268,7 +268,7 @@ async def test_envelope_data_template_render_exception_keeps_raw_value() -> None
     await context.test_initialize()
     with patch.object(context.hass_api, "template", side_effect=Exception("boom")):
         uut = Envelope(
-            context.delivery("DEFAULT_notify_entity"),
+            context.delivery("notify_entity"),
             Notification(context, message="hello there"),
             data={"volume": "{{ 1 + 1 }}"},
             context=context,
@@ -283,7 +283,7 @@ async def test_envelope_contents_still_shows_raw_template_breadcrumb() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         data={"volume": "{{ 1 + 1 }}"},
         context=context,
@@ -300,7 +300,7 @@ async def test_envelope_data_leaves_scenario_template_directives_unrendered() ->
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         data={"message_template": "{{ notification_message }} EXTRA", "title_template": "{{ notification_title }}"},
         context=context,
@@ -316,7 +316,7 @@ async def test_envelope_data_without_context_left_unrendered() -> None:
     context = TestingContext()
     await context.test_initialize()
     uut = Envelope(
-        context.delivery("DEFAULT_notify_entity"),
+        context.delivery("notify_entity"),
         Notification(context, message="hello there"),
         data={"volume": "{{ 1 + 1 }}"},
     )

@@ -1,3 +1,97 @@
+## 2.6.0
+
+### Native Entities
+
+- Scenario and recipient `binary_sensor`s, and the sent/failure notification counters, are now real Home Assistant entities grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
+- Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
+- Delivery and transport `binary_sensor`s are unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175)
+
+## 2.5.0
+
+### Deliveries
+
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](roadmap/deliveries_and_transports.md).
+
+- Every transport that is available to use is automatically available as a delivery with the same name.
+  - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
+  - Deliveries no longer have a `default_` prefix, although existing automations which use these will automatically be switched to `email`,`notify_entity` etc
+  - Auto discovery of action name for lots of transports, see list below
+  - A repair is raised for any deliveries that have the same name as a transport but don't use that transport. The transport name is effectively a reserved delivery name.
+- Creating `Delivery` objects now only necessary if there's more than one Delivery for the same transport, like `plain_email` and `html_email`, different Telegram channels etc
+    - Everything that can be done with a `Delivery` configuration can be done with the `delivery_defaults:` section of a `Transport` object
+    - Its also possible to avoid creating Delivery objects in YAML by defining the relevant `data:` items in a notification action, although this gets unwieldy (the whole point of Delivery objects is to define this stuff once and not across many notifications).
+- Switch entities are only published for Transport objects that are available
+  - So you won't get clutter for things like `ntfy`,`gotfy`,`alexa_media_player` if those are not installed
+- Default delivery creation tightened for Notify Entity and Mobile Push, so these Delivery objects don't get created if there are no mobile apps or notify entities on the Home Assistant instance.
+- Transports have a `load` control, switching this off means there's no attempt to auto-discover it, and it never has a Delivery or Home Assistant entities created for it
+- Transports with no automatic or manual Delivery pre-sets get unloaded, so don't appear as entities
+- Auto-configure for `email` will respect the direct mode if connection details present
+- Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the notification. The older keyword is still supported but deprecated.
+- Auto generated deliveries give way to manually configured deliveries of the same name, and come last in any selection battle to handle unique targets
+
+### Targets
+
+There has a wide overhaul of how targets are categorized and tied back to transports - this has simplified the code, and should make it simpler to configure and more predictable in how it will behave. Regression tests and migration code has been used to keep it backward compatible with existing configurations. There's also a new documentation page for [Target Usage](usage/targets.md).
+
+- A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
+- Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](usage/targets.md)
+- Archive message now has `uncategorized_targets` and `unassigned_targets` to help debugging delivery issues
+- New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
+- A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
+- An error will be raised logged if there any targets that can't be mapped to a category - this won't stop the rest of the notification working, but will make it visible
+
+### Alexa Devices
+- Three automatically generated standard deliveries
+  - `alexa_devices` - picks up on any Alexa notify entities in the target list, does nothing if no targets
+  - `alexa_devices_speak_all` - sends notification to all *speak* Alexa notify entities, takes no targets
+  - `alexa_devices_announce_all` - sends notification to all *announce* Alexa notify entities, takes no targets
+- This means that it is easy with a Zero YAML configuration to use Alexa announcements - just add `alexa_devices_announce_all` to the list of deliveries
+
+### Alexa Media Player
+- Automatically finds correct notify action by default
+
+### Discord
+- Automatically finds correct notify action by default
+
+### Email
+- The internal SMTP integration is used by default, and will reuse the Home Assistant SMTP connection details if SMTP set up via the UI
+
+### Gotify
+- Automatically finds correct notify action by default
+
+### Notify Entity
+- Target selection for notify entities now uses Home Assistant domain that provided the entity
+  - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with the very basic `notify_entity` as a back stop
+
+### MQTT
+- Delivery now accepts a topic as a target, and takes payload from message. Previous behaviour remains supported.
+
+### Mobile Actions
+
+- Exposed `group` on mobile actions as `mobile_push_group` (previously undocumented and mis-named `action_category`)
+- Fixed problem with `action_template` and `title_template` producing broken buttons
+- Stop forcing mobile notifications into 'general' or 'appd' group
+- New doc page on how they work
+
+### Pushover
+- Automatically finds correct notify action by default
+
+### SMS
+- Automatically finds correct notify action by default for Twilio and Mikrotik_SMS integrations
+
+### Technical
+- Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
+- Improved order of fields in archive for most useful to top, and related together
+- HomeAssistant compatibility moved to 2026.9.2
+- Developer automated documentation for Transports expose the new target configurations they have
+- Manifest updated so Supernotify will wait for all its dependent integrations before starting up
+
+## 2.4.2
+
+### Fixes
+- Automation editor could leave `data` fields at `null`, for example `constrain_scenarios` which got rejected by schema validator. Null values now explicitly allowed, and handled as unset for optional values.
+- Fixed an obscure set amalgamation bug in `notification.py` `select_deliveries()` that could cause different results for multiple deliveries
+
 ## 2.4.1
 
 ## Data Templates
@@ -11,13 +105,7 @@
 
 ## 2.4.0
 
-### Native Entities
-
-- Scenario and recipient `binary_sensor`s, and the sent/failure notification counters, are now real Home Assistant entities grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
-- Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
-- Delivery and transport `binary_sensor`s are unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175)
-
-### Live Scenarios
+### Live Scenarios
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
 - New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 

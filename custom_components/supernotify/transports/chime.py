@@ -20,12 +20,13 @@ from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA,
     ATTR_PRIORITY,
+    CONF_INCLUSION,
     CONF_TUNE,
+    INCLUSION_EXPLICIT,
     OPTION_CHIME_ALIASES,
     OPTION_DEVICE_DISCOVERY,
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
@@ -34,6 +35,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntityCategory,
     SelectionRule,
     Target,
     TargetRequired,
@@ -47,11 +49,21 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
+# kept in sync with RE_VALID_CHIME below and this transport's target_categories property
+CHIME_ENTITY_DOMAINS = ["switch", "script", "group", "rest_command", "siren", "media_player"]
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
+
+# extra standard delivery grouping every siren - see build_standard_deliveries() below
+STANDARD_DELIVERY_SIREN_ALL = f"{TRANSPORT_CHIME}_siren_all"
 
 _LOGGER = logging.getLogger(__name__)
 
+# device-registry scan (see HomeAssistantAPI.discover_devices), independent of whether
+# AlexaDevicesTransport itself is currently viable/loaded - HA doesn't reliably prune
+# device registry entries when a config entry is unloaded, so chime can keep finding and
+# targeting alexa_devices devices after that transport has gone away
 DEVICE_DOMAINS = ["alexa_devices"]
 
 
@@ -268,7 +280,7 @@ class ChimeTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature(0)
+        return TransportFeature.SOUND
 
     def extra_attributes(self) -> dict[str, Any]:
         return {"mini_transports": [t.domain for t in self.mini_transports.values()]}
@@ -277,8 +289,8 @@ class ChimeTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,
@@ -286,8 +298,37 @@ class ChimeTransport(Transport):
         }
         return config
 
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
+
     def validate_action(self, action: str | None) -> bool:
         return action is None
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # an explicit delivery can supply its own chime_aliases regardless of whether the
+        # transport-level default is configured - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport
+        # entirely once it's confirmed no delivery (explicit or auto) actually uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        """Its own default (only if chime_aliases is configured - with none, there's
+        nothing to map a tune/priority to a target), plus "..._siren_all" - all siren.*
+        entities, regardless of chime_aliases: unlike the other chime domains,
+        SirenChimeTransport.build() doesn't need a tune/alias mapping to call
+        siren.turn_on, so this extra doesn't share the alias requirement."""
+        deliveries: dict[str, ConfigType] = {}
+        if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
+            deliveries[self.name] = {}
+        siren_entity_ids = hass_api.entity_ids_for_domain("siren")
+        if siren_entity_ids:
+            deliveries[STANDARD_DELIVERY_SIREN_ALL] = {
+                CONF_TARGET: {ATTR_ENTITY_ID: siren_entity_ids},
+                CONF_INCLUSION: [INCLUSION_EXPLICIT],
+            }
+
+        return deliveries
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data: dict[str, Any] = {}

@@ -108,9 +108,7 @@ def infer_ptz_method(hass_api: HomeAssistantAPI, camera_entity_id: str) -> str:
     Used only as a fallback for cameras with no entry in the cameras: config, where
     there's no explicit ptz_method to consult.
     """
-    ent_reg = hass_api.entity_registry()
-    reg_entry = ent_reg.async_get(camera_entity_id) if ent_reg else None
-    if reg_entry and reg_entry.platform == PLATFORM_FRIGATE:
+    if hass_api.platform_for_entity(camera_entity_id) == PLATFORM_FRIGATE:
         return PTZ_METHOD_FRIGATE
     return PTZ_METHOD_ONVIF
 

@@ -275,6 +275,10 @@
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Dostarczenie nie jest już domyślnie uwzględniane",
+            "description": "Dostarczenie {delivery} nie ustawia własnego inclusion, a transport {transport} nie używa już domyślnie 'default' - to dostarczenie nie będzie już uruchamiane przy każdym powiadomieniu. Dodaj inclusion: [default] do dostarczenia, jeśli nadal chcesz zachować to zachowanie."
+        },
         "legacy_yaml_config": {
             "title": "Konfigurację YAML Supernotify trzeba przenieść",
             "fix_flow": {
@@ -306,6 +310,11 @@
         "python_313_deprecated": {
             "title": "Wsparcie dla Pythona 3.13 wkrótce się kończy",
             "description": "Ta instancja Home Assistant działa na Pythonie {python_version}. Supernotify zakończy wsparcie dla Pythona 3.13 (oraz wersji Home Assistant starszych niż 2026.3.0) wraz z wydaniem Home Assistant 2026.10 - po tym momencie ta instancja nie będzie mogła instalować kolejnych aktualizacji Supernotify, dopóki środowisko Pythona nie zostanie zaktualizowane do wersji 3.14 lub nowszej."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Powiadomienie dostarczone (wysłano {delivered_count} dostaw), ale {uncategorized_count} cel(e/ów) nie udało się przypisać do żadnej dostawy i zostały pominięte: {uncategorized_targets} (sprawdzone dostawy: {deliveries})"
         }
     },
     "options": {

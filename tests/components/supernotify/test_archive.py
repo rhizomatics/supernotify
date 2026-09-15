@@ -77,6 +77,7 @@ async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: Outcom
         async with aiofiles.open(obj_path) as stream:
             blob: str = "".join(await stream.readlines())
             reobj = json.loads(blob)
+        assert reobj is not None
         assert reobj["priority"] == "critical"
         assert reobj["outcome"] == uut.last_notification.outcome()
         for outcome in EnvelopeOutcome:

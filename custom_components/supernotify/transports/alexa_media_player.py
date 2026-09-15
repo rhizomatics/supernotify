@@ -64,7 +64,10 @@ import re
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+)
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
@@ -72,13 +75,14 @@ from custom_components.supernotify.const import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_SELECT,
     OPTION_UNIQUE_TARGETS,
+    RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntityCategory,
     MessageOnlyPolicy,
     TargetRequired,
     TransportConfig,
@@ -90,8 +94,12 @@ if TYPE_CHECKING:
     from homeassistant.core import Context as HAContext
 
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
-RE_VALID_ALEXA = r"media_player\.[A-Za-z0-9_]+"
+# alandtse/alexa_media_player HACS integration's notify platform module
+HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
+# the entity registry platform for the media_player entities this integration creates
+HA_ALEXA_MEDIA_PLAYER_PLATFORM = "alexa_media"
 
 
 RE_SSML_TAG = re.compile(r"<[^>]+>")
@@ -147,21 +155,37 @@ class AlexaMediaPlayerTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.action = "notify.alexa_media"
+        config.delivery_defaults.action = self.hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
-            OPTION_TARGET_SELECT: [RE_VALID_ALEXA],
+            OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
             OPTION_MEDIA_AUTO_PAUSE: True,
         }
         return config
 
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player", platform=HA_ALEXA_MEDIA_PLAYER_PLATFORM)]
+
     def validate_action(self, action: str | None) -> bool:
         return action is not None
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() above, an explicit delivery can supply its own action
+        # regardless of whether the service is discoverable here - is_viable() can't see
+        # delivery-level config, so it can't rule that out; DeliveryRegistry prunes this
+        # transport entirely once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        if self.delivery_defaults.action:
+            return {self.name: {}}
+        return {}
 
     async def _safe_service(
         self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None

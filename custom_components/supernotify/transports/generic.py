@@ -9,6 +9,7 @@ from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_
 
 # ATTR_VARIABLES from script.const has import issues
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import ensure_list
 from custom_components.supernotify.const import (
@@ -51,51 +52,6 @@ if TYPE_CHECKING:
     from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
-"""
-Replaced by reuse of original service schema to prune out fields
-
-DATA_FIELDS_ALLOWED_BY_DOMAIN = {
-    "light": [
-        "transition",
-        "rgb_color",
-        "color_temp_kelvin",
-        "brightness_pct",
-        "brightness_step_pct",
-        "effect",
-        "rgbw_color",
-        "rgbww_color",
-        "color_name",
-        "hs_color",
-        "xy_color",
-        "color_temp",
-        "brightness",
-        "brightness_step",
-        "white",
-        "profile",
-        "flash",
-    ],
-    "siren": ["tone", "duration", "volume_level"],
-    "mqtt": ["topic", "payload", "evaluate_payload", "qos", "retain"],
-    "script": ["variables", "wait", "wait_template"],
-    "ntfy": [
-        "title",
-        "message",
-        "markdown",
-        "tags",
-        "priority",
-        "click",
-        "delay",
-        "attach",
-        "attach_file",
-        "filename",
-        "email",
-        "call",
-        "icon",
-        "action",
-        "sequence_id",
-    ],
-    "tts": ["cache", "options", "message", "language", "media_player_entity_id", "entity_id", "target"],
-} """
 
 
 class GenericTransport(Transport):
@@ -114,6 +70,7 @@ class GenericTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
@@ -129,6 +86,22 @@ class GenericTransport(Transport):
             return True
         _LOGGER.warning("SUPERNOTIFY Generic transport must have a qualified action name, e.g. notify.foo")
         return False
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # entirely delivery-driven (bring-your-own-action) - there's no transport-level
+        # prerequisite to check. A transport-level default action still gates whether
+        # build_standard_deliveries() below produces something usable; if not,
+        # DeliveryRegistry prunes this transport entirely once it's confirmed no delivery
+        # (explicit or auto) uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        # with no default action configured, there's nothing to auto-generate a delivery
+        # from - validate_action()/Delivery.initialize() reject it before it's ever used
+        action = self.delivery_defaults.action
+        if action is None or "." not in action:
+            return {}
+        return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         # inputs

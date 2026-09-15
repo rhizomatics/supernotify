@@ -5,6 +5,14 @@ tags:
 ---
 # Discord Transport Adaptor
 
+## Discovery
+
+**Delivery (explicit selection).** If the `discord` integration is already configured and no
+`discord` delivery is defined, a `discord` delivery is generated automatically (discovering
+whichever `notify.discord*` service slug your bot's config entry registered) — but since the
+channel/user ID has no automatic mapping to a recipient or entity, it only fires when selected
+explicitly (`data: {data: {delivery: [discord]}}` or a scenario), not by default.
+
 ## Motivation
 
 Provides a native SuperNotify transport for [Discord](https://discord.com/) through the
@@ -43,7 +51,7 @@ delivery:
       - "123456789012345678"
     data:
       discord_priority_prefix: true
-    selection: explicit
+    inclusion: explicit
 ```
 
 For camera snapshots (`discord_attach_image`) the `discord` integration checks local paths

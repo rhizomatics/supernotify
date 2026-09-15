@@ -275,6 +275,10 @@
             "title": "推送的条件无效",
             "description": "推送 {delivery} 包含无效条件 {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "推送不再默认包含",
+            "description": "推送 {delivery} 未设置自己的 inclusion,且传输方式 {transport} 不再默认使用 'default' - 该推送将不再在每次通知时触发。如果仍需要此行为,请在推送中添加 inclusion: [default]。"
+        },
         "legacy_yaml_config": {
             "title": "Supernotify 的 YAML 配置需要迁移",
             "fix_flow": {
@@ -306,6 +310,11 @@
         "python_313_deprecated": {
             "title": "Python 3.13 支持即将结束",
             "description": "此 Home Assistant 实例正在运行 Python {python_version}。当 Home Assistant 2026.10 发布后，Supernotify 将不再支持 Python 3.13(以及 2026.3.0 之前的 Home Assistant 版本)——此后，除非将底层 Python 环境升级到 Python 3.14 或更高版本，否则该实例将无法安装 Supernotify 的后续更新。"
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "通知已送达(已发送 {delivered_count} 个投递),但有 {uncategorized_count} 个目标无法归类到任何投递,已被丢弃:{uncategorized_targets}(已检查的投递:{deliveries})"
         }
     },
     "options": {

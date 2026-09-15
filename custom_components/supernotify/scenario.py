@@ -191,7 +191,7 @@ class ScenarioRegistry:
             # (reactive condition-entity change or periodic sweep), same as before this was a
             # real Entity.
             return True
-        _LOGGER.info("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
+        _LOGGER.debug("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
         return False
 
     def _collect_scenario_condition_entities(self) -> dict[str, set[str]]:

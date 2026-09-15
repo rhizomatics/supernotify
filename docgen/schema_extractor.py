@@ -7,17 +7,30 @@ from types import FunctionType
 
 # Home Assistant aliases the `voluptuous` module to its `probatio` replacement in
 # sys.modules (see homeassistant/__init__.py's install_as_voluptuous()), but only if
-# that happens before anything else imports the real `voluptuous`. voluptuous_openapi
-# imports the real voluptuous at module load time, so homeassistant has to be imported
-# first here, or its convert() can't recognize schemas built from Home Assistant's
-# cv.* validators (which are probatio's, not real voluptuous's) - it doesn't fail
-# cleanly either, since probatio's Schema is unhashable where convert() expects a
-# hashable type to check against a dict of known validator types.
+# that happens before anything else imports the real `voluptuous`, so homeassistant
+# has to be imported first here.
 import homeassistant  # noqa: F401
 import mkdocs_gen_files
 from json_schema_for_humans.generate import generate_from_schema  # type: ignore
 from json_schema_for_humans.generation_configuration import GenerationConfiguration  # type: ignore
-from voluptuous_openapi import convert  # type: ignore
+from probatio import UNSUPPORTED, to_openapi
+
+
+def _fixup_ha_validators(node: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
+    """Home Assistant's cv.url/string/boolean are plain functions typed to accept
+    Any, so probatio can't infer a JSON type from their signature; recognize them
+    by name instead."""
+    if isinstance(node, FunctionType):
+        if node.__name__ in ("url", "string"):
+            return {"type": "string"}
+        if node.__name__ == "boolean":
+            return {"type": "boolean"}
+    return UNSUPPORTED
+
+
+def convert(schema: typing.Any) -> dict[str, typing.Any]:  # ruff: ignore[any-type]
+    return to_openapi(schema, custom_serializer=_fixup_ha_validators)
+
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # import must come after sys.path append
@@ -40,60 +53,12 @@ TOP_LEVEL_SCHEMAS = {
     "CHIME_ALIASES_SCHEMA": "Chime Aliases Definition",
 }
 
-# some hacks to stop voluptuous_openapi generating broken schemas
-
-
-def tune_schema(node: dict[str, type | typing.Any] | list[type | typing.Any]) -> None:
-    def defuncify(v: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
-        if isinstance(v, FunctionType):
-            if v.__name__ in ("url", "string"):
-                return str
-            if v.__name__ == "boolean":
-                return bool
-        return v
-
-    if isinstance(node, dict):
-        for key in node:
-            node[key] = defuncify(node[key])
-            if isinstance(node[key], FunctionType):
-                if node[key].__name__ in ("url", "string"):
-                    node[key] = str
-                    _LOGGER.info(f"Converted {key} to Required(str)")
-                elif node[key].__name__ == "boolean":
-                    node[key] = bool
-
-            if hasattr(node[key], "validators"):
-                node[key].validators: list[FunctionType] = [defuncify(v) for v in node[key].validators]  # ty:ignore[possibly-missing-attribute]
-
-
-def unwrap_schema(vol_schema: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
-    """vol.All(...) chains deprecation/migration validators onto the real vol.Schema,
-    which is always the last validator - unwrap down to that."""
-    while not hasattr(vol_schema, "schema") and hasattr(vol_schema, "validators"):
-        vol_schema = vol_schema.validators[-1]
-    return vol_schema
-
-
-def walk_schema(schema: dict[str, type | typing.Any] | list[str | typing.Any]) -> None:
-    tune_schema(schema)
-    if isinstance(schema, dict):
-        for key in schema:
-            walk_schema(schema[key])  # ty:ignore[invalid-argument-type]
-    elif isinstance(schema, list):
-        for sub_schema in schema:
-            walk_schema(sub_schema)  # ty:ignore[invalid-argument-type]
-
 
 def schema_doc() -> None:
     Path("docs/developer/schemas").mkdir(exist_ok=True)
     Path("docs/developer/schemas/js").mkdir(exist_ok=True)
 
     v_schemas = {s: getattr(custom_components.supernotify.schema, s) for s in TOP_LEVEL_SCHEMAS}
-    for vol_schema in v_schemas.values():
-        try:
-            walk_schema(unwrap_schema(vol_schema).schema)
-        except Exception:
-            _LOGGER.exception("Failed on %s", vol_schema)
     j_schemas = {s[0]: (TOP_LEVEL_SCHEMAS[s[0]], convert(s[1])) for s in v_schemas.items()}
     config = GenerationConfiguration(
         examples_as_yaml=True,

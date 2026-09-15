@@ -275,6 +275,10 @@
             "title": "डिलीवरी की शर्त अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "डिलीवरी अब डिफ़ॉल्ट रूप से शामिल नहीं है",
+            "description": "डिलीवरी {delivery} अपना स्वयं का inclusion सेट नहीं करती, और परिवहन {transport} अब डिफ़ॉल्ट रूप से 'default' का उपयोग नहीं करता - यह डिलीवरी अब हर सूचना पर सक्रिय नहीं होगी। यदि आप यह व्यवहार बनाए रखना चाहते हैं, तो डिलीवरी में inclusion: [default] जोड़ें।"
+        },
         "legacy_yaml_config": {
             "title": "Supernotify YAML कॉन्फ़िगरेशन को स्थानांतरित करना आवश्यक है",
             "fix_flow": {
@@ -306,6 +310,11 @@
         "python_313_deprecated": {
             "title": "Python 3.13 का समर्थन जल्द ही समाप्त हो रहा है",
             "description": "यह Home Assistant इंस्टेंस Python {python_version} पर चल रहा है। जब Home Assistant 2026.10 जारी होगा, तब Supernotify Python 3.13 (और 2026.3.0 से पहले के Home Assistant संस्करणों) के लिए समर्थन समाप्त कर देगा - उसके बाद, अंतर्निहित Python वातावरण को Python 3.14 या उससे नए संस्करण में अपग्रेड किए बिना इस इंस्टेंस पर Supernotify के आगे के अपडेट इंस्टॉल नहीं किए जा सकेंगे।"
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "सूचना भेज दी गई ({delivered_count} डिलीवरी भेजी गईं), लेकिन {uncategorized_count} लक्ष्य किसी भी डिलीवरी से मेल नहीं खा सके और उन्हें छोड़ दिया गया: {uncategorized_targets} (जाँची गई डिलीवरी: {deliveries})"
         }
     },
     "options": {

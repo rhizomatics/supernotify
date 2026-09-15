@@ -122,6 +122,43 @@ def test_target_sorts_out_big_flat_list() -> None:
     assert uut.custom_ids("_UNKNOWN_") == ["@joey", "00001111122223333444455556666"]
 
 
+def test_target_category_prefix_in_list_mode() -> None:
+    # a prefix is always a target *category* (topic, discord_channel, ...), never a
+    # transport or delivery name directly - those are only addressable via the mapping form
+    uut = Target([
+        "me@house.org",
+        "+48323232211",
+        "discord_channel:9585",
+        "topic:my/topic/name",
+    ])
+    assert uut.email == ["me@house.org"]
+    assert uut.phone == ["+48323232211"]
+    assert uut.custom_ids("discord_channel") == ["9585"]
+    assert uut.custom_ids("topic") == ["my/topic/name"]
+    assert not uut.has_unknown_targets()
+
+
+def test_target_category_prefix_in_scalar_mode() -> None:
+    assert Target("topic:my/topic/name").custom_ids("topic") == ["my/topic/name"]
+
+
+def test_target_category_prefix_only_recognised_in_list_form() -> None:
+    # the mapping form is taken verbatim - no colon-splitting - so values that clash with the
+    # prefix syntax (e.g. already containing a colon) can still be expressed unambiguously
+    uut = Target({"topic": "topic:my/topic/name"})
+    assert uut.custom_ids("topic") == ["topic:my/topic/name"]
+
+
+def test_target_category_prefix_requires_known_category() -> None:
+    # an unrecognised prefix isn't split - falls through to the flat unknown-custom bucket.
+    # This includes transport/delivery names - "mqtt" is a transport, not a category, so
+    # doesn't qualify a prefix (use the mapping form, `target: {mqtt: value}`, for that).
+    uut = Target(["notavalidcategory:foo", "mqtt:my/topic/name"])
+    assert uut.custom_ids("notavalidcategory") == []
+    assert uut.custom_ids("mqtt") == []
+    assert uut.custom_ids("_UNKNOWN_") == ["notavalidcategory:foo", "mqtt:my/topic/name"]
+
+
 def test_has_resolved() -> None:
     assert not Target({"label_id": "tag001"}).has_resolved_target()
     assert not Target({"person_id": "person.cuth_bert"}).has_resolved_target()

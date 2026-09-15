@@ -54,6 +54,7 @@ def _make_transport(call_action_result: bool = True) -> Any:  # ruff: ignore[any
     transport: Any = DiscordTransport.__new__(DiscordTransport)
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
+    transport.hass_api.find_service.return_value = "notify.discord"
     transport.context = MagicMock()
     transport.call_action = AsyncMock(return_value=call_action_result)
     transport.record_error = MagicMock()

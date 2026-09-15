@@ -5,6 +5,12 @@ tags:
 ---
 # Kodi Transport Adaptor
 
+## Discovery
+
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is
+defined, a `kodi` delivery is generated automatically and fires on every notification,
+targeting any matching `media_player.kodi_*` entities present.
+
 ## Motivation
 
 Shows on-screen overlay notifications on Kodi media centers through the Home Assistant
@@ -36,7 +42,7 @@ delivery:
       - media_player.kodi_living_room
     data:
       kodi_displaytime: 8000
-    selection: explicit
+    inclusion: explicit
 ```
 
 The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.10:8123`) rather

@@ -401,7 +401,7 @@ def test_build_mobile_app_cache_no_entity_registry(mock_hass: HomeAssistant) -> 
     from unittest.mock import patch
 
     hass_api = HomeAssistantAPI(mock_hass)
-    with patch.object(hass_api, "entity_registry", return_value=None):
+    with patch.object(hass_api, "_entity_registry", return_value=None):
         hass_api.build_mobile_app_cache()  # should not raise
 
 
@@ -411,7 +411,7 @@ def test_discover_devices_skips_disabled(hass: HomeAssistant) -> None:
 
     hass_api = HomeAssistantAPI(hass)
     dev_entry = register_device(hass_api, domain="test_disabled", domain_id="dd_01")
-    dev_reg = hass_api.device_registry()
+    dev_reg = hass_api._device_registry()
     if dev_entry and dev_reg:
         dev_reg.async_update_device(dev_entry.id, disabled_by=DeviceEntryDisabler.USER)
     devices = hass_api.discover_devices("test_disabled")
@@ -567,7 +567,7 @@ def test_device_config_info_falls_back_to_deprecated_config_entries(hass: HomeAs
 def test_discover_devices_no_device_registry(hass: HomeAssistant) -> None:
     # Lines 554-555
     hass_api = HomeAssistantAPI(hass)
-    with patch.object(hass_api, "device_registry", return_value=None):
+    with patch.object(hass_api, "_device_registry", return_value=None):
         assert hass_api.discover_devices("mobile_app") == []
 
 
@@ -609,14 +609,14 @@ def test_entity_registry_handles_exception(hass: HomeAssistant) -> None:
     # Lines 646-647
     hass_api = HomeAssistantAPI(hass)
     with patch("custom_components.supernotify.hass_api.er.async_get", side_effect=RuntimeError("boom")):
-        assert hass_api.entity_registry() is None
+        assert hass_api._entity_registry() is None
 
 
 def test_device_registry_handles_exception(hass: HomeAssistant) -> None:
     # Lines 658-659
     hass_api = HomeAssistantAPI(hass)
     with patch("custom_components.supernotify.hass_api.dr.async_get", side_effect=RuntimeError("boom")):
-        assert hass_api.device_registry() is None
+        assert hass_api._device_registry() is None
 
 
 async def test_mqtt_available_raises_by_default(mock_hass: HomeAssistant) -> None:

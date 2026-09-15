@@ -13,7 +13,7 @@ from custom_components.supernotify.const import (
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     CONF_DELIVERY,
-    CONF_SELECTION,
+    CONF_INCLUSION,
     CONF_TRANSPORT,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
@@ -26,6 +26,7 @@ from custom_components.supernotify.model import ConditionVariables, TargetRequir
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.scenario import Scenario
 from custom_components.supernotify.schema import SCENARIO_SCHEMA, EnvelopeOutcome
+from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
 
 from .doubles_lib import DummyTransport
 from .hass_setup_lib import TestingContext
@@ -189,6 +190,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
         },
         deliveries={"smtp": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp"}, "alexa": {CONF_TRANSPORT: "alexa_devices"}},
         transport_types=TRANSPORTS,
+        viable_transport_types=[AlexaDevicesTransport],
     )
     await ctx.test_initialize()
 
@@ -248,8 +250,8 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
         deliveries={
             "plain_email": {CONF_TRANSPORT: "dummy"},
             "mobile": {CONF_TRANSPORT: "dummy"},
-            "siren": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
-            "chime": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
+            "siren": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
+            "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
         },
         transport_types=[DummyTransport],
     )
@@ -285,10 +287,10 @@ async def test_scenario_suppress(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
-            "mobile": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
-            "siren": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
-            "chime": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
+            "siren": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
+            "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
         },
         transport_types=[DummyTransport],
         scenarios={
@@ -404,7 +406,7 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"plain_email": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "explicit"}, "text": {CONF_TRANSPORT: "dummy"}},
+        deliveries={"plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "explicit"}, "text": {CONF_TRANSPORT: "dummy"}},
         transport_types=[DummyTransport],
         scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"enabled": None, "data": {"priority": "low"}}}}},
     )
@@ -633,7 +635,7 @@ async def test_scenario_wildcard_overrides_deliveries(hass: HomeAssistant) -> No
         },
         deliveries={
             "plain_email": {CONF_TRANSPORT: "dummy"},
-            "mobile": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
             "siren": {CONF_TRANSPORT: "dummy", CONF_ENABLED: False},
             "chime": {CONF_TRANSPORT: "dummy"},
         },
@@ -675,7 +677,7 @@ async def test_scenario_wildcard_does_not_force_enable_scenario_selected_deliver
         },
         deliveries={
             "plain_email": {CONF_TRANSPORT: "dummy"},
-            "mobile": {CONF_TRANSPORT: "dummy", CONF_SELECTION: "scenario"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
             "siren": {CONF_TRANSPORT: "dummy", CONF_ENABLED: False},
             "chime": {CONF_TRANSPORT: "dummy"},
         },

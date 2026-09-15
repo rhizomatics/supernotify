@@ -45,13 +45,22 @@ import logging
 import re
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, TRANSPORT_MATRIX
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_DATA, ATTR_MATRIX_ROOM, TRANSPORT_MATRIX
+from custom_components.supernotify.model import (
+    DebugTrace,
+    EntityCategory,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,11 +96,28 @@ class MatrixTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "matrix.send_message"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        # a Matrix room ID/alias has no shape distinct enough for automatic matching, so
+        # it's only ever reachable here via explicit qualification (prefix, mapping, or
+        # this transport's/a delivery's own name) - select_rooms() below still validates
+        # the shape itself once it arrives
+        return [ATTR_MATRIX_ROOM]
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the matrix send_message service."""
         return action == "matrix.send_message"
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # matrix is YAML-configured (no config entry); the service only registers once
+        # the bot has connected, so check for it directly
+        return hass_api.has_service("matrix", "send_message")
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def select_rooms(self, envelope: Envelope) -> list[str]:
         """Filter envelope targets down to valid Matrix room IDs or aliases.

@@ -6,6 +6,7 @@ import pytest
 
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -68,6 +69,7 @@ action_groups:
       icon: "sfsymbols:airplane"
       """,
         services={"notify": ["mobile_app_joe_nokia"]},
+        viable_transport_types=[MobilePushTransport],
     )
     hass.states.async_set("alarm_control_panel.home_alarm", "pending")
     await hass.async_block_till_done()

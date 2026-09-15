@@ -168,6 +168,25 @@ def test_alexa_transport_selects_targets() -> None:
     assert uut.select_targets(Target(["switch.alexa_1", "media_player.hall_1"])).entity_ids == ["media_player.hall_1"]
 
 
+def test_alexa_transport_selects_by_domain_and_platform() -> None:
+    """Only media_player entities registered by the alexa_media integration are selected -
+
+    another integration's media_player entity (e.g. a Chromecast) is excluded even though
+    it's the right domain, since it isn't this integration's own.
+    """
+    context = TestingContext(deliveries={"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}})
+    platforms = {
+        "media_player.echo_kitchen": "alexa_media",
+        "media_player.chromecast_lounge": "cast",
+    }
+    context.hass_api.platform_for_entity = lambda entity_id: platforms.get(entity_id)  # type: ignore
+    uut = Delivery("unit_testing", {}, AlexaMediaPlayerTransport(context, {}))
+
+    assert uut.select_targets(
+        Target(["media_player.echo_kitchen", "media_player.chromecast_lounge"]), context.hass_api
+    ).entity_ids == ["media_player.echo_kitchen"]
+
+
 def _make_transport(states=None):
     def _get_state(entity_id):
         if not states or entity_id not in states:

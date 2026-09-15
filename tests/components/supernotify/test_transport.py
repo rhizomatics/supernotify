@@ -12,7 +12,7 @@ from custom_components.supernotify.const import CONF_DELIVERY_DEFAULTS, TRANSPOR
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.model import DeliveryConfig, Target, TransportConfig, TransportFeature
+from custom_components.supernotify.model import Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transports.generic import GenericTransport
 
@@ -41,7 +41,7 @@ def test_simplify_text() -> None:
 async def test_call_action_simple(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     dummy_service = DummyService(hass)
     envelope = Envelope(
         Delivery("testing", {}, uut),
@@ -63,7 +63,7 @@ async def test_call_action_simple(hass: HomeAssistant) -> None:
 async def test_call_action_debug(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     dummy_service = DummyService(hass, response={"test": "debug_001"}, supports_response=SupportsResponse.ONLY)
     envelope = Envelope(
         Delivery("testing", {CONF_DEBUG: True}, uut),
@@ -86,7 +86,7 @@ async def test_call_action_debug(hass: HomeAssistant) -> None:
 async def test_call_action_debug_no_response(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     _dummy_service = DummyService(hass, supports_response=SupportsResponse.NONE)
     envelope = Envelope(
         Delivery("testing", {CONF_DEBUG: True}, uut),
@@ -103,7 +103,7 @@ async def test_call_action_debug_no_response(hass: HomeAssistant) -> None:
 async def test_call_action_debug_failing_service(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     _dummy_service = DummyService(hass, exception=NotImplementedError("not available"))
     envelope = Envelope(
         Delivery("testing", {CONF_DEBUG: True}, uut),
@@ -120,7 +120,7 @@ async def test_call_action_logs_once_while_unavailable(hass: HomeAssistant, capl
     caplog.set_level(logging.DEBUG, logger="custom_components.supernotify.transport")
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     dummy_service = DummyService(hass, exception=NotImplementedError("not available"))
 
     def make_envelope() -> Envelope:
@@ -162,7 +162,7 @@ async def test_common_features(mock_hass: HomeAssistant, mock_hass_api: HomeAssi
     assert attrs[ATTR_NAME] == transport_type.name
     assert isinstance(attrs[CONF_ENABLED], bool)
     assert attrs[CONF_DELIVERY_DEFAULTS] == transport.delivery_defaults
-    assert isinstance(transport.auto_configure(mock_hass_api), (DeliveryConfig, type(None)))
+    assert isinstance(transport.build_standard_deliveries(mock_hass_api), dict)
 
 
 async def test_transport_base_supported_features_and_default_config(mock_hass: HomeAssistant) -> None:
@@ -180,7 +180,7 @@ async def test_transport_attributes_with_error(mock_hass: HomeAssistant) -> None
     # Lines 100-102: attributes includes error info after record_error
     ctx = TestingContext(homeassistant=mock_hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     uut.record_error("test error msg", "test_method")
     attrs = uut.attributes()
     assert attrs["last_error_message"] == "test error msg"
@@ -192,7 +192,7 @@ async def test_set_action_data(mock_hass: HomeAssistant) -> None:
     # Lines 122-124: set_action_data adds key when data is not None
     ctx = TestingContext(homeassistant=mock_hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     action_data: dict = {}
     uut.set_action_data(action_data, "message", "hello")
     assert action_data["message"] == "hello"
@@ -206,7 +206,7 @@ async def test_call_action_no_action(hass: HomeAssistant) -> None:
 
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
-    uut = ctx.transport(TRANSPORT_GENERIC)
+    uut = ctx.transport(TRANSPORT_GENERIC, force=True)
     envelope = Envelope(
         Delivery("testing", {}, uut),  # no action in config or transport defaults
         Notification(ctx),

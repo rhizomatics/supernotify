@@ -275,6 +275,10 @@
             "title": "La Consegna Ha una Condizione Non Valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "La Consegna Non È Più Inclusa Per Impostazione Predefinita",
+            "description": "La consegna {delivery} non imposta un proprio inclusion, e il trasporto {transport} non usa più 'default' come predefinito - questa consegna non verrà più attivata su ogni notifica. Aggiungi inclusion: [default] alla consegna se desideri mantenere questo comportamento."
+        },
         "legacy_yaml_config": {
             "title": "La configurazione YAML di Supernotify deve essere spostata",
             "fix_flow": {
@@ -306,6 +310,11 @@
         "python_313_deprecated": {
             "title": "Il supporto per Python 3.13 terminerà a breve",
             "description": "Questa istanza di Home Assistant sta eseguendo Python {python_version}. Supernotify interromperà il supporto per Python 3.13 (e per le versioni di Home Assistant precedenti alla 2026.3.0) al rilascio di Home Assistant 2026.10 - da quel momento, questa istanza non potrà più installare aggiornamenti di Supernotify finché l'ambiente Python sottostante non verrà aggiornato a Python 3.14 o successivo."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Notifica consegnata ({delivered_count} consegna/e inviata/e), ma {uncategorized_count} destinazione/i non è stato possibile associarla/e a nessuna consegna ed è stata/e scartata/e: {uncategorized_targets} (consegne verificate: {deliveries})"
         }
     },
     "options": {

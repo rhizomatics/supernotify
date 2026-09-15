@@ -3,7 +3,9 @@
 from typing import Final
 
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     ATTR_SERVICE,
 )
 
@@ -29,8 +31,10 @@ CONF_LINKS: Final[str] = "links"
 CONF_PERSON: Final[str] = "person"
 CONF_TRANSPORT: Final[str] = "transport"
 CONF_TRANSPORTS: Final[str] = "transports"
+CONF_LOAD: Final[str] = "load"
 CONF_DELIVERY: Final[str] = "delivery"
-CONF_SELECTION: Final[str] = "selection"
+CONF_INCLUSION: Final[str] = "inclusion"
+CONF_SELECTION: Final[str] = "selection"  # deprecated, use CONF_INCLUSION
 CONF_SELECTION_RANK: Final[str] = "selection_rank"
 
 
@@ -111,9 +115,10 @@ ATTR_MEDIA_CAMERA_PTZ_PRESET = "camera_ptz_preset"
 ATTR_MEDIA_CLIP_URL = "clip_url"
 ATTR_MEDIA_SNAPSHOT_PATH = "snapshot_image_path"
 ATTR_TOPIC = "topic"
+ATTR_DISCORD_CHANNEL = "discord_channel"
+ATTR_MATRIX_ROOM = "matrix_room"
 ATTR_ACTION_GROUPS = "action_groups"
 CONF_ACTION_GROUP_NAMES = "action_groups"
-ATTR_ACTION_CATEGORY = "action_category"
 ATTR_ACTION_URL = "action_url"
 ATTR_ACTION_URL_TITLE = "action_url_title"
 ATTR_MESSAGE_HTML = "message_html"
@@ -141,17 +146,17 @@ PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
 PTZ_DELAY_DEFAULT = 10
 SNAP_WAIT_DEFAULT = 15
 
-SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
-SELECTION_FALLBACK = "fallback"
-SELECTION_BY_SCENARIO = "scenario"
-SELECTION_DEFAULT = "default"
-SELECTION_EXPLICIT = "explicit"
-SELECTION_VALUES = [
-    SELECTION_FALLBACK_ON_ERROR,
-    SELECTION_EXPLICIT,
-    SELECTION_BY_SCENARIO,
-    SELECTION_DEFAULT,
-    SELECTION_FALLBACK,
+INCLUSION_FALLBACK_ON_ERROR = "fallback_on_error"
+INCLUSION_FALLBACK = "fallback"
+INCLUSION_BY_SCENARIO = "scenario"
+INCLUSION_DEFAULT = "default"
+INCLUSION_EXPLICIT = "explicit"
+INCLUSION_VALUES = [
+    INCLUSION_FALLBACK_ON_ERROR,
+    INCLUSION_EXPLICIT,
+    INCLUSION_BY_SCENARIO,
+    INCLUSION_DEFAULT,
+    INCLUSION_FALLBACK,
 ]
 
 OCCUPANCY_VALUES = [
@@ -219,6 +224,8 @@ EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
 
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
+RE_MEDIA_PLAYER_ENTITY_ID = r"^media_player\.[A-Za-z0-9_]+$"
+RE_NOTIFY_ENTITY_ID = r"^notify\.[A-Za-z0-9_]+$"
 
 RESERVED_DELIVERY_NAMES: list[str] = ["ALL"]
 RESERVED_SCENARIO_NAMES: list[str] = ["NO_SCENARIO", "NULL"]
@@ -301,6 +308,21 @@ TRANSPORT_VALUES = [
     TRANSPORT_MATRIX,
     TRANSPORT_KODI,
     TRANSPORT_DISCORD,
+]
+
+# The master list of target category names, independent of any one transport - both
+# `Target` (for qualifying a target, e.g. `topic:my/topic` or `target: {topic: ...}`)
+# and `Transport.target_categories` (for declaring which categories a transport accepts)
+# reference this same list, rather than transports and targets each keeping their own.
+TARGET_CATEGORY_VALUES = [
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_EMAIL,
+    ATTR_PHONE,
+    ATTR_MOBILE_APP_ID,
+    ATTR_TOPIC,
+    ATTR_DISCORD_CHANNEL,
+    ATTR_MATRIX_ROOM,
 ]
 
 

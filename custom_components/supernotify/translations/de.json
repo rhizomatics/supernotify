@@ -275,6 +275,10 @@
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Lieferung wird nicht mehr standardmäßig eingeschlossen",
+            "description": "Die Lieferung {delivery} legt kein eigenes inclusion fest, und der Transport {transport} verwendet 'default' nicht mehr als Standard - diese Lieferung wird nicht mehr bei jeder Benachrichtigung ausgelöst. Fügen Sie inclusion: [default] zur Lieferung hinzu, wenn Sie dieses Verhalten weiterhin möchten."
+        },
         "legacy_yaml_config": {
             "title": "Supernotify-YAML-Konfiguration muss verschoben werden",
             "fix_flow": {
@@ -306,6 +310,11 @@
         "python_313_deprecated": {
             "title": "Python 3.13 Unterstützung endet bald",
             "description": "Diese Home-Assistant-Instanz läuft unter Python {python_version}. Supernotify stellt die Unterstützung für Python 3.13 (und Home-Assistant-Versionen vor 2026.3.0) ein, sobald Home Assistant 2026.10 veröffentlicht wird - danach können auf dieser Instanz keine weiteren Supernotify-Updates mehr installiert werden, bis die zugrunde liegende Python-Umgebung auf Python 3.14 oder höher aktualisiert wird."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Benachrichtigung zugestellt ({delivered_count} Zustellung(en) gesendet), aber {uncategorized_count} Ziel(e) konnten keiner Zustellung zugeordnet werden und wurden verworfen: {uncategorized_targets} (geprüfte Zustellungen: {deliveries})"
         }
     },
     "options": {
