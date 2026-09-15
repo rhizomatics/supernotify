@@ -180,6 +180,7 @@ class EmailTransport(Transport):
         self.sender: str | None = options.get(OPTION_SENDER)
         self.sender_name: str | None = options.get(OPTION_SENDER_NAME)
         self.default_title: str | None = options.get(OPTION_DEFAULT_TITLE)
+        self.ha_action: str | None = None
 
         if not self.host:
             self._reuse_ha_smtp_connection()
@@ -202,6 +203,7 @@ class EmailTransport(Transport):
             self.sender = entry_data.get(CONF_SENDER)
         if not self.sender_name:
             self.sender_name = entry_data.get(CONF_SENDER_NAME)
+        self.ha_action = self.hass_api.find_service("notify", "homeassistant.components.smtp.notify")
 
     async def initialize(self) -> None:
         try:
@@ -223,7 +225,7 @@ class EmailTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Valid either with an HA notify action, or a usable direct SMTP connection for
         deliveries that set OPTION_MODE to 'direct'."""
-        return action is not None or bool(self.host and self.sender)
+        return action is not None or self.ha_action is not None or bool(self.host and self.sender)
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # like validate_action() above, an explicit delivery can supply its own action
@@ -238,7 +240,7 @@ class EmailTransport(Transport):
             self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
             and self.host
             and self.sender
-        ) or self.delivery_defaults.action:
+        ) or self.ha_action:
             return {self.name: {}}
         return {}
 
@@ -270,7 +272,6 @@ class EmailTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.inclusion = self.inclusion_mode
-        config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
@@ -372,9 +373,12 @@ class EmailTransport(Transport):
         email can be sent to arbitrary addresses without every recipient needing to be
         pre-registered as a notify entity, and isn't limited to whatever a given HA notify
         action exposes."""
+        if envelope.delivery.action:
+            # explicit action, use that
+            return await self.call_action(envelope, action_data=action_data)
         if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT:
             return await self._send_direct_smtp(envelope, action_data)
-        return await self.call_action(envelope, action_data=action_data)
+        return await self.call_action(envelope, action_data=action_data, qualified_action=self.ha_action)
 
     async def _send_direct_smtp(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
         addresses: list[str] = action_data.get(ATTR_TARGET) or []

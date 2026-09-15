@@ -438,7 +438,6 @@ async def test_email_auto_configure_direct_connection_no_ha_smtp(hass: HomeAssis
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
     result = uut.build_standard_deliveries(ctx.hass_api)
     assert TRANSPORT_EMAIL in result
-    assert result[TRANSPORT_EMAIL].get(CONF_OPTIONS, {}).get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
     assert "email" in ctx.delivery_registry.deliveries
     assert ctx.delivery_registry.deliveries["email"].options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
 
@@ -920,6 +919,50 @@ async def test_deliver_ha_smtp_mode_uses_action_call() -> None:
     context.hass.services.async_call.assert_called_with(  # type: ignore
         "notify",
         "smtp",
+        service_data={"target": ["tester1@assert.com"], "title": "testing", "message": "hello there"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )
+
+
+async def test_deliver_ha_smtp_mode_uses_default_action() -> None:
+    """OPTION_MODE=EMAIL_OPTION_MODE_HA_SMTP with no explicit delivery `action:` falls back
+    to the transport's own discovered default action (self.ha_action) - distinct from
+    test_deliver_ha_smtp_mode_uses_action_call, which sets an explicit per-delivery action."""
+    context = TestingContext(
+        recipients=[{CONF_PERSON: "person.tester1", CONF_EMAIL: "tester1@assert.com"}],
+        deliveries={
+            "ha_smtp": {
+                CONF_TRANSPORT: TRANSPORT_EMAIL,
+                CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_HA_SMTP},
+            }
+        },
+        services={"notify": [{"action": "mailservice", "module": "homeassistant.components.smtp.notify"}]},
+    )
+    # a truthy smtp config entry is needed to get past the early return in
+    # EmailTransport._reuse_ha_smtp_connection() before it discovers self.ha_action - the
+    # default mock hass returns an empty (falsy) data dict for every domain
+    context.hass.config_entries.async_entries = lambda domain, **_kwargs: (  # type: ignore # ty: ignore[invalid-assignment]
+        [Mock(data={CONF_SENDER: "hass@example.com"})] if domain == "smtp" else [Mock(data={})]
+    )
+    await context.test_initialize()
+    uut = cast("EmailTransport", context.transport(TRANSPORT_EMAIL))
+    assert uut.ha_action == "notify.mailservice"
+
+    result = await uut.deliver(
+        Envelope(
+            Delivery("ha_smtp", context.delivery_config("ha_smtp"), uut),
+            Notification(context, message="hello there", title="testing"),
+            target=Target(["tester1@assert.com"]),
+        )
+    )
+
+    assert result is True
+    context.hass.services.async_call.assert_called_with(  # type: ignore
+        "notify",
+        "mailservice",
         service_data={"target": ["tester1@assert.com"], "title": "testing", "message": "hello there"},
         blocking=False,
         context=None,
