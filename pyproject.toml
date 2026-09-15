@@ -65,7 +65,7 @@ dev=[
     "notify-events",
     "aiontfy==0.8.2; python_full_version < '3.14.2'",
     "aiontfy==0.8.5; python_full_version >= '3.14.2'",
-    "zeroconf==0.148.0; python_full_version < '3.14.2'",
+    "zeroconf==0.149.16; python_full_version < '3.14.2'",
     "zeroconf>=0.150.1; python_full_version >= '3.14.2'",
     # home assistant tts testing
     "mutagen",
@@ -113,6 +113,10 @@ environments = [
 ]
 override-dependencies = [
     #"voluptuous-openapi==0.2.0"
+    # homeassistant==2026.2.3 hard-pins zeroconf==0.148.0 (exact, no range) - that version
+    # carries a known CVE, so force the patched 0.149.16 instead for py3.13 (2026.9.2, used
+    # for py3.14+, already requires a newer zeroconf range that isn't affected)
+    "zeroconf==0.149.16; python_full_version < '3.14.2'",
     "homeassistant==2026.2.3; python_full_version < '3.14.2'",
     "homeassistant==2026.9.2; python_full_version >= '3.14.2'",
     "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
