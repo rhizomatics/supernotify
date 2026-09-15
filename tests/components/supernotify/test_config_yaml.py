@@ -12,6 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
+from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
@@ -151,7 +152,29 @@ async def test_reload(hass: HomeAssistant) -> None:
     # auto-configured delivery regardless of what else is explicitly configured for it.
     # "mobile_push" doesn't add one of its own on top: its explicit delivery is itself
     # named "mobile_push" (same as the transport), so the auto-config merges into it instead
-    assert len(uut.context.delivery_registry.deliveries) == 20
+    assert list(uut.context.delivery_registry.deliveries.keys()) == unordered([
+        "html_email",
+        "backup_mail",
+        "direct_mail",
+        "email",
+        "text_message",
+        "sms",
+        "alexa_announce",
+        "alexa_devices",
+        "mobile_push",
+        "alexa_show",
+        "media",
+        "play_chimes",
+        "doorbell_chime_alexa",
+        "sleigh_bells",
+        "chime",
+        "persistent",
+        "expensive_api_call",
+        "my_hw_notifiers",
+        "alexa_red_alert",
+        "upstairs_siren",
+        "notify_entity",
+    ])
 
     # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
     # over from before the reload (both would report True) - actually call it and confirm the

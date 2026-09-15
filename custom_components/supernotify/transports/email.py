@@ -180,10 +180,13 @@ class EmailTransport(Transport):
         self.sender: str | None = options.get(OPTION_SENDER)
         self.sender_name: str | None = options.get(OPTION_SENDER_NAME)
         self.default_title: str | None = options.get(OPTION_DEFAULT_TITLE)
-        self.ha_action: str | None = None
-
+        self.ha_action: str | None = self.hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if not self.host:
             self._reuse_ha_smtp_connection()
+        if self.host and self.port:
+            self.local_smtp = True
+        else:
+            self.local_smtp = False
 
     def _reuse_ha_smtp_connection(self) -> None:
         """No direct SMTP connection configured here; fall back to a configured HA smtp
@@ -203,7 +206,6 @@ class EmailTransport(Transport):
             self.sender = entry_data.get(CONF_SENDER)
         if not self.sender_name:
             self.sender_name = entry_data.get(CONF_SENDER_NAME)
-        self.ha_action = self.hass_api.find_service("notify", "homeassistant.components.smtp.notify")
 
     async def initialize(self) -> None:
         try:
@@ -225,7 +227,7 @@ class EmailTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Valid either with an HA notify action, or a usable direct SMTP connection for
         deliveries that set OPTION_MODE to 'direct'."""
-        return action is not None or self.ha_action is not None or bool(self.host and self.sender)
+        return action is not None or self.ha_action is not None or self.local_smtp
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # like validate_action() above, an explicit delivery can supply its own action
@@ -238,8 +240,7 @@ class EmailTransport(Transport):
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         if (
             self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
-            and self.host
-            and self.sender
+            and self.local_smtp
         ) or self.ha_action:
             return {self.name: {}}
         return {}
@@ -376,7 +377,7 @@ class EmailTransport(Transport):
         if envelope.delivery.action:
             # explicit action, use that
             return await self.call_action(envelope, action_data=action_data)
-        if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT:
+        if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT and self.local_smtp:
             return await self._send_direct_smtp(envelope, action_data)
         return await self.call_action(envelope, action_data=action_data, qualified_action=self.ha_action)
 
@@ -491,7 +492,7 @@ class EmailTransport(Transport):
         return attachment
 
     def _send_smtp(self, msg: MIMEMultipart | MIMEText, addresses: list[str]) -> None:
-        if not self.host or not self.port:
+        if not self.local_smtp or not self.host or not self.port:  # redundant but quietens mypy
             _LOGGER.warning("SUPERNOTIFY Direct SMTP connection not configured")
             return
 

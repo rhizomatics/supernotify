@@ -634,6 +634,7 @@ async def test_find_default_template(tmp_aiopath: Path) -> None:
 def test_direct_smtp_validate_action_without_connection() -> None:
     context = Mock(custom_template_path=None)
     context.hass_api.find_config_entry_data.return_value = None
+    context.hass_api.find_service.return_value = None
     uut = EmailTransport(context, {})
     assert uut.validate_action(None) is False
 
