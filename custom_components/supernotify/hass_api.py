@@ -15,6 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
@@ -124,8 +125,8 @@ class HomeAssistantAPI:
         self.external_url: str = ""
         self.language: str = ""
         self.hass_name: str = "!UNDEFINED!"
-        self._entity_registry: er.EntityRegistry | None = None
-        self._device_registry: dr.DeviceRegistry | None = None
+        self.__entity_registry: er.EntityRegistry | None = None
+        self.__device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
@@ -211,9 +212,12 @@ class HomeAssistantAPI:
 
     def platform_for_entity(self, entity_id: str) -> str | None:
         """The integration that registered this entity (RegistryEntry.platform), if any."""
-        ent_reg = self.entity_registry()
-        reg_entry = ent_reg.async_get(entity_id) if ent_reg else None
-        return reg_entry.platform if reg_entry else None
+        entity_registry: EntityRegistry | None = self._entity_registry()
+        if entity_registry:
+            reg_entry: RegistryEntry | None = entity_registry.async_get(entity_id) if entity_registry else None
+            if reg_entry:
+                return reg_entry.platform
+        return None
 
     def entity_ids_for_platform(self, domain: str, platform: str) -> list[str]:
         """entity_ids in `domain` (e.g. "notify") registered by a specific integration.
@@ -221,10 +225,10 @@ class HomeAssistantAPI:
         Reads the entity registry directly (not the state machine), so a freshly
         registered entity counts even before it has reported a first state.
         """
-        ent_reg = self.entity_registry()
-        if not ent_reg:
+        entity_registry = self._entity_registry()
+        if not entity_registry:
             return []
-        return [e.entity_id for e in ent_reg.entities.values() if e.domain == domain and e.platform == platform]
+        return [e.entity_id for e in entity_registry.entities.values() if e.domain == domain and e.platform == platform]
 
     async def async_get_camera_image(self, entity_id: str, timeout: int = 10) -> ha_camera.Image | None:
         """Fetch a still image directly from a camera entity, via HA's own camera component API,
@@ -271,7 +275,7 @@ class HomeAssistantAPI:
     ) -> None:
         """Expose a technical entity in Home Assistant representing internal state and attributes"""
         entity_id: str
-        entity_registry = self.entity_registry()
+        entity_registry = self._entity_registry()
         if entity_registry is not None:
             try:
                 entry: er.RegistryEntry = entity_registry.async_get_or_create(
@@ -584,8 +588,8 @@ class HomeAssistantAPI:
 
     def build_mobile_app_cache(self) -> None:
         """All enabled mobile apps"""
-        ent_reg: EntityRegistry | None = self.entity_registry()
-        if not ent_reg:
+        entity_registry: EntityRegistry | None = self._entity_registry()
+        if not entity_registry:
             _LOGGER.warning("SUPERNOTIFY Unable to discover devices for - no entity registry found")
             return
 
@@ -601,7 +605,7 @@ class HomeAssistantAPI:
                 else:
                     _LOGGER.warning("SUPERNOTIFY Unable to find notify action <%s>", mobile_app_id)
 
-                registry_entries = ent_reg.entities.get_entries_for_device_id(mobile_app_info.device_id)
+                registry_entries = entity_registry.entities.get_entries_for_device_id(mobile_app_info.device_id)
                 for reg_entry in registry_entries:
                     if reg_entry.platform == "mobile_app" and reg_entry.domain == "device_tracker":
                         device_tracker = reg_entry.entity_id
@@ -652,7 +656,7 @@ class HomeAssistantAPI:
         device_label_select: SelectionRule | None = None,
     ) -> list[DeviceInfo]:
         devices: list[DeviceInfo] = []
-        dev_reg: DeviceRegistry | None = self.device_registry()
+        dev_reg: DeviceRegistry | None = self._device_registry()
         if dev_reg is None or not hasattr(dev_reg, "devices"):
             _LOGGER.warning(f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
             return []
@@ -730,7 +734,7 @@ class HomeAssistantAPI:
     def domain_for_device(self, device_id: str, domains: list[str]) -> str | None:
         # discover domain from device registry
         verified_domain: str | None = None
-        device_registry = self.device_registry()
+        device_registry: DeviceRegistry | None = self._device_registry()
         if device_registry:
             device: DeviceEntry | None = self.find_device(device_id)
             if device:
@@ -744,38 +748,39 @@ class HomeAssistantAPI:
             )
         return verified_domain
 
-    def entity_registry(self) -> er.EntityRegistry | None:
+    def _entity_registry(self) -> er.EntityRegistry | None:
         """Hass entity registry is weird, every component ends up creating its own, with a store, subscribing
         to all entities, so do it once here
         """
-        if self._entity_registry is not None:
-            return self._entity_registry
+        if self.__entity_registry is not None:
+            return self.__entity_registry
         try:
-            self._entity_registry = er.async_get(self._hass)
+            self.__entity_registry = er.async_get(self._hass)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get entity registry: %s", e)
-        return self._entity_registry
+        return self.__entity_registry
 
-    def device_registry(self) -> dr.DeviceRegistry | None:
+    def _device_registry(self) -> dr.DeviceRegistry | None:
         """Hass device registry is weird, every component ends up creating its own, with a store, subscribing
         to all devices, so do it once here
         """
-        if self._device_registry is not None:
-            return self._device_registry
+        if self.__device_registry is not None:
+            return self.__device_registry
         try:
-            self._device_registry = dr.async_get(self._hass)
+            self.__device_registry = dr.async_get(self._hass)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get device registry: %s", e)
-        return self._device_registry
+        return self.__device_registry
 
     def find_device(self, device_id: str) -> DeviceEntry | None:
-        if self._device_registry is None:
+        reg: DeviceRegistry | None = self._device_registry()
+        if reg is None:
             return None
         try:
-            return self._device_registry.async_get(device_id, include_child_devices=False)  # type: ignore[call-arg]
+            return reg.async_get(device_id, include_child_devices=False)  # type: ignore[call-arg]
         except TypeError:
             # older HA
-            return cast("DeviceEntry|None", self._device_registry.async_get(device_id))
+            return cast("DeviceEntry|None", reg.async_get(device_id))
 
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
         from homeassistant.components import mqtt

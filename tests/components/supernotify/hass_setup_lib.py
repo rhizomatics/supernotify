@@ -521,7 +521,7 @@ def register_mobile_app(
         trackers.extend(existing.attributes.get("device_trackers", []))
         hass_api.set_state(person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
 
-    device_registry = hass_api.device_registry()
+    device_registry = hass_api._device_registry()
     device_entry = None
     if device_registry:
         device_entry = device_registry.async_get_or_create(
@@ -541,7 +541,7 @@ def register_mobile_app(
         hass_api._hass.services.async_register(
             "notify", slugify(f"mobile_app_{device_name}"), service_func=fake_service, supports_response=SupportsResponse.NONE
         )
-    entity_registry: EntityRegistry | None = hass_api.entity_registry()
+    entity_registry: EntityRegistry | None = hass_api._entity_registry()
     if entity_registry and device_entry:
         entity_registry.async_get_or_create(
             "device_tracker", "mobile_app", device_name, suggested_object_id=device_slug, device_id=device_entry.id
@@ -580,7 +580,7 @@ def register_device(
         hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(config_entry)
     except Exception as e:
         _LOGGER.warning("Unable to mess with HASS config entries for device registry: %s", e)
-    device_registry = hass_api.device_registry()
+    device_registry = hass_api._device_registry()
     device_entry = None
     if device_registry:
         device_entry = device_registry.async_get_or_create(
