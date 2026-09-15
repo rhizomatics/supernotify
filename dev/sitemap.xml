@@ -57,6 +57,10 @@
          <lastmod>2026-09-15</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/</loc>
+         <lastmod>2026-09-15</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/</loc>
          <lastmod>2026-09-15</lastmod>
     </url>
@@ -410,10 +414,6 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/usage/notifying/</loc>
-         <lastmod>2026-09-15</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/usage/scenarios/</loc>
          <lastmod>2026-09-15</lastmod>
     </url>
     <url>
