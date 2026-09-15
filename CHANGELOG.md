@@ -51,6 +51,9 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 ### Gotify
 - Automatically finds correct notify action by default
 
+### Live Scenarios
+- Fix scenarios without entities, such as date based ones using `now()` being left out of periodic sweep to recompute
+
 ### Notify Entity
 - Target selection for notify entities now uses Home Assistant domain that provided the entity
   - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with the very basic `notify_entity` as a back stop
