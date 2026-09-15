@@ -3,7 +3,7 @@
     "name": "Supernotify",
     "after_dependencies": [
         "alexa_devices",
-        "alexa_media_player",
+        "alexa_media",
         "discord",
         "gotify",
         "html5",
@@ -22,7 +22,7 @@
         "tod",
         "trace",
         "tts",
-        "twilio",
+        "twilio_sms",
         "workday"
     ],
     "codeowners": [
