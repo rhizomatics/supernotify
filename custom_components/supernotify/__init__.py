@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 from homeassistant.const import CONF_NAME, SERVICE_RELOAD, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.loader import Integration, async_get_integration
@@ -106,11 +107,30 @@ def _entry_full_config(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> Co
     return {**CONFIG_ENTRY_SCHEMA({**entry.data, **entry.options}), **yaml_config}
 
 
+# Delivery names auto-configured under the old "DEFAULT_x" naming (see
+# DeliveryRegistry.resolve_name()), long since replaced by plain transport names - their
+# binary_sensor entities are orphaned now that nothing in current use is named with that prefix.
+LEGACY_DEFAULT_DELIVERY_NAMES = ("notify_entity", "email", "mobile_push", "smtp")
+
+
+def _async_remove_legacy_default_entities(hass: HomeAssistant) -> None:
+    """One-time cleanup of binary_sensor entities left behind by the old 'DEFAULT_x'
+    auto-configured delivery naming - a harmless no-op once they're gone."""
+    entity_registry = er.async_get(hass)
+    for name in LEGACY_DEFAULT_DELIVERY_NAMES:
+        entity_id = entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, f"delivery_DEFAULT_{name}")
+        if entity_id:
+            _LOGGER.info("SUPERNOTIFY Removing orphaned legacy entity %s", entity_id)
+            entity_registry.async_remove(entity_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
     from .actions import async_register_engine_actions
     from .engine import build_supernotify_engine
     from .notification import set_version
     from .notify import SuperNotificationService
+
+    _async_remove_legacy_default_entities(hass)
 
     integration: Integration = await async_get_integration(hass, DOMAIN)
     set_version(str(integration.version) if integration.version else "unknown")
