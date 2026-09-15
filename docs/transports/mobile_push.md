@@ -14,7 +14,7 @@ tags:
 ## Discovery
 
 **Default delivery.** If at least one Companion App device is registered (a `mobile_app` config
-entry exists) and no `mobile_push` delivery is configured, a `DEFAULT_mobile_push` delivery is
+entry exists) and no `mobile_push` delivery is configured, a `mobile_push` delivery is
 generated automatically and fires on every notification, with targets resolved per-recipient
 from the HA Companion App at delivery time.
 
@@ -78,7 +78,7 @@ iOS doesn't support it for them.
 
 ## Default Delivery
 
-A default Delivery called `DEFAULT_mobile_push` will be automatically generated for Mobile Push transport if no explicit ones
+A default Delivery called `mobile_push` will be automatically generated for Mobile Push transport if no explicit ones
 created, since this is the new standard HomeAssistant notification provider. If you don't want to use it, then
 use configuration as below:
 

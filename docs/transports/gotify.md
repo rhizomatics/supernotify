@@ -9,7 +9,7 @@ tags:
 
 **Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the
 `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is
-defined, a `DEFAULT_gotify` delivery is generated automatically using that service and fires on
+defined, a `gotify` delivery is generated automatically using that service and fires on
 every notification. Manually configuring your own `gotify` delivery with an explicit `action:`
 (see [Notes](#notes) below) still works and takes precedence.
 

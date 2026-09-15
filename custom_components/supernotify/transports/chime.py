@@ -60,6 +60,10 @@ STANDARD_DELIVERY_SIREN_ALL = f"{TRANSPORT_CHIME}_siren_all"
 
 _LOGGER = logging.getLogger(__name__)
 
+# device-registry scan (see HomeAssistantAPI.discover_devices), independent of whether
+# AlexaDevicesTransport itself is currently viable/loaded - HA doesn't reliably prune
+# device registry entries when a config entry is unloaded, so chime can keep finding and
+# targeting alexa_devices devices after that transport has gone away
 DEVICE_DOMAINS = ["alexa_devices"]
 
 

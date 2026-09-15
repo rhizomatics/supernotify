@@ -26,7 +26,7 @@ Persistent notification has a Delivery automatically discovered where the integr
         message: Testing an e-mail that also shows as persistent notification
         data:
           delivery:
-            - DEFAULT_email
+            - email
             - persistent
 ```
 

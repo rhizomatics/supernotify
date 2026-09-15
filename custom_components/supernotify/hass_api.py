@@ -419,12 +419,12 @@ class HomeAssistantAPI:
                             else domain_obj.job.target.__module__
                         )
                         if target_module == module:
-                            _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s", service, domain)
+                            _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s in %s", service, domain, module)
                             return f"{domain}.{service}"
 
-            _LOGGER.debug("SUPERNOTIFY Unable to find service for %s", domain)
+            _LOGGER.debug("SUPERNOTIFY Unable to find service for %s, module %s", domain, module)
         except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY Unable to find service for %s: %s", domain, e)
+            _LOGGER.warning("SUPERNOTIFY Unable to find service for %s, module %s : %s", domain, module, e)
         return None
 
     def find_config_entry_data(self, domain: str) -> Mapping[str, Any] | None:

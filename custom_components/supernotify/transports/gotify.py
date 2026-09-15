@@ -41,9 +41,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import (
-    CONF_ACTION,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
@@ -117,8 +114,7 @@ class GotifyTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
         config.delivery_defaults.inclusion = self.inclusion_mode
-        # No static default action - auto_configure() discovers it, or a manually configured
-        # delivery can set action: notify.<name> directly
+        config.delivery_defaults.action = self.hass_api.find_service("notify", HA_GOTIFY_MODULE)
         return config
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
@@ -129,9 +125,8 @@ class GotifyTransport(Transport):
         return True
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        action: str | None = hass_api.find_service("notify", HA_GOTIFY_MODULE)
-        if action:
-            return {self.name: {CONF_ACTION: action}}
+        if self.delivery_defaults.action:
+            return {self.name: {}}
         return {}
 
     def validate_action(self, action: str | None) -> bool:

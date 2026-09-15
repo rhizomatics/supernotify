@@ -47,7 +47,6 @@ from custom_components.supernotify.const import (
     CONF_OPTIONS,
     CONF_TEMPLATE,
     EMAIL_OPTION_MODE_DIRECT,
-    EMAIL_OPTION_MODE_HA_SMTP,
     INCLUSION_DEFAULT,
     OPTION_DEFAULT_TITLE,
     OPTION_JPEG,
@@ -235,24 +234,11 @@ class EmailTransport(Transport):
         return True
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        # always discover the native action, even if direct sending wins by default below -
-        # a specific delivery can still override OPTION_MODE back to 'ha_smtp' at merge
         if (
             self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
             and self.host
             and self.sender
-        ):
-            # usable direct SMTP connection is configured
-            # (explicit `connection:` on this transport, or reused from the
-            # HA smtp integration's own connection details) - auto-configure for that
-            return {self.name: {CONF_OPTIONS: {OPTION_MODE: EMAIL_OPTION_MODE_DIRECT}}}
-            # time, and needs an action already sitting in these transport defaults to inherit
-
-        action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
-        if action:
-            # this should get computed directly in default_config(), however that doesn't have API access
-            self.delivery_defaults.action = action
-        if action:
+        ) or self.delivery_defaults.action:
             return {self.name: {}}
         return {}
 
@@ -284,7 +270,7 @@ class EmailTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.inclusion = self.inclusion_mode
-
+        config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
@@ -295,6 +281,7 @@ class EmailTransport(Transport):
             OPTION_STRICT_TEMPLATE: False,
             OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;",
             OPTION_PREHEADER_LENGTH: 100,
+            OPTION_MODE: EMAIL_OPTION_MODE_DIRECT,  # default to avoiding the e-mail integration, since it will get locked down to notify entities
             OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same address
             # only used for deliveries with OPTION_MODE set to 'direct'
             OPTION_SENDER_NAME: "Home Assistant",
@@ -385,7 +372,7 @@ class EmailTransport(Transport):
         email can be sent to arbitrary addresses without every recipient needing to be
         pre-registered as a notify entity, and isn't limited to whatever a given HA notify
         action exposes."""
-        if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_HA_SMTP) == EMAIL_OPTION_MODE_DIRECT:
+        if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT:
             return await self._send_direct_smtp(envelope, action_data)
         return await self.call_action(envelope, action_data=action_data)
 

@@ -66,7 +66,6 @@ from typing import TYPE_CHECKING, Any, cast
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_ACTION,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -156,7 +155,7 @@ class AlexaMediaPlayerTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.action = "notify.alexa_media"
+        config.delivery_defaults.action = self.hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
@@ -184,10 +183,9 @@ class AlexaMediaPlayerTransport(Transport):
         return True
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        action = hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
-        if not action:
-            return {}
-        return {self.name: {CONF_ACTION: action}}
+        if self.delivery_defaults.action:
+            return {self.name: {}}
+        return {}
 
     async def _safe_service(
         self, domain: str, service: str, service_data: dict[str, Any], context: HAContext | None = None

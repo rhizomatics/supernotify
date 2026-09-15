@@ -437,7 +437,7 @@ class DeliveryRegistry:
         used_transport_names = {d.transport.name for d in self._deliveries.values()}
         for name in list(self.transports):
             if name not in used_transport_names:
-                _LOGGER.debug("SUPERNOTIFY %s transport has no deliveries, unloading", name)
+                _LOGGER.info("SUPERNOTIFY %s transport has no deliveries, unloading", name)
                 del self.transports[name]
 
     def expose_entities(self, hass_api: HomeAssistantAPI) -> None:

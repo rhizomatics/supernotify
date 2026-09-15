@@ -18,7 +18,7 @@ Targets for Notify Entities can be broader than `entity_id`, and can also be a `
 ## Discovery
 
 **Default delivery.** If at least one `notify.*` entity exists in the house and no
-`notify_entity` delivery is configured, a `DEFAULT_notify_entity` delivery is generated
+`notify_entity` delivery is configured, a `notify_entity` delivery is generated
 automatically and fires on every notification, since this is the standard Home Assistant
 notification provider.
 

@@ -4,9 +4,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_TARGET
-from homeassistant.const import (
-    CONF_ACTION,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
@@ -65,6 +62,15 @@ class SMSTransport(Transport):
             OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same number
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
         }
+        for module in (
+            "homeassistant.components.twilio_sms.notify",
+            "custom_components.mikrotik_sms.notify",
+        ):
+            action: str | None = self.hass_api.find_service("notify", module)
+            if action:
+                config.delivery_defaults.action = action
+                _LOGGER.info("SUPERNOTIFY SMS action defaults to %s", action)
+                break
         return config
 
     @property
@@ -79,14 +85,8 @@ class SMSTransport(Transport):
         return True
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        """Discover the notify service registered by a supported SMS gateway integration, if installed."""
-        for module in (
-            "homeassistant.components.twilio_sms.notify",
-            "custom_components.mikrotik_sms.notify",
-        ):
-            action: str | None = hass_api.find_service("notify", module)
-            if action:
-                return {self.name: {CONF_ACTION: action}}
+        if self.delivery_defaults.action:
+            return {self.name: {}}
         return {}
 
     def validate_action(self, action: str | None) -> bool:

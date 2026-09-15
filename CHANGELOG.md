@@ -39,6 +39,18 @@ There has a wide overhaul of how targets are categorized and tied back to transp
   - `alexa_devices_announce_all` - sends notification to all *announce* Alexa notify entities, takes no targets
 - This means that it is easy with a Zero YAML configuration to use Alexa announcements - just add `alexa_devices_announce_all` to the list of deliveries
 
+### Alexa Media Player
+- Automatically finds correct notify action by default
+
+### Discord
+- Automatically finds correct notify action by default
+
+### Email
+- The internal SMTP integration is used by default, and will reuse the Home Assistant SMTP connection details if SMTP set up via the UI
+
+### Gotify
+- Automatically finds correct notify action by default
+
 ### Notify Entity
 - Target selection for notify entities now uses Home Assistant domain that provided the entity
   - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with the very basic `notify_entity` as a back stop
@@ -51,6 +63,12 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Fixed problem with `action_template` and `title_template` producing broken buttons
 - Stop forcing mobile notifications into 'general' or 'appd' group
 - New doc page on how they work
+
+### Pushover
+- Automatically finds correct notify action by default
+
+### SMS
+- Automatically finds correct notify action by default for Twilio and Mikrotik_SMS integrations
 
 ### Technical
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`

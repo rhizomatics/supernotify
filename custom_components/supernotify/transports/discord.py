@@ -56,9 +56,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import (
-    CONF_ACTION,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
@@ -105,7 +102,7 @@ class DiscordTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
-        config.delivery_defaults.action = "notify.discord"
+        config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.discord.notify")
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.inclusion = self.inclusion_mode
         return config
@@ -126,9 +123,8 @@ class DiscordTransport(Transport):
         return True
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
-        action: str | None = hass_api.find_service("notify", "homeassistant.components.discord.notify")
-        if action:
-            return {self.name: {CONF_ACTION: action}}
+        if self.delivery_defaults.action:
+            return {self.name: {}}
         return {}
 
     def validate_action(self, action: str | None) -> bool:
