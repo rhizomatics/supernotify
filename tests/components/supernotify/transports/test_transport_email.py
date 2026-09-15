@@ -255,10 +255,13 @@ async def _setup_ha_smtp_notify(hass: HomeAssistant, extra_config: dict | None =
 
 
 async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
-    """With the HA smtp integration present and no explicit OPTION_MODE, the
-    auto-configured delivery prefers direct sending (reusing the integration's own
-    connection details) over the native notify.smtp action - the legacy notify-platform
-    action path only wins if a delivery explicitly asks for EMAIL_OPTION_MODE_HA_SMTP."""
+    """With the HA smtp integration present and no explicit OPTION_MODE, the auto-configured
+    delivery defaults to direct sending either way - OPTION_MODE: direct is always the
+    transport-wide default now (see EmailTransport.default_config()), regardless of whether a
+    config entry exists to reuse a real connection from. Whether direct sending is actually
+    usable at runtime is EmailTransport.local_smtp's job (see _send()), not this option -
+    the legacy notify-platform action path only wins if a delivery explicitly asks for
+    EMAIL_OPTION_MODE_HA_SMTP."""
     ctx = TestingContext(homeassistant=hass)
     await _setup_ha_smtp_notify(hass, {"notify_events": {"token": "ABC"}})
 
@@ -266,15 +269,16 @@ async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
     assert "email" in ctx.delivery_registry.deliveries
     delivery = ctx.delivery_registry.deliveries["email"]
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
+    assert delivery.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
     if _smtp_uses_config_entry():
         # a config entry exists to reuse a direct SMTP connection from
-        assert delivery.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
         assert uut.host == "localhost"
         assert uut.sender == "hass@localhost.org"
+        assert uut.local_smtp is True
     else:
         # legacy discovered notify platform, no config entry to reuse a connection from
-        assert delivery.options.get(OPTION_MODE) is None
         assert uut.host is None
+        assert uut.local_smtp is False
 
 
 async def test_discover_smtp_integration_explicit_ha_smtp_mode(hass: HomeAssistant) -> None:

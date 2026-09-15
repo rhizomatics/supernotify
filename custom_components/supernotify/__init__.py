@@ -115,13 +115,22 @@ LEGACY_DEFAULT_DELIVERY_NAMES = ("notify_entity", "email", "mobile_push", "smtp"
 
 def _async_remove_legacy_default_entities(hass: HomeAssistant) -> None:
     """One-time cleanup of binary_sensor entities left behind by the old 'DEFAULT_x'
-    auto-configured delivery naming - a harmless no-op once they're gone."""
+    auto-configured delivery naming - a harmless no-op once they're gone.
+
+    Removing the registry entry alone doesn't clear its last-known state - these were never
+    backed by a real Entity/EntityPlatform (see HomeAssistantAPI.expose_entity(), which writes
+    directly to the registry and state machine), so nothing else ever calls
+    hass.states.async_remove() for them either. Left alone, the state lingers in the state
+    machine (and so still shows in the UI/history) until a full restart, even though the
+    registry entry is genuinely gone.
+    """
     entity_registry = er.async_get(hass)
     for name in LEGACY_DEFAULT_DELIVERY_NAMES:
         entity_id = entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, f"delivery_DEFAULT_{name}")
         if entity_id:
             _LOGGER.info("SUPERNOTIFY Removing orphaned legacy entity %s", entity_id)
             entity_registry.async_remove(entity_id)
+            hass.states.async_remove(entity_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:

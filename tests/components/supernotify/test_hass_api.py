@@ -401,7 +401,7 @@ def test_build_mobile_app_cache_no_entity_registry(mock_hass: HomeAssistant) -> 
     from unittest.mock import patch
 
     hass_api = HomeAssistantAPI(mock_hass)
-    with patch.object(hass_api, "entity_registry", return_value=None):
+    with patch.object(hass_api, "_entity_registry", return_value=None):
         hass_api.build_mobile_app_cache()  # should not raise
 
 
@@ -567,7 +567,7 @@ def test_device_config_info_falls_back_to_deprecated_config_entries(hass: HomeAs
 def test_discover_devices_no_device_registry(hass: HomeAssistant) -> None:
     # Lines 554-555
     hass_api = HomeAssistantAPI(hass)
-    with patch.object(hass_api, "device_registry", return_value=None):
+    with patch.object(hass_api, "_device_registry", return_value=None):
         assert hass_api.discover_devices("mobile_app") == []
 
 
