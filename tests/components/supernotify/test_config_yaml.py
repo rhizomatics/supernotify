@@ -97,7 +97,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # no action override, for alexa_devices/mobile_push/media_player respectively - each
     # needs its own real discovery signal to register
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
-    er.async_get(hass).async_get_or_create("notify", "alexa_device", "kitchen_echo_unique_id")
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "kitchen_echo_unique_id")
     MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
     hass.states.async_set("media_player.kitchen_2", "idle")
 

@@ -316,7 +316,7 @@ async def test_alexa_media_player_auto_configure_discovers_service(hass: HomeAss
 
 async def test_alexa_devices_stays_default_without_alexa_media_player(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
-    er.async_get(hass).async_get_or_create("notify", "alexa_device", "bedroom_echo_unique_id")
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "bedroom_echo_unique_id")
 
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
@@ -334,9 +334,9 @@ async def test_alexa_devices_speak_all_and_announce_all_conditional(hass: HomeAs
     matching entities - not every alexa_devices notify entity."""
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
     ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create("notify", "alexa_device", "bedroom_speak_id", suggested_object_id="bedroom_echo_speak")
-    ent_reg.async_get_or_create("notify", "alexa_device", "kitchen_announce_id", suggested_object_id="kitchen_echo_announce")
-    ent_reg.async_get_or_create("notify", "alexa_device", "hall_id", suggested_object_id="hall_echo")
+    ent_reg.async_get_or_create("notify", "alexa_devices", "bedroom_speak_id", suggested_object_id="bedroom_echo_speak")
+    ent_reg.async_get_or_create("notify", "alexa_devices", "kitchen_announce_id", suggested_object_id="kitchen_echo_announce")
+    ent_reg.async_get_or_create("notify", "alexa_devices", "hall_id", suggested_object_id="hall_echo")
 
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
@@ -355,7 +355,7 @@ async def test_alexa_devices_speak_all_and_announce_all_conditional(hass: HomeAs
 
 async def test_alexa_devices_no_speak_or_announce_extras_without_matching_entities(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
-    er.async_get(hass).async_get_or_create("notify", "alexa_device", "hall_id", suggested_object_id="hall_echo")
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "hall_id", suggested_object_id="hall_echo")
 
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()

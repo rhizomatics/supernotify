@@ -79,7 +79,7 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
     # ... and, for these examples specifically, an Alexa Devices integration entity and a
     # paired mobile_app companion app too
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
-    er.async_get(hass).async_get_or_create("notify", "alexa_device", "kitchen_echo_unique_id")
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "kitchen_echo_unique_id")
     MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
     config = await hass.async_add_executor_job(load_yaml_config_file, str(config_path))
 

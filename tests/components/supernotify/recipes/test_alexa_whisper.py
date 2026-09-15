@@ -19,7 +19,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
     """https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/"""
     # Pretend there's an Alexa Devices integration entity called kitchen_alexa_speak
     er.async_get(hass).async_get_or_create(
-        "notify", "alexa_device", "kitchen_echo_unique_id", suggested_object_id="kitchen_alexa_speak"
+        "notify", "alexa_devices", "kitchen_echo_unique_id", suggested_object_id="kitchen_alexa_speak"
     )
     ctx = TestingContext(
         homeassistant=hass,

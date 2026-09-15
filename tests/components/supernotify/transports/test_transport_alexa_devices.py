@@ -67,9 +67,9 @@ def test_alexa_transport_selects_targets(mock_hass, unmocked_config) -> None:  #
     notify entity (e.g. alexa_media_player) is correctly excluded even if named similarly.
     An HA group target is selected too, since it isn't owned by any platform."""
     platforms = {
-        "notify.bedroom_echo_announce": "alexa_device",
-        "notify.living_room_echo_2_speak": "alexa_device",
-        "notify.kitchen_echo": "alexa_device",
+        "notify.bedroom_echo_announce": "alexa_devices",
+        "notify.living_room_echo_2_speak": "alexa_devices",
+        "notify.kitchen_echo": "alexa_devices",
         "notify.alexa_media_player_announce": "alexa_media_player",
     }
     unmocked_config.hass_api.platform_for_entity = lambda entity_id: platforms.get(entity_id)  # type: ignore

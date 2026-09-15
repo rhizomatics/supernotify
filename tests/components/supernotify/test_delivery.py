@@ -297,7 +297,7 @@ async def test_delivery_overrides_transport_delivery_defaults(mock_context: Cont
 
 async def test_autogenerate_default_vs_explicit_selection(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
-    er.async_get(hass).async_get_or_create("notify", "alexa_device", "bedroom_echo_unique_id")
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "bedroom_echo_unique_id")
     MockConfigEntry(domain="ntfy", data={}).add_to_hass(hass)
 
     ctx = TestingContext(homeassistant=hass)

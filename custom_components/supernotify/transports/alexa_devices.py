@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 HA_ALEXA_DEVICES_DOMAIN = "alexa_devices"
 # the entity registry platform for notify entities the integration itself creates -
 # singular, unlike the (plural) config entry/integration domain above
-HA_ALEXA_DEVICES_PLATFORM = "alexa_device"
+HA_ALEXA_DEVICES_PLATFORM = "alexa_devices"
 # alandtse/alexa_media_player HACS integration's notify platform module - kept in sync
 # with the constant of the same name in alexa_media_player.py
 HA_ALEXA_MEDIA_PLAYER_MODULE = "custom_components.alexa_media.notify"
@@ -102,9 +102,13 @@ class AlexaDevicesTransport(Transport):
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         if hass_api.find_config_entry_data(HA_ALEXA_DEVICES_DOMAIN) is None:
+            _LOGGER.debug("SUPERNOTIFY No config entry data found for %s", HA_ALEXA_DEVICES_DOMAIN)
             return False
         # integration installed but no Alexa device has registered a notify entity yet
-        return bool(hass_api.entity_ids_for_platform("notify", HA_ALEXA_DEVICES_PLATFORM))
+        if hass_api.entity_ids_for_platform("notify", HA_ALEXA_DEVICES_PLATFORM):
+            return True
+        _LOGGER.debug("SUPERNOTIFY No notify entities found for %s", HA_ALEXA_DEVICES_PLATFORM)
+        return False
 
     def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
         """Its own default, plus "..._speak_all"/"..._announce_all" - explicit-only

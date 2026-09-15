@@ -578,11 +578,11 @@ class DeliveryRegistry:
                 transport_config: ConfigType = self._transport_configs.get(transport_class.name, {})
                 if not transport_config.get(CONF_LOAD, True):
                     # not just disabled: excluded entirely, so no deliveries or entities either
-                    _LOGGER.debug("SUPERNOTIFY %s transport configure not to load", transport_class.name)
+                    _LOGGER.debug("SUPERNOTIFY %s transport configured not to load", transport_class.name)
                     continue
                 transport = transport_class(context, transport_config, **kwargs)
                 if not transport.is_viable(context.hass_api):
-                    _LOGGER.debug("SUPERNOTIFY %s transport has no viable configuration, not loaded", transport_class.name)
+                    _LOGGER.info("SUPERNOTIFY %s transport has no viable configuration, not loaded", transport_class.name)
                     continue
                 self.transports[transport_class.name] = transport
                 await transport.initialize()
