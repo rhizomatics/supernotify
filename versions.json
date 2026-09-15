@@ -5,11 +5,6 @@
     "aliases": []
   },
   {
-    "version": "1.9.3",
-    "title": "1.9.3",
-    "aliases": []
-  },
-  {
     "version": "v2.5.0",
     "title": "v2.5.0",
     "aliases": [
@@ -39,11 +34,6 @@
     "aliases": []
   },
   {
-    "version": "v2.4.0-beta1",
-    "title": "v2.4.0-beta1",
-    "aliases": []
-  },
-  {
     "version": "v2.3.1",
     "title": "v2.3.1",
     "aliases": []
@@ -69,113 +59,8 @@
     "aliases": []
   },
   {
-    "version": "v2.2.0-beta1",
-    "title": "v2.2.0-beta1",
-    "aliases": []
-  },
-  {
     "version": "v2.1.0",
     "title": "v2.1.0",
-    "aliases": []
-  },
-  {
-    "version": "v2.0.0",
-    "title": "v2.0.0",
-    "aliases": []
-  },
-  {
-    "version": "v2.0.0-RC1",
-    "title": "v2.0.0-RC1",
-    "aliases": []
-  },
-  {
-    "version": "v2.0.0-beta1",
-    "title": "v2.0.0-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.5",
-    "title": "v1.16.5",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.4-beta1",
-    "title": "v1.16.4-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.3",
-    "title": "v1.16.3",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.2",
-    "title": "v1.16.2",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.1",
-    "title": "v1.16.1",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.1-beta1",
-    "title": "v1.16.1-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.16.0-beta1",
-    "title": "v1.16.0-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.15.0-beta1",
-    "title": "v1.15.0-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.14.0",
-    "title": "v1.14.0",
-    "aliases": []
-  },
-  {
-    "version": "v1.14.0-beta1",
-    "title": "v1.14.0-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.13.0-beta1",
-    "title": "v1.13.0-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.12.2",
-    "title": "v1.12.2",
-    "aliases": []
-  },
-  {
-    "version": "v1.12.1-d4",
-    "title": "v1.12.1-d4",
-    "aliases": []
-  },
-  {
-    "version": "v1.12.0-beta1",
-    "title": "v1.12.0-beta1",
-    "aliases": []
-  },
-  {
-    "version": "v1.11.0",
-    "title": "v1.11.0",
-    "aliases": []
-  },
-  {
-    "version": "v1.10.0",
-    "title": "v1.10.0",
-    "aliases": []
-  },
-  {
-    "version": "v1.9.1",
-    "title": "v1.9.1",
     "aliases": []
   }
 ]
