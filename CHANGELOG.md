@@ -7,7 +7,7 @@ There's an explanation of the aims and design of deliveries, transports and targ
 - Every transport that is available to use is automatically available as a delivery with the same name.
   - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
   - Deliveries no longer have a `default_` prefix, although existing automations which use these will automatically be switched to `email`,`notify_entity` etc
-  - SMS auto discovery works for Twilio and Mikrotik SMS integrations
+  - Auto discovery of action name for lots of transports, see list below
   - A repair is raised for any deliveries that have the same name as a transport but don't use that transport. The transport name is effectively a reserved delivery name.
 - Creating `Delivery` objects now only necessary if there's more than one Delivery for the same transport, like `plain_email` and `html_email`, different Telegram channels etc
     - Everything that can be done with a `Delivery` configuration can be done with the `delivery_defaults:` section of a `Transport` object
@@ -27,7 +27,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 
 - A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
 - Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](usage/targets.md)
-- Archive message now has `uncategorized_targets` and `unassigned_targets` to help un debugging delivery issues
+- Archive message now has `uncategorized_targets` and `unassigned_targets` to help debugging delivery issues
 - New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
 - A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
 - An error will be raised logged if there any targets that can't be mapped to a category - this won't stop the rest of the notification working, but will make it visible
