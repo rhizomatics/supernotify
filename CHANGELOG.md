@@ -58,7 +58,8 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 ### MQTT
 - Delivery now accepts a topic as a target, and takes payload from message. Previous behaviour remains supported.
 
-### Mobile Actions
+### Mobile Actions
+
 - Exposed `group` on mobile actions as `mobile_push_group` (previously undocumented and mis-named `action_category`)
 - Fixed problem with `action_template` and `title_template` producing broken buttons
 - Stop forcing mobile notifications into 'general' or 'appd' group
@@ -74,6 +75,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
 - Improved order of fields in archive for most useful to top, and related together
 - HomeAssistant compatibility moved to 2026.9.2
+- Manifest updated so Supernotify will wait for all its dependent integrations before starting up
 
 ## 2.4.2
 
