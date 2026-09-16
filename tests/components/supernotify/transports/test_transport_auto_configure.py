@@ -20,6 +20,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 from pytest_unordered import unordered
@@ -351,6 +352,64 @@ async def test_alexa_devices_speak_all_and_announce_all_conditional(hass: HomeAs
     assert announce.target is not None
     assert announce.target.entity_ids == ["notify.kitchen_echo_announce"]
     assert announce.inclusion == [INCLUSION_EXPLICIT]
+
+
+async def test_alexa_devices_excludes_speaker_groups(hass: HomeAssistant) -> None:
+    """A speaker group gets its own "_announce"/"_speak" notify entities alongside its
+    member devices' own, but can't be expanded to its members - so it's excluded
+    entirely to avoid double notification of the same group members."""
+    config_entry = MockConfigEntry(domain="alexa_devices", data={})
+    config_entry.add_to_hass(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+
+    member_device = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("alexa_devices", "bedroom_echo")}, model="Echo Dot"
+    )
+    ent_reg.async_get_or_create(
+        "notify",
+        "alexa_devices",
+        "bedroom_speak_id",
+        suggested_object_id="bedroom_echo_speak",
+        device_id=member_device.id,
+    )
+    ent_reg.async_get_or_create(
+        "notify",
+        "alexa_devices",
+        "bedroom_announce_id",
+        suggested_object_id="bedroom_echo_announce",
+        device_id=member_device.id,
+    )
+
+    group_device = dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("alexa_devices", "family_room_group")}, model="Speaker Group"
+    )
+    ent_reg.async_get_or_create(
+        "notify",
+        "alexa_devices",
+        "family_room_speak_id",
+        suggested_object_id="family_room_speak",
+        device_id=group_device.id,
+    )
+    ent_reg.async_get_or_create(
+        "notify",
+        "alexa_devices",
+        "family_room_announce_id",
+        suggested_object_id="family_room_announce",
+        device_id=group_device.id,
+    )
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_ALEXA)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    speak = DeliveryConfig(result["alexa_devices_speak_all"], uut.delivery_defaults)
+    assert speak.target is not None
+    assert speak.target.entity_ids == ["notify.bedroom_echo_speak"]
+    announce = DeliveryConfig(result["alexa_devices_announce_all"], uut.delivery_defaults)
+    assert announce.target is not None
+    assert announce.target.entity_ids == ["notify.bedroom_echo_announce"]
 
 
 async def test_alexa_devices_no_speak_or_announce_extras_without_matching_entities(hass: HomeAssistant) -> None:

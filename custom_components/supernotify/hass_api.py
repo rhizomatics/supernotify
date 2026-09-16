@@ -219,16 +219,33 @@ class HomeAssistantAPI:
                 return reg_entry.platform
         return None
 
-    def entity_ids_for_platform(self, domain: str, platform: str) -> list[str]:
+    def entity_ids_for_platform(
+        self, domain: str, platform: str, device_model_select: str | list[str] | dict | SelectionRule | None = None
+    ) -> list[str]:
         """entity_ids in `domain` (e.g. "notify") registered by a specific integration.
 
         Reads the entity registry directly (not the state machine), so a freshly
         registered entity counts even before it has reported a first state.
+
+        `device_model_select` optionally filters by the backing device's model (e.g.
+        `{"exclude": ["Speaker Group"]}`), same include/exclude rule shape used elsewhere.
         """
         entity_registry = self._entity_registry()
         if not entity_registry:
             return []
-        return [e.entity_id for e in entity_registry.entities.values() if e.domain == domain and e.platform == platform]
+        entries: list[RegistryEntry] = [
+            e for e in entity_registry.entities.values() if e.domain == domain and e.platform == platform
+        ]
+        if device_model_select is not None:
+            model_filter = SelectionRule(device_model_select)
+            entries = [e for e in entries if model_filter.match(self._device_model(e.device_id))]
+        return [e.entity_id for e in entries]
+
+    def _device_model(self, device_id: str | None) -> str | None:
+        if device_id is None:
+            return None
+        dev_entry = self.find_device(device_id)
+        return dev_entry.model if dev_entry else None
 
     async def async_get_camera_image(self, entity_id: str, timeout: int = 10) -> ha_camera.Image | None:
         """Fetch a still image directly from a camera entity, via HA's own camera component API,
