@@ -25,6 +25,8 @@ From the HACS page on Home Assistant, select **Supernotify** in the list of avai
 
 For a zero-configuration setup with everything auto-discovered (mobile push, an existing SMTP integration or any notify entities, recipients from Home Assistant persons), go to **Settings → Devices & Services → Add Integration** and search for **Supernotify**.
 
+![Adding Integration](assets/images/new_integration.png)
+
 Archive, duplicate detection and housekeeping settings can be adjusted afterwards from the integration's **Configure** option.
 
 This will build a delivery channel for every transport mechanism it can find, plus some convenience ones, like `chime_siren_all` and `alexa_devices_announce_all` that will be created if you have those devices.
