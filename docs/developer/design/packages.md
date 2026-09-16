@@ -40,6 +40,24 @@ Where elapsed and progress are available, the notification will be periodically 
 
 If the end never happens, there's a timeout where the notification is auto-cleared.
 
+#### Bosch / Home Connect
+
+`sensor.dishwasher_operation_state` - `run`
+`sensor.dishwasher_program_progress` - 84 %
+`sensor.dishwasher_programme_finished` - `off`
+`sensor.dishwasher_remaining_program_time` - `2026-09-16T21:44:16+00:00`
+`select.dishwasher_selected_program` - `dishcare_dishwasher_program_intensiv_70`
+`number.dishwasher_start_in_relative` - 0
+
+`automation.oven_reached_temperature` - `on`
+`number.oven_target_temperature` - `unavailable`
+`sensor.oven_current_oven_cavity_temperature` - 59
+`sensor.oven_operation_state` - `inactive`
+`sensor.oven_pre_heat_finished` - `off`
+`sensor.oven_program_progress` - `unavailable` %
+`sensor.oven_programme_finished` - `off`
+`sensor.oven_remaining_program_time` - `unavailable`
+
 ### Motion Sensors
 
 Home Assistant triggers have made it easier to set up automations for things like PIRs, but they still require automations with triggers and actions, and are another case where auto-detection would simplify for non-tech and expert users.
