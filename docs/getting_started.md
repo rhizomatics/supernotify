@@ -38,7 +38,7 @@ Advanced configuration, like custom deliveries, transports, scenarios, recipient
 
 Send a test notification from [Tools Action Tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) or start [sending notifications](usage/notifying.md) from automations. Use the `supernotify.notify` action to craft the notification, which can be nothing more than a single `message`.
 
-![Tools Action](assets/images/tools_action_notify.png){width=400}
+![Tools Action](assets/images/tools_action_notify.png){width=600}
 
 This first notification will go out all mobile devices in the house. To limit it, list the mobile devices, or the `person` entities as targets in the notification:
 
@@ -48,9 +48,9 @@ If you have Alexa Devices, use `alexa_devices_announce_all` or `alexa_devices_sp
 
 ### Add a Notification Action to an Automation
 
-![Select Action](./assets/images/add_action_automation.png){width=400}
+![Select Action](./assets/images/add_action_automation.png){width=600}
 
-![Configure Action](./assets/images/automation_action_simple.png){width=400}
+![Configure Action](./assets/images/automation_action_simple.png){width=600}
 
 ### Add to the Dashboard
 
