@@ -16,6 +16,16 @@ Everything about this is ConfigFlow based, there is no YAML required, nor offere
 
 The "packages" could also be selected after the fact, either directly in the main Supernotify ConfigFlow, or as "helper" objects.
 
+## Implementation
+
+A new sub-package within Supernotify, with a module per package.
+
+At set-up or startup the modules are called to see if they are applicable. If use chooses to ignore them, this ignore state is persisted so not bothered again.
+
+### Alternatives
+
+Separate custom component on HACS, per package, as Supernotify "plugins". Worth doing if there are heavy dependencies, otherwise extra complexity for users.
+
 ## Examples
 
 ### Live Notifications for Appliances
