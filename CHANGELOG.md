@@ -4,6 +4,9 @@
 - Automatic deliveries, `alexa_devices_announce_all` and `alexa_devices_speak_all` now only select devices and ignore speaker groups so not double notifying
   - Speaker Groups are a good thing, however its not possible to work out if they are all devices or a subset from auto-discovery
   - If you want a group, then override the delivery with the group as target, or create a new delivery
+### Recipes
+- Simple *Live Activity* for a dishwasher
+  - This will be improved to support progress bars etc
 
 
 ## 2.5.0
