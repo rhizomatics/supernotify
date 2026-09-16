@@ -34,11 +34,13 @@
 
 >> An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
-A **unified notification interface** on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, mobile actions, camera snapshots, chimes and template based HTML emails.
+A **unified notification interface** on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, voice announcements, mobile actions, camera snapshots, chimes and template based HTML emails.
 
-Supernotify has one goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
+The goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-Start off with zero YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), attach a camera snapshot to an e-mail, or redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications. Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant dashboard integration. And with advanced YAML configuration, the possibilities are endless.
+Start off with no YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), attach a camera snapshot to an e-mail, redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications.
+
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant dashboard integration. And with advanced YAML configuration, the possibilities are endless.
 
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
@@ -54,9 +56,11 @@ Supernotify is a custom component available via the [Home Assistant Community Sh
 
 ## Documentation
 
-Try [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/), the explanation of [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/) to understand what it can do. [Notifying](https://supernotify.rhizomatics.org.uk/usage/notifying/) shows how to call Supernotify from automations or the Developer Tools action page.
+All you need to get running quickly is at [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/).
 
-There are lots of [recipes](https://supernotify.rhizomatics.org.uk/recipes/) with sample config snippers to give you some more ideas, or browse by [tags](https://supernotify.rhizomatics.org.uk/tags/).
+To learn more of what it can do for you, check the [core concepts](https://supernotify.rhizomatics.org.uk/concepts/), and the available [transport adaptors](https://supernotify.rhizomatics.org.uk/transports/). [Notifying](https://supernotify.rhizomatics.org.uk/usage/notifying/) shows how to call Supernotify from automations or the Developer Tools action page.
+
+There are lots of [recipes](https://supernotify.rhizomatics.org.uk/recipes/) with sample config snippets to give you some more ideas, or browse by [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
 Translations for the Home Assistant UI are available for Dutch, English, French, German, Hindi, Italian, Japanese, Polish, Portuguese, Simplified Mandarin and Spanish.
 
@@ -67,7 +71,7 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
     * Adaptors automatically tune notification data for each integration
     * For example, use with a [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints) to get camera snapshots by e-mail instead of, or as well as, mobile notifications. See the [Frigate Recipe](https://supernotify.rhizomatics.org.uk/recipes/frigate_emails/) for more info.
 * Automated set-up
-    * Delivery configuration for Mobile Push, Email (SMTP) and Notify Entity set up automatically
+    * Delivery configuration auto-discovered, including for Alexa Devices, Mobile Push, Email (SMTP).
     * Mobile Apps automatically discovered, including Manufacturer and Model of the phone, which can be used to customize delivery
     * Alexa Devices for sending chime noises automatically discovered from Home Assistant
 * Go beyond `notify` integrations
@@ -91,6 +95,8 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
 * Easy **HTML email templates**
     * Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
     * Default general template supplied
+* **Dashboard Integration**
+    * [Supernotify Cards](https://github.com/lollox80/supernotify-cards) has cards for controlling deliveries, sending out messages, testing configuration and more
 * **Mobile Actions**
     * Set up a single set of consistent mobile actions across multiple notifications and reuse across many notifications
     * Include *snoozing* actions to silence based on criteria
@@ -98,12 +104,6 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
     * Supports cameras, MQTT Images and image URLs.
     * Reposition cameras to PTZ presets before and after a snapshot is taken, including special support for Frigate PTZ presets
     * See the [Multimedia](https://supernotify.rhizomatics.org.uk/configuration/multimedia/) documentation for more information.
-* Choose Your Level Configuration
-    * Set defaults, including lists of targets at
-      - Transport Adaptor level, for example `alexa_devices`
-      - Delivery level, for example `Alexa Announce`,`Alexa Speak`
-      - On the Action call for each notification
-      - On a Scenario to apply to arbitrary deliveries
 * **Duplicate Notification** Suppression
     * Tune how long to wait before re-allowing
     *  Can be combined with snoozing for specific people or transports
@@ -128,7 +128,7 @@ A lot can be done with the simple non-YAML configuration, including automation o
 ## Known Limitations
 
 - **Links** can be configured but not currently used.
-- YAML still required for Delivery, Transport, Recipient, Action etc
+- YAML still required for Transport, Recipient, Action and additional custom Delivery
 - Versions of Home Assistant more than 6 major releases ( usually 6 months ) aren't tested against Supernotify
 
 ##  Rhizomatics Open Source for Home Assistant
