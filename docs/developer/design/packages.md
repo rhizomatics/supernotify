@@ -299,6 +299,8 @@ Frigate could have multiple flows - regular event detection (`frigate/reviews`),
             - disarmed
 ```
 
+Live Activities would be a great fit for ongoing events in Frigate, where its possible to tie together what's happening. Though to be really useful this could be a mixture of PIRs, Frigate Events, Driveway Alarms etc and probably require some sort of AI to make sensible guess when an event ("the postman visits") starts and ends.
+
 ## Questions
 
 - What does the UI look like? Does this fit into an existing HA concept?
