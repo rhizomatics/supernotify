@@ -293,8 +293,9 @@ it is also possible to simply define everything at the top level `data` section 
               data:
                 message: Garden sensor was triggered
             sms: # refers to a transport, so effects all deliveries based on SMS transport
-                message: Garden Activity
-                title: HASS
+                data:
+                  message: Garden Activity
+                  title: HASS
 ```
 
 # Alternate Notification Action
