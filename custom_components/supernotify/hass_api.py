@@ -434,12 +434,17 @@ class HomeAssistantAPI:
             if service_objs:
                 for service, domain_obj in service_objs.items():
                     if domain_obj.job and domain_obj.job.target:
-                        target_module: str | None = (
-                            domain_obj.job.target.__self__.__module__
-                            if hasattr(domain_obj.job.target, "__self__")
-                            else domain_obj.job.target.__module__
-                        )
+                        target = domain_obj.job.target
+                        bound_self = getattr(target, "__self__", None)
+                        target_module: str | None = bound_self.__module__ if bound_self is not None else target.__module__
                         if target_module == module:
+                            # Legacy notify platforms with a targets property (e.g. alexa_media_player)
+                            # register extra per-target services (notify.<platform>_<device>) that share
+                            # this same bound method but hard-code their own target, ignoring any target:
+                            # passed by the caller - skip those and hold out for the base platform service.
+                            registered_targets = getattr(bound_self, "registered_targets", None)
+                            if registered_targets is not None and service in registered_targets:
+                                continue
                             _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s in %s", service, domain, module)
                             return f"{domain}.{service}"
 

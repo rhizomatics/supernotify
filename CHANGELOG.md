@@ -1,3 +1,10 @@
+## 2.5.2
+
+### Alexa Media Player
+
+- Fix for auto discovery on Alexa Media Player, where every action registered by the integration hits the same function
+  - Service lookup ignores target-specific instances of an action to find the target neutral one
+
 ## 2.5.1
 
 ### Alexa Devices
