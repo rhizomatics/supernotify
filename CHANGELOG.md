@@ -7,6 +7,8 @@
 - Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
 ### Documentation
 - Fix automatically generated validation schema documentation
+### Technical
+- `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 
 ## 2.5.3
 

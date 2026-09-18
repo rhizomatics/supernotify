@@ -317,7 +317,7 @@ async def test_ntfy_publish() -> None:
     uut = Notification(
         ctx,
         message="test message",
-        action_data={"delivery": {"ntfy": {"enabled": True}}, "data": {"tags": ["a", "b"], "nonsense": False}},
+        action_data={"delivery": {"ntfy": {"enabled": True}}, "data": {"priority": 3, "tags": ["a", "b"], "nonsense": False}},
     )
     await uut.initialize()
     await uut.deliver()
@@ -714,7 +714,7 @@ async def test_ntfy_single_email_single_entity() -> None:
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
         "ntfy",
         "publish",
-        service_data={"message": "test message", "email": "joe@test.org"},
+        service_data={"message": "test message", "email": "joe@test.org", "priority": 3},
         blocking=False,
         target={"entity_id": ["notify.topic_1"]},
         context=None,
@@ -745,7 +745,7 @@ async def test_ntfy_with_phone() -> None:
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
         "ntfy",
         "publish",
-        service_data={"message": "test message", "call": "+447979123456"},
+        service_data={"message": "test message", "call": "+447979123456", "priority": 3},
         blocking=False,
         target=None,
         context=None,

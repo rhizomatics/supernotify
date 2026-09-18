@@ -85,15 +85,17 @@ class Envelope(DupeCheckable):
         self._message: str | None = None
         self._title: str | None = None
         self.message_html: str | None = None
-        self.data: dict[str, Any] = {}
+        self.data: dict[str, Any] = {}  # delivery/target/scenario/action data
         self.actions: list[dict[str, Any]] = []
         if notification:
             delivery_config_data: dict[str, Any] = notification.delivery_data(delivery)
             self._enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
+            # in reverse of usual logic, delivery config wins over notification data for message and title
             self._message = delivery_config_data.pop(ATTR_MESSAGE, notification.message)
             self._title = delivery_config_data.pop(ATTR_TITLE, notification._title)
             self.id = f"{notification.id}_{self.delivery_name}"
         else:
+            # should be testing scenarios only
             delivery_config_data = {}
             self._enabled_scenarios = {}
             self.id = str(uuid.uuid1())
@@ -110,10 +112,15 @@ class Envelope(DupeCheckable):
             self.media = notification.media
             self.action_groups = notification.action_groups
             self.actions = notification.actions
-            self.priority = self.data.get(ATTR_PRIORITY, notification.priority)
-            self.message_html = self.data.get(ATTR_MESSAGE_HTML, notification.message_html)
+            self.priority = self.data.pop(ATTR_PRIORITY, notification.priority)
+            self.message_html = self.data.pop(ATTR_MESSAGE_HTML, notification.message_html)
+
+        self.timestamp_format: str | None = self.data.pop(ATTR_TIMESTAMP, None)
+
+        # from this point on `self.data` has no internal Supernotify fields
+
         if notification and hasattr(notification, "condition_variables"):  # yeuchh
-            self.condition_variables = notification.condition_variables
+            self.condition_variables: ConditionVariables = notification.condition_variables
         else:
             self.condition_variables = ConditionVariables()
 
@@ -165,9 +172,9 @@ class Envelope(DupeCheckable):
                 data[ATTR_MESSAGE] = ""
         else:
             data[ATTR_MESSAGE] = self.message
-        timestamp = self.data.get(ATTR_TIMESTAMP)
-        if timestamp and ATTR_MESSAGE in data:
-            data[ATTR_MESSAGE] = f"{data[ATTR_MESSAGE]} [{time.strftime(timestamp, time.localtime())}]"
+
+        if self.timestamp_format and ATTR_MESSAGE in data:
+            data[ATTR_MESSAGE] = f"{data[ATTR_MESSAGE]} [{time.strftime(self.timestamp_format, time.localtime())}]"
         if self.title is not None:
             data[ATTR_TITLE] = self.title
         return data

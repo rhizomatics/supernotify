@@ -175,9 +175,13 @@ class GenericTransport(Transport):
             action_data.update(data)
             build_targets = True
         elif equiv_domain == "notify_events":
-            mini_envelopes.extend(notify_events(envelope.message, envelope.title, core_action_data, data, envelope.delivery))
+            mini_envelopes.extend(
+                notify_events(envelope.message, envelope.title, core_action_data, data, envelope.delivery, envelope.priority)
+            )
         elif qualified_action == "ntfy.publish":
-            mini_envelopes.extend(ntfy(core_action_data, data, envelope.target, envelope.delivery, self.hass_api))
+            mini_envelopes.extend(
+                ntfy(core_action_data, data, envelope.target, envelope.delivery, envelope.priority, self.hass_api)
+            )
         elif equiv_domain in ("siren", "light"):
             target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
             action_data = data
@@ -259,6 +263,7 @@ def ntfy(
     data: dict[str, Any],
     target: Target,
     delivery: Delivery,
+    priority: str | None,
     hass_api: HomeAssistantAPI,
 ) -> list[MiniEnvelope]:
     """Customize `data` for ntfy integration"""
@@ -267,8 +272,8 @@ def ntfy(
     action_data.update(data)
     action_data = hass_api.coerce_schema("ntfy", "publish", action_data)
 
-    if ATTR_PRIORITY in action_data and action_data[ATTR_PRIORITY] in PRIORITY_VALUES:
-        action_data[ATTR_PRIORITY] = PRIORITY_VALUES.get(action_data[ATTR_PRIORITY], 3)
+    if priority and priority in PRIORITY_VALUES:
+        action_data[ATTR_PRIORITY] = PRIORITY_VALUES.get(priority, 3)
 
     media = action_data.pop(ATTR_MEDIA, {})
     if media and media.get(ATTR_MEDIA_SNAPSHOT_URL) and "attach" not in action_data:
@@ -315,6 +320,7 @@ def notify_events(
     core_action_data: dict[str, Any],
     data: dict[str, Any],
     delivery: Delivery,
+    priority: str | None,
 ) -> list[MiniEnvelope]:
     """Customize `data` for notify_events integration"""
     results: list[MiniEnvelope] = []
@@ -338,12 +344,12 @@ def notify_events(
         # notify_events is schema-less for action
         action_data[ATTR_DATA] = input_data[ATTR_DATA]
 
-    if ATTR_PRIORITY in input_data and input_data[ATTR_PRIORITY] in PRIORITY_VALUES:
+    if priority and priority in PRIORITY_VALUES:
         action_data.setdefault(ATTR_DATA, {})
-        action_data[ATTR_DATA][ATTR_PRIORITY] = priority_mapping.get(input_data[ATTR_PRIORITY])
-    elif ATTR_PRIORITY in input_data and input_data[ATTR_PRIORITY] in priority_mapping.values():
+        action_data[ATTR_DATA][ATTR_PRIORITY] = priority_mapping.get(priority)
+    elif priority and priority in priority_mapping.values():
         action_data.setdefault(ATTR_DATA, {})
-        action_data[ATTR_DATA][ATTR_PRIORITY] = input_data[ATTR_PRIORITY]
+        action_data[ATTR_DATA][ATTR_PRIORITY] = priority
 
     if "token" in input_data:
         action_data.setdefault(ATTR_DATA, {})
