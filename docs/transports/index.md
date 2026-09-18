@@ -47,7 +47,7 @@ All of these set by passing an `options` block in Delivery config or Transport d
 | preheader_blank            | str       | mail       | HTML code used to pack the pre-header with blanks for HTML email             |
 | preheader_length           | int       | mail       | Minimum size to pack the pre-header with blanks for HTML email               |
 | message_usage              | str       | all        | Combine message and title, default title                                     |
-| simplify_text              | bool      | all        | Remove some common symbols that can trip up voice assistants                 |
+| simplify_text              | bool      | all        | Remove some common symbols that can trip up voice assistants. SSML markup is left alone on spoken transports |
 | strip_urls                 | bool      | all        | Remove URLs from message and title                                           |
 | target_categories          | list      | all        | Which targets to pass, e.g. `entity_id`,`email`,`device_id`                  |
 | target_select              | Selection | all        | Only use targets fully matching these regular expressions                    |

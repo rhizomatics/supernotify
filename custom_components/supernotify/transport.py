@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 import time
 import unicodedata
 from abc import abstractmethod
@@ -42,6 +43,29 @@ if TYPE_CHECKING:
     from .delivery import Delivery, DeliveryRegistry
     from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry
+
+# Markup that spoken transports hand straight to the voice assistant. Simplification
+# strips angle brackets, so SSML has to be passed through untouched or the assistant
+# ends up speaking the tag names out loud.
+RE_MARKUP_TAG = re.compile(r"(</?[A-Za-z][\w.:-]*(?:\s[^<>]*?)?/?>)")
+RE_MARKUP_TAG_NAME = re.compile(r"</?([A-Za-z][\w.:-]*)")
+SSML_TAG_NAMES = frozenset({
+    "alexa:name",
+    "amazon:domain",
+    "amazon:effect",
+    "amazon:emotion",
+    "audio",
+    "break",
+    "emphasis",
+    "lang",
+    "mark",
+    "phoneme",
+    "prosody",
+    "say-as",
+    "speak",
+    "sub",
+    "voice",
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -329,13 +353,50 @@ class Transport:
             self._unavailable = False
 
     def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
-        """Simplify text for delivery transports with speaking or plain text interfaces"""
+        """Simplify text for delivery transports with speaking or plain text interfaces.
+
+        Spoken transports can be handed SSML, which the voice assistant parses itself.
+        Simplification removes angle brackets, so applying it to SSML turns the markup
+        into words the assistant reads out loud. When a spoken transport is given SSML,
+        the tags are left alone and only the text around them is simplified, so emoji,
+        URLs and symbols are still cleaned up.
+        """
         if not text:
             return None
+        if self.supported_features & TransportFeature.SPOKEN and self._is_ssml(text):
+            simplified = "".join(
+                fragment if index % 2 else self._simplify_around_markup(fragment, strip_urls)
+                for index, fragment in enumerate(RE_MARKUP_TAG.split(text))
+            )
+        else:
+            simplified = self._simplify_text(text, strip_urls)
+        _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", simplified)
+        return simplified
+
+    @staticmethod
+    def _is_ssml(text: str) -> bool:
+        """Tell SSML markup apart from stray angle brackets in ordinary text."""
+        for tag in RE_MARKUP_TAG.findall(text):
+            name = RE_MARKUP_TAG_NAME.match(tag)
+            if name is not None and name.group(1).lower() in SSML_TAG_NAMES:
+                return True
+        return False
+
+    @staticmethod
+    def _simplify_text(text: str, strip_urls: bool = False) -> str:
+        """Remove symbols, and optionally URLs, that can trip up voice assistants."""
         if strip_urls:
             words = text.split()
             text = " ".join(word for word in words if not urlparse(word).scheme)
         text = text.translate(str.maketrans("_", " ", "()£$<>"))
-        text = "".join(c for c in text if unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn"))
-        _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", text)
-        return text
+        return "".join(c for c in text if unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn"))
+
+    @classmethod
+    def _simplify_around_markup(cls, fragment: str, strip_urls: bool) -> str:
+        """Simplify a fragment of text sitting between two SSML tags, keeping the
+        whitespace at either end so that words do not end up glued to the markup."""
+        if not fragment.strip():
+            return fragment
+        lead = fragment[: len(fragment) - len(fragment.lstrip())]
+        trail = fragment[len(fragment.rstrip()) :]
+        return f"{lead}{cls._simplify_text(fragment.strip(), strip_urls)}{trail}"
