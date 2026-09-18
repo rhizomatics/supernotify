@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_DESCRIPTION,
-    CONF_DOMAIN,
     CONF_EMAIL,
     CONF_ENABLED,
     CONF_HOST,
@@ -95,7 +94,6 @@ from .const import (
     CONF_DEVICE_TRACKER,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
-    CONF_DURATION,
     CONF_ENCRYPTION,
     CONF_EXPOSE_STATE,
     CONF_HOUSEKEEPING,
@@ -143,15 +141,11 @@ from .const import (
     CONF_TRANSPORT,
     CONF_TRANSPORTS,
     CONF_TTL,
-    CONF_TUNE,
     CONF_URI,
-    CONF_VOLUME,
     DELIVERY_SELECTION_VALUES,
     INCLUSION_VALUES,
     OCCUPANCY_ALL,
     OCCUPANCY_VALUES,
-    OPTION_CHIME_ALIASES,
-    OPTIONS_CHIME_DOMAINS,
     PRIORITY_VALUES,
     PTZ_DELAY_DEFAULT,
     PTZ_METHOD_ONVIF,
@@ -556,25 +550,6 @@ FULL_CONFIG_SCHEMA = SUPERNOTIFY_YAML_SCHEMA.extend({
     vol.Optional(CONF_DUPE_CHECK, default=dict): NOTIFICATION_DUPE_SCHEMA,
     vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
-})
-
-CHIME_ALIASES_SCHEMA = vol.Schema({
-    vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
-        cv.string: vol.Schema({
-            cv.string: vol.Any(
-                vol.Any(None, cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
-                vol.Schema({
-                    vol.Optional(CONF_ALIAS): cv.string,
-                    vol.Optional(CONF_DOMAIN): cv.string,
-                    vol.Optional(CONF_TUNE): cv.string,
-                    vol.Optional(CONF_DATA): DATA_SCHEMA,
-                    vol.Optional(CONF_VOLUME): float,
-                    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-                    vol.Optional(CONF_DURATION): cv.positive_int,
-                }),
-            )
-        })
-    })
 })
 
 

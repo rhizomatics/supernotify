@@ -4,9 +4,9 @@ from unittest.mock import Mock
 
 import mkdocs_gen_files
 
-from custom_components.supernotify.const import OPTION_UNIQUE_TARGETS
 from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.model import EntityCategory, Target
+from custom_components.supernotify.options import OPTION_UNIQUE_TARGETS
 
 
 def esc(v: Any) -> str:  # ruff: ignore[any-type]
@@ -43,7 +43,7 @@ def transport_doc() -> None:
 
     with mkdocs_gen_files.open(doc_filename, "w") as df:
         df.write("# Transport Configuration\n\n")
-        df.write("See the [Options Table](../transports/index.md/#table-of-options) for a description of each option.\n\n")
+        df.write("See the [Options Reference](options.md) for a description of each option.\n\n")
 
         df.write("## Default Inclusion\n")
 

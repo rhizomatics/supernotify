@@ -49,8 +49,16 @@ plugins:
       ignore_pages:
         - developer/schemas/*
         - developer/classes.md
+        - developer/transports.md
+        - developer/options.md
       ignore_urls:
         - ../../developer/schemas/*
+        - ../developer/transports/*
+        - ../developer/options/*
+        - ../transports/*
+        - ../options/*
+        - transports.md*
+        - options.md*
 
   - autorefs
   - pagetree
@@ -88,6 +96,7 @@ plugins:
       scripts:
         - docgen/schema_extractor.py
         - docgen/transport_table.py
+        - docgen/options_table.py
         - docgen/render_templates.py
 
 hooks:

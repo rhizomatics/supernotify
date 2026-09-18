@@ -1,3 +1,13 @@
+## 2.5.4
+
+### Transport Options
+- Options for transports are now self-describing, so auto generated table of options up to date and more detail
+- `message_html` removed from spoken only envelopes
+### Media Transport
+- Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
+### Documentation
+- Fix automatically generated validation schema documentation
+
 ## 2.5.3
 
 ### Spoken Notifications

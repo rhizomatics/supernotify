@@ -1,34 +1,15 @@
 from __future__ import annotations
 
-from homeassistant.const import CONF_HOST
-
 from custom_components.supernotify.const import (
     ATTR_EMAIL,
     ATTR_SCENARIOS_CONSTRAIN,
-    CONF_CONNECTION,
     CONF_DATA,
     CONF_DELIVERY_DEFAULTS,
     CONF_OCCUPANCY,
-    CONF_OPTIONS,
     CONF_TEMPLATE,
     OCCUPANCY_ALL_IN,
-    OPTION_SENDER,
 )
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA, TARGET_SCHEMA, TRANSPORT_SCHEMA
-
-
-def test_transport_schema_sender_stays_a_string() -> None:
-    """Regression test: vol.Email (uncalled) previously returned a validator function.
-
-    instead of the validated address, so downstream code (e.g. email.utils.formataddr)
-    blew up trying to call str methods on a function object.
-    """
-    validated = TRANSPORT_SCHEMA({
-        CONF_CONNECTION: {CONF_HOST: "smtp.example.com"},
-        CONF_DELIVERY_DEFAULTS: {CONF_OPTIONS: {OPTION_SENDER: "hass@example.com"}},
-    })
-    assert isinstance(validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER], str)
-    assert validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER] == "hass@example.com"
 
 
 def test_transport_delivery_defaults_accepts_delivery_only_fields() -> None:

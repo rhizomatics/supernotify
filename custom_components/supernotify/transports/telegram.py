@@ -31,11 +31,12 @@ from __future__ import annotations
 
 import html
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_TELEGRAM
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -150,6 +151,7 @@ class TelegramTransport(Transport):
     """Notify via Telegram using Home Assistant telegram_bot integration."""
 
     name = TRANSPORT_TELEGRAM
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

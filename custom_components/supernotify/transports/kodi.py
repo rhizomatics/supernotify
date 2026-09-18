@@ -53,7 +53,7 @@ from __future__ import annotations
 
 import logging
 import urllib.parse
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import ConfigType
@@ -61,7 +61,6 @@ from homeassistant.helpers.typing import ConfigType
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
-    OPTION_TARGET_SELECT,
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_KODI,
 )
@@ -72,6 +71,7 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -120,6 +120,7 @@ class KodiTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_KODI
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
     def supported_features(self) -> TransportFeature:

@@ -12,13 +12,7 @@ from custom_components.supernotify.const import (
     CONF_INCLUSION,
     INCLUSION_DEFAULT,
     INCLUSION_EXPLICIT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
     RE_NOTIFY_ENTITY_ID,
-    SELECT_EXCLUDE,
     TRANSPORT_ALEXA,
 )
 from custom_components.supernotify.model import (
@@ -28,6 +22,14 @@ from custom_components.supernotify.model import (
     TargetRequired,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_SELECT,
+    OPTION_UNIQUE_TARGETS,
+    SELECT_EXCLUDE,
 )
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport

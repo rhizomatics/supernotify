@@ -7,7 +7,7 @@ import time
 import unicodedata
 from abc import abstractmethod
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
@@ -35,6 +35,7 @@ from .const import (
     INCLUSION_EXPLICIT,
 )
 from .model import DeliveryConfig, SuppressionReason
+from .options import DeliveryOption
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -82,6 +83,7 @@ class Transport:
     """
 
     name: str
+    declared_options: ClassVar[list[DeliveryOption]] = []
 
     @abstractmethod
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:

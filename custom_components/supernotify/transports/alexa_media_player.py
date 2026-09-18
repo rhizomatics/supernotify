@@ -61,22 +61,17 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
-    OPTION_MEDIA_AUTO_PAUSE,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
     RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
 )
@@ -87,6 +82,14 @@ from custom_components.supernotify.model import (
     TargetRequired,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_SELECT,
+    OPTION_UNIQUE_TARGETS,
+    DeliveryOption,
 )
 from custom_components.supernotify.transport import Transport
 
@@ -116,6 +119,8 @@ _MUSIC_RESUME_DELAY = 2.0
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTION_MEDIA_AUTO_PAUSE = "media_auto_pause"
+
 
 def _estimate_tts_duration(message: str, char_weight: float = _CHAR_WEIGHT) -> float:
     """Estimate pronunciation duration in seconds, stripping SSML first.
@@ -144,6 +149,13 @@ class AlexaMediaPlayerTransport(Transport):
     """
 
     name = TRANSPORT_ALEXA_MEDIA_PLAYER
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(
+            OPTION_MEDIA_AUTO_PAUSE,
+            "Pause (rather than stop) music if playing before announcing, and restore afterwards",
+            value_type=cv.boolean,
+        ),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

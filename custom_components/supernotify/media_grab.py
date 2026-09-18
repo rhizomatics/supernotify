@@ -36,15 +36,13 @@ from custom_components.supernotify.const import (
     CONF_PTZ_METHOD,
     CONF_PTZ_PRESET_DEFAULT,
     CONF_SNAP_WAIT,
-    MEDIA_OPTION_REPROCESS,
-    OPTION_JPEG,
-    OPTION_PNG,
     PLATFORM_FRIGATE,
     PTZ_DELAY_DEFAULT,
     PTZ_METHOD_FRIGATE,
     PTZ_METHOD_ONVIF,
     SNAP_WAIT_DEFAULT,
 )
+from custom_components.supernotify.options import MEDIA_OPTION_REPROCESS, OPTION_JPEG, OPTION_PNG
 
 from .common import int_or_none
 

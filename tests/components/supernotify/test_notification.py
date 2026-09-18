@@ -27,7 +27,6 @@ from custom_components.supernotify.const import (
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
     INCLUSION_DEFAULT,
-    OPTION_TARGET_CATEGORIES,
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -36,6 +35,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
 from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport

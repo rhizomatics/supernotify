@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 
 # ATTR_VARIABLES from script.const has import issues
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import ensure_list
@@ -18,13 +19,6 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PRIORITY,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_GENERIC_DOMAIN_STYLE,
-    OPTION_MESSAGE_USAGE,
-    OPTION_RAW,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     PRIORITY_CRITICAL,
     PRIORITY_HIGH,
     PRIORITY_LOW,
@@ -37,10 +31,19 @@ from custom_components.supernotify.model import (
     DataFilter,
     DebugTrace,
     MessageOnlyPolicy,
+    SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    DeliveryOption,
 )
 from custom_components.supernotify.transport import (
     Transport,
@@ -53,11 +56,23 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTION_RAW = "raw"
+OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
+
 
 class GenericTransport(Transport):
     """Call any service, including non-notify ones, like switch.turn_on or mqtt.publish"""
 
     name = TRANSPORT_GENERIC
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(OPTION_RAW, "Don't apply domain specific data handling and pruning rules", value_type=cv.boolean),
+        DeliveryOption(OPTION_GENERIC_DOMAIN_STYLE, "Treat the action call in the same way as a known domain"),
+        DeliveryOption(
+            OPTION_DATA_KEYS_SELECT,
+            "Prune the data block by including/excluding values or by regex pattern",
+            value_type=SelectionRule,
+        ),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

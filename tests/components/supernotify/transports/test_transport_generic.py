@@ -22,13 +22,6 @@ from custom_components.supernotify.const import (
     CONF_OPTIONS,
     CONF_TRANSPORT,
     INCLUSION_DEFAULT,
-    OPTION_DATA_KEYS_EXCLUDE_RE,
-    OPTION_DATA_KEYS_INCLUDE_RE,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_GENERIC_DOMAIN_STYLE,
-    OPTION_TARGET_CATEGORIES,
-    SELECT_EXCLUDE,
-    SELECT_INCLUDE,
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -36,8 +29,16 @@ from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DataFilter, Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import (
+    OPTION_DATA_KEYS_EXCLUDE_RE,
+    OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_TARGET_CATEGORIES,
+    SELECT_EXCLUDE,
+    SELECT_INCLUDE,
+)
 from custom_components.supernotify.schema import EnvelopeOutcome
-from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.generic import OPTION_GENERIC_DOMAIN_STYLE, GenericTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 

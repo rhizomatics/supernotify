@@ -28,7 +28,6 @@ from pytest_unordered import unordered
 from custom_components.supernotify.const import (
     INCLUSION_DEFAULT,
     INCLUSION_EXPLICIT,
-    OPTION_CHIME_ALIASES,
     TRANSPORT_ALEXA,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
@@ -54,7 +53,7 @@ from custom_components.supernotify.transports.alexa_devices import (
     STANDARD_DELIVERY_ANNOUNCE_ALL,
     STANDARD_DELIVERY_SPEAK_ALL,
 )
-from custom_components.supernotify.transports.chime import STANDARD_DELIVERY_SIREN_ALL
+from custom_components.supernotify.transports.chime import OPTION_CHIME_ALIASES, STANDARD_DELIVERY_SIREN_ALL
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:

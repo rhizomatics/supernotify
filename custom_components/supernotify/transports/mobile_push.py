@@ -44,7 +44,7 @@ from __future__ import annotations
 import logging
 import time
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
@@ -64,14 +64,6 @@ from custom_components.supernotify.const import (
     ATTR_VIDEO,
     INCLUSION_DEFAULT,
     MANUFACTURER_APPLE,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MODEL_SELECT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_UNIQUE_TARGETS,
     TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.model import (
@@ -86,6 +78,18 @@ from custom_components.supernotify.model import (
     TargetRequired,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    MEDIA_OPTIONS,
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_DEVICE_DISCOVERY,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MODEL_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
+    DeliveryOption,
 )
 from custom_components.supernotify.transport import Transport
 
@@ -110,6 +114,14 @@ ANDROID_CRITICAL_TTL = 0
 
 class MobilePushTransport(Transport):
     name = TRANSPORT_MOBILE_PUSH
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        *MEDIA_OPTIONS,
+        DeliveryOption(
+            OPTION_DATA_KEYS_SELECT,
+            "Prune the data block by including/excluding values or by regex pattern",
+            value_type=SelectionRule,
+        ),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

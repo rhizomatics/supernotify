@@ -22,10 +22,6 @@ from .const import (
     ATTR_PRIORITY,
     ATTR_SPOKEN_MESSAGE,
     ATTR_TIMESTAMP,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
 )
 from .media_grab import grab_image
@@ -38,6 +34,12 @@ from .model import (
     Target,
     TargetRequired,
     TransportFeature,
+)
+from .options import (
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
 )
 
 if typing.TYPE_CHECKING:

@@ -8,8 +8,6 @@ from custom_components.supernotify.const import (
     CONF_INCLUSION,
     CONF_TRANSPORT,
     INCLUSION_DEFAULT,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_SELECT,
     TRANSPORT_GENERIC,
     TRANSPORT_NOTIFY_ENTITY,
 )
@@ -17,6 +15,7 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES, OPTION_TARGET_SELECT
 from custom_components.supernotify.schema import EnvelopeOutcome
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext

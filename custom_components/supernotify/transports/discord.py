@@ -54,7 +54,7 @@ Notes on the HA `discord` notify service:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.helpers.typing import ConfigType
 
@@ -67,6 +67,7 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -94,6 +95,7 @@ class DiscordTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_DISCORD
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
     def supported_features(self) -> TransportFeature:
