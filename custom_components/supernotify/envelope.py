@@ -181,6 +181,8 @@ class Envelope(DupeCheckable):
                 exclude_attrs.append(ATTR_MEDIA)
             if not features & TransportFeature.MESSAGE:
                 exclude_attrs.extend(["message_html", "message"])
+            if features & TransportFeature.SPOKEN:
+                exclude_attrs.append("message_html")
             if not features & TransportFeature.TITLE:
                 exclude_attrs.append("title")
             if self.delivery.target_required == TargetRequired.NEVER:
@@ -234,12 +236,7 @@ class Envelope(DupeCheckable):
 
     def _spoken_message(self) -> str | None:
         """Alternative message only for spoken voice transports"""
-        if (
-            self._notification
-            and self._notification.extra_data
-            and ATTR_SPOKEN_MESSAGE in self._notification.extra_data
-            and self.delivery.transport.supported_features & TransportFeature.SPOKEN
-        ):
+        if self._notification and self._notification.extra_data and ATTR_SPOKEN_MESSAGE in self._notification.extra_data:
             return str(self._notification.extra_data[ATTR_SPOKEN_MESSAGE])
         return None
 
@@ -248,7 +245,8 @@ class Envelope(DupeCheckable):
 
         # self._message could be top level `message` or `message` set in delivery override
         msg: str | None = self.delivery.message if self.delivery.message is not None else self._message
-        msg = self._spoken_message() or msg
+        if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
+            msg = self._spoken_message() or msg
 
         if msg and self.context and is_template_string(msg):
             try:
@@ -313,7 +311,11 @@ class Envelope(DupeCheckable):
         def alphaize(v: str | None) -> str | None:
             return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
 
-        message: str | None = self._spoken_message() or self._message
+        message: str | None
+        if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
+            message = self._spoken_message() or self._message
+        else:
+            message = self._message
         media = self.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
         media_url = media.get(ATTR_MEDIA_CLIP_URL) or media.get(ATTR_MEDIA_SNAPSHOT_URL)
