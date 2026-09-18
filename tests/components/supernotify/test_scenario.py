@@ -207,7 +207,7 @@ async def test_scenario_templating(hass: HomeAssistant) -> None:
     assert smtp_envelope._compute_title() == "Home Notification"
     alexa_envelope = Envelope(ctx.delivery("alexa"), notification, context=ctx)
     assert alexa_envelope._compute_message() == '<amazon:effect name="whispered">Hello from Home</amazon:effect>'
-    assert alexa_envelope._compute_title() == ""
+    assert alexa_envelope._compute_title() is None
 
     notification = Notification(ctx, message="Please Sir", action_data={"apply_scenarios": ["softly_softly", "emotional"]})
     await notification.initialize()

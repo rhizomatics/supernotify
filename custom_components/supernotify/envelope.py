@@ -220,12 +220,14 @@ class Envelope(DupeCheckable):
         title: str | None = None
         message_usage = self.delivery.option_str(OPTION_MESSAGE_USAGE)
         if not ignore_usage and message_usage.upper() in (MessageOnlyPolicy.USE_TITLE, MessageOnlyPolicy.COMBINE_TITLE):
+            # Message sourced from title text, title field dropped
             title = None
         else:
             title = self.delivery.title if self.delivery.title is not None else self._title
+            title = self._render_scenario_templates(title, "title_template", "notification_title")
             if self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True or self.delivery.option_bool(OPTION_STRIP_URLS) is True:
                 title = self.delivery.transport.simplify(title, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
-        title = self._render_scenario_templates(title, "title_template", "notification_title")
+
         if title is None:
             return None
         return str(title)
@@ -266,10 +268,10 @@ class Envelope(DupeCheckable):
             if title:
                 msg = f"{title} {msg}"
 
+        msg = self._render_scenario_templates(msg, "message_template", "notification_message")
         if self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True or self.delivery.option_bool(OPTION_STRIP_URLS) is True:
             msg = self.delivery.transport.simplify(msg, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
 
-        msg = self._render_scenario_templates(msg, "message_template", "notification_message")
         if msg is None:  # keep mypy happy
             return None
         return str(msg)

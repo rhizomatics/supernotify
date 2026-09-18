@@ -1,3 +1,19 @@
+## 2.5.3
+
+### Spoken Notifications
+
+- Simplify Text
+  - SSML tags now untouched and left for devices to interpret
+  - Unicode `Sc` category now added to the simplify text filter
+  - Common signs (`+`,`-`,`=`,`%`) that make sense to vocalize are omitted from the Unicode special character filter
+  - Unicode is now NFC normalized prior to Unicode `Mn` filtering to strip out marks, so accented characters in NFD-decomposed text better handled
+- Strip URLs
+  - False positive for words ending with `:` fixed
+- Scenario Templates
+  - Simplify Text and Strip URLs is now applied _after_ any scenario templates update message and title
+- New [voice](usage/voice.md) documentation page added
+
+
 ## 2.5.2
 
 ### Alexa Media Player
@@ -689,8 +705,7 @@ only prepare data and targets
 - Improved documentation content and navigation
 - Media Player transport allows `media_content_type` to be overridden in `data` for non-image use
 - Archiving now has a `debug` option, which controls if `debug_trace` included in notifications
-- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and
-an Alexa 'announce' delivery is selected, only one of them will speak for each device)
+- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and an Alexa 'announce' delivery is selected, only one of them will speak for each device)
 - Transport adaptors now count errors and report last error time and type
 ### Internal
 - Renaming of transport tests for consistency with package names

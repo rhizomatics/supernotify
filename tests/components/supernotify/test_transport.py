@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import unicodedata
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
@@ -39,6 +40,31 @@ def test_simplify_text() -> None:
     assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
 
 
+def test_simplify_text_keeps_sign_characters() -> None:
+    """+, -, = and % are kept even though some of them are Unicode symbol codepoints,
+    so numeric values like "+3" aren't left indistinguishable from "3"."""
+
+    uut = GenericTransport(Mock())
+    assert uut.simplify("Temperature +3 °C, -2 overnight, 50% humidity") == "Temperature +3 C, -2 overnight, 50% humidity"
+
+
+def test_simplify_text_normalizes_nfd_before_stripping_marks() -> None:
+    """NFD text (e.g. from macOS filenames) decomposes accents into a separate combining
+    mark codepoint, which must not be stripped as if it were unrelated symbol markup."""
+
+    uut = GenericTransport(Mock())
+    nfd_text = unicodedata.normalize("NFD", "Umidità già alta")
+    assert uut.simplify(nfd_text) == "Umidità già alta"
+
+
+def test_simplify_text_strip_urls_does_not_match_bare_scheme_like_words() -> None:
+    """A word ending in a colon (e.g. "Attention:") parses with a truthy `scheme` under
+    urlparse, but is not a URL and must not be dropped."""
+
+    uut = GenericTransport(Mock())
+    assert uut.simplify("Attention: visit https://example.com now", strip_urls=True) == "Attention: visit now"
+
+
 def test_simplify_text_preserves_ssml_for_spoken_transports() -> None:
     """Spoken transports pass SSML to the voice assistant, so the markup must survive."""
 
@@ -69,7 +95,7 @@ def test_simplify_text_strips_ssml_for_non_spoken_transports() -> None:
     assert not uut.supported_features & TransportFeature.SPOKEN
     assert (
         uut.simplify('<amazon:effect name="whispered">Smoke alarm</amazon:effect>')
-        == 'amazon:effect name"whispered"Smoke alarm/amazon:effect'
+        == 'amazon:effect name="whispered"Smoke alarm/amazon:effect'
     )
 
 
