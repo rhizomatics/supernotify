@@ -50,11 +50,11 @@ plugins:
         - developer/schemas/*
         - developer/classes.md
         - developer/transports.md
-        - developer/options.md
+        - configuration/options.md
       ignore_urls:
         - ../../developer/schemas/*
         - ../developer/transports/*
-        - ../developer/options/*
+        - ../configuration/options/*
         - ../transports/*
         - ../options/*
         - transports.md*

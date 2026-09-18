@@ -43,7 +43,7 @@ def transport_doc() -> None:
 
     with mkdocs_gen_files.open(doc_filename, "w") as df:
         df.write("# Transport Configuration\n\n")
-        df.write("See the [Options Reference](options.md) for a description of each option.\n\n")
+        df.write("See the [Options Reference](../configuration/options.md) for a description of each option.\n\n")
 
         df.write("## Default Inclusion\n")
 
