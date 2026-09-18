@@ -234,11 +234,11 @@ class Envelope(DupeCheckable):
             return None
         return str(title)
 
-    def _spoken_message(self) -> str | None:
+    def _spoken_message(self, msg: str | None) -> str | None:
         """Alternative message only for spoken voice transports"""
         if self._notification and self._notification.extra_data and ATTR_SPOKEN_MESSAGE in self._notification.extra_data:
             return str(self._notification.extra_data[ATTR_SPOKEN_MESSAGE])
-        return None
+        return msg
 
     def _compute_message(self) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
@@ -246,7 +246,7 @@ class Envelope(DupeCheckable):
         # self._message could be top level `message` or `message` set in delivery override
         msg: str | None = self.delivery.message if self.delivery.message is not None else self._message
         if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
-            msg = self._spoken_message() or msg
+            msg = self._spoken_message(msg)
 
         if msg and self.context and is_template_string(msg):
             try:
@@ -313,7 +313,7 @@ class Envelope(DupeCheckable):
 
         message: str | None
         if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
-            message = self._spoken_message() or self._message
+            message = self._spoken_message(self._message)
         else:
             message = self._message
         media = self.media or {}
