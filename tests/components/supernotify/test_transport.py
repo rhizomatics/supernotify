@@ -14,6 +14,7 @@ from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.alexa_media_player import AlexaMediaPlayerTransport
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .doubles_lib import DummyService
@@ -36,6 +37,40 @@ def test_simplify_text() -> None:
         == "Hello world! Visit https://example.com it's great 100 test"
     )
     assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
+
+
+def test_simplify_text_preserves_ssml_for_spoken_transports() -> None:
+    """Spoken transports pass SSML to the voice assistant, so the markup must survive."""
+
+    uut = AlexaMediaPlayerTransport(Mock())
+    assert uut.supported_features & TransportFeature.SPOKEN
+
+    assert (
+        uut.simplify('<amazon:effect name="whispered">Smoke alarm in the kitchen</amazon:effect>')
+        == '<amazon:effect name="whispered">Smoke alarm in the kitchen</amazon:effect>'
+    )
+    assert (
+        uut.simplify('<speak><break time="500ms"/>Front_door open</speak>')
+        == '<speak><break time="500ms"/>Front door open</speak>'
+    )
+    # text around the markup is still simplified, and spacing is kept
+    assert (
+        uut.simplify('<speak>Front <emphasis level="strong">door</emphasis> open (again) £5</speak>')
+        == '<speak>Front <emphasis level="strong">door</emphasis> open again 5</speak>'
+    )
+    # angle brackets that are not SSML keep the old behaviour, on any transport
+    assert uut.simplify("Sensor <test> tripped") == "Sensor test tripped"
+
+
+def test_simplify_text_strips_ssml_for_non_spoken_transports() -> None:
+    """Transports without a voice interface have no use for SSML, so it is simplified away."""
+
+    uut = GenericTransport(Mock())
+    assert not uut.supported_features & TransportFeature.SPOKEN
+    assert (
+        uut.simplify('<amazon:effect name="whispered">Smoke alarm</amazon:effect>')
+        == 'amazon:effect name"whispered"Smoke alarm/amazon:effect'
+    )
 
 
 async def test_call_action_simple(hass: HomeAssistant) -> None:
