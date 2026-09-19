@@ -91,7 +91,7 @@
                 },
                 "extra_data": {
                     "name": "Données supplémentaires",
-                    "description": "Données transmises pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
+                    "description": "Données transmises et réglages de transport pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
                 }
             },
             "sections": {

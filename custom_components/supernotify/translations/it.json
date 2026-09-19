@@ -91,7 +91,7 @@
                 },
                 "extra_data": {
                     "name": "Dati aggiuntivi",
-                    "description": "Dati passanti per trasporti/blueprint che qui si aspettano propri campi, ad es. attributi da un blueprint di notifica Frigate."
+                    "description": "Dati passanti e regolazione del trasporto per trasporti/blueprint che qui si aspettano propri campi, ad es. attributi da un blueprint di notifica Frigate."
                 }
             },
             "sections": {

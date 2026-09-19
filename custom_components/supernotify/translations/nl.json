@@ -91,7 +91,7 @@
                 },
                 "extra_data": {
                     "name": "Extra gegevens",
-                    "description": "Doorgegeven gegevens voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
+                    "description": "Doorgegeven gegevens en transportafstemming voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
                 }
             },
             "sections": {

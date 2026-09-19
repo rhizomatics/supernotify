@@ -91,7 +91,7 @@
                 },
                 "extra_data": {
                     "name": "Zusätzliche Daten",
-                    "description": "Durchgereichte Daten für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
+                    "description": "Durchgereichte Daten und Transport-Feinabstimmung für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
                 }
             },
             "sections": {

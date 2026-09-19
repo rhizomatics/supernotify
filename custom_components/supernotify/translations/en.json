@@ -91,7 +91,7 @@
                 },
                 "extra_data": {
                     "name": "Extra Data",
-                    "description": "Passthrough data for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
+                    "description": "Passthrough data and transport tuning for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
                 }
             },
             "sections": {
