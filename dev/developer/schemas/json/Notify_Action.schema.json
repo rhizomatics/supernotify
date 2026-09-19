@@ -394,6 +394,41 @@
         }
       ]
     },
+    "extra_data": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "object",
+            "additionalProperties": true
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "type": "object",
+            "nullable": true,
+            "description": "Must be null"
+          }
+        ]
+      },
+      "nullable": true
+    },
     "custom_target": {
       "type": "array",
       "items": {
