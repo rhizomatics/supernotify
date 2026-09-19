@@ -354,3 +354,18 @@ async def test_spoken_message_only_in_archived_envelope_for_spoken_transports() 
 
     assert Envelope(ctx.delivery("voice"), notification).contents()["spoken_message"] == "say this"
     assert "spoken_message" not in Envelope(ctx.delivery("push"), notification).contents()
+
+
+async def test_force_resend_defaults_from_notification_and_data_overrides_it() -> None:
+    """Handled like message_html: popped from the envelope's data, so it never reaches the transport's
+    pass-through data, and per delivery/target/scenario data can override the notification's"""
+    ctx = TestingContext(deliveries={"push": {CONF_TRANSPORT: "notify_entity"}})
+    await ctx.test_initialize()
+
+    assert Envelope(ctx.delivery("push"), Notification(ctx, "m")).force_resend is False
+    assert Envelope(ctx.delivery("push"), Notification(ctx, "m", action_data={"force_resend": True})).force_resend is True
+
+    uut = Envelope(ctx.delivery("push"), Notification(ctx, "m"), data={"force_resend": True, "other": 1})
+    assert uut.force_resend is True
+    assert uut.data == {"other": 1}
+    assert "force_resend" not in uut.contents()

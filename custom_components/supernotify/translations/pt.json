@@ -77,6 +77,10 @@
                     "name": "Mensagem HTML",
                     "description": "Uma alternativa HTML à Mensagem, usada por transportes que suportam formatação rica (por exemplo, e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Mensagem falada",
+                    "description": "Uma alternativa falada à Mensagem, usada por transportes que a leem em voz alta (por exemplo, Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Depuração",
                     "description": "Inclui detalhes de diagnóstico adicionais para esta notificação nos traces e no arquivo."

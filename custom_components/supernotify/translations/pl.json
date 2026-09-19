@@ -77,6 +77,10 @@
                     "name": "Wiadomość HTML",
                     "description": "Alternatywa HTML dla Wiadomości, używana przez transporty obsługujące bogate formatowanie (np. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Wiadomość mówiona",
+                    "description": "Mówiona alternatywa dla Wiadomości, używana przez transporty odczytujące ją na głos (np. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debugowanie",
                     "description": "Uwzględnij dodatkowe szczegóły diagnostyczne tego powiadomienia w śladach i archiwum."

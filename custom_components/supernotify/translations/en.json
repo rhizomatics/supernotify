@@ -77,6 +77,10 @@
                     "name": "HTML Message",
                     "description": "An HTML alternative to Message, used by transports that support rich formatting (e.g. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Spoken Message",
+                    "description": "A spoken alternative to Message, used by transports that speak it aloud (e.g. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Include extra diagnostic detail for this notification in traces and the archive."

@@ -77,6 +77,10 @@
                     "name": "HTML-bericht",
                     "description": "Een HTML-alternatief voor Bericht, gebruikt door transporten die rijke opmaak ondersteunen (bijv. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Gesproken bericht",
+                    "description": "Een gesproken alternatief voor Bericht, gebruikt door transporten die het hardop voorlezen (bijv. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Extra diagnostische details voor deze melding opnemen in traces en het archief."

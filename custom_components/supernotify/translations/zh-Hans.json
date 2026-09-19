@@ -77,6 +77,10 @@
                     "name": "HTML 消息",
                     "description": "消息的 HTML 替代方案，供支持富格式的传输方式使用（例如电子邮件）。"
                 },
+                "spoken_message": {
+                    "name": "语音消息",
+                    "description": "消息的语音替代方案，供朗读消息的传输方式使用（例如 Alexa、TTS）。"
+                },
                 "debug": {
                     "name": "调试",
                     "description": "在跟踪记录和存档中为此通知包含额外的诊断详情。"
