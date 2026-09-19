@@ -321,3 +321,36 @@ async def test_envelope_data_without_context_left_unrendered() -> None:
         data={"volume": "{{ 1 + 1 }}"},
     )
     assert uut.data["volume"] == "{{ 1 + 1 }}"
+
+
+async def test_spoken_message_only_replaces_message_for_spoken_transports() -> None:
+    ctx = TestingContext(deliveries={"voice": {CONF_TRANSPORT: "tts"}, "push": {CONF_TRANSPORT: "notify_entity"}})
+    await ctx.test_initialize()
+    notification = Notification(ctx, "text message", action_data={"spoken_message": "say this"})
+
+    assert Envelope(ctx.delivery("voice"), notification)._compute_message() == "say this"
+    assert Envelope(ctx.delivery("push"), notification)._compute_message() == "text message"
+    assert notification.extra_data == {}
+
+
+async def test_spoken_message_in_envelope_data_wins_and_is_not_passed_on() -> None:
+    """Handled like message_html: popped from the envelope's data, so per delivery/target/scenario data
+    can override the notification's, and it never reaches the transport's pass-through data"""
+    ctx = TestingContext(deliveries={"voice": {CONF_TRANSPORT: "tts"}})
+    await ctx.test_initialize()
+    notification = Notification(ctx, "text message", action_data={"spoken_message": "from notification"})
+
+    uut = Envelope(ctx.delivery("voice"), notification, data={"spoken_message": "from data", "other": 1})
+
+    assert uut.spoken_message == "from data"
+    assert uut._compute_message() == "from data"
+    assert uut.data == {"other": 1}
+
+
+async def test_spoken_message_only_in_archived_envelope_for_spoken_transports() -> None:
+    ctx = TestingContext(deliveries={"voice": {CONF_TRANSPORT: "tts"}, "push": {CONF_TRANSPORT: "notify_entity"}})
+    await ctx.test_initialize()
+    notification = Notification(ctx, "text message", action_data={"spoken_message": "say this"})
+
+    assert Envelope(ctx.delivery("voice"), notification).contents()["spoken_message"] == "say this"
+    assert "spoken_message" not in Envelope(ctx.delivery("push"), notification).contents()

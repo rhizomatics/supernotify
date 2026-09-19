@@ -516,6 +516,27 @@ def test_lift_legacy_nested_data_two_levels_of_data_is_legacy() -> None:
     assert lift_legacy_nested_data({"data": {"data": {"ttl": 5}}}) == {"data": {"ttl": 5}}
 
 
+async def test_spoken_message_handled_like_message_html_by_both_actions(hass: HomeAssistant) -> None:
+    entry = await _setup_entry(hass)
+
+    await hass.services.async_call(DOMAIN, "notify", {"message": "m", "spoken_message": "say new"}, blocking=True)
+    await hass.async_block_till_done()
+    new = entry.runtime_data.last_notification
+    assert new is not None
+    assert new.spoken_message == "say new"
+    assert new.extra_data == {}
+
+    await hass.services.async_call(
+        "notify", "supernotify", {"message": "m", "data": {"spoken_message": "say old"}}, blocking=True
+    )
+    await hass.async_block_till_done()
+    legacy = entry.runtime_data.last_notification
+    assert legacy is not None
+    assert legacy is not new
+    assert legacy.spoken_message == "say old"
+    assert legacy.extra_data == {}
+
+
 def test_lift_legacy_nested_data_never_touches_extra_data() -> None:
     payload = {"data": {"colour": "red"}, "extra_data": {"priority": "high", "data": {"ttl": 5}, "message_html": "<p/>"}}
     assert lift_legacy_nested_data(payload) == payload

@@ -14,6 +14,7 @@ from jinja2 import TemplateError
 
 from .common import DupeCheckable
 from .const import (
+    ATTR_FORCE_RESEND,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
@@ -85,6 +86,8 @@ class Envelope(DupeCheckable):
         self._message: str | None = None
         self._title: str | None = None
         self.message_html: str | None = None
+        self.spoken_message: str | None = None
+        self.force_resend: bool = False
         self.data: dict[str, Any] = {}  # delivery/target/scenario/action data
         self.actions: list[dict[str, Any]] = []
         if notification:
@@ -114,6 +117,8 @@ class Envelope(DupeCheckable):
             self.actions = notification.actions
             self.priority = self.data.pop(ATTR_PRIORITY, notification.priority)
             self.message_html = self.data.pop(ATTR_MESSAGE_HTML, notification.message_html)
+            self.spoken_message = self.data.pop(ATTR_SPOKEN_MESSAGE, notification.spoken_message)
+            self.force_resend = self.data.pop(ATTR_FORCE_RESEND, notification.force_resend)
 
         self.timestamp_format: str | None = self.data.pop(ATTR_TIMESTAMP, None)
 
@@ -180,7 +185,7 @@ class Envelope(DupeCheckable):
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
-        exclude_attrs: list[str] = ["_notification", "context", "ha_context", "condition_variables"]
+        exclude_attrs: list[str] = ["_notification", "context", "ha_context", "condition_variables", "force_resend"]
         if minimal:
             exclude_attrs.append("delivery")
             features: TransportFeature = self.delivery.transport.supported_features
@@ -192,6 +197,8 @@ class Envelope(DupeCheckable):
                 exclude_attrs.extend(["message_html", "message"])
             if features & TransportFeature.SPOKEN:
                 exclude_attrs.append("message_html")
+            else:
+                exclude_attrs.append("spoken_message")
             if not features & TransportFeature.TITLE:
                 exclude_attrs.append("title")
             if self.delivery.target_required == TargetRequired.NEVER:
@@ -245,9 +252,7 @@ class Envelope(DupeCheckable):
 
     def _spoken_message(self, msg: str | None) -> str | None:
         """Alternative message only for spoken voice transports"""
-        if self._notification and self._notification.extra_data and ATTR_SPOKEN_MESSAGE in self._notification.extra_data:
-            return str(self._notification.extra_data[ATTR_SPOKEN_MESSAGE])
-        return msg
+        return self.spoken_message if self.spoken_message is not None else msg
 
     def _compute_message(self) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call

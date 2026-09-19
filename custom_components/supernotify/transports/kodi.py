@@ -40,8 +40,8 @@ Notes on the `kodi.call_method` service:
   transport pattern.
 - Pure overlay: no action buttons and no user interaction.
 
-Internal data keys filtered upstream by notification.py and NOT popped here:
-    force_resend, spoken_message
+Internal data keys popped upstream by the envelope (force_resend, spoken_message) and NOT
+    popped here
 
 References:
 - Kodi integration: https://www.home-assistant.io/integrations/kodi/

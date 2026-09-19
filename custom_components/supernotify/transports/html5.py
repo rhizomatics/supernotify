@@ -65,8 +65,8 @@ Notes on the HA `html5.send_message` service schema:
 - Expired push subscriptions (410 GONE) are handled by the core, which
   unregisters the browser and raises: call_action then returns False.
 
-Internal data keys filtered upstream by notification.py and NOT popped
-here: force_resend, spoken_message.
+Internal data keys popped upstream by the envelope (force_resend, spoken_message) and NOT
+popped here.
 
 References:
 - HTML5 push integration: https://www.home-assistant.io/integrations/html5/
