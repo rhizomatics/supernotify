@@ -1,5 +1,7 @@
 # Roadmap
 
+See also [Principles](./principles.md) for what guides development.
+
 ## Home Assistant Version Compatibility
 
 When the following versions meet the 6-month ago window for testing, here are the changes to make
@@ -12,7 +14,16 @@ Remove Py3.13 compatibility and testing
 
 Switch from `voluptuous` to `probatio`
 
-## Planned Changes
+## Features
+
+### Packages
+
+See [Packages](./packages.md)
+
+## Internal Improvements
+
+The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining
+all reasonable backward compatibility.
 
 ### Overhaul use of `data` in pipeline
 
