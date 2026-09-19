@@ -128,7 +128,7 @@ A recipient's `delivery:` block (also used below for [per-delivery targets](#man
 
 A delivery doesn't need to be turned on for everybody to be useful to one person - an explicit `enabled: true` in a recipient's own `delivery:` block switches it on for them alone, or conversely `enabled: false` to switch it off just for those recipients.
 
-A `target:` override can also be used, independently of the enabled status, to override the target only for that recipient on that delivery. For example, a Slack delivery built with the [Generic Transport](https://supernotify.rhizomatics.org.uk/transports/generic/#selecting-targets) that only Jane uses:
+A `target:` override can also be used, independently of the enabled status, to override the target only for that recipient on that delivery. For example, a Slack delivery built with the [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/#selecting-targets) that only Jane uses:
 
 ```yaml
 delivery:

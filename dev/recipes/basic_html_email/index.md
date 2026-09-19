@@ -21,4 +21,4 @@ Example Action Call
 
 ## Example
 
-See [Home Assistant Restart Notification](https://supernotify.rhizomatics.org.uk/recipes/restart_email/index.md) recipe for a simple application.
+See [Home Assistant Restart Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) recipe for a simple application.

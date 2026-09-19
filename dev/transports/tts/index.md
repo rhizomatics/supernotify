@@ -57,7 +57,7 @@ action: notify.mobile_app_my_pixel
       tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/transports/#table-of-options) for the list of options and the include/exclude syntax).
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
 
 Configuration Snippet
 
@@ -99,9 +99,9 @@ Use `spoken_message` in the notification call to provide a different message for
 
 ## Alternatives
 
-For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](https://supernotify.rhizomatics.org.uk/transports/alexa_devices/index.md) and [Alexa Media Player](https://supernotify.rhizomatics.org.uk/transports/alexa_media_player/index.md) transport adaptors.
+For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md) and [Alexa Media Player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) transport adaptors.
 
-To get canned sounds rather than speech, use the [Chime](https://supernotify.rhizomatics.org.uk/transports/chime/index.md) transport adaptor.
+To get canned sounds rather than speech, use the [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) transport adaptor.
 
 ## References
 

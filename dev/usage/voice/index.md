@@ -2,9 +2,9 @@
 
 Several voice assistants have specific support, in addition to what can be done for any Home Assistant Notify Entity.
 
-- [Alexa Devices](https://supernotify.rhizomatics.org.uk/transports/alexa_devices/index.md)
-- [Alexa Media Player](https://supernotify.rhizomatics.org.uk/transports/alexa_media_player/index.md)
-- [TTS](https://supernotify.rhizomatics.org.uk/transports/tts/index.md)
+- [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)
+- [Alexa Media Player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md)
+- [TTS](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)
 
 See the transport pages for lots of features and tuning for using these, such as auto-pausing music, using vendor-native groups for faster parallel notifications and more.
 
@@ -12,11 +12,11 @@ See the transport pages for lots of features and tuning for using these, such as
 
 Several recipes feature voice notifications:
 
-- [Alexa Backup](https://supernotify.rhizomatics.org.uk/recipes/alexa_alternative_integration/index.md)
-- [Alexa Whispers](https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/index.md)
-- [All Sirens Go](https://supernotify.rhizomatics.org.uk/recipes/all_sirens_go/index.md)
-- [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/recipes/seasonal_greetings/index.md)
-- [Voice Described CCTV](https://supernotify.rhizomatics.org.uk/recipes/voice_described_cctv/index.md)
+- [Alexa Backup](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/index.md)
+- [Alexa Whispers](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
+- [All Sirens Go](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md)
+- [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
+- [Voice Described CCTV](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)
 
 ## Simplifying Text
 
@@ -92,4 +92,4 @@ There are also options to combine the title into the message, or drop it out alt
 
 ### Noises
 
-While SSML can add a variety of sounds to voice assistants, the best way to use them is with the [Chime](https://supernotify.rhizomatics.org.uk/transports/chime/index.md) transport, which can also be used to unify Alexas making red alert noises with real sirens and doorbell chimes to make as much racket as you need.
+While SSML can add a variety of sounds to voice assistants, the best way to use them is with the [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) transport, which can also be used to unify Alexas making red alert noises with real sirens and doorbell chimes to make as much racket as you need.

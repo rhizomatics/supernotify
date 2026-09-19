@@ -18,11 +18,11 @@ Archive, duplicate detection and housekeeping settings can be adjusted afterward
 
 This will build a delivery channel for every transport mechanism it can find, plus some convenience ones, like `chime_siren_all` and `alexa_devices_announce_all` that will be created if you have those devices.
 
-Advanced configuration, like custom deliveries, transports, scenarios, recipients and fine-tuning cameras are still configured via YAML fornow - see the [Configuration](https://supernotify.rhizomatics.org.uk/configuration/index.md) pages.
+Advanced configuration, like custom deliveries, transports, scenarios, recipients and fine-tuning cameras are still configured via YAML fornow - see the [Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/index.md) pages.
 
 ## Send
 
-Send a test notification from [Tools Action Tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) or start [sending notifications](https://supernotify.rhizomatics.org.uk/usage/notifying/index.md) from automations. Use the `supernotify.notify` action to craft the notification, which can be nothing more than a single `message`.
+Send a test notification from [Tools Action Tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) or start [sending notifications](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md) from automations. Use the `supernotify.notify` action to craft the notification, which can be nothing more than a single `message`.
 
 This first notification will go out all mobile devices in the house. To limit it, list the mobile devices, or the `person` entities as targets in the notification:
 
@@ -47,4 +47,4 @@ From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
 
 ## Be Inspired
 
-Find lots of ideas with example configuration in the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md).
+Find lots of ideas with example configuration in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md).

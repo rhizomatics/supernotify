@@ -60,7 +60,7 @@ Config Snippet
 
 For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. For everything else, you need to pass the list of target entity IDs in the notification action call.
 
-The formal schema is published as [Chime Aliases Definition](https://supernotify.rhizomatics.org.uk/developer/schemas/Chime_Aliases_Definition/index.md). Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.
+The formal schema is published as [Chime Aliases Definition](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md). Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.
 
 ## Device Types
 
@@ -225,7 +225,7 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 
 ## Scenarios
 
-Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/transports/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md) for more details.
+Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/transports/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more details.
 
 ## References
 

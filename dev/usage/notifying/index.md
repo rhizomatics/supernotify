@@ -16,7 +16,7 @@ Same Example, via supernotify.notify
 
 All of the examples below will work equally with `supernotify.notify` (easier to use when using in the Actions or Automations UI) or the `notify` platform compatible `notify.supernotify` style action.
 
-There are lots more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md), including how to make it work well with Frigate, AppDaemon and Alexa.
+There are lots more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including how to make it work well with Frigate, AppDaemon and Alexa.
 
 ## Simplest Example
 
@@ -34,7 +34,7 @@ Example Message to All Devices
 
 ## Adding Targets
 
-Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](https://supernotify.rhizomatics.org.uk/configuration/email/index.md) for more on configuring e-mail notifications, and [Targets](https://supernotify.rhizomatics.org.uk/usage/targets/index.md) for more in general about how to use them.
+Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md) for more on configuring e-mail notifications, and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more in general about how to use them.
 
 Example Message to All Devices
 
@@ -92,7 +92,7 @@ For a target with no address type Supernotify can auto-detect (e.g. an MQTT topi
             - topic:security/basement/alert
 ```
 
-See [Targets](https://supernotify.rhizomatics.org.uk/usage/targets/index.md) for the full list of category names and the other ways to qualify a target (a mapping, or setting it directly on a delivery).
+See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of category names and the other ways to qualify a target (a mapping, or setting it directly on a delivery).
 
 ## Notification Priority
 
@@ -127,7 +127,7 @@ Notifications are checked for duplicates based on a selected policy. This can al
         force_resend: true
 ```
 
-See [Duplicate Configuration](https://supernotify.rhizomatics.org.uk/configuration/dupe_detection/index.md) for more information.
+See [Duplicate Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md) for more information.
 
 ## Controlling Delivery Selection
 
@@ -184,11 +184,11 @@ Fixed - always set explicitly
             - plain_email
 ```
 
-!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/configuration/deliveries/#delivery-selection)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
+!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-selection)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
 
 ### When Scenarios Disagree
 
-Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](https://supernotify.rhizomatics.org.uk/usage/notifying/scenarios.md#overriding-delivery-selection-and-configuration).
+Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/scenarios.md#overriding-delivery-selection-and-configuration).
 
 If more than one scenario is active at once and they disagree on the same delivery, **`false` always wins**, regardless of how many other active scenarios enabled it - there's no priority or ordering between scenarios.
 
@@ -299,7 +299,7 @@ Channel Specific Messages
 The top level `extra_data` can hold anything that isn't a Supernotify action field, and is offered to every delivery. It is used for two things:
 
 - **Values for the underlying integration**, passed straight through. If there are multiple integrations, all of them will get this data ( other than where Supernotify knows the integration and that they can't handle extra data items).
-- **Tuning for Supernotify's own transports**, such as `chime_tune` for the [Chime](https://supernotify.rhizomatics.org.uk/transports/chime/index.md) transport. Each transport takes out the keys it recognizes, and passes the rest on to the integration.
+- **Tuning for Supernotify's own transports**, such as `chime_tune` for the [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) transport. Each transport takes out the keys it recognizes, and passes the rest on to the integration.
 
 Extra Data for Integration
 
@@ -336,4 +336,4 @@ These examples assume you've named the Supernotify notifier as `supernotify` sin
 
 ## References
 
-The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/developer/schemas/Notify_Action_Data/index.md)
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action_Data/index.md)

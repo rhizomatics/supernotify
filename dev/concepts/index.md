@@ -8,7 +8,7 @@
 - The transport adaptor allows a single notification to be sent to many platforms, even when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
 - Transport Adaptors can optionally be defined in the Supernotify config with defaults
 - Each transport has a default configuration, which allows lots of fine tuning and defaults to be made, saving need to add the same values into every notification.
-- See [Transports](https://supernotify.rhizomatics.org.uk/transports/index.md) for more detail
+- See [Transports](https://supernotify.rhizomatics.org.uk/latest/transports/index.md) for more detail
 
 ## Delivery
 
@@ -16,14 +16,14 @@
 - Every configured Transport is available as a Delivery with the same name as the transport, so for example `email` or `mobile_push`.
 - Transports which can definitively select targets, like Email or Notify Entity, are always enabled by default. Others can be selected in configuration, by using Scenarios or switching them on in a notification
 - You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
-- See [Deliveries](https://supernotify.rhizomatics.org.uk/configuration/deliveries/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md) for more detail
+- See [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
 ## Scenario
 
 - An easy way to package up common chunks of config, optionally combined with conditional logic
 - Scenarios can be manually selected, in an `apply_scenarios` value of notification `data` block, or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications, and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](https://supernotify.rhizomatics.org.uk/concepts/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md) for more detail
+- See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/concepts/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
 ## Target
 
@@ -33,13 +33,13 @@
 - There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify will exploded these for the *Chime* integration, but otherwise ignore them.
 - Targets can be qualified for a specific delivery, like `discord:839439434`
 - Targets for Notify Entity, Email and SMS are automatically routed to first available delivery for the appropriate transport
-- See [Targets](https://supernotify.rhizomatics.org.uk/usage/targets/index.md) for more information
+- See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information
 
 ## Recipient
 
 - Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
 - This lets you target notifications to people in notifications, and each transport will pick the type of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
-- See [People](https://supernotify.rhizomatics.org.uk/configuration/people/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md) for more detail
+- See [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
 ## Envelope
 
@@ -47,7 +47,7 @@
   - List of targets filtered, for example, only e-mail addresses for SMTP integration
   - Indirect targets, like `person.xxx` are materialized into e-mail addresses, phone numbers etc
   - The `data` section of the notification may also have been customized, by the delivery definition, or application of a scenario.
-- *Envelope* isn't present in the configuration - aside from the code, its only visible when viewing an [archived notification](https://supernotify.rhizomatics.org.uk/configuration/archiving/index.md), where a list of *delivered* and *undelivered* envelopes is kept.
+- *Envelope* isn't present in the configuration - aside from the code, its only visible when viewing an [archived notification](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md), where a list of *delivered* and *undelivered* envelopes is kept.
 
 ## Priority
 
@@ -58,7 +58,7 @@
 
 Info
 
-For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/developer/class_diagram/index.md) of the core classes matching these concepts.
+For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/latest/developer/class_diagram/index.md) of the core classes matching these concepts.
 
 # Core Principles
 

@@ -1,6 +1,6 @@
 # Deliveries and Transports
 
-See also [Principles](https://supernotify.rhizomatics.org.uk/developer/design/principles/index.md).
+See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md).
 
 ## Context
 

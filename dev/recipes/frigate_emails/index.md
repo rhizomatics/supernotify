@@ -34,4 +34,4 @@ automations:
 - Use this anywhere else you want to get multiple notification channels without changing templates
 - Simplify automations and templates by moving complex setup and rules into Supernotify, such as using a single **Scenario** to configure dozens of automations
 - Have TTS or Alexa devices announce the notification too, using the `tts`, `alexa_devices` or `alexa_media_player` integrations, or have a sound alert via an Alexa or 433Mhz doorbell chime
-- See also the [Fix Frigate Apple Push](https://supernotify.rhizomatics.org.uk/recipes/fix_frigate_apple_push/index.md) recipe.
+- See also the [Fix Frigate Apple Push](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) recipe.

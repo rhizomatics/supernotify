@@ -76,7 +76,7 @@ scenarios:
 
 ## Variations
 
-The [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/transports/chime/index.md) has lots more ways of doing this.
+The [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) has lots more ways of doing this.
 
 Set up aliases for common chimes, and a secondary seasonal version, in the Chime transport defaults:
 

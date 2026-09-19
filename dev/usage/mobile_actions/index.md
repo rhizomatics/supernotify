@@ -2,13 +2,13 @@
 
 Note
 
-This page is about the buttons on an [Actionable Notification](https://companion.home-assistant.io/docs/notifications/actionable-notifications/) (referred to throughout as **Mobile Actions**), not Home Assistant *Actions* (previously known as 'services') such as `supernotify.notify` - those are documented at [Actions](https://supernotify.rhizomatics.org.uk/usage/actions/index.md).
+This page is about the buttons on an [Actionable Notification](https://companion.home-assistant.io/docs/notifications/actionable-notifications/) (referred to throughout as **Mobile Actions**), not Home Assistant *Actions* (previously known as 'services') such as `supernotify.notify` - those are documented at [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md).
 
-Mobile Actions currently only affect the [Mobile Push](https://supernotify.rhizomatics.org.uk/transports/mobile_push/index.md) transport - other transports either ignore `actions`/`action_groups` entirely, or only pick up the single `action_url` link described below.
+Mobile Actions currently only affect the [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) transport - other transports either ignore `actions`/`action_groups` entirely, or only pick up the single `action_url` link described below.
 
 Note
 
-Don't confuse `action_groups:` here with [`mobile_push_group`](https://supernotify.rhizomatics.org.uk/transports/mobile_push/#notification-grouping) - that's an unrelated Companion App feature for visually stacking notifications together, named `group` for consistency with the Companion App's own docs even though it clashes with "action groups" here.
+Don't confuse `action_groups:` here with [`mobile_push_group`](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/#notification-grouping) - that's an unrelated Companion App feature for visually stacking notifications together, named `group` for consistency with the Companion App's own docs even though it clashes with "action groups" here.
 
 ## Ad-hoc actions on a single notification
 
@@ -72,7 +72,7 @@ Notify call referencing a group
 
 ### Attaching groups from a scenario
 
-More commonly, a [Scenario](https://supernotify.rhizomatics.org.uk/usage/mobile_actions/scenarios.md) attaches the group instead, so the right buttons appear automatically depending on state, without every automation having to know about them:
+More commonly, a [Scenario](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/scenarios.md) attaches the group instead, so the right buttons appear automatically depending on state, without every automation having to know about them:
 
 Scenario-driven groups
 
@@ -98,7 +98,7 @@ A scenario referencing a group name that isn't defined under the top-level `acti
 
 ## Snoozing from a Mobile Action
 
-When a notification includes `media.camera_entity_id`, Supernotify automatically appends one more action - `SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_<camera_entity_id>` - with a text-input prompt for minutes to snooze. This, and the wider `SUPERNOTIFY_<COMMAND>_<RecipientType>_<TargetType>` action naming scheme that Supernotify listens for on `mobile_app_notification_action` events, is covered in full on the [Snoozing](https://supernotify.rhizomatics.org.uk/usage/snoozing/index.md) page - you don't need to wire up your own automation for it.
+When a notification includes `media.camera_entity_id`, Supernotify automatically appends one more action - `SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_<camera_entity_id>` - with a text-input prompt for minutes to snooze. This, and the wider `SUPERNOTIFY_<COMMAND>_<RecipientType>_<TargetType>` action naming scheme that Supernotify listens for on `mobile_app_notification_action` events, is covered in full on the [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md) page - you don't need to wire up your own automation for it.
 
 ## Auto-fetched link titles
 
@@ -107,7 +107,7 @@ If an action (ad-hoc or from a group) has `action_url` set but no `action_url_ti
 ## References
 
 - [Companion App: Actionable Notifications](https://companion.home-assistant.io/docs/notifications/actionable-notifications/)
-- [Mobile Push transport](https://supernotify.rhizomatics.org.uk/transports/mobile_push/index.md)
-- [Scenarios](https://supernotify.rhizomatics.org.uk/usage/mobile_actions/scenarios.md)
-- [Snoozing](https://supernotify.rhizomatics.org.uk/usage/snoozing/index.md)
-- [Actions (services)](https://supernotify.rhizomatics.org.uk/usage/actions/index.md)
+- [Mobile Push transport](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)
+- [Scenarios](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/scenarios.md)
+- [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
+- [Actions (services)](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)

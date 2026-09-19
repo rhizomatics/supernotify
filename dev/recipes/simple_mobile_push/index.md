@@ -8,7 +8,7 @@ Send mobile push notifications without any configuration.
 
 All you need is:
 
-1. Install Supernotify from HACS ([Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/index.md))
+1. Install Supernotify from HACS ([Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md))
    - By default, the configuration will have *Mobile Device Discovery* and *Person Discovery* switched on
 1. If they don't already have it, set up the [Home Assistant Companion App](https://companion.home-assistant.io) for each person/device to be notified
    - This needs a *username* and *password* for each user, see [Adding a Person to Home Assistant](https://www.home-assistant.io/integrations/person/#adding-a-person-to-home-assistant)
@@ -17,4 +17,4 @@ All you need is:
 
 ## Variations
 
-See [Mobile Push](https://supernotify.rhizomatics.org.uk/transports/mobile_push/index.md) for lots more options to add to the notification, such as camera snapshots, sounds, vibrations, links, grouping, priority, badges and more.
+See [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) for lots more options to add to the notification, such as camera snapshots, sounds, vibrations, links, grouping, priority, badges and more.

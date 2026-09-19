@@ -1,6 +1,6 @@
 # Conditions
 
-The [Bedtime](https://supernotify.rhizomatics.org.uk/recipes/bedtime/index.md) recipe illustrates a simple use of conditions, based on time of day, and [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/recipes/seasonal_greetings/index.md) shows a slightly more complex version with `or` logic for date ranges. These conditions are identical to what can be used in any Home Assistant automation.
+The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md) recipe illustrates a simple use of conditions, based on time of day, and [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) shows a slightly more complex version with `or` logic for date ranges. These conditions are identical to what can be used in any Home Assistant automation.
 
 ## Condition Variables
 
@@ -19,9 +19,9 @@ The [Bedtime](https://supernotify.rhizomatics.org.uk/recipes/bedtime/index.md) r
 
 These recipes demonstrate how the template variables can be used:
 
-- [Content Escalation](https://supernotify.rhizomatics.org.uk/recipes/content_escalation/index.md)
-- [Alexa Whisper](https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/index.md)
-- [Except Scenario](https://supernotify.rhizomatics.org.uk/recipes/except_scenario/index.md)
+- [Content Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md)
+- [Alexa Whisper](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
+- [Except Scenario](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md)
 
 Be aware of values that can be empty, and which can trip Jinja2 up with some checks. For example `{{ 'CRITICAL' in notification_title}}` will fail with a "not iterable" error if title is not set, which will be the case when the condition is validated at start up or if no title passed on a notification. This can be easily addressed with a filter, such as `{{ 'CRITICAL' in notification_title | trim}}`, or the `upper`,`lower` filters if checking for case.
 

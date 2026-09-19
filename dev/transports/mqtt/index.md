@@ -6,7 +6,7 @@
 
 ## Discovery
 
-**Delivery (explicit selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically — but since a topic has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [mqtt]}}` or a scenario), not by default. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/transports/notify_entity/index.md) transport's own default delivery instead.
+**Delivery (explicit selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically — but since a topic has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [mqtt]}}` or a scenario), not by default. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, the specific MQTT integration can be easier to use.
 

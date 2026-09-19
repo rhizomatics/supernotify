@@ -33,4 +33,4 @@ In this case a Frigate notification is usually a medium priority, however if the
 ## Variations
 
 - Use `{{'LONE_HOME' in occupancy}}` to check if only one person is home
-- Use risk levels in the message, as set by GenAI in the [Voice Described CCTV Recipe](https://supernotify.rhizomatics.org.uk/recipes/voice_described_cctv/index.md)
+- Use risk levels in the message, as set by GenAI in the [Voice Described CCTV Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)

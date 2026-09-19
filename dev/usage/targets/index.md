@@ -124,7 +124,7 @@ mix of targets
                 target: notify.alexa_kitchen_announce
 ```
 
-This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](https://supernotify.rhizomatics.org.uk/usage/targets/scenarios.md) for more on how to use these pre-canned bits of config.
+This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/usage/targets/scenarios.md) for more on how to use these pre-canned bits of config.
 
 mix of targets
 
@@ -149,4 +149,4 @@ In the archived JSON, each delivery has an `envelope` with the targets assigned 
 
 ## Not All Transports Have Targets
 
-Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](https://supernotify.rhizomatics.org.uk/developer/transports/index.md)
+Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/developer/transports/index.md)

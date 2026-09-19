@@ -1,6 +1,6 @@
 # Roadmap
 
-See also [Principles](https://supernotify.rhizomatics.org.uk/developer/design/principles/index.md) for what guides development.
+See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md) for what guides development.
 
 ## Home Assistant Version Compatibility
 
@@ -18,11 +18,11 @@ Switch from `voluptuous` to `probatio`
 
 ### Packages
 
-See [Packages](https://supernotify.rhizomatics.org.uk/developer/design/packages/index.md)
+See [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
 
 ### Extended UI Configuration
 
-Second and further phases identified at [ConfigFlow](https://supernotify.rhizomatics.org.uk/developer/design/configflow_approach/index.md)
+Second and further phases identified at [ConfigFlow](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
 
 ### AI Friendly
 
@@ -106,8 +106,8 @@ The plan is to make this a documented, supported setting, and decide which of th
 
 ## Completed Roadmap
 
-- [ConfigFlow](https://supernotify.rhizomatics.org.uk/developer/design/configflow_approach/index.md)
+- [ConfigFlow](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
 - v2.0.0
 - Partially completed, basic YAML only
-- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/developer/design/deliveries_and_transports/index.md)
+- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md)
 - v2.5.0

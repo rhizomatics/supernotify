@@ -38,7 +38,7 @@ data:
   entity_id: media_player.kitchen_alexa
 ```
 
-If you want to send a sound to the media player, try the much more functional [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/transports/chime/index.md).
+If you want to send a sound to the media player, try the much more functional [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md).
 
 ## Alexa Media Player
 

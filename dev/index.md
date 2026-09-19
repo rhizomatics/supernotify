@@ -1,4 +1,4 @@
-This page available in [English](https://supernotify.rhizomatics.org.uk/index.md), [Deutsch](https://supernotify.rhizomatics.org.uk/de/index.md), [Español](https://supernotify.rhizomatics.org.uk/es/index.md), [Français](https://supernotify.rhizomatics.org.uk/fr/index.md), [हिन्दी](https://supernotify.rhizomatics.org.uk/hi/index.md), [Italiano](https://supernotify.rhizomatics.org.uk/it/index.md),[日本語](https://supernotify.rhizomatics.org.uk/ja/index.md), [Nederlands](https://supernotify.rhizomatics.org.uk/nl/index.md), [Polski](https://supernotify.rhizomatics.org.uk/pl/index.md), [Português](https://supernotify.rhizomatics.org.uk/pt/index.md), [中文（简体)](https://supernotify.rhizomatics.org.uk/zh-Hans/index.md)
+This page available in [English](https://supernotify.rhizomatics.org.uk/latest/index.md), [Deutsch](https://supernotify.rhizomatics.org.uk/latest/de/index.md), [Español](https://supernotify.rhizomatics.org.uk/latest/es/index.md), [Français](https://supernotify.rhizomatics.org.uk/latest/fr/index.md), [हिन्दी](https://supernotify.rhizomatics.org.uk/latest/hi/index.md), [Italiano](https://supernotify.rhizomatics.org.uk/latest/it/index.md),[日本語](https://supernotify.rhizomatics.org.uk/latest/ja/index.md), [Nederlands](https://supernotify.rhizomatics.org.uk/latest/nl/index.md), [Polski](https://supernotify.rhizomatics.org.uk/latest/pl/index.md), [Português](https://supernotify.rhizomatics.org.uk/latest/pt/index.md), [中文（简体)](https://supernotify.rhizomatics.org.uk/latest/zh-Hans/index.md)
 
 # Supernotify - Unified Notifications for Home Assistant
 
@@ -20,13 +20,13 @@ A **unified notification interface** on top of HomeAssistant's built in `notify`
 
 The goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-Start off with no YAML configuration and easily do [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/recipes/simple_mobile_push/index.md), attach a camera snapshot to an e-mail, redirect [Frigate blueprint notifications to email](https://supernotify.rhizomatics.org.uk/recipes/frigate_emails/index.md), or automatically cut down on repeated duplicate notifications.
+Start off with no YAML configuration and easily do [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), attach a camera snapshot to an e-mail, redirect [Frigate blueprint notifications to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), or automatically cut down on repeated duplicate notifications.
 
 Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant dashboard integration. And with advanced YAML configuration, the possibilities are endless.
 
 Recipes
 
-Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md), including: [Make Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/index.md), [Set off sirens for critical alerts](https://supernotify.rhizomatics.org.uk/recipes/all_sirens_go/index.md), [Send HomeAssistant themed HTML e-mail](https://supernotify.rhizomatics.org.uk/recipes/basic_html_email/index.md), [Use the Frigate blueprint to send emails with attached images](https://supernotify.rhizomatics.org.uk/recipes/frigate_emails/index.md), [Move and zoom a camera to take a snapshot](https://supernotify.rhizomatics.org.uk/recipes/move_a_camera_for_snapshot/index.md), [Suppress or escalate notifications based on content](https://supernotify.rhizomatics.org.uk/recipes/content_escalation/index.md) and [Halloween and Christmas themed chimes and voices](https://supernotify.rhizomatics.org.uk/recipes/seasonal_greetings/index.md)
+Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including: [Make Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), [Set off sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), [Send HomeAssistant themed HTML e-mail](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md), [Use the Frigate blueprint to send emails with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [Move and zoom a camera to take a snapshot](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md), [Suppress or escalate notifications based on content](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) and [Halloween and Christmas themed chimes and voices](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -90,14 +90,14 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
 - Notification **Archival** and **Debug Support**
   - Optionally archive notifications to file system and/or MQTT topic
   - Includes full debug information, including occupancy assumptions, delivery and target selections
-  - HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/usage/actions/index.md)
+  - HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
   - Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
 
 ## YAML Only for Advanced Use
 
 Presently Supernotify supports standard Home Assistant UI based config for the basic setup, and [YAML configuration](https://supernotify.rhizomatics.org.uk/configuration/yaml/) for advanced features. YAML will be preserved for ease of working with larger rule bases.
 
-A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md) in the documentation, and this mobile push example:
+A lot can be done with the simple non-YAML configuration, including automation of mobile push setup. See the [recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) in the documentation, and this mobile push example:
 
 With zero YAML all UI config
 

@@ -30,7 +30,7 @@ Separate custom component on HACS, per package, as Supernotify "plugins". Worth 
 
 ### Live Notifications for Appliances
 
-If there's a connected appliance like dishwasher, it will send a start and stop [Live Activity](https://companion.home-assistant.io/docs/notifications/live-activities) notification to mobile devices with an appropriate icon. See the very basic [recipe](https://supernotify.rhizomatics.org.uk/recipes/dishwasher_live_activity/index.md) for current usage.
+If there's a connected appliance like dishwasher, it will send a start and stop [Live Activity](https://companion.home-assistant.io/docs/notifications/live-activities) notification to mobile devices with an appropriate icon. See the very basic [recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md) for current usage.
 
 If the appliance has a time-remaining and/or progress quantity, these will be passed using the `progress` and `chronometer` values. If these are `unavailable` they're not sent and the simpler style prevails.
 

@@ -8,7 +8,7 @@
 
 LaMetric TIME is a popular IoT display device with [native Home Assistant integration](https://www.home-assistant.io/integrations/lametric/) (auto-discovered via mDNS/SSDP). The HA lametric integration exposes two services: lametric.message (text notifications) and lametric.chart (bar chart data).
 
-While LaMetric can be used with the [Generic Transport](https://supernotify.rhizomatics.org.uk/transports/generic/index.md) for basic text, this integration adds:
+While LaMetric can be used with the [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) for basic text, this integration adds:
 
 - Map SuperNotify's 5-level priority to LaMetric's display parameters (cycles, sound, icon, icon_type) automatically
 - Send bar chart data (lametric.chart) for sensor visualization (temperature, CPU, battery)

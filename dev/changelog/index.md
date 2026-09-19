@@ -26,7 +26,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 - Fix automatically generated validation schema documentation
 - Added automated test for the YAML examples in docs
-- [Roadmap](https://supernotify.rhizomatics.org.uk/developer/design/roadmap/index.md) of technial and features added
+- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/index.md) of technial and features added
 
 ### Technical
 
@@ -45,7 +45,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 - False positive for words ending with `:` fixed
 - Scenario Templates
 - Simplify Text and Strip URLs is now applied *after* any scenario templates update message and title
-- New [voice](https://supernotify.rhizomatics.org.uk/usage/voice/index.md) documentation page added
+- New [voice](https://supernotify.rhizomatics.org.uk/latest/usage/voice/index.md) documentation page added
 
 ## 2.5.2
 
@@ -71,7 +71,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/changelog/roadmap/deliveries_and_transports.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/changelog/roadmap/deliveries_and_transports.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
 - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -92,10 +92,10 @@ There's an explanation of the aims and design of deliveries, transports and targ
 
 ### Targets
 
-There has a wide overhaul of how targets are categorized and tied back to transports - this has simplified the code, and should make it simpler to configure and more predictable in how it will behave. Regression tests and migration code has been used to keep it backward compatible with existing configurations. There's also a new documentation page for [Target Usage](https://supernotify.rhizomatics.org.uk/usage/targets/index.md).
+There has a wide overhaul of how targets are categorized and tied back to transports - this has simplified the code, and should make it simpler to configure and more predictable in how it will behave. Regression tests and migration code has been used to keep it backward compatible with existing configurations. There's also a new documentation page for [Target Usage](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md).
 
 - A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
-- Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](https://supernotify.rhizomatics.org.uk/usage/targets/index.md)
+- Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md)
 - Archive message now has `uncategorized_targets` and `unassigned_targets` to help debugging delivery issues
 - New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
 - A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
@@ -361,7 +361,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](https://supernotify.rhizomatics.org.uk/changelog/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](https://supernotify.rhizomatics.org.uk/latest/changelog/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
 - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
 - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.
@@ -453,7 +453,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 - Data sections can now be filtered in/out to any level of nesting
 - Common use case - trimming out values from Frigate blueprint like `attachment` or `video` that can result in broken thumbnails for Apple notifications
-- [Fix Frigate Apple Push](https://supernotify.rhizomatics.org.uk/recipes/fix_frigate_apple_push/index.md) reciped added.
+- [Fix Frigate Apple Push](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) reciped added.
 
 ## Generic
 
@@ -545,7 +545,7 @@ Includes major fixes and improvements contributed by [@lollox80](https://github.
 ### Delivery Overrides
 
 - Overrides now respect `message` or `title` in the `data` section for channel specific messages
-- New [recipe](https://supernotify.rhizomatics.org.uk/recipes/channel_specific_messages/index.md) to illustrate it
+- New [recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md) to illustrate it
 - Overrides now match against the name of a transport if there's no matching delivery
 - Delivery overrides that have indirect targets like `person` now correctly resolved to email / sms / slack / mobile etc
 - Explicitly enabled deliveries in action call not overridden by scenarios

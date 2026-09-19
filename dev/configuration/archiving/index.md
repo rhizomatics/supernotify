@@ -42,7 +42,7 @@ The options for event policy selection are:
 
 (These are the same options used for `diagnostics`)
 
-See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/recipes/otel_events/index.md) for more.
+See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) for more.
 
 ## Example Notification
 

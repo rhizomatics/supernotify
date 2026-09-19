@@ -25,17 +25,17 @@ Scenarios can override specific delivery configurations, general media configura
   - Notifications that don't match a scenario get dropped
     - Alternatively, a fallback delivery can be selected if every message goes somewhere
   - This is a good option when you're comfortable with the integration and its configuration, and you have noisy notifications, which should be either dropped, or result only in a chime ringing or an Alexa sound playing.
-  - Even if no notification occurs, there can still be an archive notification, to file system or MQTT as a record, for example if you are experimenting with tuning out noise, see [Archive](https://supernotify.rhizomatics.org.uk/configuration/archiving/index.md).
+  - Even if no notification occurs, there can still be an archive notification, to file system or MQTT as a record, for example if you are experimenting with tuning out noise, see [Archive](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md).
 
 ## Conditions
 
 For more on the conditions, see the [Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of notification by the standard Home Assistant module.
 
-Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](https://supernotify.rhizomatics.org.uk/configuration/conditions/#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or even patterns of words in the message or title - see [Content Escalation Recipe](https://supernotify.rhizomatics.org.uk/recipes/content_escalation/index.md) for an example.
+Supernotify also adds more context variables to use in conditions, see the full list on the [Condition Variables](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#condition-variables) section. You can use these to switch on scenarios based on the notification priority, or even patterns of words in the message or title - see [Content Escalation Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) for an example.
 
 Tip
 
-There's a [Scenario Schema](https://supernotify.rhizomatics.org.uk/developer/schemas/Scenario_Definition/index.md) defined for the configuration, and [debugging hints](https://supernotify.rhizomatics.org.uk/configuration/conditions/#debugging-conditions)
+There's a [Scenario Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Scenario_Definition/index.md) defined for the configuration, and [debugging hints](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#debugging-conditions)
 
 ## Examples
 
@@ -81,9 +81,9 @@ Each delivery section within scenario has an `enabled` value, which defaults to 
 - `false` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
 - *Empty* - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied. Especially useful with [Wildcard Deliveries].
 
-If two active scenarios disagree on the same delivery, `false` always wins over any number of scenarios saying `true` - see [When Scenarios Disagree](https://supernotify.rhizomatics.org.uk/usage/notifying/#when-scenarios-disagree) for the full explanation and the one way to override it.
+If two active scenarios disagree on the same delivery, `false` always wins over any number of scenarios saying `true` - see [When Scenarios Disagree](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#when-scenarios-disagree) for the full explanation and the one way to override it.
 
-See the [Seasonal Greetings Recipe](https://supernotify.rhizomatics.org.uk/recipes/seasonal_greetings/index.md) for an example where the null value of `enabled` is useful.
+See the [Seasonal Greetings Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) for an example where the null value of `enabled` is useful.
 
 Lists and single values can also be used, if the only need is to switch on deliveries. These all do the same, so it is kinder on everyone who sometimes gets their YAML styles mixed up.
 

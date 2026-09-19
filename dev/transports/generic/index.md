@@ -40,7 +40,7 @@ Example Action Call
                     channel: 3456
 ```
 
-This includes support for [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/). (Supernotify also offers an [MQTT Transport Adaptor](https://supernotify.rhizomatics.org.uk/transports/mqtt/index.md) for direct flexible access to `mqtt.publish`.)
+This includes support for [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/). (Supernotify also offers an [MQTT Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md) for direct flexible access to `mqtt.publish`.)
 
 ### Selecting Targets
 
@@ -212,7 +212,7 @@ Both forms can be combined freely and nest to any depth.
 
 Tip
 
-If using Generic to trigger bells, sirens or other noises, consider the [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/transports/chime/index.md), which makes that easier, especially if working with a mix of audio devices. It has a similar set of known integrations, geared towards sounds rather than messages.
+If using Generic to trigger bells, sirens or other noises, consider the [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md), which makes that easier, especially if working with a mix of audio devices. It has a similar set of known integrations, geared towards sounds rather than messages.
 
 ### AWS
 

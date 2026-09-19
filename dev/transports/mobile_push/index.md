@@ -57,7 +57,7 @@ If left unset, a notification with `media.camera_entity_id` is grouped under tha
 
 Note
 
-Don't confuse this with [Action Groups](https://supernotify.rhizomatics.org.uk/usage/mobile_actions/#action-groups) - `action_groups:` is Supernotify's own unrelated concept for reusable sets of actionable-notification buttons. The name clash is with the Companion App's own `group` attribute, not with Supernotify's action groups.
+Don't confuse this with [Action Groups](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/#action-groups) - `action_groups:` is Supernotify's own unrelated concept for reusable sets of actionable-notification buttons. The name clash is with the Companion App's own `group` attribute, not with Supernotify's action groups.
 
 ## Default Delivery
 

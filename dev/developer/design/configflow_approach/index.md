@@ -72,7 +72,7 @@ Breakdown:
 ### Third
 
 - Upgrade to Gold level quality.
-- Move Delivery, Transport, Recipient and Camera to ConfigFlow, following the design in [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/developer/design/deliveries_and_transports/index.md).
+- Move Delivery, Transport, Recipient and Camera to ConfigFlow, following the design in [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md).
 - Transport is the primary ConfigFlow object, not Delivery: every auto-configurable Transport is implicitly also a Delivery of the same name (Design Decision 1), so a Transport options page covers the common case without a separate Delivery step.
 - Delivery only needs its own ConfigFlow entry for the advanced case of more than one preset per Transport (e.g. a low-priority and high-priority chime) - Principle #3, Design Decision 2.
 - Prerequisite engine change, ahead of or alongside the UI work rather than part of it: merge the `DELIVERY_SCHEMA` extensions back into `DELIVERY_CONFIG_SCHEMA` (Design Decision 1), so there's a single config shape to expose instead of two.

@@ -1,6 +1,6 @@
 # YAML
 
-By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/getting_started/index.md).
+By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md).
 
 ## Naming the Integration
 

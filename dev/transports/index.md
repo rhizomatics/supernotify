@@ -32,8 +32,8 @@ Transport Adaptors are exposed as `sensor.supernotify_transport_XXXX` entities i
 
 ### Table of Options
 
-All of these are set by passing an `options` block in Delivery config or Transport defaults. See the [Options Reference](https://supernotify.rhizomatics.org.uk/configuration/options/index.md) for the full, generated list of common and transport-specific options, their types, examples and descriptions - and [Default Options](https://supernotify.rhizomatics.org.uk/developer/transports/#default-options) for the actual default value each transport sets.
+All of these are set by passing an `options` block in Delivery config or Transport defaults. See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/configuration/options/index.md) for the full, generated list of common and transport-specific options, their types, examples and descriptions - and [Default Options](https://supernotify.rhizomatics.org.uk/latest/developer/transports/#default-options) for the actual default value each transport sets.
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.
 
-Options typed as [Selection Rules](https://supernotify.rhizomatics.org.uk/configuration/selection_rules/index.md) (e.g. `device_os_select`, `target_select`) share a common flexible syntax - see that page for the full set of forms.
+Options typed as [Selection Rules](https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/index.md) (e.g. `device_os_select`, `target_select`) share a common flexible syntax - see that page for the full set of forms.

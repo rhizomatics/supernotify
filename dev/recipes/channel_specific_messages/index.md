@@ -29,4 +29,4 @@ Example Action Call
 
 ## Variations
 
-- Use `spoken_message` as a top level action attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](https://supernotify.rhizomatics.org.uk/transports/alexa_devices/index.md),[Alexa Media Player](https://supernotify.rhizomatics.org.uk/transports/alexa_media_player/index.md) or [TTS](https://supernotify.rhizomatics.org.uk/transports/tts/index.md) for Android.
+- Use `spoken_message` as a top level action attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md),[Alexa Media Player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) or [TTS](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md) for Android.

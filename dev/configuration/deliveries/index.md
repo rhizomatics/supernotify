@@ -2,13 +2,13 @@
 
 *Delivery* is a pre-set configuration for a specific *Transport* - it controls the configuration and can set values that would otherwise have to be repeated in every notification.
 
-The simplest case though is that you never know or worry about them - if you add an email address as a target for a notification, the email delivery is used, or a phone number for SMS, and if you add a big list of random targets, Supernotify will work out the right delivery for each. See [Targets](https://supernotify.rhizomatics.org.uk/usage/targets/index.md) for more information.
+The simplest case though is that you never know or worry about them - if you add an email address as a target for a notification, the email delivery is used, or a phone number for SMS, and if you add a big list of random targets, Supernotify will work out the right delivery for each. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information.
 
 If you need, Deliveries can be manually selected on a notification, for example sending some to Telegram and others to email, or having a siren fire also for some. They can also be automatically selected using conditions or Scenarios.
 
 ## Standard Delivery
 
-A Delivery gets configured automatically for every usable [transport](https://supernotify.rhizomatics.org.uk/transports/index.md), it will check the underlying integration, like Ntfy or Telegram, has been set up in Home Assistant, and if it needs entities like Media Players, whether these exist.
+A Delivery gets configured automatically for every usable [transport](https://supernotify.rhizomatics.org.uk/latest/transports/index.md), it will check the underlying integration, like Ntfy or Telegram, has been set up in Home Assistant, and if it needs entities like Media Players, whether these exist.
 
 For example, if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) an `email` Delivery will be set up, with the SMTP `action`.
 
@@ -59,13 +59,13 @@ transports:
 - Adapt messaging style to occupancy
 - Reduce notification noise by using sounds, like dings or bells, on chime devices or voice assistants
 
-There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/recipes/index.md) section.
+There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) section.
 
 ## Simplifying Deliveries
 
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
-- Use [Scenarios](https://supernotify.rhizomatics.org.uk/configuration/usage/scenarios.md) to apply common chunks of config
+- Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/usage/scenarios.md) to apply common chunks of config
 - Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, these do the same thing) for every delivery
 - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
@@ -100,7 +100,7 @@ Info
 
 `message` and `title` are the two special cases where the values in the configuration override the values in the Action `data`. For everything else the Action wins.
 
-For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/configuration/usage/scenarios.md).
+For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/usage/scenarios.md).
 
 ## Controlling Targets
 
@@ -118,7 +118,7 @@ Additionally, `target_required` defines if this delivery needs targets to work, 
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
-See [Targets](https://supernotify.rhizomatics.org.uk/usage/targets/index.md) for more info on how to use them.
+See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more info on how to use them.
 
 ## Delivery Inclusion
 
@@ -138,7 +138,7 @@ Info
 
 Info
 
-This is a config-time property of the delivery itself - whether it's a *candidate* for implicit inclusion at all. For the separate, per-notification `delivery_selection` choice (`implicit`/`explicit`/`fixed`) made on an action call, see [Controlling Delivery Selection](https://supernotify.rhizomatics.org.uk/usage/notifying/#controlling-delivery-selection).
+This is a config-time property of the delivery itself - whether it's a *candidate* for implicit inclusion at all. For the separate, per-notification `delivery_selection` choice (`implicit`/`explicit`/`fixed`) made on an action call, see [Controlling Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#controlling-delivery-selection).
 
 ## Entities
 
@@ -158,7 +158,7 @@ transports:
 
 ## Extreme Example
 
-Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](https://supernotify.rhizomatics.org.uk/developer/schemas/Delivery_Definition/index.md) definition.
+Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Definition/index.md) definition.
 
 Complex Example
 

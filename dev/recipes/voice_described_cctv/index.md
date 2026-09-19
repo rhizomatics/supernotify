@@ -65,7 +65,7 @@ This assumes that you have `delivery` configurations for `alexa_announce` and `m
 
 The automation subscribes to the Frigate MQTT topic, ignores certain messages, strips the "MEDIUM RISK" etc preface off the message and derives the notification priority from the risk level assessed by GenAI.
 
-The [mobile push transport adaptor](https://supernotify.rhizomatics.org.uk/transports/mobile_push/index.md) will automatically, for iOS, set the `interruption-level` set to `time-sensitive` for `high` priority notifications, and a `critical` for critical ones. The latter will also have the `critical` sound played at full volume.
+The [mobile push transport adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) will automatically, for iOS, set the `interruption-level` set to `time-sensitive` for `high` priority notifications, and a `critical` for critical ones. The latter will also have the `critical` sound played at full volume.
 
 ```yaml
 automations:
@@ -108,10 +108,10 @@ automations:
 
 - Use a *scenario* in Supernotify to handle messages differently by risk
 - For example dropping the "NO RISK" ones and sending the "CRITICAL RISK" ones out by email and time-sensitive mobile push (
-- The [Mobile Push Transport Adaptor](https://supernotify.rhizomatics.org.uk/transports/mobile_push/index.md) will automatically set the iOS critical or high priority configuration based on message priority)
-- See the [Content Escalation Recipe](https://supernotify.rhizomatics.org.uk/recipes/content_escalation/index.md) for an example of doing this with basic Frigate occupancy events
+- The [Mobile Push Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) will automatically set the iOS critical or high priority configuration based on message priority)
+- See the [Content Escalation Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) for an example of doing this with basic Frigate occupancy events
 - Move a PTZ camera to point at the location mentioned in the GenAI generated notification
-- The [Move a Camera for Snapshot](https://supernotify.rhizomatics.org.uk/recipes/move_a_camera_for_snapshot/index.md) recipe will show you how
+- The [Move a Camera for Snapshot](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) recipe will show you how
 - Tune the context in Frigate to make it more relevant for the notifications
 - Gemini will pick up on things like typical behaviours of the occupants, local crime history, regular visitors
 
