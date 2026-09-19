@@ -232,6 +232,9 @@
     "message_html": {
       "type": "string"
     },
+    "spoken_message": {
+      "type": "string"
+    },
     "action_groups": {
       "type": "array",
       "items": {
