@@ -688,3 +688,30 @@ async def test_notification_accepts_dict_shaped_target_without_crashing() -> Non
 
     assert uut._target is not None
     assert uut._target.person_ids == ["person.alice"]
+
+
+async def test_contents_omits_unpopulated_exposed_fields() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+
+    contents = uut.contents()
+
+    for key in ("message_html", "spoken_message", "extra_data", "actions"):
+        assert key not in contents
+
+
+async def test_contents_places_populated_exposed_fields_by_preferred_order() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx, "testing 123", action_data={"spoken_message": "say this", "message_html": "<b>hi</b>", "colour": "red"}
+    )
+    await uut.initialize()
+
+    keys = list(uut.contents())
+
+    assert keys[keys.index("message") : keys.index("message") + 4] == ["message", "spoken_message", "message_html", "priority"]
+    assert "extra_data" in keys  # populated but not in preferred_order, so still exposed, after the ordered fields
+    assert keys.index("extra_data") > keys.index("priority")

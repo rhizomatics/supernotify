@@ -705,6 +705,8 @@ class Notification(ArchivableObject):
             "outcome",
             "created",
             "message",
+            "spoken_message",
+            "message_html",
             "priority",
             "stats",
             "delivered",
@@ -752,7 +754,7 @@ class Notification(ArchivableObject):
         result.update({
             k: sanitize(raw[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only))
             for k in preferred_order
-            if k in raw
+            if k in raw and (k not in exposed_if_populated or raw[k])
         })
 
         # all the rest not explicitly excluded
@@ -766,8 +768,12 @@ class Notification(ArchivableObject):
             and (not minimal or k not in keys_only)
             and (not minimal or k not in debug_only)
         })
-        # the exposed only if populated fields
-        result.update({k: sanitize(raw[k], minimal=minimal, occupancy_only=True) for k in exposed_if_populated if raw.get(k)})
+        # the exposed only if populated fields not already placed by preferred_order
+        result.update({
+            k: sanitize(raw[k], minimal=minimal, occupancy_only=True)
+            for k in exposed_if_populated
+            if k not in result and raw.get(k)
+        })
         return result
 
     def _delivery_stats(self) -> dict[str, Any]:
