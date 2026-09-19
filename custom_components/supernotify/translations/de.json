@@ -85,7 +85,7 @@
                     "name": "Erneutes Senden erzwingen",
                     "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
                 },
-                "data": {
+                "extra_data": {
                     "name": "Zusätzliche Daten",
                     "description": "Durchgereichte Daten für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
                 }

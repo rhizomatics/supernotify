@@ -21,6 +21,8 @@ from .archive import ARCHIVE_PURGE_MIN_INTERVAL
 from .common import ensure_list
 from .const import (
     ATTR_CUSTOM_TARGET,
+    ATTR_DATA,
+    ATTR_EXTRA_DATA,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
@@ -47,12 +49,46 @@ from .const import (
 )
 from .engine import SupernotifyEngine
 from .model import Target
-from .schema import NOTIFY_ACTION_SCHEMA
+from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def lift_legacy_nested_data(data: dict[str, Any]) -> dict[str, Any]:
+    """Migrate a notify.supernotify-shaped payload sent to supernotify.notify.
+
+    notify.supernotify carries Supernotify's own fields inside the call's `data:`, where
+    supernotify.notify takes them at top level and keeps `data:` for the target service. Renaming
+    the action on an old automation therefore leaves e.g. `message_html` and `priority` stranded
+    in pass-through data. If the nested `data:` holds any Supernotify action field (including a
+    further nested `data:`), treat it as the legacy block: lift Supernotify's fields to top level,
+    keep the rest as pass-through.
+
+    `extra_data`, the preferred home for pass-through data that legitimately reuses Supernotify
+    field names (e.g. a mobile_app push's own `priority`), is never inspected or changed here.
+    """
+    data = dict(data)
+    nested = data.get(ATTR_DATA)
+    if isinstance(nested, dict) and not ACTION_DATA_FIELDS.isdisjoint(nested):
+        _LOGGER.warning(
+            "SUPERNOTIFY supernotify.notify has Supernotify fields (%s) inside `data:`, which looks like an automation "
+            "changed from notify.supernotify. Treating as top-level fields, but move them out of `data:` to silence this, "
+            "or use `extra_data:` if they are meant for the target service",
+            ", ".join(sorted(ACTION_DATA_FIELDS.intersection(nested))),
+        )
+        lifted = {k: v for k, v in nested.items() if k in ACTION_DATA_FIELDS and k != ATTR_DATA}
+        passthrough = {k: v for k, v in nested.items() if k not in ACTION_DATA_FIELDS}
+        passthrough.update(nested.get(ATTR_DATA) or {})
+        # explicit top-level values win, but the schema fills empty defaults (action_groups: [] etc)
+        # for absent ones, so an empty top-level value must not shadow a lifted one
+        data = lifted | {k: v for k, v in data.items() if k != ATTR_DATA and (v or k not in lifted)}
+        if passthrough:
+            data[ATTR_DATA] = passthrough
+    return data
+
 
 ACTION_NAMES: Final[tuple[str, ...]] = (
     "notify",
@@ -98,7 +134,10 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         calling action's Context through to deliveries, same as the SuperNotificationService override
         of _async_notify_message_service does for notify.supernotify/notify.<target>.
         """
-        data = dict(call.data)
+        data = lift_legacy_nested_data(dict(call.data))
+        # extra_data is what Notification knows as `data`, and wins over any same-named key in a legacy `data`
+        if extra_data := data.pop(ATTR_EXTRA_DATA, None):
+            data[ATTR_DATA] = {**(data.get(ATTR_DATA) or {}), **extra_data}
         message = data.pop(CONF_MESSAGE)
         title = data.pop(CONF_TITLE, None)
         target = data.pop(CONF_TARGET, None)

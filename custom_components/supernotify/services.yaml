@@ -94,7 +94,7 @@ notify:
         force_resend:
           selector:
             boolean:
-        data:
+        extra_data:
           selector:
             object:
 enquire_configuration:

@@ -85,7 +85,7 @@
                     "name": "Wymuś ponowne wysłanie",
                     "description": "Wyślij nawet, jeśli wykrywanie duplikatów w innym przypadku wstrzymałoby to powiadomienie."
                 },
-                "data": {
+                "extra_data": {
                     "name": "Dodatkowe dane",
                     "description": "Dane przekazywane dalej dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
                 }

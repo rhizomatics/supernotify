@@ -97,11 +97,10 @@ Then call this action ...
 action: supernotify.notify
 data:
   message: "Test transport nativo LaMetric - Se vedi questo sul display LaMetric, funziona!"
-  data:
-    delivery_selection: fixed
-    delivery:
-      lametric_test:
-        enabled: true
+  delivery_selection: fixed
+  delivery:
+    lametric_test:
+      enabled: true
 ```
 
 And the resulting archived notification looks like:

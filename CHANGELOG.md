@@ -1,5 +1,10 @@
 ## 2.5.4
 
+### Action Data
+The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of handling `data` mappings than the original legacy Notify platform way.
+- In the old notify the top level `data` could hold only `message` and `title` and everything else got pushed down to a second level nested `data`
+- The new action will detect if the old style nested data is used and handle it as if the new set. Its still worth at some point going back over old automations, since two levels of `data` was always confusing.
+- `data` elements to be passed down to other actions, and not for Supernotify itself (other than running templates over them) are now named `extra_data` in line with the UI. The old name works fine, though the contents will get autodetected for old style nested data, whereas `extra_data` will be left alone.
 ### Transport Options
 - Options for transports are now self-describing, so auto generated table of options up to date and more detail
 - `message_html` removed from spoken only envelopes
@@ -7,6 +12,7 @@
 - Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
 ### Documentation
 - Fix automatically generated validation schema documentation
+- Added automated test for the YAML examples in docs
 ### Technical
 - `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 

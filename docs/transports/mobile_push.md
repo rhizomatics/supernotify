@@ -30,24 +30,23 @@ its also possible to directly set them, as in this example:
   - action: supernotify.notify
     data:
       message: Movement at garden gate
-      data:
-        priority: high
-        media:
-          camera_entity_id: camera.porch
-          camera_ptz_preset: garden_gate
-        action_groups:
-          - security_actions
-        delivery:
-          mobile_push:
-            data:
-              tag: "backyard-motion-detected"
-              presentation_options:
-                - alert
-                - badge
-              push:
-                sound:
-                  name: "US-EN-Alexa-Motion-Detected-Generic.wav"
-                  volume: 1.0
+      priority: high
+      media:
+        camera_entity_id: camera.porch
+        camera_ptz_preset: garden_gate
+      action_groups:
+        - security_actions
+      delivery:
+        mobile_push:
+          data:
+            tag: "backyard-motion-detected"
+            presentation_options:
+              - alert
+              - badge
+            push:
+              sound:
+                name: "US-EN-Alexa-Motion-Detected-Generic.wav"
+                volume: 1.0
 ```
 
 !!! info

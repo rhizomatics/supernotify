@@ -108,11 +108,10 @@ action: supernotify.notify
 data:
   message: "Test transport nativo Pushover - Se ricevi con suono magic, funziona!"
   title: "PR Pushover Smoke Test"
-  data:
-    delivery_selection: fixed
-    delivery:
-      pushover_test:
-        enabled: true
+  delivery_selection: fixed
+  delivery:
+    pushover_test:
+      enabled: true
 ```
 
 #### Resulting Notification Archive

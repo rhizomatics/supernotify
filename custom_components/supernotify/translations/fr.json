@@ -85,7 +85,7 @@
                     "name": "Forcer le renvoi",
                     "description": "Envoyer même si la détection des doublons supprimerait autrement cette notification."
                 },
-                "data": {
+                "extra_data": {
                     "name": "Données supplémentaires",
                     "description": "Données transmises pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
                 }

@@ -71,9 +71,11 @@ or use the generic delivery overrides
         message: Somebody has triggered the motion detector at the front porch
         delivery:
           mobile_push:
-              message: Someone at the back door
+              data:
+                message: Someone at the back door
           alexa_devices_announce_all:
-              message: Porch Alert
+              data:
+                message: Porch Alert
 ```
 
 There are also options to combine the title into the message, or drop it out altogether that may work better for you

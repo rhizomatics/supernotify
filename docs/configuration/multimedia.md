@@ -77,20 +77,18 @@ These options can be set in the `delivery` or `transport` configuration, or in t
 ### Example Action
 
 ```yaml
- - action: supernotify.notify
-      data:
-        title: "My Home Notification"
-        message: "Notify with image snapshot taking close-up of vehicle on driveway"
-        delivery:
-            data:
-                media:
-                    camera_entity_id: camera.driveway
-                    camera_ptz_preset: closeup
-                    camera_delay: 10
-                    jpeg_opts:
-                      progressive: true
-                      optimize: true
-                      quality: 50
+ -  action: supernotify.notify
+    data:
+      title: "My Home Notification"
+      message: "Notify with image snapshot taking close-up of vehicle on driveway"
+      media:
+          camera_entity_id: camera.driveway
+          camera_ptz_preset: closeup
+          camera_delay: 10
+          jpeg_opts:
+            progressive: true
+            optimize: true
+            quality: 50
 ```
 
 ## Cameras

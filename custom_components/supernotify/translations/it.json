@@ -85,7 +85,7 @@
                     "name": "Forza reinvio",
                     "description": "Invia anche se il rilevamento dei duplicati sopprimerebbe altrimenti questa notifica."
                 },
-                "data": {
+                "extra_data": {
                     "name": "Dati aggiuntivi",
                     "description": "Dati passanti per trasporti/blueprint che qui si aspettano propri campi, ad es. attributi da un blueprint di notifica Frigate."
                 }

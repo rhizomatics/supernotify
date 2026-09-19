@@ -12,6 +12,7 @@ from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
+from custom_components.supernotify.actions import lift_legacy_nested_data
 from custom_components.supernotify.const import CONF_MEDIA_PATH
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
@@ -399,3 +400,139 @@ async def test_ha_shutdown_unsubscribes_engine_listeners(hass: HomeAssistant) ->
     # idempotent - the test fixture's own teardown calls hass.async_stop(force=True), which
     # fires this same event a second time and must not raise on the already-empty list
     engine.shutdown()
+
+
+async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
+
+
+async def test_legacy_and_new_actions_produce_same_notification(hass: HomeAssistant) -> None:
+    """notify.supernotify carries Supernotify's fields in its `data:` block, supernotify.notify at
+    top level - the same notification sent either way must end up identical, for every field that
+    used to only be exercised with trivial top-level payloads."""
+    entry = await _setup_entry(hass)
+    fields = {"priority": "high", "message_html": "<b>hi</b>", "delivery_selection": "explicit"}
+
+    await hass.services.async_call("notify", "supernotify", {"message": "same", "data": {**fields, "ttl": 5}}, blocking=True)
+    await hass.async_block_till_done()
+    legacy = entry.runtime_data.last_notification
+
+    await hass.services.async_call(DOMAIN, "notify", {"message": "same", **fields, "data": {"ttl": 5}}, blocking=True)
+    await hass.async_block_till_done()
+    new = entry.runtime_data.last_notification
+
+    assert legacy is not None
+    assert new is not None
+    assert new is not legacy
+    for attr in ("priority", "message_html", "delivery_selection", "extra_data"):
+        assert getattr(new, attr) == getattr(legacy, attr), attr
+    assert new.priority == "high"
+    assert new.message_html == "<b>hi</b>"
+    assert new.extra_data == {"ttl": 5}
+
+
+async def test_notify_action_migrates_nested_legacy_data(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Regression: an automation changed from notify.supernotify to supernotify.notify by renaming
+    the action alone leaves priority/message_html inside `data:`, where they were archived as
+    extra_data and ignored by the Notification (priority stayed at its default)."""
+    entry = await _setup_entry(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {"message": "restarted", "data": {"priority": "high", "message_html": "<table/>", "ttl": 5}},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    notification = entry.runtime_data.last_notification
+    assert notification is not None
+    assert notification.priority == "high"
+    assert notification.message_html == "<table/>"
+    assert notification.extra_data == {"ttl": 5}
+    assert "changed from notify.supernotify" in caplog.text
+
+
+async def test_notify_action_migrates_any_nested_supernotify_field(hass: HomeAssistant) -> None:
+    """Any Supernotify action field in nested data triggers the migration, not just distinctive ones -
+    priority alone is enough (it is what the restart recipe's users actually hit)."""
+    entry = await _setup_entry(hass)
+
+    await hass.services.async_call(
+        DOMAIN, "notify", {"message": "plain", "data": {"priority": "high", "ttl": 0}}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    notification = entry.runtime_data.last_notification
+    assert notification is not None
+    assert notification.priority == "high"
+    assert notification.extra_data == {"ttl": 0}
+
+
+async def test_notify_action_extra_data_is_never_migrated(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """extra_data is the escape hatch for target-service data that reuses Supernotify field names
+    (e.g. a mobile_app push's own priority/actions) - passed through untouched, no warning."""
+    entry = await _setup_entry(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {"message": "plain", "extra_data": {"priority": "high", "actions": [{"action": "x"}], "ttl": 0}},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    notification = entry.runtime_data.last_notification
+    assert notification is not None
+    assert notification.priority == "medium"
+    assert notification.extra_data == {"priority": "high", "actions": [{"action": "x"}], "ttl": 0}
+    assert "changed from notify.supernotify" not in caplog.text
+
+
+def test_lift_legacy_nested_data_top_level_wins_and_flattens_inner_data() -> None:
+    lifted = lift_legacy_nested_data({
+        "priority": "low",
+        "action_groups": [],  # schema-filled default must not shadow the lifted value
+        "data": {"priority": "high", "action_groups": ["alarm"], "message_html": "<p/>", "data": {"ttl": 5}, "colour": "red"},
+    })
+    assert lifted == {
+        "priority": "low",
+        "action_groups": ["alarm"],
+        "message_html": "<p/>",
+        "data": {"colour": "red", "ttl": 5},
+    }
+
+
+def test_lift_legacy_nested_data_no_supernotify_fields_untouched() -> None:
+    payload = {"priority": "low", "data": {"ttl": 5, "colour": "red"}}
+    assert lift_legacy_nested_data(payload) == payload
+
+
+def test_lift_legacy_nested_data_two_levels_of_data_is_legacy() -> None:
+    assert lift_legacy_nested_data({"data": {"data": {"ttl": 5}}}) == {"data": {"ttl": 5}}
+
+
+def test_lift_legacy_nested_data_never_touches_extra_data() -> None:
+    payload = {"data": {"colour": "red"}, "extra_data": {"priority": "high", "data": {"ttl": 5}, "message_html": "<p/>"}}
+    assert lift_legacy_nested_data(payload) == payload
+
+
+async def test_notify_action_extra_data_passed_as_data_and_wins(hass: HomeAssistant) -> None:
+    entry = await _setup_entry(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "notify",
+        {"message": "plain", "data": {"colour": "red", "ttl": 1}, "extra_data": {"priority": "high", "ttl": 5}},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    notification = entry.runtime_data.last_notification
+    assert notification is not None
+    assert notification.priority == "medium"
+    assert notification.extra_data == {"colour": "red", "ttl": 5, "priority": "high"}

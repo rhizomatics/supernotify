@@ -155,10 +155,9 @@ action:
               data:
                 title: "Home Security: {{ description }}"
                 message: "WARNING! Night motion in {{ description }}"
-                data:
-                  priority: high
-                  media:
-                    camera_entity_id: !input camera
+                priority: high
+                media:
+                  camera_entity_id: !input camera
 
       - conditions:
           - not:
@@ -178,10 +177,9 @@ action:
               data:
                 title: "Home Security: {{ description }}"
                 message: "WARNING! Motion in {{ description }}"
-                data:
-                  priority: high
-                  media:
-                    camera_entity_id: !input camera
+                priority: high
+                media:
+                  camera_entity_id: !input camera
 
       - conditions:
           and:
@@ -199,9 +197,8 @@ action:
             data:
               title: "Home Security: {{ description }}"
               message: "Warning! Outdoors motion in {{ description }}"
-              data:
-                media:
-                  camera_entity_id: !input camera
+              media:
+                camera_entity_id: !input camera
 
       - conditions:
           and:
@@ -223,9 +220,8 @@ action:
               data:
                 title: "Home Security: {{ description }}"
                 message: "WARNING! Indoors night motion in {{ description }}"
-                data:
-                  media:
-                    camera_entity_id: !input camera
+                media:
+                  camera_entity_id: !input camera
 
       - conditions:
           condition: and
@@ -257,10 +253,9 @@ action:
               data:
                 title: "Home Security: {{ description}}"
                 message: "Night motion while occupied in {{ description }}"
-                data:
-                  priority: low
-                  media:
-                    camera_entity_id: !input camera
+                priority: low
+                media:
+                  camera_entity_id: !input camera
 ```
 
 ### Frigate

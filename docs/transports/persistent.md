@@ -24,10 +24,9 @@ Persistent notification has a Delivery automatically discovered where the integr
       - homeowner@24acaciaavenue.com
     data:
         message: Testing an e-mail that also shows as persistent notification
-        data:
-          delivery:
-            - email
-            - persistent
+        delivery:
+          - email
+          - persistent
 ```
 
 

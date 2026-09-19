@@ -46,6 +46,7 @@ from .const import (
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
     ATTR_EMAIL,
+    ATTR_EXTRA_DATA,
     ATTR_FORCE_RESEND,
     ATTR_JPEG_OPTS,
     ATTR_MEDIA,
@@ -574,6 +575,8 @@ _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,  # allow other data, e.g. the android/ios mobile push
 )
 
+ACTION_DATA_FIELDS: frozenset[str] = frozenset(str(key) for key in _ACTION_DATA_FIELDS_SCHEMA.schema)
+
 ACTION_DATA_SCHEMA = vol.All(
     cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
     _ACTION_DATA_FIELDS_SCHEMA,
@@ -594,6 +597,8 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Required(CONF_MESSAGE): cv.string,
         vol.Optional(CONF_TITLE): cv.string,
         vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+        # pass-through data exempt from the legacy nested-data migration - see actions.py
+        vol.Optional(ATTR_EXTRA_DATA): vol.Any(None, DATA_SCHEMA),
         # the target selector behind CONF_TARGET can only produce entity/device/area/floor/label
         # ids, so custom_target is a free-text escape hatch for targets it can't - e-mail
         # addresses, phone numbers, Slack ids etc. notify.py's action_notify merges

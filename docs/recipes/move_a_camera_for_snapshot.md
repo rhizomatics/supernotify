@@ -46,10 +46,9 @@ cameras:
     data:
         title: 'ALERT: {{ state_attr(motion_sensor,"friendly_name") }}'
         message: Motion at night in {{ state_attr(motion_sensor,"friendly_name")
-        data:
-            media:
-                camera_entity_id: camera.courtyard
-                camera_ptz_preset: "Preset 2"
+        media:
+            camera_entity_id: camera.courtyard
+            camera_ptz_preset: "Preset 2"
 ```
 
 ## Variations

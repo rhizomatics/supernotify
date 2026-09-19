@@ -85,7 +85,7 @@
                     "name": "Opnieuw verzenden forceren",
                     "description": "Verzend zelfs als detectie van duplicaten deze melding anders zou onderdrukken."
                 },
-                "data": {
+                "extra_data": {
                     "name": "Extra gegevens",
                     "description": "Doorgegeven gegevens voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
                 }
