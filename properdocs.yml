@@ -67,6 +67,7 @@ plugins:
   - tags
   - meta-descriptions
   - llmstxt:
+      base_url: https://supernotify.rhizomatics.org.uk/latest/
       markdown_description: >-
         Supernotify is a Home Assistant custom integration for unified notifications: send one
         notification and it is routed to many channels (deliveries) by transport, recipient

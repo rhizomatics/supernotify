@@ -129,6 +129,14 @@ jobs:
             echo "Deploying stable release: $TAG"
             uv run mike deploy --update-aliases "$TAG" latest
             uv run mike set-default latest
+            # mike only publishes these under the version directory, but crawlers and agents look for them at the site root
+            ROOT_FILES="llms.txt llms-full.txt sitemap.xml sitemap.xml.gz robots.txt"
+            ROOT_DIR=$(mktemp -d)
+            git worktree add "$ROOT_DIR" gh-pages
+            for f in $ROOT_FILES; do cp "$ROOT_DIR/$TAG/$f" "$ROOT_DIR/$f"; done
+            git -C "$ROOT_DIR" add $ROOT_FILES
+            git -C "$ROOT_DIR" commit -m "Publish root llms.txt and sitemap for $TAG" || echo "root files unchanged"
+            git worktree remove --force "$ROOT_DIR"
           fi
         else
           echo "Deploying development docs"
