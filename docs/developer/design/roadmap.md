@@ -20,6 +20,10 @@ Switch from `voluptuous` to `probatio`
 
 See [Packages](./packages.md)
 
+### Extended UI Configuration
+
+Second and further phases identified at [ConfigFlow](./configflow_approach.md)
+
 ## Internal Improvements
 
 The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining
@@ -61,3 +65,11 @@ and only affects what the transport sees. Delivery selection by priority, snoozi
 still use the priority of the original call.
 
 The plan is to make this a documented, supported setting, and decide which of those should follow it.
+
+## Completed Roadmap
+
+- [ConfigFlow](./configflow_approach.md)
+  - v2.0.0
+  - Partially completed, basic YAML only
+- [Deliveries and Transports](./deliveries_and_transports.md)
+  - v2.5.0

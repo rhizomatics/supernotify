@@ -16,6 +16,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Documentation
 - Fix automatically generated validation schema documentation
 - Added automated test for the YAML examples in docs
+- [Roadmap](developer/design/roadmap.md) of technial and features added
 ### Technical
 - `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 
