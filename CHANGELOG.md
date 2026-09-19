@@ -1,4 +1,4 @@
-## 2.5.4
+## 2.6.0
 
 ### Action Data
 The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of handling `data` mappings than the original legacy Notify platform way.
