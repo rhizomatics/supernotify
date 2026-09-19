@@ -39,8 +39,7 @@ all reasonable backward compatibility.
   from that data rather than from the notification's own, which needs checking against the top level `media`
   and `actions` used by `supernotify.notify`
 
-The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other
-than `extra_data` should terminate as soon as action handled.
+The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other than `extra_data` should terminate as soon as action handled. This also means finding another home or some other way of separating the data elements picked up by Supernotify transports.
 
 Consider simplifying the `data` section needed for `delivery` definitions and overrides.
 

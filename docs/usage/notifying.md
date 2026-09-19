@@ -296,9 +296,12 @@ it is also possible to simply define everything at the top level `extra_data` se
                   title: HASS
 ```
 
-## Passing Data Directly to the Underlying Integration
+## Extra Data
 
-If you want to pass thru `data` to the notification integrations, this can be done per delivery channel, or as a top level `extra_data` key. Note in this case if there are multiple integrations, all of them will get this data ( other than where Supernotify knows the integration and that they can't handle extra data items).
+The top level `extra_data` can hold anything that isn't a Supernotify action field, and is offered to every delivery. It is used for two things:
+
+- **Values for the underlying integration**, passed straight through. If there are multiple integrations, all of them will get this data ( other than where Supernotify knows the integration and that they can't handle extra data items).
+- **Tuning for Supernotify's own transports**, such as `chime_tune` for the [Chime](../transports/chime.md) transport. Each transport takes out the keys it recognizes, and passes the rest on to the integration.
 
 ```yaml title="Extra Data for Integration"
   - action: supernotify.notify
@@ -309,6 +312,17 @@ If you want to pass thru `data` to the notification integrations, this can be do
         extra_data:
           zify_back_channel: 1041
 
+```
+
+Since `extra_data` goes to every delivery, transport tuning is better defined in the `data` section of the specific delivery, so it only affects that delivery. This can be done in the delivery configuration, or for a single notification in a `delivery` override, as in the `mobile_push` example above.
+
+```yaml title="Transport Tuning in a Delivery"
+supernotify:
+  delivery:
+    xmas_chime:
+      transport: chime
+      data:
+        chime_tune: christmas_05
 ```
 
 # Alternate Notification Action
