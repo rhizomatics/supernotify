@@ -28,6 +28,16 @@ Second and further phases identified at [ConfigFlow](./configflow_approach.md)
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
 
+
+#### Register an LLM API.
+HA's homeassistant.helpers.llm lets an integration register a tool set through async_register_api. A notify tool with delivery, scenario and target parameters would work for Assist conversation agents. It should also be reachable through HA's MCP server. Check the current API before committing to this. It is the only option here that makes Supernotify callable by agents, not just easier to configure.
+
+#### Richer services.yaml descriptions.
+Every field's description, example and selector are what an LLM sees when it discovers actions. Your memory notes already flag dynamic delivery and scenario dropdowns via async_set_service_schema. That would help agents as well, since they would see the real delivery names.
+
+#### Structured errors and diagnostics.
+Config validation errors that name the key and the valid options let an agent self-correct. diagnostics.py helps the same way.
+
 ### Delivery Explanations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement.
