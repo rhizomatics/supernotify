@@ -55,14 +55,14 @@ its also possible to directly set them, as in this example:
 
 ## Notification Grouping
 
-Set `mobile_push_group` in `data:` to visually stack notifications together on the device
+Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device
 (iOS thread-id / Android notification group):
 
 ```yaml
   - action: supernotify.notify
     data:
       message: Someone is at the front door
-      data:
+      extra_data:
         mobile_push_group: security
 ```
 

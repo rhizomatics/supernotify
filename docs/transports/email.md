@@ -32,7 +32,7 @@ configured and no `email` delivery is defined, a `email` delivery is generated a
 
 ## Pre-generated HTML
 
-The `data` section of the notification can have a `message_html` supplied for html that will be used in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the end to include any attached images. The `data` can be configured as part of the fixed configuration, or in the `data` of the action call.
+The notification can have a `message_html` supplied for html that will be used in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the end to include any attached images. It can be set in fixed configuration, in the `data` of a delivery or scenario, or as `message_html` in the action call.
 
 ## HTML Templates
 
@@ -43,10 +43,30 @@ Jinja2 template validation.
 
 ### Configuration
 
-Supernotify ships with a built in template, `default.html.j2` which can be used by using `template: default.html.j2` in the `data` section. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
+Supernotify ships with a built in template, `default.html.j2` which can be used by setting `template: default.html.j2` on the delivery. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
 it into a custom template directory, usually inside Home Assistant's `\config` directory. Templates can live in this directory, or in an `email` subdirectory ( the top-level is for templates that could be used with any transport, and `email` only for this one).
 
 ![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png)
+
+Once a template is in that directory, set it as the `template` of an email delivery, and select that delivery when sending a notification:
+
+```yaml title="Delivery Using a Custom Template"
+supernotify:
+  delivery:
+    back_door_email:
+      transport: email
+      template: back_door.html.j2
+```
+
+```yaml title="Notification Using That Delivery"
+- action: supernotify.notify
+  data:
+    title: Motion at the back door
+    message: Motion has been detected at the back door
+    target:
+      - homeowner@example.com
+    delivery: back_door_email
+```
 
 ### Template Variables
 

@@ -38,4 +38,4 @@ delivery name will be matched against the Transport name if there's no matching 
 
 ## Variations
 
-- Use `spoken_message` as a top level `data` attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](../transports/alexa_devices.md),[Alexa Media Player](../transports/alexa_media_player.md) or [TTS](../transports/tts.md) for Android.
+- Use `spoken_message` as a top level action attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](../transports/alexa_devices.md),[Alexa Media Player](../transports/alexa_media_player.md) or [TTS](../transports/tts.md) for Android.

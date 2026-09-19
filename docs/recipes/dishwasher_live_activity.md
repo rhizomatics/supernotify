@@ -32,7 +32,7 @@ actions:
       delivery:
         - mobile_push
         - alexa_devices_annnounce_all
-      data:
+      extra_data:
         tag: dishwasher
         live_update: true
         notification_icon: mdi:dishwasher
@@ -60,7 +60,7 @@ actions:
           data:
             message: clear_notification
         alexa_devices_announce_all:
-      data:
+      extra_data:
         tag: dishwasher
         live_update: true
         notification_icon: mdi:dishwasher
