@@ -24,6 +24,10 @@ See [Packages](./packages.md)
 
 Second and further phases identified at [ConfigFlow](./configflow_approach.md)
 
+### AI Friendly
+
+Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
+
 ### Delivery Explanations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement.
@@ -50,7 +54,7 @@ all reasonable backward compatibility.
 
 The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other than `extra_data` should terminate as soon as action handled. This also means finding another home or some other way of separating the data elements picked up by Supernotify transports.
 
-Consider simplifying the `data` section needed for `delivery` definitions and overrides.
+Consider simplifying or renaming the `data` section needed for `delivery` definitions and overrides. This could mean that the term `data` only ever appears at the top of an action notification, as Home Assistant standard, and nowhere else.
 
 Overhaul the Envelope's use of pop and get to pick out data elements such as priority. For something like priority the order should be:
 
@@ -66,6 +70,8 @@ Overhaul the Envelope's use of pop and get to pick out data elements such as pri
 The `priority` on the action data would always win, _unless_ the action data also had a delivery override with a different priority. (Question - scenarios, deliveries etc should be able to override too, so does a delivery level config priority win over a notification level action priority? Probably should do so, and use delivery overrides in action to resolve that if the default behaviour doesn't suit)
 
 #### Transport Usage of Extra Data
+
+Its possible these are really the same thing as options, but lacking the documentation and passed a different way. Review and see if they can brought into the options setup, so there's automatic document generation for them, and they can be passed in `options` rather than `data`. Check if that completely removes Supernotify usage of `extra_data` and also review use of `options` from actions rather than static config.
 
 (Analyzed for `v2.6.0-beta1`)
 
