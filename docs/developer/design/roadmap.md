@@ -69,7 +69,7 @@ The plan is to make this a documented, supported setting, and decide which of th
 ## Completed Roadmap
 
 - [ConfigFlow](./configflow_approach.md)
-  - v2.0.0
-  - Partially completed, basic YAML only
+   - v2.0.0
+   - Partially completed, basic YAML only
 - [Deliveries and Transports](./deliveries_and_transports.md)
-  - v2.5.0
+   - v2.5.0
