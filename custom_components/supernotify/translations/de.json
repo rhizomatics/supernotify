@@ -89,6 +89,14 @@
                     "name": "Erneutes Senden erzwingen",
                     "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
                 },
+                "data": {
+                    "name": "Daten (veraltet)",
+                    "description": "Älterer Name für Zusätzliche Daten, beibehalten, damit bestehende Automatisierungen im visuellen Editor weiterhin angezeigt werden. Für neue Automatisierungen „Zusätzliche Daten“ verwenden."
+                },
+                "timestamp": {
+                    "name": "Zeitstempel-Format",
+                    "description": "Hängt das aktuelle Datum/die aktuelle Uhrzeit in eckigen Klammern an die Nachricht an, im Python-strftime-Format, z. B. %H:%M oder %Y-%m-%d %H:%M."
+                },
                 "extra_data": {
                     "name": "Zusätzliche Daten",
                     "description": "Durchgereichte Daten und Transport-Feinabstimmung für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."

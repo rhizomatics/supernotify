@@ -89,6 +89,14 @@
                     "name": "Forza reinvio",
                     "description": "Invia anche se il rilevamento dei duplicati sopprimerebbe altrimenti questa notifica."
                 },
+                "data": {
+                    "name": "Dati (legacy)",
+                    "description": "Vecchio nome di Dati aggiuntivi, mantenuto perché le automazioni esistenti continuino a comparire nell'editor visuale. Per le nuove automazioni usa Dati aggiuntivi."
+                },
+                "timestamp": {
+                    "name": "Formato del timestamp",
+                    "description": "Aggiunge al messaggio la data/ora corrente, tra parentesi quadre, usando un formato strftime di Python come %H:%M o %Y-%m-%d %H:%M."
+                },
                 "extra_data": {
                     "name": "Dati aggiuntivi",
                     "description": "Dati inoltrati così come sono e regolazioni specifiche del transport, per transport o blueprint che richiedono campi propri, es. gli attributi del blueprint di notifica di Frigate."

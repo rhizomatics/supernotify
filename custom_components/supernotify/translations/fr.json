@@ -89,6 +89,14 @@
                     "name": "Forcer le renvoi",
                     "description": "Envoyer même si la détection des doublons supprimerait autrement cette notification."
                 },
+                "data": {
+                    "name": "Données (ancien)",
+                    "description": "Ancien nom de Données supplémentaires, conservé pour que les automatisations existantes s'affichent toujours dans l'éditeur visuel. Utilisez Données supplémentaires pour les nouvelles automatisations."
+                },
+                "timestamp": {
+                    "name": "Format de l'horodatage",
+                    "description": "Ajoute la date/heure actuelle au message, entre crochets, avec un format strftime de Python tel que %H:%M ou %Y-%m-%d %H:%M."
+                },
                 "extra_data": {
                     "name": "Données supplémentaires",
                     "description": "Données transmises et réglages de transport pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."

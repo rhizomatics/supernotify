@@ -98,6 +98,12 @@ notify:
         force_resend:
           selector:
             boolean:
+        data:
+          selector:
+            object:
+        timestamp:
+          selector:
+            text:
         extra_data:
           selector:
             object:

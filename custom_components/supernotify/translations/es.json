@@ -89,6 +89,14 @@
                     "name": "Forzar reenvío",
                     "description": "Envía incluso si la detección de duplicados suprimiría esta notificación."
                 },
+                "data": {
+                    "name": "Datos (heredado)",
+                    "description": "Nombre anterior de Datos adicionales, conservado para que las automatizaciones existentes se sigan mostrando en el editor visual. Usa Datos adicionales en las nuevas automatizaciones."
+                },
+                "timestamp": {
+                    "name": "Formato de marca de tiempo",
+                    "description": "Añade la fecha/hora actual al mensaje, entre corchetes, con un formato strftime de Python como %H:%M o %Y-%m-%d %H:%M."
+                },
                 "extra_data": {
                     "name": "Datos adicionales",
                     "description": "Datos de paso y ajustes del transporte para transportes/blueprints que esperan sus propios campos aquí, por ejemplo, atributos de un blueprint de notificación de Frigate."

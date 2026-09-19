@@ -89,6 +89,14 @@
                     "name": "Forçar reenvio",
                     "description": "Envia mesmo que a deteção de duplicados suprimisse esta notificação."
                 },
+                "data": {
+                    "name": "Dados (legado)",
+                    "description": "Nome anterior de Dados extra, mantido para que as automatizações existentes continuem a aparecer no editor visual. Use Dados extra nas novas automatizações."
+                },
+                "timestamp": {
+                    "name": "Formato da marca temporal",
+                    "description": "Acrescenta a data/hora atual à mensagem, entre parênteses retos, com um formato strftime do Python como %H:%M ou %Y-%m-%d %H:%M."
+                },
                 "extra_data": {
                     "name": "Dados extra",
                     "description": "Dados de passagem e ajustes do transporte para transportes/blueprints que esperam os seus próprios campos aqui, por exemplo, atributos de um blueprint de notificação Frigate."
