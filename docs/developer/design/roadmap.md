@@ -24,6 +24,15 @@ See [Packages](./packages.md)
 
 Second and further phases identified at [ConfigFlow](./configflow_approach.md)
 
+### Delivery Explanations
+
+Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement.
+
+### Inclusion Default
+
+An advanced and very usable mode is to have all deliveries selected only explicitly/by scenario so nothing is notified unless asked for, rather than by
+default everything. This works well to minimize noise. However it means every delivery has to have inclusion set to `scenario` or `explicit` manually - make an option in configflow UI to set a global default.
+
 ## Internal Improvements
 
 The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining
@@ -70,6 +79,11 @@ The `priority` on the action data would always win, _unless_ the action data als
 | MQTT and persistent        | `topic`, `payload`, `notification_id`                                                                                                    |                                                                                                           |
 | TTS                        | `language`, `cache`, `options`, `media_stream`                                                                                           | Fields of `tts.speak` selected by the transport, so borderline pass-through                               |
 | Handled by the envelope    | `priority`, `message_html`, `spoken_message`, `force_resend`, `timestamp`                                                                | Taken out before the transports see the data, never passed to integrations                                |
+
+#### Other clean-up
+
+Fields like `message_html`,`spoken_message`,`priority` are treated inconsistently across notification and envelope. some belong to both objects as attributes, some to just one.
+
 
 ### Per-delivery priority
 
