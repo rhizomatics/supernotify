@@ -84,7 +84,7 @@ scenarios:
 Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable
 the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
 
-The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`, see [Scenario Sensors](#scenario-sensors).
+The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 
 
 ## Overriding Delivery Selection and Configuration
@@ -216,10 +216,10 @@ scenarios:
 
 ## Scenario Sensors
 
-!!! warning "Deprecated"
-    The scenario `binary_sensor` is kept only for backward compatibility, and will be removed in a future version. It is read-only: writing its state no longer enables or disables the scenario, use the scenario `switch` for that. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
+Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its
+conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
 
-Each scenario is exposed as `switch.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
+This is separate from whether the scenario is enabled, which is what the scenario's `switch` shows and controls. A scenario that only applies on a couple of days a year has a switch that stays `on` all year, and a `binary_sensor` that is `on` only on those days. The `binary_sensor` is read-only: writing its state does not enable or disable the scenario.
 
 ### Live Scenarios
 

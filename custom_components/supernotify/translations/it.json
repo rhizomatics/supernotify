@@ -339,9 +339,9 @@
             "title": "Il supporto per Python 3.13 terminerà a breve",
             "description": "Questa istanza di Home Assistant sta eseguendo Python {python_version}. Supernotify interromperà il supporto per Python 3.13 (e per le versioni di Home Assistant precedenti alla 2026.3.0) al rilascio di Home Assistant 2026.10 - da quel momento, questa istanza non potrà più installare aggiornamenti di Supernotify finché l'ambiente Python sottostante non verrà aggiornato a Python 3.14 o successivo."
         },
-        "binary_sensor_deprecated": {
-            "title": "I binary_sensor di scenario e recipient verranno rimossi",
-            "description": "Ogni scenario e ogni recipient ha ora uno switch (ad esempio `switch.supernotify_scenario_XXXX` e `switch.supernotify_recipient_XXXX`) che lo abilita e lo disabilita. Le entità `binary_sensor` di scenario e recipient sono da ora in sola lettura, indicano soltanto se le condizioni di uno scenario sono soddisfatte in questo momento o se un recipient è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di una di queste entità `binary_sensor` non abilita né disabilita più lo scenario o il recipient, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch."
+        "recipient_binary_sensor_deprecated": {
+            "title": "I binary_sensor dei recipient verranno rimossi",
+            "description": "Ogni recipient ha ora uno switch (ad esempio `switch.supernotify_recipient_XXXX`) che lo abilita e lo disabilita. Le entità `binary_sensor` dei recipient sono da ora in sola lettura, riflettono soltanto se il recipient è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di un `binary_sensor` di un recipient non abilita né disabilita più il recipient, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch del recipient."
         }
     },
     "exceptions": {

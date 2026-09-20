@@ -339,9 +339,9 @@
             "title": "Python 3.13 のサポートは間もなく終了します",
             "description": "この Home Assistant インスタンスは Python {python_version} で実行されています。Home Assistant 2026.10 のリリースに伴い、Supernotify は Python 3.13（および 2026.3.0 より前の Home Assistant バージョン）のサポートを終了します。それ以降、基盤となる Python 環境を Python 3.14 以降にアップグレードしない限り、このインスタンスは Supernotify の今後のアップデートをインストールできなくなります。"
         },
-        "binary_sensor_deprecated": {
-            "title": "シナリオと受信者のバイナリセンサーは削除されます",
-            "description": "各シナリオと受信者に、有効・無効を切り替えるスイッチ（例: `switch.supernotify_scenario_XXXX` と `switch.supernotify_recipient_XXXX`）が追加されました。シナリオと受信者の `binary_sensor` エンティティは今後は読み取り専用となり、シナリオの条件が現在満たされているか、または受信者が有効かどうかを示すだけで、将来のバージョンで削除されます。これらの `binary_sensor` の状態を書き込んでも、シナリオや受信者は有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、スイッチを使うように変更してください。"
+        "recipient_binary_sensor_deprecated": {
+            "title": "受信者のバイナリセンサーは削除されます",
+            "description": "各受信者に、有効・無効を切り替えるスイッチ（例: `switch.supernotify_recipient_XXXX`）が追加されました。受信者の `binary_sensor` エンティティは今後は読み取り専用となり、受信者が有効かどうかを反映するだけで、将来のバージョンで削除されます。受信者の `binary_sensor` の状態を書き込んでも、受信者は有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、受信者のスイッチを使うように変更してください。"
         }
     },
     "exceptions": {

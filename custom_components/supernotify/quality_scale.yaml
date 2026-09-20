@@ -358,8 +358,8 @@ rules:
       Partial infrastructure exists: hass_api.py creates repair issues but all
       but one are is_fixable=False, i.e. informational rather than the
       guided/actionable fix flows this rule expects. repairs.py also raises one
-      persistent "binary_sensor_deprecated" issue, never re-raised once
-      dismissed, for the deprecated scenario and recipient binary_sensors.
+      persistent "recipient_binary_sensor_deprecated" issue, never re-raised once
+      dismissed, for the deprecated recipient binary_sensors.
 
   stale-devices:
     status: exempt

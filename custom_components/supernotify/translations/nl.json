@@ -339,9 +339,9 @@
             "title": "Ondersteuning voor Python 3.13 stopt binnenkort",
             "description": "Deze Home Assistant-installatie draait op Python {python_version}. Supernotify laat de ondersteuning voor Python 3.13 (en Home Assistant-versies ouder dan 2026.3.0) vallen zodra Home Assistant 2026.10 wordt uitgebracht - daarna kan deze installatie geen verdere Supernotify-updates meer installeren totdat de onderliggende Python-omgeving is bijgewerkt naar Python 3.14 of hoger."
         },
-        "binary_sensor_deprecated": {
-            "title": "Binary-sensoren voor scenario's en ontvangers worden verwijderd",
-            "description": "Elk scenario en elke ontvanger heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_scenario_XXXX` en `switch.supernotify_recipient_XXXX`) waarmee het of hij wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van scenario's en ontvangers zijn vanaf nu alleen-lezen, geven alleen aan of de voorwaarden van een scenario op dit moment vervuld zijn of dat een ontvanger is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een van deze `binary_sensor`-entiteiten schakelt het scenario of de ontvanger niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar wordt gebruikt."
+        "recipient_binary_sensor_deprecated": {
+            "title": "Binary-sensoren voor ontvangers worden verwijderd",
+            "description": "Elke ontvanger heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_recipient_XXXX`) waarmee hij wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van ontvangers zijn vanaf nu alleen-lezen, geven alleen weer of de ontvanger is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een `binary_sensor` van een ontvanger schakelt de ontvanger niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar van de ontvanger wordt gebruikt."
         }
     },
     "exceptions": {

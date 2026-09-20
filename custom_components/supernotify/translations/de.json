@@ -339,9 +339,9 @@
             "title": "Python 3.13 Unterstützung endet bald",
             "description": "Diese Home-Assistant-Instanz läuft unter Python {python_version}. Supernotify stellt die Unterstützung für Python 3.13 (und Home-Assistant-Versionen vor 2026.3.0) ein, sobald Home Assistant 2026.10 veröffentlicht wird - danach können auf dieser Instanz keine weiteren Supernotify-Updates mehr installiert werden, bis die zugrunde liegende Python-Umgebung auf Python 3.14 oder höher aktualisiert wird."
         },
-        "binary_sensor_deprecated": {
-            "title": "Binärsensoren für Szenarien und Empfänger werden entfernt",
-            "description": "Jedes Szenario und jeder Empfänger hat jetzt einen Schalter (zum Beispiel `switch.supernotify_scenario_XXXX` und `switch.supernotify_recipient_XXXX`), der ihn aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Szenarien und Empfänger sind ab sofort schreibgeschützt, melden nur noch, ob die Bedingungen eines Szenarios aktuell erfüllt sind oder ob ein Empfänger aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands einer dieser `binary_sensor`-Entitäten aktiviert oder deaktiviert das Szenario oder den Empfänger nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Schalter verwenden."
+        "recipient_binary_sensor_deprecated": {
+            "title": "Binärsensoren für Empfänger werden entfernt",
+            "description": "Jeder Empfänger hat jetzt einen Schalter (zum Beispiel `switch.supernotify_recipient_XXXX`), der ihn aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Empfänger sind ab sofort schreibgeschützt, spiegeln nur noch wider, ob der Empfänger aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands eines Empfänger-`binary_sensor` aktiviert oder deaktiviert den Empfänger nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Empfänger-Schalter verwenden."
         }
     },
     "exceptions": {

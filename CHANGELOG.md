@@ -6,7 +6,8 @@
 - Sent/failure notification counters are now real Home Assistant `sensor` entities
 - New real entities are grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
 - Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
-- Both `scenario` and `recipient` still have read-only `binary_sensor` entities for backward compatibility, but they are not created at all on a new install, or for a scenario or recipient added to an existing one. They will be removed in a future version, and a repair is raised once if you have them enabled
+- The scenario `binary_sensor` stays, read-only, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled
+- The recipient `binary_sensor` only mirrors the recipient switch, so is deprecated and will be removed in a future version. It is read-only, and not created on a new install, or for a recipient added to an existing one. A repair is raised once if you have it enabled
 - Delivery and transport `binary_sensor`s are otherwise unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175) - but now belong to the config entry
 
 ### Other
@@ -15,7 +16,7 @@
 ### Scenario and Recipient Switches
 
 - Each scenario and recipient now has a switch, `switch.supernotify_scenario_<name>` or `switch.supernotify_recipient_<name>`, to enable and disable it
-- **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag. Both are deprecated and will be removed in a future version - a repair is raised once to say so. Any automation or script that switched a scenario or recipient by setting its `binary_sensor` should use the switch instead
+- **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it, use the switch instead. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag
 - Scenario and recipient entity names are translated, and put the type first so each sorts together in the entity list: `Scenario <name>` and `Recipient <name>` for the `binary_sensor`s, and `Scenario <name> Enabled` and `Recipient <name> Enabled` for the switches
 
 ## 2.6.0

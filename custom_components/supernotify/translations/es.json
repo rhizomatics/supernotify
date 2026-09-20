@@ -339,9 +339,9 @@
             "title": "El soporte de Python 3.13 finaliza pronto",
             "description": "Esta instancia de Home Assistant está ejecutando Python {python_version}. Supernotify eliminará el soporte para Python 3.13 (y versiones de Home Assistant anteriores a 2026.3.0) cuando se publique Home Assistant 2026.10 - a partir de entonces, esta instancia no podrá instalar más actualizaciones de Supernotify hasta que el entorno de Python subyacente se actualice a Python 3.14 o posterior."
         },
-        "binary_sensor_deprecated": {
-            "title": "Los sensores binarios de escenarios y destinatarios serán eliminados",
-            "description": "Cada escenario y destinatario tiene ahora un interruptor (por ejemplo `switch.supernotify_scenario_XXXX` y `switch.supernotify_recipient_XXXX`) que lo habilita y deshabilita. Las entidades `binary_sensor` de escenarios y destinatarios son de solo lectura a partir de ahora, solo informan de si las condiciones de un escenario se cumplen en este momento o de si un destinatario está habilitado, y se eliminarán en una versión futura. Escribir el estado de una de estas entidades `binary_sensor` ya no habilita ni deshabilita el escenario o el destinatario, así que cambia cualquier automatización, script o panel que lo haga, o que dependa de estas entidades, para que use el interruptor."
+        "recipient_binary_sensor_deprecated": {
+            "title": "Los sensores binarios de destinatarios serán eliminados",
+            "description": "Cada destinatario tiene ahora un interruptor (por ejemplo `switch.supernotify_recipient_XXXX`) que lo habilita y deshabilita. Las entidades `binary_sensor` de los destinatarios son de solo lectura a partir de ahora, solo reflejan si el destinatario está habilitado, y se eliminarán en una versión futura. Escribir el estado de un `binary_sensor` de destinatario ya no habilita ni deshabilita al destinatario, así que cambia cualquier automatización, script o panel que lo haga, o que dependa de estas entidades, para que use el interruptor del destinatario."
         }
     },
     "exceptions": {
