@@ -88,6 +88,44 @@ async def test_scenario_binary_sensor_reflects_true_condition_and_scenario_stays
     assert state.state == STATE_ON
 
 
+def _scenarios_with_and_without_state() -> dict:
+    config = _stateful_scenario_config("on")
+    config["scenarios"]["manual"] = {"delivery": {"testing": {}}}
+    config["scenarios"]["quiet"] = {
+        "expose_state": False,
+        "conditions": config["scenarios"]["sera"]["conditions"],
+        "delivery": {"testing": {}},
+    }
+    return config
+
+
+async def test_scenario_binary_sensor_is_only_published_for_scenarios_with_conditions(hass: HomeAssistant) -> None:
+    await _setup_supernotify(hass, _scenarios_with_and_without_state())
+    registry = er.async_get(hass)
+
+    # nothing to evaluate, or opted out - neither is meaningfully on or off, so there's no entity
+    for name in ("manual", "quiet"):
+        assert registry.async_get(f"binary_sensor.supernotify_scenario_{name}") is None
+        assert hass.states.get(f"binary_sensor.supernotify_scenario_{name}") is None
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera").state in (STATE_ON, STATE_OFF)  # type: ignore[union-attr]
+    # while every scenario keeps its switch
+    for name in ("manual", "quiet", "sera"):
+        assert hass.states.get(f"switch.supernotify_scenario_{name}").state == STATE_ON  # type: ignore[union-attr]
+
+
+async def test_stale_binary_sensor_for_a_scenario_without_state_is_removed(hass: HomeAssistant) -> None:
+    # an install from before, which published an unknown state for every scenario
+    _preexisting_binary_sensors(hass, "scenario_manual", "scenario_sera")
+    hass.states.async_set("binary_sensor.supernotify_scenario_manual", "unknown")
+    await _setup_supernotify(hass, _scenarios_with_and_without_state())
+
+    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_manual") is None
+    assert hass.states.get("binary_sensor.supernotify_scenario_manual") is None
+    # one with conditions is kept, along with its history
+    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_sera") is not None
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera") is not None
+
+
 async def test_scenario_survives_config_entry_reload(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.dnd_test", "off")
     await _setup_supernotify(hass, _stateful_scenario_config("on"))

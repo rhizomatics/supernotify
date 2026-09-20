@@ -126,6 +126,13 @@ class ScenarioRegistry:
         if entity is not None:
             entity.async_write_ha_state()
 
+    def scenario_has_state(self, scenario: Scenario) -> bool:
+        """Whether a scenario has any state to report - it must have conditions to evaluate, and
+        not have opted out with expose_state. The same cases _scenario_state() treats as
+        STATE_UNKNOWN. A scenario without conditional logic is never on or off in any meaningful
+        way, so gets no binary_sensor."""
+        return scenario.expose_state and bool(scenario.conditions_config)
+
     def scenario_is_on(self, scenario: Scenario) -> bool | None:
         """`is_on` for SupernotifyScenarioBinarySensor - None maps to STATE_UNKNOWN."""
         state = self._scenario_state(scenario, self._batch_cvars)

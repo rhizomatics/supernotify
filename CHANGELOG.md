@@ -6,7 +6,8 @@
 - Sent/failure notification counters are now real Home Assistant `sensor` entities
 - New real entities are grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
 - Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
-- The scenario `binary_sensor` stays, read-only, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled
+- The scenario `binary_sensor` stays, read-only, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled.
+  - It is only created for a scenario that has conditions to evaluate, since one without has no on/off state to show, and any existing one that could only ever have been `unknown` is removed
 - The recipient `binary_sensor` only mirrors the recipient switch, so is deprecated and will be removed in a future version. It is read-only, and not created on a new install, or for a recipient added to an existing one. A repair is raised once if you have it enabled
 - Delivery and transport `binary_sensor`s are otherwise unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175) - but now belong to the config entry
 

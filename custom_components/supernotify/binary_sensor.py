@@ -13,7 +13,7 @@ entity_registry entry with a hand-written state and no Entity object behind it.
 Both are read-only: enabling and disabling a scenario or recipient is done by its switch entity
 (switch.py). The scenario binary_sensor is the only place a scenario's state - whether its
 conditions currently hold, as opposed to whether it is enabled - is exposed, so is kept for
-everyone. The recipient binary_sensor only mirrors the switch, so is deprecated, and only kept
+everyone, for any scenario that has conditions to evaluate. The recipient binary_sensor only mirrors the switch, so is deprecated, and only kept
 for an existing install that already has it, never created for a new one. A one-off repair tells
 anyone with it enabled that it will be removed in a future version (see repairs.py).
 
@@ -35,6 +35,7 @@ same issue.
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -45,6 +46,8 @@ from . import DOMAIN
 from .common import sanitize
 from .hass_api import ha_device_info
 from .repairs import async_create_recipient_binary_sensor_deprecated_issue
+
+_LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -61,21 +64,27 @@ async def async_setup_entry(
     entry: SupernotifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Expose each scenario's state, and keep the deprecated recipient binary_sensors for an
-    install that has them."""
+    """Expose the state of each scenario that has conditions to evaluate, and keep the deprecated
+    recipient binary_sensors for an install that has them."""
     service = entry.runtime_data
     device_info = ha_device_info(entry.entry_id)
 
-    entities: list[BinarySensorEntity] = [
-        SupernotifyScenarioBinarySensor(scenario, service.context.scenario_registry, device_info)
-        for scenario in service.context.scenario_registry.scenarios.values()
-    ]
+    entity_registry = er.async_get(hass)
+    entities: list[BinarySensorEntity] = []
+    for scenario in service.context.scenario_registry.scenarios.values():
+        if service.context.scenario_registry.scenario_has_state(scenario):
+            entities.append(SupernotifyScenarioBinarySensor(scenario, service.context.scenario_registry, device_info))
+        elif entity_id := entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, f"scenario_{scenario.name}"):
+            # an install from before this had one, that could only ever have been unknown - remove
+            # it rather than leave it as an entity that's no longer provided
+            _LOGGER.info("SUPERNOTIFY Removing binary_sensor for scenario %s, it has no state to show", scenario.name)
+            entity_registry.async_remove(entity_id)
+            hass.states.async_remove(entity_id)
 
     # The recipient binary_sensor is deprecated, so only kept for an existing install that already
     # has it, and never published for anyone new - which includes a recipient added to an
     # existing install. Whether an entity exists is known from its registry entry, which is only
     # created by adding the entity.
-    entity_registry = er.async_get(hass)
     in_use = False
     for recipient in service.context.people_registry.people.values():
         recipient_sensor = SupernotifyRecipientBinarySensor(recipient, service.context.people_registry, device_info)
@@ -93,7 +102,8 @@ async def async_setup_entry(
 
 class SupernotifyScenarioBinarySensor(BinarySensorEntity):
     """A scenario's evaluated condition state - whether it currently applies, as opposed to
-    whether it is enabled, which is the scenario switch.
+    whether it is enabled, which is the scenario switch. Only created for a scenario that has
+    conditions to evaluate (see ScenarioRegistry.scenario_has_state()).
 
     Read-only: writing its state does not enable or disable the scenario.
 
