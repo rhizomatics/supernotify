@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Scénario"
+                "name": "Scénario {scenario}"
+            },
+            "recipient": {
+                "name": "Destinataire {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Scénario activé"
+                "name": "Scénario {scenario} activé"
             },
             "recipient_enabled": {
-                "name": "{recipient} Destinataire activé"
+                "name": "Destinataire {recipient} activé"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "Les capteurs binaires de scénario et de destinataire vont être supprimés",
-            "description": "Chaque scénario et chaque destinataire dispose désormais d'un interrupteur (par exemple `switch.supernotify_scenario_<name>` et `switch.supernotify_recipient_<name>`) qui l'active et le désactive. Les entités `binary_sensor` des scénarios et des destinataires sont désormais en lecture seule, indiquent uniquement si les conditions d'un scénario sont actuellement remplies ou si un destinataire est activé, et seront supprimées dans une version future. Écrire l'état de l'une de ces entités `binary_sensor` n'active ni ne désactive plus le scénario ou le destinataire : modifiez toute automatisation, script ou tableau de bord qui le fait, ou qui s'appuie autrement sur ces entités, pour qu'il utilise l'interrupteur."
+            "description": "Chaque scénario et chaque destinataire dispose désormais d'un interrupteur (par exemple `switch.supernotify_scenario_XXXX` et `switch.supernotify_recipient_XXXX`) qui l'active et le désactive. Les entités `binary_sensor` des scénarios et des destinataires sont désormais en lecture seule, indiquent uniquement si les conditions d'un scénario sont actuellement remplies ou si un destinataire est activé, et seront supprimées dans une version future. Écrire l'état de l'une de ces entités `binary_sensor` n'active ni ne désactive plus le scénario ou le destinataire : modifiez toute automatisation, script ou tableau de bord qui le fait, ou qui s'appuie autrement sur ces entités, pour qu'il utilise l'interrupteur."
         }
     },
     "exceptions": {

@@ -11,9 +11,9 @@ BinarySensorEntity objects grouped under a single SuperNotify device, instead of
 entity_registry entry with a hand-written state and no Entity object behind it.
 
 The scenario and recipient binary_sensors are deprecated, kept only for backward compatibility,
-and read-only: enabling and disabling a scenario or recipient is done by its switch entity
-(switch.py). A one-off repair tells users they will be removed in a future version (see
-repairs.py).
+only created for an existing install that already has them, and read-only: enabling and disabling a scenario or recipient is done by its switch entity
+(switch.py). A one-off repair tells anyone with them enabled that they will be removed in a
+future version (see repairs.py).
 
 entity_id and unique_id are chosen deliberately to line up with the pre-existing raw-write
 scheme (binary_sensor.supernotify_scenario_<name> / _recipient_<name>, unique_id
@@ -36,7 +36,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
+from homeassistant.helpers import entity_registry as er
 
 from . import DOMAIN
 from .common import sanitize
@@ -58,20 +59,36 @@ async def async_setup_entry(
     entry: SupernotifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Expose each scenario and recipient as its own binary_sensor entity."""
+    """Keep the deprecated scenario and recipient binary_sensors, for an install that has them."""
     service = entry.runtime_data
     device_info = ha_device_info(entry.entry_id)
 
-    entities: list[BinarySensorEntity] = [
+    candidates: list[BinarySensorEntity] = [
         SupernotifyScenarioBinarySensor(scenario, service.context.scenario_registry, device_info)
         for scenario in service.context.scenario_registry.scenarios.values()
     ]
-    entities.extend(
+    candidates.extend(
         SupernotifyRecipientBinarySensor(recipient, service.context.people_registry, device_info)
         for recipient in service.context.people_registry.people.values()
     )
+
+    # These are deprecated, so only kept for an existing install that already has them, and never
+    # published for anyone new - which includes a scenario or recipient added to an existing
+    # install. Whether an entity exists is known from its registry entry, which is only created
+    # by adding the entity.
+    entity_registry = er.async_get(hass)
+    entities: list[BinarySensorEntity] = []
+    in_use = False
+    for entity in candidates:
+        entity_id = entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, entity.unique_id or "")
+        registry_entry = entity_registry.async_get(entity_id) if entity_id else None
+        if registry_entry is not None:
+            entities.append(entity)
+            # only worth a warning if somebody could still be relying on it
+            in_use = in_use or registry_entry.disabled_by is None
+
     async_add_entities(entities)
-    if entities:
+    if in_use:
         async_create_binary_sensor_deprecated_issue(hass)
 
 
@@ -127,8 +144,6 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
     # here - it means online/offline device reachability, not "enabled for delivery", and made
     # a disabled recipient show as "Disconnected" in the dashboard. Icon (see icons.json) and
     # translation_key below already carry the meaning without borrowing a misleading one.
-    # Icon only (see icons.json) - _attr_name is set per-instance below from user config, so
-    # translation_key never drives the displayed name, only the icon lookup.
     _attr_translation_key = "recipient"
     _attr_should_poll = False
 
@@ -137,7 +152,7 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
         self._registry = registry
         self._attr_unique_id = f"recipient_{recipient.name}"
         self._attr_device_info = device_info
-        self._attr_name = recipient.alias or recipient.name
+        self._attr_translation_placeholders = {"recipient": recipient.alias or recipient.name}
         # Setting entity_id directly is not preferred Home Assistant practice - see
         # SupernotifyScenarioSwitch for why it's done anyway, and why it can't change the
         # entity_id of an existing install.

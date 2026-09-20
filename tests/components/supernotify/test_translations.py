@@ -52,6 +52,7 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("fr", "services.notify.fields.message.name"),  # "Message" is also the French word for message
     ("fr", "services.notify.fields.actions.name"),  # "Actions" is also the French word for actions
     ("it", "entity.binary_sensor.scenario.name"),  # "scenario" stays English in Italian, see CLAUDE.md
+    ("it", "entity.binary_sensor.recipient.name"),  # "recipient" stays English in Italian, see CLAUDE.md
     ("nl", "entity.binary_sensor.scenario.name"),  # "Scenario" is also the Dutch word for scenario
 }
 
@@ -93,3 +94,11 @@ def test_all_translations_match_strings():
         extra = actual_keys - expected_keys
         assert not missing, f"{path.name} is missing keys: {sorted(missing)}"
         assert not extra, f"{path.name} has unexpected keys: {sorted(extra)}"
+
+
+def test_no_angle_brackets_in_translations():
+    """Home Assistant's frontend parses translation strings as ICU messages, where `<name>` is
+    an HTML-style tag, so a bare `<name>` placeholder in text shows as an UNCLOSED_TAG error"""
+    for path in [STRINGS_FILE, *TRANSLATIONS_DIR.glob("*.json")]:
+        offending = [key for key, value in _leaf_values(json.loads(path.read_text())).items() if "<" in value]
+        assert not offending, f"{path.name} has angle brackets in: {sorted(offending)}"

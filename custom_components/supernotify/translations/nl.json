@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Scenario"
+                "name": "Scenario {scenario}"
+            },
+            "recipient": {
+                "name": "Ontvanger {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Scenario ingeschakeld"
+                "name": "Scenario {scenario} ingeschakeld"
             },
             "recipient_enabled": {
-                "name": "{recipient} Ontvanger ingeschakeld"
+                "name": "Ontvanger {recipient} ingeschakeld"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "Binary-sensoren voor scenario's en ontvangers worden verwijderd",
-            "description": "Elk scenario en elke ontvanger heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_scenario_<name>` en `switch.supernotify_recipient_<name>`) waarmee het of hij wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van scenario's en ontvangers zijn vanaf nu alleen-lezen, geven alleen aan of de voorwaarden van een scenario op dit moment vervuld zijn of dat een ontvanger is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een van deze `binary_sensor`-entiteiten schakelt het scenario of de ontvanger niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar wordt gebruikt."
+            "description": "Elk scenario en elke ontvanger heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_scenario_XXXX` en `switch.supernotify_recipient_XXXX`) waarmee het of hij wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van scenario's en ontvangers zijn vanaf nu alleen-lezen, geven alleen aan of de voorwaarden van een scenario op dit moment vervuld zijn of dat een ontvanger is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een van deze `binary_sensor`-entiteiten schakelt het scenario of de ontvanger niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar wordt gebruikt."
         }
     },
     "exceptions": {

@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Escenario"
+                "name": "Escenario {scenario}"
+            },
+            "recipient": {
+                "name": "Destinatario {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Escenario habilitado"
+                "name": "Escenario {scenario} habilitado"
             },
             "recipient_enabled": {
-                "name": "{recipient} Destinatario habilitado"
+                "name": "Destinatario {recipient} habilitado"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "Los sensores binarios de escenarios y destinatarios serán eliminados",
-            "description": "Cada escenario y destinatario tiene ahora un interruptor (por ejemplo `switch.supernotify_scenario_<name>` y `switch.supernotify_recipient_<name>`) que lo habilita y deshabilita. Las entidades `binary_sensor` de escenarios y destinatarios son de solo lectura a partir de ahora, solo informan de si las condiciones de un escenario se cumplen en este momento o de si un destinatario está habilitado, y se eliminarán en una versión futura. Escribir el estado de una de estas entidades `binary_sensor` ya no habilita ni deshabilita el escenario o el destinatario, así que cambia cualquier automatización, script o panel que lo haga, o que dependa de estas entidades, para que use el interruptor."
+            "description": "Cada escenario y destinatario tiene ahora un interruptor (por ejemplo `switch.supernotify_scenario_XXXX` y `switch.supernotify_recipient_XXXX`) que lo habilita y deshabilita. Las entidades `binary_sensor` de escenarios y destinatarios son de solo lectura a partir de ahora, solo informan de si las condiciones de un escenario se cumplen en este momento o de si un destinatario está habilitado, y se eliminarán en una versión futura. Escribir el estado de una de estas entidades `binary_sensor` ya no habilita ni deshabilita el escenario o el destinatario, así que cambia cualquier automatización, script o panel que lo haga, o que dependa de estas entidades, para que use el interruptor."
         }
     },
     "exceptions": {

@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Szenario"
+                "name": "Szenario {scenario}"
+            },
+            "recipient": {
+                "name": "Empfänger {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Szenario aktiviert"
+                "name": "Szenario {scenario} aktiviert"
             },
             "recipient_enabled": {
-                "name": "{recipient} Empfänger aktiviert"
+                "name": "Empfänger {recipient} aktiviert"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "Binärsensoren für Szenarien und Empfänger werden entfernt",
-            "description": "Jedes Szenario und jeder Empfänger hat jetzt einen Schalter (zum Beispiel `switch.supernotify_scenario_<name>` und `switch.supernotify_recipient_<name>`), der ihn aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Szenarien und Empfänger sind ab sofort schreibgeschützt, melden nur noch, ob die Bedingungen eines Szenarios aktuell erfüllt sind oder ob ein Empfänger aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands einer dieser `binary_sensor`-Entitäten aktiviert oder deaktiviert das Szenario oder den Empfänger nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Schalter verwenden."
+            "description": "Jedes Szenario und jeder Empfänger hat jetzt einen Schalter (zum Beispiel `switch.supernotify_scenario_XXXX` und `switch.supernotify_recipient_XXXX`), der ihn aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Szenarien und Empfänger sind ab sofort schreibgeschützt, melden nur noch, ob die Bedingungen eines Szenarios aktuell erfüllt sind oder ob ein Empfänger aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands einer dieser `binary_sensor`-Entitäten aktiviert oder deaktiviert das Szenario oder den Empfänger nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Schalter verwenden."
         }
     },
     "exceptions": {

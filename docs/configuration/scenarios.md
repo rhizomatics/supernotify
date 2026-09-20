@@ -217,7 +217,7 @@ scenarios:
 ## Scenario Sensors
 
 !!! warning "Deprecated"
-    The scenario `binary_sensor` is kept only for backward compatibility, and will be removed in a future version. It is read-only: writing its state no longer enables or disables the scenario, use the scenario `switch` for that. A repair is raised once in Home Assistant to say so.
+    The scenario `binary_sensor` is kept only for backward compatibility, and will be removed in a future version. It is read-only: writing its state no longer enables or disables the scenario, use the scenario `switch` for that. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
 
 Each scenario is exposed as `switch.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
 

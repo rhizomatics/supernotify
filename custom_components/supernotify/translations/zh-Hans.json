@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} 场景"
+                "name": "场景 {scenario}"
+            },
+            "recipient": {
+                "name": "接收人 {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} 场景 已启用"
+                "name": "场景 {scenario} 已启用"
             },
             "recipient_enabled": {
-                "name": "{recipient} 接收人 已启用"
+                "name": "接收人 {recipient} 已启用"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "场景和接收人的二进制传感器将被移除",
-            "description": "每个场景和接收人现在都有一个开关（例如 `switch.supernotify_scenario_<name>` 和 `switch.supernotify_recipient_<name>`）用于启用和停用它。场景和接收人的 `binary_sensor` 实体从现在起为只读，仅报告场景条件当前是否满足或接收人是否已启用，并将在未来版本中移除。写入这些 `binary_sensor` 实体的状态不再会启用或停用场景或接收人，因此请将任何这样做、或以其他方式依赖这些实体的自动化、脚本或仪表板，改为使用开关。"
+            "description": "每个场景和接收人现在都有一个开关（例如 `switch.supernotify_scenario_XXXX` 和 `switch.supernotify_recipient_XXXX`）用于启用和停用它。场景和接收人的 `binary_sensor` 实体从现在起为只读，仅报告场景条件当前是否满足或接收人是否已启用，并将在未来版本中移除。写入这些 `binary_sensor` 实体的状态不再会启用或停用场景或接收人，因此请将任何这样做、或以其他方式依赖这些实体的自动化、脚本或仪表板，改为使用开关。"
         }
     },
     "exceptions": {

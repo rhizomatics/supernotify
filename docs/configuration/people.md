@@ -103,7 +103,7 @@ target list with email addresses, notify entities, or direct mobile actions ).
 Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
 
 !!! warning "Deprecated"
-    The recipient `binary_sensor.supernotify_recipient_XXXXX` is kept only for backward compatibility, and will be removed in a future version. It is read-only, mirroring the switch: writing its state no longer enables or disables the recipient. A repair is raised once in Home Assistant to say so.
+    The recipient `binary_sensor.supernotify_recipient_XXXXX` is kept only for backward compatibility, and will be removed in a future version. It is read-only, mirroring the switch: writing its state no longer enables or disables the recipient. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
 
 This can be handy if someone should be temporarily switched off for notifications, or you want your own
 automation to determine which people get notified when.

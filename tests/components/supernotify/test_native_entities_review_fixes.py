@@ -59,10 +59,19 @@ def _stateful_scenario_config(condition_state: str) -> dict:
     }
 
 
+def _preexisting_binary_sensors(hass: HomeAssistant, *unique_ids: str) -> None:
+    """Register binary_sensors as an existing install already has them - enabled, from before
+    they were deprecated - since a brand new install creates them disabled"""
+    registry = er.async_get(hass)
+    for unique_id in unique_ids:
+        registry.async_get_or_create("binary_sensor", DOMAIN, unique_id, suggested_object_id=f"supernotify_{unique_id}")
+
+
 # --- Scenario: binary_sensor reports conditions, switch controls enabled --------------------
 
 
 async def test_scenario_binary_sensor_reflects_false_condition_and_scenario_stays_enabled(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
     hass.states.async_set("binary_sensor.dnd_test", "off")
     engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
     assert engine.context.scenario_registry.scenarios["sera"].enabled is True
@@ -72,6 +81,7 @@ async def test_scenario_binary_sensor_reflects_false_condition_and_scenario_stay
 
 
 async def test_scenario_binary_sensor_reflects_true_condition_and_scenario_stays_enabled(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
     hass.states.async_set("binary_sensor.dnd_test", "on")
     engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
     assert engine.context.scenario_registry.scenarios["sera"].enabled is True
@@ -94,6 +104,7 @@ async def test_scenario_survives_config_entry_reload(hass: HomeAssistant) -> Non
 
 
 async def test_scenario_switch_enables_and_disables_scenario(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
     hass.states.async_set("binary_sensor.dnd_test", "on")
     engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
     scenario = engine.context.scenario_registry.scenarios["sera"]
@@ -116,6 +127,7 @@ async def test_scenario_switch_enables_and_disables_scenario(hass: HomeAssistant
 
 
 async def test_scenario_switch_exposes_scenario_attributes(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
     await _setup_supernotify(hass, _stateful_scenario_config("on"))
     switch = hass.states.get("switch.supernotify_scenario_sera")
     assert switch is not None
@@ -140,6 +152,7 @@ async def test_writing_scenario_binary_sensor_state_no_longer_controls_scenario(
 
 
 async def test_scenario_entities_have_config_entry_device_and_names(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
     await _setup_supernotify(hass, _stateful_scenario_config("on"))
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     registry = er.async_get(hass)
@@ -153,11 +166,12 @@ async def test_scenario_entities_have_config_entry_device_and_names(hass: HomeAs
 
     binary = hass.states.get("binary_sensor.supernotify_scenario_sera")
     assert binary is not None
-    assert binary.name == "SuperNotify Evening mode Scenario"
-    assert hass.states.get("switch.supernotify_scenario_sera").name == "SuperNotify Evening mode Scenario Enabled"  # type: ignore[union-attr]
+    assert binary.name == "SuperNotify Scenario Evening mode"
+    assert hass.states.get("switch.supernotify_scenario_sera").name == "SuperNotify Scenario Evening mode Enabled"  # type: ignore[union-attr]
 
 
 async def test_scenario_binary_sensor_deprecation_repair_is_raised_once(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
     await _setup_supernotify(hass, _stateful_scenario_config("on"))
     issues = ir.async_get(hass)
     issue = issues.async_get_issue(DOMAIN, BINARY_SENSOR_DEPRECATED_ISSUE_ID)
@@ -174,6 +188,54 @@ async def test_scenario_binary_sensor_deprecation_repair_is_raised_once(hass: Ho
     issue = issues.async_get_issue(DOMAIN, BINARY_SENSOR_DEPRECATED_ISSUE_ID)
     assert issue is not None
     assert issue.dismissed_version is not None
+
+
+async def test_scenario_and_recipient_binary_sensors_are_not_published_on_a_new_install(hass: HomeAssistant) -> None:
+    hass.states.async_set("person.joe", "home")
+    config = _recipient_config()
+    config["scenarios"] = _stateful_scenario_config("on")["scenarios"]
+    await _setup_supernotify(hass, config)
+    registry = er.async_get(hass)
+
+    for entity_id in ("binary_sensor.supernotify_scenario_sera", "binary_sensor.supernotify_recipient_joe"):
+        assert registry.async_get(entity_id) is None
+        assert hass.states.get(entity_id) is None
+    # the switches that replace them are unaffected
+    assert hass.states.get("switch.supernotify_scenario_sera").state == STATE_ON  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_recipient_joe").state == STATE_ON  # type: ignore[union-attr]
+
+
+async def test_binary_sensor_is_not_added_for_a_scenario_new_to_an_existing_install(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
+    config = _stateful_scenario_config("on")
+    config["scenarios"]["later"] = {"conditions": config["scenarios"]["sera"]["conditions"], "delivery": {"testing": {}}}
+    await _setup_supernotify(hass, config)
+
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera") is not None
+    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_later") is None
+    assert hass.states.get("switch.supernotify_scenario_later") is not None
+
+
+async def test_no_binary_sensor_repair_on_a_new_install(hass: HomeAssistant) -> None:
+    hass.states.async_set("person.joe", "home")
+    await _setup_supernotify(hass, _recipient_config())
+    assert ir.async_get(hass).async_get_issue(DOMAIN, BINARY_SENSOR_DEPRECATED_ISSUE_ID) is None
+
+
+async def test_existing_install_keeps_its_binary_sensors_enabled(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
+    await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    reg_entry = er.async_get(hass).async_get("binary_sensor.supernotify_scenario_sera")
+    assert reg_entry is not None
+    assert reg_entry.disabled_by is None
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera") is not None
+
+
+async def test_no_binary_sensor_repair_if_the_user_disabled_them(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_sera")
+    er.async_get(hass).async_update_entity("binary_sensor.supernotify_scenario_sera", disabled_by=er.RegistryEntryDisabler.USER)
+    await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    assert ir.async_get(hass).async_get_issue(DOMAIN, BINARY_SENSOR_DEPRECATED_ISSUE_ID) is None
 
 
 async def test_no_binary_sensor_repair_without_scenarios_or_recipients(hass: HomeAssistant) -> None:
@@ -194,6 +256,7 @@ def _recipient_config() -> dict:
 
 
 async def test_recipient_switch_enables_and_disables_recipient(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "recipient_joe")
     hass.states.async_set("person.joe", "home")
     engine = await _setup_supernotify(hass, _recipient_config())
     recipient = engine.context.people_registry.people["person.joe"]
@@ -240,6 +303,7 @@ async def test_writing_recipient_binary_sensor_state_no_longer_controls_recipien
 
 
 async def test_recipient_entities_have_config_entry_device_and_names(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "recipient_joe")
     hass.states.async_set("person.joe", "home")
     await _setup_supernotify(hass, _recipient_config())
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -252,10 +316,12 @@ async def test_recipient_entities_have_config_entry_device_and_names(hass: HomeA
         assert reg_entry.device_id is not None
         assert reg_entry.unique_id == "recipient_joe"
 
-    assert hass.states.get("switch.supernotify_recipient_joe").name == "SuperNotify Joe Bloggs Recipient Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_recipient_joe").name == "SuperNotify Recipient Joe Bloggs Enabled"  # type: ignore[union-attr]
+    assert hass.states.get("binary_sensor.supernotify_recipient_joe").name == "SuperNotify Recipient Joe Bloggs"  # type: ignore[union-attr]
 
 
 async def test_binary_sensor_repair_is_raised_for_recipients_alone(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "recipient_joe")
     hass.states.async_set("person.joe", "home")
     await _setup_supernotify(hass, _recipient_config())
     assert ir.async_get(hass).async_get_issue(DOMAIN, BINARY_SENSOR_DEPRECATED_ISSUE_ID) is not None

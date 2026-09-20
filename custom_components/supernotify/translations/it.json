@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Scenario"
+                "name": "Scenario {scenario}"
+            },
+            "recipient": {
+                "name": "Recipient {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Scenario abilitato"
+                "name": "Scenario {scenario} abilitato"
             },
             "recipient_enabled": {
-                "name": "{recipient} Recipient abilitato"
+                "name": "Recipient {recipient} abilitato"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "I binary_sensor di scenario e recipient verranno rimossi",
-            "description": "Ogni scenario e ogni recipient ha ora uno switch (ad esempio `switch.supernotify_scenario_<name>` e `switch.supernotify_recipient_<name>`) che lo abilita e lo disabilita. Le entità `binary_sensor` di scenario e recipient sono da ora in sola lettura, indicano soltanto se le condizioni di uno scenario sono soddisfatte in questo momento o se un recipient è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di una di queste entità `binary_sensor` non abilita né disabilita più lo scenario o il recipient, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch."
+            "description": "Ogni scenario e ogni recipient ha ora uno switch (ad esempio `switch.supernotify_scenario_XXXX` e `switch.supernotify_recipient_XXXX`) che lo abilita e lo disabilita. Le entità `binary_sensor` di scenario e recipient sono da ora in sola lettura, indicano soltanto se le condizioni di uno scenario sono soddisfatte in questo momento o se un recipient è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di una di queste entità `binary_sensor` non abilita né disabilita più lo scenario o il recipient, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch."
         }
     },
     "exceptions": {

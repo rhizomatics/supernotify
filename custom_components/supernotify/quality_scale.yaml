@@ -324,11 +324,11 @@ rules:
   entity-translations:
     status: todo
     comment: |
-      Partial: the two counter sensors, the scenario binary_sensors, and the
-      scenario and recipient switches have translated names via strings.json's
+      Partial: the two counter sensors, and the scenario and recipient
+      binary_sensors and switches, have translated names via strings.json's
       "entity" section and _attr_translation_key (the scenario or recipient name
-      being a translation placeholder). The deprecated recipient binary_sensors
-      intentionally keep their per-instance _attr_name.
+      being a translation placeholder). The type comes first in each name, so
+      scenarios and recipients each sort together in the entity list.
       Delivery/transport entities not yet reviewed.
 
   exception-translations:
@@ -341,8 +341,7 @@ rules:
     comment: |
       Partial: icons.json now covers the scenario and recipient switches, the scenario/
       recipient binary_sensors and the two counter sensors via
-      _attr_translation_key (independent of the per-instance _attr_name on
-      the recipient binary_sensor - see entity-translations).
+      _attr_translation_key.
       Delivery/transport entities (still raw hass_api.expose_entity() writes)
       not yet reviewed; no state/range-dependent icons identified so far.
 

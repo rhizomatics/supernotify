@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Scenariusz"
+                "name": "Scenariusz {scenario}"
+            },
+            "recipient": {
+                "name": "Odbiorca {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Scenariusz włączony"
+                "name": "Scenariusz {scenario} włączony"
             },
             "recipient_enabled": {
-                "name": "{recipient} Odbiorca włączony"
+                "name": "Odbiorca {recipient} włączony"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "Czujniki binarne scenariuszy i odbiorców zostaną usunięte",
-            "description": "Każdy scenariusz i każdy odbiorca ma teraz przełącznik (na przykład `switch.supernotify_scenario_<name>` i `switch.supernotify_recipient_<name>`), który go włącza i wyłącza. Encje `binary_sensor` scenariuszy i odbiorców są odtąd tylko do odczytu, informują jedynie, czy warunki scenariusza są w tej chwili spełnione lub czy odbiorca jest włączony, i zostaną usunięte w przyszłej wersji. Zapisanie stanu jednej z tych encji `binary_sensor` nie włącza ani nie wyłącza już scenariusza ani odbiorcy, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika."
+            "description": "Każdy scenariusz i każdy odbiorca ma teraz przełącznik (na przykład `switch.supernotify_scenario_XXXX` i `switch.supernotify_recipient_XXXX`), który go włącza i wyłącza. Encje `binary_sensor` scenariuszy i odbiorców są odtąd tylko do odczytu, informują jedynie, czy warunki scenariusza są w tej chwili spełnione lub czy odbiorca jest włączony, i zostaną usunięte w przyszłej wersji. Zapisanie stanu jednej z tych encji `binary_sensor` nie włącza ani nie wyłącza już scenariusza ani odbiorcy, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika."
         }
     },
     "exceptions": {

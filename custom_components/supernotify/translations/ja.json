@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} シナリオ"
+                "name": "シナリオ {scenario}"
+            },
+            "recipient": {
+                "name": "受信者 {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} シナリオ 有効"
+                "name": "シナリオ {scenario} 有効"
             },
             "recipient_enabled": {
-                "name": "{recipient} 受信者 有効"
+                "name": "受信者 {recipient} 有効"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "シナリオと受信者のバイナリセンサーは削除されます",
-            "description": "各シナリオと受信者に、有効・無効を切り替えるスイッチ（例: `switch.supernotify_scenario_<name>` と `switch.supernotify_recipient_<name>`）が追加されました。シナリオと受信者の `binary_sensor` エンティティは今後は読み取り専用となり、シナリオの条件が現在満たされているか、または受信者が有効かどうかを示すだけで、将来のバージョンで削除されます。これらの `binary_sensor` の状態を書き込んでも、シナリオや受信者は有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、スイッチを使うように変更してください。"
+            "description": "各シナリオと受信者に、有効・無効を切り替えるスイッチ（例: `switch.supernotify_scenario_XXXX` と `switch.supernotify_recipient_XXXX`）が追加されました。シナリオと受信者の `binary_sensor` エンティティは今後は読み取り専用となり、シナリオの条件が現在満たされているか、または受信者が有効かどうかを示すだけで、将来のバージョンで削除されます。これらの `binary_sensor` の状態を書き込んでも、シナリオや受信者は有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、スイッチを使うように変更してください。"
         }
     },
     "exceptions": {

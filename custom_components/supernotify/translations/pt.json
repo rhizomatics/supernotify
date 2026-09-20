@@ -3,7 +3,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "{scenario} Cenário"
+                "name": "Cenário {scenario}"
+            },
+            "recipient": {
+                "name": "Destinatário {recipient}"
             }
         },
         "sensor": {
@@ -16,10 +19,10 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "{scenario} Cenário ativado"
+                "name": "Cenário {scenario} ativado"
             },
             "recipient_enabled": {
-                "name": "{recipient} Destinatário ativado"
+                "name": "Destinatário {recipient} ativado"
             }
         }
     },
@@ -338,7 +341,7 @@
         },
         "binary_sensor_deprecated": {
             "title": "Os sensores binários de cenário e destinatário serão removidos",
-            "description": "Cada cenário e destinatário tem agora um interruptor (por exemplo `switch.supernotify_scenario_<name>` e `switch.supernotify_recipient_<name>`) que o ativa e desativa. As entidades `binary_sensor` dos cenários e destinatários passam a ser só de leitura, apenas indicam se as condições de um cenário estão atualmente cumpridas ou se um destinatário está ativado, e serão removidas numa versão futura. Escrever o estado de uma destas entidades `binary_sensor` deixa de ativar ou desativar o cenário ou o destinatário, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor."
+            "description": "Cada cenário e destinatário tem agora um interruptor (por exemplo `switch.supernotify_scenario_XXXX` e `switch.supernotify_recipient_XXXX`) que o ativa e desativa. As entidades `binary_sensor` dos cenários e destinatários passam a ser só de leitura, apenas indicam se as condições de um cenário estão atualmente cumpridas ou se um destinatário está ativado, e serão removidas numa versão futura. Escrever o estado de uma destas entidades `binary_sensor` deixa de ativar ou desativar o cenário ou o destinatário, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor."
         }
     },
     "exceptions": {
