@@ -104,10 +104,7 @@ Fields like `message_html`,`spoken_message`,`priority` are treated inconsistentl
 
 ### Per-delivery priority
 
-Setting `priority` in a delivery, target or scenario `data` block changes the priority of just that delivery, for
-example to downgrade one channel while the rest stay at the call's priority. It works, but is not documented,
-and only affects what the transport sees. Delivery selection by priority, snoozing and scenario conditions
-still use the priority of the original call.
+Setting `priority` in a delivery, target or scenario `data` block changes the priority of just that delivery, for example to downgrade one channel while the rest stay at the call's priority. It works, but is not documented, and only affects what the transport sees. Delivery selection by priority, snoozing and scenario conditions still use the priority of the original call.
 
 The plan is to make this a documented, supported setting, and decide which of those should follow it.
 
