@@ -206,12 +206,12 @@ scenarios:
               - "{{'BIRD IDENTIFIED' in notification_message|upper}}"
               - "{{'UNKNOWN BIRD' in notification_message|upper}}"
       delivery:
-        - apple_push
+        - mobile_push
     unknown_birds:
       alias: Don't send out any notifications if the bird can't be identified
       conditions: "{{'UNKNOWN BIRD' in notification_message|upper}}"
       delivery:
-        apple_push:
+        mobile_push:
           enabled: false
         plain_email:
           enabled: false

@@ -47,6 +47,8 @@ Better explain in the archived message, the basis on which any single delivery w
 An advanced and very usable mode is to have all deliveries selected only explicitly/by scenario so nothing is notified unless asked for, rather than by
 default everything. This works well to minimize noise. However it means every delivery has to have inclusion set to `scenario` or `explicit` manually - make an option in configflow UI to set a global default.
 
+Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a useful delivery mode which is effectively target driven - only consider the transport if there's a target that needs it. On other hand deliveries like Persistence that only make sense if explicit.
+
 ## Internal Improvements
 
 The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining

@@ -34,7 +34,7 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
           action: notify.4g_modem
           target: "+4394889348934"
           selection: scenario
-        apple_push:
+        mobile_push:
           transport: mobile_push
           target: mobile_app_iphone
         """,
@@ -63,8 +63,8 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == []
-    assert list(uut.selected_deliveries) == ["apple_push"]
-    assert cast("Envelope", uut.deliveries["apple_push"][EnvelopeOutcome.SUCCESS][0]).priority == "medium"  # type: ignore
+    assert list(uut.selected_deliveries) == ["mobile_push"]
+    assert cast("Envelope", uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS][0]).priority == "medium"  # type: ignore
 
     uut = Notification(ctx, "person was detected at back door", action_data={"priority": "high"})
     await uut.initialize()
@@ -72,7 +72,7 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     assert list(uut.enabled_scenarios.keys()) == ["high_alert"]
     # the scenario's wildcard `.*` delivery override also sweeps in "persistent", an
     # explicit-selection-only auto-configured delivery that otherwise wouldn't fire
-    assert list(uut.selected_deliveries) == unordered("plain_email", "apple_push", "sms", "persistent")
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile_push", "sms", "persistent")
     assert cast("Envelope", uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0]).priority == "critical"  # type: ignore
 
 

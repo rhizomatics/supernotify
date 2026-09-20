@@ -54,6 +54,7 @@ from .const import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CAMERA_PTZ_PRESET,
     ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
     ATTR_MOBILE_APP_ID,
@@ -421,6 +422,7 @@ MEDIA_SCHEMA = vol.Schema({
     # URL fragments allowed
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
     vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
+    vol.Optional(ATTR_MEDIA_SNAPSHOT_PATH): cv.path,
     vol.Optional(ATTR_JPEG_OPTS): dict,
     vol.Optional(ATTR_PNG_OPTS): dict,
 })

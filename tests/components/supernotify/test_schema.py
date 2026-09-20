@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from custom_components.supernotify.const import (
     ATTR_EMAIL,
+    ATTR_MEDIA,
+    ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_SCENARIOS_CONSTRAIN,
     CONF_DATA,
     CONF_DELIVERY_DEFAULTS,
@@ -43,3 +45,13 @@ def test_notify_action_schema_allows_null_in_nested_data() -> None:
         CONF_DATA: {"delivery": ["plain_email"], ATTR_SCENARIOS_CONSTRAIN: None},
     })
     assert validated[CONF_DATA][ATTR_SCENARIOS_CONSTRAIN] is None
+
+
+def test_notify_action_schema_accepts_media_snapshot_image_path() -> None:
+    """Regression test: snapshot_image_path is documented and handled by media_grab, but was
+    missing from MEDIA_SCHEMA so validation rejected it as an extra key."""
+    validated = NOTIFY_ACTION_SCHEMA({
+        "message": "hello",
+        ATTR_MEDIA: {ATTR_MEDIA_SNAPSHOT_PATH: "/config/media/supernotify/image/shot.jpg"},
+    })
+    assert validated[ATTR_MEDIA][ATTR_MEDIA_SNAPSHOT_PATH] == "/config/media/supernotify/image/shot.jpg"
