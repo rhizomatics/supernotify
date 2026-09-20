@@ -12,18 +12,6 @@
     ]
   },
   {
-    "version": "v2.6.0-beta1",
-    "title": "v2.6.0-beta1",
-    "aliases": [
-      "beta"
-    ]
-  },
-  {
-    "version": "v2.5.4-beta1",
-    "title": "v2.5.4-beta1",
-    "aliases": []
-  },
-  {
     "version": "v2.5.3",
     "title": "v2.5.3",
     "aliases": []
@@ -41,11 +29,6 @@
   {
     "version": "v2.5.0",
     "title": "v2.5.0",
-    "aliases": []
-  },
-  {
-    "version": "v2.5.0-beta1",
-    "title": "v2.5.0-beta1",
     "aliases": []
   },
   {
