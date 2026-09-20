@@ -30,7 +30,7 @@ scenarios:
               state:
               - armed_night
         delivery:
-            - apple_push
+            - mobile_push
             - alexa_announce
             - plain_email
             - chimes

@@ -45,7 +45,7 @@ This can be switched on or off for any delivery:
 
 ```yaml
 delivery:
-  apple_push:
+  mobile_push:
     transport: mobile_push
     options:
       simplify_text: false

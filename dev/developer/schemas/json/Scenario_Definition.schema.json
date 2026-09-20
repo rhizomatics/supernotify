@@ -45,6 +45,9 @@
         "snapshot_url": {
           "type": "string"
         },
+        "snapshot_image_path": {
+          "type": "string"
+        },
         "jpeg_opts": {
           "type": "object",
           "additionalProperties": true

@@ -981,7 +981,7 @@ This can be switched on or off for any delivery:
 
 ```yaml
 delivery:
-  apple_push:
+  mobile_push:
     transport: mobile_push
     options:
       simplify_text: false
@@ -1169,7 +1169,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
       "scenario_enable_deliveries": [
         "plain_email",
         "alexa_announce",
-        "apple_push",
+        "mobile_push",
         "high_chime_alert"
       ],
       "default_enable_deliveries": [],
@@ -1274,7 +1274,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
   "delivery_errors": {},
   "selected_delivery_names": [
     "high_chime_alert",
-    "apple_push",
+    "mobile_push",
     "alexa_announce",
     "plain_email"
   ],
@@ -1292,7 +1292,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
       "delivery": {
         "plain_email": null,
         "alexa_announce": null,
-        "apple_push": null,
+        "mobile_push": null,
         "high_chime_alert": null
       },
       "default": false
@@ -5604,7 +5604,7 @@ scenarios:
         conditions:
           - "{{notification_priority not in ['critical','high','low']}}"
       delivery:
-        - apple_push
+        - mobile_push
         - alexa_announce
         - alexa_backup_announce
 ```
@@ -5629,7 +5629,7 @@ scenarios:
 
       delivery:
         plain_email:
-        apple_push:
+        mobile_push:
         alexa_inform:
           data:
             message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'
@@ -5912,7 +5912,7 @@ supernotify:
           - mobile_app_id: mobile_app_joe_nokia
 
   delivery:
-    apple_push:
+    mobile_push:
       transport: mobile_push
   scenarios:
     alarm_disarmed:
@@ -6195,7 +6195,7 @@ Example Delivery Definition
 ...
 delivery:
     ...
-    apple_push:
+    mobile_push:
       alias: Push notifications to iPhones, iPads and Macs
       transport: mobile_push
       options:
@@ -6216,7 +6216,7 @@ delivery:
 
 ```yaml
 deliveries:
-  apple_push:
+  mobile_push:
     transport: mobile_push
     options:
     device_manufacturer_select:
@@ -6384,7 +6384,7 @@ scenarios:
               state:
               - armed_night
         delivery:
-            - apple_push
+            - mobile_push
             - alexa_announce
             - plain_email
             - chimes
@@ -6901,12 +6901,12 @@ scenarios:
               - "{{'BIRD IDENTIFIED' in notification_message|upper}}"
               - "{{'UNKNOWN BIRD' in notification_message|upper}}"
       delivery:
-        - apple_push
+        - mobile_push
     unknown_birds:
       alias: Don't send out any notifications if the bird can't be identified
       conditions: "{{'UNKNOWN BIRD' in notification_message|upper}}"
       delivery:
-        apple_push:
+        mobile_push:
           enabled: false
         plain_email:
           enabled: false
@@ -6992,6 +6992,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Media Transport
 
 - Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
+- Added missing `snapshot_image_path` to allowed `media:` options
 
 ### Documentation
 
@@ -8775,6 +8776,8 @@ Better explain in the archived message, the basis on which any single delivery w
 ### Inclusion Default
 
 An advanced and very usable mode is to have all deliveries selected only explicitly/by scenario so nothing is notified unless asked for, rather than by default everything. This works well to minimize noise. However it means every delivery has to have inclusion set to `scenario` or `explicit` manually - make an option in configflow UI to set a global default.
+
+Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a useful delivery mode which is effectively target driven - only consider the transport if there's a target that needs it. On other hand deliveries like Persistence that only make sense if explicit.
 
 ## Internal Improvements
 

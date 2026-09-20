@@ -22,6 +22,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Media Transport
 
 - Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
+- Added missing `snapshot_image_path` to allowed `media:` options
 
 ### Documentation
 
