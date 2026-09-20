@@ -12,9 +12,10 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Transport Options
 - Options for transports are now self-describing, so auto generated table of options up to date and more detail
 - `message_html` removed from spoken only envelopes
+### Multimedia
+- Added missing `snapshot_image_path` to allowed `media:` options
 ### Media Transport
 - Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
-- Added missing `snapshot_image_path` to allowed `media:` options
 ### Documentation
 - Fix automatically generated validation schema documentation
 - Added automated test for the YAML examples in docs
