@@ -1,0 +1,20 @@
+{
+    "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "default": "mdi:clipboard-text"
+            },
+            "recipient": {
+                "default": "mdi:account-arrow-left"
+            }
+        },
+        "sensor": {
+            "notifications": {
+                "default": "mdi:message-arrow-right"
+            },
+            "failures": {
+                "default": "mdi:message-alert"
+            }
+        }
+    }
+}

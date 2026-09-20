@@ -1,5 +1,15 @@
 {
     "title": "Supernotify",
+    "entity": {
+        "sensor": {
+            "notifications": {
+                "name": "भेजी गई सूचनाएं"
+            },
+            "failures": {
+                "name": "सूचना विफलताएं"
+            }
+        }
+    },
     "services": {
         "reload": {
             "name": "पुनः लोड करें",

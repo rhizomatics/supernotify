@@ -220,8 +220,12 @@ rules:
   # ==================
 
   devices:
-    status: exempt
-    comment: This integration does not connect to any devices
+    status: done
+    comment: |
+      A single "SuperNotify" device (hass_api.ha_device_info()) now groups the
+      scenario/recipient binary_sensors and the notification/failure counter
+      sensors (binary_sensor.py, sensor.py). Delivery/transport entities are
+      not yet on this device - a separate, larger conversion (issue #175).
 
   diagnostics:
     status: done
@@ -283,20 +287,26 @@ rules:
 
   dynamic-devices:
     status: exempt
-    comment: No devices are created by this integration (see devices exemption).
+    comment: |
+      A single fixed device is created per config entry (see devices); no
+      dynamically discovered devices are added after setup.
 
   entity-category:
     status: todo
     comment: |
-      Partial: EntityCategory.DIAGNOSTIC now set in notify.py:575 and
-      people.py:64. Other entity types not yet reviewed.
+      Partial: EntityCategory.DIAGNOSTIC now set on all scenario/recipient
+      binary_sensors and the two counter sensors (binary_sensor.py,
+      sensor.py), plus notify.py:575 and people.py. Delivery/transport
+      entities not yet reviewed.
 
   entity-device-class:
-    status: done
+    status: exempt
     comment: |
-      Renamed from device-class. people.py:63 sets
-      BinarySensorDeviceClass.CONNECTIVITY on the person-availability sensor;
-      no other entity has an applicable standard device_class.
+      Renamed from device-class. No entity currently sets a standard
+      device_class: binary_sensor.py's SupernotifyRecipientBinarySensor
+      deliberately does not (CONNECTIVITY was tried and dropped - see its
+      docstring - it means online/offline reachability, not "enabled for
+      delivery", and made a disabled recipient show as "Disconnected").
 
   entity-disabled-by-default:
     status: todo
@@ -308,24 +318,11 @@ rules:
   entity-translations:
     status: todo
     comment: |
-      No "entity" section in strings.json and no _attr_translation_key usage
-      anywhere. Two entity surfaces, and they differ:
-
-      - Recipient entities (people.py: RecipientNotifyEntity's _attr_name,
-        and the recipient binary_sensor's original_name via
-        PeopleRegistry.expose_entities) are exempt - the name is entirely
-        the user's own person name/alias, not fixed vocabulary, so there's
-        nothing to translate.
-      - Scenario binary_sensors (scenario.py ScenarioRegistry.expose_entities)
-        are NOT exempt: original_name glues the fixed English word "Scenario"
-        onto the user's scenario name. Both entity types are created via
-        entity_registry.async_get_or_create() + hass.states.async_set()
-        rather than real Entity subclasses, so there's no has_entity_name/
-        translation_key mechanism to hang a translation on without a
-        redesign (e.g. giving each scenario a device to anchor a generic
-        translated name against the specific one). Still to do: either
-        restructure scenario exposure through a proper entity platform, or
-        explicitly accept "Scenario" staying untranslated.
+      Partial: the two counter sensors (sensor.py) have a translated name via
+      strings.json's "entity" section and _attr_translation_key. The scenario
+      and recipient binary_sensors intentionally keep their per-instance
+      _attr_name (a user-configured scenario/recipient name isn't a candidate
+      for translation). Delivery/transport entities not yet reviewed.
 
   exception-translations:
     status: todo
@@ -335,8 +332,11 @@ rules:
   icon-translations:
     status: todo
     comment: |
-      No icons.json present. Evaluate if dynamic icons needed based on
-      state/ranges.
+      Partial: icons.json now covers the scenario/recipient binary_sensors and
+      the two counter sensors via _attr_translation_key (independent of the
+      per-instance _attr_name on the first two - see entity-translations).
+      Delivery/transport entities (still raw hass_api.expose_entity() writes)
+      not yet reviewed; no state/range-dependent icons identified so far.
 
   reconfiguration-flow:
     status: todo
@@ -356,8 +356,10 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      Renamed from stale-device-removal. This integration does not connect to
-      any devices.
+      Renamed from stale-device-removal. The single "SuperNotify" device (see
+      devices) is fixed for the lifetime of its config entry - not discovered
+      or removable independently of it - so there is nothing that can go
+      stale.
 
   # ==================
   # PLATINUM TIER

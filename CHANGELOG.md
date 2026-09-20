@@ -1,3 +1,11 @@
+## 2.7.0
+
+### Native Entities
+
+- Scenario and recipient `binary_sensor`s, and the sent/failure notification counters, are now real Home Assistant entities grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
+- Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
+- Delivery and transport `binary_sensor`s are unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175)
+
 ## 2.6.0
 
 ### Action Data
