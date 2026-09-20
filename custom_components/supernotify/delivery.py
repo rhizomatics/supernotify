@@ -66,7 +66,7 @@ if TYPE_CHECKING:
     from homeassistant.core import State
     from homeassistant.helpers.typing import ConfigType
 
-    from custom_components.supernotify.hass_api import DeviceInfo
+    from custom_components.supernotify.hass_api import TrackedDeviceDetails
     from custom_components.supernotify.transport import Transport
 
     from .context import Context
@@ -210,7 +210,7 @@ class Delivery(DeliveryConfig):
                     if self.target is None:
                         self.target = Target()
                     if domain == "mobile_app":
-                        mobile_app: DeviceInfo | None = context.hass_api.mobile_app_by_device_id(d.device_id)
+                        mobile_app: TrackedDeviceDetails | None = context.hass_api.mobile_app_by_device_id(d.device_id)
                         if mobile_app and mobile_app.action:
                             mobile_app_id = mobile_app.mobile_app_id if mobile_app else None
                             if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:

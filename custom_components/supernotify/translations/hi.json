@@ -1,12 +1,22 @@
 {
     "title": "Supernotify",
     "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "{scenario} परिदृश्य"
+            }
+        },
         "sensor": {
             "notifications": {
                 "name": "भेजी गई सूचनाएं"
             },
             "failures": {
                 "name": "सूचना विफलताएं"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "{scenario} परिदृश्य सक्षम"
             }
         }
     },
@@ -322,6 +332,10 @@
         "python_313_deprecated": {
             "title": "Python 3.13 का समर्थन जल्द ही समाप्त हो रहा है",
             "description": "यह Home Assistant इंस्टेंस Python {python_version} पर चल रहा है। जब Home Assistant 2026.10 जारी होगा, तब Supernotify Python 3.13 (और 2026.3.0 से पहले के Home Assistant संस्करणों) के लिए समर्थन समाप्त कर देगा - उसके बाद, अंतर्निहित Python वातावरण को Python 3.14 या उससे नए संस्करण में अपग्रेड किए बिना इस इंस्टेंस पर Supernotify के आगे के अपडेट इंस्टॉल नहीं किए जा सकेंगे।"
+        },
+        "scenario_binary_sensor_deprecated": {
+            "title": "परिदृश्य बाइनरी सेंसर हटा दिए जाएंगे",
+            "description": "अब प्रत्येक परिदृश्य के लिए एक स्विच (उदाहरण के लिए `switch.supernotify_scenario_<name>`) है जो उसे सक्षम और अक्षम करता है। परिदृश्य के `binary_sensor` एंटिटी अब से केवल-पढ़ने योग्य हैं, केवल यह बताती हैं कि परिदृश्य की शर्तें इस समय पूरी हो रही हैं या नहीं, और भविष्य के संस्करण में हटा दी जाएंगी। परिदृश्य के `binary_sensor` की स्थिति लिखने से अब परिदृश्य सक्षम या अक्षम नहीं होता, इसलिए ऐसा करने वाले, या इन एंटिटी पर निर्भर किसी भी ऑटोमेशन, स्क्रिप्ट या डैशबोर्ड को बदलकर परिदृश्य स्विच का उपयोग करें।"
         }
     },
     "exceptions": {

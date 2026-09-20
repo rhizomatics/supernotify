@@ -95,7 +95,7 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
+    from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -392,7 +392,7 @@ class MobilePushTransport(Transport):
 
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
-            mobile_info: DeviceInfo | None = self.context.hass_api.mobile_app_by_id(mobile_target)
+            mobile_info: TrackedDeviceDetails | None = self.context.hass_api.mobile_app_by_id(mobile_target)
             if mobile_info is not None and not model_filter.match(mobile_info.model):
                 _LOGGER.debug("SUPERNOTIFY Skipping %s, model %s excluded by delivery filter", mobile_target, mobile_info.model)
                 continue

@@ -358,6 +358,7 @@ class TestingContext(Context):
                     self.entities[entity_id].attributes = attributes
 
             self.hass.states.set.side_effect = set_state
+            self.hass.states.async_set.side_effect = set_state
 
         self.hass_external_url = hass_external_url
         if services:
@@ -468,6 +469,20 @@ class TestingContext(Context):
             self.delivery_registry.deliveries[delivery_name] = delivery
 
 
+def set_state(
+    hass_api: HomeAssistantAPI,
+    entity_id: str,
+    state: str | int | bool,
+    attributes: dict[str, Any] | None = None,
+) -> None:
+    """Set an entity state from test code, which may or may not be inside the hass event loop"""
+    states = hass_api._hass.states
+    if hass_api.in_hass_loop():
+        states.async_set(entity_id, str(state), attributes=attributes)
+    else:
+        states.set(entity_id, str(state), attributes=attributes)
+
+
 def register_mobile_app(
     hass_api: HomeAssistantAPI | None,
     person: str = "person.test_user",
@@ -483,7 +498,7 @@ def register_mobile_app(
     if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
         return None
-    # hass_api.set_state(person, "home")
+    # set_state(hass_api, person, "home")
     existing: State | None = hass_api.get_state(person)
     if existing and existing.attributes and ATTR_USER_ID in existing.attributes:
         user_id = existing.attributes[ATTR_USER_ID]
@@ -491,7 +506,7 @@ def register_mobile_app(
         user_id = user_id or str(uuid.uuid1())
         attrs = dict(existing.attributes) if existing and existing.attributes else {}
         attrs[ATTR_USER_ID] = user_id
-        hass_api.set_state(person, "home", attributes=attrs)
+        set_state(hass_api, person, "home", attributes=attrs)
 
     config_entry = config_entries.ConfigEntry(
         domain=domain,
@@ -513,13 +528,16 @@ def register_mobile_app(
 
     device_slug: str = slugify(device_name)
     if not existing or "device_trackers" not in existing.attributes:
-        hass_api.set_state(
-            person, "home", attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]}
+        set_state(
+            hass_api,
+            person,
+            "home",
+            attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]},
         )
     else:
         trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
         trackers.extend(existing.attributes.get("device_trackers", []))
-        hass_api.set_state(person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
+        set_state(hass_api, person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
 
     device_registry = hass_api._device_registry()
     device_entry = None

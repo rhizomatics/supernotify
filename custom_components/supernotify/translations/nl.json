@@ -1,12 +1,22 @@
 {
     "title": "Supernotify",
     "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "{scenario} Scenario"
+            }
+        },
         "sensor": {
             "notifications": {
                 "name": "Verzonden meldingen"
             },
             "failures": {
                 "name": "Mislukte meldingen"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "{scenario} Scenario ingeschakeld"
             }
         }
     },
@@ -322,6 +332,10 @@
         "python_313_deprecated": {
             "title": "Ondersteuning voor Python 3.13 stopt binnenkort",
             "description": "Deze Home Assistant-installatie draait op Python {python_version}. Supernotify laat de ondersteuning voor Python 3.13 (en Home Assistant-versies ouder dan 2026.3.0) vallen zodra Home Assistant 2026.10 wordt uitgebracht - daarna kan deze installatie geen verdere Supernotify-updates meer installeren totdat de onderliggende Python-omgeving is bijgewerkt naar Python 3.14 of hoger."
+        },
+        "scenario_binary_sensor_deprecated": {
+            "title": "Scenario-binary-sensoren worden verwijderd",
+            "description": "Elk scenario heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_scenario_<name>`) waarmee het wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van scenario's zijn vanaf nu alleen-lezen, geven alleen aan of de voorwaarden van het scenario op dit moment vervuld zijn, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een `binary_sensor` van een scenario schakelt het scenario niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar van het scenario wordt gebruikt."
         }
     },
     "exceptions": {

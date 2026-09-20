@@ -51,6 +51,8 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("nl", "services.notify.fields.camera_entity_id.name"),  # "Camera" is also the Dutch word for camera
     ("fr", "services.notify.fields.message.name"),  # "Message" is also the French word for message
     ("fr", "services.notify.fields.actions.name"),  # "Actions" is also the French word for actions
+    ("it", "entity.binary_sensor.scenario.name"),  # "scenario" stays English in Italian, see CLAUDE.md
+    ("nl", "entity.binary_sensor.scenario.name"),  # "Scenario" is also the Dutch word for scenario
 }
 
 

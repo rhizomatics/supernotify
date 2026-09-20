@@ -1,12 +1,22 @@
 {
     "title": "Supernotify",
     "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "{scenario} シナリオ"
+            }
+        },
         "sensor": {
             "notifications": {
                 "name": "送信済み通知"
             },
             "failures": {
                 "name": "通知エラー"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "{scenario} シナリオ 有効"
             }
         }
     },
@@ -322,6 +332,10 @@
         "python_313_deprecated": {
             "title": "Python 3.13 のサポートは間もなく終了します",
             "description": "この Home Assistant インスタンスは Python {python_version} で実行されています。Home Assistant 2026.10 のリリースに伴い、Supernotify は Python 3.13（および 2026.3.0 より前の Home Assistant バージョン）のサポートを終了します。それ以降、基盤となる Python 環境を Python 3.14 以降にアップグレードしない限り、このインスタンスは Supernotify の今後のアップデートをインストールできなくなります。"
+        },
+        "scenario_binary_sensor_deprecated": {
+            "title": "シナリオのバイナリセンサーは削除されます",
+            "description": "各シナリオに、有効・無効を切り替えるスイッチ（例: `switch.supernotify_scenario_<name>`）が追加されました。シナリオの `binary_sensor` エンティティは今後は読み取り専用となり、シナリオの条件が現在満たされているかどうかを示すだけで、将来のバージョンで削除されます。シナリオの `binary_sensor` の状態を書き込んでも、シナリオは有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、シナリオのスイッチを使うように変更してください。"
         }
     },
     "exceptions": {

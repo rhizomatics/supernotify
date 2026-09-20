@@ -1,12 +1,22 @@
 {
     "title": "Supernotify",
     "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "{scenario} Cenário"
+            }
+        },
         "sensor": {
             "notifications": {
                 "name": "Notificações enviadas"
             },
             "failures": {
                 "name": "Falhas de notificação"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "{scenario} Cenário ativado"
             }
         }
     },
@@ -322,6 +332,10 @@
         "python_313_deprecated": {
             "title": "O suporte a Python 3.13 termina em breve",
             "description": "Esta instância do Home Assistant está a executar Python {python_version}. O Supernotify deixará de suportar Python 3.13 (e versões do Home Assistant anteriores à 2026.3.0) quando o Home Assistant 2026.10 for lançado - a partir daí, esta instância não poderá instalar mais atualizações do Supernotify até que o ambiente Python subjacente seja atualizado para Python 3.14 ou posterior."
+        },
+        "scenario_binary_sensor_deprecated": {
+            "title": "Os sensores binários de cenário serão removidos",
+            "description": "Cada cenário tem agora um interruptor (por exemplo `switch.supernotify_scenario_<name>`) que o ativa e desativa. As entidades `binary_sensor` dos cenários passam a ser só de leitura, apenas indicam se as condições do cenário estão atualmente cumpridas, e serão removidas numa versão futura. Escrever o estado de um `binary_sensor` de cenário deixa de ativar ou desativar o cenário, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor do cenário."
         }
     },
     "exceptions": {

@@ -81,8 +81,10 @@ scenarios:
 
 ## Entities
 
-Scenarios are exposed as `sensor.supernotify_scenario_XXXX` entities in Home Assistant, with the configuration and
-current state as `unavailable` ( since their conditions are not continually being evaluated, only on demand). They can be enabled or disabled like any other entities, for run-time control of notifications.
+Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable
+the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
+
+The scenario's configuration is available as attributes of its `binary_sensor.supernotify_scenario_<name>`, see [Scenario Sensors](#scenario-sensors).
 
 
 ## Overriding Delivery Selection and Configuration
@@ -215,6 +217,11 @@ scenarios:
 ```
 
 ## Scenario Sensors
+
+!!! warning "Deprecated"
+    The scenario `binary_sensor` is kept only for backward compatibility, and will be removed in a future
+    version. It is read-only: writing its state no longer enables or disables the scenario, use the
+    scenario `switch` for that. A repair is raised once in Home Assistant to say so.
 
 Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its
 conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.

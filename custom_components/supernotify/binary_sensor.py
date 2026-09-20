@@ -10,10 +10,14 @@ for scenario and recipient binary_sensors (see upstream issue #175, "Part B"): r
 BinarySensorEntity objects grouped under a single SuperNotify device, instead of a bare
 entity_registry entry with a hand-written state and no Entity object behind it.
 
+The scenario binary_sensor is deprecated, kept only for backward compatibility, and read-only:
+enabling and disabling a scenario is done by its switch entity (switch.py). A one-off repair
+tells users it will be removed in a future version (see repairs.py).
+
 entity_id and unique_id are chosen deliberately to line up with the pre-existing raw-write
 scheme (binary_sensor.supernotify_scenario_<name> / _recipient_<name>, unique_id
 "scenario_<name>" / "recipient_<name>" with no config-entry prefix) so that upgrading an
-existing installation adopts the same entity_id and history instead of creating a duplicate -
+existing installation adopts the same registry entry and history instead of creating a duplicate -
 see hass_api.expose_entity() for the scheme this continues. Delivery and transport
 binary_sensors are unchanged in this PR - they keep their existing raw exposure pending a
 separate, larger conversion to switch entities (entity_id migration + repair) discussed in the
@@ -21,15 +25,10 @@ same issue.
 """
 
 # CHANGELOG
-# 2026-09-08 (Claude): fix bug minore dalla review multi-agente del branch
-# feat/native-entities-scenario-recipient-counters (vedi memoria di progetto
-# project_native_entities_review_202609.md), prima di proporlo come PR upstream:
-# - SupernotifyRecipientBinarySensor: rimosso _attr_device_class = CONNECTIVITY, semanticamente
-#   sbagliato (indica online/offline del device, non "abilitato per la consegna") - un recipient
-#   disabilitato appariva come "Disconnected" in dashboard, fuorviante.
-# Backup: nessuno necessario, storia completa in git (branch locale, non ancora pushato upstream).
-# Verificato con CI replica completa (ruff/mypy/pytest py3.13+3.14, 1185 test verdi, 96% coverage)
-# e con nuovi test dedicati in tests/components/supernotify/test_native_entities_review_fixes.py.
+# 2026-09-08: fix from the multi-agent review of the native scenario/recipient entities work:
+# - SupernotifyRecipientBinarySensor: removed _attr_device_class = CONNECTIVITY, which was
+#   semantically wrong (it means a device is online/offline, not "enabled for delivery") - a
+#   disabled recipient showed as "Disconnected" in dashboards, which was misleading.
 
 from __future__ import annotations
 
@@ -37,13 +36,15 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import EntityCategory
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import DOMAIN
 from .common import sanitize
 from .hass_api import ha_device_info
+from .repairs import async_create_scenario_binary_sensor_issue
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import Event, EventStateChangedData, HomeAssistant
     from homeassistant.helpers.device_registry import DeviceInfo
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -58,7 +59,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Expose each scenario and recipient as its own binary_sensor entity."""
-    _ = hass
     service = entry.runtime_data
     device_info = ha_device_info(entry.entry_id)
 
@@ -71,10 +71,12 @@ async def async_setup_entry(
         for recipient in service.context.people_registry.people.values()
     )
     async_add_entities(entities)
+    if service.context.scenario_registry.scenarios:
+        async_create_scenario_binary_sensor_issue(hass)
 
 
 class SupernotifyScenarioBinarySensor(BinarySensorEntity):
-    """A scenario's evaluated condition state.
+    """A scenario's evaluated condition state. Deprecated, see the scenario switch.
 
     See ScenarioRegistry._scenario_state()/scenario_is_on() for how ON/OFF/unknown is derived,
     and async_refresh_scenario_states() for what triggers a re-read of this entity's state.
@@ -82,8 +84,6 @@ class SupernotifyScenarioBinarySensor(BinarySensorEntity):
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    # Icon only (see icons.json) - _attr_name is set per-instance below from user config, so
-    # translation_key never drives the displayed name, only the icon lookup.
     _attr_translation_key = "scenario"
     _attr_should_poll = False
 
@@ -92,7 +92,10 @@ class SupernotifyScenarioBinarySensor(BinarySensorEntity):
         self._registry = registry
         self._attr_unique_id = f"scenario_{scenario.name}"
         self._attr_device_info = device_info
-        self._attr_name = scenario.alias or scenario.name
+        self._attr_translation_placeholders = {"scenario": scenario.alias or scenario.name}
+        # Setting entity_id directly is not preferred Home Assistant practice - see
+        # SupernotifyScenarioSwitch for why it's done anyway, and why it can't change the
+        # entity_id of an existing install.
         self.entity_id = f"binary_sensor.{DOMAIN}_scenario_{scenario.name}"
 
     @property
@@ -115,10 +118,9 @@ class SupernotifyScenarioBinarySensor(BinarySensorEntity):
 class SupernotifyRecipientBinarySensor(BinarySensorEntity):
     """Whether a recipient is currently enabled for delivery.
 
-    Read-only here - toggling comes from the state_changed listener in notify.py
-    (PeopleRegistry.handle_entity_state_change), not from this entity, matching how
-    delivery/transport binary_sensors already work. Only delivery/transport are planned to
-    become switch entities (see issue #175); recipients stay binary_sensor.
+    Toggled by writing its state, which this entity listens for and applies to the recipient
+    (PeopleRegistry.handle_entity_state_change), matching how delivery/transport binary_sensors
+    already work. TODO: recipients are to become switch entities, like scenarios (see issue #175).
     """
 
     _attr_has_entity_name = True
@@ -138,6 +140,9 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
         self._attr_unique_id = f"recipient_{recipient.name}"
         self._attr_device_info = device_info
         self._attr_name = recipient.alias or recipient.name
+        # Setting entity_id directly is not preferred Home Assistant practice - see
+        # SupernotifyScenarioSwitch for why it's done anyway, and why it can't change the
+        # entity_id of an existing install.
         self.entity_id = f"binary_sensor.{DOMAIN}_recipient_{recipient.name}"
 
     @property
@@ -151,6 +156,13 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self._registry.register_entity(self._recipient.name, self)
+        # watch this entity's own state, under whatever entity_id it was actually given
+        self.async_on_remove(async_track_state_change_event(self.hass, [self.entity_id], self._async_state_changed))
+
+    async def _async_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        new_state = event.data["new_state"]
+        if new_state is not None and self._registry.handle_entity_state_change(self._recipient, new_state):
+            self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         self._registry.unregister_entity(self._recipient.name)

@@ -1,12 +1,22 @@
 {
     "title": "Supernotify",
     "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "{scenario} Szenario"
+            }
+        },
         "sensor": {
             "notifications": {
                 "name": "Gesendete Benachrichtigungen"
             },
             "failures": {
                 "name": "Benachrichtigungsfehler"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "{scenario} Szenario aktiviert"
             }
         }
     },
@@ -322,6 +332,10 @@
         "python_313_deprecated": {
             "title": "Python 3.13 Unterstützung endet bald",
             "description": "Diese Home-Assistant-Instanz läuft unter Python {python_version}. Supernotify stellt die Unterstützung für Python 3.13 (und Home-Assistant-Versionen vor 2026.3.0) ein, sobald Home Assistant 2026.10 veröffentlicht wird - danach können auf dieser Instanz keine weiteren Supernotify-Updates mehr installiert werden, bis die zugrunde liegende Python-Umgebung auf Python 3.14 oder höher aktualisiert wird."
+        },
+        "scenario_binary_sensor_deprecated": {
+            "title": "Szenario-Binärsensoren werden entfernt",
+            "description": "Jedes Szenario hat jetzt einen Schalter (zum Beispiel `switch.supernotify_scenario_<name>`), der es aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Szenarien sind ab sofort schreibgeschützt, melden nur noch, ob die Bedingungen des Szenarios aktuell erfüllt sind, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands eines Szenario-`binary_sensor` aktiviert oder deaktiviert das Szenario nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Szenario-Schalter verwenden."
         }
     },
     "exceptions": {

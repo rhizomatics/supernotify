@@ -115,7 +115,9 @@ rules:
   has-entity-name:
     status: done
     comment: |
-      SupernotifyEntity sets _attr_has_entity_name = True.
+      SupernotifyEntity sets _attr_has_entity_name = True, as do all the entities added by the
+      binary_sensor, sensor and switch platforms. Delivery/transport entities are still raw
+      hass_api.expose_entity() writes, outside this rule until they become real entities (#175).
 
   runtime-data:
     status: done
@@ -223,9 +225,11 @@ rules:
     status: done
     comment: |
       A single "SuperNotify" device (hass_api.ha_device_info()) now groups the
-      scenario/recipient binary_sensors and the notification/failure counter
-      sensors (binary_sensor.py, sensor.py). Delivery/transport entities are
-      not yet on this device - a separate, larger conversion (issue #175).
+      scenario switches, scenario/recipient binary_sensors and the
+      notification/failure counter sensors (switch.py, binary_sensor.py,
+      sensor.py). Delivery/transport entities are not yet on this device - a
+      separate, larger conversion (issue #175) - though hass_api.expose_entity()
+      now attaches them to the config entry.
 
   diagnostics:
     status: done
@@ -294,17 +298,19 @@ rules:
   entity-category:
     status: todo
     comment: |
-      Partial: EntityCategory.DIAGNOSTIC now set on all scenario/recipient
+      Partial: EntityCategory.DIAGNOSTIC set on all scenario/recipient
       binary_sensors and the two counter sensors (binary_sensor.py,
-      sensor.py), plus notify.py:575 and people.py. Delivery/transport
-      entities not yet reviewed.
+      sensor.py), EntityCategory.CONFIG on the scenario switches (switch.py),
+      plus notify.py:575. Delivery/transport entities not yet reviewed.
 
   entity-device-class:
     status: exempt
     comment: |
-      Renamed from device-class. No entity currently sets a standard
-      device_class: binary_sensor.py's SupernotifyRecipientBinarySensor
-      deliberately does not (CONNECTIVITY was tried and dropped - see its
+      Renamed from device-class. Re-evaluated as exempt rather than done: no
+      standard device_class describes any entity here - a scenario switch, a
+      scenario's conditions holding, a recipient being enabled, or a unitless
+      notification count. binary_sensor.py's SupernotifyRecipientBinarySensor
+      deliberately sets none (CONNECTIVITY was tried and dropped - see its
       docstring - it means online/offline reachability, not "enabled for
       delivery", and made a disabled recipient show as "Disconnected").
 
@@ -318,11 +324,12 @@ rules:
   entity-translations:
     status: todo
     comment: |
-      Partial: the two counter sensors (sensor.py) have a translated name via
-      strings.json's "entity" section and _attr_translation_key. The scenario
-      and recipient binary_sensors intentionally keep their per-instance
-      _attr_name (a user-configured scenario/recipient name isn't a candidate
-      for translation). Delivery/transport entities not yet reviewed.
+      Partial: the two counter sensors, and the scenario binary_sensors and
+      switches, have translated names via strings.json's "entity" section and
+      _attr_translation_key (the scenario name being a translation placeholder).
+      Recipient binary_sensors intentionally keep their per-instance _attr_name,
+      as a user-configured recipient name isn't a candidate for translation.
+      Delivery/transport entities not yet reviewed.
 
   exception-translations:
     status: todo
@@ -332,9 +339,10 @@ rules:
   icon-translations:
     status: todo
     comment: |
-      Partial: icons.json now covers the scenario/recipient binary_sensors and
-      the two counter sensors via _attr_translation_key (independent of the
-      per-instance _attr_name on the first two - see entity-translations).
+      Partial: icons.json now covers the scenario switches, the scenario/
+      recipient binary_sensors and the two counter sensors via
+      _attr_translation_key (independent of the per-instance _attr_name on
+      the recipient binary_sensor - see entity-translations).
       Delivery/transport entities (still raw hass_api.expose_entity() writes)
       not yet reviewed; no state/range-dependent icons identified so far.
 
@@ -348,10 +356,11 @@ rules:
   repair-issues:
     status: todo
     comment: |
-      Partial infrastructure exists: hass_api.py creates repair issues (8 issue
-      types registered in strings.json under "issues") but all are currently
-      is_fixable=False, i.e. informational rather than the guided/actionable
-      fix flows this rule expects.
+      Partial infrastructure exists: hass_api.py creates repair issues but all
+      but one are is_fixable=False, i.e. informational rather than the
+      guided/actionable fix flows this rule expects. repairs.py also raises one
+      persistent "scenario_binary_sensor_deprecated" issue, never re-raised once
+      dismissed, for the deprecated scenario binary_sensors.
 
   stale-devices:
     status: exempt

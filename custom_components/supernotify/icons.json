@@ -15,6 +15,11 @@
             "failures": {
                 "default": "mdi:message-alert"
             }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "default": "mdi:clipboard-check"
+            }
         }
     }
 }

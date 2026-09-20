@@ -53,7 +53,7 @@ from custom_components.supernotify.transports.email import (
     OPTION_SENDER_NAME,
     EmailTransport,
 )
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext, set_state
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
@@ -119,7 +119,7 @@ async def test_deliver_with_template(hass: HomeAssistant) -> None:
         template_path=Path("tests/components/supernotify/fixtures/templates"),
         services={"notify": ["smtp"]},
     )
-    ctx.hass_api.set_state("device_tracker.joey_mctest", "home")
+    set_state(ctx.hass_api, "device_tracker.joey_mctest", "home")
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_EMAIL)
 

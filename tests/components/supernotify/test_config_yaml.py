@@ -254,14 +254,14 @@ async def test_exposed_states(hass: HomeAssistant) -> None:
 
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
-    hass.states.async_set("binary_sensor.supernotify_scenario_simple", "off")
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.supernotify_scenario_simple"}, blocking=True)
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
     assert response == {"somebody": {"enabled": ["chime_person"], "disabled": [], "applies": ["chime_person"]}}
-    hass.states.async_set("binary_sensor.supernotify_scenario_simple", "on")
+    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.supernotify_scenario_simple"}, blocking=True)
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True

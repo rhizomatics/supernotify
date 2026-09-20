@@ -40,7 +40,7 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
+    from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 
 _LOGGER = logging.getLogger(__name__)
 RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
@@ -147,7 +147,7 @@ class TTSTransport(Transport):
         manufacturer_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MANUFACTURER_SELECT))
         at_least_one: bool = False
         for target in targets:
-            mobile_info: DeviceInfo | None = self.context.hass_api.mobile_app_by_id(target)
+            mobile_info: TrackedDeviceDetails | None = self.context.hass_api.mobile_app_by_id(target)
             if not mobile_info or not manufacturer_filter.match(mobile_info.manufacturer):
                 _LOGGER.debug("SUPERNOTIFY Skipping tts target excluded by manufacturer filter: %s", mobile_info)
             else:

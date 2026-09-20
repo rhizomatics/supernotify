@@ -1,12 +1,22 @@
 {
     "title": "Supernotify",
     "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "{scenario} 场景"
+            }
+        },
         "sensor": {
             "notifications": {
                 "name": "已发送通知"
             },
             "failures": {
                 "name": "通知失败"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "{scenario} 场景 已启用"
             }
         }
     },
@@ -322,6 +332,10 @@
         "python_313_deprecated": {
             "title": "Python 3.13 支持即将结束",
             "description": "此 Home Assistant 实例正在运行 Python {python_version}。当 Home Assistant 2026.10 发布后，Supernotify 将不再支持 Python 3.13(以及 2026.3.0 之前的 Home Assistant 版本)——此后，除非将底层 Python 环境升级到 Python 3.14 或更高版本，否则该实例将无法安装 Supernotify 的后续更新。"
+        },
+        "scenario_binary_sensor_deprecated": {
+            "title": "场景二进制传感器将被移除",
+            "description": "每个场景现在都有一个开关（例如 `switch.supernotify_scenario_<name>`）用于启用和停用它。场景的 `binary_sensor` 实体从现在起为只读，仅报告场景条件当前是否满足，并将在未来版本中移除。写入场景 `binary_sensor` 的状态不再会启用或停用该场景，因此请将任何这样做、或以其他方式依赖这些实体的自动化、脚本或仪表板，改为使用场景开关。"
         }
     },
     "exceptions": {

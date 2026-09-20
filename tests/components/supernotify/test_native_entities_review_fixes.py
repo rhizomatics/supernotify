@@ -1,22 +1,11 @@
-"""Regression tests for the multi-agent review of feat/native-entities-scenario-recipient-
-counters (2026-09-08), run before proposing the branch upstream as a PR.
+"""Tests for the native scenario/recipient entities and counter sensors.
 
-Covers the three confirmed high-severity bugs:
-  1. counter restore race (notify.py restore_sent/restore_failures overwriting a higher
-     in-memory value with an older persisted one - see restore_sent()'s docstring)
-  2. scenario auto-disabled at boot (scenario.py handle_entity_state_change mistaking a
-     stateful scenario's own first published state - which reflects condition evaluation, not
-     `enabled` - for someone manually disabling it)
-  3. manual re-enable self-cancelling in the same tick (an entity.async_write_ha_state() call
-     right after re-enabling used to immediately re-evaluate conditions, still false, and flip
-     `enabled` back off before the toggle was ever visible)
-
-and the confirmed medium-severity bug: determine_occupancy() recomputed once per scenario in
-a batch refresh instead of once for the whole batch.
-
-The six events exercised end-to-end below (boot with a false condition, boot with a true
-condition, manual disable, manual re-enable, config entry reload, and a multi-scenario batch
-refresh) are the "tutti e sei gli eventi" debug pass requested after applying these fixes.
+Covers the scenario switch (which owns enabling and disabling a scenario), the now read-only
+scenario binary_sensor and its one-off deprecation repair, recipient binary_sensor toggling,
+restorable notification counters, config entry ownership of exposed entities, and two
+regressions found by the multi-agent review of this work: determine_occupancy() recomputed once
+per scenario in a batch refresh instead of once for the batch, and a misleading CONNECTIVITY
+device class on the recipient binary_sensor.
 """
 
 from __future__ import annotations
@@ -25,10 +14,15 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import State
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import mock_restore_cache_with_extra_data
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.engine import SupernotifyEngine
+from custom_components.supernotify.repairs import SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID
 from custom_components.supernotify.scenario import ScenarioRegistry
 
 if TYPE_CHECKING:
@@ -38,6 +32,9 @@ if TYPE_CHECKING:
 async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyEngine:
     """Same helper as test_config_yaml.py: bootstrap supernotify from a top-level
     `supernotify:` YAML config and return the live service."""
+    if hass.states.get("binary_sensor.dnd_test") is None:
+        # a scenario condition on a missing entity fails validation and the scenario is dropped
+        hass.states.async_set("binary_sensor.dnd_test", "off")
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     await hass.async_block_till_done()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -63,177 +60,196 @@ def _stateful_scenario_config(condition_state: str) -> dict:
     }
 
 
-# --- Bug #1: counter restore race -----------------------------------------------------------
+# --- Scenario: binary_sensor reports conditions, switch controls enabled --------------------
 
 
-def test_restore_sent_does_not_regress_a_higher_in_memory_value() -> None:
-    """A notification landing on the raw fallback counter (see async_send_message) during the
-    window between async_register_services() and the sensor platform's restore must not be
-    silently erased by a restore() call carrying the older, pre-increment value."""
-    action = MagicMock()
-    action.sent = 5
-    SupernotifyEngine.restore_sent(action, 2)
-    assert action.sent == 5
-
-
-def test_restore_sent_applies_the_restored_value_when_higher() -> None:
-    """The normal case: nothing incremented the fallback yet, so the restored value wins."""
-    action = MagicMock()
-    action.sent = 0
-    SupernotifyEngine.restore_sent(action, 7)
-    assert action.sent == 7
-
-
-def test_restore_failures_does_not_regress_a_higher_in_memory_value() -> None:
-    action = MagicMock()
-    action.failures = 3
-    SupernotifyEngine.restore_failures(action, 1)
-    assert action.failures == 3
-
-
-def test_restore_failures_applies_the_restored_value_when_higher() -> None:
-    action = MagicMock()
-    action.failures = 0
-    SupernotifyEngine.restore_failures(action, 4)
-    assert action.failures == 4
-
-
-# --- Bug #2: scenario auto-disabled at boot --------------------------------------------------
-
-
-async def test_stateful_scenario_survives_its_own_first_state_publish(hass: HomeAssistant) -> None:
-    """A scenario with entity-backed conditions that evaluate False at boot (dnd_test is
-    "off", condition wants "on") must stay `enabled` after setup - the entity's own first
-    published state (OFF, since the condition is false) must not be mistaken by
-    handle_entity_state_change for a manual disable."""
+async def test_scenario_binary_sensor_reflects_false_condition_and_scenario_stays_enabled(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.dnd_test", "off")
-    await _setup_supernotify(hass, _stateful_scenario_config("on"))
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    scenario = entry.runtime_data.context.scenario_registry.scenarios["sera"]
-    assert scenario.enabled is True
-    # and the published state does reflect the (false) condition, proving this isn't just an
-    # untouched entity - the mechanism ran, it just correctly left `enabled` alone.
+    engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    assert engine.context.scenario_registry.scenarios["sera"].enabled is True
     state = hass.states.get("binary_sensor.supernotify_scenario_sera")
     assert state is not None
     assert state.state == STATE_OFF
 
 
-async def test_stateful_scenario_survives_first_publish_when_true_at_boot(hass: HomeAssistant) -> None:
-    """Symmetric case: a condition that is already True at boot must also leave `enabled`
-    untouched (the suppression is unconditional on the first publish, not state-dependent)."""
+async def test_scenario_binary_sensor_reflects_true_condition_and_scenario_stays_enabled(hass: HomeAssistant) -> None:
     hass.states.async_set("binary_sensor.dnd_test", "on")
-    await _setup_supernotify(hass, _stateful_scenario_config("on"))
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    scenario = entry.runtime_data.context.scenario_registry.scenarios["sera"]
-    assert scenario.enabled is True
+    engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    assert engine.context.scenario_registry.scenarios["sera"].enabled is True
     state = hass.states.get("binary_sensor.supernotify_scenario_sera")
     assert state is not None
     assert state.state == STATE_ON
 
 
 async def test_scenario_survives_config_entry_reload(hass: HomeAssistant) -> None:
-    """A config entry reload (e.g. after an options change) tears down and recreates the
-    scenario entities from scratch - register_entity() runs again and must again suppress
-    that fresh first publish, exactly like the original boot."""
     hass.states.async_set("binary_sensor.dnd_test", "off")
     await _setup_supernotify(hass, _stateful_scenario_config("on"))
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.runtime_data.context.scenario_registry.scenarios["sera"].enabled is True
 
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.runtime_data.context.scenario_registry.scenarios["sera"].enabled is True
+    assert hass.states.get("switch.supernotify_scenario_sera").state == STATE_ON  # type: ignore[union-attr]
 
 
-def test_pending_first_publish_is_cleared_after_the_first_event() -> None:
-    """The suppression only ever swallows one event per registration - a second state change
-    for the same scenario is treated as a real toggle, not silently ignored forever."""
-    registry = MagicMock()
-    registry._pending_first_publish = {"sera"}
-    scenario = MagicMock()
-    scenario.name = "sera"
-    scenario.enabled = True
-    registry.scenarios = {"sera": scenario}
+async def test_scenario_switch_enables_and_disables_scenario(hass: HomeAssistant) -> None:
+    hass.states.async_set("binary_sensor.dnd_test", "on")
+    engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    scenario = engine.context.scenario_registry.scenarios["sera"]
+    switch = hass.states.get("switch.supernotify_scenario_sera")
+    assert switch is not None
+    assert switch.state == STATE_ON
 
-    new_state = MagicMock()
-    new_state.state = STATE_OFF
-    first = ScenarioRegistry.handle_entity_state_change(registry, "binary_sensor.supernotify_scenario_sera", new_state)
-    assert first is False
-    assert scenario.enabled is True
-    assert "sera" not in registry._pending_first_publish
-
-    second = ScenarioRegistry.handle_entity_state_change(registry, "binary_sensor.supernotify_scenario_sera", new_state)
-    assert second is True
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.supernotify_scenario_sera"}, blocking=True)
+    await hass.async_block_till_done()
     assert scenario.enabled is False
+    assert hass.states.get("switch.supernotify_scenario_sera").state == STATE_OFF  # type: ignore[union-attr]
+    # a disabled scenario's conditions can't apply, and the binary_sensor follows straight away
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera").state == STATE_OFF  # type: ignore[union-attr]
+
+    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.supernotify_scenario_sera"}, blocking=True)
+    await hass.async_block_till_done()
+    assert scenario.enabled is True
+    assert hass.states.get("switch.supernotify_scenario_sera").state == STATE_ON  # type: ignore[union-attr]
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera").state == STATE_ON  # type: ignore[union-attr]
 
 
-def test_register_entity_marks_pending_first_publish() -> None:
-    registry = MagicMock()
-    registry._entities = {}
-    registry._pending_first_publish = set()
-    entity = MagicMock()
-    ScenarioRegistry.register_entity(registry, "sera", entity)
-    assert "sera" in registry._pending_first_publish
-    assert registry._entities["sera"] is entity
+async def test_writing_scenario_binary_sensor_state_no_longer_controls_scenario(hass: HomeAssistant) -> None:
+    hass.states.async_set("binary_sensor.dnd_test", "on")
+    engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    scenario = engine.context.scenario_registry.scenarios["sera"]
 
-
-def test_unregister_entity_clears_pending_first_publish() -> None:
-    registry = MagicMock()
-    registry._entities = {"sera": MagicMock()}
-    registry._pending_first_publish = {"sera"}
-    ScenarioRegistry.unregister_entity(registry, "sera")
-    assert "sera" not in registry._pending_first_publish
-    assert "sera" not in registry._entities
-
-
-# --- Bug #3: manual re-enable self-cancelling in the same tick ------------------------------
-
-
-async def test_manual_re_enable_holds_until_the_next_real_refresh(hass: HomeAssistant) -> None:
-    """Re-enabling a disabled scenario from Developer Tools must not be immediately undone by
-    the entity re-evaluating its (still false) conditions and writing that back in the same
-    tick."""
-    hass.states.async_set("binary_sensor.dnd_test", "off")
-    await _setup_supernotify(hass, _stateful_scenario_config("on"))
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    scenario = entry.runtime_data.context.scenario_registry.scenarios["sera"]
-    assert scenario.enabled is True  # bug #2 regression already covers the boot state
-
-    # disable manually
     hass.states.async_set("binary_sensor.supernotify_scenario_sera", STATE_OFF)
     await hass.async_block_till_done()
-    assert scenario.enabled is False
 
-    # re-enable manually - conditions are still false (binary_sensor.dnd_test is still off)
-    hass.states.async_set("binary_sensor.supernotify_scenario_sera", STATE_ON)
+    assert scenario.enabled is True
+    assert hass.states.get("switch.supernotify_scenario_sera").state == STATE_ON  # type: ignore[union-attr]
+
+
+async def test_scenario_entities_have_config_entry_device_and_names(hass: HomeAssistant) -> None:
+    await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    registry = er.async_get(hass)
+
+    for entity_id in ("switch.supernotify_scenario_sera", "binary_sensor.supernotify_scenario_sera"):
+        reg_entry = registry.async_get(entity_id)
+        assert reg_entry is not None
+        assert reg_entry.config_entry_id == entry.entry_id
+        assert reg_entry.device_id is not None
+        assert reg_entry.unique_id == "scenario_sera"
+
+    binary = hass.states.get("binary_sensor.supernotify_scenario_sera")
+    assert binary is not None
+    assert binary.name == "SuperNotify Evening mode Scenario"
+    assert hass.states.get("switch.supernotify_scenario_sera").name == "SuperNotify Evening mode Scenario Enabled"  # type: ignore[union-attr]
+
+
+async def test_scenario_binary_sensor_deprecation_repair_is_raised_once(hass: HomeAssistant) -> None:
+    await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    issues = ir.async_get(hass)
+    issue = issues.async_get_issue(DOMAIN, SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID)
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.is_persistent is True
+
+    # once dismissed, it must not come back when the entry is set up again
+    ir.async_ignore_issue(hass, DOMAIN, SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID, True)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
-    assert scenario.enabled is True
-    # and the manually-set state itself holds - it wasn't overwritten in the same tick
-    state = hass.states.get("binary_sensor.supernotify_scenario_sera")
-    assert state is not None
-    assert state.state == STATE_ON
+
+    issue = issues.async_get_issue(DOMAIN, SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID)
+    assert issue is not None
+    assert issue.dismissed_version is not None
 
 
-def test_handle_entity_state_change_does_not_write_ha_state() -> None:
-    """Unit-level guard for the fix itself: unlike an earlier version of this method, it must
-    never call entity.async_write_ha_state() - that write is what caused the self-cancelling
-    loop (see scenario.py's handle_entity_state_change docstring/comments)."""
-    registry = MagicMock()
-    entity = MagicMock()
-    registry._entities = {"sera": entity}
-    registry._pending_first_publish = set()
-    scenario = MagicMock()
-    scenario.name = "sera"
-    scenario.enabled = False
-    registry.scenarios = {"sera": scenario}
+async def test_no_scenario_binary_sensor_repair_without_scenarios(hass: HomeAssistant) -> None:
+    config = _stateful_scenario_config("on")
+    config["scenarios"] = {}
+    await _setup_supernotify(hass, config)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID) is None
 
-    new_state = MagicMock()
-    new_state.state = STATE_ON
-    ScenarioRegistry.handle_entity_state_change(registry, "binary_sensor.supernotify_scenario_sera", new_state)
-    assert scenario.enabled is True
-    entity.async_write_ha_state.assert_not_called()
+
+# --- Recipient binary_sensor toggling ---------------------------------------------------------
+
+
+async def test_recipient_binary_sensor_state_write_toggles_recipient(hass: HomeAssistant) -> None:
+    hass.states.async_set("person.joe", "home")
+    config = _stateful_scenario_config("on")
+    config["recipients"] = [{"person": "person.joe"}]
+    engine = await _setup_supernotify(hass, config)
+    recipient = engine.context.people_registry.people["person.joe"]
+    assert recipient.enabled is True
+    entity_id = "binary_sensor.supernotify_recipient_joe"
+    assert hass.states.get(entity_id).state == STATE_ON  # type: ignore[union-attr]
+
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert recipient.enabled is False
+    assert hass.states.get(entity_id).state == STATE_OFF  # type: ignore[union-attr]
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert recipient.enabled is True
+
+
+# --- Counters --------------------------------------------------------------------------------
+
+
+async def test_counters_are_the_only_home_of_the_counts(hass: HomeAssistant) -> None:
+    engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    assert hass.states.get("sensor.supernotify_notifications").state == "0"  # type: ignore[union-attr]
+    assert hass.states.get("sensor.supernotify_failures").state == "0"  # type: ignore[union-attr]
+
+    engine.notifications_sensor.increment()
+    engine.failures_sensor.increment()
+    engine.failures_sensor.increment()
+    await hass.async_block_till_done()
+
+    assert engine.sent == 1
+    assert engine.failures == 2
+    assert hass.states.get("sensor.supernotify_notifications").state == "1"  # type: ignore[union-attr]
+    assert hass.states.get("sensor.supernotify_failures").state == "2"  # type: ignore[union-attr]
+
+
+async def test_counters_restore_their_last_value(hass: HomeAssistant) -> None:
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (State("sensor.supernotify_notifications", "7"), {"native_value": 7, "native_unit_of_measurement": None}),
+            (State("sensor.supernotify_failures", "3"), {"native_value": 3, "native_unit_of_measurement": None}),
+        ],
+    )
+    engine = await _setup_supernotify(hass, _stateful_scenario_config("on"))
+
+    assert engine.sent == 7
+    assert engine.failures == 3
+    assert hass.states.get("sensor.supernotify_notifications").state == "7"  # type: ignore[union-attr]
+
+    engine.notifications_sensor.increment()
+    assert engine.sent == 8
+
+
+async def test_counter_sensors_are_on_the_supernotify_device(hass: HomeAssistant) -> None:
+    await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    reg_entry = er.async_get(hass).async_get("sensor.supernotify_notifications")
+    assert reg_entry is not None
+    assert reg_entry.config_entry_id == entry.entry_id
+    assert reg_entry.device_id is not None
+
+
+# --- Raw exposed entities ----------------------------------------------------------------------
+
+
+async def test_delivery_entities_belong_to_the_config_entry(hass: HomeAssistant) -> None:
+    await _setup_supernotify(hass, _stateful_scenario_config("on"))
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    reg_entry = er.async_get(hass).async_get("binary_sensor.supernotify_delivery_testing")
+    assert reg_entry is not None
+    assert reg_entry.config_entry_id == entry.entry_id
 
 
 # --- Medium bug: occupancy recomputed once per scenario in a batch refresh -----------------

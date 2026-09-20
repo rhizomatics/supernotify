@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
 from .common import ensure_list
 from .const import (
     ATTR_ALIAS,
@@ -54,7 +53,7 @@ if TYPE_CHECKING:
     from homeassistant.core import State
 
     from .binary_sensor import SupernotifyRecipientBinarySensor
-    from .hass_api import DeviceInfo, HomeAssistantAPI
+    from .hass_api import HomeAssistantAPI, TrackedDeviceDetails
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,7 +139,7 @@ class Recipient:
         if self.phone_number:
             self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
-            discovered_devices: list[DeviceInfo] = people_registry.mobile_devices_for_person(self.entity_id)
+            discovered_devices: list[TrackedDeviceDetails] = people_registry.mobile_devices_for_person(self.entity_id)
             if discovered_devices:
                 new_ids = []
                 for d in discovered_devices:
@@ -297,34 +296,19 @@ class PeopleRegistry:
         """Every registered recipient binary_sensor - used by supernotify.refresh_entities."""
         return list(self._entities.values())
 
-    def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
-        """React to a recipient binary_sensor being toggled on/off.
+    def handle_entity_state_change(self, recipient: Recipient, new_state: State) -> bool:
+        """React to a recipient's binary_sensor being toggled on/off.
 
-        Returns None if entity_id isn't one of ours, True if it was recognised and its
-        enabled state changed, False if recognised but unknown or already in that state.
+        Returns True if the recipient's enabled state changed, False if it was already in that
+        state.
         """
-        prefix = f"binary_sensor.{DOMAIN}_recipient_"
-        if not entity_id.startswith(prefix):
-            return None
-
-        name = entity_id.removeprefix(prefix)
-        recipient = self.people.get("person." + name)
-        if recipient is None:
-            _LOGGER.warning("SUPERNOTIFY Event for unknown recipient %s", entity_id)
-            return False
         if new_state.state == STATE_OFF and recipient.enabled:
             recipient.enabled = False
             _LOGGER.info("SUPERNOTIFY Disabling recipient %s", recipient.entity_id)
-            entity = self._entities.get(name)
-            if entity is not None:
-                entity.async_write_ha_state()
             return True
         if new_state.state == STATE_ON and not recipient.enabled:
             recipient.enabled = True
             _LOGGER.info("SUPERNOTIFY Enabling recipient %s", recipient.entity_id)
-            entity = self._entities.get(name)
-            if entity is not None:
-                entity.async_write_ha_state()
             return True
         _LOGGER.info("SUPERNOTIFY No change to recipient %s, already %s", recipient.entity_id, new_state)
         return False
@@ -408,7 +392,7 @@ class PeopleRegistry:
                     results[STATE_NOT_HOME].append(person_config)
         return results
 
-    def mobile_devices_for_person(self, person_entity_id: str) -> list[DeviceInfo]:
+    def mobile_devices_for_person(self, person_entity_id: str) -> list[TrackedDeviceDetails]:
         """Auto detect mobile_app targets for a person.
 
         Targets not currently validated as async registration may not be complete at this stage

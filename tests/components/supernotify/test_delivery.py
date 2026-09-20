@@ -26,7 +26,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_NTFY,
 )
 from custom_components.supernotify.delivery import Delivery
-from custom_components.supernotify.hass_api import DeviceInfo
+from custom_components.supernotify.hass_api import TrackedDeviceDetails
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.generic import GenericTransport
@@ -339,7 +339,7 @@ def test_device_discovery(unmocked_config: Context) -> None:
         transport=GenericTransport(unmocked_config, {CONF_DEVICE_DOMAIN: ["unit_testing"], CONF_DEVICE_DISCOVERY: True}),
     )
 
-    dev: DeviceInfo = Mock(spec=DeviceInfo, device_id="11112222ffffeeee00009999ddddcccc")
+    dev: TrackedDeviceDetails = Mock(spec=TrackedDeviceDetails, device_id="11112222ffffeeee00009999ddddcccc")
     unmocked_config.hass_api.discover_devices = Mock(  # type: ignore
         return_value=[dev]
     )
