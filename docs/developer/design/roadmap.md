@@ -51,8 +51,7 @@ Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a
 
 ## Internal Improvements
 
-The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining
-all reasonable backward compatibility.
+The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining all reasonable backward compatibility.
 
 ### Overhaul use of `data` in pipeline
 
