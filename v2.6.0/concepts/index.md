@@ -1,0 +1,72 @@
+# Core Concepts
+
+## Transport
+
+- *Transport* is the underlying platform that performs notifications, either out of the box from Home Assistant, or another custom component
+- *Transport Adaptors* are what make the difference between regular Notify Groups and Supernotify. While a Notify Group seems to allow easy multi-channel notifications, in practice each notify transport has different `data` (and `data` inside `data`!) structures, addressing etc so in the end notifications have to be simplified to the lowest common set of attributes, like just `message`!
+- Supernotify comes out the box with adaptors for common transports, like e-mail, mobile push, SMS, and Alexa, and a *Generic* transport adaptor that can be used to wrap any other Home Assistant action
+- The transport adaptor allows a single notification to be sent to many platforms, even when they all have different and mutually incompatible interfaces. They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where its possible.
+- Transport Adaptors can optionally be defined in the Supernotify config with defaults
+- Each transport has a default configuration, which allows lots of fine tuning and defaults to be made, saving need to add the same values into every notification.
+- See [Transports](https://supernotify.rhizomatics.org.uk/latest/transports/index.md) for more detail
+
+## Delivery
+
+- A **Delivery** defines each notification channel you want to use
+- Every configured Transport is available as a Delivery with the same name as the transport, so for example `email` or `mobile_push`.
+- Transports which can definitively select targets, like Email or Notify Entity, are always enabled by default. Others can be selected in configuration, by using Scenarios or switching them on in a notification
+- You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
+- See [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
+
+## Scenario
+
+- An easy way to package up common chunks of config, optionally combined with conditional logic
+- Scenarios can be manually selected, in an `apply_scenarios` value of notification `data` block, or automatically selected using a standard Home Assistant `condition` block.
+- They make it easy to apply overrides in one place to many different deliveries or notifications, and are the key to making notification calls in your automations radically simpler
+- See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/concepts/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
+
+## Target
+
+- The target of a notification.
+- This could be a *direct* target, like an `entity_id`, `device_id`, e-mail address, phone number, or some custom ID for a specialist transport like Telegram or API calls.
+- It also has some support, more to come, for *indirect* targets. The primary one is `person_id`, although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id` and `area_id`.
+- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify will exploded these for the *Chime* integration, but otherwise ignore them.
+- Targets can be qualified for a specific delivery, like `discord:839439434`
+- Targets for Notify Entity, Email and SMS are automatically routed to first available delivery for the appropriate transport
+- See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information
+
+## Recipient
+
+- Define a person, with optional e-mail address, phone number, mobile devices or custom targets.
+- This lets you target notifications to people in notifications, and each transport will pick the type of target it wants, for example the SMS one picking phone number and the SMTP one an e-mail address
+- See [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
+
+## Envelope
+
+- A notification customized for a specific delivery
+  - List of targets filtered, for example, only e-mail addresses for SMTP integration
+  - Indirect targets, like `person.xxx` are materialized into e-mail addresses, phone numbers etc
+  - The `data` section of the notification may also have been customized, by the delivery definition, or application of a scenario.
+- *Envelope* isn't present in the configuration - aside from the code, its only visible when viewing an [archived notification](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md), where a list of *delivered* and *undelivered* envelopes is kept.
+
+## Priority
+
+- An urgency level for notifications
+- There is no standard way to prioritize notifications, within or outside Home Assistant
+- Supernotify has its own 5 level scheme, which follows the most common practices, from `minimum` to `critical`
+- Priority can be used for things like scenario and delivery rules, and passed onto notify integrations that support it
+
+Info
+
+For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/latest/developer/class_diagram/index.md) of the core classes matching these concepts.
+
+# Core Principles
+
+1. All a notification needs is a message, everything else can be defaulted, including all the targets
+1. If you define something in an action call, it takes precedence over the defaults
+   - This can be tuned by things like `target_usage`
+   - The people registry is only used to generate targets if no targets given
+1. Action > Scenario > Delivery > Transport for configuration and defaults
+1. As unfussy as possible about how it is configured and called
+   - Targets can be structured into sub-categories, or a bit list of entity ids, device ids, emails and phone numbers
+   - Action `data` options like `delivery` can be a single value, list or dictionary mapping
