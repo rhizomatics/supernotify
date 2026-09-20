@@ -59,7 +59,7 @@ ISSUE_ID = "legacy_yaml_config"
 # retryable - e.g. after the user manually clears whatever blocked the automated attempt).
 MANUAL_MIGRATION_ISSUE_ID = "legacy_yaml_manual_migration_required"
 PYTHON_313_DEPRECATED_ISSUE_ID = "python_313_deprecated"
-SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID = "scenario_binary_sensor_deprecated"
+BINARY_SENSOR_DEPRECATED_ISSUE_ID = "binary_sensor_deprecated"
 SUPERNOTIFY_YAML_FILENAME = "supernotify.yaml"
 CONFIGURATION_YAML_FILENAME = "configuration.yaml"
 
@@ -169,21 +169,22 @@ def async_check_python_version(hass: HomeAssistant) -> None:
         )
 
 
-def async_create_scenario_binary_sensor_issue(hass: HomeAssistant) -> None:
-    """Raise a single, persistent, non-fixable warning that scenario binary_sensors are going.
+def async_create_binary_sensor_deprecated_issue(hass: HomeAssistant) -> None:
+    """Raise a single, persistent, non-fixable warning that scenario and recipient
+    binary_sensors are going.
 
-    Enabling and disabling a scenario moved to a switch entity, leaving the binary_sensor
-    read-only and only there for backward compatibility. Never deleted by us, so once the
+    Enabling and disabling a scenario or recipient moved to a switch entity, leaving the
+    binary_sensor read-only and only there for backward compatibility. Never deleted by us, so once the
     user has dismissed it, Home Assistant keeps it dismissed rather than raising it again.
     """
     ir.async_create_issue(
         hass,
         DOMAIN,
-        SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID,
+        BINARY_SENSOR_DEPRECATED_ISSUE_ID,
         is_fixable=False,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key=SCENARIO_BINARY_SENSOR_DEPRECATED_ISSUE_ID,
+        translation_key=BINARY_SENSOR_DEPRECATED_ISSUE_ID,
         learn_more_url="https://supernotify.rhizomatics.org.uk",
     )
 

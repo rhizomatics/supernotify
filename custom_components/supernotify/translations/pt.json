@@ -17,6 +17,9 @@
         "switch": {
             "scenario_enabled": {
                 "name": "{scenario} Cenário ativado"
+            },
+            "recipient_enabled": {
+                "name": "{recipient} Destinatário ativado"
             }
         }
     },
@@ -333,9 +336,9 @@
             "title": "O suporte a Python 3.13 termina em breve",
             "description": "Esta instância do Home Assistant está a executar Python {python_version}. O Supernotify deixará de suportar Python 3.13 (e versões do Home Assistant anteriores à 2026.3.0) quando o Home Assistant 2026.10 for lançado - a partir daí, esta instância não poderá instalar mais atualizações do Supernotify até que o ambiente Python subjacente seja atualizado para Python 3.14 ou posterior."
         },
-        "scenario_binary_sensor_deprecated": {
-            "title": "Os sensores binários de cenário serão removidos",
-            "description": "Cada cenário tem agora um interruptor (por exemplo `switch.supernotify_scenario_<name>`) que o ativa e desativa. As entidades `binary_sensor` dos cenários passam a ser só de leitura, apenas indicam se as condições do cenário estão atualmente cumpridas, e serão removidas numa versão futura. Escrever o estado de um `binary_sensor` de cenário deixa de ativar ou desativar o cenário, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor do cenário."
+        "binary_sensor_deprecated": {
+            "title": "Os sensores binários de cenário e destinatário serão removidos",
+            "description": "Cada cenário e destinatário tem agora um interruptor (por exemplo `switch.supernotify_scenario_<name>` e `switch.supernotify_recipient_<name>`) que o ativa e desativa. As entidades `binary_sensor` dos cenários e destinatários passam a ser só de leitura, apenas indicam se as condições de um cenário estão atualmente cumpridas ou se um destinatário está ativado, e serão removidas numa versão futura. Escrever o estado de uma destas entidades `binary_sensor` deixa de ativar ou desativar o cenário ou o destinatário, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor."
         }
     },
     "exceptions": {

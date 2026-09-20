@@ -10,9 +10,10 @@ for scenario and recipient binary_sensors (see upstream issue #175, "Part B"): r
 BinarySensorEntity objects grouped under a single SuperNotify device, instead of a bare
 entity_registry entry with a hand-written state and no Entity object behind it.
 
-The scenario binary_sensor is deprecated, kept only for backward compatibility, and read-only:
-enabling and disabling a scenario is done by its switch entity (switch.py). A one-off repair
-tells users it will be removed in a future version (see repairs.py).
+The scenario and recipient binary_sensors are deprecated, kept only for backward compatibility,
+and read-only: enabling and disabling a scenario or recipient is done by its switch entity
+(switch.py). A one-off repair tells users they will be removed in a future version (see
+repairs.py).
 
 entity_id and unique_id are chosen deliberately to line up with the pre-existing raw-write
 scheme (binary_sensor.supernotify_scenario_<name> / _recipient_<name>, unique_id
@@ -36,15 +37,14 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import EntityCategory
-from homeassistant.helpers.event import async_track_state_change_event
 
 from . import DOMAIN
 from .common import sanitize
 from .hass_api import ha_device_info
-from .repairs import async_create_scenario_binary_sensor_issue
+from .repairs import async_create_binary_sensor_deprecated_issue
 
 if TYPE_CHECKING:
-    from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+    from homeassistant.core import HomeAssistant
     from homeassistant.helpers.device_registry import DeviceInfo
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -71,8 +71,8 @@ async def async_setup_entry(
         for recipient in service.context.people_registry.people.values()
     )
     async_add_entities(entities)
-    if service.context.scenario_registry.scenarios:
-        async_create_scenario_binary_sensor_issue(hass)
+    if entities:
+        async_create_binary_sensor_deprecated_issue(hass)
 
 
 class SupernotifyScenarioBinarySensor(BinarySensorEntity):
@@ -116,11 +116,9 @@ class SupernotifyScenarioBinarySensor(BinarySensorEntity):
 
 
 class SupernotifyRecipientBinarySensor(BinarySensorEntity):
-    """Whether a recipient is currently enabled for delivery.
+    """Whether a recipient is currently enabled for delivery. Deprecated, see the recipient switch.
 
-    Toggled by writing its state, which this entity listens for and applies to the recipient
-    (PeopleRegistry.handle_entity_state_change), matching how delivery/transport binary_sensors
-    already work. TODO: recipients are to become switch entities, like scenarios (see issue #175).
+    Read-only: writing its state no longer enables or disables the recipient.
     """
 
     _attr_has_entity_name = True
@@ -156,13 +154,6 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self._registry.register_entity(self._recipient.name, self)
-        # watch this entity's own state, under whatever entity_id it was actually given
-        self.async_on_remove(async_track_state_change_event(self.hass, [self.entity_id], self._async_state_changed))
-
-    async def _async_state_changed(self, event: Event[EventStateChangedData]) -> None:
-        new_state = event.data["new_state"]
-        if new_state is not None and self._registry.handle_entity_state_change(self._recipient, new_state):
-            self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         self._registry.unregister_entity(self._recipient.name)

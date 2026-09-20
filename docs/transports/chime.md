@@ -258,7 +258,7 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 ## Scenarios
 
 Chimes work well with scenarios, you can easily add a chime for all critical notifications without
-having to change any of the automations. See [Scenarios](../usage/scenarios.md) and [Recipes](../recipes/index.md)
+having to change any of the automations. See [Scenarios](../configuration/scenarios.md) and [Recipes](../recipes/index.md)
 for more details.
 
 ## References

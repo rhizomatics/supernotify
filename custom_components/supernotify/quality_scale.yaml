@@ -225,7 +225,7 @@ rules:
     status: done
     comment: |
       A single "SuperNotify" device (hass_api.ha_device_info()) now groups the
-      scenario switches, scenario/recipient binary_sensors and the
+      scenario and recipient switches, scenario/recipient binary_sensors and the
       notification/failure counter sensors (switch.py, binary_sensor.py,
       sensor.py). Delivery/transport entities are not yet on this device - a
       separate, larger conversion (issue #175) - though hass_api.expose_entity()
@@ -300,7 +300,7 @@ rules:
     comment: |
       Partial: EntityCategory.DIAGNOSTIC set on all scenario/recipient
       binary_sensors and the two counter sensors (binary_sensor.py,
-      sensor.py), EntityCategory.CONFIG on the scenario switches (switch.py),
+      sensor.py), EntityCategory.CONFIG on the scenario and recipient switches (switch.py),
       plus notify.py:575. Delivery/transport entities not yet reviewed.
 
   entity-device-class:
@@ -324,11 +324,11 @@ rules:
   entity-translations:
     status: todo
     comment: |
-      Partial: the two counter sensors, and the scenario binary_sensors and
-      switches, have translated names via strings.json's "entity" section and
-      _attr_translation_key (the scenario name being a translation placeholder).
-      Recipient binary_sensors intentionally keep their per-instance _attr_name,
-      as a user-configured recipient name isn't a candidate for translation.
+      Partial: the two counter sensors, the scenario binary_sensors, and the
+      scenario and recipient switches have translated names via strings.json's
+      "entity" section and _attr_translation_key (the scenario or recipient name
+      being a translation placeholder). The deprecated recipient binary_sensors
+      intentionally keep their per-instance _attr_name.
       Delivery/transport entities not yet reviewed.
 
   exception-translations:
@@ -339,7 +339,7 @@ rules:
   icon-translations:
     status: todo
     comment: |
-      Partial: icons.json now covers the scenario switches, the scenario/
+      Partial: icons.json now covers the scenario and recipient switches, the scenario/
       recipient binary_sensors and the two counter sensors via
       _attr_translation_key (independent of the per-instance _attr_name on
       the recipient binary_sensor - see entity-translations).
@@ -359,8 +359,8 @@ rules:
       Partial infrastructure exists: hass_api.py creates repair issues but all
       but one are is_fixable=False, i.e. informational rather than the
       guided/actionable fix flows this rule expects. repairs.py also raises one
-      persistent "scenario_binary_sensor_deprecated" issue, never re-raised once
-      dismissed, for the deprecated scenario binary_sensors.
+      persistent "binary_sensor_deprecated" issue, never re-raised once
+      dismissed, for the deprecated scenario and recipient binary_sensors.
 
   stale-devices:
     status: exempt

@@ -17,6 +17,9 @@
         "switch": {
             "scenario_enabled": {
                 "name": "{scenario} Scenario Enabled"
+            },
+            "recipient_enabled": {
+                "name": "{recipient} Recipient Enabled"
             }
         }
     },
@@ -419,9 +422,9 @@
             "title": "Delivery No Longer Included By Default",
             "description": "Delivery {delivery} does not set its own inclusion, and transport {transport} no longer defaults to 'default' - this delivery will not fire on every notification any more. Add inclusion: [default] to the delivery if you still want that."
         },
-        "scenario_binary_sensor_deprecated": {
-            "title": "Scenario binary sensors will be removed",
-            "description": "Each scenario now has a switch (for example `switch.supernotify_scenario_<name>`) that enables and disables it. The scenario `binary_sensor` entities are read-only from now on, only reporting whether the scenario's conditions currently hold, and will be removed in a future version. Writing a scenario `binary_sensor`'s state no longer enables or disables the scenario, so change any automation, script or dashboard that does that, or otherwise relies on these entities, to use the scenario switch instead."
+        "binary_sensor_deprecated": {
+            "title": "Scenario and recipient binary sensors will be removed",
+            "description": "Each scenario and recipient now has a switch (for example `switch.supernotify_scenario_<name>` and `switch.supernotify_recipient_<name>`) that enables and disables it. The scenario and recipient `binary_sensor` entities are read-only from now on, only reporting whether a scenario's conditions currently hold or whether a recipient is enabled, and will be removed in a future version. Writing the state of one of these `binary_sensor` entities no longer enables or disables the scenario or recipient, so change any automation, script or dashboard that does that, or otherwise relies on these entities, to use the switch instead."
         }
     },
     "exceptions": {

@@ -19,6 +19,9 @@
         "switch": {
             "scenario_enabled": {
                 "default": "mdi:clipboard-check"
+            },
+            "recipient_enabled": {
+                "default": "mdi:account-check"
             }
         }
     }

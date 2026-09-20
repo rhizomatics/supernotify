@@ -17,9 +17,8 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_HOME,
     STATE_NOT_HOME,
-    STATE_OFF,
-    STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import ensure_list
@@ -296,22 +295,12 @@ class PeopleRegistry:
         """Every registered recipient binary_sensor - used by supernotify.refresh_entities."""
         return list(self._entities.values())
 
-    def handle_entity_state_change(self, recipient: Recipient, new_state: State) -> bool:
-        """React to a recipient's binary_sensor being toggled on/off.
-
-        Returns True if the recipient's enabled state changed, False if it was already in that
-        state.
-        """
-        if new_state.state == STATE_OFF and recipient.enabled:
-            recipient.enabled = False
-            _LOGGER.info("SUPERNOTIFY Disabling recipient %s", recipient.entity_id)
-            return True
-        if new_state.state == STATE_ON and not recipient.enabled:
-            recipient.enabled = True
-            _LOGGER.info("SUPERNOTIFY Enabling recipient %s", recipient.entity_id)
-            return True
-        _LOGGER.info("SUPERNOTIFY No change to recipient %s, already %s", recipient.entity_id, new_state)
-        return False
+    @callback
+    def async_refresh_entity(self, name: str) -> None:
+        """Re-publish one recipient's binary_sensor now"""
+        entity = self._entities.get(name)
+        if entity is not None:
+            entity.async_write_ha_state()
 
     def expose_notify_entities(
         self, entry_id: str, async_add_entities: AddConfigEntryEntitiesCallback, service: NotifyEntityPlatform

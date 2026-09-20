@@ -300,7 +300,9 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
 
 async def test_exposed_recipients(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
-    hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "off")
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.supernotify_recipient_house_owner"}, blocking=True
+    )
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
     await hass.async_block_till_done()
@@ -330,7 +332,9 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
         ]
     }
     assert response == expected_response
-    hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "on")
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.supernotify_recipient_house_owner"}, blocking=True
+    )
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
     await hass.async_block_till_done()

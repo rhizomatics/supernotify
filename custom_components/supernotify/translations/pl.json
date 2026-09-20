@@ -17,6 +17,9 @@
         "switch": {
             "scenario_enabled": {
                 "name": "{scenario} Scenariusz włączony"
+            },
+            "recipient_enabled": {
+                "name": "{recipient} Odbiorca włączony"
             }
         }
     },
@@ -333,9 +336,9 @@
             "title": "Wsparcie dla Pythona 3.13 wkrótce się kończy",
             "description": "Ta instancja Home Assistant działa na Pythonie {python_version}. Supernotify zakończy wsparcie dla Pythona 3.13 (oraz wersji Home Assistant starszych niż 2026.3.0) wraz z wydaniem Home Assistant 2026.10 - po tym momencie ta instancja nie będzie mogła instalować kolejnych aktualizacji Supernotify, dopóki środowisko Pythona nie zostanie zaktualizowane do wersji 3.14 lub nowszej."
         },
-        "scenario_binary_sensor_deprecated": {
-            "title": "Czujniki binarne scenariuszy zostaną usunięte",
-            "description": "Każdy scenariusz ma teraz przełącznik (na przykład `switch.supernotify_scenario_<name>`), który go włącza i wyłącza. Encje `binary_sensor` scenariuszy są odtąd tylko do odczytu, informują jedynie, czy warunki scenariusza są w tej chwili spełnione, i zostaną usunięte w przyszłej wersji. Zapisanie stanu `binary_sensor` scenariusza nie włącza ani nie wyłącza już scenariusza, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika scenariusza."
+        "binary_sensor_deprecated": {
+            "title": "Czujniki binarne scenariuszy i odbiorców zostaną usunięte",
+            "description": "Każdy scenariusz i każdy odbiorca ma teraz przełącznik (na przykład `switch.supernotify_scenario_<name>` i `switch.supernotify_recipient_<name>`), który go włącza i wyłącza. Encje `binary_sensor` scenariuszy i odbiorców są odtąd tylko do odczytu, informują jedynie, czy warunki scenariusza są w tej chwili spełnione lub czy odbiorca jest włączony, i zostaną usunięte w przyszłej wersji. Zapisanie stanu jednej z tych encji `binary_sensor` nie włącza ani nie wyłącza już scenariusza ani odbiorcy, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika."
         }
     },
     "exceptions": {

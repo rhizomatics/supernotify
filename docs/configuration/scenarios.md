@@ -84,7 +84,7 @@ scenarios:
 Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable
 the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
 
-The scenario's configuration is available as attributes of its `binary_sensor.supernotify_scenario_<name>`, see [Scenario Sensors](#scenario-sensors).
+The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`, see [Scenario Sensors](#scenario-sensors).
 
 
 ## Overriding Delivery Selection and Configuration
@@ -201,9 +201,7 @@ Regular expressions can be mixed and matched with literal delivery names, where 
 liternal name will work, where 2 regular expressions resolve to the same delivery, the last one to
 be applied is used.
 
-All deliveries are enabled by default - which makes regular scenarios easier to use - though can
-mean that a wildcard switches on more deliveries than might be the intention. The solution for this is
-to use an `enabled:` field, which won't force anything to be enabled.
+All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. The solution for this is to use an `enabled:` field, which won't force anything to be enabled.
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 
@@ -219,12 +217,9 @@ scenarios:
 ## Scenario Sensors
 
 !!! warning "Deprecated"
-    The scenario `binary_sensor` is kept only for backward compatibility, and will be removed in a future
-    version. It is read-only: writing its state no longer enables or disables the scenario, use the
-    scenario `switch` for that. A repair is raised once in Home Assistant to say so.
+    The scenario `binary_sensor` is kept only for backward compatibility, and will be removed in a future version. It is read-only: writing its state no longer enables or disables the scenario, use the scenario `switch` for that. A repair is raised once in Home Assistant to say so.
 
-Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its
-conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
+Each scenario is exposed as `switch.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
 
 ### Live Scenarios
 
@@ -238,8 +233,7 @@ scenario_control:
   refresh_interval: 60 # seconds; 0 keeps the reactive path and drops the sweep
 ```
 
-An individual scenario can be kept out of it, which is useful for one expensive template among
-otherwise cheap scenarios:
+An individual scenario can be kept out of it, which is useful for one expensive template among otherwise cheap scenarios:
 
 ```yaml
 scenarios:
