@@ -35,22 +35,27 @@ def convert(schema: typing.Any) -> dict[str, typing.Any]:  # ruff: ignore[any-ty
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # import must come after sys.path append
 import custom_components.supernotify.schema
+import custom_components.supernotify.transports.chime
 
 _LOGGER = logging.getLogger(__name__)
 
 ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
 
-TOP_LEVEL_SCHEMAS = {
-    "FULL_CONFIG_SCHEMA": "Full Configuration",
-    "SCENARIO_SCHEMA": "Scenario Definition",
-    "STRICT_ACTION_DATA_SCHEMA": "Notify Action Data",
-    "NOTIFY_ACTION_SCHEMA": "Notify Action",
-    "DELIVERY_SCHEMA": "Delivery Definition",
-    "DELIVERY_CUSTOMIZE_SCHEMA": "Delivery Customization",
-    "RECIPIENT_SCHEMA": "Recipient Definition",
-    "CAMERA_SCHEMA": "Camera Definition",
-    "TRANSPORT_SCHEMA": "Transport Definition",
-    "CHIME_ALIASES_SCHEMA": "Chime Aliases Definition",
+SCHEMAS_BY_MODULE = {
+    custom_components.supernotify.schema: {
+        "FULL_CONFIG_SCHEMA": "Full Configuration",
+        "SCENARIO_SCHEMA": "Scenario Definition",
+        "STRICT_ACTION_DATA_SCHEMA": "Notify Action Data",
+        "NOTIFY_ACTION_SCHEMA": "Notify Action",
+        "DELIVERY_SCHEMA": "Delivery Definition",
+        "DELIVERY_CUSTOMIZE_SCHEMA": "Delivery Customization",
+        "RECIPIENT_SCHEMA": "Recipient Definition",
+        "CAMERA_SCHEMA": "Camera Definition",
+        "TRANSPORT_SCHEMA": "Transport Definition",
+    },
+    custom_components.supernotify.transports.chime: {
+        "CHIME_ALIASES_SCHEMA": "Chime Aliases Definition",
+    },
 }
 
 
@@ -58,8 +63,10 @@ def schema_doc() -> None:
     Path("docs/developer/schemas").mkdir(exist_ok=True)
     Path("docs/developer/schemas/js").mkdir(exist_ok=True)
 
-    v_schemas = {s: getattr(custom_components.supernotify.schema, s) for s in TOP_LEVEL_SCHEMAS}
-    j_schemas = {s[0]: (TOP_LEVEL_SCHEMAS[s[0]], convert(s[1])) for s in v_schemas.items()}
+    j_schemas = {}
+    for module, schema_defs in SCHEMAS_BY_MODULE.items():
+        v_schemas = {s: getattr(module, s) for s in schema_defs}
+        j_schemas.update({s[0]: (schema_defs[s[0]], convert(s[1])) for s in v_schemas.items()})
     config = GenerationConfiguration(
         examples_as_yaml=True,
         template_name="md",
@@ -104,7 +111,7 @@ def schema_doc() -> None:
         df.write("## JSON Schema Files\n")
         df.write("|Schema|JSON Definition|Documentation|\n")
         df.write("|------|---------------|-------|\n")
-        for schema_name in j_schemas:
+        for schema_name, _schema in j_schemas.values():
             schema_link_name = schema_name.replace(" ", "_")
             df.write(f"|{schema_name}|[{schema_link_name}.json](json/{schema_link_name}.schema.json)|")
             df.write(f"[Schema Doc]({schema_link_name}.md)|\n")

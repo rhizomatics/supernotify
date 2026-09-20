@@ -85,7 +85,11 @@
                 },
                 "message_html": {
                     "name": "Messaggio HTML",
-                    "description": "Un'alternativa HTML al Messaggio, usata dai trasporti che supportano la formattazione ricca (ad es. e-mail)."
+                    "description": "Un'alternativa HTML al Messaggio, usata dai transport che supportano la formattazione ricca (ad es. e-mail)."
+                },
+                "spoken_message": {
+                    "name": "Messaggio vocale",
+                    "description": "Alternativa vocale al campo Messaggio, usata dai transport che leggono la notifica ad alta voce (es. Alexa, TTS)."
                 },
                 "debug": {
                     "name": "Debug",
@@ -96,8 +100,16 @@
                     "description": "Invia anche se il rilevamento dei duplicati sopprimerebbe altrimenti questa notifica."
                 },
                 "data": {
+                    "name": "Dati (legacy)",
+                    "description": "Vecchio nome di Dati aggiuntivi, mantenuto perché le automazioni esistenti continuino a comparire nell'editor visuale. Per le nuove automazioni usa Dati aggiuntivi."
+                },
+                "timestamp": {
+                    "name": "Formato del timestamp",
+                    "description": "Aggiunge al messaggio la data/ora corrente, tra parentesi quadre, usando un formato strftime di Python come %H:%M o %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Dati aggiuntivi",
-                    "description": "Dati passanti per trasporti/blueprint che qui si aspettano propri campi, ad es. attributi da un blueprint di notifica Frigate."
+                    "description": "Dati inoltrati così come sono e regolazioni specifiche del transport, per transport o blueprint che richiedono campi propri, es. gli attributi del blueprint di notifica di Frigate."
                 }
             },
             "sections": {
@@ -285,7 +297,7 @@
                 "step": {
                     "confirm": {
                         "title": "Migra la configurazione YAML di Supernotify",
-                        "description": "Le impostazioni di consegna, trasporti, scenari, destinatari, telecamere, gruppi di azione, link e snooze devono essere spostate dal blocco YAML `notify: - platform: supernotify` a una nuova chiave di primo livello `supernotify:`.\n\nSelezionando **Invia** questo viene automatizzato: viene scritto un nuovo file `supernotify.yaml` con le impostazioni attuali e viene aggiunta una riga `supernotify: !include supernotify.yaml` alla fine di `configuration.yaml`. La configurazione viene ricaricata immediatamente - non è necessario riavviare.\n\n**Preferisci farlo manualmente?** Sposta semplicemente le impostazioni tu stesso in una chiave di primo livello `supernotify:` invece di cliccare su Invia - entrambi i modi vanno bene, e questa riparazione non richiede che tu torni a confermarla.\n\nIn entrambi i casi, questo **non** rimuove il vecchio blocco `notify: - platform: supernotify`. Una volta che quel blocco viene eliminato da `configuration.yaml` e Home Assistant viene riavviato, questa riparazione si risolve automaticamente - non è necessario chiuderla manualmente."
+                        "description": "Le impostazioni di consegna, transport, scenari, destinatari, telecamere, gruppi di azione, link e snooze devono essere spostate dal blocco YAML `notify: - platform: supernotify` a una nuova chiave di primo livello `supernotify:`.\n\nSelezionando **Invia** questo viene automatizzato: viene scritto un nuovo file `supernotify.yaml` con le impostazioni attuali e viene aggiunta una riga `supernotify: !include supernotify.yaml` alla fine di `configuration.yaml`. La configurazione viene ricaricata immediatamente - non è necessario riavviare.\n\n**Preferisci farlo manualmente?** Sposta semplicemente le impostazioni tu stesso in una chiave di primo livello `supernotify:` invece di cliccare su Invia - entrambi i modi vanno bene, e questa riparazione non richiede che tu torni a confermarla.\n\nIn entrambi i casi, questo **non** rimuove il vecchio blocco `notify: - platform: supernotify`. Una volta che quel blocco viene eliminato da `configuration.yaml` e Home Assistant viene riavviato, questa riparazione si risolve automaticamente - non è necessario chiuderla manualmente."
                     },
                     "already_migrated": {
                         "title": "Configurazione YAML di Supernotify già migrata",
@@ -305,7 +317,7 @@
         },
         "legacy_yaml_manual_migration_required": {
             "title": "La configurazione YAML di Supernotify deve essere migrata manualmente",
-            "description": "La migrazione automatica a una chiave YAML di primo livello `supernotify:` non è riuscita: {reason}. Sposta tu stesso le impostazioni di consegna, trasporti, scenari, destinatari, telecamere, gruppi di azione, link e snooze dal blocco `notify: - platform: supernotify` a una chiave di primo livello `supernotify:` (ad esempio `supernotify: !include supernotify.yaml`), quindi rimuovi il vecchio blocco e riavvia Home Assistant."
+            "description": "La migrazione automatica a una chiave YAML di primo livello `supernotify:` non è riuscita: {reason}. Sposta tu stesso le impostazioni di consegna, transport, scenari, destinatari, telecamere, gruppi di azione, link e snooze dal blocco `notify: - platform: supernotify` a una chiave di primo livello `supernotify:` (ad esempio `supernotify: !include supernotify.yaml`), quindi rimuovi il vecchio blocco e riavvia Home Assistant."
         },
         "python_313_deprecated": {
             "title": "Il supporto per Python 3.13 terminerà a breve",

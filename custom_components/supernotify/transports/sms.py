@@ -9,10 +9,6 @@ from homeassistant.helpers.typing import ConfigType
 from custom_components.supernotify.const import (
     ATTR_PHONE,
     INCLUSION_DEFAULT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_UNIQUE_TARGETS,
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.model import (
@@ -21,6 +17,12 @@ from custom_components.supernotify.model import (
     MessageOnlyPolicy,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
 )
 from custom_components.supernotify.transport import (
     Transport,

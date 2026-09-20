@@ -43,7 +43,7 @@ from __future__ import annotations
 import html
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,6 +56,7 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -86,6 +87,7 @@ class MatrixTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_MATRIX
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
     def supported_features(self) -> TransportFeature:

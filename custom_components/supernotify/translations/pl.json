@@ -87,6 +87,10 @@
                     "name": "Wiadomość HTML",
                     "description": "Alternatywa HTML dla Wiadomości, używana przez transporty obsługujące bogate formatowanie (np. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Wiadomość mówiona",
+                    "description": "Mówiona alternatywa dla Wiadomości, używana przez transporty odczytujące ją na głos (np. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debugowanie",
                     "description": "Uwzględnij dodatkowe szczegóły diagnostyczne tego powiadomienia w śladach i archiwum."
@@ -96,8 +100,16 @@
                     "description": "Wyślij nawet, jeśli wykrywanie duplikatów w innym przypadku wstrzymałoby to powiadomienie."
                 },
                 "data": {
+                    "name": "Dane (przestarzałe)",
+                    "description": "Starsza nazwa pola Dodatkowe dane, zachowana, aby istniejące automatyzacje nadal były widoczne w edytorze wizualnym. W nowych automatyzacjach używaj pola Dodatkowe dane."
+                },
+                "timestamp": {
+                    "name": "Format znacznika czasu",
+                    "description": "Dołącza do wiadomości bieżącą datę/godzinę w nawiasach kwadratowych, w formacie strftime Pythona, np. %H:%M lub %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Dodatkowe dane",
-                    "description": "Dane przekazywane dalej dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
+                    "description": "Dane przekazywane dalej i dostrajanie transportu dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
                 }
             },
             "sections": {

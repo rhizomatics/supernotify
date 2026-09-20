@@ -12,11 +12,6 @@ from custom_components.supernotify.const import (
     CONF_INCLUSION,
     INCLUSION_DEFAULT,
     INCLUSION_EXPLICIT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
     RE_NOTIFY_ENTITY_ID,
     TRANSPORT_ALEXA,
 )
@@ -27,6 +22,14 @@ from custom_components.supernotify.model import (
     TargetRequired,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_SELECT,
+    OPTION_UNIQUE_TARGETS,
+    SELECT_EXCLUDE,
 )
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
@@ -117,7 +120,12 @@ class AlexaDevicesTransport(Transport):
         announcement chime+speech. Each extra is only built if at least one matching
         entity exists."""
         deliveries: dict[str, ConfigType] = {self.name: {}}
-        entity_ids = hass_api.entity_ids_for_platform("notify", HA_ALEXA_DEVICES_PLATFORM)
+        # speaker groups get their own "_announce"/"_speak" notify entities alongside their
+        # member devices, but can't be expanded to their members here (see target_categories
+        # below), so they're excluded to avoid double notification of the same group members
+        entity_ids = hass_api.entity_ids_for_platform(
+            "notify", HA_ALEXA_DEVICES_PLATFORM, device_model_select={SELECT_EXCLUDE: ["Speaker Group"]}
+        )
         speak_entities = [e for e in entity_ids if "_speak" in e]
         if speak_entities:
             deliveries[STANDARD_DELIVERY_SPEAK_ALL] = {

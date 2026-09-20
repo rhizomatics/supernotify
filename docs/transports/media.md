@@ -28,11 +28,11 @@ Pass the content link in using the `snapshot_url` value in the notification `dat
   data:
     message: ""
     delivery:
-        media:
-            target:
-                - media_player.kitchen_alexa
-            data:
-                snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
+      media:
+        target:
+            - media_player.kitchen_alexa
+        data:
+            snapshot_url: https://mycctvserver/doorbell/snapshot.jpeg
 ```
 
 The resulting action call from the adaptor looks like:

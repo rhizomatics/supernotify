@@ -33,11 +33,6 @@ from custom_components.supernotify.const import (
     CONF_PERSON,
     CONF_TEMPLATE,
     CONF_TRANSPORT,
-    EMAIL_OPTION_MODE_DIRECT,
-    EMAIL_OPTION_MODE_HA_SMTP,
-    OPTION_MODE,
-    OPTION_SENDER,
-    OPTION_SENDER_NAME,
     PRIORITY_HIGH,
     PRIORITY_LOW,
     PRIORITY_MEDIUM,
@@ -47,7 +42,17 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.transports.email import OPTION_PREHEADER_BLANK, OPTION_PREHEADER_LENGTH, EmailTransport
+from custom_components.supernotify.schema import TRANSPORT_SCHEMA
+from custom_components.supernotify.transports.email import (
+    EMAIL_OPTION_MODE_DIRECT,
+    EMAIL_OPTION_MODE_HA_SMTP,
+    OPTION_MODE,
+    OPTION_PREHEADER_BLANK,
+    OPTION_PREHEADER_LENGTH,
+    OPTION_SENDER,
+    OPTION_SENDER_NAME,
+    EmailTransport,
+)
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -974,3 +979,17 @@ async def test_deliver_ha_smtp_mode_uses_default_action() -> None:
         target=None,
         return_response=False,
     )
+
+
+def test_transport_schema_sender_stays_a_string() -> None:
+    """Regression test: vol.Email (uncalled) previously returned a validator function.
+
+    instead of the validated address, so downstream code (e.g. email.utils.formataddr)
+    blew up trying to call str methods on a function object.
+    """
+    validated = TRANSPORT_SCHEMA({
+        CONF_CONNECTION: {CONF_HOST: "smtp.example.com"},
+        CONF_DELIVERY_DEFAULTS: {CONF_OPTIONS: {OPTION_SENDER: "hass@example.com"}},
+    })
+    assert isinstance(validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER], str)
+    assert validated[CONF_DELIVERY_DEFAULTS][CONF_OPTIONS][OPTION_SENDER] == "hass@example.com"

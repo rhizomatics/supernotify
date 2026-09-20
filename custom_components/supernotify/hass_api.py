@@ -230,16 +230,33 @@ class HomeAssistantAPI:
                 return reg_entry.platform
         return None
 
-    def entity_ids_for_platform(self, domain: str, platform: str) -> list[str]:
+    def entity_ids_for_platform(
+        self, domain: str, platform: str, device_model_select: str | list[str] | dict | SelectionRule | None = None
+    ) -> list[str]:
         """entity_ids in `domain` (e.g. "notify") registered by a specific integration.
 
         Reads the entity registry directly (not the state machine), so a freshly
         registered entity counts even before it has reported a first state.
+
+        `device_model_select` optionally filters by the backing device's model (e.g.
+        `{"exclude": ["Speaker Group"]}`), same include/exclude rule shape used elsewhere.
         """
         entity_registry = self._entity_registry()
         if not entity_registry:
             return []
-        return [e.entity_id for e in entity_registry.entities.values() if e.domain == domain and e.platform == platform]
+        entries: list[RegistryEntry] = [
+            e for e in entity_registry.entities.values() if e.domain == domain and e.platform == platform
+        ]
+        if device_model_select is not None:
+            model_filter = SelectionRule(device_model_select)
+            entries = [e for e in entries if model_filter.match(self._device_model(e.device_id))]
+        return [e.entity_id for e in entries]
+
+    def _device_model(self, device_id: str | None) -> str | None:
+        if device_id is None:
+            return None
+        dev_entry = self.find_device(device_id)
+        return dev_entry.model if dev_entry else None
 
     async def async_get_camera_image(self, entity_id: str, timeout: int = 10) -> ha_camera.Image | None:
         """Fetch a still image directly from a camera entity, via HA's own camera component API,
@@ -428,12 +445,17 @@ class HomeAssistantAPI:
             if service_objs:
                 for service, domain_obj in service_objs.items():
                     if domain_obj.job and domain_obj.job.target:
-                        target_module: str | None = (
-                            domain_obj.job.target.__self__.__module__
-                            if hasattr(domain_obj.job.target, "__self__")
-                            else domain_obj.job.target.__module__
-                        )
+                        target = domain_obj.job.target
+                        bound_self = getattr(target, "__self__", None)
+                        target_module: str | None = bound_self.__module__ if bound_self is not None else target.__module__
                         if target_module == module:
+                            # Legacy notify platforms with a targets property (e.g. alexa_media_player)
+                            # register extra per-target services (notify.<platform>_<device>) that share
+                            # this same bound method but hard-code their own target, ignoring any target:
+                            # passed by the caller - skip those and hold out for the base platform service.
+                            registered_targets = getattr(bound_self, "registered_targets", None)
+                            if registered_targets is not None and service in registered_targets:
+                                continue
                             _LOGGER.debug("SUPERNOTIFY Found service %s for domain %s in %s", service, domain, module)
                             return f"{domain}.{service}"
 

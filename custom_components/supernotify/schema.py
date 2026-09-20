@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_DESCRIPTION,
-    CONF_DOMAIN,
     CONF_EMAIL,
     CONF_ENABLED,
     CONF_HOST,
@@ -47,6 +46,7 @@ from .const import (
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
     ATTR_EMAIL,
+    ATTR_EXTRA_DATA,
     ATTR_FORCE_RESEND,
     ATTR_JPEG_OPTS,
     ATTR_MEDIA,
@@ -54,6 +54,7 @@ from .const import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CAMERA_PTZ_PRESET,
     ATTR_MEDIA_CLIP_URL,
+    ATTR_MEDIA_SNAPSHOT_PATH,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
     ATTR_MOBILE_APP_ID,
@@ -65,6 +66,7 @@ from .const import (
     ATTR_SCENARIOS_APPLY,
     ATTR_SCENARIOS_CONSTRAIN,
     ATTR_SCENARIOS_REQUIRE,
+    ATTR_SPOKEN_MESSAGE,
     ATTR_TIMESTAMP,
     ATTR_TITLE,
     CONF_ACTION_GROUP_NAMES,
@@ -95,7 +97,6 @@ from .const import (
     CONF_DEVICE_TRACKER,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
-    CONF_DURATION,
     CONF_ENCRYPTION,
     CONF_EXPOSE_STATE,
     CONF_HOUSEKEEPING,
@@ -143,15 +144,11 @@ from .const import (
     CONF_TRANSPORT,
     CONF_TRANSPORTS,
     CONF_TTL,
-    CONF_TUNE,
     CONF_URI,
-    CONF_VOLUME,
     DELIVERY_SELECTION_VALUES,
     INCLUSION_VALUES,
     OCCUPANCY_ALL,
     OCCUPANCY_VALUES,
-    OPTION_CHIME_ALIASES,
-    OPTIONS_CHIME_DOMAINS,
     PRIORITY_VALUES,
     PTZ_DELAY_DEFAULT,
     PTZ_METHOD_ONVIF,
@@ -425,6 +422,7 @@ MEDIA_SCHEMA = vol.Schema({
     # URL fragments allowed
     vol.Optional(ATTR_MEDIA_CLIP_URL): vol.Any(cv.url, cv.string),
     vol.Optional(ATTR_MEDIA_SNAPSHOT_URL): vol.Any(cv.url, cv.string),
+    vol.Optional(ATTR_MEDIA_SNAPSHOT_PATH): cv.path,
     vol.Optional(ATTR_JPEG_OPTS): dict,
     vol.Optional(ATTR_PNG_OPTS): dict,
 })
@@ -558,25 +556,6 @@ FULL_CONFIG_SCHEMA = SUPERNOTIFY_YAML_SCHEMA.extend({
     vol.Optional(CONF_RECIPIENTS_DISCOVERY, default=True): cv.boolean,
 })
 
-CHIME_ALIASES_SCHEMA = vol.Schema({
-    vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
-        cv.string: vol.Schema({
-            cv.string: vol.Any(
-                vol.Any(None, cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
-                vol.Schema({
-                    vol.Optional(CONF_ALIAS): cv.string,
-                    vol.Optional(CONF_DOMAIN): cv.string,
-                    vol.Optional(CONF_TUNE): cv.string,
-                    vol.Optional(CONF_DATA): DATA_SCHEMA,
-                    vol.Optional(CONF_VOLUME): float,
-                    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-                    vol.Optional(CONF_DURATION): cv.positive_int,
-                }),
-            )
-        })
-    })
-})
-
 
 _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
     {
@@ -589,6 +568,7 @@ _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
         vol.Optional(ATTR_RECIPIENTS): vol.All(cv.ensure_list, [cv.entity_id]),
         vol.Optional(ATTR_MEDIA): MEDIA_SCHEMA,
         vol.Optional(ATTR_MESSAGE_HTML): cv.string,
+        vol.Optional(ATTR_SPOKEN_MESSAGE): cv.string,
         vol.Optional(ATTR_ACTION_GROUPS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ACTIONS, default=[]): vol.All(cv.ensure_list, [MOBILE_ACTION_CALL_SCHEMA]),
         vol.Optional(ATTR_DEBUG, default=False): cv.boolean,
@@ -598,6 +578,8 @@ _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,  # allow other data, e.g. the android/ios mobile push
 )
+
+ACTION_DATA_FIELDS: frozenset[str] = frozenset(str(key) for key in _ACTION_DATA_FIELDS_SCHEMA.schema)
 
 ACTION_DATA_SCHEMA = vol.All(
     cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
@@ -619,6 +601,8 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Required(CONF_MESSAGE): cv.string,
         vol.Optional(CONF_TITLE): cv.string,
         vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+        # pass-through data exempt from the legacy nested-data migration - see actions.py
+        vol.Optional(ATTR_EXTRA_DATA): vol.Any(None, DATA_SCHEMA),
         # the target selector behind CONF_TARGET can only produce entity/device/area/floor/label
         # ids, so custom_target is a free-text escape hatch for targets it can't - e-mail
         # addresses, phone numbers, Slack ids etc. notify.py's action_notify merges

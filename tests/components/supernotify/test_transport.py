@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import unicodedata
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
@@ -14,6 +15,7 @@ from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target, TransportConfig, TransportFeature
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.alexa_media_player import AlexaMediaPlayerTransport
 from custom_components.supernotify.transports.generic import GenericTransport
 
 from .doubles_lib import DummyService
@@ -36,6 +38,65 @@ def test_simplify_text() -> None:
         == "Hello world! Visit https://example.com it's great 100 test"
     )
     assert uut.simplify("NoSpecialChars123") == "NoSpecialChars123"
+
+
+def test_simplify_text_keeps_sign_characters() -> None:
+    """+, -, = and % are kept even though some of them are Unicode symbol codepoints,
+    so numeric values like "+3" aren't left indistinguishable from "3"."""
+
+    uut = GenericTransport(Mock())
+    assert uut.simplify("Temperature +3 °C, -2 overnight, 50% humidity") == "Temperature +3 C, -2 overnight, 50% humidity"
+
+
+def test_simplify_text_normalizes_nfd_before_stripping_marks() -> None:
+    """NFD text (e.g. from macOS filenames) decomposes accents into a separate combining
+    mark codepoint, which must not be stripped as if it were unrelated symbol markup."""
+
+    uut = GenericTransport(Mock())
+    nfd_text = unicodedata.normalize("NFD", "Umidità già alta")
+    assert uut.simplify(nfd_text) == "Umidità già alta"
+
+
+def test_simplify_text_strip_urls_does_not_match_bare_scheme_like_words() -> None:
+    """A word ending in a colon (e.g. "Attention:") parses with a truthy `scheme` under
+    urlparse, but is not a URL and must not be dropped."""
+
+    uut = GenericTransport(Mock())
+    assert uut.simplify("Attention: visit https://example.com now", strip_urls=True) == "Attention: visit now"
+
+
+def test_simplify_text_preserves_ssml_for_spoken_transports() -> None:
+    """Spoken transports pass SSML to the voice assistant, so the markup must survive."""
+
+    uut = AlexaMediaPlayerTransport(Mock())
+    assert uut.supported_features & TransportFeature.SPOKEN
+
+    assert (
+        uut.simplify('<amazon:effect name="whispered">Smoke alarm in the kitchen</amazon:effect>')
+        == '<amazon:effect name="whispered">Smoke alarm in the kitchen</amazon:effect>'
+    )
+    assert (
+        uut.simplify('<speak><break time="500ms"/>Front_door open</speak>')
+        == '<speak><break time="500ms"/>Front door open</speak>'
+    )
+    # text around the markup is still simplified, and spacing is kept
+    assert (
+        uut.simplify('<speak>Front <emphasis level="strong">door</emphasis> open (again) £5</speak>')
+        == '<speak>Front <emphasis level="strong">door</emphasis> open again 5</speak>'
+    )
+    # angle brackets that are not SSML keep the old behaviour, on any transport
+    assert uut.simplify("Sensor <test> tripped") == "Sensor test tripped"
+
+
+def test_simplify_text_strips_ssml_for_non_spoken_transports() -> None:
+    """Transports without a voice interface have no use for SSML, so it is simplified away."""
+
+    uut = GenericTransport(Mock())
+    assert not uut.supported_features & TransportFeature.SPOKEN
+    assert (
+        uut.simplify('<amazon:effect name="whispered">Smoke alarm</amazon:effect>')
+        == 'amazon:effect name="whispered"Smoke alarm/amazon:effect'
+    )
 
 
 async def test_call_action_simple(hass: HomeAssistant) -> None:

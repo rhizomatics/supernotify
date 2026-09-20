@@ -87,6 +87,10 @@
                     "name": "HTML 消息",
                     "description": "消息的 HTML 替代方案，供支持富格式的传输方式使用（例如电子邮件）。"
                 },
+                "spoken_message": {
+                    "name": "语音消息",
+                    "description": "消息的语音替代方案，供朗读消息的传输方式使用（例如 Alexa、TTS）。"
+                },
                 "debug": {
                     "name": "调试",
                     "description": "在跟踪记录和存档中为此通知包含额外的诊断详情。"
@@ -96,8 +100,16 @@
                     "description": "即使重复检测原本会抑制此通知，也发送。"
                 },
                 "data": {
+                    "name": "数据（旧）",
+                    "description": "额外数据的旧名称，保留以便现有自动化仍能在可视化编辑器中显示。新的自动化请使用额外数据。"
+                },
+                "timestamp": {
+                    "name": "时间戳格式",
+                    "description": "使用 Python strftime 格式（如 %H:%M 或 %Y-%m-%d %H:%M），将当前日期/时间以方括号形式附加到消息末尾。"
+                },
+                "extra_data": {
                     "name": "额外数据",
-                    "description": "供期望在此处提供自有字段的传输方式/蓝图使用的透传数据，例如来自 Frigate 通知蓝图的属性。"
+                    "description": "供期望在此处提供自有字段的传输方式/蓝图使用的透传数据和传输调优，例如来自 Frigate 通知蓝图的属性。"
                 }
             },
             "sections": {

@@ -67,16 +67,16 @@ Both these examples had a single target. The `target` field will work with a sin
 This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever is most convenient
 
 ```yaml
-  - action: supernotify.notify
-    data:
-        message: Something went off in the basement
-        target:
-            email: john@mcdoe.co.bn
-            phone_number: +4398708123987
-            telegram: @bill
-            mobile_app_id:
-              - mobile_app.john_phone
-              - mobile_app.john_ipad
+- action: supernotify.notify
+  data:
+      message: Something went off in the basement
+      target:
+          email: john@mcdoe.co.bn
+          phone_number: +4398708123987
+          telegram: "@bill"
+          mobile_app_id:
+            - mobile_app.john_phone
+            - mobile_app.john_ipad
 ```
 
 ## Category-Prefixed Targets
@@ -153,13 +153,13 @@ Delivery selection can be passed in the `data` of an action call using the `deli
 An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override. If in doubt, add the `delivery_selection` to make it clear.
 
 ```yaml title="Implicit (default) - implied by a mapping"
-  - action:supernotify.notify
-    data:
-        message: Garden sensor triggered
-        delivery:
-            mobile_push: # tunes an existing (default or scenario) delivery
-              data:
-                clickAction: https://my.home.net/dashboard
+- action: supernotify.notify
+  data:
+      message: Garden sensor triggered
+      delivery:
+          mobile_push: # tunes an existing (default or scenario) delivery
+            data:
+              clickAction: https://my.home.net/dashboard
 ```
 
 In this example, `mobile_push` and `plain_email` are selected as deliveries, even if they are not default ones. In addition
@@ -214,8 +214,7 @@ In this example, when an Actionable Notification is sent with action `Red Alert`
   action:
   - action: notify.supernotify
     data:
-      data:
-        scenario: red_alert
+      apply_scenario: red_alert
 ```
 
 In this example, a mobile notification goes out to notify of the dishwasher finishing, and email is switched off.
@@ -234,10 +233,9 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
   - action: supernotify.notify
     data:
       message: Dishwasher is finished
-      data:
-        delivery:
-          plain_email:
-            enabled:
+      delivery:
+        plain_email:
+          enabled:
 ```
 ### Automation and Templates
 
@@ -278,7 +276,7 @@ Templates can be used freely, as in other `notify` integrations
 ```
 
 Note here that the `clickAction` is defined only on the `mobile_push` delivery. However
-it is also possible to simply define everything at the top level `data` section and let the individual transport adaptors pick out the attributes they need. This is helpful either if you don't care about fine tuning delivery configurations, or using existing notification blueprints, such as the popular
+it is also possible to simply define everything at the top level `extra_data` section and let the individual transport adaptors pick out the attributes they need. This is helpful either if you don't care about fine tuning delivery configurations, or using existing notification blueprints, such as the popular
 [Frigate Camera Notification Blueprints](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications).
 
 ## Customizing message per channel
@@ -293,8 +291,38 @@ it is also possible to simply define everything at the top level `data` section 
               data:
                 message: Garden sensor was triggered
             sms: # refers to a transport, so effects all deliveries based on SMS transport
-                message: Garden Activity
-                title: HASS
+                data:
+                  message: Garden Activity
+                  title: HASS
+```
+
+## Extra Data
+
+The top level `extra_data` can hold anything that isn't a Supernotify action field, and is offered to every delivery. It is used for two things:
+
+- **Values for the underlying integration**, passed straight through. If there are multiple integrations, all of them will get this data ( other than where Supernotify knows the integration and that they can't handle extra data items).
+- **Tuning for Supernotify's own transports**, such as `chime_tune` for the [Chime](../transports/chime.md) transport. Each transport takes out the keys it recognizes, and passes the rest on to the integration.
+
+```yaml title="Extra Data for Integration"
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        title: Something has happened
+        delivery: zify
+        extra_data:
+          zify_back_channel: 1041
+
+```
+
+Since `extra_data` goes to every delivery, transport tuning is better defined in the `data` section of the specific delivery, so it only affects that delivery. This can be done in the delivery configuration, or for a single notification in a `delivery` override, as in the `mobile_push` example above.
+
+```yaml title="Transport Tuning in a Delivery"
+supernotify:
+  delivery:
+    xmas_chime:
+      transport: chime
+      data:
+        chime_tune: christmas_05
 ```
 
 # Alternate Notification Action

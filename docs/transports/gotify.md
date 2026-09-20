@@ -69,7 +69,7 @@ action: supernotify.notify
 data:
   message: "Movimento rilevato"
   delivery: [gotify_con_camera]
-  data:
+  extra_data:
     gotify_attach_image: true
   media:
     camera_entity_id: camera.ingresso
@@ -80,7 +80,7 @@ action: supernotify.notify
 data:
   message: "**Porta aperta** — controlla la dashboard"
   delivery: [gotify_base]
-  data:
+  extra_data:
     gotify_click: "https://ha.local:8123/lovelace/sicurezza"
     gotify_markdown: true
 # Result: bold text rendered, tap opens HA dashboard ✅

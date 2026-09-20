@@ -214,20 +214,16 @@ scenarios:
         priority: critical
 ```
 
-## Scenario state
+## Scenario Sensors
 
 Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its
-conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate
-between notifications — one with no conditions, or whose conditions depend only on the priority of
-the notification being sent.
+conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
 
-The state is kept current in two ways. A change to an entity referenced by a scenario's conditions
-re-evaluates the scenarios that depend on that entity, immediately. A periodic sweep then covers
-what no entity change can announce: time windows, sun position, and templates whose dependencies
-could not be determined statically.
+### Live Scenarios
 
-Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on
-small hardware is worth controlling:
+The state is kept current in two ways. A change to an entity referenced by a scenario's conditions re-evaluates the scenarios that depend on that entity, immediately. A periodic sweep then covers what no entity change can announce: time windows, sun position, and templates whose dependencies could not be determined statically.
+
+Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on small hardware is worth controlling, so the section below is needed to switch it on.
 
 ```yaml
 scenario_control:

@@ -87,6 +87,10 @@
                     "name": "HTML-bericht",
                     "description": "Een HTML-alternatief voor Bericht, gebruikt door transporten die rijke opmaak ondersteunen (bijv. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Gesproken bericht",
+                    "description": "Een gesproken alternatief voor Bericht, gebruikt door transporten die het hardop voorlezen (bijv. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Extra diagnostische details voor deze melding opnemen in traces en het archief."
@@ -96,8 +100,16 @@
                     "description": "Verzend zelfs als detectie van duplicaten deze melding anders zou onderdrukken."
                 },
                 "data": {
+                    "name": "Gegevens (verouderd)",
+                    "description": "Oudere naam voor Extra gegevens, behouden zodat bestaande automatiseringen nog in de visuele editor verschijnen. Gebruik Extra gegevens voor nieuwe automatiseringen."
+                },
+                "timestamp": {
+                    "name": "Tijdstempelnotatie",
+                    "description": "Voegt de huidige datum/tijd tussen vierkante haken toe aan het bericht, in een Python-strftime-notatie zoals %H:%M of %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Extra gegevens",
-                    "description": "Doorgegeven gegevens voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
+                    "description": "Doorgegeven gegevens en transportafstemming voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
                 }
             },
             "sections": {

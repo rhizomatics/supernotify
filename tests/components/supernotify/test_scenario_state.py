@@ -1,9 +1,11 @@
 """Tests for scenario state exposure (fix: scenarios were stuck at STATE_UNKNOWN).
 
 Covers the classification logic of `ScenarioRegistry._scenario_state`:
-  * a scenario with no conditions (manual / apply_scenarios only) -> UNKNOWN
-  * a scenario whose conditions reference no entity (priority-only / transient)
-    -> UNKNOWN
+  * a scenario with no conditions at all (manual / apply_scenarios only) -> UNKNOWN
+  * a scenario whose conditions reference no HA entity (e.g. a pure now()/date
+    template, or one keyed off notification_priority) -> evaluated for real,
+    same as any other scenario - see _scenario_state()'s own docstring for why a
+    priority/message/title-only condition still isn't meaningfully dynamic here
   * a scenario whose conditions reference entities (stateful / hybrid)
     -> ON/OFF from a neutral evaluation
 
@@ -17,11 +19,18 @@ to `ScenarioRegistry` in scenario.py.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, Mock
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import CONF_ALIAS, CONF_CONDITIONS, STATE_OFF, STATE_ON, STATE_UNKNOWN
 
+from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
+from custom_components.supernotify.schema import SCENARIO_SCHEMA
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 def _evaluate_state(conditions_config, cond_entities, evaluate_result: bool) -> str:
@@ -45,12 +54,14 @@ def test_manual_scenario_without_conditions_is_unknown() -> None:
     assert _evaluate_state([], set(), True) == STATE_UNKNOWN
 
 
-def test_transient_scenario_without_entities_is_unknown() -> None:
-    """A scenario whose conditions reference no entity depends only on the
-    per-notification priority (critical_panic/high_priority/alexa_low_whisper)
-    -> transient -> UNKNOWN, not a misleading OFF."""
-    assert _evaluate_state([{"condition": "template"}], set(), True) == STATE_UNKNOWN
-    assert _evaluate_state([{"condition": "template"}], set(), False) == STATE_UNKNOWN
+def test_entityless_conditions_are_evaluated_for_real() -> None:
+    """A scenario whose conditions reference no HA entity - e.g. a pure now()/date
+    template like `{{ (10, 31) == (now().month, now().day) }}` - still gets a real
+    ON/OFF from evaluate(), not a permanent UNKNOWN: async_extract_entities() finding
+    nothing doesn't mean the condition has nothing to evaluate, and the periodic sweep
+    exists specifically to keep exactly this kind of scenario current."""
+    assert _evaluate_state([{"condition": "template"}], set(), True) == STATE_ON
+    assert _evaluate_state([{"condition": "template"}], set(), False) == STATE_OFF
 
 
 def test_stateful_scenario_reflects_evaluation() -> None:
@@ -162,6 +173,34 @@ def test_refresh_is_a_no_op_when_disabled() -> None:
     me.scenario_state_enabled = False
     ScenarioRegistry.async_refresh_scenario_states(me)
     assert _refreshed(me) == set()
+
+
+async def test_entityless_template_scenario_evaluates_end_to_end(hass: HomeAssistant) -> None:
+    """Regression test for a real report: a scenario conditioned on a bare template that
+    references no HA entity (e.g. a date/now() check like the user's `halloween`/`birthdays`
+    scenarios) must expose a genuine ON/OFF, not get stuck showing 'unavailable' in the UI
+    forever because _scenario_state() treated 'no extracted entity' as 'never evaluate'.
+
+    Uses the real Scenario/ScenarioRegistry/condition machinery (not a mocked evaluate()) for
+    end-to-end confidence, with a wall-clock-independent template so the test itself is stable.
+    """
+    hass_api = HomeAssistantAPI(hass)
+    people_registry = PeopleRegistry([], hass_api)
+    delivery_registry = Mock()
+    delivery_registry.deliveries = {}
+
+    registry = ScenarioRegistry(
+        {
+            "always_on": SCENARIO_SCHEMA({CONF_ALIAS: "always on", CONF_CONDITIONS: "{{ 1 == 1 }}"}),
+            "always_off": SCENARIO_SCHEMA({CONF_ALIAS: "always off", CONF_CONDITIONS: "{{ 1 == 2 }}"}),
+        },
+        {},
+        people_registry,
+    )
+    await registry.initialize(delivery_registry, {}, hass_api)
+
+    assert registry._scenario_state(registry.scenarios["always_on"]) == STATE_ON
+    assert registry._scenario_state(registry.scenarios["always_off"]) == STATE_OFF
 
 
 def test_scenario_opted_out_of_state_stays_unknown() -> None:

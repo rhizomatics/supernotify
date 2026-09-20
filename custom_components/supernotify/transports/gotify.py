@@ -38,7 +38,7 @@ Priority mapping (SuperNotify -> Gotify integer):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.helpers.typing import ConfigType
@@ -51,6 +51,7 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -101,6 +102,7 @@ class GotifyTransport(Transport):
     """Notify via Gotify self-hosted push notification server."""
 
     name = TRANSPORT_GOTIFY
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

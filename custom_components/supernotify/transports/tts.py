@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.components.tts.const import ATTR_CACHE, ATTR_LANGUAGE, ATTR_OPTIONS
@@ -11,16 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from custom_components.supernotify.const import (
     ATTR_MOBILE_APP_ID,
     MANUFACTURER_APPLE,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MANUFACTURER_SELECT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_SELECT,
-    OPTION_TTS_ENTITY_ID,
     RE_MEDIA_PLAYER_ENTITY_ID,
-    SELECT_EXCLUDE,
     TRANSPORT_TTS,
 )
 from custom_components.supernotify.model import (
@@ -33,6 +24,17 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import (
+    OPTION_DEVICE_DISCOVERY,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MANUFACTURER_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_SELECT,
+    SELECT_EXCLUDE,
+    DeliveryOption,
+)
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
 
@@ -43,6 +45,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"  # mypy flags up import from tts
+OPTION_TTS_ENTITY_ID = "tts_entity_id"
 
 
 class TTSTransport(Transport):
@@ -54,6 +57,9 @@ class TTSTransport(Transport):
     """
 
     name = TRANSPORT_TTS
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(OPTION_TTS_ENTITY_ID, "The tts entity used to generate speech"),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

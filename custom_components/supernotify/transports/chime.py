@@ -3,34 +3,33 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    CONF_ALIAS,
     CONF_DOMAIN,
     CONF_TARGET,
 )
 from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.helpers import config_validation as cv
 from voluptuous.humanize import humanize_error
 
 from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA,
     ATTR_PRIORITY,
+    CONF_DATA,
+    CONF_DURATION,
     CONF_INCLUSION,
     CONF_TUNE,
+    CONF_VOLUME,
     INCLUSION_EXPLICIT,
-    OPTION_CHIME_ALIASES,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MODEL_SELECT,
-    OPTION_TARGET_SELECT,
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
-    SELECT_EXCLUDE,
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.model import (
@@ -42,7 +41,15 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
-from custom_components.supernotify.schema import CHIME_ALIASES_SCHEMA
+from custom_components.supernotify.options import (
+    OPTION_DEVICE_DISCOVERY,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MODEL_SELECT,
+    OPTION_TARGET_SELECT,
+    SELECT_EXCLUDE,
+    DeliveryOption,
+)
+from custom_components.supernotify.schema import DATA_SCHEMA, TARGET_SCHEMA
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -65,6 +72,26 @@ _LOGGER = logging.getLogger(__name__)
 # device registry entries when a config entry is unloaded, so chime can keep finding and
 # targeting alexa_devices devices after that transport has gone away
 DEVICE_DOMAINS = ["alexa_devices"]
+
+OPTION_CHIME_ALIASES = "chime_aliases"
+CHIME_ALIASES_SCHEMA = vol.Schema({
+    vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
+        cv.string: vol.Schema({
+            cv.string: vol.Any(
+                vol.Any(None, cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
+                vol.Schema({
+                    vol.Optional(CONF_ALIAS): cv.string,
+                    vol.Optional(CONF_DOMAIN): cv.string,
+                    vol.Optional(CONF_TUNE): cv.string,
+                    vol.Optional(CONF_DATA): DATA_SCHEMA,
+                    vol.Optional(CONF_VOLUME): float,
+                    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+                    vol.Optional(CONF_DURATION): cv.positive_int,
+                }),
+            )
+        })
+    })
+})
 
 
 @dataclass
@@ -251,6 +278,9 @@ class MediaPlayerChimeTransport(MiniChimeTransport):
 
 class ChimeTransport(Transport):
     name = TRANSPORT_CHIME
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(OPTION_CHIME_ALIASES, "Custom chime device aliases and their per-domain tuning"),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

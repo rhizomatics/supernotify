@@ -30,7 +30,7 @@ scenarios:
 
       delivery:
         plain_email:
-        apple_push:
+        mobile_push:
         alexa_inform:
           data:
             message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'

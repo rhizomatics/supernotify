@@ -41,7 +41,7 @@ When speaking, [SSML](https://developer.amazon.com/en-US/docs/alexa/custom-skill
 
 ## Voice specific message
 
-Use `spoken_message` in the `data` section of a notification call to provide a different message for a voice
+Use `spoken_message` in the notification call to provide a different message for a voice
 notification than used for other transports like email or mobile push.
 
 ## References

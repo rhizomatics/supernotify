@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 
 # ATTR_VARIABLES from script.const has import issues
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import ensure_list
@@ -18,13 +19,6 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PRIORITY,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_GENERIC_DOMAIN_STYLE,
-    OPTION_MESSAGE_USAGE,
-    OPTION_RAW,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
     PRIORITY_CRITICAL,
     PRIORITY_HIGH,
     PRIORITY_LOW,
@@ -37,10 +31,19 @@ from custom_components.supernotify.model import (
     DataFilter,
     DebugTrace,
     MessageOnlyPolicy,
+    SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_CATEGORIES,
+    DeliveryOption,
 )
 from custom_components.supernotify.transport import (
     Transport,
@@ -53,11 +56,23 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+OPTION_RAW = "raw"
+OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
+
 
 class GenericTransport(Transport):
     """Call any service, including non-notify ones, like switch.turn_on or mqtt.publish"""
 
     name = TRANSPORT_GENERIC
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(OPTION_RAW, "Don't apply domain specific data handling and pruning rules", value_type=cv.boolean),
+        DeliveryOption(OPTION_GENERIC_DOMAIN_STYLE, "Treat the action call in the same way as a known domain"),
+        DeliveryOption(
+            OPTION_DATA_KEYS_SELECT,
+            "Prune the data block by including/excluding values or by regex pattern",
+            value_type=SelectionRule,
+        ),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -160,9 +175,13 @@ class GenericTransport(Transport):
             action_data.update(data)
             build_targets = True
         elif equiv_domain == "notify_events":
-            mini_envelopes.extend(notify_events(envelope.message, envelope.title, core_action_data, data, envelope.delivery))
+            mini_envelopes.extend(
+                notify_events(envelope.message, envelope.title, core_action_data, data, envelope.delivery, envelope.priority)
+            )
         elif qualified_action == "ntfy.publish":
-            mini_envelopes.extend(ntfy(core_action_data, data, envelope.target, envelope.delivery, self.hass_api))
+            mini_envelopes.extend(
+                ntfy(core_action_data, data, envelope.target, envelope.delivery, envelope.priority, self.hass_api)
+            )
         elif equiv_domain in ("siren", "light"):
             target_data = {ATTR_ENTITY_ID: envelope.target.domain_entity_ids(domain)}
             action_data = data
@@ -244,6 +263,7 @@ def ntfy(
     data: dict[str, Any],
     target: Target,
     delivery: Delivery,
+    priority: str | None,
     hass_api: HomeAssistantAPI,
 ) -> list[MiniEnvelope]:
     """Customize `data` for ntfy integration"""
@@ -252,8 +272,8 @@ def ntfy(
     action_data.update(data)
     action_data = hass_api.coerce_schema("ntfy", "publish", action_data)
 
-    if ATTR_PRIORITY in action_data and action_data[ATTR_PRIORITY] in PRIORITY_VALUES:
-        action_data[ATTR_PRIORITY] = PRIORITY_VALUES.get(action_data[ATTR_PRIORITY], 3)
+    if priority and priority in PRIORITY_VALUES:
+        action_data[ATTR_PRIORITY] = PRIORITY_VALUES.get(priority, 3)
 
     media = action_data.pop(ATTR_MEDIA, {})
     if media and media.get(ATTR_MEDIA_SNAPSHOT_URL) and "attach" not in action_data:
@@ -300,6 +320,7 @@ def notify_events(
     core_action_data: dict[str, Any],
     data: dict[str, Any],
     delivery: Delivery,
+    priority: str | None,
 ) -> list[MiniEnvelope]:
     """Customize `data` for notify_events integration"""
     results: list[MiniEnvelope] = []
@@ -323,12 +344,12 @@ def notify_events(
         # notify_events is schema-less for action
         action_data[ATTR_DATA] = input_data[ATTR_DATA]
 
-    if ATTR_PRIORITY in input_data and input_data[ATTR_PRIORITY] in PRIORITY_VALUES:
+    if priority and priority in PRIORITY_VALUES:
         action_data.setdefault(ATTR_DATA, {})
-        action_data[ATTR_DATA][ATTR_PRIORITY] = priority_mapping.get(input_data[ATTR_PRIORITY])
-    elif ATTR_PRIORITY in input_data and input_data[ATTR_PRIORITY] in priority_mapping.values():
+        action_data[ATTR_DATA][ATTR_PRIORITY] = priority_mapping.get(priority)
+    elif priority and priority in priority_mapping.values():
         action_data.setdefault(ATTR_DATA, {})
-        action_data[ATTR_DATA][ATTR_PRIORITY] = input_data[ATTR_PRIORITY]
+        action_data[ATTR_DATA][ATTR_PRIORITY] = priority
 
     if "token" in input_data:
         action_data.setdefault(ATTR_DATA, {})

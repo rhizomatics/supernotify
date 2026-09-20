@@ -87,6 +87,10 @@
                     "name": "Message HTML",
                     "description": "Une alternative HTML au Message, utilisée par les transports prenant en charge une mise en forme riche (par ex. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Message parlé",
+                    "description": "Une alternative parlée au Message, utilisée par les transports qui le lisent à voix haute (par ex. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Débogage",
                     "description": "Inclure des détails de diagnostic supplémentaires pour cette notification dans les traces et l'archive."
@@ -96,8 +100,16 @@
                     "description": "Envoyer même si la détection des doublons supprimerait autrement cette notification."
                 },
                 "data": {
+                    "name": "Données (ancien)",
+                    "description": "Ancien nom de Données supplémentaires, conservé pour que les automatisations existantes s'affichent toujours dans l'éditeur visuel. Utilisez Données supplémentaires pour les nouvelles automatisations."
+                },
+                "timestamp": {
+                    "name": "Format de l'horodatage",
+                    "description": "Ajoute la date/heure actuelle au message, entre crochets, avec un format strftime de Python tel que %H:%M ou %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Données supplémentaires",
-                    "description": "Données transmises pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
+                    "description": "Données transmises et réglages de transport pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
                 }
             },
             "sections": {

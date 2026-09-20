@@ -65,7 +65,8 @@ Breakdown:
 
 ### Second
 
-* Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved.   - The Notify Entity question from the Principles section above is resolved (staying on `BaseNotificationService`)
+* Solve the remaining Bronze and Silver level quality issues that don't impinge on how delivery/transport/scenario/recipient/camera are resolved.
+- The Notify Entity question from the Principles section above is resolved (staying on `BaseNotificationService`)
 - Remaining Second-phase work is entity/service lifecycle quality-scale items (see `quality_scale.yaml`'s `action-setup` for the still-YAML-only supplemental `supernotify.*` debugging services), not an architecture decision.
 
 ### Third

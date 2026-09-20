@@ -14,6 +14,7 @@ from jinja2 import TemplateError
 
 from .common import DupeCheckable
 from .const import (
+    ATTR_FORCE_RESEND,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
@@ -22,10 +23,6 @@ from .const import (
     ATTR_PRIORITY,
     ATTR_SPOKEN_MESSAGE,
     ATTR_TIMESTAMP,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
     PRIORITY_MEDIUM,
 )
 from .media_grab import grab_image
@@ -38,6 +35,12 @@ from .model import (
     Target,
     TargetRequired,
     TransportFeature,
+)
+from .options import (
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
 )
 
 if typing.TYPE_CHECKING:
@@ -83,15 +86,19 @@ class Envelope(DupeCheckable):
         self._message: str | None = None
         self._title: str | None = None
         self.message_html: str | None = None
-        self.data: dict[str, Any] = {}
+        self.spoken_message: str | None = None
+        self.force_resend: bool = False
+        self.data: dict[str, Any] = {}  # delivery/target/scenario/action data
         self.actions: list[dict[str, Any]] = []
         if notification:
             delivery_config_data: dict[str, Any] = notification.delivery_data(delivery)
             self._enabled_scenarios: dict[str, Scenario] = notification.enabled_scenarios
+            # in reverse of usual logic, delivery config wins over notification data for message and title
             self._message = delivery_config_data.pop(ATTR_MESSAGE, notification.message)
             self._title = delivery_config_data.pop(ATTR_TITLE, notification._title)
             self.id = f"{notification.id}_{self.delivery_name}"
         else:
+            # should be testing scenarios only
             delivery_config_data = {}
             self._enabled_scenarios = {}
             self.id = str(uuid.uuid1())
@@ -108,10 +115,17 @@ class Envelope(DupeCheckable):
             self.media = notification.media
             self.action_groups = notification.action_groups
             self.actions = notification.actions
-            self.priority = self.data.get(ATTR_PRIORITY, notification.priority)
-            self.message_html = self.data.get(ATTR_MESSAGE_HTML, notification.message_html)
+            self.priority = self.data.pop(ATTR_PRIORITY, notification.priority)
+            self.message_html = self.data.pop(ATTR_MESSAGE_HTML, notification.message_html)
+            self.spoken_message = self.data.pop(ATTR_SPOKEN_MESSAGE, notification.spoken_message)
+            self.force_resend = self.data.pop(ATTR_FORCE_RESEND, notification.force_resend)
+
+        self.timestamp_format: str | None = self.data.pop(ATTR_TIMESTAMP, None)
+
+        # from this point on `self.data` has no internal Supernotify fields
+
         if notification and hasattr(notification, "condition_variables"):  # yeuchh
-            self.condition_variables = notification.condition_variables
+            self.condition_variables: ConditionVariables = notification.condition_variables
         else:
             self.condition_variables = ConditionVariables()
 
@@ -163,15 +177,15 @@ class Envelope(DupeCheckable):
                 data[ATTR_MESSAGE] = ""
         else:
             data[ATTR_MESSAGE] = self.message
-        timestamp = self.data.get(ATTR_TIMESTAMP)
-        if timestamp and ATTR_MESSAGE in data:
-            data[ATTR_MESSAGE] = f"{data[ATTR_MESSAGE]} [{time.strftime(timestamp, time.localtime())}]"
+
+        if self.timestamp_format and ATTR_MESSAGE in data:
+            data[ATTR_MESSAGE] = f"{data[ATTR_MESSAGE]} [{time.strftime(self.timestamp_format, time.localtime())}]"
         if self.title is not None:
             data[ATTR_TITLE] = self.title
         return data
 
     def contents(self, minimal: bool = True, **_kwargs: Any) -> dict[str, typing.Any]:
-        exclude_attrs: list[str] = ["_notification", "context", "ha_context", "condition_variables"]
+        exclude_attrs: list[str] = ["_notification", "context", "ha_context", "condition_variables", "force_resend"]
         if minimal:
             exclude_attrs.append("delivery")
             features: TransportFeature = self.delivery.transport.supported_features
@@ -181,6 +195,10 @@ class Envelope(DupeCheckable):
                 exclude_attrs.append(ATTR_MEDIA)
             if not features & TransportFeature.MESSAGE:
                 exclude_attrs.extend(["message_html", "message"])
+            if features & TransportFeature.SPOKEN:
+                exclude_attrs.append("message_html")
+            else:
+                exclude_attrs.append("spoken_message")
             if not features & TransportFeature.TITLE:
                 exclude_attrs.append("title")
             if self.delivery.target_required == TargetRequired.NEVER:
@@ -220,33 +238,29 @@ class Envelope(DupeCheckable):
         title: str | None = None
         message_usage = self.delivery.option_str(OPTION_MESSAGE_USAGE)
         if not ignore_usage and message_usage.upper() in (MessageOnlyPolicy.USE_TITLE, MessageOnlyPolicy.COMBINE_TITLE):
+            # Message sourced from title text, title field dropped
             title = None
         else:
             title = self.delivery.title if self.delivery.title is not None else self._title
+            title = self._render_scenario_templates(title, "title_template", "notification_title")
             if self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True or self.delivery.option_bool(OPTION_STRIP_URLS) is True:
                 title = self.delivery.transport.simplify(title, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
-        title = self._render_scenario_templates(title, "title_template", "notification_title")
+
         if title is None:
             return None
         return str(title)
 
-    def _spoken_message(self) -> str | None:
+    def _spoken_message(self, msg: str | None) -> str | None:
         """Alternative message only for spoken voice transports"""
-        if (
-            self._notification
-            and self._notification.extra_data
-            and ATTR_SPOKEN_MESSAGE in self._notification.extra_data
-            and self.delivery.transport.supported_features & TransportFeature.SPOKEN
-        ):
-            return str(self._notification.extra_data[ATTR_SPOKEN_MESSAGE])
-        return None
+        return self.spoken_message if self.spoken_message is not None else msg
 
     def _compute_message(self) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call
 
         # self._message could be top level `message` or `message` set in delivery override
         msg: str | None = self.delivery.message if self.delivery.message is not None else self._message
-        msg = self._spoken_message() or msg
+        if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
+            msg = self._spoken_message(msg)
 
         if msg and self.context and is_template_string(msg):
             try:
@@ -266,10 +280,10 @@ class Envelope(DupeCheckable):
             if title:
                 msg = f"{title} {msg}"
 
+        msg = self._render_scenario_templates(msg, "message_template", "notification_message")
         if self.delivery.option_bool(OPTION_SIMPLIFY_TEXT) is True or self.delivery.option_bool(OPTION_STRIP_URLS) is True:
             msg = self.delivery.transport.simplify(msg, strip_urls=self.delivery.option_bool(OPTION_STRIP_URLS))
 
-        msg = self._render_scenario_templates(msg, "message_template", "notification_message")
         if msg is None:  # keep mypy happy
             return None
         return str(msg)
@@ -311,7 +325,11 @@ class Envelope(DupeCheckable):
         def alphaize(v: str | None) -> str | None:
             return v.translate(HASH_PREP_TRANSLATION_TABLE) if v else v
 
-        message: str | None = self._spoken_message() or self._message
+        message: str | None
+        if self.delivery.transport.supported_features & TransportFeature.SPOKEN:
+            message = self._spoken_message(self._message)
+        else:
+            message = self._message
         media = self.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
         media_url = media.get(ATTR_MEDIA_CLIP_URL) or media.get(ATTR_MEDIA_SNAPSHOT_URL)

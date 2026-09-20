@@ -13,9 +13,10 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
 import aiofiles
+import voluptuous as vol
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
@@ -28,6 +29,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
@@ -46,19 +48,7 @@ from custom_components.supernotify.const import (
     CONF_ENCRYPTION,
     CONF_OPTIONS,
     CONF_TEMPLATE,
-    EMAIL_OPTION_MODE_DIRECT,
     INCLUSION_DEFAULT,
-    OPTION_DEFAULT_TITLE,
-    OPTION_JPEG,
-    OPTION_MESSAGE_USAGE,
-    OPTION_MODE,
-    OPTION_PNG,
-    OPTION_SENDER,
-    OPTION_SENDER_NAME,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRICT_TEMPLATE,
-    OPTION_STRIP_URLS,
-    OPTION_UNIQUE_TARGETS,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.model import (
@@ -68,6 +58,16 @@ from custom_components.supernotify.model import (
     SuppressionReason,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    MEDIA_OPTIONS,
+    OPTION_JPEG,
+    OPTION_MESSAGE_USAGE,
+    OPTION_PNG,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
+    DeliveryOption,
 )
 from custom_components.supernotify.transport import Transport
 
@@ -85,6 +85,13 @@ RE_VALID_EMAIL = (
 )
 OPTION_PREHEADER_BLANK = "preheader_blank"
 OPTION_PREHEADER_LENGTH = "preheader_length"
+OPTION_STRICT_TEMPLATE = "strict_template"
+OPTION_SENDER = "sender"
+OPTION_SENDER_NAME = "sender_name"
+OPTION_DEFAULT_TITLE = "default_title"
+OPTION_MODE = "mode"
+EMAIL_OPTION_MODE_DIRECT = "direct"
+EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
 
 DEFAULT_SMTP_PORT = 587
 DEFAULT_SMTP_ENCRYPTION = "starttls"
@@ -156,6 +163,31 @@ class Alert(TypedDict):
 
 class EmailTransport(Transport):
     name = TRANSPORT_EMAIL
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        *MEDIA_OPTIONS,
+        DeliveryOption(
+            OPTION_STRICT_TEMPLATE,
+            "Fail template if Jinja2 issues found when true, render anyway if false",
+            value_type=cv.boolean,
+        ),
+        DeliveryOption(OPTION_PREHEADER_BLANK, "HTML code used to pack the pre-header with blanks for HTML email"),
+        DeliveryOption(
+            OPTION_PREHEADER_LENGTH,
+            "Minimum size to pack the pre-header with blanks for HTML email",
+            value_type=int,
+        ),
+        DeliveryOption(
+            OPTION_MODE,
+            "Set to direct to send over a direct SMTP connection instead of an action call",
+            value_type=vol.In({
+                EMAIL_OPTION_MODE_DIRECT: "Use the native SMTP transport",
+                EMAIL_OPTION_MODE_HA_SMTP: "Use the Home Assistant SMTP integration",
+            }),
+        ),
+        DeliveryOption(OPTION_SENDER, "Sender address used in direct SMTP mode"),
+        DeliveryOption(OPTION_SENDER_NAME, "Sender display name used in direct SMTP mode"),
+        DeliveryOption(OPTION_DEFAULT_TITLE, "Default email subject if none supplied"),
+    ]
 
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
         super().__init__(context, transport_config)

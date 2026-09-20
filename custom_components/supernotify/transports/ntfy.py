@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.helpers.typing import ConfigType
@@ -42,6 +42,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_NTFY,
 )
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -105,6 +106,7 @@ class NtfyTransport(Transport):
     """Notify via ntfy push notification service."""
 
     name = TRANSPORT_NTFY
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)

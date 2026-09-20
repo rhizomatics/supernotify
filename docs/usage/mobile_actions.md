@@ -7,7 +7,7 @@ tags:
 description: How Actionable Notification buttons (Mobile Actions) and reusable Action Groups work
 ---
 
-# Mobile Actions & Action Groups
+# Mobile Actions and Action Groups
 
 !!! note
     This page is about the buttons on an [Actionable Notification](https://companion.home-assistant.io/docs/notifications/actionable-notifications/)

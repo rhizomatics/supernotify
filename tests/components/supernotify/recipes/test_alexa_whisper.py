@@ -38,7 +38,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
       target:
         entity_id:
           notify.kitchen_alexa_speak
-    apple_push:
+    mobile_push:
       transport: mobile_push
   scenarios:
     routine:
@@ -46,7 +46,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
         conditions: "{{notification_priority in ['low']}}"
         delivery:
           plain_email:
-          apple_push:
+          mobile_push:
           alexa_inform:
             data:
               message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'

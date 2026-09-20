@@ -87,6 +87,10 @@
                     "name": "HTML-Nachricht",
                     "description": "Eine HTML-Alternative zu „Nachricht“, verwendet von Transporten, die umfangreiche Formatierung unterstützen (z. B. E-Mail)."
                 },
+                "spoken_message": {
+                    "name": "Gesprochene Nachricht",
+                    "description": "Eine gesprochene Alternative zu „Nachricht“, verwendet von Transporten, die sie vorlesen (z. B. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Zusätzliche Diagnosedetails für diese Benachrichtigung in Traces und im Archiv einschließen."
@@ -96,8 +100,16 @@
                     "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
                 },
                 "data": {
+                    "name": "Daten (veraltet)",
+                    "description": "Älterer Name für Zusätzliche Daten, beibehalten, damit bestehende Automatisierungen im visuellen Editor weiterhin angezeigt werden. Für neue Automatisierungen „Zusätzliche Daten“ verwenden."
+                },
+                "timestamp": {
+                    "name": "Zeitstempel-Format",
+                    "description": "Hängt das aktuelle Datum/die aktuelle Uhrzeit in eckigen Klammern an die Nachricht an, im Python-strftime-Format, z. B. %H:%M oder %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Zusätzliche Daten",
-                    "description": "Durchgereichte Daten für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
+                    "description": "Durchgereichte Daten und Transport-Feinabstimmung für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
                 }
             },
             "sections": {

@@ -41,7 +41,7 @@ Generic Transport toolbox, and extended to Mobile Push in v1.16.0.
 ...
 delivery:
     ...
-    apple_push:
+    mobile_push:
       alias: Push notifications to iPhones, iPads and Macs
       transport: mobile_push
       options:
@@ -60,7 +60,7 @@ delivery:
 
 ```yaml
 deliveries:
-  apple_push:
+  mobile_push:
     transport: mobile_push
     options:
     device_manufacturer_select:

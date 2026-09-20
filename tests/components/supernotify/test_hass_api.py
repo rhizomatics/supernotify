@@ -285,6 +285,31 @@ def test_finds_service(hass: HomeAssistant) -> None:
     assert hass_api.find_service("foo2", "supernotify.test_hass_api") == "foo2.clz"
 
 
+def test_finds_service_skips_per_target_aliases(hass: HomeAssistant) -> None:
+    """Legacy notify platforms with a targets property (e.g. alexa_media_player) register
+    extra per-target services (notify.<platform>_<device>) sharing the same bound method as
+    the base service. find_service must not settle on one of those aliases - it ignores any
+    target: passed by the caller and always speaks through its own hard-coded device - and
+    should hold out for the base platform service instead."""
+
+    class TestingNotifyService:
+        def __init__(self) -> None:
+            self.registered_targets = {"foo_device_one": "device_one", "foo_device_two": "device_two"}
+
+        async def service_call(self, call: ServiceCall) -> ServiceResponse | None:
+            return {}
+
+    svc = TestingNotifyService()
+
+    # per-target aliases registered first, as the real notify platform does, base service last
+    hass.services.async_register(domain="foo", service="foo_device_one", service_func=svc.service_call)  # type: ignore
+    hass.services.async_register(domain="foo", service="foo_device_two", service_func=svc.service_call)  # type: ignore
+    hass.services.async_register(domain="foo", service="foo", service_func=svc.service_call)  # type: ignore
+
+    hass_api = HomeAssistantAPI(hass)
+    assert hass_api.find_service("foo", "supernotify.test_hass_api") == "foo.foo"
+
+
 async def test_coerce_schema_does_nothing_for_unknown_service(hass) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()

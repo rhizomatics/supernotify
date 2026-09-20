@@ -65,9 +65,6 @@ Notes on the HA `html5.send_message` service schema:
 - Expired push subscriptions (410 GONE) are handled by the core, which
   unregisters the browser and raises: call_action then returns False.
 
-Internal data keys filtered upstream by notification.py and NOT popped
-here: force_resend, spoken_message.
-
 References:
 - HTML5 push integration: https://www.home-assistant.io/integrations/html5/
 
@@ -76,7 +73,7 @@ References:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import ConfigType
@@ -86,8 +83,6 @@ from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA_SNAPSHOT_URL,
     INCLUSION_DEFAULT,
-    OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
     RE_NOTIFY_ENTITY_ID,
     TRANSPORT_HTML5,
 )
@@ -99,6 +94,7 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, OPTION_UNIQUE_TARGETS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -131,6 +127,7 @@ class HTML5Transport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_HTML5
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
     def supported_features(self) -> TransportFeature:

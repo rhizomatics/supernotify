@@ -15,13 +15,13 @@ from custom_components.supernotify.const import (
     CONF_OPTIONS,
     CONF_TRANSPORT,
     INCLUSION_DEFAULT,
-    OPTION_DEVICE_DISCOVERY,
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import OPTION_DEVICE_DISCOVERY
 from custom_components.supernotify.transports.chime import (
     ChimeTargetConfig,
     ChimeTransport,

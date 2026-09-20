@@ -36,7 +36,7 @@ The `message_usage` option can be set to `combine_title` or `use_title` to overr
 
 ## Voice specific message
 
-Use `spoken_message` in the `data` section of a notification call to provide a different message for a voice notification than used for other transports like email or mobile push.
+Use `spoken_message` in the notification call to provide a different message for a voice notification than used for other transports like email or mobile push.
 
 ## Volume management
 

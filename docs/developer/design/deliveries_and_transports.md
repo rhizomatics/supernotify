@@ -123,23 +123,23 @@ Use cases could be:
 
 ```yaml:
 - action: supernotify.notify
-    data:
-        title: Multi modal notification
-        message: Sending to email, SMS, telegram and however Billy is configured
-        target:
-         - johnny@43acacia.avenue.com
-         - +4304283883222
-         - person.billy_mctest
-         - telegram: 123456789
+  data:
+    title: Multi modal notification
+    message: Sending to email, SMS, telegram and however Billy is configured
+    target:
+        - johnny@43acacia.avenue.com
+        - +4304283883222
+        - person.billy_mctest
+        - telegram: 123456789
 ```
 
 ```yaml:
 - action: supernotify.notify
-    data:
-        title: Email notification
-        message: Sending to parents, email only
-        target:
-         - person.billy_mctest
-         - person.sally_mctest
-        delivery: email
+  data:
+    title: Email notification
+    message: Sending to parents, email only
+    target:
+        - person.billy_mctest
+        - person.sally_mctest
+    delivery: email
 ```

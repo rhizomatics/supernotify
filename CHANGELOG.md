@@ -5,6 +5,62 @@
 - Scenario and recipient `binary_sensor`s, and the sent/failure notification counters, are now real Home Assistant entities grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
 - Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
 - Delivery and transport `binary_sensor`s are unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175)
+### Action Data
+The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of handling `data` mappings than the original legacy Notify platform way.
+- In the old notify the top level `data` could hold only `message` and `title` and everything else got pushed down to a second level nested `data`
+- From v2.6.0, the new action will detect if the old style nested data is used and remap it to the new flat style. Its still worth at some point going back over old automations, since two levels of `data` was always confusing.
+- `data` elements to be passed down to other actions, and not for Supernotify itself (other than running templates over them) are now named `extra_data` in line with the UI. The old name works fine, though the contents will get autodetected for old style nested data, whereas `extra_data` will be left alone.
+- `force_resend` now a top-level action data item, see also `spoken_message`
+- `timestamp` can now be set from the action UI. Supply a `strftime` format and it will be prepended to every message
+### Voice
+- **Spoken Message** is now a top-level field, so can be set easily from the Automation Actions panel or the Tools Action call. In YAML this is `spoken_message`
+### Transport Options
+- Options for transports are now self-describing, so auto generated table of options up to date and more detail
+- `message_html` removed from spoken only envelopes
+### Multimedia
+- Added missing `snapshot_image_path` to allowed `media:` options
+### Media Transport
+- Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
+### Documentation
+- Fix automatically generated validation schema documentation
+- Added automated test for the YAML examples in docs
+- [Roadmap](developer/design/roadmap.md) of technial and features added
+### Technical
+- `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
+
+## 2.5.3
+
+### Spoken Notifications
+
+- Simplify Text
+  - SSML tags now untouched and left for devices to interpret
+  - Unicode `Sc` category now added to the simplify text filter
+  - Common signs (`+`,`-`,`=`,`%`) that make sense to vocalize are omitted from the Unicode special character filter
+  - Unicode is now NFC normalized prior to Unicode `Mn` filtering to strip out marks, so accented characters in NFD-decomposed text better handled
+- Strip URLs
+  - False positive for words ending with `:` fixed
+- Scenario Templates
+  - Simplify Text and Strip URLs is now applied _after_ any scenario templates update message and title
+- New [voice](usage/voice.md) documentation page added
+
+
+## 2.5.2
+
+### Alexa Media Player
+
+- Fix for auto discovery on Alexa Media Player, where every action registered by the integration hits the same function
+  - Service lookup ignores target-specific instances of an action to find the target neutral one
+
+## 2.5.1
+
+### Alexa Devices
+- Automatic deliveries, `alexa_devices_announce_all` and `alexa_devices_speak_all` now only select devices and ignore speaker groups so not double notifying
+  - Speaker Groups are a good thing, however its not possible to work out if they are all devices or a subset from auto-discovery
+  - If you want a group, then override the delivery with the group as target, or create a new delivery
+### Recipes
+- Simple *Live Activity* for a dishwasher
+  - This will be improved to support progress bars etc
+
 
 ## 2.5.0
 
@@ -58,6 +114,9 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 
 ### Gotify
 - Automatically finds correct notify action by default
+
+### Live Scenarios
+- Fix scenarios without entities, such as date based ones using `now()` being left out of periodic sweep to recompute
 
 ### Notify Entity
 - Target selection for notify entities now uses Home Assistant domain that provided the entity
@@ -676,8 +735,7 @@ only prepare data and targets
 - Improved documentation content and navigation
 - Media Player transport allows `media_content_type` to be overridden in `data` for non-image use
 - Archiving now has a `debug` option, which controls if `debug_trace` included in notifications
-- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and
-an Alexa 'announce' delivery is selected, only one of them will speak for each device)
+- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and an Alexa 'announce' delivery is selected, only one of them will speak for each device)
 - Transport adaptors now count errors and report last error time and type
 ### Internal
 - Renaming of transport tests for consistency with package names

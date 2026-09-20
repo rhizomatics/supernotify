@@ -57,14 +57,9 @@ from .const import (
     CONF_TITLE,
     INCLUSION_DEFAULT,
     OCCUPANCY_ALL,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MODEL_SELECT,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     RE_DEVICE_ID,
-    SELECT_EXCLUDE,
-    SELECT_INCLUDE,
     TARGET_CATEGORY_VALUES,
     TARGET_USE_ON_NO_ACTION_TARGETS,
 )
@@ -450,6 +445,16 @@ class Target:
 
 class TransportConfig:
     def __init__(self, conf: ConfigType | None = None, class_config: TransportConfig | None = None) -> None:
+        # local import: options.py imports SelectionRule from this module, so importing
+        # its constants back at module level here would be circular
+        from .options import (
+            OPTION_DEVICE_DISCOVERY,
+            OPTION_DEVICE_DOMAIN,
+            OPTION_DEVICE_MODEL_SELECT,
+            SELECT_EXCLUDE,
+            SELECT_INCLUDE,
+        )
+
         conf = conf or {}
         if class_config is not None:
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
@@ -515,6 +520,9 @@ class DeliveryCustomization:
 
 class SelectionRule:
     def __init__(self, config: str | list[str] | dict | SelectionRule | None) -> None:
+        # local import: see TransportConfig.__init__ for why this can't be module-level
+        from .options import SELECT_EXCLUDE, SELECT_INCLUDE
+
         self.include: list[str] | None = None
         self.exclude: list[str] | None = None
         if config is None:
@@ -580,6 +588,9 @@ class DataFilter:
             self._init_from_dict(config)
 
     def _init_from_dict(self, config: dict) -> None:
+        # local import: see TransportConfig.__init__ for why this can't be module-level
+        from .options import SELECT_EXCLUDE, SELECT_INCLUDE
+
         include_val = config.get(SELECT_INCLUDE)
         exclude_val = config.get(SELECT_EXCLUDE)
         if isinstance(include_val, dict):

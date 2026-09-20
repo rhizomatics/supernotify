@@ -116,9 +116,8 @@ action: supernotify.notify
 data:
   message: "Motion detected at entrance"
   title: "📷 Front Camera"
-  data:
-    media:
-      camera_entity_id: camera.ezviz_ingresso
+  media:
+    camera_entity_id: camera.ezviz_ingresso
 ```
 
 **Expected behavior:**

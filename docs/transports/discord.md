@@ -83,16 +83,15 @@ action: supernotify.notify
 data:
   title: "Alarm"
   message: "Motion detected"
-  data:
-    priority: critical
-    delivery:
-      discord_alerts:
-        data:
-          discord_attach_image: true
-          discord_embed:
-            title: "Garden camera"
-            description: "Motion at 22:41"
-            color: 15158332
+  priority: critical
+  delivery:
+    discord_alerts:
+      data:
+        discord_attach_image: true
+        discord_embed:
+          title: "Garden camera"
+          description: "Motion at 22:41"
+          color: 15158332
 ```
 
 ## Notes

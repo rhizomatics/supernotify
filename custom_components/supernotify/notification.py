@@ -43,7 +43,6 @@ from .const import (
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
-    OPTION_UNIQUE_TARGETS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     TARGET_USE_FIXED,
@@ -63,6 +62,7 @@ from .model import (
     TargetRequired,
     TransportFeature,
 )
+from .options import OPTION_UNIQUE_TARGETS
 from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome
 
 if TYPE_CHECKING:
@@ -91,7 +91,7 @@ def set_version(version: str) -> None:
 
 
 # supernotify specific data items not to be passed to transports in data
-INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
+# the existence of this is probably an indication of something not quite right
 
 type DeliveryName = str
 
@@ -162,6 +162,7 @@ class Notification(ArchivableObject):
 
         self.priority: str = action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM)
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
+        self.spoken_message: str | None = action_data.get(ATTR_SPOKEN_MESSAGE)
         self.force_resend: bool = action_data.get(ATTR_FORCE_RESEND, False)
         self.required_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_REQUIRE))
         self.applied_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_APPLY))
@@ -607,7 +608,7 @@ class Notification(ArchivableObject):
                 return
 
             for envelope in envelopes:
-                if not self.force_resend and self.context.dupe_checker.check(envelope):
+                if not envelope.force_resend and self.context.dupe_checker.check(envelope):
                     _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self.message)
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
@@ -690,13 +691,22 @@ class Notification(ArchivableObject):
         object_refs = ["context", "ha_context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
         debug_only = ["debug_trace"]
-        exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions", "_suppression_reason"]
+        exposed_if_populated = [
+            "_delivery_error",
+            "message_html",
+            "spoken_message",
+            "extra_data",
+            "actions",
+            "_suppression_reason",
+        ]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
             "id",
             "outcome",
             "created",
             "message",
+            "spoken_message",
+            "message_html",
             "priority",
             "stats",
             "delivered",
@@ -719,7 +729,9 @@ class Notification(ArchivableObject):
             "delivery_exceptions",
             "uncategorized_targets",
             "unassigned_targets",
+            "extra_data",
             "deliveries",
+            "actions",
             "delivery_exceptions",
             "original_context",
             "version",
@@ -744,7 +756,7 @@ class Notification(ArchivableObject):
         result.update({
             k: sanitize(raw[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only))
             for k in preferred_order
-            if k in raw
+            if k in raw and (k not in exposed_if_populated or raw[k])
         })
 
         # all the rest not explicitly excluded
@@ -758,8 +770,12 @@ class Notification(ArchivableObject):
             and (not minimal or k not in keys_only)
             and (not minimal or k not in debug_only)
         })
-        # the exposed only if populated fields
-        result.update({k: sanitize(raw[k], minimal=minimal, occupancy_only=True) for k in exposed_if_populated if raw.get(k)})
+        # the exposed only if populated fields not already placed by preferred_order
+        result.update({
+            k: sanitize(raw[k], minimal=minimal, occupancy_only=True)
+            for k in exposed_if_populated
+            if k not in result and raw.get(k)
+        })
         return result
 
     def _delivery_stats(self) -> dict[str, Any]:
@@ -1051,9 +1067,7 @@ class Notification(ArchivableObject):
                         envelope_data.update(customization.data)
 
                 # apply data from action call last to prioritize it
-                envelope_data.update({
-                    k: v for k, v in self.extra_data.items() if k not in INTERNAL_DATA_KEYS
-                })  # action call data
+                envelope_data.update(self.extra_data)  # action call data
 
                 envelopes.append(
                     Envelope(delivery, self, target, envelope_data, context=self.context, ha_context=self.ha_context)
