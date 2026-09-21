@@ -202,6 +202,8 @@ This is separate from whether the scenario itself is enabled, which is what the 
 
 Scenarios with conditions have `binary_sensor` that are read-only: writing its state does not enable or disable the scenario. Scenarios without conditions can be externally controlled by your own automations, dashboard toggles etc and have read/write binary sensors. This can be useful if the condition would be too complex to write in Home Assistant conditions logic.
 
+Manual control of scenarios via `binary_sensor` only affects which ones get automatically selected for deliveries. If a delivery declares `apply_scenarios`, then those scenarios will be selected regardless of manual setting.
+
 ### Live Scenarios
 
 The state is kept current in two ways. A change to an entity referenced by a scenario's conditions re-evaluates the scenarios that depend on that entity, immediately. A periodic sweep then covers what no entity change can announce: time windows, sun position, and templates whose dependencies could not be determined statically.
