@@ -225,7 +225,7 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 
 ## Scenarios
 
-Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/transports/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more details.
+Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more details.
 
 ## References
 

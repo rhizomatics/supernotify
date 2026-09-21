@@ -92,7 +92,11 @@ Example Message to Some People
 
 ## Entities
 
-Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools, automations, API or whatever ) will disable or enable the recipient.
+Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+
+Deprecated
+
+The recipient `binary_sensor.supernotify_recipient_XXXXX` is kept only for backward compatibility, and will be removed in a future version. It is read-only, mirroring the switch: writing its state no longer enables or disables the recipient. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
 
 This can be handy if someone should be temporarily switched off for notifications, or you want your own automation to determine which people get notified when.
 
@@ -119,6 +123,8 @@ Because it's an ordinary Home Assistant Notify Entity, it can be added as a memb
 Note
 
 Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `supernotify.notify` action with an explicit `target:` if you need any of that for a specific recipient.
+
+Notify Entities get updated on every notification by Supernotify for that person, regardless of whether the Notify Entity itself was used for it. This also adds context of the original automation, so you can track what happened for a person.
 
 ## Enabling, Disabling and Overriding Targets per Delivery
 

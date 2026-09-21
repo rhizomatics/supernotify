@@ -65,7 +65,7 @@ There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/
 
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
-- Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/usage/scenarios.md) to apply common chunks of config
+- Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) to apply common chunks of config
 - Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, these do the same thing) for every delivery
 - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
@@ -100,7 +100,7 @@ Info
 
 `message` and `title` are the two special cases where the values in the configuration override the values in the Action `data`. For everything else the Action wins.
 
-For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/usage/scenarios.md).
+For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md).
 
 ## Controlling Targets
 

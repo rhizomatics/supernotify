@@ -71,7 +71,9 @@ scenarios:
 
 ## Entities
 
-Scenarios are exposed as `sensor.supernotify_scenario_XXXX` entities in Home Assistant, with the configuration and current state as `unavailable` ( since their conditions are not continually being evaluated, only on demand). They can be enabled or disabled like any other entities, for run-time control of notifications.
+Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
+
+The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 
 ## Overriding Delivery Selection and Configuration
 
@@ -194,7 +196,9 @@ scenarios:
 
 ## Scenario Sensors
 
-Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
+Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on` or `off`. Only a scenario that has conditions to evaluate gets one, so there is none for a scenario with no conditions, or with `expose_state: false`.
+
+This is separate from whether the scenario is enabled, which is what the scenario's `switch` shows and controls. A scenario that only applies on a couple of days a year has a switch that stays `on` all year, and a `binary_sensor` that is `on` only on those days. The `binary_sensor` is read-only: writing its state does not enable or disable the scenario.
 
 ### Live Scenarios
 
@@ -219,4 +223,4 @@ scenarios:
         value_template: "{{ states.binary_sensor | selectattr('state','eq','on') | list | count > 3 }}"
 ```
 
-Such a scenario still works normally for notifications; it simply stays `unknown` as an entity.
+Such a scenario still works normally for notifications; it simply has no `binary_sensor`.

@@ -23,7 +23,7 @@
 - An easy way to package up common chunks of config, optionally combined with conditional logic
 - Scenarios can be manually selected, in an `apply_scenarios` value of notification `data` block, or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications, and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/concepts/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
+- See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
 ## Target
 

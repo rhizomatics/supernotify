@@ -210,7 +210,7 @@ Find lots of ideas with example configuration in the [Recipes](https://supernoti
 - An easy way to package up common chunks of config, optionally combined with conditional logic
 - Scenarios can be manually selected, in an `apply_scenarios` value of notification `data` block, or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications, and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/concepts/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
+- See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
 ## Target
 
@@ -366,7 +366,7 @@ Notify call referencing a group
 
 ### Attaching groups from a scenario
 
-More commonly, a [Scenario](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/scenarios.md) attaches the group instead, so the right buttons appear automatically depending on state, without every automation having to know about them:
+More commonly, a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) attaches the group instead, so the right buttons appear automatically depending on state, without every automation having to know about them:
 
 Scenario-driven groups
 
@@ -402,7 +402,7 @@ If an action (ad-hoc or from a group) has `action_url` set but no `action_url_ti
 
 - [Companion App: Actionable Notifications](https://companion.home-assistant.io/docs/notifications/actionable-notifications/)
 - [Mobile Push transport](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)
-- [Scenarios](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/scenarios.md)
+- [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)
 - [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
 - [Actions (services)](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
 
@@ -504,7 +504,7 @@ See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.
 
 ## Notification Priority
 
-Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or scenarios ( for example a siren to accompany 'critical' notifications).
+Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or [scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) ( for example a siren to accompany 'critical' notifications).
 
 It will also be mapped to delivery priority flags where the underlying transport allows, for example Mobile Push, Gotify, Ntfy, SMTP, Telegram.
 
@@ -592,11 +592,11 @@ Fixed - always set explicitly
             - plain_email
 ```
 
-!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-selection)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
+!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
 
 ### When Scenarios Disagree
 
-Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/scenarios.md#overriding-delivery-selection-and-configuration).
+Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/#overriding-delivery-selection-and-configuration).
 
 If more than one scenario is active at once and they disagree on the same delivery, **`false` always wins**, regardless of how many other active scenarios enabled it - there's no priority or ordering between scenarios.
 
@@ -907,7 +907,7 @@ mix of targets
                 target: notify.alexa_kitchen_announce
 ```
 
-This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/usage/targets/scenarios.md) for more on how to use these pre-canned bits of config.
+This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) for more on how to use these pre-canned bits of config.
 
 mix of targets
 
@@ -1473,7 +1473,7 @@ There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/
 
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
-- Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/usage/scenarios.md) to apply common chunks of config
+- Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) to apply common chunks of config
 - Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, these do the same thing) for every delivery
 - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
@@ -1508,7 +1508,7 @@ Info
 
 `message` and `title` are the two special cases where the values in the configuration override the values in the Action `data`. For everything else the Action wins.
 
-For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/usage/scenarios.md).
+For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md).
 
 ## Controlling Targets
 
@@ -2069,7 +2069,11 @@ Example Message to Some People
 
 ## Entities
 
-Recipients are exposed to Home Assistant as `sensor.supernotify_recipient_XXXXX` entities. The entity state is the recipient `enabled` flag, and changing the entity in Home Assistant ( by main UI, Developer Tools, automations, API or whatever ) will disable or enable the recipient.
+Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+
+Deprecated
+
+The recipient `binary_sensor.supernotify_recipient_XXXXX` is kept only for backward compatibility, and will be removed in a future version. It is read-only, mirroring the switch: writing its state no longer enables or disables the recipient. It is not created on a new install, and a repair is raised once in Home Assistant if you have it enabled.
 
 This can be handy if someone should be temporarily switched off for notifications, or you want your own automation to determine which people get notified when.
 
@@ -2096,6 +2100,8 @@ Because it's an ordinary Home Assistant Notify Entity, it can be added as a memb
 Note
 
 Home Assistant restricts Notify Entity calls to only `message` and `title` - unlike `notify.supernotify`, there's no `data:` section for scenarios, priority, media, delivery selection etc. Use the main `supernotify.notify` action with an explicit `target:` if you need any of that for a specific recipient.
+
+Notify Entities get updated on every notification by Supernotify for that person, regardless of whether the Notify Entity itself was used for it. This also adds context of the original automation, so you can track what happened for a person.
 
 ## Enabling, Disabling and Overriding Targets per Delivery
 
@@ -2312,7 +2318,9 @@ scenarios:
 
 ## Entities
 
-Scenarios are exposed as `sensor.supernotify_scenario_XXXX` entities in Home Assistant, with the configuration and current state as `unavailable` ( since their conditions are not continually being evaluated, only on demand). They can be enabled or disabled like any other entities, for run-time control of notifications.
+Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
+
+The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 
 ## Overriding Delivery Selection and Configuration
 
@@ -2435,7 +2443,9 @@ scenarios:
 
 ## Scenario Sensors
 
-Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
+Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on` or `off`. Only a scenario that has conditions to evaluate gets one, so there is none for a scenario with no conditions, or with `expose_state: false`.
+
+This is separate from whether the scenario is enabled, which is what the scenario's `switch` shows and controls. A scenario that only applies on a couple of days a year has a switch that stays `on` all year, and a `binary_sensor` that is `on` only on those days. The `binary_sensor` is read-only: writing its state does not enable or disable the scenario.
 
 ### Live Scenarios
 
@@ -2460,7 +2470,7 @@ scenarios:
         value_template: "{{ states.binary_sensor | selectattr('state','eq','on') | list | count > 3 }}"
 ```
 
-Such a scenario still works normally for notifications; it simply stays `unknown` as an entity.
+Such a scenario still works normally for notifications; it simply has no `binary_sensor`.
 
 # Selection Rules
 
@@ -3804,7 +3814,7 @@ The same tune could also define MQTT sirens, or Amazon Echo devices making siren
 
 ## Scenarios
 
-Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/transports/usage/scenarios.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more details.
+Chimes work well with scenarios, you can easily add a chime for all critical notifications without having to change any of the automations. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more details.
 
 ## References
 
@@ -6968,6 +6978,40 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
+## 2.7.0
+
+### Native Entities
+
+- Scenario and recipients are now real `switch` entities
+- Sent/failure notification counters are now real Home Assistant `sensor` entities
+- New real entities are grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
+- Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
+- The scenario `binary_sensor` stays, read-only, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled.
+- It is only created for a scenario that has conditions to evaluate, since one without has no on/off state to show, and any existing one that could only ever have been `unknown` is removed
+- The recipient `binary_sensor` only mirrors the recipient switch, so is deprecated and will be removed in a future version. It is read-only, and not created on a new install, or for a recipient added to an existing one. A repair is raised once if you have it enabled
+- Delivery and transport `binary_sensor`s are otherwise unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175) - but now belong to the config entry
+
+### Notify Entities
+
+- The notify entities created for recipients now have the timestamp changed however they were notified by SuperNotify (previously only updated if the Notify Entity itself was used, as in `send_message`)
+- Home Assistant context is used for the Notify Entity timestamp, so its possible to look at a sent timestamp on an entity and see why it was notified
+
+### Scenario and Recipient Switches
+
+- Each scenario and recipient now has a switch, `switch.supernotify_scenario_<name>` or `switch.supernotify_recipient_<name>`, to enable and disable it
+- **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it, use the switch instead. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag
+- Scenario and recipient entity names are translated, and put the type first so each sorts together in the entity list: `Scenario <name>` and `Recipient <name>` for the `binary_sensor`s, and `Scenario <name> Enabled` and `Recipient <name> Enabled` for the switches
+
+### Other
+
+- HomeAssistant compatibility moved to 2026.9.3
+- Fix handling of target specific data, that could lead to targets showing up in other envelopes
+- If a camera or other image source not available, the mobile push is text only rather than showing with a broken image
+
+### Internal
+
+- `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
+
 ## 2.6.0
 
 ### Action Data
@@ -7046,7 +7090,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/changelog/roadmap/deliveries_and_transports.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/changelog/developer/design/roadmap/deliveries_and_transports.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
 - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -7336,7 +7380,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](https://supernotify.rhizomatics.org.uk/latest/changelog/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](https://supernotify.rhizomatics.org.uk/latest/changelog/developer/design/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
 - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
 - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.
@@ -8771,6 +8815,31 @@ Every field's description, example and selector are what an LLM sees when it dis
 #### Structured errors and diagnostics.
 
 Config validation errors that name the key and the valid options let an agent self-correct. diagnostics.py helps the same way.
+
+### Configurable links for email
+
+### Actions for email
+
+### Rate limiting
+
+Moving window quota per priority. Per delivery / scenario limits.
+
+### Holiday support
+
+Randomization for greetings and sounds.
+
+### Miscellaneous
+
+- Transport overrides for scenarios
+- MQTT Publish action
+- Time ranges for notifications
+
+### Target Expansion
+
+- Include area, label, floor as targets
+- Support transports that understand them as exception
+- Expand all higher level targets prior to envelope generation and resolve dupes
+- [https://github.com/rhizomatics/supernotify/pull/188]
 
 ### Delivery Explanations
 

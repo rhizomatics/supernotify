@@ -72,7 +72,7 @@ Notify call referencing a group
 
 ### Attaching groups from a scenario
 
-More commonly, a [Scenario](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/scenarios.md) attaches the group instead, so the right buttons appear automatically depending on state, without every automation having to know about them:
+More commonly, a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) attaches the group instead, so the right buttons appear automatically depending on state, without every automation having to know about them:
 
 Scenario-driven groups
 
@@ -108,6 +108,6 @@ If an action (ad-hoc or from a group) has `action_url` set but no `action_url_ti
 
 - [Companion App: Actionable Notifications](https://companion.home-assistant.io/docs/notifications/actionable-notifications/)
 - [Mobile Push transport](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)
-- [Scenarios](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/scenarios.md)
+- [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)
 - [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
 - [Actions (services)](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
