@@ -100,7 +100,9 @@ class Delivery(DeliveryConfig):
             # isinstance check, not just a None check, is deliberate: a test double `Mock()`
             # transport can leave `self.target` as an auto-mocked attribute rather than None.)
             self.target = self.reclassify_unqualified_target(self.target)
-        self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
+        # as configured, which enabled can be overridden from at runtime by the delivery switch
+        self.config_enabled: bool = conf.get(CONF_ENABLED, self.transport.config_enabled)
+        self.enabled: bool = self.config_enabled
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
         if self.options.get(OPTION_TARGET_SELECT):

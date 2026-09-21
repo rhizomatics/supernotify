@@ -66,6 +66,8 @@ from .static_config import TRANSPORTS
 if TYPE_CHECKING:
     import datetime as dt
 
+    from .switch import SupernotifyOverridableSwitch
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -108,6 +110,9 @@ class SupernotifyEngine:
         # sensor.py hands them to Home Assistant once its platform loads
         self.notifications_sensor = SupernotifyCounterSensor("notifications", "notifications")
         self.failures_sensor = SupernotifyCounterSensor("failures", "failures")
+        # Every switch overriding a configured enabled flag, by unique_id - populated by switch.py
+        # as each is added to Home Assistant
+        self.override_switches: dict[str, SupernotifyOverridableSwitch] = {}
         hass_api = HomeAssistantAPI(hass)
 
         people_registry = PeopleRegistry(

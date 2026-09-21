@@ -297,6 +297,19 @@ CONF_DEVICE_DOMAIN: Final[str] = "device_domain"
 CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
 CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
 
+# What a runtime override of a configured `enabled` flag can apply to - each also the unique_id
+# prefix of the switch for it, e.g. switch unique_id "delivery_<name>"
+OVERRIDE_KIND_SCENARIO: Final[str] = "scenario"
+OVERRIDE_KIND_RECIPIENT: Final[str] = "recipient"
+OVERRIDE_KIND_DELIVERY: Final[str] = "delivery"
+OVERRIDE_KIND_TRANSPORT: Final[str] = "transport"
+OVERRIDE_KINDS: Final[tuple[str, ...]] = (
+    OVERRIDE_KIND_SCENARIO,
+    OVERRIDE_KIND_RECIPIENT,
+    OVERRIDE_KIND_DELIVERY,
+    OVERRIDE_KIND_TRANSPORT,
+)
+
 CONF_SNOOZE = "snooze"
 CONF_SNOOZE_TIME = "snooze_time"
 

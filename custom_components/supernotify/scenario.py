@@ -252,6 +252,8 @@ class Scenario:
         self.hass_api: HomeAssistantAPI = hass_api
         self.delivery_registry = delivery_registry
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
+        # as configured, which enabled can be overridden from at runtime by the scenario switch
+        self.config_enabled: bool = self.enabled
         self.expose_state: bool = scenario_definition.get(CONF_EXPOSE_STATE, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)

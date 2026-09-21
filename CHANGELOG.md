@@ -1,3 +1,9 @@
+## Unreleased
+
+### Persistent Overrides
+
+- Switching a scenario or recipient on or off now survives a Home Assistant restart and a reload, for as long as its `enabled` value in the YAML config is unchanged - changing that value in the config takes back control. An override belongs to its switch: while the switch entity is disabled in Home Assistant, its override is not applied, and it comes back when the switch is enabled again
+
 ## 2.7.0
 
 ### Native Entities
