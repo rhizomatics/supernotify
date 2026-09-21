@@ -16,6 +16,7 @@
 
 ### Other
 - HomeAssistant compatibility moved to 2026.9.3
+- Fix handling of target specific data, that could lead to targets showing up in other envelopes
 - Internal
   - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
 
