@@ -70,8 +70,8 @@ class ScenarioRegistry:
         self._people_registry: PeopleRegistry = people_registry
         # Populated by binary_sensor.py's async_setup_entry once the platform is loaded (after
         # initialize() below) - see register_entity/unregister_entity. Empty (and harmless to
-        # look up against) before then, e.g. during initialize()'s own expose_entities() call
-        # and in tests that build ScenarioRegistry directly without a config entry.
+        # look up against) before then, e.g. in tests that build ScenarioRegistry directly
+        # without a config entry.
         self._entities: dict[str, SupernotifyScenarioBinarySensor] = {}
         # Shared occupancy/ConditionVariables snapshot for the scenario currently being batch
         # refreshed - set for the duration of async_refresh_scenario_states()'s loop, read by

@@ -16,9 +16,7 @@ from homeassistant.core import (
 )
 from homeassistant.core import (
     Event,
-    EventStateChangedData,
     HomeAssistant,
-    State,
     callback,
 )
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -152,19 +150,9 @@ class SupernotifyEngine:
         await self.context.media_storage.initialize(self.context.hass_api)
         await self.context.snoozer.initialize(self.context.hass_api)
 
-        # Delivery/transport binary_sensors are still raw hass_api.expose_entity() writes (a
-        # separate, larger conversion - see issue #175); scenario/recipient binary_sensors and
-        # the counters are real entities now and self-initialize when their platforms load
-        # (after this method returns - see __init__.py), so expose_entities() itself is only
-        # needed on demand (supernotify.refresh_entities), not eagerly here.
-        self.context.delivery_registry.expose_entities(self.context.hass_api)
+        # Every entity - switches, binary_sensors and counters - is a real platform entity, added
+        # once this method returns (see __init__.py), and keeps its own state current
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
-
-        # Delivery/transport binary_sensors are still raw hass_api.expose_entity() writes, so
-        # only they need watching here for an external toggle (Developer Tools, an automation).
-        # Scenario switches and recipient binary_sensors are real entities, which handle
-        # their own state.
-        self.context.hass_api.subscribe_state(self.context.hass_api.exposed_entities, self._entity_state_change_listener)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -266,35 +254,23 @@ class SupernotifyEngine:
                 # of the rest of the notification going out
                 raise UncategorizedTargetError(notification.delivered, notification.uncategorized_targets)
 
-    async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
-        if event is None:
-            return
-        _LOGGER.debug(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
-        new_state: State | None = event.data["new_state"]
-        if new_state is None:
-            return
+    @callback
+    def refresh_entities(self) -> None:
+        """Re-publish the current state of every entity SuperNotify provides.
 
-        entity_id: str = event.data["entity_id"]
-        if self.context.delivery_registry.handle_entity_state_change(entity_id, new_state) is not None:
-            return
-        _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
-
-    def expose_entities(self) -> None:
-        """Refresh every entity SuperNotify exposes for introspection/control.
-
-        Scenario and recipient entities, and the notification/failure counters, are real
-        platform entities added via async_forward_entry_setups and keep themselves current;
-        refreshing them here is a safe no-op before those platforms have loaded (e.g. in tests
-        that build SupernotifyEngine directly without a config entry). Delivery/transport
-        entities are still raw hass_api writes, pending a separate, larger conversion to switch
-        entities (see issue #175).
+        Entities are only refreshed once added to Home Assistant, so this is a safe no-op for any
+        whose platform hasn't loaded (e.g. in tests that build SupernotifyEngine directly without
+        a config entry). Must run in the event loop, as it writes entity state.
         """
         self.notifications_sensor.refresh()
         self.failures_sensor.refresh()
         self.context.scenario_registry.async_refresh_scenario_states()
         for entity in self.context.people_registry.recipient_entities():
             entity.async_write_ha_state()
-        self.context.delivery_registry.expose_entities(self.context.hass_api)
+        for legacy_entity in self.context.delivery_registry.legacy_entities():
+            legacy_entity.async_write_ha_state()
+        for switch in self.override_switches.values():
+            switch.async_write_ha_state()
 
     def enquire_implicit_deliveries(self) -> dict[str, Any]:
         v: dict[str, list[str]] = {}

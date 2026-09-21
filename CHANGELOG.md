@@ -1,8 +1,17 @@
 ## Unreleased
 
+### Delivery and Transport Switches
+
+- Each loaded delivery and transport now has a switch, `switch.supernotify_delivery_<name>` or `switch.supernotify_transport_<name>`, named `Delivery <name> Enabled` and `Transport <name> Enabled`, on the SuperNotify device. Switching a transport off suppresses all of its deliveries, without changing their own switches
+- Delivery and transport `binary_sensor`s go the same way as the recipient one: they only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+
 ### Persistent Overrides
 
-- Switching a scenario or recipient on or off now survives a Home Assistant restart and a reload, for as long as its `enabled` value in the YAML config is unchanged - changing that value in the config takes back control. An override belongs to its switch: while the switch entity is disabled in Home Assistant, its override is not applied, and it comes back when the switch is enabled again
+- Switching a scenario, recipient, delivery or transport on or off now survives a Home Assistant restart and a reload, for as long as its configured `enabled` value - its own, or for a delivery without one, its transport's - is unchanged. Changing that value in the config takes back control. An override belongs to its switch: while the switch entity is disabled in Home Assistant, its override is not applied, and it comes back when the switch is enabled again
+
+### Breaking
+
+- Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
 
 ## 2.7.0
 

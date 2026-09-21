@@ -7,6 +7,7 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_SERVICE,
+    CONF_TARGET,
 )
 
 CONF_ACTIONS: Final[str] = "actions"  # not fully implemented
@@ -309,6 +310,14 @@ OVERRIDE_KINDS: Final[tuple[str, ...]] = (
     OVERRIDE_KIND_DELIVERY,
     OVERRIDE_KIND_TRANSPORT,
 )
+# Entity state attributes too large, or changing too often, to be worth keeping in history
+DELIVERY_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({CONF_OPTIONS, CONF_DATA, CONF_TARGET})
+TRANSPORT_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({
+    CONF_DELIVERY_DEFAULTS,
+    "action_titles",
+    "action_title_failures",
+    "cached_templates",
+})
 
 CONF_SNOOZE = "snooze"
 CONF_SNOOZE_TIME = "snooze_time"

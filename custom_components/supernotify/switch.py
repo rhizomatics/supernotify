@@ -1,20 +1,21 @@
-"""Switch platform: enable or disable each scenario and recipient.
+"""Switch platform: enable or disable each scenario, recipient, delivery and transport.
 
 Forwarded to from async_setup_entry in __init__.py once the SupernotifyEngine (entry.
 runtime_data) is fully initialized.
 
 A scenario's binary_sensor (binary_sensor.py) reports whether its *conditions* currently hold, so
 it can't also be the control for enabling and disabling the scenario - writing its state used to do
-both, and the two meanings fought each other. A recipient's binary_sensor had no such conflict, but
-is treated the same way for consistency. These switches are the control, and the binary_sensors
-are now read-only and kept only for backward compatibility.
+both, and the two meanings fought each other. Recipient, delivery and transport binary_sensors had
+no such conflict, but are treated the same way for consistency. These switches are the control,
+and the binary_sensors are now read-only and kept only for backward compatibility.
+
+A delivery and its transport each have their own switch, and their own flag: switching a
+transport off suppresses all of its deliveries, without changing the delivery switches.
 
 Each switch overrides the `enabled` value configured in YAML, and the override is kept across a
-restart or reload (RestoreEntity) for as long as that configured value is unchanged - editing
-`enabled:` in YAML hands control back to the configuration.
-
-TODO: deliveries and transports are still controlled by writing the state of their
-binary_sensors (see issue #175), and are to move to switches in the same way.
+restart or reload (RestoreEntity) for as long as that configured value - its own `enabled`, or for
+a delivery without one, its transport's - is unchanged. Editing it in YAML hands control back to
+the configuration.
 """
 
 from __future__ import annotations
@@ -27,10 +28,18 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
+from homeassistant.util import slugify
 
 from . import DOMAIN
 from .common import sanitize
-from .const import OVERRIDE_KIND_RECIPIENT, OVERRIDE_KIND_SCENARIO
+from .const import (
+    DELIVERY_UNRECORDED_ATTRIBUTES,
+    OVERRIDE_KIND_DELIVERY,
+    OVERRIDE_KIND_RECIPIENT,
+    OVERRIDE_KIND_SCENARIO,
+    OVERRIDE_KIND_TRANSPORT,
+    TRANSPORT_UNRECORDED_ATTRIBUTES,
+)
 from .hass_api import ha_device_info
 
 if TYPE_CHECKING:
@@ -39,8 +48,10 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
     from . import SupernotifyConfigEntry
+    from .delivery import Delivery, DeliveryRegistry
     from .people import PeopleRegistry, Recipient
     from .scenario import Scenario, ScenarioRegistry
+    from .transport import Transport
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +61,7 @@ async def async_setup_entry(
     entry: SupernotifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add a switch for each scenario and recipient."""
+    """Add a switch for each scenario, recipient, and loaded transport and delivery."""
     _ = hass
     context = entry.runtime_data.context
     switches = entry.runtime_data.override_switches
@@ -62,6 +73,18 @@ async def async_setup_entry(
     entities.extend(
         SupernotifyRecipientSwitch(recipient, context.people_registry, device_info, switches)
         for recipient in context.people_registry.people.values()
+    )
+    # Only for what is loaded. The switch of a transport that isn't loaded this time, and of its
+    # deliveries, is left in the entity registry rather than removed: a transport can be missing
+    # just while what it depends on is still starting up
+    delivery_registry = context.delivery_registry
+    entities.extend(
+        SupernotifyTransportSwitch(transport, delivery_registry, device_info, switches)
+        for transport in delivery_registry.transports.values()
+    )
+    entities.extend(
+        SupernotifyDeliverySwitch(delivery, delivery_registry, device_info, switches)
+        for delivery in delivery_registry.deliveries.values()
     )
     async_add_entities(entities)
 
@@ -95,8 +118,8 @@ class OverrideStoredData(ExtraStoredData):
 
 class SupernotifyOverridableSwitch(SwitchEntity, RestoreEntity):
     """A switch overriding the configured enabled flag of a scenario, recipient, delivery or
-    transport, and keeping that override across a restart or reload while the configured value
-    is unchanged."""
+    transport, and keeping that override across a restart or reload while the configured value -
+    its own `enabled`, or for a delivery without one, its transport's - is unchanged."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
@@ -223,3 +246,64 @@ class SupernotifyRecipientSwitch(SupernotifyOverridableSwitch):
     def _refresh_related(self) -> None:
         # the deprecated binary_sensor mirrors enabled
         self._registry.async_refresh_entity(self._recipient.name)
+
+
+class SupernotifyDeliverySwitch(SupernotifyOverridableSwitch):
+    """Whether a delivery is enabled, and so able to be used for notifications."""
+
+    _attr_translation_key = "delivery_enabled"
+    _unrecorded_attributes = DELIVERY_UNRECORDED_ATTRIBUTES
+
+    def __init__(
+        self,
+        delivery: Delivery,
+        registry: DeliveryRegistry,
+        device_info: DeviceInfo,
+        switches: dict[str, SupernotifyOverridableSwitch],
+    ) -> None:
+        super().__init__(OVERRIDE_KIND_DELIVERY, delivery, device_info, switches)
+        self._delivery = delivery
+        self._registry = registry
+        self._attr_translation_placeholders = {"delivery": delivery.alias or delivery.name}
+        # Setting entity_id directly is not preferred Home Assistant practice - see
+        # SupernotifyScenarioSwitch for why it's done anyway. Slugified, as a delivery name can be
+        # any string.
+        self.entity_id = f"switch.{DOMAIN}_delivery_{slugify(delivery.name)}"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        return sanitize(self._delivery.attributes())
+
+    def _refresh_related(self) -> None:
+        # the deprecated binary_sensor mirrors enabled
+        self._registry.async_refresh_entity(self._key)
+
+
+class SupernotifyTransportSwitch(SupernotifyOverridableSwitch):
+    """Whether a transport is enabled - when off, none of its deliveries are used."""
+
+    _attr_translation_key = "transport_enabled"
+    _unrecorded_attributes = TRANSPORT_UNRECORDED_ATTRIBUTES
+
+    def __init__(
+        self,
+        transport: Transport,
+        registry: DeliveryRegistry,
+        device_info: DeviceInfo,
+        switches: dict[str, SupernotifyOverridableSwitch],
+    ) -> None:
+        super().__init__(OVERRIDE_KIND_TRANSPORT, transport, device_info, switches)
+        self._transport = transport
+        self._registry = registry
+        self._attr_translation_placeholders = {"transport": transport.alias or transport.name}
+        # Setting entity_id directly is not preferred Home Assistant practice - see
+        # SupernotifyScenarioSwitch and SupernotifyDeliverySwitch.
+        self.entity_id = f"switch.{DOMAIN}_transport_{slugify(transport.name)}"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        return sanitize(self._transport.attributes())
+
+    def _refresh_related(self) -> None:
+        # the deprecated binary_sensor mirrors enabled
+        self._registry.async_refresh_entity(self._key)

@@ -84,11 +84,14 @@ def test_schema() -> None:
 
 async def test_transport_setup(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
-    assert hass.states.get("binary_sensor.supernotify_transport_chime").state == "on"  # type: ignore
-    assert hass.states.get("binary_sensor.supernotify_transport_generic").state == "on"  # type: ignore
-    assert hass.states.get("binary_sensor.supernotify_transport_email").state == "off"  # type: ignore
-    assert hass.states.get("binary_sensor.supernotify_delivery_plain_email").state == "off"  # type: ignore
-    assert hass.states.get("binary_sensor.supernotify_delivery_testing").state == "on"  # type: ignore
+    assert hass.states.get("switch.supernotify_transport_chime").state == "on"  # type: ignore
+    assert hass.states.get("switch.supernotify_transport_generic").state == "on"  # type: ignore
+    assert hass.states.get("switch.supernotify_transport_email").state == "off"  # type: ignore
+    assert hass.states.get("switch.supernotify_delivery_plain_email").state == "off"  # type: ignore
+    assert hass.states.get("switch.supernotify_delivery_testing").state == "on"  # type: ignore
+    # the deprecated binary_sensors are never created for a new install
+    assert hass.states.get("binary_sensor.supernotify_transport_chime") is None
+    assert hass.states.get("binary_sensor.supernotify_delivery_testing") is None
 
 
 async def test_reload(hass: HomeAssistant) -> None:
@@ -278,14 +281,14 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
     MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
     hass.states.async_set("notify.mock_notify_target", "unknown")
     await _setup_supernotify(hass, SIMPLE_CONFIG)
-    hass.states.async_set("binary_sensor.supernotify_delivery_testing", "off")
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.supernotify_delivery_testing"}, blocking=True)
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_implicit_deliveries", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
     assert response == {"mobile_push": ["mobile_push"], "notify_entity": ["notify_entity"]}
-    hass.states.async_set("binary_sensor.supernotify_delivery_testing", "on")
+    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.supernotify_delivery_testing"}, blocking=True)
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_implicit_deliveries", None, blocking=True, return_response=True
@@ -378,7 +381,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "notify", {"notify": [{CONF_PLATFORM: "test"}]})
     await hass.async_block_till_done()
 
-    hass.states.async_set("binary_sensor.supernotify_transport_generic", "off")
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.supernotify_transport_generic"}, blocking=True)
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,
@@ -394,7 +397,7 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert_clean_notification(notification, expected_deliveries={"chime_person": 1}, expected_skipped=1)
     assert notification is not None
 
-    hass.states.async_set("binary_sensor.supernotify_transport_generic", "on")
+    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.supernotify_transport_generic"}, blocking=True)
     await hass.async_block_till_done()
     await hass.services.async_call(
         NOTIFY_DOMAIN,

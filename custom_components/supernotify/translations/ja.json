@@ -7,6 +7,12 @@
             },
             "recipient": {
                 "name": "受信者 {recipient}"
+            },
+            "delivery": {
+                "name": "配信 {delivery}"
+            },
+            "transport": {
+                "name": "トランスポート {transport}"
             }
         },
         "sensor": {
@@ -23,6 +29,12 @@
             },
             "recipient_enabled": {
                 "name": "受信者 {recipient} 有効"
+            },
+            "delivery_enabled": {
+                "name": "配信 {delivery} 有効"
+            },
+            "transport_enabled": {
+                "name": "トランスポート {transport} 有効"
             }
         }
     },
@@ -342,6 +354,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "受信者のバイナリセンサーは削除されます",
             "description": "各受信者に、有効・無効を切り替えるスイッチ（例: `switch.supernotify_recipient_XXXX`）が追加されました。受信者の `binary_sensor` エンティティは今後は読み取り専用となり、受信者が有効かどうかを反映するだけで、将来のバージョンで削除されます。受信者の `binary_sensor` の状態を書き込んでも、受信者は有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、受信者のスイッチを使うように変更してください。"
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "配信とトランスポートのバイナリセンサーは削除されます",
+            "description": "各配信と各トランスポートに、有効・無効を切り替えるスイッチ（例: `switch.supernotify_delivery_XXXX` や `switch.supernotify_transport_XXXX`）が追加されました。配信とトランスポートの `binary_sensor` エンティティは今後は読み取り専用となり、配信またはトランスポートが有効かどうかを反映するだけで、将来のバージョンで削除されます。これらの `binary_sensor` の状態を書き込んでも、配信やトランスポートは有効・無効になりません。そのため、そのような操作を行う、またはこれらのエンティティに依存しているオートメーション、スクリプト、ダッシュボードは、スイッチを使うように変更してください。"
         }
     },
     "exceptions": {

@@ -7,6 +7,12 @@
             },
             "recipient": {
                 "name": "接收人 {recipient}"
+            },
+            "delivery": {
+                "name": "推送 {delivery}"
+            },
+            "transport": {
+                "name": "传输方式 {transport}"
             }
         },
         "sensor": {
@@ -23,6 +29,12 @@
             },
             "recipient_enabled": {
                 "name": "接收人 {recipient} 已启用"
+            },
+            "delivery_enabled": {
+                "name": "推送 {delivery} 已启用"
+            },
+            "transport_enabled": {
+                "name": "传输方式 {transport} 已启用"
             }
         }
     },
@@ -342,6 +354,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "接收人的二进制传感器将被移除",
             "description": "每个接收人现在都有一个开关（例如 `switch.supernotify_recipient_XXXX`）用于启用和停用它。接收人的 `binary_sensor` 实体从现在起为只读，仅反映接收人是否已启用，并将在未来版本中移除。写入接收人 `binary_sensor` 的状态不再会启用或停用该接收人，因此请将任何这样做、或以其他方式依赖这些实体的自动化、脚本或仪表板，改为使用接收人开关。"
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "推送和传输方式的二进制传感器将被移除",
+            "description": "每个推送和传输方式现在都有一个开关（例如 `switch.supernotify_delivery_XXXX` 或 `switch.supernotify_transport_XXXX`）用于启用和停用它。推送和传输方式的 `binary_sensor` 实体从现在起为只读，仅反映推送或传输方式是否已启用，并将在未来版本中移除。写入这些 `binary_sensor` 的状态不再会启用或停用推送或传输方式，因此请将任何这样做、或以其他方式依赖这些实体的自动化、脚本或仪表板，改为使用开关。"
         }
     },
     "exceptions": {

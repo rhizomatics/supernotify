@@ -11,8 +11,6 @@ from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
     CONF_ACTION,
     CONF_DEVICE_ID,
-    EntityCategory,
-    Platform,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -140,7 +138,6 @@ class HomeAssistantAPI:
         self.__device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
-        self.exposed_entities: list[str] = []
         self.mobile_apps_by_tracker: dict[str, TrackedDeviceDetails] = {}
         self.mobile_apps_by_app_id: dict[str, TrackedDeviceDetails] = {}
         self.mobile_apps_by_device_id: dict[str, TrackedDeviceDetails] = {}
@@ -279,43 +276,6 @@ class HomeAssistantAPI:
         blocking the caller, since this is called from both sync and async contexts."""
         store: Store[Any] = Store(self._hass, version, key)
         self._hass.async_create_task(store.async_save(data), f"supernotify_save_{key}")
-
-    def expose_entity(
-        self,
-        entity_name: str,
-        state: str,
-        attributes: dict[str, Any],
-        platform: str = Platform.BINARY_SENSOR,
-        original_name: str | None = None,
-        original_icon: str | None = None,
-    ) -> None:
-        """Expose a technical entity in Home Assistant representing internal state and attributes"""
-        entity_id: str
-        entity_registry = self._entity_registry()
-        if entity_registry is not None:
-            try:
-                # single_config_entry integration, so the one entry (if any) owns every entity;
-                # attaching it also lets HA remove these entities along with the entry
-                config_entries = self._hass.config_entries.async_entries(DOMAIN)
-                entry: er.RegistryEntry = entity_registry.async_get_or_create(
-                    platform,
-                    DOMAIN,
-                    entity_name,
-                    config_entry=config_entries[0] if config_entries else None,
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    original_name=original_name,
-                    original_icon=original_icon,
-                )
-                entity_id = entry.entity_id
-            except Exception as e:
-                _LOGGER.warning("SUPERNOTIFY Unable to register entity %s: %s", entity_name, e)
-                # continue anyway even if not registered as state is independent of entity
-                entity_id = f"{platform}.{DOMAIN}_{entity_name}"
-        try:
-            self._hass.states.async_set(entity_id, str(state), attributes=attributes)
-            self.exposed_entities.append(entity_id)
-        except Exception as e:
-            _LOGGER.error("SUPERNOTIFY Unable to set state for entity %s: %s", entity_id, e)
 
     def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""

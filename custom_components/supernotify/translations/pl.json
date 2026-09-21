@@ -7,6 +7,12 @@
             },
             "recipient": {
                 "name": "Odbiorca {recipient}"
+            },
+            "delivery": {
+                "name": "Dostarczenie {delivery}"
+            },
+            "transport": {
+                "name": "Transport {transport}"
             }
         },
         "sensor": {
@@ -23,6 +29,12 @@
             },
             "recipient_enabled": {
                 "name": "Odbiorca {recipient} włączony"
+            },
+            "delivery_enabled": {
+                "name": "Dostarczenie {delivery} włączone"
+            },
+            "transport_enabled": {
+                "name": "Transport {transport} włączony"
             }
         }
     },
@@ -342,6 +354,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "Czujniki binarne odbiorców zostaną usunięte",
             "description": "Każdy odbiorca ma teraz przełącznik (na przykład `switch.supernotify_recipient_XXXX`), który go włącza i wyłącza. Encje `binary_sensor` odbiorców są odtąd tylko do odczytu, jedynie odzwierciedlają, czy odbiorca jest włączony, i zostaną usunięte w przyszłej wersji. Zapisanie stanu `binary_sensor` odbiorcy nie włącza ani nie wyłącza już odbiorcy, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika odbiorcy."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "Czujniki binarne dostarczeń i transportów zostaną usunięte",
+            "description": "Każde dostarczenie i każdy transport ma teraz przełącznik (na przykład `switch.supernotify_delivery_XXXX` lub `switch.supernotify_transport_XXXX`), który je włącza i wyłącza. Encje `binary_sensor` dostarczeń i transportów są odtąd tylko do odczytu, jedynie odzwierciedlają, czy dostarczenie lub transport jest włączony, i zostaną usunięte w przyszłej wersji. Zapisanie stanu jednej z tych encji `binary_sensor` nie włącza ani nie wyłącza już dostarczenia ani transportu, dlatego zmień każdą automatyzację, skrypt lub pulpit, który to robi lub w inny sposób polega na tych encjach, tak aby używał przełącznika."
         }
     },
     "exceptions": {

@@ -7,6 +7,12 @@
             },
             "recipient": {
                 "name": "Empfänger {recipient}"
+            },
+            "delivery": {
+                "name": "Lieferung {delivery}"
+            },
+            "transport": {
+                "name": "Transport {transport}"
             }
         },
         "sensor": {
@@ -23,6 +29,12 @@
             },
             "recipient_enabled": {
                 "name": "Empfänger {recipient} aktiviert"
+            },
+            "delivery_enabled": {
+                "name": "Lieferung {delivery} aktiviert"
+            },
+            "transport_enabled": {
+                "name": "Transport {transport} aktiviert"
             }
         }
     },
@@ -342,6 +354,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "Binärsensoren für Empfänger werden entfernt",
             "description": "Jeder Empfänger hat jetzt einen Schalter (zum Beispiel `switch.supernotify_recipient_XXXX`), der ihn aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Empfänger sind ab sofort schreibgeschützt, spiegeln nur noch wider, ob der Empfänger aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands eines Empfänger-`binary_sensor` aktiviert oder deaktiviert den Empfänger nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Empfänger-Schalter verwenden."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "Binärsensoren für Lieferungen und Transporte werden entfernt",
+            "description": "Jede Lieferung und jeder Transport hat jetzt einen Schalter (zum Beispiel `switch.supernotify_delivery_XXXX` oder `switch.supernotify_transport_XXXX`), der sie aktiviert und deaktiviert. Die `binary_sensor`-Entitäten der Lieferungen und Transporte sind ab sofort schreibgeschützt, spiegeln nur noch wider, ob die Lieferung oder der Transport aktiviert ist, und werden in einer zukünftigen Version entfernt. Das Schreiben des Zustands eines dieser `binary_sensor` aktiviert oder deaktiviert die Lieferung oder den Transport nicht mehr. Passe daher Automatisierungen, Skripte oder Dashboards, die das tun oder sich anderweitig auf diese Entitäten stützen, so an, dass sie stattdessen den Schalter verwenden."
         }
     },
     "exceptions": {

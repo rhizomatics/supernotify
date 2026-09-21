@@ -7,6 +7,12 @@
             },
             "recipient": {
                 "name": "Recipient {recipient}"
+            },
+            "delivery": {
+                "name": "Delivery {delivery}"
+            },
+            "transport": {
+                "name": "Transport {transport}"
             }
         },
         "sensor": {
@@ -23,6 +29,12 @@
             },
             "recipient_enabled": {
                 "name": "Recipient {recipient} Enabled"
+            },
+            "delivery_enabled": {
+                "name": "Delivery {delivery} Enabled"
+            },
+            "transport_enabled": {
+                "name": "Transport {transport} Enabled"
             }
         }
     },
@@ -428,6 +440,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "Recipient binary sensors will be removed",
             "description": "Each recipient now has a switch (for example `switch.supernotify_recipient_XXXX`) that enables and disables it. The recipient `binary_sensor` entities are read-only from now on, only mirroring whether the recipient is enabled, and will be removed in a future version. Writing the state of a recipient `binary_sensor` no longer enables or disables the recipient, so change any automation, script or dashboard that does that, or otherwise relies on these entities, to use the recipient switch instead."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "Delivery and transport binary sensors will be removed",
+            "description": "Each delivery and transport now has a switch (for example `switch.supernotify_delivery_XXXX` or `switch.supernotify_transport_XXXX`) that enables and disables it. The delivery and transport `binary_sensor` entities are read-only from now on, only mirroring whether the delivery or transport is enabled, and will be removed in a future version. Writing the state of one of these `binary_sensor` entities no longer enables or disables the delivery or transport, so change any automation, script or dashboard that does that, or otherwise relies on these entities, to use the switch instead."
         }
     },
     "exceptions": {

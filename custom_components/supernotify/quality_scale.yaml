@@ -99,9 +99,10 @@ rules:
   entity-event-setup:
     status: exempt
     comment: |
-      Reviewed: the four subscriptions (mobile_app_notification_action, exposed_entities
-      state tracking, nightly housekeeping timer, EVENT_HOMEASSISTANT_STOP - all wired in
-      SupernotifyEngine.initialize(), notify.py) are inherently orchestration-level, not
+      Reviewed: the subscriptions (mobile_app_notification_action, nightly housekeeping
+      timer, EVENT_HOMEASSISTANT_STOP - all wired in SupernotifyEngine.initialize(),
+      notify.py - and ScenarioRegistry's state tracking of scenario condition entities and
+      periodic refresh, in scenario.py) are inherently orchestration-level, not
       scoped to any single entity - they act across all recipients/deliveries. Neither
       SupernotifyEntity nor the per-recipient RecipientNotifyEntity (notify.py, added via the
       notify platform's async_setup_entry) owns any of them - each just delegates
@@ -116,8 +117,7 @@ rules:
     status: done
     comment: |
       SupernotifyEntity sets _attr_has_entity_name = True, as do all the entities added by the
-      binary_sensor, sensor and switch platforms. Delivery/transport entities are still raw
-      hass_api.expose_entity() writes, outside this rule until they become real entities (#175).
+      other entity platforms, including the delivery and transport switches and binary_sensors.
 
   runtime-data:
     status: done
@@ -225,11 +225,9 @@ rules:
     status: done
     comment: |
       A single "SuperNotify" device (hass_api.ha_device_info()) now groups the
-      scenario and recipient switches, scenario/recipient binary_sensors and the
-      notification/failure counter sensors (switch.py, binary_sensor.py,
-      sensor.py). Delivery/transport entities are not yet on this device - a
-      separate, larger conversion (issue #175) - though hass_api.expose_entity()
-      now attaches them to the config entry.
+      scenario, recipient, delivery and transport switches, their binary_sensors
+      and the notification/failure counter sensors (switch.py, binary_sensor.py,
+      sensor.py). The recipient notify entities (people.py) are not on it.
 
   diagnostics:
     status: done
@@ -339,11 +337,10 @@ rules:
   icon-translations:
     status: todo
     comment: |
-      Partial: icons.json now covers the scenario and recipient switches, the scenario/
-      recipient binary_sensors and the two counter sensors via
-      _attr_translation_key.
-      Delivery/transport entities (still raw hass_api.expose_entity() writes)
-      not yet reviewed; no state/range-dependent icons identified so far.
+      Partial: icons.json covers every switch, binary_sensor and sensor entity, via
+      _attr_translation_key. The recipient notify entities (people.py) have no
+      translation_key, so no icon translation, yet. No state/range-dependent icons
+      identified so far.
 
   reconfiguration-flow:
     status: todo
