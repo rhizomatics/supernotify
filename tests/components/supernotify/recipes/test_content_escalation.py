@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, cast
 
 from pytest_unordered import unordered
 
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import DummyTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -19,6 +21,8 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     ctx = TestingContext(
         homeassistant=hass,
         transports={"notify_entity": {"enabled": False}},
+        transport_types=TRANSPORTS,
+        viable_transport_types=[MobilePushTransport],
         deliveries="""
         plain_email:
           transport: email
@@ -30,7 +34,7 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
           action: notify.4g_modem
           target: "+4394889348934"
           selection: scenario
-        apple_push:
+        mobile_push:
           transport: mobile_push
           target: mobile_app_iphone
         """,
@@ -50,7 +54,7 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
             data:
               priority: critical
 """,
-        services={"notify": ["send_message", "smtp", "4g_modem", "mobile_app_iphone"]},
+        services={"notify": ["send_message", "smtp", "4g_modem", "mobile_app_iphone"], "persistent_notification": ["create"]},
     )
     await ctx.test_initialize()
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_away")
@@ -59,14 +63,16 @@ async def test_content_escalation_by_delivery_selection(hass: HomeAssistant):
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == []
-    assert list(uut.selected_deliveries) == ["apple_push"]
-    assert cast("Envelope", uut.deliveries["apple_push"][EnvelopeOutcome.SUCCESS][0]).priority == "medium"  # type: ignore
+    assert list(uut.selected_deliveries) == ["mobile_push"]
+    assert cast("Envelope", uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS][0]).priority == "medium"  # type: ignore
 
     uut = Notification(ctx, "person was detected at back door", action_data={"priority": "high"})
     await uut.initialize()
     await uut.deliver()
     assert list(uut.enabled_scenarios.keys()) == ["high_alert"]
-    assert list(uut.selected_deliveries) == unordered("plain_email", "apple_push", "sms")
+    # the scenario's wildcard `.*` delivery override also sweeps in "persistent", an
+    # explicit-selection-only auto-configured delivery that otherwise wouldn't fire
+    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile_push", "sms", "persistent")
     assert cast("Envelope", uut.deliveries["plain_email"][EnvelopeOutcome.SUCCESS][0]).priority == "critical"  # type: ignore
 
 

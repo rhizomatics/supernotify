@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 import time
 import unicodedata
 from abc import abstractmethod
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 from urllib.parse import urlparse
 
 from homeassistant.components.notify.const import ATTR_TARGET
@@ -20,6 +21,7 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntityCategory,
     Target,
     TargetRequired,
     TransportConfig,
@@ -30,8 +32,10 @@ from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
+    INCLUSION_EXPLICIT,
 )
 from .model import DeliveryConfig, SuppressionReason
+from .options import DeliveryOption
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -40,6 +44,33 @@ if TYPE_CHECKING:
     from .delivery import Delivery, DeliveryRegistry
     from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry
+
+# Markup that spoken transports hand straight to the voice assistant. Simplification
+# strips angle brackets, so SSML has to be passed through untouched or the assistant
+# ends up speaking the tag names out loud.
+RE_MARKUP_TAG = re.compile(r"(</?[A-Za-z][\w.:-]*(?:\s[^<>]*?)?/?>)")
+RE_MARKUP_TAG_NAME = re.compile(r"</?([A-Za-z][\w.:-]*)")
+SSML_TAG_NAMES = frozenset({
+    "alexa:name",
+    "amazon:domain",
+    "amazon:effect",
+    "amazon:emotion",
+    "audio",
+    "break",
+    "emphasis",
+    "lang",
+    "mark",
+    "phoneme",
+    "prosody",
+    "say-as",
+    "speak",
+    "sub",
+    "voice",
+})
+
+# Sign characters kept even though their Unicode category (Sm) would otherwise be stripped,
+# so numeric values like "+3" or "-3" aren't left indistinguishable from "3".
+SIGN_CHARS = frozenset("+-=%")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +83,7 @@ class Transport:
     """
 
     name: str
+    declared_options: ClassVar[list[DeliveryOption]] = []
 
     @abstractmethod
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
@@ -89,11 +121,68 @@ class Transport:
         return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
 
     @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        """The target categories this transport understands, independent of any delivery.
+
+        A plain string names a category directly (e.g. `ATTR_EMAIL`); an `EntityCategory`
+        declares that the `entity_id` category is accepted, but only for entities matching
+        its domain/platform constraints. Empty by default - a transport that doesn't declare
+        anything here relies entirely on `Delivery.select_targets()`'s other qualification
+        paths (its own name, its transport's name, or a delivery's own `OPTION_TARGET_CATEGORIES`
+        override), which is the deliberate design for `generic`, a bring-your-own-categories
+        transport. Queried via `Delivery.target_categories`, not directly - a `Transport`
+        never needs to know about delivery-level config, only the reverse.
+        """
+        return []
+
+    @property
     def default_config(self) -> TransportConfig:
         return TransportConfig()
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return None
+    @property
+    def inclusion_mode(self) -> list[str]:
+        """The `inclusion` an auto-configured delivery for this transport should use.
+
+        Explicit-only by default: most transports need a chat_id/channel/device_id the
+        notification author must supply, have targets too opaque or ambiguous to map to
+        a recipient/entity, or a channel too intrusive to fire on every notification.
+        Override to return `[INCLUSION_DEFAULT]` for the few transports that can
+        reasonably fire on every notification out of the box (e.g. email, mobile_push).
+
+        Pulled out as a separate property so can be reported in the Transport Configuration
+        section of the Developer documentation
+        """
+        return [INCLUSION_EXPLICIT]
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        """Whether this transport currently has what it needs to auto-configure a delivery.
+
+        Default implementation just defers to `build_standard_deliveries()` and checks for
+        a non-empty result - correct for any transport, but builds (and discards) the
+        `DeliveryConfig`s to answer what's otherwise a yes/no question. Override with a
+        standalone check (matching `build_standard_deliveries()`'s own condition) in a
+        transport where that's cheap and doesn't require mutating `self.delivery_defaults`
+        to find out - most transports that gate purely on hass_api state (a config entry, a
+        registered service, discovered entities) can. Skip the override where viability can
+        only be discovered by doing the same service/entity lookup
+        `build_standard_deliveries()` itself needs to build the config (e.g. `discord`,
+        `pushover`, `sms` - discovering *which* service is available - or `email`, which
+        also decides *how* to send based on what's found).
+        """
+        return bool(self.build_standard_deliveries(hass_api))
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        """Build every 'standard' (auto-generatable) delivery this transport contributes,
+        keyed by name: its own default (keyed by `self.name`) plus any extras.
+
+        Only ever called once `is_viable()` has returned True for the same `hass_api` -
+        callers must check that first. Most overrides trust this and skip re-checking
+        their own viability condition; the exception is a transport whose viability can
+        only be discovered by doing the very lookup this method needs anyway (see
+        `is_viable()`'s docstring) - those keep their own guard and still return an empty
+        dict, simply because there's nothing to gain by trusting the caller there.
+        """
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""
@@ -270,13 +359,51 @@ class Transport:
             self._unavailable = False
 
     def simplify(self, text: str | None, strip_urls: bool = False) -> str | None:
-        """Simplify text for delivery transports with speaking or plain text interfaces"""
+        """Simplify text for delivery transports with speaking or plain text interfaces.
+
+        Spoken transports can be handed SSML, which the voice assistant parses itself.
+        Simplification removes angle brackets, so applying it to SSML turns the markup
+        into words the assistant reads out loud. When a spoken transport is given SSML,
+        the tags are left alone and only the text around them is simplified, so emoji,
+        URLs and symbols are still cleaned up.
+        """
         if not text:
             return None
+        if self.supported_features & TransportFeature.SPOKEN and self._is_ssml(text):
+            simplified = "".join(
+                fragment if index % 2 else self._simplify_around_markup(fragment, strip_urls)
+                for index, fragment in enumerate(RE_MARKUP_TAG.split(text))
+            )
+        else:
+            simplified = self._simplify_text(text, strip_urls)
+        _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", simplified)
+        return simplified
+
+    @staticmethod
+    def _is_ssml(text: str) -> bool:
+        """Tell SSML markup apart from stray angle brackets in ordinary text."""
+        for tag in RE_MARKUP_TAG.findall(text):
+            name = RE_MARKUP_TAG_NAME.match(tag)
+            if name is not None and name.group(1).lower() in SSML_TAG_NAMES:
+                return True
+        return False
+
+    @staticmethod
+    def _simplify_text(text: str, strip_urls: bool = False) -> str:
+        """Remove symbols, and optionally URLs, that can trip up voice assistants."""
         if strip_urls:
             words = text.split()
-            text = " ".join(word for word in words if not urlparse(word).scheme)
+            text = " ".join(word for word in words if not (urlparse(word).scheme and urlparse(word).netloc))
+        text = unicodedata.normalize("NFC", text)
         text = text.translate(str.maketrans("_", " ", "()£$<>"))
-        text = "".join(c for c in text if unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn"))
-        _LOGGER.debug("SUPERNOTIFY Simplified text to: %s", text)
-        return text
+        return "".join(c for c in text if c in SIGN_CHARS or unicodedata.category(c) not in ("So", "Sk", "Sm", "Mn", "Sc"))
+
+    @classmethod
+    def _simplify_around_markup(cls, fragment: str, strip_urls: bool) -> str:
+        """Simplify a fragment of text sitting between two SSML tags, keeping the
+        whitespace at either end so that words do not end up glued to the markup."""
+        if not fragment.strip():
+            return fragment
+        lead = fragment[: len(fragment) - len(fragment.lstrip())]
+        trail = fragment[len(fragment.rstrip()) :]
+        return f"{lead}{cls._simplify_text(fragment.strip(), strip_urls)}{trail}"

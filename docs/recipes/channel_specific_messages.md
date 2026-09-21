@@ -21,20 +21,21 @@ delivery name will be matched against the Transport name if there's no matching 
 
 ```yaml title="Example Action Call"
 - action: supernotify.notify
-      data:
-        title: "Motion Detection at Back Door"
-        message: "Motion has been detected at the back door"
-        delivery:
-          8tel_sms:
-            data:
-              message: Back Door Movement
-              title: HASS
-          mobile_push:
-              message: Someone at the back door
+  data:
+    title: "Motion Detection at Back Door"
+    message: "Motion has been detected at the back door"
+    delivery:
+      8tel_sms:
+        data:
+          message: Back Door Movement
+          title: HASS
+      mobile_push:
+        data:
+          message: Someone at the back door
 
 ```
 
 
 ## Variations
 
-- Use `spoken_message` as a top level `data` attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](../transports/alexa_devices.md),[Alexa Media Player](../transports/alexa_media_player.md) or [TTS](../transports/tts.md) for Android.
+- Use `spoken_message` as a top level action attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](../transports/alexa_devices.md),[Alexa Media Player](../transports/alexa_media_player.md) or [TTS](../transports/tts.md) for Android.

@@ -77,6 +77,10 @@
                     "name": "Wiadomość HTML",
                     "description": "Alternatywa HTML dla Wiadomości, używana przez transporty obsługujące bogate formatowanie (np. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Wiadomość mówiona",
+                    "description": "Mówiona alternatywa dla Wiadomości, używana przez transporty odczytujące ją na głos (np. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debugowanie",
                     "description": "Uwzględnij dodatkowe szczegóły diagnostyczne tego powiadomienia w śladach i archiwum."
@@ -86,8 +90,16 @@
                     "description": "Wyślij nawet, jeśli wykrywanie duplikatów w innym przypadku wstrzymałoby to powiadomienie."
                 },
                 "data": {
+                    "name": "Dane (przestarzałe)",
+                    "description": "Starsza nazwa pola Dodatkowe dane, zachowana, aby istniejące automatyzacje nadal były widoczne w edytorze wizualnym. W nowych automatyzacjach używaj pola Dodatkowe dane."
+                },
+                "timestamp": {
+                    "name": "Format znacznika czasu",
+                    "description": "Dołącza do wiadomości bieżącą datę/godzinę w nawiasach kwadratowych, w formacie strftime Pythona, np. %H:%M lub %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Dodatkowe dane",
-                    "description": "Dane przekazywane dalej dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
+                    "description": "Dane przekazywane dalej i dostrajanie transportu dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
                 }
             },
             "sections": {
@@ -265,6 +277,10 @@
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Dostarczenie nie jest już domyślnie uwzględniane",
+            "description": "Dostarczenie {delivery} nie ustawia własnego inclusion, a transport {transport} nie używa już domyślnie 'default' - to dostarczenie nie będzie już uruchamiane przy każdym powiadomieniu. Dodaj inclusion: [default] do dostarczenia, jeśli nadal chcesz zachować to zachowanie."
+        },
         "legacy_yaml_config": {
             "title": "Konfigurację YAML Supernotify trzeba przenieść",
             "fix_flow": {
@@ -296,6 +312,11 @@
         "python_313_deprecated": {
             "title": "Wsparcie dla Pythona 3.13 wkrótce się kończy",
             "description": "Ta instancja Home Assistant działa na Pythonie {python_version}. Supernotify zakończy wsparcie dla Pythona 3.13 (oraz wersji Home Assistant starszych niż 2026.3.0) wraz z wydaniem Home Assistant 2026.10 - po tym momencie ta instancja nie będzie mogła instalować kolejnych aktualizacji Supernotify, dopóki środowisko Pythona nie zostanie zaktualizowane do wersji 3.14 lub nowszej."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Powiadomienie dostarczone (wysłano {delivered_count} dostaw), ale {uncategorized_count} cel(e/ów) nie udało się przypisać do żadnej dostawy i zostały pominięte: {uncategorized_targets} (sprawdzone dostawy: {deliveries})"
         }
     },
     "options": {

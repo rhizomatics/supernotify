@@ -77,6 +77,10 @@
                     "name": "HTML Message",
                     "description": "An HTML alternative to Message, used by transports that support rich formatting (e.g. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Spoken Message",
+                    "description": "A spoken alternative to Message, used by transports that speak it aloud (e.g. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Include extra diagnostic detail for this notification in traces and the archive."
@@ -86,8 +90,16 @@
                     "description": "Send even if duplicate-detection would otherwise suppress this notification."
                 },
                 "data": {
+                    "name": "Data (legacy)",
+                    "description": "Older name for Extra Data, kept so existing automations still show in the visual editor. Use Extra Data for new automations."
+                },
+                "timestamp": {
+                    "name": "Timestamp Format",
+                    "description": "Append the current date/time to the message, in square brackets, using a Python strftime format such as %H:%M or %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Extra Data",
-                    "description": "Passthrough data for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
+                    "description": "Passthrough data and transport tuning for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
                 }
             },
             "sections": {
@@ -382,6 +394,15 @@
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",
             "description": "The {delivery} delivery has an invalid condition {condition}"
+        },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Delivery No Longer Included By Default",
+            "description": "Delivery {delivery} does not set its own inclusion, and transport {transport} no longer defaults to 'default' - this delivery will not fire on every notification any more. Add inclusion: [default] to the delivery if you still want that."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Notification delivered ({delivered_count} delivery/deliveries sent), but {uncategorized_count} target(s) could not be matched to any delivery and were dropped: {uncategorized_targets} (deliveries checked: {deliveries})"
         }
     },
     "selector": {

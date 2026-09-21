@@ -51,6 +51,7 @@ dev=[
     "pytest-mock",
     "pytest-xdist",
     "pytest-icdiff",
+    "icdiff",
     "types-aiofiles",
     "types-cachetools",
     "pre-commit",
@@ -64,15 +65,19 @@ dev=[
     "notify-events",
     "aiontfy==0.8.2; python_full_version < '3.14.2'",
     "aiontfy==0.8.5; python_full_version >= '3.14.2'",
-    "zeroconf==0.148.0; python_full_version < '3.14.2'",
+    "zeroconf==0.149.16; python_full_version < '3.14.2'",
     "zeroconf>=0.150.1; python_full_version >= '3.14.2'",
-
     # home assistant tts testing
     "mutagen",
     "ha-ffmpeg",
-
-    # home assistant mobile push testing, and ntfy
-    "PyTurboJPEG==2.5.0"
+    # home assistant mobile push testing, and ntfy, old ver for HA compat
+    "PyTurboJPEG==1.8.3",
+    "types-python-slugify>=8.0.2.20240310",
+    "voluptuous-stubs>=0.1.1",
+    "types-requests>=2.33.0.20260906,<3.0.0.0",
+    "types-pillow>=10.2.0.20240822,<11.0.0.0",
+    "types-pyyaml>=6.0.12.20260906,<7.0.0.0",
+    "types-beautifulsoup4>=4.12.0.20250516,<5.0.0.0",
 ]
 docs=[
     "mkdocs-material[imaging]",
@@ -87,13 +92,13 @@ docs=[
     "properdocs[i18n]",
     "json-schema-for-humans",
     "mkdocs-gen-files",
-    "voluptuous-openapi==0.2.0; python_full_version < '3.14.2'",
-    "voluptuous-openapi>=0.3.0; python_full_version >= '3.14.2'",
+    "probatio",
     "mkdocs-git-revision-date-localized-plugin",
     "mkdocs-minify-html-plugin",
     "mkdocs-meta-descriptions-plugin",
     "mike",
-    "mkdocs-htmlproofer-plugin"
+    "mkdocs-htmlproofer-plugin",
+    "mkdocs-llmstxt"
 ]
 
 [project.optional-dependencies]
@@ -109,10 +114,15 @@ environments = [
 ]
 override-dependencies = [
     #"voluptuous-openapi==0.2.0"
+    # homeassistant==2026.2.3 hard-pins zeroconf==0.148.0 (exact, no range) - that version
+    # carries a known CVE, so force the patched 0.149.16 instead for py3.13 (2026.9.2, used
+    # for py3.14+, already requires a newer zeroconf range that isn't affected)
+    "zeroconf==0.149.16; python_full_version < '3.14.2'",
+    "zeroconf>=0.150.1; python_full_version >= '3.14.2'",
     "homeassistant==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant==2026.9.1; python_full_version >= '3.14.2'",
+    "homeassistant==2026.9.2; python_full_version >= '3.14.2'",
     "homeassistant-stubs==2026.2.3; python_full_version < '3.14.2'",
-    "homeassistant-stubs==2026.9.1; python_full_version >= '3.14.2'",
+    "homeassistant-stubs==2026.9.2; python_full_version >= '3.14.2'",
 
 ]
 exclude-newer = "5 days"
@@ -228,5 +238,6 @@ addopts = [
     "--cov-report=term-missing",
     "--cov=custom_components.supernotify",
     "--cov-fail-under=80",
+    "--verbosity=2",
     "--allow-hosts=127.0.0.1,127.0.1.1,localhost,::1",
 ]

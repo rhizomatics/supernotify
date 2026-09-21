@@ -1,8 +1,156 @@
-## 2.4.2
+## Unreleased
 
 ### Targets
 - Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied. Previously only Chime expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
   - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
+
+## 2.6.0
+
+### Action Data
+The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of handling `data` mappings than the original legacy Notify platform way.
+- In the old notify the top level `data` could hold only `message` and `title` and everything else got pushed down to a second level nested `data`
+- From v2.6.0, the new action will detect if the old style nested data is used and remap it to the new flat style. Its still worth at some point going back over old automations, since two levels of `data` was always confusing.
+- `data` elements to be passed down to other actions, and not for Supernotify itself (other than running templates over them) are now named `extra_data` in line with the UI. The old name works fine, though the contents will get autodetected for old style nested data, whereas `extra_data` will be left alone.
+- `force_resend` now a top-level action data item, see also `spoken_message`
+- `timestamp` can now be set from the action UI. Supply a `strftime` format and it will be prepended to every message
+### Voice
+- **Spoken Message** is now a top-level field, so can be set easily from the Automation Actions panel or the Tools Action call. In YAML this is `spoken_message`
+### Transport Options
+- Options for transports are now self-describing, so auto generated table of options up to date and more detail
+- `message_html` removed from spoken only envelopes
+### Multimedia
+- Added missing `snapshot_image_path` to allowed `media:` options
+### Media Transport
+- Now uses the standard image grabbing modules, and supports the `jpeg_opts` and `png_opts` for image tuning
+### Documentation
+- Fix automatically generated validation schema documentation
+- Added automated test for the YAML examples in docs
+- [Roadmap](developer/design/roadmap.md) of technial and features added
+### Technical
+- `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
+
+## 2.5.3
+
+### Spoken Notifications
+
+- Simplify Text
+  - SSML tags now untouched and left for devices to interpret
+  - Unicode `Sc` category now added to the simplify text filter
+  - Common signs (`+`,`-`,`=`,`%`) that make sense to vocalize are omitted from the Unicode special character filter
+  - Unicode is now NFC normalized prior to Unicode `Mn` filtering to strip out marks, so accented characters in NFD-decomposed text better handled
+- Strip URLs
+  - False positive for words ending with `:` fixed
+- Scenario Templates
+  - Simplify Text and Strip URLs is now applied _after_ any scenario templates update message and title
+- New [voice](usage/voice.md) documentation page added
+
+
+## 2.5.2
+
+### Alexa Media Player
+
+- Fix for auto discovery on Alexa Media Player, where every action registered by the integration hits the same function
+  - Service lookup ignores target-specific instances of an action to find the target neutral one
+
+## 2.5.1
+
+### Alexa Devices
+- Automatic deliveries, `alexa_devices_announce_all` and `alexa_devices_speak_all` now only select devices and ignore speaker groups so not double notifying
+  - Speaker Groups are a good thing, however its not possible to work out if they are all devices or a subset from auto-discovery
+  - If you want a group, then override the delivery with the group as target, or create a new delivery
+### Recipes
+- Simple *Live Activity* for a dishwasher
+  - This will be improved to support progress bars etc
+
+
+## 2.5.0
+
+### Deliveries
+
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](roadmap/deliveries_and_transports.md).
+
+- Every transport that is available to use is automatically available as a delivery with the same name.
+  - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
+  - Deliveries no longer have a `default_` prefix, although existing automations which use these will automatically be switched to `email`,`notify_entity` etc
+  - Auto discovery of action name for lots of transports, see list below
+  - A repair is raised for any deliveries that have the same name as a transport but don't use that transport. The transport name is effectively a reserved delivery name.
+- Creating `Delivery` objects now only necessary if there's more than one Delivery for the same transport, like `plain_email` and `html_email`, different Telegram channels etc
+    - Everything that can be done with a `Delivery` configuration can be done with the `delivery_defaults:` section of a `Transport` object
+    - Its also possible to avoid creating Delivery objects in YAML by defining the relevant `data:` items in a notification action, although this gets unwieldy (the whole point of Delivery objects is to define this stuff once and not across many notifications).
+- Switch entities are only published for Transport objects that are available
+  - So you won't get clutter for things like `ntfy`,`gotfy`,`alexa_media_player` if those are not installed
+- Default delivery creation tightened for Notify Entity and Mobile Push, so these Delivery objects don't get created if there are no mobile apps or notify entities on the Home Assistant instance.
+- Transports have a `load` control, switching this off means there's no attempt to auto-discover it, and it never has a Delivery or Home Assistant entities created for it
+- Transports with no automatic or manual Delivery pre-sets get unloaded, so don't appear as entities
+- Auto-configure for `email` will respect the direct mode if connection details present
+- Transport and Delivery now are controlled by `inclusion` rather than `selection` since that was confusing with the different but similar `delivery_selection` in the notification. The older keyword is still supported but deprecated.
+- Auto generated deliveries give way to manually configured deliveries of the same name, and come last in any selection battle to handle unique targets
+
+### Targets
+
+There has a wide overhaul of how targets are categorized and tied back to transports - this has simplified the code, and should make it simpler to configure and more predictable in how it will behave. Regression tests and migration code has been used to keep it backward compatible with existing configurations. There's also a new documentation page for [Target Usage](usage/targets.md).
+
+- A flat target list can scope an entry to a target category with a `category:value` prefix (e.g. `topic:some/topic`), as shorthand for the dictionary target form
+- Each transport now declares the target categories it accepts (`entity_id` selectors can further narrow by Home Assistant domain and/or registered platform), replacing the old `target_categories`/`target_platform_select` options - see [Targets](usage/targets.md)
+- Archive message now has `uncategorized_targets` and `unassigned_targets` to help debugging delivery issues
+- New `topic`, `discord_channel` and `matrix_room` categories for MQTT, Discord and Matrix
+- A target category matching a delivery's own name, or its transport's name, always reaches that delivery - so `sms:1234` reaches any enabled SMS delivery, while a specific delivery name (e.g. `html_email:...`) pins a target to just that one
+- An error will be raised logged if there any targets that can't be mapped to a category - this won't stop the rest of the notification working, but will make it visible
+
+### Alexa Devices
+- Three automatically generated standard deliveries
+  - `alexa_devices` - picks up on any Alexa notify entities in the target list, does nothing if no targets
+  - `alexa_devices_speak_all` - sends notification to all *speak* Alexa notify entities, takes no targets
+  - `alexa_devices_announce_all` - sends notification to all *announce* Alexa notify entities, takes no targets
+- This means that it is easy with a Zero YAML configuration to use Alexa announcements - just add `alexa_devices_announce_all` to the list of deliveries
+
+### Alexa Media Player
+- Automatically finds correct notify action by default
+
+### Discord
+- Automatically finds correct notify action by default
+
+### Email
+- The internal SMTP integration is used by default, and will reuse the Home Assistant SMTP connection details if SMTP set up via the UI
+
+### Gotify
+- Automatically finds correct notify action by default
+
+### Live Scenarios
+- Fix scenarios without entities, such as date based ones using `now()` being left out of periodic sweep to recompute
+
+### Notify Entity
+- Target selection for notify entities now uses Home Assistant domain that provided the entity
+  - This is used for `html5` and `alexa_devices` so that Notify Entities are handled correctly by the right transport, with the very basic `notify_entity` as a back stop
+
+### MQTT
+- Delivery now accepts a topic as a target, and takes payload from message. Previous behaviour remains supported.
+
+### Mobile Actions
+
+- Exposed `group` on mobile actions as `mobile_push_group` (previously undocumented and mis-named `action_category`)
+- Fixed problem with `action_template` and `title_template` producing broken buttons
+- Stop forcing mobile notifications into 'general' or 'appd' group
+- New doc page on how they work
+
+### Pushover
+- Automatically finds correct notify action by default
+
+### SMS
+- Automatically finds correct notify action by default for Twilio and Mikrotik_SMS integrations
+
+### Technical
+- Documentation auto-generation moved to `probatio`, retiring `voluptuous-openapi`
+- Improved order of fields in archive for most useful to top, and related together
+- HomeAssistant compatibility moved to 2026.9.2
+- Developer automated documentation for Transports expose the new target configurations they have
+- Manifest updated so Supernotify will wait for all its dependent integrations before starting up
+
+## 2.4.2
+
+### Fixes
+- Automation editor could leave `data` fields at `null`, for example `constrain_scenarios` which got rejected by schema validator. Null values now explicitly allowed, and handled as unset for optional values.
+- Fixed an obscure set amalgamation bug in `notification.py` `select_deliveries()` that could cause different results for multiple deliveries
 
 ## 2.4.1
 
@@ -17,7 +165,7 @@
 
 ## 2.4.0
 
-### Live Scenarios
+### Live Scenarios
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
 - New **Scenario Control** configuration added, with initial usage for controlling live scenario state
 
@@ -588,8 +736,7 @@ only prepare data and targets
 - Improved documentation content and navigation
 - Media Player transport allows `media_content_type` to be overridden in `data` for non-image use
 - Archiving now has a `debug` option, which controls if `debug_trace` included in notifications
-- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and
-an Alexa 'announce' delivery is selected, only one of them will speak for each device)
+- Alexa Devices transport now has unique recipients on by default ( so if accidentally an Alex 'speak' delivery and an Alexa 'announce' delivery is selected, only one of them will speak for each device)
 - Transport adaptors now count errors and report last error time and type
 ### Internal
 - Renaming of transport tests for consistency with package names

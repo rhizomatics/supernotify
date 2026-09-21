@@ -78,6 +78,12 @@ While this is a HACS component, it should be built wherever possible to adhere t
 consistent with the set of Home Assistant production dependencies, and test coverage
 maintained above 90%, with regression tests for bug fixes and new tests for all new features.
 
+### Translations
+
+#### Italian
+
+blueprint, transport, delivery, scenario and recipient should all stay in English throughout — they are the config keys users type and usual in Italian Home Assistant to leave domain terms untranslated.
+
 ### Project Commands
 
 Common commands:

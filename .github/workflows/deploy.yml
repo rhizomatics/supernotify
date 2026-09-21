@@ -32,6 +32,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: read
+      pages: write
+      id-token: write
 
     strategy:
       fail-fast: false
@@ -43,14 +45,24 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
+    - name: Package release zip
+      if: github.event_name == 'release'
+      run: |
+        cd custom_components
+        zip -r "${{ github.workspace }}/${{ github.event.release.tag_name }}.zip" supernotify
+    - name: Upload release zip asset
+      if: github.event_name == 'release'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload "${{ github.event.release.tag_name }}" "${{ github.event.release.tag_name }}.zip" --clobber
     - name: HACS Action
       uses: "hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa"
       with:
         category: "integration"
     - name: HACS Hassfest
-      uses: "home-assistant/actions/hassfest@a7c616ce81ccda50150bf1595786c71b1883fabb"
+      uses: "home-assistant/actions/hassfest@58bff37c8947f690ace498be413a9b78d6f30f93"
     - name: Install uv
-      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+      uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v7
       with:
@@ -58,7 +70,7 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        sudo apt-get install pngquant
+        sudo apt-get install -y pngquant libturbojpeg
         uv sync
     - name: Ruff
       uses:  astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89
@@ -117,6 +129,14 @@ jobs:
             echo "Deploying stable release: $TAG"
             uv run mike deploy --update-aliases "$TAG" latest
             uv run mike set-default latest
+            # mike only publishes these under the version directory, but crawlers and agents look for them at the site root
+            ROOT_FILES="llms.txt llms-full.txt sitemap.xml sitemap.xml.gz robots.txt"
+            ROOT_DIR=$(mktemp -d)
+            git worktree add "$ROOT_DIR" gh-pages
+            for f in $ROOT_FILES; do cp "$ROOT_DIR/$TAG/$f" "$ROOT_DIR/$f"; done
+            git -C "$ROOT_DIR" add $ROOT_FILES
+            git -C "$ROOT_DIR" commit -m "Publish root llms.txt and sitemap for $TAG" || echo "root files unchanged"
+            git worktree remove --force "$ROOT_DIR"
           fi
         else
           echo "Deploying development docs"
@@ -126,3 +146,28 @@ jobs:
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Export docs site for Pages artifact
+      if: ${{ github.event_name != 'pull_request' }}
+      run: |
+        mkdir site-export
+        git archive gh-pages | tar -x -C site-export
+    - name: Upload Pages artifact
+      if: ${{ github.event_name != 'pull_request' }}
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: site-export
+
+  deploy-pages:
+    needs: build
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v5

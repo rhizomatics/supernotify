@@ -65,9 +65,6 @@ Notes on the HA `html5.send_message` service schema:
 - Expired push subscriptions (410 GONE) are handled by the core, which
   unregisters the browser and raises: call_action then returns False.
 
-Internal data keys filtered upstream by notification.py and NOT popped
-here: force_resend, spoken_message.
-
 References:
 - HTML5 push integration: https://www.home-assistant.io/integrations/html5/
 
@@ -76,29 +73,37 @@ References:
 from __future__ import annotations
 
 import logging
-import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA_SNAPSHOT_URL,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_SELECT,
+    INCLUSION_DEFAULT,
+    RE_NOTIFY_ENTITY_ID,
     TRANSPORT_HTML5,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    EntityCategory,
+    SelectionRank,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
+from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, OPTION_UNIQUE_TARGETS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+HA_HTML5_DOMAIN = "html5"
 
 _LOGGER = logging.getLogger(__name__)
-
-RE_VALID_HTML5 = r"notify\.[A-Za-z0-9_]+"
-_HTML5_TARGET_RE = re.compile(r"^notify\.[A-Za-z0-9_]+$")
 
 # HA schema default for the required title field
 _DEFAULT_TITLE = "Home Assistant"
@@ -122,6 +127,7 @@ class HTML5Transport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_HTML5
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
     def supported_features(self) -> TransportFeature:
@@ -137,33 +143,39 @@ class HTML5Transport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "html5.send_message"
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.selection_rank = SelectionRank.FIRST
         config.delivery_defaults.options = {
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
-            OPTION_TARGET_SELECT: [RE_VALID_HTML5],
+            OPTION_UNIQUE_TARGETS: True,  # stop Notify Entity also trying to handle these
+            OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY_ID],
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        # a notify.* entity's registered platform identifies it as this integration's own,
+        # unlike the generic notify_entity transport which has no such distinction
+        return [EntityCategory(domain="notify", platform=HA_HTML5_DOMAIN)]
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # a browser's notify.* entity is unambiguously this integration's own (matched by
+        # platform, not just a loose notify.* shape), so it's reasonable to fire by default
+        return [INCLUSION_DEFAULT]
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the html5 send_message service."""
         return action == "html5.send_message"
 
-    def select_targets(self, envelope: Envelope) -> list[str]:
-        """Filter envelope targets down to html5 `notify.*` entity ids.
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        if hass_api.find_config_entry_data(HA_HTML5_DOMAIN) is None:
+            return False
+        # integration installed but no browser has registered a push subscription yet
+        return bool(hass_api.entity_ids_for_platform("notify", HA_HTML5_DOMAIN))
 
-        The service is entity-based: every target must be a notify entity
-        created by a browser push registration. Non-matching entries are
-        dropped with a debug log; duplicates are removed preserving order.
-        """
-        raw_targets: list[str] = envelope.target.resolved_targets() if envelope.target else []
-        targets: list[str] = []
-        for target in raw_targets:
-            if isinstance(target, str) and _HTML5_TARGET_RE.match(target):
-                if target not in targets:
-                    targets.append(target)
-            else:
-                _LOGGER.debug("SUPERNOTIFY html5: skipping invalid target %r (expected notify.*)", target)
-        return targets
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def _resolve_image_url(self, envelope: Envelope) -> str | None:
         """Resolve a browser-reachable snapshot URL.
@@ -211,7 +223,7 @@ class HTML5Transport(Transport):
         custom_data = raw_data.pop("html5_data", None)
 
         # Resolve and pre-validate notify entity targets
-        targets = self.select_targets(envelope)
+        targets = envelope.target.resolved_targets() if envelope.target else []
         if not targets:
             _LOGGER.warning("SUPERNOTIFY html5: no valid targets (expected notify.* entities)")
             self.record_error("no valid html5 notify entity targets", "deliver")

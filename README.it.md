@@ -94,7 +94,7 @@ Ci sono molte [ricette](https://supernotify.rhizomatics.org.uk/recipes/) con ese
 * **Archiviazione** delle notifiche e **supporto al debug**
     * Archivia facoltativamente le notifiche nel file system e/o su un topic MQTT
     * Include informazioni di debug complete
-    * Consegne, trasporti, destinatari e scenari esposti come entità nell'interfaccia di Home Assistant
+    * Consegne, transport, destinatari e scenari esposti come entità nell'interfaccia di Home Assistant
 
 
 ## YAML solo per uso avanzato

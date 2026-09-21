@@ -1,29 +1,22 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.components.tts.const import ATTR_CACHE, ATTR_LANGUAGE, ATTR_OPTIONS
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     ATTR_MOBILE_APP_ID,
     MANUFACTURER_APPLE,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MANUFACTURER_SELECT,
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_SELECT,
-    OPTION_TTS_ENTITY_ID,
-    SELECT_EXCLUDE,
+    RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_TTS,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntityCategory,
     MessageOnlyPolicy,
     SelectionRule,
     Target,
@@ -31,17 +24,28 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import (
+    OPTION_DEVICE_DISCOVERY,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MANUFACTURER_SELECT,
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_SELECT,
+    SELECT_EXCLUDE,
+    DeliveryOption,
+)
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import DeviceInfo
+    from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
-RE_VALID_MEDIA_PLAYER = r"media_player\.[A-Za-z0-9_]+"
 RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"  # mypy flags up import from tts
+OPTION_TTS_ENTITY_ID = "tts_entity_id"
 
 
 class TTSTransport(Transport):
@@ -53,6 +57,9 @@ class TTSTransport(Transport):
     """
 
     name = TRANSPORT_TTS
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(OPTION_TTS_ENTITY_ID, "The tts entity used to generate speech"),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -65,24 +72,40 @@ class TTSTransport(Transport):
         """Allow default action to be overridden, such as tts.say or tts.cloud_speak"""
         return action is not None
 
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        if not hass_api.has_service("tts", "speak"):
+            _LOGGER.debug("SUPERNOTIFY No tts.speak action available, `tts` transport not configured")
+            return False
+        if not hass_api.entity_ids_for_domain("media_player"):
+            _LOGGER.debug("SUPERNOTIFY No media players available, `tts` transport not configured")
+            return False
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
+
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "tts.speak"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.selection_rank = SelectionRank.FIRST
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_MOBILE_APP_ID],
-            OPTION_TARGET_SELECT: [RE_VALID_MEDIA_PLAYER, RE_MOBILE_APP],
+            OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
             OPTION_DEVICE_DISCOVERY: False,
             OPTION_DEVICE_DOMAIN: ["mobile_app"],
             OPTION_DEVICE_MANUFACTURER_SELECT: {SELECT_EXCLUDE: [MANUFACTURER_APPLE]},
         }
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player"), ATTR_MOBILE_APP_ID]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY tts: %s", envelope.message)

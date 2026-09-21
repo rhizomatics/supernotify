@@ -13,13 +13,23 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from traceback import format_exception
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
 import aiofiles
+import voluptuous as vol
 from anyio import Path
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
 from homeassistant.components.smtp.const import CONF_SENDER_NAME, CONF_SERVER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_TIMEOUT, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SENDER,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template, TemplateError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import create_client_context
@@ -38,28 +48,26 @@ from custom_components.supernotify.const import (
     CONF_ENCRYPTION,
     CONF_OPTIONS,
     CONF_TEMPLATE,
-    EMAIL_OPTION_MODE_DIRECT,
-    EMAIL_OPTION_MODE_HA_SMTP,
-    OPTION_DEFAULT_TITLE,
-    OPTION_JPEG,
-    OPTION_MESSAGE_USAGE,
-    OPTION_MODE,
-    OPTION_PNG,
-    OPTION_SENDER,
-    OPTION_SENDER_NAME,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRICT_TEMPLATE,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
+    INCLUSION_DEFAULT,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
+    EntityCategory,
     MessageOnlyPolicy,
     SuppressionReason,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    MEDIA_OPTIONS,
+    OPTION_JPEG,
+    OPTION_MESSAGE_USAGE,
+    OPTION_PNG,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_UNIQUE_TARGETS,
+    DeliveryOption,
 )
 from custom_components.supernotify.transport import Transport
 
@@ -77,6 +85,13 @@ RE_VALID_EMAIL = (
 )
 OPTION_PREHEADER_BLANK = "preheader_blank"
 OPTION_PREHEADER_LENGTH = "preheader_length"
+OPTION_STRICT_TEMPLATE = "strict_template"
+OPTION_SENDER = "sender"
+OPTION_SENDER_NAME = "sender_name"
+OPTION_DEFAULT_TITLE = "default_title"
+OPTION_MODE = "mode"
+EMAIL_OPTION_MODE_DIRECT = "direct"
+EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
 
 DEFAULT_SMTP_PORT = 587
 DEFAULT_SMTP_ENCRYPTION = "starttls"
@@ -148,6 +163,31 @@ class Alert(TypedDict):
 
 class EmailTransport(Transport):
     name = TRANSPORT_EMAIL
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        *MEDIA_OPTIONS,
+        DeliveryOption(
+            OPTION_STRICT_TEMPLATE,
+            "Fail template if Jinja2 issues found when true, render anyway if false",
+            value_type=cv.boolean,
+        ),
+        DeliveryOption(OPTION_PREHEADER_BLANK, "HTML code used to pack the pre-header with blanks for HTML email"),
+        DeliveryOption(
+            OPTION_PREHEADER_LENGTH,
+            "Minimum size to pack the pre-header with blanks for HTML email",
+            value_type=int,
+        ),
+        DeliveryOption(
+            OPTION_MODE,
+            "Set to direct to send over a direct SMTP connection instead of an action call",
+            value_type=vol.In({
+                EMAIL_OPTION_MODE_DIRECT: "Use the native SMTP transport",
+                EMAIL_OPTION_MODE_HA_SMTP: "Use the Home Assistant SMTP integration",
+            }),
+        ),
+        DeliveryOption(OPTION_SENDER, "Sender address used in direct SMTP mode"),
+        DeliveryOption(OPTION_SENDER_NAME, "Sender display name used in direct SMTP mode"),
+        DeliveryOption(OPTION_DEFAULT_TITLE, "Default email subject if none supplied"),
+    ]
 
     def __init__(self, context: Context, transport_config: ConfigType | None = None) -> None:
         super().__init__(context, transport_config)
@@ -172,9 +212,13 @@ class EmailTransport(Transport):
         self.sender: str | None = options.get(OPTION_SENDER)
         self.sender_name: str | None = options.get(OPTION_SENDER_NAME)
         self.default_title: str | None = options.get(OPTION_DEFAULT_TITLE)
-
+        self.ha_action: str | None = self.hass_api.find_service("notify", "homeassistant.components.smtp.notify")
         if not self.host:
             self._reuse_ha_smtp_connection()
+        if self.host and self.port:
+            self.local_smtp = True
+        else:
+            self.local_smtp = False
 
     def _reuse_ha_smtp_connection(self) -> None:
         """No direct SMTP connection configured here; fall back to a configured HA smtp
@@ -215,15 +259,29 @@ class EmailTransport(Transport):
     def validate_action(self, action: str | None) -> bool:
         """Valid either with an HA notify action, or a usable direct SMTP connection for
         deliveries that set OPTION_MODE to 'direct'."""
-        return action is not None or bool(self.host and self.sender)
+        return action is not None or self.ha_action is not None or self.local_smtp
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        action: str | None = hass_api.find_service("notify", "homeassistant.components.smtp.notify")
-        if action:
-            delivery_config: DeliveryConfig = self.delivery_defaults
-            delivery_config.action = action
-            return delivery_config
-        return None
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # like validate_action() above, an explicit delivery can supply its own action
+        # (or connection details) regardless of whether the native smtp integration or a
+        # transport-level host/sender is discoverable - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
+        # once it's confirmed no delivery (explicit or auto) actually uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        if (
+            self.delivery_defaults.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT
+            and self.local_smtp
+        ) or self.ha_action:
+            return {self.name: {}}
+        return {}
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # email addresses map cleanly to recipients, so it's reasonable to fire on
+        # every notification by default
+        return [INCLUSION_DEFAULT]
 
     @property
     def supported_features(self) -> TransportFeature:
@@ -246,31 +304,40 @@ class EmailTransport(Transport):
     @property
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_TARGET_CATEGORIES: [ATTR_EMAIL],
             # use sensible defaults for image attachments
             OPTION_JPEG: {"progressive": "true", "optimize": "true"},
             OPTION_PNG: {"optimize": "true"},
             OPTION_STRICT_TEMPLATE: False,
             OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;",
             OPTION_PREHEADER_LENGTH: 100,
+            OPTION_MODE: EMAIL_OPTION_MODE_DIRECT,  # default to avoiding the e-mail integration, since it will get locked down to notify entities
+            OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same address
             # only used for deliveries with OPTION_MODE set to 'direct'
             OPTION_SENDER_NAME: "Home Assistant",
             OPTION_DEFAULT_TITLE: "Home Assistant Notification",
         }
         return config
 
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [ATTR_EMAIL]
+
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
-        _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, envelope.target.email)
+        # resolved_targets(), not the typed `.email` getter: envelope.target is already
+        # scoped to this delivery by Delivery.select_targets(), so this also picks up a
+        # `email:`/`{email: ...}`-qualified address that isn't shaped like a validated one
+        addresses: list[str] = envelope.target.resolved_targets() if envelope.target else []
+        _LOGGER.debug("SUPERNOTIFY notify_email: %s %s", envelope.delivery_name, addresses)
 
         data: dict[str, Any] = envelope.data or {}
         html: str | None = data.get("html")
         template_name: str | None = data.get(CONF_TEMPLATE, envelope.delivery.template)
         strict_template: bool = envelope.delivery.options.get(OPTION_STRICT_TEMPLATE, False)
-        addresses: list[str] = envelope.target.email or []
         snapshot_url: str | None = data.get(ATTR_MEDIA, {}).get(ATTR_MEDIA_SNAPSHOT_URL)
         if snapshot_url is None:
             # older location for backward compatibility
@@ -339,9 +406,12 @@ class EmailTransport(Transport):
         email can be sent to arbitrary addresses without every recipient needing to be
         pre-registered as a notify entity, and isn't limited to whatever a given HA notify
         action exposes."""
-        if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_HA_SMTP) == EMAIL_OPTION_MODE_DIRECT:
+        if envelope.delivery.action:
+            # explicit action, use that
+            return await self.call_action(envelope, action_data=action_data)
+        if envelope.delivery.options.get(OPTION_MODE, EMAIL_OPTION_MODE_DIRECT) == EMAIL_OPTION_MODE_DIRECT and self.local_smtp:
             return await self._send_direct_smtp(envelope, action_data)
-        return await self.call_action(envelope, action_data=action_data)
+        return await self.call_action(envelope, action_data=action_data, qualified_action=self.ha_action)
 
     async def _send_direct_smtp(self, envelope: Envelope, action_data: dict[str, Any]) -> bool:
         addresses: list[str] = action_data.get(ATTR_TARGET) or []
@@ -454,7 +524,7 @@ class EmailTransport(Transport):
         return attachment
 
     def _send_smtp(self, msg: MIMEMultipart | MIMEText, addresses: list[str]) -> None:
-        if not self.host or not self.port:
+        if not self.local_smtp or not self.host or not self.port:  # redundant but quietens mypy
             _LOGGER.warning("SUPERNOTIFY Direct SMTP connection not configured")
             return
 

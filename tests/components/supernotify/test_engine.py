@@ -1,6 +1,7 @@
 from typing import Any, cast
 from unittest.mock import ANY, AsyncMock, Mock
 
+import pytest
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
     CONF_ACTION,
@@ -23,17 +24,18 @@ from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
     CONF_DUPE_POLICY,
+    CONF_INCLUSION,
     CONF_OPTIONS,
     CONF_PHONE_NUMBER,
     CONF_PRIORITY,
-    CONF_SELECTION,
     CONF_TARGET_REQUIRED,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
+    INCLUSION_BY_SCENARIO,
+    INCLUSION_DEFAULT,
+    INCLUSION_FALLBACK,
+    INCLUSION_FALLBACK_ON_ERROR,
     PRIORITY_CRITICAL,
-    SELECTION_BY_SCENARIO,
-    SELECTION_FALLBACK,
-    SELECTION_FALLBACK_ON_ERROR,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
     TRANSPORT_EMAIL,
@@ -42,6 +44,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.engine import SupernotifyEngine
+from custom_components.supernotify.exceptions import UncategorizedTargetError
 from custom_components.supernotify.model import TargetRequired
 from custom_components.supernotify.notify import SuperNotificationService
 from custom_components.supernotify.schema import DELIVERY_SCHEMA
@@ -49,12 +52,20 @@ from tests.components.supernotify.doubles_lib import DummyTransport
 
 DELIVERY: dict[str, dict] = {
     "email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"},
-    "text": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
-    "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "target": ["switch.bell_1", "script.siren_2"]},
-    "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
-    "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
-    "dummy": {CONF_TRANSPORT: "dummy"},
+    "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.sms"},
+    "chime": {
+        CONF_TRANSPORT: TRANSPORT_CHIME,
+        "target": ["switch.bell_1", "script.siren_2"],
+        CONF_INCLUSION: [INCLUSION_DEFAULT],
+    },
+    "alexa_media_player": {
+        CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER,
+        CONF_ACTION: "notify.alexa_media_player",
+        CONF_INCLUSION: [INCLUSION_DEFAULT],
+    },
+    "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server", CONF_INCLUSION: [INCLUSION_DEFAULT]},
+    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_INCLUSION: [INCLUSION_BY_SCENARIO]},
+    "dummy": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: [INCLUSION_DEFAULT]},
 }
 SCENARIOS: dict[str, dict] = {
     "scenario1": {CONF_DELIVERY: {"persistent": {}}},
@@ -153,7 +164,7 @@ async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mo
     )
     await uut.initialize()
     caller_context = Context()
-    await uut.async_send_message(message="testing 123", data={"delivery": "text"}, context=caller_context)
+    await uut.async_send_message(message="testing 123", data={"delivery": "sms"}, context=caller_context)
     mock_hass.services.async_call.assert_called_with(
         "notify",
         "sms",
@@ -186,7 +197,7 @@ async def test_legacy_notify_service_call_propagates_context(mock_hass: Mock) ->
         mock_hass,
         "notify",
         "supernotify",
-        data={"message": "testing 123", "data": {"delivery": "text"}},
+        data={"message": "testing 123", "data": {"delivery": "sms"}},
         context=caller_context,
     )
     await uut._async_notify_message_service(call)
@@ -211,7 +222,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
         dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
     )
     await uut.initialize()
-    await uut.async_send_message(message="testing 123", data={"delivery": "text"})
+    await uut.async_send_message(message="testing 123", data={"delivery": "sms"})
     assert mock_hass.services.async_call.call_count == 1
     # no explicit context supplied, so one was synthesized rather than left None
     mock_hass.services.async_call.assert_called_with(
@@ -226,7 +237,7 @@ async def test_explicit_delivery_on_action(mock_hass: Mock) -> None:
     assert isinstance(mock_hass.services.async_call.call_args.kwargs["context"], Context)
     # contra-test
     mock_hass.services.async_call.reset_mock()
-    await uut.async_send_message(message="testing 123")
+    await uut.async_send_message(message="testing 456")
     assert mock_hass.services.async_call.call_count == 6  # SMS + 2 notify + 2 chime + 1 mobile_push
 
 
@@ -282,6 +293,39 @@ async def test_recipient_delivery_target_override(mock_hass: HomeAssistant) -> N
     assert dummy.service.calls[1].data["_UNKNOWN_"] == ["abc789"]
     assert dummy.service.calls[1].data["email"] == ["me@tester.net"]
     assert dummy.service.calls[1].data["mobile_app_id"] == ["mobile_app_new_iphone"]
+
+
+async def test_uncategorized_target_raises_after_delivery_completes(mock_hass: HomeAssistant) -> None:
+    """A target set via `data: {delivery: {<name>: {target: ...}}}` that can't be matched to
+
+    any category is still tracked and raised as `UncategorizedTargetError` - but only after
+    delivery has fully completed (the value still reaches `dummy`'s permissive delivery, since
+    a transport that declares no categories at all doesn't restrict on category either),
+    matching the "one uncategorized target must not block the rest" intent.
+    """
+    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, transport_configs=TRANSPORT_DEFAULTS)
+    dummy = DummyTransport(uut.context)
+    uut.context.configure_for_tests(transport_instances=[dummy])
+    await uut.initialize()
+
+    with pytest.raises(UncategorizedTargetError) as exc_info:
+        await uut.async_send_message(
+            message="hello",
+            data={
+                "delivery_selection": DELIVERY_SELECTION_EXPLICIT,
+                "delivery": {"dummy": {"target": "not_a_recognisable_target"}},
+            },
+        )
+
+    assert exc_info.value.translation_key == "uncategorized_target"
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_placeholders == {
+        "delivered_count": "1",
+        "uncategorized_count": "1",
+        "uncategorized_targets": "not_a_recognisable_target",
+        "deliveries": "dummy",
+    }
+    assert len(dummy.service.calls) == 1
 
 
 async def test_recipient_can_disable_a_globally_enabled_delivery(mock_hass: HomeAssistant) -> None:
@@ -405,7 +449,7 @@ async def test_fallback_delivery_on_error(mock_hass: HomeAssistant) -> None:
         deliveries={
             "generic": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
-                CONF_SELECTION: [SELECTION_FALLBACK_ON_ERROR],
+                CONF_INCLUSION: [INCLUSION_FALLBACK_ON_ERROR],
                 CONF_ACTION: "notify.dummy",
             },
             "failing": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.make_fail"},
@@ -435,7 +479,7 @@ async def test_fallback_delivery_by_default(mock_hass: HomeAssistant) -> None:
     uut = SupernotifyEngine(
         mock_hass,
         deliveries={
-            "generic": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_SELECTION: [SELECTION_FALLBACK], CONF_ACTION: "notify.dummy"},
+            "generic": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_INCLUSION: [INCLUSION_FALLBACK], CONF_ACTION: "notify.dummy"},
             "failing": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.make_fail", CONF_PRIORITY: PRIORITY_CRITICAL},
         },
         transport_configs=TRANSPORT_DEFAULTS,

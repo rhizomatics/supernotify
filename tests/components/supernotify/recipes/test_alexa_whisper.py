@@ -2,8 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from homeassistant.helpers import entity_registry as er
+
+from custom_components.supernotify.engine import TRANSPORTS
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.alexa_devices import AlexaDevicesTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -12,8 +17,14 @@ if TYPE_CHECKING:
 
 async def test_alexa_whispering(hass: HomeAssistant):
     """https://supernotify.rhizomatics.org.uk/recipes/alexa_whisper/"""
+    # Pretend there's an Alexa Devices integration entity called kitchen_alexa_speak
+    er.async_get(hass).async_get_or_create(
+        "notify", "alexa_devices", "kitchen_echo_unique_id", suggested_object_id="kitchen_alexa_speak"
+    )
     ctx = TestingContext(
         homeassistant=hass,
+        transport_types=TRANSPORTS,
+        viable_transport_types=[AlexaDevicesTransport, MobilePushTransport],  # make sure is_viable forced
         yaml="""
   name: Supernotify
   platform: supernotify
@@ -27,7 +38,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
       target:
         entity_id:
           notify.kitchen_alexa_speak
-    apple_push:
+    mobile_push:
       transport: mobile_push
   scenarios:
     routine:
@@ -35,7 +46,7 @@ async def test_alexa_whispering(hass: HomeAssistant):
         conditions: "{{notification_priority in ['low']}}"
         delivery:
           plain_email:
-          apple_push:
+          mobile_push:
           alexa_inform:
             data:
               message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'

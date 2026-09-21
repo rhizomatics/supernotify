@@ -20,7 +20,7 @@ The hashed message and title is cached, with a limit to both cache size and time
 
 ## Overriding
 
-Set `force_resend: true` on the `data` section of a notification to override any dupe detection, just for that message.
+Set `force_resend: true` on the top level of the notification action data to override any dupe detection, just for that message.
 
 ## Internals
 

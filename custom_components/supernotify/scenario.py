@@ -124,7 +124,7 @@ class ScenarioRegistry:
             scenario.enabled = True
             _LOGGER.info("SUPERNOTIFY Enabling scenario %s", scenario.name)
             return True
-        _LOGGER.info("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
+        _LOGGER.debug("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
         return False
 
     def _collect_scenario_condition_entities(self) -> dict[str, set[str]]:
@@ -173,16 +173,21 @@ class ScenarioRegistry:
     def _scenario_state(self, scenario: Scenario, cvars: ConditionVariables | None = None) -> str:
         """State to expose for a scenario binary_sensor.
 
-        - no conditions, or conditions with no source entity -> transient/manual
-          -> STATE_UNKNOWN (state is undefined outside of a notification);
+        - no conditions at all (manual/emergency-only scenario) -> STATE_UNKNOWN
+          (state is undefined outside of a notification);
         - otherwise ON/OFF from a neutral evaluation (current occupancy, medium
-          priority), the same basis as enquire_active_scenarios().
+          priority), the same basis as enquire_active_scenarios() - including a
+          scenario whose conditions reference no HA entity (e.g. a pure now()/date
+          template): those are exactly what the periodic sweep in initialize() exists
+          to keep current, so they get evaluated for real rather than stuck at UNKNOWN.
+          A condition keyed off notification_priority/applied_scenarios/message/title
+          instead will always evaluate the same way here, since those are neutral
+          placeholders rather than real values - a known, accepted limitation rather
+          than something this method tries to detect and suppress.
         """
         if not scenario.expose_state:
             return STATE_UNKNOWN
         if not scenario.conditions_config:
-            return STATE_UNKNOWN
-        if not getattr(self, "_scenario_cond_entities", {}).get(scenario.name):
             return STATE_UNKNOWN
         if cvars is None:
             occupiers = self._people_registry.determine_occupancy()

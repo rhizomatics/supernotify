@@ -60,6 +60,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
@@ -72,8 +74,11 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+HA_LAMETRIC_DOMAIN = "lametric"
 
 # Priority mapping: SuperNotify string → LaMetric priority string
 _PRIORITY_MAP: dict[str, str] = {
@@ -142,7 +147,14 @@ class LaMetricTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_LAMETRIC_DOMAIN) is not None
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def validate_action(self, action: str | None) -> bool:
         # No external action required - transport uses lametric.message / lametric.chart directly

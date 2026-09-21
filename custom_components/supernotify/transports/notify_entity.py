@@ -4,22 +4,26 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
-    OPTION_MESSAGE_USAGE,
-    OPTION_SIMPLIFY_TEXT,
-    OPTION_STRIP_URLS,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
+    INCLUSION_DEFAULT,
+    RE_NOTIFY_ENTITY_ID,
     TRANSPORT_NOTIFY_ENTITY,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    DeliveryConfig,
+    EntityCategory,
     MessageOnlyPolicy,
     TransportConfig,
     TransportFeature,
+)
+from custom_components.supernotify.options import (
+    OPTION_MESSAGE_USAGE,
+    OPTION_SIMPLIFY_TEXT,
+    OPTION_STRIP_URLS,
+    OPTION_TARGET_SELECT,
+    OPTION_UNIQUE_TARGETS,
 )
 from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.transport import (
@@ -32,7 +36,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_NOTIFY_ENTITY = r"notify\.[A-Za-z0-9_]+"
+
 FIXED_ACTION = "notify.send_message"
 
 
@@ -53,18 +57,34 @@ class NotifyEntityTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = FIXED_ACTION
         config.delivery_defaults.selection_rank = SelectionRank.LAST
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
             OPTION_UNIQUE_TARGETS: True,
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
-            OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY],
+            OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY_ID],
         }
         return config
 
-    def auto_configure(self, hass_api: HomeAssistantAPI) -> DeliveryConfig | None:
-        return self.delivery_defaults
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        # no platform restriction - the generic catch-all for any notify.* entity not
+        # claimed by a more specific transport (html5, alexa_devices); selection_rank=LAST
+        # ensures those get first refusal
+        return [EntityCategory(domain="notify")]
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # a notify.* entity maps cleanly to a recipient, so it's reasonable to fire on
+        # every notification by default
+        return [INCLUSION_DEFAULT]
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return bool(hass_api.entity_ids_for_domain("notify"))
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         targets = envelope.target.entity_ids or []

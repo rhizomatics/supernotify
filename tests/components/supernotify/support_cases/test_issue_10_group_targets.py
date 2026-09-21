@@ -27,7 +27,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ACTION
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -35,7 +35,9 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA,
     ATTR_MEDIA_SNAPSHOT_URL,
     CONF_DATA,
+    CONF_INCLUSION,
     CONF_TRANSPORT,
+    INCLUSION_DEFAULT,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
     TRANSPORT_MEDIA,
@@ -45,7 +47,10 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.transport import Transport
-from custom_components.supernotify.transports.alexa_media_player import AlexaMediaPlayerTransport
+from custom_components.supernotify.transports.alexa_media_player import (
+    HA_ALEXA_MEDIA_PLAYER_PLATFORM,
+    AlexaMediaPlayerTransport,
+)
 from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.media_player import MediaPlayerTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
@@ -142,9 +147,17 @@ async def test_alexa_media_player_delivers_to_group_members() -> None:
     so HA will NOT expand the group natively - the transport must expand to member media_players.
     CURRENT: the group id is filtered out at delivery selection, no notify.alexa_media call is made."""
     ctx = TestingContext(
-        deliveries={"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}},
+        deliveries={
+            "announce": {
+                CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER,
+                CONF_ACTION: "notify.alexa_media",
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            }
+        },
         transport_types=[AlexaMediaPlayerTransport],
         entities={SPEAKER_GROUP: MockGroup(SPEAKERS)},
+        # members must be alexa_media entities for the transport's entity_id selector to accept them
+        entity_platforms=dict.fromkeys(SPEAKERS, HA_ALEXA_MEDIA_PLAYER_PLATFORM),
     )
     await ctx.test_initialize()
 
@@ -201,7 +214,9 @@ async def test_chime_control_selects_and_expands_group() -> None:
     group.* and deliver() expands the group via hass_api.expand_group. Now that groups are expanded at
     delivery target selection, the selector yields the members and chime's own expansion is a no-op."""
     ctx = TestingContext(
-        deliveries={"chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_DATA: {"chime_tune": "ding"}}},
+        deliveries={
+            "chimes": {CONF_TRANSPORT: TRANSPORT_CHIME, CONF_INCLUSION: [INCLUSION_DEFAULT], CONF_DATA: {"chime_tune": "ding"}}
+        },
         transport_types=[ChimeTransport],
         entities={SPEAKER_GROUP: MockGroup(SPEAKERS)},
     )
