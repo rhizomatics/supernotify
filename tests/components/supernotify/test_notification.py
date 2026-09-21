@@ -1,8 +1,7 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
