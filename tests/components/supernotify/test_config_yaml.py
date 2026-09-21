@@ -409,6 +409,18 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     assert_clean_notification(notification, expected_deliveries={"testing": 1, "chime_person": 1})
 
 
+async def test_refresh_entities_action(hass: HomeAssistant) -> None:
+    """supernotify.refresh_entities writes entity state, so has to run in the event loop -
+    as a plain function it was run in a worker thread, and failed."""
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
+
+    await hass.services.async_call(DOMAIN, "refresh_entities", None, blocking=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.supernotify_notifications").state == "0"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_scenario_simple").state == "on"  # type: ignore[union-attr]
+
+
 async def test_call_supplemental_actions(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
     response: ServiceResponse = await hass.services.async_call(
