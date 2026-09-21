@@ -24,7 +24,9 @@ At set-up or startup the modules are called to see if they are applicable. If us
 
 ### Alternatives
 
-Separate custom component on HACS, per package, as Supernotify "plugins". Worth doing if there are heavy dependencies, otherwise extra complexity for users.
+Separate custom component on HACS, per package, as Supernotify "plugins". Worth doing if there are heavy dependencies, otherwise extra complexity for users. May make it more noticeable, e.g. someone looking for help with Frigate more likely to pick a Frigate Auto Notify plugin from HACS than examine Supernotify and find the small print.
+
+Config sub-entries?
 
 ## Examples
 
@@ -42,9 +44,27 @@ If the end never happens, there's a timeout where the notification is auto-clear
 
 #### Bosch / Home Connect
 
+Example entity IDs. An actual match would be on translation keys, since users change entity IDs.
+
 `sensor.dishwasher_operation_state` - `run` `sensor.dishwasher_program_progress` - 84 % `sensor.dishwasher_programme_finished` - `off` `sensor.dishwasher_remaining_program_time` - `2026-09-16T21:44:16+00:00` `select.dishwasher_selected_program` - `dishcare_dishwasher_program_intensiv_70` `number.dishwasher_start_in_relative` - 0
 
 `automation.oven_reached_temperature` - `on` `number.oven_target_temperature` - `unavailable` `sensor.oven_current_oven_cavity_temperature` - 59 `sensor.oven_operation_state` - `inactive` `sensor.oven_pre_heat_finished` - `off` `sensor.oven_program_progress` - `unavailable` % `sensor.oven_programme_finished` - `off` `sensor.oven_remaining_program_time` - `unavailable`
+
+#### Power Monitored Appliances
+
+Non-smart appliances running on a power monitor.
+
+Potential for advanced things like learning durations and using that to estimate completion.
+
+Also smart appliances that have gaps which a power monitor might fill, like auto power-down not being notified.
+
+Example, from @lollox80
+
+```text
+Dishwasher and washing machine are on power-monitoring smart plugs, and the dryer is SmartThings but stops reporting when off, so today each one is ~1,200 lines of YAML (power threshold + delay_on/delay_off state machine, cycle counters, maintenance reminders) plus an FSM blueprint.
+
+Appliance package could support two detection sources from the start: native state where the integration has one (Home Connect operation_state, SmartThings *_machine_state), and a power sensor on the appliance's plug with threshold/delay options. Without remaining time, the live notification can show elapsed time via chronometer, and later estimate the end from the average of recent cycles.
+```
 
 ### Motion Sensors
 
@@ -321,8 +341,11 @@ Live Activities would be a great fit for ongoing events in Frigate, where its po
 
 - What does the UI look like? Does this fit into an existing HA concept?
 - Should it generate actual notifications or be entirely in code?
+- Preference for code, since that means future releases can easily make deliver improvements for existing users
+- Possibility for an `export` function, but advanced. Audience would be people who want their own automations, but need to get started, though that's an LLM use case nowadays
 - Are those multiple Frigate cameras, and priorities, and GenAI detections multiple packages? sub-packages?
 - Is there a package per camera, and a separate one for the GenAI events?
 - "Packages" isn't a great name, but can't be anything that clashes with Home Assistant nomenclature
 - "Notification Presets"?
 - "Routines"?
+- Reuse "Recipe" - manual recipes in the docs, automatic recipes in the code. Though recipe sounds like a set of steps for doing things yourself, this is more like buying the cake already baked and iced.
