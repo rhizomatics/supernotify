@@ -240,7 +240,6 @@ def mock_context(
     context.hass_api = mock_hass_api
     context.cameras = {}
     context.snoozer = Snoozer()
-    context._fallback_by_default = []
     context.mobile_actions = {}
     context.hass_api.internal_url = "http://hass-dev"
     context.hass_api.external_url = "http://hass-dev.nabu.casa"
