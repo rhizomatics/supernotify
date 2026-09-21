@@ -692,7 +692,7 @@ async def test_record_result_notifies_recipient_notify_entity_on_delivery() -> N
     await ctx.test_initialize()
     notify_entity = Mock()
     ctx.people_registry.people["person.alice"].notify_entity = notify_entity
-    generic = ctx.transport(TRANSPORT_GENERIC)
+    generic = ctx.transport(TRANSPORT_GENERIC, force=True)
     delivery = Delivery("simple", {}, generic)
     uut = Notification(ctx, "testing 123")
     envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
@@ -709,7 +709,7 @@ async def test_record_result_skips_recipients_without_a_notify_entity() -> None:
     same tolerant fallback pattern used elsewhere for entity-less operation."""
     ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
     await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
+    generic = ctx.transport(TRANSPORT_GENERIC, force=True)
     delivery = Delivery("simple", {}, generic)
     uut = Notification(ctx, "testing 123")
     envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
@@ -723,7 +723,7 @@ async def test_record_result_ignores_envelope_with_no_target() -> None:
     await ctx.test_initialize()
     notify_entity = Mock()
     ctx.people_registry.people["person.alice"].notify_entity = notify_entity
-    generic = ctx.transport(TRANSPORT_GENERIC)
+    generic = ctx.transport(TRANSPORT_GENERIC, force=True)
     delivery = Delivery("simple", {}, generic)
     uut = Notification(ctx, "testing 123")
     envelope = Envelope(delivery)
