@@ -370,9 +370,6 @@ class DeliveryRegistry:
         self._deliveries: dict[str, Delivery] = {}
         self.transports: dict[str, Transport] = {}
         self._transport_configs: ConfigType = transport_configs or {}
-        self._fallback_on_error: list[Delivery] = []
-        self._fallback_by_default: list[Delivery] = []
-        self._implicit_deliveries: list[Delivery] = []
 
         self._transport_types: dict[type[Transport], dict[str, Any]]
         if isinstance(transport_types, list):
@@ -384,7 +381,6 @@ class DeliveryRegistry:
 
     async def initialize(self, context: Context) -> None:
         await self.initialize_transports(context)
-        await self.initialize_deliveries()
 
     def unload_unused_transports(self) -> None:
         """Drop any transport that ended up with no delivery at all - explicit or auto-generated.
@@ -460,20 +456,6 @@ class DeliveryRegistry:
 
         return None
 
-    async def initialize_deliveries(self) -> None:
-
-        for delivery in self._deliveries.values():
-            if delivery.enabled:
-                if INCLUSION_FALLBACK_ON_ERROR in delivery.inclusion:
-                    self._fallback_on_error.append(delivery)
-                if INCLUSION_FALLBACK in delivery.inclusion:
-                    self._fallback_by_default.append(delivery)
-                if INCLUSION_DEFAULT in delivery.inclusion:
-                    self._implicit_deliveries.append(delivery)
-                # delivery.inclusion can also be INCLUSION_BY_SCENARIO
-                # or INCLUSION_EXPLICIT to have it only used where asked for
-                # default is INCLUSION_DEFAULT so every delivery used implicitly
-
     def enable(self, delivery_name: str) -> bool:
         delivery = self._deliveries.get(delivery_name)
         if delivery and not delivery.enabled:
@@ -512,18 +494,22 @@ class DeliveryRegistry:
     def disabled_deliveries(self) -> dict[str, Delivery]:
         return {d: dconf for d, dconf in self._deliveries.items() if not dconf.enabled}
 
+    # Computed on each call, not cached at startup, so that a delivery enabled at runtime (by its
+    # switch) is included just like one enabled in config. delivery.inclusion can also be
+    # INCLUSION_BY_SCENARIO or INCLUSION_EXPLICIT to have it only used where asked for.
+
     @property
     def fallback_by_default_deliveries(self) -> list[Delivery]:
-        return [d for d in self._fallback_by_default if d.enabled]
+        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_FALLBACK in d.inclusion]
 
     @property
     def fallback_on_error_deliveries(self) -> list[Delivery]:
-        return [d for d in self._fallback_on_error if d.enabled]
+        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_FALLBACK_ON_ERROR in d.inclusion]
 
     @property
     def implicit_deliveries(self) -> list[Delivery]:
         """Deliveries switched on all the time via implicit inclusion"""
-        return [d for d in self._implicit_deliveries if d.enabled]
+        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_DEFAULT in d.inclusion]
 
     async def initialize_transports(self, context: Context) -> None:
         if self._transport_instances:

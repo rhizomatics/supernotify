@@ -25,6 +25,7 @@
 - HomeAssistant compatibility moved to 2026.9.3
 - Fix handling of target specific data, that could lead to targets showing up in other envelopes
 - If a camera or other image source not available, the mobile push is text only rather than showing with a broken image
+- Fix a delivery disabled in config but enabled at run-time never being used implicitly or as a fallback
 
 ### Internal
   - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
