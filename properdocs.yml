@@ -140,6 +140,7 @@ extra_javascript:
 
 hooks:
   - docgen/optimize_social_cards.py
+  - docgen/nav_order.py
 
 watch:
   - custom_components/supernotify

@@ -101,7 +101,7 @@ qualify a target (a mapping, or setting it directly on a delivery).
 
 ## Notification Priority
 
-Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or scenarios ( for example a siren to accompany 'critical' notifications).
+Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or [scenarios](../configuration/scenarios.md) ( for example a siren to accompany 'critical' notifications).
 
 It will also be mapped to delivery priority flags where the underlying transport allows, for example Mobile Push, Gotify, Ntfy, SMTP, Telegram.
 
@@ -191,7 +191,7 @@ In this case `plain_email` will be chosen even if the delivery `condition` or `p
 
 ### When Scenarios Disagree
 
-Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](scenarios.md#overriding-delivery-selection-and-configuration).
+Each scenario can set a delivery's `enabled` to `true`, `false`, or leave it empty - see [Overriding Delivery Selection and Configuration](../configuration/scenarios.md#overriding-delivery-selection-and-configuration).
 
 If more than one scenario is active at once and they disagree on the same delivery, **`false` always wins**, regardless of how many other active scenarios enabled it - there's no priority or ordering between scenarios.
 

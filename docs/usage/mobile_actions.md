@@ -80,7 +80,7 @@ templated `action`/`title` - **these are currently accepted but never rendered**
 
 ### Attaching groups from a scenario
 
-More commonly, a [Scenario](scenarios.md) attaches the group instead, so the right buttons appear
+More commonly, a [Scenario](../configuration/scenarios.md) attaches the group instead, so the right buttons appear
 automatically depending on state, without every automation having to know about them:
 
 ```yaml title="Scenario-driven groups"
@@ -117,6 +117,6 @@ If an action (ad-hoc or from a group) has `action_url` set but no `action_url_ti
 
 - [Companion App: Actionable Notifications](https://companion.home-assistant.io/docs/notifications/actionable-notifications/)
 - [Mobile Push transport](../transports/mobile_push.md)
-- [Scenarios](scenarios.md)
+- [Scenarios](../configuration/scenarios.md)
 - [Snoozing](snoozing.md)
 - [Actions (services)](actions.md)
