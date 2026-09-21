@@ -5,6 +5,9 @@
             "scenario": {
                 "name": "シナリオ条件 {scenario}"
             },
+            "scenario_manual": {
+                "name": "手動シナリオ {scenario}"
+            },
             "recipient": {
                 "name": "受信者 {recipient}"
             }
