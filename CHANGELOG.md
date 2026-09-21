@@ -14,6 +14,12 @@
 ### Notify Entities
 - The notify entities created for recipients now have the timestamp changed however they were notified by SuperNotify (previously only updated if the Notify Entity itself was used, as in `send_message`)
 
+### Scenario and Recipient Switches
+
+- Each scenario and recipient now has a switch, `switch.supernotify_scenario_<name>` or `switch.supernotify_recipient_<name>`, to enable and disable it
+- **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it, use the switch instead. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag
+- Scenario and recipient entity names are translated, and put the type first so each sorts together in the entity list: `Scenario <name>` and `Recipient <name>` for the `binary_sensor`s, and `Scenario <name> Enabled` and `Recipient <name> Enabled` for the switches
+
 ### Other
 - HomeAssistant compatibility moved to 2026.9.3
 - Fix handling of target specific data, that could lead to targets showing up in other envelopes
@@ -22,11 +28,6 @@
 ### Internal
   - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
 
-### Scenario and Recipient Switches
-
-- Each scenario and recipient now has a switch, `switch.supernotify_scenario_<name>` or `switch.supernotify_recipient_<name>`, to enable and disable it
-- **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it, use the switch instead. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag
-- Scenario and recipient entity names are translated, and put the type first so each sorts together in the entity list: `Scenario <name>` and `Recipient <name>` for the `binary_sensor`s, and `Scenario <name> Enabled` and `Recipient <name> Enabled` for the switches
 
 ## 2.6.0
 
