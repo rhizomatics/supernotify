@@ -199,8 +199,8 @@ async def test_scenario_entities_have_config_entry_device_and_names(hass: HomeAs
 
     binary = hass.states.get("binary_sensor.supernotify_scenario_sera")
     assert binary is not None
-    assert binary.name == "SuperNotify Scenario Evening mode"
-    assert hass.states.get("switch.supernotify_scenario_sera").name == "SuperNotify Scenario Evening mode Enabled"  # type: ignore[union-attr]
+    assert binary.name == "SuperNotify Scenario Condition Evening mode"
+    assert hass.states.get("switch.supernotify_scenario_sera").name == "SuperNotify Scenario Evening mode"  # type: ignore[union-attr]
 
 
 async def test_scenario_binary_sensor_is_published_on_a_new_install(hass: HomeAssistant) -> None:

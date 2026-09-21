@@ -3,7 +3,7 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "परिदृश्य {scenario}"
+                "name": "परिदृश्य शर्त {scenario}"
             },
             "recipient": {
                 "name": "प्राप्तकर्ता {recipient}"
@@ -19,7 +19,7 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "परिदृश्य {scenario} सक्षम"
+                "name": "परिदृश्य {scenario}"
             },
             "recipient_enabled": {
                 "name": "प्राप्तकर्ता {recipient} सक्षम"

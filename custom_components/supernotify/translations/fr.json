@@ -3,7 +3,7 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "Scénario {scenario}"
+                "name": "Condition du scénario {scenario}"
             },
             "recipient": {
                 "name": "Destinataire {recipient}"
@@ -19,7 +19,7 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "Scénario {scenario} activé"
+                "name": "Scénario {scenario}"
             },
             "recipient_enabled": {
                 "name": "Destinataire {recipient} activé"

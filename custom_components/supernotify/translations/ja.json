@@ -3,7 +3,7 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "name": "シナリオ {scenario}"
+                "name": "シナリオ条件 {scenario}"
             },
             "recipient": {
                 "name": "受信者 {recipient}"
@@ -19,7 +19,7 @@
         },
         "switch": {
             "scenario_enabled": {
-                "name": "シナリオ {scenario} 有効"
+                "name": "シナリオ {scenario}"
             },
             "recipient_enabled": {
                 "name": "受信者 {recipient} 有効"
