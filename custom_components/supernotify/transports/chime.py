@@ -34,9 +34,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
     SelectionRule,
-    Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -50,6 +48,7 @@ from custom_components.supernotify.options import (
     DeliveryOption,
 )
 from custom_components.supernotify.schema import DATA_SCHEMA, TARGET_SCHEMA
+from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -329,8 +328,8 @@ class ChimeTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
-        return [EntityCategory(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
+    def target_categories(self) -> list[str | TargetEntityCategory]:
+        return [TargetEntityCategory(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
 
     def validate_action(self, action: str | None) -> bool:
         return action is None

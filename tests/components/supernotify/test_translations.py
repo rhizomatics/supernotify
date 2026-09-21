@@ -53,7 +53,9 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("fr", "services.notify.fields.actions.name"),  # "Actions" is also the French word for actions
     ("it", "entity.binary_sensor.scenario.name"),  # "scenario" stays English in Italian, see CLAUDE.md
     ("it", "entity.binary_sensor.recipient.name"),  # "recipient" stays English in Italian, see CLAUDE.md
+    ("it", "entity.switch.scenario_enabled.name"),  # "scenario" stays English in Italian, see CLAUDE.md
     ("nl", "entity.binary_sensor.scenario.name"),  # "Scenario" is also the Dutch word for scenario
+    ("nl", "entity.switch.scenario_enabled.name"),  # "Scenario" is also the Dutch word for scenario
 }
 
 

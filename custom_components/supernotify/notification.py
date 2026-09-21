@@ -701,8 +701,8 @@ class Notification(ArchivableObject):
             return
         for person_id in envelope.target.person_ids:
             recipient = self.people_registry.people.get(person_id)
-            if recipient is not None and recipient.notify_entity is not None:
-                recipient.notify_entity.record_notification()
+            if recipient is not None:
+                recipient.on_notification()
 
     def contents(self, diagnostics: bool = False, **_kwargs: Any) -> dict[str, Any]:
         """ArchiveableObject implementation"""

@@ -11,8 +11,13 @@
 - The recipient `binary_sensor` only mirrors the recipient switch, so is deprecated and will be removed in a future version. It is read-only, and not created on a new install, or for a recipient added to an existing one. A repair is raised once if you have it enabled
 - Delivery and transport `binary_sensor`s are otherwise unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175) - but now belong to the config entry
 
+### Notify Entities
+- The notify entities created for recipients now have the timestamp changed however they were notified by SuperNotify (previously only updated if the Notify Entity itself was used, as in `send_message`)
+
 ### Other
 - HomeAssistant compatibility moved to 2026.9.3
+- Internal
+  - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
 
 ### Scenario and Recipient Switches
 

@@ -21,6 +21,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 
+from custom_components.supernotify.target import Target, TargetEntityCategory
+
 from . import DOMAIN
 from .common import ensure_list, sanitize
 from .const import (
@@ -42,7 +44,7 @@ from .const import (
     RESERVED_DELIVERY_NAMES,
 )
 from .hass_api import HomeAssistantAPI
-from .model import ConditionVariables, DeliveryConfig, EntityCategory, SelectionRule, Target
+from .model import ConditionVariables, DeliveryConfig, SelectionRule
 from .options import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
@@ -121,7 +123,7 @@ class Delivery(DeliveryConfig):
                 learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
         if CONF_INCLUSION not in self._raw_conf and INCLUSION_DEFAULT not in self.inclusion:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "SUPERNOTIFY Delivery %s has no explicit inclusion, but transport %s no longer defaults to "
                 "'default' - it will not fire implicitly",
                 self.name,
@@ -230,7 +232,7 @@ class Delivery(DeliveryConfig):
                 _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         """The target categories this delivery accepts - the query point for "what does this
 
         delivery support", so callers never need to look at `Transport` and `OPTION_TARGET_
@@ -291,7 +293,7 @@ class Delivery(DeliveryConfig):
     def select_targets(self, target: Target, hass_api: HomeAssistantAPI | None = None) -> Target:
         declared_categories = self.target_categories
         plain_categories = {c for c in declared_categories if isinstance(c, str)}
-        entity_selectors = [c for c in declared_categories if isinstance(c, EntityCategory)]
+        entity_selectors = [c for c in declared_categories if isinstance(c, TargetEntityCategory)]
 
         def selected(category: str, targets: list[str]) -> list[str]:
             # a target category named after this delivery, or after its transport, is always

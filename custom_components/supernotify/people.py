@@ -230,6 +230,11 @@ class Recipient:
                 _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
         _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict())
 
+    def on_notification(self) -> None:
+        # Record that a notification has occurred for this person
+        if self.notify_entity is not None:
+            self.notify_entity.record_notification()
+
     @property
     def enabled_mobile_devices(self) -> dict[str, dict[str, str | list[str] | None]]:
         return {k: v for k, v in self.mobile_devices.items() if v.get(CONF_ENABLED, True)}

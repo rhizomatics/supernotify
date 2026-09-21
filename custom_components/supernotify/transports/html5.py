@@ -88,13 +88,13 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
     SelectionRank,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
 from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, OPTION_UNIQUE_TARGETS, DeliveryOption
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -153,10 +153,10 @@ class HTML5Transport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         # a notify.* entity's registered platform identifies it as this integration's own,
         # unlike the generic notify_entity transport which has no such distinction
-        return [EntityCategory(domain="notify", platform=HA_HTML5_DOMAIN)]
+        return [TargetEntityCategory(domain="notify", platform=HA_HTML5_DOMAIN)]
 
     @property
     def inclusion_mode(self) -> list[str]:

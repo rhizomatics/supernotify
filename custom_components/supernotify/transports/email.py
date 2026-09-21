@@ -53,7 +53,6 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
     MessageOnlyPolicy,
     SuppressionReason,
     TransportConfig,
@@ -69,6 +68,7 @@ from custom_components.supernotify.options import (
     OPTION_UNIQUE_TARGETS,
     DeliveryOption,
 )
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -324,7 +324,7 @@ class EmailTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         return [ATTR_EMAIL]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

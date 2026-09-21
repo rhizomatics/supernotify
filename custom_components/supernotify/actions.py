@@ -48,8 +48,8 @@ from .const import (
     CONF_TRANSPORTS,
 )
 from .engine import SupernotifyEngine
-from .model import Target
 from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
+from .target import Target
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType

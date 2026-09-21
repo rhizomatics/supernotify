@@ -22,6 +22,7 @@ from custom_components.supernotify.const import (
     CONF_MOBILE_DEVICES,
     CONF_OPTIONS,
     CONF_PERSON,
+    CONF_PHONE_NUMBER,
     CONF_SELECTION_RANK,
     CONF_TARGET_USAGE,
     CONF_TRANSPORT,
@@ -29,6 +30,7 @@ from custom_components.supernotify.const import (
     DELIVERY_SELECTION_IMPLICIT,
     INCLUSION_DEFAULT,
     TRANSPORT_GENERIC,
+    TRANSPORT_SMS,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import TRANSPORTS as ALL_TRANSPORT_TYPES
@@ -37,11 +39,12 @@ from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES
+from custom_components.supernotify.people import RecipientNotifyEntity
 from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
-from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
+from custom_components.supernotify.transports.sms import SMSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
 DELIVERIES = """
@@ -211,12 +214,7 @@ async def test_unassigned_targets_reported_in_archive() -> None:
 
 
 async def test_call_transport_records_delivery_exception() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile_push"})
@@ -232,12 +230,7 @@ async def test_call_transport_records_delivery_exception() -> None:
 
 
 async def test_custom_priority() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: "most_urgent"})
@@ -246,12 +239,7 @@ async def test_custom_priority() -> None:
 
 
 async def test_bad_priority() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
 
     with pytest.raises(vol.Invalid):
@@ -264,7 +252,6 @@ async def test_scenario_delivery_no_change() -> None:
         transports=TRANSPORTS,
         scenarios={"mockery": {}},
         transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
         services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
@@ -295,7 +282,6 @@ async def test_scenario_delivery_enable() -> None:
         scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
     ctx.delivery_registry.deliveries["chime"].enabled = False
@@ -320,7 +306,6 @@ async def test_action_data_disable_delivery() -> None:
         scenarios={"mockery": {}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
 
@@ -464,7 +449,6 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
         transports=TRANSPORTS,
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
 
@@ -474,12 +458,7 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
 
 
 async def test_snapshot_url() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -500,12 +479,7 @@ async def test_snapshot_url() -> None:
 
 
 async def test_camera_entity() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -529,12 +503,7 @@ async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
     """Capturing an image has real overhead (a service call, then polling for the file
     to appear) that must not be paid when no selected delivery would even use it — here
     only chime (no SNAPSHOT_IMAGE feature) is selected, despite camera media being present."""
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -554,11 +523,7 @@ async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
     """mobile (mobile_push) supports SNAPSHOT_IMAGE, so with camera media present the
     image grab must be kicked off."""
     ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
+        deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES, services=MOCK_SERVICES
     )
     await ctx.test_initialize()
     uut = Notification(
@@ -688,17 +653,25 @@ async def test_record_result_notifies_recipient_notify_entity_on_delivery() -> N
     person_id by convert_notify_entities() before delivery). Every Recipient's Target always
     includes its own person_id (Recipient.initialize()), so that's the reliable link back from
     an arbitrary envelope to the Recipient objects it reached."""
-    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
-    await ctx.test_initialize()
-    notify_entity = Mock()
-    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
-    generic = ctx.transport(TRANSPORT_GENERIC)
-    delivery = Delivery("simple", {}, generic)
-    uut = Notification(ctx, "testing 123")
-    envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
-    envelope.delivered = 1
 
-    uut.record_result(delivery, envelope)
+    ctx = TestingContext(
+        deliveries={"sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        services={"notify": ["smsify"]},
+        recipients=[{CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"}],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    notify_entity = Mock(spec=RecipientNotifyEntity)
+    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
+    # generic = ctx.transport(TRANSPORT_GENERIC,force=True)
+    # delivery = Delivery("simple", {}, generic)
+    uut = Notification(ctx, "testing 123", target=["person.alice"])
+    await uut.initialize()
+    await uut.deliver()
+    # envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
+    # envelope.delivered = 1
+
+    # uut.record_result(delivery, envelope)
 
     notify_entity.record_notification.assert_called_once()
 

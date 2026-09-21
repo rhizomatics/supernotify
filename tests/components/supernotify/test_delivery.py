@@ -131,7 +131,7 @@ async def test_reclassify_unqualified_target_falls_back_to_primary_category() ->
 
 
 async def test_reclassify_unqualified_target_warns_when_genuinely_unmappable(caplog: pytest.LogCaptureFixture) -> None:
-    """A delivery with only `EntityCategory`-constrained categories (no plain-string one to
+    """A delivery with only `TargetEntityCategory`-constrained categories (no plain-string one to
 
     fall back on) has nowhere to put an unqualified value - since it's already established
     as exclusively scoped to this one delivery, this is a real, actionable warning, not a

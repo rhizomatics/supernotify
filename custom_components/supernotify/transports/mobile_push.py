@@ -69,12 +69,10 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
-    EntityCategory,
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
     SelectionRule,
-    Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -91,6 +89,7 @@ from custom_components.supernotify.options import (
     OPTION_UNIQUE_TARGETS,
     DeliveryOption,
 )
+from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -165,7 +164,7 @@ class MobilePushTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         return [ATTR_MOBILE_APP_ID]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:

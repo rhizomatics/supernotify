@@ -12,6 +12,8 @@ from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.helpers.template import is_template_string
 from jinja2 import TemplateError
 
+from custom_components.supernotify.target import Target
+
 from .common import DupeCheckable
 from .const import (
     ATTR_FORCE_RESEND,
@@ -32,7 +34,6 @@ from .model import (
     DeliveryCustomization,
     MessageOnlyPolicy,
     SuppressionReason,
-    Target,
     TargetRequired,
     TransportFeature,
 )
