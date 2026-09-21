@@ -5,6 +5,9 @@
             "scenario": {
                 "name": "परिदृश्य शर्त {scenario}"
             },
+            "scenario_manual": {
+                "name": "परिदृश्य मैनुअल {scenario}"
+            },
             "recipient": {
                 "name": "प्राप्तकर्ता {recipient}"
             }

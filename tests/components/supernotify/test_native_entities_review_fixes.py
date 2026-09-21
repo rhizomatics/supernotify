@@ -99,31 +99,86 @@ def _scenarios_with_and_without_state() -> dict:
     return config
 
 
-async def test_scenario_binary_sensor_is_only_published_for_scenarios_with_conditions(hass: HomeAssistant) -> None:
+async def test_scenario_binary_sensor_is_published_unless_opted_out(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, _scenarios_with_and_without_state())
     registry = er.async_get(hass)
 
-    # nothing to evaluate, or opted out - neither is meaningfully on or off, so there's no entity
-    for name in ("manual", "quiet"):
-        assert registry.async_get(f"binary_sensor.supernotify_scenario_{name}") is None
-        assert hass.states.get(f"binary_sensor.supernotify_scenario_{name}") is None
+    # opted out, so no entity
+    assert registry.async_get("binary_sensor.supernotify_scenario_quiet") is None
+    assert hass.states.get("binary_sensor.supernotify_scenario_quiet") is None
+    # a scenario with no conditions gets a manual one, off until something sets it
+    manual = hass.states.get("binary_sensor.supernotify_scenario_manual")
+    assert manual is not None
+    assert manual.state == STATE_OFF
+    assert manual.name == "SuperNotify Scenario Manual manual"
     assert hass.states.get("binary_sensor.supernotify_scenario_sera").state in (STATE_ON, STATE_OFF)  # type: ignore[union-attr]
     # while every scenario keeps its switch
     for name in ("manual", "quiet", "sera"):
         assert hass.states.get(f"switch.supernotify_scenario_{name}").state == STATE_ON  # type: ignore[union-attr]
 
 
-async def test_stale_binary_sensor_for_a_scenario_without_state_is_removed(hass: HomeAssistant) -> None:
-    # an install from before, which published an unknown state for every scenario
-    _preexisting_binary_sensors(hass, "scenario_manual", "scenario_sera")
-    hass.states.async_set("binary_sensor.supernotify_scenario_manual", "unknown")
+async def test_stale_binary_sensor_for_an_opted_out_scenario_is_removed(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "scenario_manual", "scenario_quiet")
+    hass.states.async_set("binary_sensor.supernotify_scenario_quiet", "unknown")
     await _setup_supernotify(hass, _scenarios_with_and_without_state())
 
-    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_manual") is None
-    assert hass.states.get("binary_sensor.supernotify_scenario_manual") is None
-    # one with conditions is kept, along with its history
-    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_sera") is not None
-    assert hass.states.get("binary_sensor.supernotify_scenario_sera") is not None
+    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_quiet") is None
+    assert hass.states.get("binary_sensor.supernotify_scenario_quiet") is None
+    # one without conditions is kept, along with its history
+    assert er.async_get(hass).async_get("binary_sensor.supernotify_scenario_manual") is not None
+    assert hass.states.get("binary_sensor.supernotify_scenario_manual") is not None
+
+
+async def test_manual_scenario_is_controlled_by_its_binary_sensor(hass: HomeAssistant) -> None:
+    engine = await _setup_supernotify(hass, _scenarios_with_and_without_state())
+    scenario = engine.context.scenario_registry.scenarios["manual"]
+    assert scenario.evaluate(MagicMock()) is False
+    assert "manual" not in await engine.enquire_active_scenarios()
+
+    # an external script or automation writes the state, and the scenario applies
+    hass.states.async_set("binary_sensor.supernotify_scenario_manual", STATE_ON)
+    await hass.async_block_till_done()
+    assert scenario.manual_active is True
+    assert scenario.evaluate(MagicMock()) is True
+    assert await scenario.trace(MagicMock()) is True
+    assert "manual" in await engine.enquire_active_scenarios()
+    state = hass.states.get("binary_sensor.supernotify_scenario_manual")
+    assert state.state == STATE_ON  # type: ignore[union-attr]
+    # the entity's own attributes put back over the plain state write
+    assert state.attributes["name"] == "manual"  # type: ignore[union-attr]
+
+    hass.states.async_set("binary_sensor.supernotify_scenario_manual", STATE_OFF)
+    await hass.async_block_till_done()
+    assert scenario.manual_active is False
+    assert scenario.evaluate(MagicMock()) is False
+
+
+async def test_manual_scenario_ignores_unusable_states_and_disabled_scenarios(hass: HomeAssistant) -> None:
+    engine = await _setup_supernotify(hass, _scenarios_with_and_without_state())
+    scenario = engine.context.scenario_registry.scenarios["manual"]
+    hass.states.async_set("binary_sensor.supernotify_scenario_manual", STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("binary_sensor.supernotify_scenario_manual", "unavailable")
+    hass.states.async_remove("binary_sensor.supernotify_scenario_manual")
+    await hass.async_block_till_done()
+    assert scenario.manual_active is True
+
+    # disabling the scenario stops it applying without losing the manual state
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.supernotify_scenario_manual"}, blocking=True)
+    await hass.async_block_till_done()
+    assert scenario.manual_active is True
+    assert scenario.evaluate(MagicMock()) is False
+    assert await scenario.trace(MagicMock()) is False
+    assert hass.states.get("binary_sensor.supernotify_scenario_manual").state == STATE_ON  # type: ignore[union-attr]
+
+
+async def test_manual_scenario_state_is_restored(hass: HomeAssistant) -> None:
+    mock_restore_cache_with_extra_data(hass, [(State("binary_sensor.supernotify_scenario_manual", STATE_ON), {})])
+    engine = await _setup_supernotify(hass, _scenarios_with_and_without_state())
+
+    assert engine.context.scenario_registry.scenarios["manual"].manual_active is True
+    assert hass.states.get("binary_sensor.supernotify_scenario_manual").state == STATE_ON  # type: ignore[union-attr]
 
 
 async def test_scenario_survives_config_entry_reload(hass: HomeAssistant) -> None:
@@ -478,6 +533,7 @@ def test_scenario_is_on_uses_the_shared_batch_cvars_when_set() -> None:
     scenario.conditions_config = [{"condition": "state"}]
     scenario.evaluate.return_value = True
     scenario.expose_state = True
+    scenario.is_manual = False
 
     registry.scenario_is_on(scenario)
 

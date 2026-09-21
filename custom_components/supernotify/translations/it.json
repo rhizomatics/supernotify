@@ -5,6 +5,9 @@
             "scenario": {
                 "name": "Condizione scenario {scenario}"
             },
+            "scenario_manual": {
+                "name": "Scenario manuale {scenario}"
+            },
             "recipient": {
                 "name": "Recipient {recipient}"
             }

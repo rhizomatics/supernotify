@@ -5,6 +5,9 @@
             "scenario": {
                 "name": "Szenario-Bedingung {scenario}"
             },
+            "scenario_manual": {
+                "name": "Szenario manuell {scenario}"
+            },
             "recipient": {
                 "name": "Empfänger {recipient}"
             }

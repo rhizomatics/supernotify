@@ -127,14 +127,15 @@ class ScenarioRegistry:
             entity.async_write_ha_state()
 
     def scenario_has_state(self, scenario: Scenario) -> bool:
-        """Whether a scenario has any state to report - it must have conditions to evaluate, and
-        not have opted out with expose_state. The same cases _scenario_state() treats as
-        STATE_UNKNOWN. A scenario without conditional logic is never on or off in any meaningful
-        way, so gets no binary_sensor."""
-        return scenario.expose_state and bool(scenario.conditions_config)
+        """Whether a scenario has any state to report - anything that hasn't opted out with
+        expose_state. That is the evaluated state of its conditions if it has any, otherwise
+        a manual state that something outside Supernotify sets, see Scenario.manual_active."""
+        return scenario.expose_state
 
     def scenario_is_on(self, scenario: Scenario) -> bool | None:
         """`is_on` for SupernotifyScenarioBinarySensor - None maps to STATE_UNKNOWN."""
+        if scenario.is_manual:
+            return scenario.manual_active
         state = self._scenario_state(scenario, self._batch_cvars)
         if state == STATE_UNKNOWN:
             return None
@@ -257,6 +258,9 @@ class Scenario:
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.conditions: ConditionsFunc | None = None
         self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
+        # With no conditions to evaluate, whether the scenario applies is set from outside, by
+        # the state of its binary_sensor - see SupernotifyScenarioManualBinarySensor
+        self.manual_active: bool = False
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
         self._config_delivery: dict[str, DeliveryCustomization]
@@ -291,6 +295,11 @@ class Scenario:
         else:
             _LOGGER.warning("SUPERNOTIFY No delivery definitions for scenario %s", self.name)
             self._config_delivery = {}
+
+    @property
+    def is_manual(self) -> bool:
+        """A scenario with no conditions, which only applies when its manual state is on"""
+        return not self.conditions_config
 
     async def validate(self, valid_action_group_names: list[str] | None = None) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
@@ -423,6 +432,8 @@ class Scenario:
     def evaluate(self, condition_variables: ConditionVariables) -> bool:
         """Evaluate scenario conditions"""
         result: bool | None = False
+        if self.enabled and self.is_manual:
+            return self.manual_active
         if self.enabled and self.conditions:
             try:
                 result = self.hass_api.evaluate_conditions(self.conditions, condition_variables)
@@ -441,6 +452,8 @@ class Scenario:
         """Trace scenario condition execution"""
         result: bool | None = False
         trace: ActionTrace | None = None
+        if self.enabled and self.is_manual:
+            return self.manual_active
         if self.enabled and self.conditions:
             result, trace = await self.hass_api.trace_conditions(
                 self.conditions, condition_variables, trace_name=f"scenario_{self.name}"
