@@ -14,6 +14,7 @@ async def target_usage_fixture(usage: str) -> TestingContext:
                 "target_required": "always",
                 "target_usage": usage,
                 "options": {"target_categories": "entity_id"},
+                "inclusion": ["default"],
             }
         },
         transport_types=[GenericTransport],

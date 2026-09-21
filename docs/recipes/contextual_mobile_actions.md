@@ -42,7 +42,7 @@ supernotify:
           - mobile_app_id: mobile_app_joe_nokia
 
   delivery:
-    apple_push:
+    mobile_push:
       transport: mobile_push
   scenarios:
     alarm_disarmed:

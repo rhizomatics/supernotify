@@ -544,7 +544,7 @@ async def test_deliver_exact_payload_shape() -> None:
 
 @pytest.mark.asyncio
 async def test_deliver_internal_keys_not_forwarded_and_data_untouched() -> None:
-    # force_resend / spoken_message are filtered upstream by notification.py;
+    # force_resend / spoken_message are popped upstream by the envelope;
     # if they ever reach the envelope they must not leak to the strict schema,
     # and the transport must not mutate envelope.data
     uut = _make_transport()

@@ -28,13 +28,13 @@ delivery:
  alexa_backup_announce:
       transport: alexa_media_player
       occupancy: any_in
-      selection: scenario
+      inclusion: scenario
       enabled: false
 
     alexa_announce:
       transport: alexa_devices
       occupancy: any_in
-      selection: scenario
+      inclusion: scenario
       enabled: true
       target:
         - notify.bedroom_announce
@@ -50,7 +50,7 @@ scenarios:
         conditions:
           - "{{notification_priority not in ['critical','high','low']}}"
       delivery:
-        - apple_push
+        - mobile_push
         - alexa_announce
         - alexa_backup_announce
 ```

@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
@@ -311,8 +310,6 @@ class PeopleRegistry:
         self.hass_api = hass_api
         self.people: dict[str, Recipient] = {}
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
-        self.entity_registry = entity_registry
-        self.device_registry = device_registry
         self.mobile_discovery = mobile_discovery
         self.discover = discover
 

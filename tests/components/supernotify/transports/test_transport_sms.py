@@ -7,12 +7,16 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.sms import SMSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
 async def test_deliver() -> None:
     """Test on_notify_email."""
-    ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
+    ctx = TestingContext(
+        deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        viable_transport_types=[SMSTransport],
+    )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
@@ -55,7 +59,10 @@ async def test_deliver() -> None:
 
 
 async def test_empty_deliver() -> None:
-    ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
+    ctx = TestingContext(
+        deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        viable_transport_types=[SMSTransport],
+    )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
@@ -69,7 +76,10 @@ async def test_empty_deliver() -> None:
 
 
 async def test_deliver_with_data() -> None:
-    ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
+    ctx = TestingContext(
+        deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        viable_transport_types=[SMSTransport],
+    )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 
@@ -93,7 +103,10 @@ async def test_deliver_with_data() -> None:
 
 
 async def test_deliver_jumbo() -> None:
-    ctx = TestingContext(deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}})
+    ctx = TestingContext(
+        deliveries={"smsify": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        viable_transport_types=[SMSTransport],
+    )
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_SMS)
 

@@ -52,11 +52,9 @@ The media content type will be automatically determined from the grabbed image.
 
 ### PTZ ( Pan, Tilt, Zoom ) Camera Support
 
-Supernotify can ask a camera to move and zoom to a pre-set position before an image snapshot is taken. So for
-example, if a person rings the doorbell, a camera could zoom in to take a close-up for the notification. This image will taken once and then reused across all supporting delivery transports.
+Supernotify can ask a camera to move and zoom to a pre-set position before an image snapshot is taken. So for example, if a person rings the doorbell, a camera could zoom in to take a close-up for the notification. This image will taken once and then reused across all supporting delivery transports.
 
-Set the (optional) PTZ preset referenced in the `data` section, whether in transport, delivery or scenario config,
-or in the notify `action` call.
+Set the (optional) PTZ preset referenced in the `data` section, whether in transport, delivery or scenario config, or in the notify `action` call.
 
 A PTZ delay can be set to wait for camera movement before snapshot taken, and a choice of `onvif` or `frigate` for the PTZ control. After the snap, an additional PTZ movement will be commanded to return to the `ptz_default_preset` defined for the camera.
 
@@ -77,20 +75,18 @@ These options can be set in the `delivery` or `transport` configuration, or in t
 ### Example Action
 
 ```yaml
- - action: supernotify.notify
-      data:
-        title: "My Home Notification"
-        message: "Notify with image snapshot taking close-up of vehicle on driveway"
-        delivery:
-            data:
-                media:
-                    camera_entity_id: camera.driveway
-                    camera_ptz_preset: closeup
-                    camera_delay: 10
-                    jpeg_opts:
-                      progressive: true
-                      optimize: true
-                      quality: 50
+ -  action: supernotify.notify
+    data:
+      title: "My Home Notification"
+      message: "Notify with image snapshot taking close-up of vehicle on driveway"
+      media:
+          camera_entity_id: camera.driveway
+          camera_ptz_preset: closeup
+          camera_delay: 10
+          jpeg_opts:
+            progressive: true
+            optimize: true
+            quality: 50
 ```
 
 ## Cameras

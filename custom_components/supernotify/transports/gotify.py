@@ -3,14 +3,14 @@
 Sends push notifications via Gotify (self-hosted, privacy-first push server).
 Requires the HACS custom integration 1RandomDev/homeassistant-gotify installed
 and configured in configuration.yaml. The notify service name (e.g. notify.gotify)
-depends on the user's HACS configuration - it MUST be specified as `action:` in
-delivery.yaml (no default exists).
+depends on the user's HACS configuration - auto_configure() discovers it via the
+registered service's module, or it can be set manually as `action:` on a delivery.
 
 Prerequisites:
     - Gotify server running and reachable
     - HACS integration 1RandomDev/homeassistant-gotify installed
     - Application token configured in configuration.yaml
-    - `action: notify.<name>` set in delivery.yaml (REQUIRED)
+    - `action: notify.<name>` set on a delivery only if auto-discovery doesn't apply
 
 For snapshot camera / bigImageUrl:
     - `media_web_path` must be configured (PLATFORM_SCHEMA) for grab_image to produce a URL.
@@ -38,25 +38,28 @@ Priority mapping (SuperNotify -> Gotify integer):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import (
-    ATTR_MEDIA_SNAPSHOT_URL,
-    TRANSPORT_GOTIFY,
-)
+from custom_components.supernotify.const import ATTR_MEDIA_SNAPSHOT_URL, TRANSPORT_GOTIFY
 from custom_components.supernotify.model import (
     DebugTrace,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+
+# Gotify's HACS notify platform module (no longer bundled with HA core)
+HA_GOTIFY_MODULE = "custom_components.gotify.notify"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,6 +102,7 @@ class GotifyTransport(Transport):
     """Notify via Gotify self-hosted push notification server."""
 
     name = TRANSPORT_GOTIFY
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -111,8 +115,21 @@ class GotifyTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
-        # No default action - user MUST specify action: notify.<name> in delivery.yaml
+        config.delivery_defaults.inclusion = self.inclusion_mode
+        config.delivery_defaults.action = self.hass_api.find_service("notify", HA_GOTIFY_MODULE)
         return config
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # a manually configured delivery can set its own action: notify.<name> regardless
+        # of whether the service is discoverable here - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
+        # once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        if self.delivery_defaults.action:
+            return {self.name: {}}
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         if action and action.startswith("notify."):

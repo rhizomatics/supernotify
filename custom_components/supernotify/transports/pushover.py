@@ -10,7 +10,7 @@ Requires the official HA Pushover integration configured in configuration.yaml:
         user_key: YOUR_PUSHOVER_USER_KEY
 
 The notify service name (e.g. notify.pushover_home) MUST be specified as
-`action:` in delivery.yaml — there is no default, since the name depends on
+`action:` on the delivery - there is no default, since the name depends on
 the user's configuration.yaml entry.
 
 Priority mapping (SuperNotify -> Pushover integer):
@@ -53,9 +53,10 @@ Supported data keys (all optional unless noted):
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_PUSHOVER
@@ -65,10 +66,12 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +95,7 @@ class PushoverTransport(Transport):
     """Notify via Pushover push notification service."""
 
     name = TRANSPORT_PUSHOVER
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -104,8 +108,21 @@ class PushoverTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.NEVER
-        # No default action — user MUST specify action: notify.<name> in delivery.yaml
+        config.delivery_defaults.inclusion = self.inclusion_mode
+        config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.pushover.notify")
         return config
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # a manually configured delivery can set its own action: notify.<name> regardless
+        # of whether the service is discoverable here - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport entirely
+        # once it's confirmed no delivery (explicit or auto) uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        if self.delivery_defaults.action:
+            return {self.name: {}}
+        return {}
 
     def validate_action(self, action: str | None) -> bool:
         if action and action.startswith("notify."):

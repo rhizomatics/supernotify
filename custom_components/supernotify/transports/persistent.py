@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.helpers.typing import ConfigType
+
 from custom_components.supernotify.const import (
     ATTR_NOTIFICATION_ID,
     TRANSPORT_PERSISTENT,
@@ -12,6 +14,7 @@ from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +34,16 @@ class PersistentTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "persistent_notification.create"
         config.delivery_defaults.target_required = TargetRequired.NEVER
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # persistent_notification is always available in HA core, no integration to discover -
+        # but a UI popup on every single notification would be intrusive, so require opt-in
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data = envelope.data or {}

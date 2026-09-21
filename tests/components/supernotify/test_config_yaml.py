@@ -8,9 +8,11 @@ from unittest.mock import patch
 from homeassistant import config as hass_config
 from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_FLOOR_ID, ATTR_LABEL_ID, CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
+from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.model import Target
@@ -39,7 +41,12 @@ async def _setup_supernotify(hass: HomeAssistant, config: dict) -> SupernotifyEn
 
 SIMPLE_CONFIG = {
     "delivery": {
-        "testing": {"transport": "generic", "target": ["testy.testy"], "action": "notify.send_message"},
+        "testing": {
+            "transport": "generic",
+            "target": ["testy.testy"],
+            "action": "notify.send_message",
+            "inclusion": ["default"],
+        },
         "plain_email": {"transport": "email"},
         "chime_person": {"transport": "chime", "selection": ["scenario", "fallback"], "data": {"chime_tune": "person"}},
     },
@@ -86,6 +93,13 @@ async def test_transport_setup(hass: HomeAssistant) -> None:
 
 async def test_reload(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.home_alarm_control", "")
+    # FIXTURE (maximal.yaml) has "alexa_announce"/"mobile_push"/"alexa_show" deliveries with
+    # no action override, for alexa_devices/mobile_push/media_player respectively - each
+    # needs its own real discovery signal to register
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "kitchen_echo_unique_id")
+    MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
+    hass.states.async_set("media_player.kitchen_2", "idle")
 
     await _setup_supernotify(hass, SIMPLE_CONFIG)
 
@@ -107,7 +121,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     uut = entry.runtime_data
     assert len(uut.context.people_registry.people) == 3
 
-    assert "DEFAULT_notify_entity" in uut.context.delivery_registry.deliveries
+    assert "notify_entity" in uut.context.delivery_registry.deliveries
     assert "html_email" in uut.context.delivery_registry.deliveries
     assert "backup_mail" in uut.context.delivery_registry.deliveries
     assert "backup_mail" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
@@ -127,8 +141,40 @@ async def test_reload(hass: HomeAssistant) -> None:
     })
     assert "expensive_api_call" in uut.context.delivery_registry.deliveries
     assert "expensive_api_call" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
+    assert "persistent" in uut.context.delivery_registry.deliveries
+    assert "persistent" not in [d.name for d in uut.context.delivery_registry.implicit_deliveries]
 
-    assert len(uut.context.delivery_registry.deliveries) == 15
+    # +6 vs explicit deliveries: "chime", "email", "persistent", "notify_entity",
+    # "alexa_devices" and "media" are all auto-configured alongside the fixture's own
+    # explicitly-named deliveries for those same transports (e.g. "chime" alongside
+    # play_chimes/doorbell_chime_alexa/sleigh_bells, "email" alongside
+    # html_email/backup_mail/direct_mail) - every loadable, viable transport gets its own
+    # auto-configured delivery regardless of what else is explicitly configured for it.
+    # "mobile_push" doesn't add one of its own on top: its explicit delivery is itself
+    # named "mobile_push" (same as the transport), so the auto-config merges into it instead
+    assert list(uut.context.delivery_registry.deliveries.keys()) == unordered([
+        "html_email",
+        "backup_mail",
+        "direct_mail",
+        "email",
+        "text_message",
+        "sms",
+        "alexa_announce",
+        "alexa_devices",
+        "mobile_push",
+        "alexa_show",
+        "media",
+        "play_chimes",
+        "doorbell_chime_alexa",
+        "sleigh_bells",
+        "chime",
+        "persistent",
+        "expensive_api_call",
+        "my_hw_notifiers",
+        "alexa_red_alert",
+        "upstairs_siren",
+        "notify_entity",
+    ])
 
     # has_service() alone can't tell a freshly rewired notify.supernotify from a stale one left
     # over from before the reload (both would report True) - actually call it and confirm the
@@ -185,7 +231,7 @@ async def test_empty_config_delivers_to_notify_entities(hass: HomeAssistant) -> 
     )
     await hass.async_block_till_done()
 
-    assert_clean_notification(notification, expected_deliveries={"DEFAULT_notify_entity": 1})
+    assert_clean_notification(notification, expected_deliveries={"notify_entity": 1})
 
     await hass.services.async_call(NOTIFY_DOMAIN, DOMAIN, {"title": "my title", "message": "unit test"}, blocking=True)
     notification = await hass.services.async_call(
@@ -228,6 +274,9 @@ async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
 
 
 async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
+    # mobile_push/notify_entity only auto-configure once their prerequisites exist
+    MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
+    hass.states.async_set("notify.mock_notify_target", "unknown")
     await _setup_supernotify(hass, SIMPLE_CONFIG)
     hass.states.async_set("binary_sensor.supernotify_delivery_testing", "off")
     await hass.async_block_till_done()
@@ -235,7 +284,7 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
         "supernotify", "enquire_implicit_deliveries", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
-    assert response == {"mobile_push": ["DEFAULT_mobile_push"], "notify_entity": ["DEFAULT_notify_entity"]}
+    assert response == {"mobile_push": ["mobile_push"], "notify_entity": ["notify_entity"]}
     hass.states.async_set("binary_sensor.supernotify_delivery_testing", "on")
     await hass.async_block_till_done()
     response = await hass.services.async_call(
@@ -244,8 +293,8 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert response == {
         "generic": ["testing"],
-        "mobile_push": ["DEFAULT_mobile_push"],
-        "notify_entity": ["DEFAULT_notify_entity"],
+        "mobile_push": ["mobile_push"],
+        "notify_entity": ["notify_entity"],
     }
 
 

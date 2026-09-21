@@ -54,6 +54,7 @@ def _make_transport(call_action_result: bool = True) -> Any:  # ruff: ignore[any
     transport: Any = DiscordTransport.__new__(DiscordTransport)
     transport.hass_api = MagicMock()
     transport.hass_api.call_service = AsyncMock(return_value=None)
+    transport.hass_api.find_service.return_value = "notify.discord"
     transport.context = MagicMock()
     transport.call_action = AsyncMock(return_value=call_action_result)
     transport.record_error = MagicMock()
@@ -667,7 +668,7 @@ async def test_deliver_exact_payload_shape_full() -> None:
 
 @pytest.mark.asyncio
 async def test_deliver_internal_keys_not_forwarded_and_data_untouched() -> None:
-    # force_resend / spoken_message are filtered upstream by notification.py;
+    # force_resend / spoken_message are popped upstream by the envelope;
     # if they ever reach the envelope they must not leak to the service data,
     # and the transport must not mutate envelope.data
     uut = _make_transport()

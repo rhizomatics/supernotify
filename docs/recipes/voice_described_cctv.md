@@ -110,21 +110,20 @@ automations:
           {% set description = trigger.payload_json.description %}
           {{ description | regex_replace('^(\w+)\s+RISK\s+','',ignorecase=True) | lower}}
       title: Update on activity at {{trigger.payload_json.camera}}
-      data:
-        priority: >-
-            {% set regex = "(\w+)\s+RISK\s+.*" %}
-            {% set description = trigger.payload_json.description %}
-            {% if description is match(regex,ignorecase=True) %}
-            {{ description | regex_findall_index(regex,ignorecase=True) | lower}}
-            {% else %}
-            medium
-            {% endif %}
-        media:
-          snapshot_url: http://homeassistant.local:8123/api/frigate/notifications/{{trigger.payload_json.id}}/thumbnail.jpg
-          camera_entity_id: camera.{{trigger.payload_json.camera}}
-        delivery:
-          - alexa_announce
-          - mobile_push
+      priority: >-
+          {% set regex = "(\w+)\s+RISK\s+.*" %}
+          {% set description = trigger.payload_json.description %}
+          {% if description is match(regex,ignorecase=True) %}
+          {{ description | regex_findall_index(regex,ignorecase=True) | lower}}
+          {% else %}
+          medium
+          {% endif %}
+      media:
+        snapshot_url: http://homeassistant.local:8123/api/frigate/notifications/{{trigger.payload_json.id}}/thumbnail.jpg
+        camera_entity_id: camera.{{trigger.payload_json.camera}}
+      delivery:
+        - alexa_announce
+        - mobile_push
 ```
 
 ## Variations
@@ -207,12 +206,12 @@ scenarios:
               - "{{'BIRD IDENTIFIED' in notification_message|upper}}"
               - "{{'UNKNOWN BIRD' in notification_message|upper}}"
       delivery:
-        - apple_push
+        - mobile_push
     unknown_birds:
       alias: Don't send out any notifications if the bird can't be identified
       conditions: "{{'UNKNOWN BIRD' in notification_message|upper}}"
       delivery:
-        apple_push:
+        mobile_push:
           enabled: false
         plain_email:
           enabled: false

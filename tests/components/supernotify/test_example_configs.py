@@ -10,18 +10,26 @@ from homeassistant.config import (
     load_yaml_config_file,
 )
 from homeassistant.const import CONF_ENABLED
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
+from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
+from pytest_unordered import unordered
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_NOTIFY,
-    CONF_SELECTION,
     CONF_TRANSPORT,
-    SELECTION_DEFAULT,
+    INCLUSION_DEFAULT,
+    INCLUSION_EXPLICIT,
+    TRANSPORT_ALEXA,
+    TRANSPORT_EMAIL,
+    TRANSPORT_HTML5,
     TRANSPORT_MOBILE_PUSH,
     TRANSPORT_NOTIFY_ENTITY,
+    TRANSPORT_SMS,
 )
 from custom_components.supernotify.repairs import ISSUE_ID
 
@@ -37,6 +45,18 @@ examples = [str(p.name) for p in pathlib.Path(EXAMPLES_ROOT).iterdir() if p.name
 # a real service.
 LEGACY_SHAPE_EXAMPLES = {"unmigrated.yaml"}
 
+# transports whose Transport.inclusion_mode defaults to INCLUSION_DEFAULT - a delivery for
+# one of these that doesn't set its own `inclusion:` inherits that, everything else inherits
+# INCLUSION_EXPLICIT (see Transport.inclusion_mode/Delivery.initialize's repair warning)
+DEFAULT_INCLUSION_TRANSPORTS = {
+    TRANSPORT_EMAIL,
+    TRANSPORT_ALEXA,
+    TRANSPORT_MOBILE_PUSH,
+    TRANSPORT_NOTIFY_ENTITY,
+    TRANSPORT_SMS,
+    TRANSPORT_HTML5,
+}
+
 
 @pytest.mark.parametrize("config_name", examples)
 async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> None:
@@ -45,6 +65,22 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         return
     config_path: Path = Path(EXAMPLES_ROOT) / config_name
     hass.states.async_set("alarm_control_panel.home_alarm_control", "armed_home")
+    # a typical house has at least one notify entity (e.g. a companion app), so
+    # notify_entity's auto_configure (gated on the "notify" domain having an entity)
+    # behaves the same as it would in a real house
+    hass.states.async_set("notify.mock_notify_target", "unknown")
+
+    def sms(call: object) -> None:
+        return None
+
+    sms.__module__ = "homeassistant.components.twilio_sms.notify"
+    hass.services.async_register("notify", "twilio_sms", sms)
+
+    # ... and, for these examples specifically, an Alexa Devices integration entity and a
+    # paired mobile_app companion app too
+    MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)
+    er.async_get(hass).async_get_or_create("notify", "alexa_devices", "kitchen_echo_unique_id")
+    MockConfigEntry(domain="mobile_app", data={}).add_to_hass(hass)
     config = await hass.async_add_executor_job(load_yaml_config_file, str(config_path))
 
     if config_name in LEGACY_SHAPE_EXAMPLES:
@@ -59,10 +95,9 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
     assert hass.services.has_service(NOTIFY_DOMAIN, service_name)
     deliveries = await hass.services.async_call(DOMAIN, "enquire_implicit_deliveries", blocking=True, return_response=True)
     expected_defaults: dict[str, list[str]] = {
-        TRANSPORT_NOTIFY_ENTITY: ["DEFAULT_notify_entity"],
-        TRANSPORT_MOBILE_PUSH: ["DEFAULT_mobile_push"],
+        TRANSPORT_NOTIFY_ENTITY: ["notify_entity"],
+        TRANSPORT_MOBILE_PUSH: ["mobile_push"],
     }
-    optional_defaults: dict[str, list[str]] = {}
 
     expected: dict[str, list[str]] = {}
     configured: dict[str, list[str]] = {}
@@ -70,18 +105,22 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
         if dc.get(CONF_ENABLED, True):
             configured.setdefault(dc[CONF_TRANSPORT], [])
             configured[dc[CONF_TRANSPORT]].append(d)
-            if SELECTION_DEFAULT in dc.get(CONF_SELECTION, [SELECTION_DEFAULT]):
+            inherited_inclusion = (
+                [INCLUSION_DEFAULT] if dc[CONF_TRANSPORT] in DEFAULT_INCLUSION_TRANSPORTS else [INCLUSION_EXPLICIT]
+            )
+            if INCLUSION_DEFAULT in dc.get(CONF_INCLUSION, inherited_inclusion):
                 expected.setdefault(dc[CONF_TRANSPORT], [])
                 expected[dc[CONF_TRANSPORT]].append(d)
+                if dc[CONF_TRANSPORT] not in expected[dc[CONF_TRANSPORT]]:
+                    expected[dc[CONF_TRANSPORT]].append(dc[CONF_TRANSPORT])  # auto-gen defaults
     for tname, tdef in expected_defaults.items():
         if tname not in configured:
             expected.setdefault(tname, tdef)
-    for tname, tdef in optional_defaults.items():
-        if tname in deliveries:
-            expected.setdefault(tname, tdef)
 
     assert deliveries is not None
-    assert deliveries == expected
+
+    for t in expected:  # ruff: ignore[dict-index-missing-items]
+        assert deliveries[t] == unordered(expected[t])
 
     recipients = deliveries = await hass.services.async_call(DOMAIN, "enquire_recipients", blocking=True, return_response=True)
     assert recipients is not None

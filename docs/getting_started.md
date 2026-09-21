@@ -4,6 +4,7 @@ tags:
   - hacs
   - configuration
   - developer tools
+  - quickstart
 description: Getting Started with Supernotify for Home Assistant
 ---
 # Getting Started
@@ -22,34 +23,40 @@ From the HACS page on Home Assistant, select **Supernotify** in the list of avai
 
 ## Configure
 
-Supernotify can be set up either from the UI or from YAML.
+For a zero-configuration setup with everything auto-discovered (mobile push, an existing SMTP integration or any notify entities, recipients from Home Assistant persons), go to **Settings → Devices & Services → Add Integration** and search for **Supernotify**.
 
-For a zero-configuration setup with everything auto-discovered (mobile push, an existing SMTP
-integration or any notify entities, recipients from Home Assistant persons), go to
-**Settings → Devices & Services → Add Integration** and search for **Supernotify**. Archive,
-duplicate detection and housekeeping settings can be adjusted afterwards from the integration's
-**Configure** option.
+![Adding Integration](assets/images/new_integration.png)
 
-Deliveries, transports, scenarios, recipients and cameras are still configured via YAML for
-now - see the [Configuration](configuration/index.md) pages.
+Archive, duplicate detection and housekeeping settings can be adjusted afterwards from the integration's **Configure** option.
+
+This will build a delivery channel for every transport mechanism it can find, plus some convenience ones, like `chime_siren_all` and `alexa_devices_announce_all` that will be created if you have those devices.
+
+Advanced configuration, like custom deliveries, transports, scenarios, recipients and fine-tuning cameras are still configured via YAML fornow - see the [Configuration](configuration/index.md) pages.
 
 
 ## Send
 
-Send a test notification from [Developer Tools Action Tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) or start [sending notifications](usage/notifying.md) from automations.
+Send a test notification from [Tools Action Tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) or start [sending notifications](usage/notifying.md) from automations. Use the `supernotify.notify` action to craft the notification, which can be nothing more than a single `message`.
 
-![Dev Tools Action](assets/images/dev_tools_action.png){width=400}
+![Tools Action](assets/images/tools_action_notify.png){width=600}
 
 This first notification will go out all mobile devices in the house. To limit it, list the mobile devices, or the `person` entities as targets in the notification:
 
 ![Notify All The Mobile Devices for One Person](assets/images/person_notify.png){width=400}
 
+If you have Alexa Devices, use `alexa_devices_announce_all` or `alexa_devices_speak_all` in the *Delivery* box. (Announce has an extra introductory chime vs plain speak). You can combine these with email and mobile app notifications in a single notification.
+
 ### Add a Notification Action to an Automation
 
-![Select Action](./assets/images/add_action_automation.png){width=400}
+![Select Action](./assets/images/add_action_automation.png){width=600}
 
-![Configure Action](./assets/images/automation_action_simple.png){width=400}
+![Configure Action](./assets/images/automation_action_simple.png){width=600}
 
+### Add to the Dashboard
+
+[Supernotify Cards](https://github.com/lollox80/supernotify-cards) has lots of focused dashboard cards to control and monitor notifications, send out manually, or test configurations.
+
+![Overview and Transport Cards](assets/images/cards.png)
 
 ## Removal
 

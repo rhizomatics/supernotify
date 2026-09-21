@@ -5,18 +5,24 @@ tags:
 ---
 # ntfy Transport Adaptor
 
+## Discovery
+
+**Delivery (explicit selection).** If the `ntfy` integration is already configured and no
+`ntfy` delivery is defined, an `ntfy` delivery is generated automatically — but since
+`ntfy_device_id` has no automatic mapping to a recipient or entity, it only fires when
+selected explicitly (`data: {data: {delivery: [ntfy]}}` or a scenario), not by default.
+You'll still need to supply `ntfy_device_id` yourself.
+
 ## Motivation
 
-ntfy became an official Home Assistant integration in version 2025.5. It provides
-a privacy-first, self-hostable push notification service with a rich action API:
-priority levels, action buttons, scheduled delivery, image attachments, and
-message update/cancellation via `sequence_id`.
+ntfy became an official Home Assistant integration in version 2025.5. It provides a privacy-first, self-hostable push notification service with a rich action API, priority levels, action buttons, scheduled delivery, image attachments, and message update/cancellation via `sequence_id`.
 
 The existing `generic` transport can call `ntfy.publish`, but it cannot:
-- map SuperNotify's 5-level priority to ntfy's integer scale (1–5)
-- validate action button payloads before sending
-- attach camera snapshots via HA's `camera.snapshot` service
-- apply `boolify()` for YAML boolean strings
+
+  - map SuperNotify's 5-level priority to ntfy's integer scale (1–5)
+  - validate action button payloads before sending
+  - attach camera snapshots via HA's `camera.snapshot` service
+  - apply `boolify()` for YAML boolean strings
 
 ## Data keys
 
@@ -46,35 +52,35 @@ Tested on Home Assistant 2026.3.4 with the ntfy official integration connected
 to a self-hosted ntfy instance (ntfy v2.x).
 
 **Functional tests performed:**
-- [x] Base delivery: message and title appear correctly in ntfy app
-- [x] Priority mapping: `critical` triggers urgent priority (bypasses DND)
-- [x] Priority mapping: `minimum` delivers silently with no vibration
-- [x] `ntfy_tags`: emoji tags visible in notification
-- [x] `ntfy_click`: tap opens correct URL
-- [x] `ntfy_attach_image: true` + `camera.ezviz_ingresso` → snapshot attached
-- [x] `ntfy_actions` with 3 buttons: `view`, `http` (webhook), `http` (snooze)
-- [x] `ntfy_delay: "30m"` — notification delivered after 30 minutes
-- [x] `ntfy_sequence_id` — second call with same ID updates the notification
-- [x] `ntfy_device_id` missing → `return False` with warning in log
-- [x] `ntfy_actions` with malformed entry → entry skipped, valid ones delivered
-- [x] YAML boolean strings `"true"` / `"false"` for `ntfy_attach_image`, `ntfy_markdown` — `boolify()` handles correctly
-- [x] `ntfy_priority: 99` out of range → fallback to automatic mapping, warning logged
+  - [x] Base delivery: message and title appear correctly in ntfy app
+  - [x] Priority mapping: `critical` triggers urgent priority (bypasses DND)
+  - [x] Priority mapping: `minimum` delivers silently with no vibration
+  - [x] `ntfy_tags`: emoji tags visible in notification
+  - [x] `ntfy_click`: tap opens correct URL
+  - [x] `ntfy_attach_image: true` + `camera.ezviz_ingresso` → snapshot attached
+  - [x] `ntfy_actions` with 3 buttons: `view`, `http` (webhook), `http` (snooze)
+  - [x] `ntfy_delay: "30m"` — notification delivered after 30 minutes
+  - [x] `ntfy_sequence_id` — second call with same ID updates the notification
+  - [x] `ntfy_device_id` missing → `return False` with warning in log
+  - [x] `ntfy_actions` with malformed entry → entry skipped, valid ones delivered
+  - [x] YAML boolean strings `"true"` / `"false"` for `ntfy_attach_image`, `ntfy_markdown` — `boolify()` handles correctly
+  - [x] `ntfy_priority: 99` out of range → fallback to automatic mapping, warning logged
 
 **Example configuration:**
 
 ```yaml
-# delivery.yaml — minimal
+# example delivery config — minimal
 ntfy_home:
   transport: ntfy
-  selection: default
+  inclusion: default
   data:
     ntfy_device_id: "abc123def456"
     ntfy_click: "http://homeassistant.local:8123"
 
-# delivery.yaml — security channel with camera snapshot
+# example delivery config — security channel with camera snapshot
 ntfy_security:
   transport: ntfy
-  selection: default
+  inclusion: default
   data:
     ntfy_device_id: "abc123def456"
     ntfy_attach_image: true
@@ -83,10 +89,10 @@ ntfy_security:
       - house
       - rotating_light
 
-# delivery.yaml — alarm channel with action buttons
+# example delivery config — alarm channel with action buttons
 ntfy_alarms:
   transport: ntfy
-  selection: scenario
+  inclusion: scenario
   data:
     ntfy_device_id: "abc123def456"
     ntfy_tags: [rotating_light, sos]
@@ -110,9 +116,8 @@ action: supernotify.notify
 data:
   message: "Motion detected at entrance"
   title: "📷 Front Camera"
-  data:
-    media:
-      camera_entity_id: camera.ezviz_ingresso
+  media:
+    camera_entity_id: camera.ezviz_ingresso
 ```
 
 **Expected behavior:**

@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
     CONF_ACTION,
     CONF_ALIAS,
+    CONF_CONDITIONS,
     CONF_DEBUG,
     CONF_ENABLED,
     CONF_OPTIONS,
@@ -45,20 +46,21 @@ from .const import (
     CONF_DEVICE_DOMAIN,
     CONF_DEVICE_MODEL_EXCLUDE,
     CONF_DEVICE_MODEL_INCLUDE,
+    CONF_INCLUSION,
+    CONF_MESSAGE,
+    CONF_OCCUPANCY,
     CONF_PRIORITY,
-    CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MODEL_SELECT,
+    CONF_TEMPLATE,
+    CONF_TITLE,
+    INCLUSION_DEFAULT,
+    OCCUPANCY_ALL,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     RE_DEVICE_ID,
-    SELECT_EXCLUDE,
-    SELECT_INCLUDE,
-    SELECTION_DEFAULT,
+    TARGET_CATEGORY_VALUES,
     TARGET_USE_ON_NO_ACTION_TARGETS,
 )
 from .schema import SelectionRank, phone
@@ -83,6 +85,33 @@ class TransportFeature(IntFlag):
     TEMPLATE_FILE = 32
     SNAPSHOT_IMAGE = 64  # transports will be deferred if a camera PTZ is defined
     SPOKEN = 128
+    SOUND = 256  # sirens, chimes, buzzers, all non-spoken audio
+
+
+@dataclass(frozen=True)
+class EntityCategory:
+    """Declares which entities a transport accepts for the `entity_id` target category.
+
+    Used in a `Transport.target_categories` list in place of a plain category name, since
+    "any entity_id" is too broad - most entity-based transports only want entities of a
+    particular domain (or domains), or ones registered by a particular platform/integration
+    (or both). `domain`/`platform` may each be a single value or a list; `None` means
+    "don't filter on this".
+    """
+
+    domain: str | list[str] | None = None
+    platform: str | list[str] | None = None
+
+    def matches(self, entity_id: str, platform: str | None, *, check_platform: bool = True) -> bool:
+        if self.domain is not None:
+            domains = [self.domain] if isinstance(self.domain, str) else self.domain
+            if entity_id.split(".", 1)[0] not in domains:
+                return False
+        if check_platform and self.platform is not None:
+            platforms = [self.platform] if isinstance(self.platform, str) else self.platform
+            if platform not in platforms:
+                return False
+        return True
 
 
 class Target:
@@ -125,6 +154,22 @@ class Target:
         elif isinstance(target, list):
             # simplified and legacy way of assuming list of entities that can be discriminated by validator
             targets = list(target)
+            # "<category>:<value>" entries scope a custom target without needing the full
+            # mapping form - only recognised here, in the flat list/scalar form, so the mapping
+            # form (`target: {category: value}`) stays available verbatim for any value that
+            # collides with this syntax (e.g. one already containing a colon). A prefix is always
+            # a target *category* (e.g. `topic:`, `email:`), never a transport or delivery name
+            # directly - those are dynamic and only addressable via the mapping form.
+            unprefixed: list[str] = []
+            for t in targets:
+                prefix, sep, rest = t.partition(":") if isinstance(t, str) else ("", "", "")
+                if sep and rest and prefix in TARGET_CATEGORY_VALUES:
+                    self.targets.setdefault(prefix, [])
+                    if rest not in self.targets[prefix]:
+                        self.targets[prefix].append(rest)
+                else:
+                    unprefixed.append(t)
+            targets = unprefixed
             for category in self.AUTO_CATEGORIES:
                 matched = self._filter_by_category(category, targets)
                 if matched:
@@ -251,7 +296,7 @@ class Target:
     @classmethod
     def is_email(cls, target: str) -> bool:
         try:
-            return vol.Email()(target) is not None  # type: ignore[call-arg]
+            return vol.Email()(target) is not None  # type: ignore[call-arg] # ty: ignore[missing-argument]
         except vol.Invalid:
             return False
 
@@ -400,6 +445,16 @@ class Target:
 
 class TransportConfig:
     def __init__(self, conf: ConfigType | None = None, class_config: TransportConfig | None = None) -> None:
+        # local import: options.py imports SelectionRule from this module, so importing
+        # its constants back at module level here would be circular
+        from .options import (
+            OPTION_DEVICE_DISCOVERY,
+            OPTION_DEVICE_DOMAIN,
+            OPTION_DEVICE_MODEL_SELECT,
+            SELECT_EXCLUDE,
+            SELECT_INCLUDE,
+        )
+
         conf = conf or {}
         if class_config is not None:
             self.enabled: bool = conf.get(CONF_ENABLED, class_config.enabled)
@@ -465,6 +520,9 @@ class DeliveryCustomization:
 
 class SelectionRule:
     def __init__(self, config: str | list[str] | dict | SelectionRule | None) -> None:
+        # local import: see TransportConfig.__init__ for why this can't be module-level
+        from .options import SELECT_EXCLUDE, SELECT_INCLUDE
+
         self.include: list[str] | None = None
         self.exclude: list[str] | None = None
         if config is None:
@@ -530,6 +588,9 @@ class DataFilter:
             self._init_from_dict(config)
 
     def _init_from_dict(self, config: dict) -> None:
+        # local import: see TransportConfig.__init__ for why this can't be module-level
+        from .options import SELECT_EXCLUDE, SELECT_INCLUDE
+
         include_val = config.get(SELECT_INCLUDE)
         exclude_val = config.get(SELECT_EXCLUDE)
         if isinstance(include_val, dict):
@@ -616,7 +677,7 @@ class DeliveryConfig:
 
             self.data: ConfigType = dict(delivery_defaults.data) if isinstance(delivery_defaults.data, dict) else {}
             self.data.update(conf.get(CONF_DATA, {}))
-            self.selection: list[str] = conf.get(CONF_SELECTION, delivery_defaults.selection)
+            self.inclusion: list[str] = conf.get(CONF_INCLUSION, delivery_defaults.inclusion)
             self.priority: list[str] = conf.get(CONF_PRIORITY, delivery_defaults.priority)
             self.selection_rank: SelectionRank = conf.get(CONF_SELECTION_RANK, delivery_defaults.selection_rank)
             self.options: ConfigType = conf.get(CONF_OPTIONS, {})
@@ -624,6 +685,12 @@ class DeliveryConfig:
             if isinstance(delivery_defaults.options, dict):
                 for opt in delivery_defaults.options:
                     self.options.setdefault(opt, delivery_defaults.options[opt])
+            self.alias: str | None = conf.get(CONF_ALIAS, delivery_defaults.alias)
+            self.template: str | None = conf.get(CONF_TEMPLATE, delivery_defaults.template)
+            self.message: str | None = conf.get(CONF_MESSAGE, delivery_defaults.message)
+            self.title: str | None = conf.get(CONF_TITLE, delivery_defaults.title)
+            self.occupancy: str = conf.get(CONF_OCCUPANCY, delivery_defaults.occupancy)
+            self.conditions_config: list[ConfigType] | None = conf.get(CONF_CONDITIONS, delivery_defaults.conditions_config)
         else:
             # construct the transport defaults
             self.target = Target(conf.get(CONF_TARGET)) if conf.get(CONF_TARGET) else None
@@ -633,9 +700,15 @@ class DeliveryConfig:
             self.debug = conf.get(CONF_DEBUG, False)
             self.options = conf.get(CONF_OPTIONS, {})
             self.data = conf.get(CONF_DATA, {})
-            self.selection = conf.get(CONF_SELECTION, [SELECTION_DEFAULT])
+            self.inclusion = conf.get(CONF_INCLUSION, [INCLUSION_DEFAULT])
             self.priority = conf.get(CONF_PRIORITY, list(PRIORITY_VALUES.keys()))
             self.selection_rank = conf.get(CONF_SELECTION_RANK, SelectionRank.ANY)
+            self.alias = conf.get(CONF_ALIAS)
+            self.template = conf.get(CONF_TEMPLATE)
+            self.message = conf.get(CONF_MESSAGE)
+            self.title = conf.get(CONF_TITLE)
+            self.occupancy = conf.get(CONF_OCCUPANCY, OCCUPANCY_ALL)
+            self.conditions_config = conf.get(CONF_CONDITIONS)
 
     def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
         return {
@@ -643,11 +716,17 @@ class DeliveryConfig:
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_DATA: self.data,
-            CONF_SELECTION: self.selection,
+            CONF_INCLUSION: self.inclusion,
             CONF_PRIORITY: self.priority,
             CONF_SELECTION_RANK: str(self.selection_rank),
             CONF_TARGET_REQUIRED: str(self.target_required),
             CONF_TARGET_USAGE: self.target_usage,
+            CONF_ALIAS: self.alias,
+            CONF_TEMPLATE: self.template,
+            CONF_MESSAGE: self.message,
+            CONF_TITLE: self.title,
+            CONF_OCCUPANCY: self.occupancy,
+            CONF_CONDITIONS: self.conditions_config,
         }
 
     def __repr__(self) -> str:

@@ -29,7 +29,7 @@ async def test_frigate_blueprint_notification(hass: HomeAssistant, local_server:
       transport: email
       action: notify.smtp
       target: joe@mctest.org
-    apple_push:
+    mobile_push:
       transport: mobile_push
       target: mobile_app.iphone
 """,

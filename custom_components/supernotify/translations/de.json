@@ -77,6 +77,10 @@
                     "name": "HTML-Nachricht",
                     "description": "Eine HTML-Alternative zu „Nachricht“, verwendet von Transporten, die umfangreiche Formatierung unterstützen (z. B. E-Mail)."
                 },
+                "spoken_message": {
+                    "name": "Gesprochene Nachricht",
+                    "description": "Eine gesprochene Alternative zu „Nachricht“, verwendet von Transporten, die sie vorlesen (z. B. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Zusätzliche Diagnosedetails für diese Benachrichtigung in Traces und im Archiv einschließen."
@@ -86,8 +90,16 @@
                     "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
                 },
                 "data": {
+                    "name": "Daten (veraltet)",
+                    "description": "Älterer Name für Zusätzliche Daten, beibehalten, damit bestehende Automatisierungen im visuellen Editor weiterhin angezeigt werden. Für neue Automatisierungen „Zusätzliche Daten“ verwenden."
+                },
+                "timestamp": {
+                    "name": "Zeitstempel-Format",
+                    "description": "Hängt das aktuelle Datum/die aktuelle Uhrzeit in eckigen Klammern an die Nachricht an, im Python-strftime-Format, z. B. %H:%M oder %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Zusätzliche Daten",
-                    "description": "Durchgereichte Daten für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
+                    "description": "Durchgereichte Daten und Transport-Feinabstimmung für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
                 }
             },
             "sections": {
@@ -265,6 +277,10 @@
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Lieferung wird nicht mehr standardmäßig eingeschlossen",
+            "description": "Die Lieferung {delivery} legt kein eigenes inclusion fest, und der Transport {transport} verwendet 'default' nicht mehr als Standard - diese Lieferung wird nicht mehr bei jeder Benachrichtigung ausgelöst. Fügen Sie inclusion: [default] zur Lieferung hinzu, wenn Sie dieses Verhalten weiterhin möchten."
+        },
         "legacy_yaml_config": {
             "title": "Supernotify-YAML-Konfiguration muss verschoben werden",
             "fix_flow": {
@@ -296,6 +312,11 @@
         "python_313_deprecated": {
             "title": "Python 3.13 Unterstützung endet bald",
             "description": "Diese Home-Assistant-Instanz läuft unter Python {python_version}. Supernotify stellt die Unterstützung für Python 3.13 (und Home-Assistant-Versionen vor 2026.3.0) ein, sobald Home Assistant 2026.10 veröffentlicht wird - danach können auf dieser Instanz keine weiteren Supernotify-Updates mehr installiert werden, bis die zugrunde liegende Python-Umgebung auf Python 3.14 oder höher aktualisiert wird."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Benachrichtigung zugestellt ({delivered_count} Zustellung(en) gesendet), aber {uncategorized_count} Ziel(e) konnten keiner Zustellung zugeordnet werden und wurden verworfen: {uncategorized_targets} (geprüfte Zustellungen: {deliveries})"
         }
     },
     "options": {

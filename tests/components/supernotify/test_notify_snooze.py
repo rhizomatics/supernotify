@@ -6,10 +6,10 @@ from homeassistant.core import Context, Event, HomeAssistant
 from custom_components.supernotify.const import (
     ATTR_ACTION,
     ATTR_USER_ID,
+    CONF_INCLUSION,
     CONF_PERSON,
-    CONF_SELECTION,
     CONF_TRANSPORT,
-    SELECTION_BY_SCENARIO,
+    INCLUSION_BY_SCENARIO,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
     TRANSPORT_EMAIL,
@@ -31,7 +31,7 @@ DELIVERY: dict[str, dict] = {
     "chime": {CONF_TRANSPORT: TRANSPORT_CHIME, "target": ["switch.bell_1", "script.siren_2"]},
     "alexa_media_player": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER, CONF_ACTION: "notify.alexa_media_player"},
     "chat": {CONF_TRANSPORT: TRANSPORT_GENERIC, CONF_ACTION: "notify.my_chat_server"},
-    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_SELECTION: [SELECTION_BY_SCENARIO]},
+    "persistent": {CONF_TRANSPORT: TRANSPORT_PERSISTENT, CONF_INCLUSION: [INCLUSION_BY_SCENARIO]},
     "dummy": {CONF_TRANSPORT: "dummy"},
 }
 
@@ -116,6 +116,7 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
     assert list(uut.context.snoozer.snoozes.values()) == [
         Snooze(GlobalTargetType.EVERYTHING, recipient_type=RecipientType.USER, recipient="person.bob_mctest")
     ]
+    plain_notify = Notification(uut.context, "hello again")
     await plain_notify.initialize()
     assert plain_notify.generate_targets(delivery)[0].email == ["jane@macunit.org"]
 
@@ -123,6 +124,8 @@ async def test_snooze_everything_for_person(hass: HomeAssistant) -> None:
         Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_NORMAL_USER_EVERYTHING"}, context=Context(user_id="eee999111"))
     )
     assert list(uut.context.snoozer.snoozes.values()) == []
+
+    plain_notify = Notification(uut.context, "hello again everyone")
     await plain_notify.initialize()
     assert plain_notify.generate_targets(delivery)[0].email == [
         "bob@mctest.com",

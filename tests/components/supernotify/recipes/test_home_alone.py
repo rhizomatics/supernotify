@@ -21,7 +21,7 @@ recipients:
     - person: person.jabilee_sokata
       email: jab@sokata.family.net
 delivery:
-    apple_push:
+    mobile_push:
       transport: dummy
     alexa_announce:
       transport: dummy
@@ -43,7 +43,7 @@ scenarios:
               state:
               - armed_night
         delivery:
-            apple_push:
+            mobile_push:
             alexa_announce:
             plain_email:
             chimes:

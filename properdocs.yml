@@ -8,6 +8,7 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   highlightjs: true
   language: en
   logo: assets/images/logo-blank-256x256.png
@@ -49,14 +50,57 @@ plugins:
       ignore_pages:
         - developer/schemas/*
         - developer/classes.md
+        - developer/transports.md
+        - configuration/options.md
       ignore_urls:
         - ../../developer/schemas/*
+        - ../developer/transports/*
+        - ../configuration/options/*
+        - ../transports/*
+        - ../options/*
+        - transports.md*
+        - options.md*
 
   - autorefs
   - pagetree
   - optimize
   - tags
   - meta-descriptions
+  - llmstxt:
+      base_url: https://supernotify.rhizomatics.org.uk/latest/
+      markdown_description: >-
+        Supernotify is a Home Assistant custom integration for unified notifications: send one
+        notification and it is routed to many channels (deliveries) by transport, recipient
+        and scenario, with configuration in YAML or the UI.
+
+        JSON Schemas for validating configuration are published at
+        https://supernotify.rhizomatics.org.uk/developer/schemas/json/Full_Configuration.schema.json
+        (complete YAML configuration) and
+        https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action.schema.json
+        (the notify action call). Schemas for individual objects, such as
+        Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition,
+        sit alongside as <Name>.schema.json.
+      full_output: llms-full.txt
+      sections:
+        Start here:
+          - index.md: Overview of what Supernotify does
+          - getting_started.md: Install, configure and send a first notification
+          - concepts.md: Core concepts - transports, deliveries, scenarios, recipients and targets
+        Using Supernotify:
+          - usage/*.md
+        Configuration:
+          - configuration/*.md
+        Transports:
+          - transports/*.md
+        Recipes:
+          - recipes/*.md
+        Reference:
+          - developer/schemas/index.md: JSON Schemas for configuration and the notify action data
+        Optional:
+          - changelog.md: Release history
+          - developer/design/*.md
+          - developer/transports.md: Writing a new transport
+
   - social:
       cards_layout_options:
         logo: docs/assets/images/icon.png
@@ -88,8 +132,14 @@ plugins:
       scripts:
         - docgen/schema_extractor.py
         - docgen/transport_table.py
+        - docgen/options_table.py
         - docgen/render_templates.py
 
+extra_javascript:
+  - javascripts/markdown_actions.js
+
+hooks:
+  - docgen/optimize_social_cards.py
 
 watch:
   - custom_components/supernotify

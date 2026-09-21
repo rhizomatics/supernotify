@@ -5,6 +5,14 @@ tags:
 ---
 # Telegram Transport Adaptor
 
+## Discovery
+
+**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and
+no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since
+the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected
+explicitly (`data: {data: {delivery: [telegram]}}` or a scenario), not by default. You'll still
+need to supply `telegram_chat_id` yourself, per the examples below.
+
 ## Motivation
 
 Use the latest [Telegram Bot](https://www.home-assistant.io/integrations/telegram_bot) integration in Home Assistant for richer telegram notifications, adapting core Supernotify data like title and image, and exposing telegram specific tuning.
@@ -17,35 +25,38 @@ Tested on Home Assistant 2026.3.4 with `telegram_bot` platform: polling
 ## Example configuration
 
 ```yaml title="Basic Configuration"
-telegram_home:
-  transport: telegram
-  selection: default
-  data:
-    telegram_chat_id: 123456789
+delivery:
+  telegram_home:
+    transport: telegram
+    inclusion: default
+    data:
+      telegram_chat_id: 123456789
 ```
 
 ```yaml title="security channel with camera snapshot"
-telegram_security:
-  transport: telegram
-  selection: default
-  data:
-    telegram_chat_id: 123456789
-    telegram_attach_image: true
-    telegram_parse_mode: "HTML"
+delivery:
+  telegram_security:
+    transport: telegram
+    inclusion: default
+    data:
+      telegram_chat_id: 123456789
+      telegram_attach_image: true
+      telegram_parse_mode: "HTML"
 ```
 
 ```yaml title="Alarm channel with inline buttons"
-telegram_alarms:
-  transport: telegram
-  selection: scenario
-  data:
-    telegram_chat_id: 123456789
-    telegram_attach_image: true
-    telegram_inline_keyboard:
-      - - text: "✅ Acknowledge"
-          callback_data: "ack_alarm"
-        - text: "🔇 Snooze"
-          callback_data: "snooze_alarm"
+delivery:
+  telegram_alarms:
+    transport: telegram
+    inclusion: scenario
+    data:
+      telegram_chat_id: 123456789
+      telegram_attach_image: true
+      telegram_inline_keyboard:
+        - - text: "✅ Acknowledge"
+            callback_data: "ack_alarm"
+          - text: "🔇 Snooze"
+            callback_data: "snooze_alarm"
 ```
 ## Example call
 
@@ -71,13 +82,13 @@ data:
 3. Find "chat" → "id" in the response
 
 Or use the `telegram_bot.send_message` service from HA Developer Tools to test
-with your chat_id before committing it to `delivery.yaml`
+with your chat_id before committing it to your delivery configuration
 
 
 ## Notes
 
 * `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target`
-(configured in `delivery.yaml`) or from the `telegram_chat_id` data key.
+or from the `telegram_chat_id` data key.
 * Direct `hass_api.call_service()` is used instead of `call_action()` because the
 service name switches dynamically between `send_message`, `send_photo`, and
 `send_document` depending on whether a snapshot is attached.

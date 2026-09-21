@@ -18,15 +18,10 @@ from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_OPTIONS,
     CONF_TRANSPORT,
-    OPTION_DATA_KEYS_EXCLUDE_RE,
-    OPTION_DATA_KEYS_INCLUDE_RE,
-    OPTION_DATA_KEYS_SELECT,
-    OPTION_GENERIC_DOMAIN_STYLE,
-    OPTION_TARGET_CATEGORIES,
-    SELECT_EXCLUDE,
-    SELECT_INCLUDE,
+    INCLUSION_DEFAULT,
     TRANSPORT_GENERIC,
 )
 from custom_components.supernotify.delivery import Delivery
@@ -34,8 +29,16 @@ from custom_components.supernotify.engine import SupernotifyEngine
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import DataFilter, Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import (
+    OPTION_DATA_KEYS_EXCLUDE_RE,
+    OPTION_DATA_KEYS_INCLUDE_RE,
+    OPTION_DATA_KEYS_SELECT,
+    OPTION_TARGET_CATEGORIES,
+    SELECT_EXCLUDE,
+    SELECT_INCLUDE,
+)
 from custom_components.supernotify.schema import EnvelopeOutcome
-from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.generic import OPTION_GENERIC_DOMAIN_STYLE, GenericTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 
@@ -156,6 +159,7 @@ async def test_update_fixed_message(mock_hass) -> None:
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "text.set_value",
                 CONF_DATA: {"message": "Alert Level 3"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             }
         },
     )
@@ -181,6 +185,7 @@ async def test_update_equiv_domain(mock_hass) -> None:
                 CONF_TRANSPORT: TRANSPORT_GENERIC,
                 CONF_ACTION: "text.set_value",
                 CONF_OPTIONS: {OPTION_GENERIC_DOMAIN_STYLE: "input_text"},
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             }
         },
     )
@@ -312,7 +317,7 @@ async def test_ntfy_publish() -> None:
     uut = Notification(
         ctx,
         message="test message",
-        action_data={"delivery": {"ntfy": {"enabled": True}}, "data": {"tags": ["a", "b"], "nonsense": False}},
+        action_data={"delivery": {"ntfy": {"enabled": True}}, "data": {"priority": 3, "tags": ["a", "b"], "nonsense": False}},
     )
     await uut.initialize()
     await uut.deliver()
@@ -709,7 +714,7 @@ async def test_ntfy_single_email_single_entity() -> None:
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
         "ntfy",
         "publish",
-        service_data={"message": "test message", "email": "joe@test.org"},
+        service_data={"message": "test message", "email": "joe@test.org", "priority": 3},
         blocking=False,
         target={"entity_id": ["notify.topic_1"]},
         context=None,
@@ -740,7 +745,7 @@ async def test_ntfy_with_phone() -> None:
     uut.context.hass_api._hass.services.async_call.assert_called_with(  # type:ignore [union-attr]
         "ntfy",
         "publish",
-        service_data={"message": "test message", "call": "+447979123456"},
+        service_data={"message": "test message", "call": "+447979123456", "priority": 3},
         blocking=False,
         target=None,
         context=None,

@@ -77,6 +77,10 @@
                     "name": "HTML-bericht",
                     "description": "Een HTML-alternatief voor Bericht, gebruikt door transporten die rijke opmaak ondersteunen (bijv. e-mail)."
                 },
+                "spoken_message": {
+                    "name": "Gesproken bericht",
+                    "description": "Een gesproken alternatief voor Bericht, gebruikt door transporten die het hardop voorlezen (bijv. Alexa, TTS)."
+                },
                 "debug": {
                     "name": "Debug",
                     "description": "Extra diagnostische details voor deze melding opnemen in traces en het archief."
@@ -86,8 +90,16 @@
                     "description": "Verzend zelfs als detectie van duplicaten deze melding anders zou onderdrukken."
                 },
                 "data": {
+                    "name": "Gegevens (verouderd)",
+                    "description": "Oudere naam voor Extra gegevens, behouden zodat bestaande automatiseringen nog in de visuele editor verschijnen. Gebruik Extra gegevens voor nieuwe automatiseringen."
+                },
+                "timestamp": {
+                    "name": "Tijdstempelnotatie",
+                    "description": "Voegt de huidige datum/tijd tussen vierkante haken toe aan het bericht, in een Python-strftime-notatie zoals %H:%M of %Y-%m-%d %H:%M."
+                },
+                "extra_data": {
                     "name": "Extra gegevens",
-                    "description": "Doorgegeven gegevens voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
+                    "description": "Doorgegeven gegevens en transportafstemming voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
                 }
             },
             "sections": {
@@ -265,6 +277,10 @@
             "title": "Bezorging heeft een ongeldige voorwaarde",
             "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}"
         },
+        "delivery_lost_implicit_inclusion": {
+            "title": "Bezorging wordt niet meer standaard opgenomen",
+            "description": "Bezorging {delivery} stelt geen eigen inclusion in, en transport {transport} gebruikt niet meer standaard 'default' - deze bezorging wordt niet meer bij elke melding geactiveerd. Voeg inclusion: [default] toe aan de bezorging als u dit gedrag wilt behouden."
+        },
         "legacy_yaml_config": {
             "title": "Supernotify YAML-configuratie moet worden verplaatst",
             "fix_flow": {
@@ -296,6 +312,11 @@
         "python_313_deprecated": {
             "title": "Ondersteuning voor Python 3.13 stopt binnenkort",
             "description": "Deze Home Assistant-installatie draait op Python {python_version}. Supernotify laat de ondersteuning voor Python 3.13 (en Home Assistant-versies ouder dan 2026.3.0) vallen zodra Home Assistant 2026.10 wordt uitgebracht - daarna kan deze installatie geen verdere Supernotify-updates meer installeren totdat de onderliggende Python-omgeving is bijgewerkt naar Python 3.14 of hoger."
+        }
+    },
+    "exceptions": {
+        "uncategorized_target": {
+            "message": "Melding verzonden ({delivered_count} bezorging(en) verstuurd), maar {uncategorized_count} doel(en) konden niet aan een bezorging worden gekoppeld en zijn genegeerd: {uncategorized_targets} (gecontroleerde bezorgingen: {deliveries})"
         }
     },
     "options": {

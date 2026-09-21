@@ -1,6 +1,8 @@
 import tempfile
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -15,40 +17,39 @@ from custom_components.supernotify.const import (
     ATTR_SCENARIOS_APPLY,
     CONF_DATA,
     CONF_DELIVERY,
+    CONF_INCLUSION,
     CONF_MEDIA,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
     CONF_OPTIONS,
     CONF_PERSON,
-    CONF_SELECTION,
     CONF_SELECTION_RANK,
     CONF_TARGET_USAGE,
-    CONF_TITLE,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_IMPLICIT,
-    OPTION_TARGET_CATEGORIES,
-    TRANSPORT_EMAIL,
+    INCLUSION_DEFAULT,
     TRANSPORT_GENERIC,
-    TRANSPORT_MOBILE_PUSH,
 )
 from custom_components.supernotify.delivery import Delivery
+from custom_components.supernotify.engine import TRANSPORTS as ALL_TRANSPORT_TYPES
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
+from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
+from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
 DELIVERIES = """
-plain_email:
-    transport: email
-    action: notify.smtp
-mobile:
-    transport: mobile_push
 chime:
     transport: chime
+    inclusion:
+    - default
 """
 TRANSPORTS = """
 notify_entity:
@@ -63,14 +64,14 @@ RECIPIENTS = """
     - person: person.jabilee_sokata
       email: jab@sokata.family.net
 """
+MOCK_SERVICES: dict[str, list[str] | list[dict[str, Any]]] = {
+    "notify": [{"action": "mobile_app_joe_nokia"}, {"action": "send", "module": "homeassistant.components.smtp.notify"}]
+}
 
 
 async def test_simple_create() -> None:
     ctx = TestingContext(
-        deliveries={
-            "mobile": {CONF_TITLE: "mobile notification", CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH},
-            "plain_email": {CONF_ACTION: "notify.smtp", CONF_TRANSPORT: TRANSPORT_EMAIL},
-        },
+        viable_transport_types=[MobilePushTransport, EmailTransport, NotifyEntityTransport], services=MOCK_SERVICES
     )
     await ctx.test_initialize()
 
@@ -82,42 +83,56 @@ async def test_simple_create() -> None:
     assert uut.priority == "medium"
     assert uut.delivery_overrides == {}
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert list(uut.selected_deliveries) == unordered(["plain_email", "mobile", "DEFAULT_notify_entity"])
+    assert list(uut.selected_deliveries) == unordered(["email", "mobile_push", "notify_entity"])
+
+
+async def test_legacy_default_prefixed_delivery_name_resolves_to_current() -> None:
+    """Backward compatibility: an old automation referencing 'delivery: DEFAULT_notify_entity'
+    (the pre-rename auto-configured name) still resolves to the current 'notify_entity'."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    assert "notify_entity" in ctx.delivery_registry.deliveries
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "DEFAULT_notify_entity"})
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == ["notify_entity"]
 
 
 async def test_explicit_delivery() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES, services=MOCK_SERVICES
+    )
     await ctx.test_initialize()
 
     # string forces explicit selection
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={CONF_DELIVERY: "mobile"},
+        action_data={CONF_DELIVERY: "mobile_push"},
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_EXPLICIT
-    assert list(uut.selected_deliveries) == ["mobile"]
+    assert list(uut.selected_deliveries) == ["mobile_push"]
 
     # list forces explicit selection
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={CONF_DELIVERY: ["mobile", "chime"]},
+        action_data={CONF_DELIVERY: ["mobile_push", "chime"]},
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_EXPLICIT
-    assert list(uut.selected_deliveries) == unordered(["mobile", "chime"])
+    assert list(uut.selected_deliveries) == unordered(["mobile_push", "chime"])
 
     # dict doesn't force explicit selection
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={CONF_DELIVERY: {"mobile": {CONF_DATA: {"foo": "bar"}}}},
+        action_data={CONF_DELIVERY: {"mobile_push": {CONF_DATA: {"foo": "bar"}}}},
     )
     await uut.initialize()
     assert uut.delivery_selection == DELIVERY_SELECTION_IMPLICIT
-    assert list(uut.selected_deliveries) == unordered(["mobile", "plain_email", "chime"])
+    assert list(uut.selected_deliveries) == unordered(["mobile_push", "email", "chime"])
 
 
 async def test_channel_specific_message() -> None:
@@ -125,18 +140,20 @@ async def test_channel_specific_message() -> None:
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
         recipients=RECIPIENTS,
+        viable_transport_types=[MobilePushTransport, EmailTransport, NotifyEntityTransport],
+        services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
 
     uut = Notification(
         ctx,
         "testing 123",
-        action_data={CONF_DELIVERY: {"mobile": {CONF_DATA: {"message": "buzz", "title": "HASS"}}}},
+        action_data={CONF_DELIVERY: {"mobile_push": {CONF_DATA: {"message": "buzz", "title": "HASS"}}}},
     )
     await uut.initialize()
     await uut.deliver()
-    mobile_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "mobile")
-    email_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "plain_email")
+    mobile_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "mobile_push")
+    email_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "email")
 
     assert mobile_envelope.message == "buzz"
     assert mobile_envelope.title == "HASS"
@@ -150,6 +167,8 @@ async def test_channel_transport_override() -> None:
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
         recipients=RECIPIENTS,
+        viable_transport_types=[MobilePushTransport, EmailTransport, NotifyEntityTransport],
+        services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
 
@@ -160,8 +179,8 @@ async def test_channel_transport_override() -> None:
     )
     await uut.initialize()
     await uut.deliver()
-    mobile_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "mobile")
-    email_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "plain_email")
+    mobile_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "mobile_push")
+    email_envelope = next(e for e in uut.delivered_envelopes if e.delivery_name == "email")
 
     assert mobile_envelope.message == "buzz"
     assert mobile_envelope.title == "HASS"
@@ -170,24 +189,56 @@ async def test_channel_transport_override() -> None:
     assert email_envelope.title is None
 
 
-async def test_call_transport_records_delivery_exception() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+async def test_unassigned_targets_reported_in_archive() -> None:
+    """A target value with a recognisable shape (phone) that no configured delivery
+
+    declares (plain_email wants email, mobile wants mobile_app_id, chime wants entities/
+    device_id) never lands in any envelope - it should show up as `unassigned_targets`
+    in the archived contents, grouped by category, distinct from `uncategorized_targets`
+    (which is for values with no recognisable shape at all).
+    """
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        recipients=RECIPIENTS,
+    )
     await ctx.test_initialize()
 
-    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+    uut = Notification(ctx, "testing 123", target=["+3294924848"])
     await uut.initialize()
-    delivery = ctx.delivery("mobile")
+    await uut.deliver()
+
+    assert uut.contents()["unassigned_targets"] == {"phone": ["+3294924848"]}
+
+
+async def test_call_transport_records_delivery_exception() -> None:
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile_push"})
+    await uut.initialize()
+    delivery = ctx.delivery("mobile_push")
 
     with patch.object(delivery, "evaluate_conditions", side_effect=RuntimeError("boom")):
         await uut.deliver()
 
-    assert "mobile" in uut.delivery_exceptions
-    assert "boom" in uut.delivery_exceptions["mobile"][0]
+    assert "mobile_push" in uut.delivery_exceptions
+    assert "boom" in uut.delivery_exceptions["mobile_push"][0]
     assert uut.outcome() == DeliveryOutcome.ERROR
 
 
 async def test_custom_priority() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: "most_urgent"})
@@ -196,7 +247,12 @@ async def test_custom_priority() -> None:
 
 
 async def test_bad_priority() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     with pytest.raises(vol.Invalid):
@@ -204,54 +260,76 @@ async def test_bad_priority() -> None:
 
 
 async def test_scenario_delivery_no_change() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {}})
-    await ctx.test_initialize()
-
-    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
-    await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")
-
-
-async def test_scenario_delivery_disable() -> None:
     ctx = TestingContext(
-        deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {"delivery": {"chime": {"enabled": False}}}}
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+        services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile")
+    assert list(uut.selected_deliveries) == unordered("email", "mobile_push", "chime")
+
+
+async def test_scenario_delivery_disable() -> None:
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {"delivery": {"chime": {"enabled": False}}}},
+        services=MOCK_SERVICES,
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == unordered("email", "mobile_push")
 
 
 async def test_scenario_delivery_enable() -> None:
     ctx = TestingContext(
-        deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}}
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        services=MOCK_SERVICES,
+        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
     ctx.delivery_registry.deliveries["chime"].enabled = False
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")
+    assert list(uut.selected_deliveries) == unordered("email", "mobile_push", "chime")
 
 
 async def test_explicit_list_of_deliveries() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
-    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile"})
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile_push"})
     await uut.initialize()
-    assert list(uut.selected_deliveries) == ["mobile"]
+    assert list(uut.selected_deliveries) == ["mobile_push"]
 
 
 async def test_action_data_disable_delivery() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, scenarios={"mockery": {}})
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        scenarios={"mockery": {}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        services=MOCK_SERVICES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
     uut = Notification(
-        ctx, "testing 123", action_data={"delivery": {"mobile": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
+        ctx, "testing 123", action_data={"delivery": {"mobile_push": {"enabled": False}}, ATTR_SCENARIOS_APPLY: "mockery"}
     )
     await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "chime")
+    assert list(uut.selected_deliveries) == unordered("email", "chime")
 
 
 async def test_generate_targets_from_entities() -> None:
@@ -317,7 +395,7 @@ async def test_select_recipient_deliveries() -> None:
                 CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_kidphone"}],
             },
         ],
-        deliveries={"chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_SELECTION: ["explicit"]}},
+        deliveries={"chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_INCLUSION: ["explicit"]}},
         services={"notify": ["smtp", "mobile_app_kidphone", "mobile_app_joephone"]},
     )
     await ctx.test_initialize()
@@ -325,7 +403,7 @@ async def test_select_recipient_deliveries() -> None:
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
     await uut.deliver()
-    assert first_envelope(uut, "DEFAULT_mobile_push").target.mobile_app_ids == ["mobile_app_joephone", "mobile_app_kidphone"]
+    assert first_envelope(uut, "mobile_push").target.mobile_app_ids == ["mobile_app_joephone", "mobile_app_kidphone"]
     assert first_envelope(uut, "chatty").target.email == ["owner@mctest.org"]  # type: ignore
 
 
@@ -372,7 +450,7 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
 async def test_build_targets_for_simple_case() -> None:
     ctx = TestingContext()
     await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
+    generic = ctx.transport(TRANSPORT_GENERIC, force=True)
     delivery = Delivery("simple", {}, generic)
 
     uut = Notification(ctx, "testing 123")
@@ -382,16 +460,27 @@ async def test_build_targets_for_simple_case() -> None:
 
 
 async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        services=MOCK_SERVICES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
 
-    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: {"mobile": {}}})
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: {"mobile_push": {}}})
     await uut.initialize()
-    assert list(uut.selected_deliveries) == unordered("plain_email", "mobile", "chime")
+    assert list(uut.selected_deliveries) == unordered("email", "mobile_push", "chime")
 
 
 async def test_snapshot_url() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -412,7 +501,12 @@ async def test_snapshot_url() -> None:
 
 
 async def test_camera_entity() -> None:
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -436,7 +530,12 @@ async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
     """Capturing an image has real overhead (a service call, then polling for the file
     to appear) that must not be paid when no selected delivery would even use it — here
     only chime (no SNAPSHOT_IMAGE feature) is selected, despite camera media being present."""
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -455,13 +554,19 @@ async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
 async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
     """mobile (mobile_push) supports SNAPSHOT_IMAGE, so with camera media present the
     image grab must be kicked off."""
-    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS)
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        services=MOCK_SERVICES,
+        viable_transport_types=[ChimeTransport],
+    )
     await ctx.test_initialize()
     uut = Notification(
         ctx,
         "testing 123",
         action_data={
-            CONF_DELIVERY: ["mobile"],
+            CONF_DELIVERY: ["mobile_push"],
             CONF_MEDIA: {ATTR_MEDIA_CAMERA_ENTITY_ID: "camera.lobby"},
         },
     )
@@ -475,42 +580,48 @@ async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
 
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(
+        services=MOCK_SERVICES,
         deliveries={
             "fallback": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.LAST,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "eager": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light1"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.FIRST,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "whatever": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light2"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.ANY,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
             "or_whatever": {
                 CONF_ACTION: "custom.tweak",
                 CONF_TARGET: ["custom.light3"],
                 CONF_TRANSPORT: "generic",
                 CONF_SELECTION_RANK: SelectionRank.ANY,
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
             },
-            "naturally_last": {CONF_TARGET: ["notify.me"], CONF_TRANSPORT: "notify_entity"},
-        }
+            "implicitly_last": {CONF_TARGET: ["notify.me"], CONF_TRANSPORT: "notify_entity"},
+        },
     )
     await ctx.test_initialize()
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
 
-    assert len(list(uut.selected_deliveries)) == 6
+    assert len(list(uut.selected_deliveries)) == 8
     assert next(iter(uut.selected_deliveries)) == "eager"
-    assert list(uut.selected_deliveries)[-2:] == unordered("fallback", "naturally_last")
-    assert list(uut.selected_deliveries)[1:4] == unordered("DEFAULT_mobile_push", "whatever", "or_whatever")
+    assert list(uut.selected_deliveries)[1:5] == unordered("mobile_push", "whatever", "email", "or_whatever")
+    assert list(uut.selected_deliveries)[-3:] == unordered("notify_entity", "fallback", "implicitly_last")
+    assert list(uut.selected_deliveries)[-1] == "notify_entity"  # LAST and auto-generated
 
 
 async def test_convert_notify_entities() -> None:
@@ -636,3 +747,30 @@ async def test_notification_accepts_dict_shaped_target_without_crashing() -> Non
 
     assert uut._target is not None
     assert uut._target.person_ids == ["person.alice"]
+
+
+async def test_contents_omits_unpopulated_exposed_fields() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+
+    contents = uut.contents()
+
+    for key in ("message_html", "spoken_message", "extra_data", "actions"):
+        assert key not in contents
+
+
+async def test_contents_places_populated_exposed_fields_by_preferred_order() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+    uut = Notification(
+        ctx, "testing 123", action_data={"spoken_message": "say this", "message_html": "<b>hi</b>", "colour": "red"}
+    )
+    await uut.initialize()
+
+    keys = list(uut.contents())
+
+    assert keys[keys.index("message") : keys.index("message") + 4] == ["message", "spoken_message", "message_html", "priority"]
+    assert "extra_data" in keys  # populated but not in preferred_order, so still exposed, after the ordered fields
+    assert keys.index("extra_data") > keys.index("priority")
