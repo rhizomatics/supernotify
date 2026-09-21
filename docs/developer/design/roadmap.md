@@ -56,6 +56,13 @@ Randomization for greetings and sounds.
 - MQTT Publish action
 - Time ranges for notifications
 
+### Target Expansion
+
+- Include area, label, floor as targets
+  - Support transports that understand them as exception
+  - Expand all higher level targets prior to envelope generation and resolve dupes
+  - [https://github.com/rhizomatics/supernotify/pull/188]
+
 ### Delivery Explanations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement.
