@@ -26,6 +26,7 @@
 - Fix handling of target specific data, that could lead to targets showing up in other envelopes
 - If a camera or other image source not available, the mobile push is text only rather than showing with a broken image
 - Fix a delivery disabled in config but enabled at run-time never being used implicitly or as a fallback
+- Fix `supernotify.refresh_entities` failing, as it wrote entity state from outside the event loop
 
 ### Internal
   - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term

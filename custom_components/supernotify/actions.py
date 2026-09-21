@@ -187,7 +187,9 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
         }
 
+    @callback
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
+        # a callback, so run in the event loop - it writes entity state
         return engine.expose_entities()
 
     def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:
