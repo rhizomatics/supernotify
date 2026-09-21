@@ -2443,9 +2443,11 @@ scenarios:
 
 ## Scenario Sensors
 
-Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on` or `off`. Only a scenario that has conditions to evaluate gets one, so there is none for a scenario with no conditions, or with `expose_state: false`.
+Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on` or `off`. Scenarios can be prevented from being exposed this way using `expose_state: false` in their configuration.
 
-This is separate from whether the scenario is enabled, which is what the scenario's `switch` shows and controls. A scenario that only applies on a couple of days a year has a switch that stays `on` all year, and a `binary_sensor` that is `on` only on those days. The `binary_sensor` is read-only: writing its state does not enable or disable the scenario.
+This is separate from whether the scenario itself is enabled, which is what the scenario's `switch` shows and controls. A scenario switched off will always have a binary_sensor that's off, whereas a scenario that's switched on will have a binary_sensor that's on or off depending on the condition. A scenario that only applies on a couple of days a year has a switch that stays `on` all year, and a `binary_sensor` that is `on` only on those days.
+
+Scenarios with conditions have `binary_sensor` that are read-only: writing its state does not enable or disable the scenario. Scenarios without conditions can be externally controlled by your own automations, dashboard toggles etc and have read/write binary sensors. This can be useful if the condition would be too complex to write in Home Assistant conditions logic.
 
 ### Live Scenarios
 
@@ -6986,8 +6988,8 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 - Sent/failure notification counters are now real Home Assistant `sensor` entities
 - New real entities are grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
 - Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
-- The scenario `binary_sensor` stays, read-only, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled.
-- It is only created for a scenario that has conditions to evaluate, since one without has no on/off state to show, and any existing one that could only ever have been `unknown` is removed
+- The scenario `binary_sensor` stays read-only for conditional scenarios, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled.
+- A scenario with no conditions has a *Scenario Manual* read/write `binary_sensor`, which stays the way to control it from outside Supernotify: while it is `on` the scenario applies, as if its conditions held, and its state is restored across a restart
 - The recipient `binary_sensor` only mirrors the recipient switch, so is deprecated and will be removed in a future version. It is read-only, and not created on a new install, or for a recipient added to an existing one. A repair is raised once if you have it enabled
 - Delivery and transport `binary_sensor`s are otherwise unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175) - but now belong to the config entry
 
