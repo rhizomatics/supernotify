@@ -251,7 +251,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
     if preferred_cam is None:
         # no alternatives for an unconfigured entity, whether camera or image, so it's just
         # a matter of whether it's known to be unavailable - assume it's fine if it has no state
-        if camera_available(hass_api, {CONF_CAMERA: camera_entity_id}, non_entity=True):
+        if True:
             return camera_entity_id
         return None
     if camera_available(hass_api, preferred_cam):
@@ -276,7 +276,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
                 _LOGGER.info(
                     "SUPERNOTIFY Selecting alt camera %s with no known entity for %s", alt_cam[CONF_CAMERA], camera_entity_id
                 )
-            return alt_cam[CONF_CAMERA]
+                return alt_cam[CONF_CAMERA]
 
     return None
 
