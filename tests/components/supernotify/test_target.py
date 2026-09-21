@@ -281,14 +281,13 @@ def test_select_leaves_original_target_untouched() -> None:
 
 def test_select_drops_target_specific_data_for_values_it_filters_out() -> None:
     """Otherwise split_by_target_data(), which rebuilds targets from the target-specific data,
-    would bring a filtered-out value, with its data, back into a delivery that can't handle it"""
-    uut = Target(["switch.kitchen"], target_data={"fi": 123}, target_specific_data=True)
-    uut += Target(["me@mctest.org"], target_data={"fum": True}, target_specific_data=True)
+    would bring a filtered-out value back into a delivery that can't handle it"""
+    uut = Target(["switch.kitchen", "me@mctest.org"], target_data={"fi": 123}, target_specific_data=True)
 
     selected = uut.select(["email"], ("mail", "mail"), Mock())
 
-    assert selected.target_specific_data == {("email", "me@mctest.org"): {"fum": True}}
-    assert selected.split_by_target_data() == [Target(["me@mctest.org"], target_data={"fum": True})]
+    assert selected.target_specific_data == {("email", "me@mctest.org"): {"fi": 123}}
+    assert selected.split_by_target_data() == [Target(["me@mctest.org"], target_data={"fi": 123})]
 
 
 def test_split_by_target_data_drops_leftover_that_is_only_person_ids() -> None:
