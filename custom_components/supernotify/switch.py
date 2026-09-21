@@ -307,3 +307,12 @@ class SupernotifyTransportSwitch(SupernotifyOverridableSwitch):
     def _refresh_related(self) -> None:
         # the deprecated binary_sensor mirrors enabled
         self._registry.async_refresh_entity(self._key)
+        # and each of this transport's deliveries shows it, as transport_enabled
+        for delivery in self._registry.deliveries.values():
+            if delivery.transport is not self._transport:
+                continue
+            key = f"{OVERRIDE_KIND_DELIVERY}_{delivery.name}"
+            switch = self._switches.get(key)
+            if switch is not None:
+                switch.async_write_ha_state()
+            self._registry.async_refresh_entity(key)

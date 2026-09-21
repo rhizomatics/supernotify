@@ -4,6 +4,7 @@
 
 - Each loaded delivery and transport now has a switch, `switch.supernotify_delivery_<name>` or `switch.supernotify_transport_<name>`, named `Delivery <name> Enabled` and `Transport <name> Enabled`, on the SuperNotify device. Switching a transport off suppresses all of its deliveries, without changing their own switches
 - Delivery and transport `binary_sensor`s go the same way as the recipient one: they only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+- Delivery switches and `binary_sensor`s have a `transport_enabled` attribute, updated as the transport is switched on or off, since a delivery is only used while its transport is enabled too
 
 ### Persistent Overrides
 

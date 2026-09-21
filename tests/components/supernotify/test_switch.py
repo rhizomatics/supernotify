@@ -350,6 +350,36 @@ async def test_transport_switch_off_suppresses_deliveries(hass: HomeAssistant) -
     assert len(calls) == 1
 
 
+async def test_transport_toggle_refreshes_delivery_transport_enabled(hass: HomeAssistant) -> None:
+    _preexisting_binary_sensors(hass, "delivery_testing")
+    await _setup(hass, _config())
+
+    def transport_enabled(entity_id: str) -> object:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        return state.attributes["transport_enabled"]
+
+    assert transport_enabled("switch.supernotify_delivery_testing") is True
+    await _turn(hass, "switch.supernotify_transport_generic", on=False)
+    assert transport_enabled("switch.supernotify_delivery_testing") is False
+    assert transport_enabled("binary_sensor.supernotify_delivery_testing") is False
+    # the delivery's own flag is unchanged
+    assert _state(hass, "switch.supernotify_delivery_testing") == STATE_ON
+    await _turn(hass, "switch.supernotify_transport_generic", on=True)
+    assert transport_enabled("switch.supernotify_delivery_testing") is True
+
+
+async def test_restored_transport_shows_on_its_deliveries(hass: HomeAssistant) -> None:
+    mock_restore_cache_with_extra_data(
+        hass, [(State(SWITCHES["transport"], STATE_OFF), {"enabled": False, "config_enabled": True})]
+    )
+    await _setup(hass, _config())
+
+    state = hass.states.get("switch.supernotify_delivery_testing")
+    assert state is not None
+    assert state.attributes["transport_enabled"] is False
+
+
 async def test_runtime_enabled_delivery_becomes_implicit(hass: HomeAssistant) -> None:
     config = _config({"delivery": False})
     config["delivery"]["testing"]["inclusion"] = ["default"]
@@ -498,3 +528,17 @@ async def test_refresh_entities_rewrites_switches_and_mirrors(hass: HomeAssistan
     assert _state(hass, "binary_sensor.supernotify_delivery_testing") == STATE_OFF
     assert _state(hass, "switch.supernotify_recipient_joe") == STATE_OFF
     assert _state(hass, "binary_sensor.supernotify_recipient_joe") == STATE_OFF
+
+
+async def test_reset_overrides_of_transport_refreshes_delivery_transport_enabled(hass: HomeAssistant) -> None:
+    await _setup(hass, _config())
+    await _turn(hass, SWITCHES["transport"], on=False)
+    state = hass.states.get(SWITCHES["delivery"])
+    assert state is not None
+    assert state.attributes["transport_enabled"] is False
+
+    await hass.services.async_call(DOMAIN, "reset_overrides", {"kind": "transport"}, blocking=True)
+
+    state = hass.states.get(SWITCHES["delivery"])
+    assert state is not None
+    assert state.attributes["transport_enabled"] is True

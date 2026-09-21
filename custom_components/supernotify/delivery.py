@@ -25,6 +25,7 @@ from .common import ensure_list
 from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
+    ATTR_TRANSPORT_ENABLED,
     CONF_DATA,
     CONF_INCLUSION,
     CONF_LOAD,
@@ -340,6 +341,8 @@ class Delivery(DeliveryConfig):
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
             CONF_TRANSPORT: self.transport.name,
+            # a delivery is only used while its transport is enabled too
+            ATTR_TRANSPORT_ENABLED: self.transport.enabled,
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_INCLUSION: self.inclusion,
