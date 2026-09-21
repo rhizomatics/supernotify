@@ -137,6 +137,7 @@ class Notification(ArchivableObject):
 
         self._target: Target | None = Target(self.convert_notify_entities(target)) if target else None
         self._already_selected: Target = Target()
+        self._recorded_person_ids: set[str] = set()  # recipients whose notify entity this notification has updated
         self._title: str | None = title
         self.id = str(uuid.uuid1())
         self.delivered: int = 0
@@ -654,7 +655,7 @@ class Notification(ArchivableObject):
             if envelope.delivered:
                 self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
                 self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
-                envelope.record_recipient_notifications()
+                envelope.record_recipient_notifications(self._recorded_person_ids)
             else:
                 if suppression_reason:
                     envelope.skip_reason = suppression_reason

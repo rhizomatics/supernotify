@@ -762,6 +762,31 @@ async def test_record_result_notifies_recipient_notify_entity_on_delivery(person
     personal_delivery_context.people_registry.people["person.carol"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
 
 
+async def test_record_result_notifies_recipient_notify_entity_once_however_many_deliveries_reach_them() -> None:
+    """Each update is a state write on the entity, so a recipient reached by several deliveries
+    (here, both SMS and email) is only recorded once for the notification - otherwise the logbook
+    fills with identical entries, all at the same moment and under the same context"""
+    ctx = TestingContext(
+        deliveries={
+            "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
+            "mail": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp"},
+        },
+        services={"notify": ["smsify", "smtp"]},
+        recipients=[{CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123", CONF_EMAIL: "alice@test.com"}],
+        viable_transport_types=[SMSTransport, EmailTransport],
+    )
+    await ctx.test_initialize()
+    notify_entity = Mock(spec=RecipientNotifyEntity)
+    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
+
+    uut = Notification(ctx, "testing 123", target=["person.alice"])
+    await uut.initialize()
+    await uut.deliver()
+
+    assert len(uut.delivered_envelopes) == 2
+    notify_entity.record_notification.assert_called_once()
+
+
 async def test_record_result_passes_calling_context_to_recipient_notify_entity(
     personal_delivery_context: TestingContext,
 ) -> None:

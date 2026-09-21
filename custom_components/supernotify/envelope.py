@@ -234,7 +234,7 @@ class Envelope(DupeCheckable):
         """
         return f"Envelope(message={self.message},title={self.title},delivery={self.delivery_name})"
 
-    def record_recipient_notifications(self) -> None:
+    def record_recipient_notifications(self, recorded_person_ids: set[str]) -> None:
         """Update every involved recipient's notify.recipient_<name> entity (if it has one),
         so its state (or, on HA < 2026.3, its last_notified attribute - see
         RecipientNotifyEntity.record_notification()) reflects delivery regardless of which
@@ -245,12 +245,20 @@ class Envelope(DupeCheckable):
         that's the one reliable link back from an arbitrary envelope to the Recipient objects
         it reached - see RecipientNotifyEntity.record_notification() for
         why this call is needed at all rather than leaving it to HA's own NotifyEntity state
-        tracking."""
+        tracking.
+
+        `recorded_person_ids` are the recipients already recorded by the notification's other
+        envelopes, which this adds to, so a recipient reached by several deliveries is only
+        recorded once - each is a state write, and would otherwise show up in the logbook as
+        several identical entries at the same moment."""
         if self.target is None or self.context is None:
             return
         for person_id in self.target.person_ids:
+            if person_id in recorded_person_ids:
+                continue
             recipient: Recipient | None = self.context.people_registry.people.get(person_id)
             if recipient is not None:
+                recorded_person_ids.add(person_id)
                 recipient.on_notification(self.ha_context)
 
     def _compute_title(self, ignore_usage: bool = False) -> str | None:
