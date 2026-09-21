@@ -12,6 +12,7 @@ from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.helpers.template import is_template_string
 from jinja2 import TemplateError
 
+from custom_components.supernotify.people import Recipient
 from custom_components.supernotify.target import Target
 
 from .common import DupeCheckable
@@ -232,6 +233,25 @@ class Envelope(DupeCheckable):
         inserted directly and may not be quoted or escaped.
         """
         return f"Envelope(message={self.message},title={self.title},delivery={self.delivery_name})"
+
+    def record_recipient_notifications(self) -> None:
+        """Update every involved recipient's notify.recipient_<name> entity (if it has one),
+        so its state (or, on HA < 2026.3, its last_notified attribute - see
+        RecipientNotifyEntity.record_notification()) reflects delivery regardless of which
+        target form the caller used - a plain person_id, an email/phone/mobile override,
+        notify.recipient_<name> itself, or anything else Recipient.initialize() folds into the
+        same Target. Delivery target selection keeps person_ids, and generate_targets() narrows
+        them to the recipients each envelope actually reaches (see _attach_person_ids()), so
+        that's the one reliable link back from an arbitrary envelope to the Recipient objects
+        it reached - see RecipientNotifyEntity.record_notification() for
+        why this call is needed at all rather than leaving it to HA's own NotifyEntity state
+        tracking."""
+        if self.target is None or self.context is None:
+            return
+        for person_id in self.target.person_ids:
+            recipient: Recipient | None = self.context.people_registry.people.get(person_id)
+            if recipient is not None:
+                recipient.on_notification()
 
     def _compute_title(self, ignore_usage: bool = False) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call

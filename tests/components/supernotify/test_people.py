@@ -165,7 +165,7 @@ def test_recipient_notify_entity_record_notification(hass: HomeAssistant) -> Non
 
 async def test_recipient_notify_entity_links_itself_to_recipient_on_added_to_hass(hass: HomeAssistant) -> None:
     """The Recipient needs a live reference to its RecipientNotifyEntity (not just the
-    entity_id) so Notification._record_recipient_notifications() can call record_notification()
+    entity_id) so Envelope.record_recipient_notifications() can call record_notification()
     directly without a registry lookup - set/cleared alongside the pre-existing notify_entity_id
     tracking."""
     recipient = Recipient({CONF_PERSON: "person.alice"})

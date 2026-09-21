@@ -66,6 +66,7 @@ from custom_components.supernotify.const import (
     MANUFACTURER_APPLE,
     TRANSPORT_MOBILE_PUSH,
 )
+from custom_components.supernotify.media_grab import select_avail_camera
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
@@ -346,8 +347,13 @@ class MobilePushTransport(Transport):
                 image_url = await self.context.media_storage.share_path(image_path)
                 data[ATTR_IMAGE] = image_url or str(image_path)
             else:
-                # fall back to letting device take the image
-                data["entity_id"] = camera_entity_id
+                # fall back to letting device take the image, but only from a camera that's up,
+                # since one that's switched off or unavailable would only show a broken image
+                available_camera_entity_id = select_avail_camera(self.hass_api, self.context.cameras, camera_entity_id)
+                if available_camera_entity_id:
+                    data["entity_id"] = available_camera_entity_id
+                else:
+                    _LOGGER.info("SUPERNOTIFY mobile_push: no available camera for %s, sending without image", camera_entity_id)
         if clip_url:
             data[ATTR_VIDEO] = clip_url
 
