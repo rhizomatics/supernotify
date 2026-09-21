@@ -207,6 +207,16 @@
             "name": "Entiteiten vernieuwen",
             "description": "Vernieuwt elke entiteit die SuperNotify blootstelt voor inspectie en controle"
         },
+        "reset_overrides": {
+            "name": "Overschrijvingen herstellen",
+            "description": "Zet elk scenario, elke ontvanger, bezorging en elk transport dat tijdens gebruik is in- of uitgeschakeld terug naar de geconfigureerde status",
+            "fields": {
+                "kind": {
+                    "name": "Soort",
+                    "description": "Alleen deze soort schakelaar herstellen - alle soorten indien niet opgegeven"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Snoozes wissen",
             "description": "Wist alle momenteel actieve snoozes"

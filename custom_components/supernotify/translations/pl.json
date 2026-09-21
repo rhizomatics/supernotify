@@ -207,6 +207,16 @@
             "name": "Odśwież encje",
             "description": "Odświeża każdą encję udostępnianą przez SuperNotify do wglądu i sterowania"
         },
+        "reset_overrides": {
+            "name": "Zresetuj nadpisania",
+            "description": "Przywraca skonfigurowany stan każdego scenariusza, odbiorcy, dostarczenia i transportu włączonego lub wyłączonego w trakcie działania",
+            "fields": {
+                "kind": {
+                    "name": "Rodzaj",
+                    "description": "Zresetuj tylko ten rodzaj przełącznika - wszystkie rodzaje, jeśli nie podano"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Wyczyść snooze",
             "description": "Czyści wszystkie aktualnie aktywne snooze"

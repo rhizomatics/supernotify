@@ -207,6 +207,16 @@
             "name": "Refresh Entities",
             "description": "Refresh every entity SuperNotify exposes for introspection and control"
         },
+        "reset_overrides": {
+            "name": "Reset Overrides",
+            "description": "Put every scenario, recipient, delivery and transport switched on or off at runtime back to its configured state",
+            "fields": {
+                "kind": {
+                    "name": "Kind",
+                    "description": "Only reset this kind of switch - every kind if not given"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Clear Snoozes",
             "description": "Clear all currently active snoozes"

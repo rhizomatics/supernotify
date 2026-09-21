@@ -207,6 +207,16 @@
             "name": "Actualiser les entités",
             "description": "Actualise toutes les entités exposées par SuperNotify pour l'inspection et le contrôle"
         },
+        "reset_overrides": {
+            "name": "Réinitialiser les forçages",
+            "description": "Remet chaque scénario, destinataire, livraison et transport activé ou désactivé en cours d'exécution dans son état configuré",
+            "fields": {
+                "kind": {
+                    "name": "Type",
+                    "description": "Réinitialiser uniquement ce type d'interrupteur - tous les types si non précisé"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Effacer les snoozes",
             "description": "Efface tous les snoozes actuellement actifs"

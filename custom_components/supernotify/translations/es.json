@@ -207,6 +207,16 @@
             "name": "Actualizar entidades",
             "description": "Actualiza todas las entidades que expone SuperNotify para inspección y control"
         },
+        "reset_overrides": {
+            "name": "Restablecer anulaciones",
+            "description": "Devuelve cada escenario, destinatario, entrega y transporte activado o desactivado en tiempo de ejecución a su estado configurado",
+            "fields": {
+                "kind": {
+                    "name": "Tipo",
+                    "description": "Restablecer solo este tipo de interruptor - todos los tipos si no se indica"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Borrar snooze",
             "description": "Borra todos los snooze actualmente activos"

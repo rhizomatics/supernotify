@@ -28,6 +28,7 @@ To use any of these, prefix with `supernotify.`. Try them out via [Tools](https:
 | enquire_occupancy              | List all the recipients by whether in or out                                                                         |
 | enquire_snoozes                | List all the active snoozes                                                                                          |
 | refresh_entities               | Force all the exposed entities to be re-exposed                                                                      |
+| reset_overrides                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
 | clear_snoozes                  | Clear all active snoozes                                                                                             |
 | purge_archive                  | Force the archive housekeeping to run immediately and remove old notification records                                |
 | purge_media                    | Force the media storage housekeeping to run immediately and remove old media                                         |

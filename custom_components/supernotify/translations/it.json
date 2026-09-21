@@ -207,6 +207,16 @@
             "name": "Aggiorna Entità",
             "description": "Aggiorna tutte le entità esposte da SuperNotify per l'introspezione e il controllo"
         },
+        "reset_overrides": {
+            "name": "Ripristina Override",
+            "description": "Riporta allo stato configurato ogni scenario, recipient, delivery e transport attivato o disattivato durante l'esecuzione",
+            "fields": {
+                "kind": {
+                    "name": "Tipo",
+                    "description": "Ripristina solo questo tipo di switch - tutti i tipi se non indicato"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Cancella Snooze",
             "description": "Cancella tutti gli snooze attualmente attivi"

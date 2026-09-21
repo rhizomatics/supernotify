@@ -207,6 +207,16 @@
             "name": "Entitäten aktualisieren",
             "description": "Aktualisiert alle von SuperNotify bereitgestellten Entitäten zur Überprüfung und Steuerung"
         },
+        "reset_overrides": {
+            "name": "Überschreibungen zurücksetzen",
+            "description": "Setzt jedes zur Laufzeit ein- oder ausgeschaltete Szenario, jeden Empfänger, jede Lieferung und jeden Transport auf den konfigurierten Zustand zurück",
+            "fields": {
+                "kind": {
+                    "name": "Art",
+                    "description": "Nur diese Art von Schalter zurücksetzen - ohne Angabe alle Arten"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Snooze löschen",
             "description": "Löscht alle aktuell aktiven Snoozes"

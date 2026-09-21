@@ -46,6 +46,11 @@ from .const import (
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
+    OVERRIDE_KIND_DELIVERY,
+    OVERRIDE_KIND_RECIPIENT,
+    OVERRIDE_KIND_SCENARIO,
+    OVERRIDE_KIND_TRANSPORT,
+    OVERRIDE_KINDS,
     PRIORITY_MEDIUM,
 )
 from .context import Context
@@ -63,8 +68,9 @@ from .static_config import TRANSPORTS
 
 if TYPE_CHECKING:
     import datetime as dt
+    from collections.abc import Iterable
 
-    from .switch import SupernotifyOverridableSwitch
+    from .switch import Overridable, SupernotifyOverridableSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,6 +277,49 @@ class SupernotifyEngine:
             legacy_entity.async_write_ha_state()
         for switch in self.override_switches.values():
             switch.async_write_ha_state()
+
+    def _overridables(self, kind: str) -> Iterable[Overridable]:
+        overridables: dict[str, Iterable[Overridable]] = {
+            OVERRIDE_KIND_SCENARIO: self.context.scenario_registry.scenarios.values(),
+            OVERRIDE_KIND_RECIPIENT: self.context.people_registry.people.values(),
+            OVERRIDE_KIND_DELIVERY: self.context.delivery_registry.deliveries.values(),
+            OVERRIDE_KIND_TRANSPORT: self.context.delivery_registry.transports.values(),
+        }
+        return overridables[kind]
+
+    @callback
+    def reset_overrides(self, kinds: Iterable[str] = OVERRIDE_KINDS) -> dict[str, list[str]]:
+        """Put everything switched on or off at runtime back to its configured enabled state,
+        returning the names reset for each kind.
+
+        Walks the scenarios, recipients, deliveries and transports themselves rather than their
+        switches, so one whose switch is disabled in the entity registry is reset too.
+        """
+        reset: dict[str, list[str]] = {}
+        for kind in kinds:
+            names = reset[kind] = []
+            for item in self._overridables(kind):
+                if item.enabled == item.config_enabled:
+                    continue
+                switch = self.override_switches.get(f"{kind}_{item.name}")
+                if switch is not None:
+                    switch.async_set_enabled(item.config_enabled)
+                else:
+                    item.enabled = item.config_enabled
+                    self._async_refresh_related(kind, item.name)
+                names.append(item.name)
+        return reset
+
+    @callback
+    def _async_refresh_related(self, kind: str, name: str) -> None:
+        """Re-publish the binary_sensor following the enabled flag of something with no switch
+        to do it - the same as that switch's own _refresh_related()."""
+        if kind == OVERRIDE_KIND_SCENARIO:
+            self.context.scenario_registry.async_refresh_entity(name)
+        elif kind == OVERRIDE_KIND_RECIPIENT:
+            self.context.people_registry.async_refresh_entity(name)
+        else:
+            self.context.delivery_registry.async_refresh_entity(f"{kind}_{name}")
 
     def enquire_implicit_deliveries(self) -> dict[str, Any]:
         v: dict[str, list[str]] = {}

@@ -207,6 +207,16 @@
             "name": "刷新实体",
             "description": "刷新 SuperNotify 公开的所有实体，以便查看和控制"
         },
+        "reset_overrides": {
+            "name": "重置覆盖",
+            "description": "将运行时开启或关闭的每个场景、接收人、推送和传输方式恢复为其配置状态",
+            "fields": {
+                "kind": {
+                    "name": "类型",
+                    "description": "仅重置此类开关 - 未指定时重置所有类型"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "清除打盹",
             "description": "清除所有当前处于活动状态的打盹"

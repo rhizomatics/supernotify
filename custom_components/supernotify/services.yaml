@@ -127,6 +127,21 @@ enquire_active_scenarios:
 enquire_occupancy:
 enquire_snoozes:
 refresh_entities:
+reset_overrides:
+  fields:
+    kind:
+      required: false
+      selector:
+        select:
+          options:
+            - value: scenario
+              label: Scenario
+            - value: recipient
+              label: Recipient
+            - value: delivery
+              label: Delivery
+            - value: transport
+              label: Transport
 clear_snoozes:
 purge_media:
   fields:
