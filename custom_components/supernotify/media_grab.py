@@ -276,7 +276,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
                 _LOGGER.info(
                     "SUPERNOTIFY Selecting alt camera %s with no known entity for %s", alt_cam[CONF_CAMERA], camera_entity_id
                 )
-                return alt_cam[CONF_CAMERA]
+            return alt_cam[CONF_CAMERA]
 
     return None
 
