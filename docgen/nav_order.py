@@ -16,12 +16,12 @@ TAB_ORDER = [
 HIDDEN_TABS = {"tags.md"}
 
 
-def _key(item: Any) -> str:
+def _key(item: Any) -> str:  # ruff: ignore[any-type]
     file = getattr(item, "file", None)
     return file.src_uri if file else item.title
 
 
-def on_nav(nav: Any, config: Any, files: Any, **kwargs: Any) -> Any:
+def on_nav(nav: Any, config: Any, files: Any, **kwargs: Any) -> Any:  # ruff: ignore[any-type]
     """Order the top navigation tabs and hide the Tags tab.
 
     The nav is auto-generated from the docs folder, so reorder it here rather
