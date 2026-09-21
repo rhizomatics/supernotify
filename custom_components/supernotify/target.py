@@ -28,7 +28,10 @@ from .const import (
 from .schema import phone
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Sequence
+
+    from .hass_api import HomeAssistantAPI
+    from .model import SelectionRule
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,14 +54,15 @@ class TargetEntityCategory:
     domain: str | list[str] | None = None
     platform: str | list[str] | None = None
 
-    def matches(self, entity_id: str, platform: str | None, *, check_platform: bool = True) -> bool:
+    def matches(self, entity_id: str, hass_api: HomeAssistantAPI) -> bool:
         if self.domain is not None:
             domains = [self.domain] if isinstance(self.domain, str) else self.domain
             if entity_id.split(".", 1)[0] not in domains:
                 return False
-        if check_platform and self.platform is not None:
+        # only look the platform up, in the entity registry, when there's a platform to check against
+        if self.platform is not None:
             platforms = [self.platform] if isinstance(self.platform, str) else self.platform
-            if platform not in platforms:
+            if hass_api.platform_for_entity(entity_id) not in platforms:
                 return False
         return True
 
@@ -303,6 +307,62 @@ class Target:
         t.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
         return t
 
+    def select(
+        self,
+        categories: Sequence[str | TargetEntityCategory],
+        own_names: Collection[str],
+        hass_api: HomeAssistantAPI,
+        target_selector: SelectionRule | None = None,
+    ) -> Target:
+        """Narrow this target to what a delivery can use, leaving this one untouched
+
+        `categories` are the delivery's declared target categories, and `own_names` its own
+        name and its transport's. A target category named after either is always destined
+        for that delivery. The two serve different purposes and both stay available:
+         - the TRANSPORT name (`sms:value`) reaches every delivery of that transport, so
+           scenario/time/occupancy selection logic can still decide which one actually
+           fires - the same as it would for a plain, auto-matched value
+         - a specific DELIVERY name (`shortcode_sms:value`) pins the target to just that
+           one delivery, for when two deliveries of the same transport must stay distinct
+           (e.g. `email` vs `html_email`)
+
+        `person_id`s are always kept, whatever the delivery declares, since they aren't
+        delivered to but are the link back to the recipients a delivery reaches (see
+        `Notification.generate_targets()`, which narrows them to those actually in each
+        envelope). They are kept out of the `target_selector` too, as it's for choosing
+        between values a transport can address.
+        """
+        plain_categories = {c for c in categories if isinstance(c, str)}
+        entity_selectors = [c for c in categories if isinstance(c, TargetEntityCategory)]
+
+        def selected(category: str, targets: list[str]) -> list[str]:
+            if category == ATTR_PERSON_ID:
+                return targets
+            if category not in own_names:
+                if entity_selectors and category == ATTR_ENTITY_ID:
+                    targets = [t for t in targets if any(sel.matches(t, hass_api) for sel in entity_selectors)]
+                    if not targets:
+                        return []
+                elif plain_categories:
+                    # this delivery declares fixed categories (from its transport, its own
+                    # config, or both) - anything outside that set is rejected
+                    if category not in plain_categories:
+                        return []
+                # else: this delivery declares no categories at all (e.g. `generic` with no
+                # config) - nothing to restrict against
+            if target_selector:
+                targets = [t for t in targets if target_selector.match(t)]
+            return targets
+
+        filtered_target = Target({k: selected(k, v) for k, v in self.targets.items()}, target_data=self.target_data)
+        if self.target_specific_data:
+            filtered_target.target_specific_data = {
+                (c, t): data
+                for (c, t), data in self.target_specific_data.items()
+                if c in filtered_target.targets and t in filtered_target.targets[c]
+            }
+        return filtered_target
+
     def split_by_target_data(self) -> list[Target]:
         if not self.target_specific_data:
             result = self.safe_copy()
@@ -329,7 +389,7 @@ class Target:
         new_target = Target(collected, target_data=last_found)
         results.append(new_target)
         default -= new_target
-        if default.has_targets():
+        if default.has_resolved_target():
             results.append(default)
         return results
 

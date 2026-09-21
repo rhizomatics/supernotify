@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     CONF_ACTION,
@@ -290,52 +289,10 @@ class Delivery(DeliveryConfig):
         result.extend(primary, unqualified)
         return result
 
-    def select_targets(self, target: Target, hass_api: HomeAssistantAPI | None = None) -> Target:
-        declared_categories = self.target_categories
-        plain_categories = {c for c in declared_categories if isinstance(c, str)}
-        entity_selectors = [c for c in declared_categories if isinstance(c, TargetEntityCategory)]
-
-        def selected(category: str, targets: list[str]) -> list[str]:
-            # a target category named after this delivery, or after its transport, is always
-            # destined here. The two serve different purposes and both stay available:
-            #  - the TRANSPORT name (`sms:value`) reaches every delivery of that transport, so
-            #    scenario/time/occupancy selection logic can still decide which one actually
-            #    fires - the same as it would for a plain, auto-matched value
-            #  - a specific DELIVERY name (`shortcode_sms:value`) pins the target to just that
-            #    one delivery, for when two deliveries of the same transport must stay distinct
-            #    (e.g. `email` vs `html_email`)
-            if category != self.name and category != self.transport.name:
-                if entity_selectors and category == ATTR_ENTITY_ID:
-                    targets = [
-                        t
-                        for t in targets
-                        if any(
-                            sel.matches(t, hass_api.platform_for_entity(t) if hass_api else None, check_platform=bool(hass_api))
-                            for sel in entity_selectors
-                        )
-                    ]
-                    if not targets:
-                        return []
-                elif plain_categories:
-                    # this delivery declares fixed categories (from its transport, its own
-                    # config, or both) - anything outside that set is rejected
-                    if category not in plain_categories:
-                        return []
-                # else: this delivery declares no categories at all (e.g. `generic` with no
-                # config) - nothing to restrict against
-            if self.target_selector:
-                targets = [t for t in targets if self.target_selector.match(t)]
-            return targets
-
-        filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
-        # TODO: in model class
-        if target.target_specific_data:
-            filtered_target.target_specific_data = {
-                (c, t): data
-                for (c, t), data in target.target_specific_data.items()
-                if c in target.targets and t in target.targets[c]
-            }
-        return filtered_target
+    def select_targets(self, target: Target) -> Target:
+        return target.select(
+            self.target_categories, (self.name, self.transport.name), self.transport.hass_api, self.target_selector
+        )
 
     def evaluate_conditions(self, condition_variables: ConditionVariables) -> bool | None:
         if not self.enabled:

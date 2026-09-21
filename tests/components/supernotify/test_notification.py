@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
+from pytest_asyncio import fixture
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
-    ATTR_PERSON_ID,
     ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     CONF_DATA,
@@ -427,7 +427,11 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
-        Envelope(Delivery("mail", ctx.delivery_config("mail"), email), uut, target=Target(["bob@test.com", "jane@test.com"]))
+        Envelope(
+            Delivery("mail", ctx.delivery_config("mail"), email),
+            uut,
+            target=Target({"email": ["bob@test.com", "jane@test.com"], "person_id": ["person.bob", "person.jane"]}),
+        )
     ]
 
 
@@ -646,7 +650,101 @@ async def test_convert_notify_entities_resolves_recipient_notify_entity_in_dict_
     assert converted == {"entity_id": ["notify.some_other_integration"], "person_id": ["person.alice"]}
 
 
-async def test_record_result_notifies_recipient_notify_entity_on_delivery() -> None:
+async def test_envelope_person_ids_are_only_recipients_the_envelope_reaches() -> None:
+    """Selecting targets for a delivery keeps person_ids, but each envelope's target only ends up
+    with those whose own targets for that delivery are actually in it - not a recipient with
+    nothing this delivery can send to (bob has no phone number)."""
+    ctx = TestingContext(
+        deliveries={"sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        services={"notify": ["smsify"]},
+        recipients=[
+            {CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"},
+            {CONF_PERSON: "person.bob"},
+            {CONF_PERSON: "person.carol", CONF_PHONE_NUMBER: "+339875000456"},
+        ],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", target=["person.alice", "person.bob", "person.carol"])
+    await uut.initialize()
+
+    targets = uut.generate_targets(ctx.delivery("sms"))
+
+    assert len(targets) == 1
+    assert targets[0].phone == ["+339875000123", "+339875000456"]
+    assert targets[0].person_ids == ["person.alice", "person.carol"]
+
+
+async def test_envelope_person_ids_exclude_recipient_whose_address_went_in_earlier_envelope() -> None:
+    """With unique_targets, an address already sent to by an earlier delivery is dropped, and so
+    is the recipient it belonged to - they were reached by that earlier envelope instead."""
+    ctx = TestingContext(
+        deliveries={
+            "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
+            "sms2": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
+        },
+        services={"notify": ["smsify"]},
+        recipients=[{CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"}],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", target=["person.alice"])
+    await uut.initialize()
+
+    first = uut.generate_targets(ctx.delivery("sms"))
+    second = uut.generate_targets(ctx.delivery("sms2"))
+
+    assert first[0].person_ids == ["person.alice"]
+    assert second[0].phone == []
+    assert second[0].person_ids == []
+
+
+async def test_recipient_with_no_resolvable_target_does_not_block_delivery_target_fallback() -> None:
+    """person_ids surviving target selection must not count as having found a target - a delivery
+    that only falls back to its own configured target when nothing else resolves still has to."""
+    ctx = TestingContext(
+        deliveries={
+            "sms": {
+                CONF_TRANSPORT: TRANSPORT_SMS,
+                CONF_ACTION: "notify.smsify",
+                CONF_TARGET: ["+447700900123"],
+                CONF_TARGET_USAGE: "no_delivery",
+            }
+        },
+        services={"notify": ["smsify"]},
+        recipients=[{CONF_PERSON: "person.bob"}],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", target=["person.bob"])
+    await uut.initialize()
+
+    targets = uut.generate_targets(ctx.delivery("sms"))
+
+    assert len(targets) == 1
+    assert targets[0].phone == ["+447700900123"]
+    assert targets[0].person_ids == []
+
+
+@fixture
+async def personal_delivery_context() -> TestingContext:
+    ctx = TestingContext(
+        deliveries={"sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        services={"notify": ["smsify"]},
+        recipients=[
+            {CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"},
+            {CONF_PERSON: "person.bob"},
+            {CONF_PERSON: "person.carol", CONF_PHONE_NUMBER: "+339875000456"},
+        ],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    for p in ctx._recipients:
+        ctx.people_registry.people[p[CONF_PERSON]].notify_entity = Mock(spec=RecipientNotifyEntity)
+    return ctx
+
+
+async def test_record_result_notifies_recipient_notify_entity_on_delivery(personal_delivery_context: TestingContext) -> None:
     """A successful envelope delivery updates the involved recipient's notify.recipient_<name>
     entity (record_notification()), regardless of what target form got it there - a plain
     person_id, an email/phone/mobile override, or notify.recipient_<name> itself (converted to
@@ -654,61 +752,27 @@ async def test_record_result_notifies_recipient_notify_entity_on_delivery() -> N
     includes its own person_id (Recipient.initialize()), so that's the reliable link back from
     an arbitrary envelope to the Recipient objects it reached."""
 
-    ctx = TestingContext(
-        deliveries={"sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
-        services={"notify": ["smsify"]},
-        recipients=[{CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"}],
-        viable_transport_types=[SMSTransport],
-    )
-    await ctx.test_initialize()
-    notify_entity = Mock(spec=RecipientNotifyEntity)
-    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
-    # generic = ctx.transport(TRANSPORT_GENERIC,force=True)
-    # delivery = Delivery("simple", {}, generic)
-    uut = Notification(ctx, "testing 123", target=["person.alice"])
+    uut = Notification(personal_delivery_context, "testing 123", target=["person.alice"])
     await uut.initialize()
     await uut.deliver()
-    # envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
-    # envelope.delivered = 1
 
-    # uut.record_result(delivery, envelope)
-
-    notify_entity.record_notification.assert_called_once()
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+    personal_delivery_context.people_registry.people["person.bob"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+    personal_delivery_context.people_registry.people["person.carol"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
 
 
-async def test_record_result_skips_recipients_without_a_notify_entity() -> None:
+async def test_record_result_skips_recipients_without_a_notify_entity(personal_delivery_context: TestingContext) -> None:
     """A recipient with no notify_entity set (e.g. the notify platform hasn't loaded yet, or
     tests building SupernotifyAction directly without a config entry) is silently skipped -
     same tolerant fallback pattern used elsewhere for entity-less operation."""
-    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
-    await ctx.test_initialize()
-    generic = ctx.transport(TRANSPORT_GENERIC)
-    delivery = Delivery("simple", {}, generic)
-    uut = Notification(ctx, "testing 123")
-    envelope = Envelope(delivery, target=Target({ATTR_PERSON_ID: ["person.alice"]}))
-    envelope.delivered = 1
 
-    uut.record_result(delivery, envelope)  # must not raise
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity = None
+    personal_delivery_context.people_registry.people["person.bob"].notify_entity = None
+    personal_delivery_context.people_registry.people["person.carol"].notify_entity = None
 
-
-async def test_record_result_ignores_envelope_with_no_target() -> None:
-    ctx = TestingContext(recipients=[{CONF_PERSON: "person.alice"}])
-    await ctx.test_initialize()
-    notify_entity = Mock()
-    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
-    generic = ctx.transport(TRANSPORT_GENERIC)
-    delivery = Delivery("simple", {}, generic)
-    uut = Notification(ctx, "testing 123")
-    envelope = Envelope(delivery)
-    # Envelope.target is always a Target by construction (see Envelope.__init__); this
-    # deliberately violates that to exercise _record_recipient_notifications()'s defensive
-    # `if envelope.target is None` branch.
-    envelope.target = None  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
-    envelope.delivered = 1
-
-    uut.record_result(delivery, envelope)
-
-    notify_entity.record_notification.assert_not_called()
+    uut = Notification(personal_delivery_context, "testing 123")
+    await uut.initialize()
+    await uut.deliver()
 
 
 async def test_notification_accepts_dict_shaped_target_without_crashing() -> None:
