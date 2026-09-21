@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "トランスポート {transport} 有効"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "オーバーライドのリセット"
+            }
         }
     },
     "services": {

@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "Transporte {transport} ativado"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Repor substituições"
+            }
         }
     },
     "services": {

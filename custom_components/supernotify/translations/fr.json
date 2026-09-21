@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "Transport {transport} activé"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Réinitialiser les forçages"
+            }
         }
     },
     "services": {

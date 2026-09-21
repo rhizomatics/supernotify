@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "Transporte {transport} habilitado"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Restablecer anulaciones"
+            }
         }
     },
     "services": {

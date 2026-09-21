@@ -35,6 +35,11 @@
             "transport_enabled": {
                 "default": "mdi:truck-fast"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "default": "mdi:restore"
+            }
         }
     }
 }

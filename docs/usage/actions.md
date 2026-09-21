@@ -33,3 +33,6 @@ To use any of these, prefix with `supernotify.`. Try them out via [Tools](https:
 | purge_archive                  | Force the archive housekeeping to run immediately and remove old notification records                                |
 | purge_media                    | Force the media storage housekeeping to run immediately and remove old media                                         |
 | snooze                         | Snooze notifications for a delivery or target                                                                        |
+
+The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides**
+button (`button.supernotify_reset_overrides`) on the SuperNotify device.

@@ -44,9 +44,9 @@ KEY_YAML_CONFIG = "yaml_config"
 # NOTIFY carries the main notify.supernotify action and per-recipient notify entities.
 # BINARY_SENSOR/SENSOR/SWITCH carry the scenario/recipient state, notification/failure counters
 # and scenario control as real entities (binary_sensor.py/sensor.py/switch.py) - see issue #175
-# "Part B". Their async_setup_entry read entry.runtime_data, so they must be forwarded to only
-# after it's set.
-PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+# "Part B". BUTTON carries the reset overrides button (button.py). Their async_setup_entry read
+# entry.runtime_data, so they must be forwarded to only after it's set.
+PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
 
 # Deferred import: schema.py imports ARCHIVE_DIR/MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.

@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "Transport {transport} Enabled"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Reset overrides"
+            }
         }
     },
     "services": {

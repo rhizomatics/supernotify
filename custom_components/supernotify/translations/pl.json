@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "Transport {transport} włączony"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Zresetuj nadpisania"
+            }
         }
     },
     "services": {

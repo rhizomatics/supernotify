@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "Transport {transport} ingeschakeld"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Overschrijvingen herstellen"
+            }
         }
     },
     "services": {

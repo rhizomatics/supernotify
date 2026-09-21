@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "परिवहन {transport} सक्षम"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "ओवरराइड रीसेट करें"
+            }
         }
     },
     "services": {

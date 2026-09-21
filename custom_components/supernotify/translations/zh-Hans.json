@@ -36,6 +36,11 @@
             "transport_enabled": {
                 "name": "传输方式 {transport} 已启用"
             }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "重置覆盖"
+            }
         }
     },
     "services": {

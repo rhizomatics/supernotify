@@ -149,3 +149,33 @@ async def test_reset_then_reload_does_not_restore_override(hass: HomeAssistant) 
 
     assert _model(engine, "transport").enabled is True
     assert _state(hass, SWITCHES["transport"]) == STATE_ON
+
+
+# --- Reset overrides button ------------------------------------------------------------------
+
+
+async def test_button_resets_all_kinds(hass: HomeAssistant) -> None:
+    engine = await _setup(hass, _config())
+    for entity_id in SWITCHES.values():
+        await _turn(hass, entity_id, on=False)
+
+    await hass.services.async_call("button", "press", {"entity_id": "button.supernotify_reset_overrides"}, blocking=True)
+    await hass.async_block_till_done()
+
+    for kind, entity_id in SWITCHES.items():
+        assert _model(engine, kind).enabled is True
+        assert _state(hass, entity_id) == STATE_ON
+
+
+async def test_button_is_on_the_supernotify_device(hass: HomeAssistant) -> None:
+    await _setup(hass, _config())
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    reg_entry = er.async_get(hass).async_get("button.supernotify_reset_overrides")
+    assert reg_entry is not None
+    assert reg_entry.unique_id == "reset_overrides"
+    assert reg_entry.config_entry_id == entry.entry_id
+    assert reg_entry.device_id is not None
+    state = hass.states.get("button.supernotify_reset_overrides")
+    assert state is not None
+    assert state.name == "SuperNotify Reset overrides"

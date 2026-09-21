@@ -227,7 +227,8 @@ rules:
       A single "SuperNotify" device (hass_api.ha_device_info()) now groups the
       scenario, recipient, delivery and transport switches, their binary_sensors
       and the notification/failure counter sensors (switch.py, binary_sensor.py,
-      sensor.py). The recipient notify entities (people.py) are not on it.
+      sensor.py), and the reset overrides button (button.py). The recipient notify
+      entities (people.py) are not on it.
 
   diagnostics:
     status: done
@@ -337,7 +338,7 @@ rules:
   icon-translations:
     status: todo
     comment: |
-      Partial: icons.json covers every switch, binary_sensor and sensor entity, via
+      Partial: icons.json covers every switch, binary_sensor, sensor and button entity, via
       _attr_translation_key. The recipient notify entities (people.py) have no
       translation_key, so no icon translation, yet. No state/range-dependent icons
       identified so far.

@@ -9,6 +9,7 @@
 
 - Switching a scenario, recipient, delivery or transport on or off now survives a Home Assistant restart and a reload, for as long as its configured `enabled` value - its own, or for a delivery without one, its transport's - is unchanged. Changing that value in the config takes back control. An override belongs to its switch: while the switch entity is disabled in Home Assistant, its override is not applied, and it comes back when the switch is enabled again
 - New `supernotify.reset_overrides` action puts everything switched on or off back to its configured state, for every kind or only for one `kind`, optionally returning the names reset
+- New **Reset overrides** button, `button.supernotify_reset_overrides`, on the SuperNotify device - the same as calling `supernotify.reset_overrides` for every kind
 
 ### Breaking
 
