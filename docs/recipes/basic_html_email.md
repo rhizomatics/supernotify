@@ -23,10 +23,11 @@ a much more detailed body only for email.
 
 ```yaml title="Example Action Call"
 - action: supernotify.notify
-      data:
-        title: "Motion Detection at Back Door"
-        message: "Motion has been detected at the back door"
-        message_html: "Motion was last detected at {{{{ states.binary_sensor.back_door_pir.last_changed.isoformat() }} near the <a href="http://192.168.10.10/cctv/back_door_cam">back door</a>"
+  data:
+    title: "Motion Detection at Back Door"
+    message: "Motion has been detected at the back door"
+    message_html: |
+      "Motion was last detected at {{ states.binary_sensor.back_door_pir.last_changed.isoformat() }} near the <a href="http://192.168.10.10/cctv/back_door_cam">back door</a>"
 ```
 
 

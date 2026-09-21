@@ -88,7 +88,7 @@ async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: C
                     },
                 ],
                 "push": {"interruption-level": "active"},
-                "group": "general",
+                "group": "camera.porch",
                 "entity_id": "camera.porch",
                 "video": "http://my.home/clip.mp4",
             },
@@ -98,6 +98,35 @@ async def test_on_notify_mobile_push_with_media(uninitialized_unmocked_config: C
         target=None,
         return_response=False,
     )
+
+
+async def test_on_notify_mobile_push_with_invalid_actions_dict(caplog: pytest.LogCaptureFixture) -> None:
+    """A dict passed for data.actions (instead of a list) must not crash delivery."""
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_MOBILE_PUSH)
+
+    await uut.deliver(
+        Envelope(
+            Delivery("media_test", ctx.delivery_config("media_test"), uut),
+            Notification(ctx, message="hello there"),
+            target=Target({"mobile_app_id": ["mobile_app_new_iphone"]}),
+            data={"actions": {"action_category": "vehicle"}},
+        ),
+    )
+    ctx.hass.services.async_call.assert_called_with(  # type:ignore
+        "notify",
+        "mobile_app_new_iphone",
+        service_data={
+            "message": "hello there",
+            "data": {"push": {"interruption-level": "active"}},
+        },
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )
+    assert "data.actions must be a list" in caplog.text
 
 
 async def test_on_notify_mobile_push_no_targets() -> None:
@@ -134,7 +163,7 @@ async def test_on_notify_mobile_push_with_explicit_target() -> None:
         service_data={
             "title": "testing",
             "message": "hello there",
-            "data": {"push": {"interruption-level": "active"}, "group": "general"},
+            "data": {"push": {"interruption-level": "active"}},
         },
         blocking=False,
         context=None,
@@ -262,6 +291,8 @@ async def test_message_override(hass: HomeAssistant) -> None:
 
 
 async def test_top_level_data_used(hass: HomeAssistant) -> None:
+    register_mobile_app(HomeAssistantAPI(hass), person="person.house_owner", device_name="New iPhone")
+    await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: INTEGRATION_CONFIG})
     await hass.async_block_till_done()
 
@@ -281,15 +312,14 @@ async def test_top_level_data_used(hass: HomeAssistant) -> None:
         await hass.services.async_call("supernotify", "enquire_last_notification", None, blocking=True, return_response=True),
     )
     assert notification is not None
-    # no android integration in test env
-    assert EnvelopeOutcome.ERROR in notification["deliveries"]["push"]
-    assert notification["deliveries"]["push"][EnvelopeOutcome.ERROR][0]["data"]["clickAction"] == "android_something"
+    assert EnvelopeOutcome.SUCCESS in notification["deliveries"]["push"]
+    assert notification["deliveries"]["push"][EnvelopeOutcome.SUCCESS][0]["data"]["clickAction"] == "android_something"
 
 
 async def test_action_title(hass: HomeAssistant, unmocked_config: Context, local_server: HTTPServer) -> None:
-    ctx = TestingContext(homeassistant=hass, transport_types=[MobilePushTransport])
+    ctx = TestingContext(homeassistant=hass, viable_transport_types=[MobilePushTransport])
     await ctx.test_initialize()
-    uut: MobilePushTransport = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    uut: MobilePushTransport = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH, force=True))
 
     action_url = local_server.url_for("/action_goes_here")
     local_server.expect_oneshot_request("/action_goes_here").respond_with_data(
@@ -397,8 +427,12 @@ async def test_parallel_push() -> None:
   mobile_tts:
     transport: mobile_push
     message: "TTS"
+    options:
+        unique_targets: false
   mobile_push:
     transport: mobile_push
+    options:
+        unique_targets: false
         """,
         recipients=[
             {
@@ -428,7 +462,6 @@ async def test_parallel_push() -> None:
                     "title": "testing",
                     "data": {
                         "push": {"interruption-level": "active"},
-                        "group": "general",
                     },
                 },
             ),
@@ -441,7 +474,6 @@ async def test_parallel_push() -> None:
                     "data": {
                         "tts_text": "SPEAK UP",
                         "push": {"interruption-level": "active"},
-                        "group": "general",
                     },
                 },
             ),

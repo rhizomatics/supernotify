@@ -12,14 +12,27 @@ tags:
 | `email`      | :material-github:[`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | -            | :material-home-assistant: [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), :material-home-assistant: [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |
 
 
-Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML. Automatically configured if there's already an SMTP integration.
+Can be used for plain or HTML template emails, and handle images as attachments or embedded HTML.
 
-!!! note
-    The Home Assistant [SMTP](https://www.home-assistant.io/integrations/smtp/) integration for e-mail doesn't allow priority to be set.
+## Discovery
+
+**Default delivery.** If an HA `smtp` (or compatible notify-platform) integration is already
+configured and no `email` delivery is defined, a `email` delivery is generated automatically and fires on every notification.
+
+## Example
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Motion detected at the front door"
+    priority: high
+    target:
+        - homeowner@example.com
+```
 
 ## Pre-generated HTML
 
-The `data` section of the notification can have a `message_html` supplied for html that will be used in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the end to include any attached images. The `data` can be configured as part of the fixed configuration, or in the `data` of the action call.
+The notification can have a `message_html` supplied for html that will be used in place of the standard `message` for HTML emails and ignored for other notification types. This does not require templates, see the [Restart Email Recipe](../recipes/restart_email.md) for a simple example. In this case, HTML will automatically be tagged onto the end to include any attached images. It can be set in fixed configuration, in the `data` of a delivery or scenario, or as `message_html` in the action call.
 
 ## HTML Templates
 
@@ -30,10 +43,30 @@ Jinja2 template validation.
 
 ### Configuration
 
-Supernotify ships with a built in template, `default.html.j2` which can be used by using `template: default.html.j2` in the `data` section. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
+Supernotify ships with a built in template, `default.html.j2` which can be used by setting `template: default.html.j2` on the delivery. This shouldn't be edited directly, since changes will get overwritten by future releases. Instead, write your own, or amended versions of [`default.html.j2`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/default_templates/email/default.html.j2) and put
 it into a custom template directory, usually inside Home Assistant's `\config` directory. Templates can live in this directory, or in an `email` subdirectory ( the top-level is for templates that could be used with any transport, and `email` only for this one).
 
 ![Path (Re-)Configuration in Integration Page](../assets/images/configure_ui.png)
+
+Once a template is in that directory, set it as the `template` of an email delivery, and select that delivery when sending a notification:
+
+```yaml title="Delivery Using a Custom Template"
+supernotify:
+  delivery:
+    back_door_email:
+      transport: email
+      template: back_door.html.j2
+```
+
+```yaml title="Notification Using That Delivery"
+- action: supernotify.notify
+  data:
+    title: Motion at the back door
+    message: Motion has been detected at the back door
+    target:
+      - homeowner@example.com
+    delivery: back_door_email
+```
 
 ### Template Variables
 
@@ -66,7 +99,7 @@ an `cid:XXXX` URL generated to point to the attachment name.
 
 ## Default Delivery
 
-A default Delivery called `DEFAULT_email` will be automatically generated for Email transport if no explicit ones created, using the first available SMTP integration if one is present. If you don't want to use it, then use configuration as below, or configure your own delivery for the transport.
+A default Delivery called `email` will be automatically generated for Email transport if no explicit ones created, using the first available SMTP integration if one is present. If you don't want to use it, then use configuration as below, or configure your own delivery for the transport.
 
 ```yaml
 transports:
@@ -76,9 +109,15 @@ transports:
 
 ## Direct Connection
 
-### Rationale
+By default, Supernotify now uses its own SMTP connection rather than the Home Assistant one, since the standard is planning to lose ability to handle e-mail addresses dynamically (all e-mails must be pre-wrapped as Notify Entities) and its missing features like access to e-mail priority.
 
-Setting the `OPTION_MODE` option to `direct` on a delivery switches it from calling an HA notify action to sending over its own SMTP connection instead (the default option is `ha_smtp` for the Home Assistant built-in SMTP integration). This can be set at transport level or at delivery level (if you have multiple email deliveries, such as HTML and plain).
+If you already have the SMTP integration installed, Supernotify can reuse the connection details automatically if it was set up from the UI (but not if its defined in YAML). Or you can skip that altogether and use the `connection` section of the Supernotify transport to define it directly.
+
+If you really want to use only the native Home Assistant integration, then override the defaults using `mode: ha_smtp` in the `options` section of a delivery or transport, see section below on configuring.
+
+### Configuring
+
+By default, the `OPTION_MODE` option is set to `direct`, so deliveries go through Supernotify's own SMTP capability rather than the Home Assistant notify integration. This can be set at transport level or at delivery level (if you have multiple email deliveries, such as HTML and plain).
 
 ```yaml
 transports:

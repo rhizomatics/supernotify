@@ -12,3 +12,15 @@ Click here to go to latest.
 </a>
 
 {% endblock %}
+
+{% block content %}
+  {#- Shown by javascripts/markdown_actions.js only when llmstxt published a markdown version of this page -#}
+  <a href="{{ (page.url ~ 'index.md') | url }}" title="View as Markdown" class="md-content__button md-icon" data-md-view hidden>
+    {% include ".icons/material/language-markdown-outline.svg" %}
+  </a>
+  <a href="#" role="button" title="Copy as Markdown" class="md-content__button md-icon" data-md-copy hidden>
+    <span data-md-copy-icon>{% include ".icons/material/content-copy.svg" %}</span>
+    <span data-md-done-icon hidden>{% include ".icons/material/check.svg" %}</span>
+  </a>
+  {{ super() }}
+{% endblock %}

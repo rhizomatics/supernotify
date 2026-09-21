@@ -3,7 +3,9 @@
 from typing import Final
 
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     ATTR_SERVICE,
 )
 
@@ -29,8 +31,10 @@ CONF_LINKS: Final[str] = "links"
 CONF_PERSON: Final[str] = "person"
 CONF_TRANSPORT: Final[str] = "transport"
 CONF_TRANSPORTS: Final[str] = "transports"
+CONF_LOAD: Final[str] = "load"
 CONF_DELIVERY: Final[str] = "delivery"
-CONF_SELECTION: Final[str] = "selection"
+CONF_INCLUSION: Final[str] = "inclusion"
+CONF_SELECTION: Final[str] = "selection"  # deprecated, use CONF_INCLUSION
 CONF_SELECTION_RANK: Final[str] = "selection_rank"
 
 
@@ -100,6 +104,7 @@ ATTR_DELIVERY_SELECTION = "delivery_selection"
 ATTR_RECIPIENTS = "recipients"
 ATTR_CUSTOM_TARGET = "custom_target"
 ATTR_DATA = "data"
+ATTR_EXTRA_DATA: Final[str] = "extra_data"
 ATTR_MEDIA = "media"
 ATTR_TITLE = "title"
 ATTR_IMAGE = "image"
@@ -111,9 +116,10 @@ ATTR_MEDIA_CAMERA_PTZ_PRESET = "camera_ptz_preset"
 ATTR_MEDIA_CLIP_URL = "clip_url"
 ATTR_MEDIA_SNAPSHOT_PATH = "snapshot_image_path"
 ATTR_TOPIC = "topic"
+ATTR_DISCORD_CHANNEL = "discord_channel"
+ATTR_MATRIX_ROOM = "matrix_room"
 ATTR_ACTION_GROUPS = "action_groups"
 CONF_ACTION_GROUP_NAMES = "action_groups"
-ATTR_ACTION_CATEGORY = "action_category"
 ATTR_ACTION_URL = "action_url"
 ATTR_ACTION_URL_TITLE = "action_url_title"
 ATTR_MESSAGE_HTML = "message_html"
@@ -141,17 +147,17 @@ PTZ_METHOD_VALUES = [PTZ_METHOD_ONVIF, PTZ_METHOD_FRIGATE]
 PTZ_DELAY_DEFAULT = 10
 SNAP_WAIT_DEFAULT = 15
 
-SELECTION_FALLBACK_ON_ERROR = "fallback_on_error"
-SELECTION_FALLBACK = "fallback"
-SELECTION_BY_SCENARIO = "scenario"
-SELECTION_DEFAULT = "default"
-SELECTION_EXPLICIT = "explicit"
-SELECTION_VALUES = [
-    SELECTION_FALLBACK_ON_ERROR,
-    SELECTION_EXPLICIT,
-    SELECTION_BY_SCENARIO,
-    SELECTION_DEFAULT,
-    SELECTION_FALLBACK,
+INCLUSION_FALLBACK_ON_ERROR = "fallback_on_error"
+INCLUSION_FALLBACK = "fallback"
+INCLUSION_BY_SCENARIO = "scenario"
+INCLUSION_DEFAULT = "default"
+INCLUSION_EXPLICIT = "explicit"
+INCLUSION_VALUES = [
+    INCLUSION_FALLBACK_ON_ERROR,
+    INCLUSION_EXPLICIT,
+    INCLUSION_BY_SCENARIO,
+    INCLUSION_DEFAULT,
+    INCLUSION_FALLBACK,
 ]
 
 OCCUPANCY_VALUES = [
@@ -186,50 +192,15 @@ TARGET_USE_FIXED = "fixed"
 TARGET_USE_MERGE_ALWAYS = "merge_always"
 TARGET_USE_MERGE_ON_DELIVERY_TARGETS = "merge_delivery"
 
-OPTION_SIMPLIFY_TEXT = "simplify_text"
-OPTION_STRIP_URLS = "strip_urls"
-OPTION_MESSAGE_USAGE = "message_usage"
-OPTION_RAW = "raw"
-OPTION_JPEG = "jpeg_opts"
-OPTION_PNG = "png_opts"
-OPTION_TTS_ENTITY_ID = "tts_entity_id"
-MEDIA_OPTION_REPROCESS = "reprocess"
-OPTION_TARGET_CATEGORIES = "target_categories"
-OPTION_UNIQUE_TARGETS = "unique_targets"
-OPTION_TARGET_INCLUDE_RE = "target_include_re"  # deprecated v1.9.0
-OPTION_TARGET_SELECT = "target_select"
-# how area_id/floor_id/label_id targets are handled for a delivery
-OPTION_TARGET_SELECTORS = "target_selectors"
-TARGET_SELECTORS_AUTO = "auto"  # discover from the action description whether selectors pass through
-TARGET_SELECTORS_NATIVE = "native"  # pass selectors through to the underlying action untouched
-TARGET_SELECTORS_RESOLVE = "resolve"  # resolve selectors to entity_ids within supernotify
-TARGET_SELECTORS_VALUES = [TARGET_SELECTORS_AUTO, TARGET_SELECTORS_NATIVE, TARGET_SELECTORS_RESOLVE]
-OPTION_CHIME_ALIASES = "chime_aliases"
-OPTION_DATA_KEYS_SELECT = "data_keys_select"
-OPTION_DATA_KEYS_INCLUDE_RE = "data_keys_include_re"  # deprecated v1.9.0
-OPTION_DATA_KEYS_EXCLUDE_RE = "data_keys_exclude_re"  # deprecated v1.9.0
-OPTION_GENERIC_DOMAIN_STYLE = "handle_as_domain"
-OPTION_STRICT_TEMPLATE = "strict_template"
-
-OPTION_SENDER = "sender"
-OPTION_SENDER_NAME = "sender_name"
-OPTION_DEFAULT_TITLE = "default_title"
-OPTION_MODE = "mode"
-OPTION_MEDIA_AUTO_PAUSE = "media_auto_pause"
-
-SELECT_INCLUDE = "include"
-SELECT_EXCLUDE = "exclude"
-
-EMAIL_OPTION_MODE_DIRECT = "direct"
-EMAIL_OPTION_MODE_HA_SMTP = "ha_smtp"
-
+# Options constants have been moved to `options.py`
 
 RE_DEVICE_ID = r"^[0-9a-f]{32}$"
+RE_MEDIA_PLAYER_ENTITY_ID = r"^media_player\.[A-Za-z0-9_]+$"
+RE_NOTIFY_ENTITY_ID = r"^notify\.[A-Za-z0-9_]+$"
 
 RESERVED_DELIVERY_NAMES: list[str] = ["ALL"]
 RESERVED_SCENARIO_NAMES: list[str] = ["NO_SCENARIO", "NULL"]
 RESERVED_DATA_KEYS: list[str] = [ATTR_DOMAIN, ATTR_SERVICE, "action"]
-
 
 CONF_DUPE_CHECK: Final[str] = "dupe_check"
 CONF_DUPE_POLICY: Final[str] = "dupe_policy"
@@ -248,22 +219,15 @@ CONF_DEVICE_TRACKER: Final[str] = "device_tracker"
 CONF_DEVICE_NAME: Final[str] = "device_name"
 CONF_DEVICE_LABELS: Final[str] = "device_labels"
 
-OPTION_DEVICE_DOMAIN: Final[str] = "device_domain"
-
-OPTION_DEVICE_MODEL_SELECT: Final[str] = "device_model_select"
-OPTION_DEVICE_MANUFACTURER_SELECT: Final[str] = "device_manufacturer_select"
-OPTION_DEVICE_OS_SELECT: Final[str] = "device_os_select"
-OPTION_DEVICE_LABEL_SELECT: Final[str] = "device_label_select"
-OPTION_DEVICE_AREA_SELECT: Final[str] = "device_area_select"
-OPTION_DEVICE_DISCOVERY: Final[str] = "device_discovery"
-
 MANUFACTURER_APPLE = "Apple"
 
 TARGET_REQUIRE_ALWAYS = "always"
 TARGET_REQUIRE_NEVER = "never"
 TARGET_REQUIRE_OPTIONAL = "optional"
 
-
+## Transports
+# Defined here rather than transports.py so that the strings can be imported
+# without the transports, and avoid circular references or heavier imports
 TRANSPORT_SMS = "sms"
 TRANSPORT_TTS = "tts"
 TRANSPORT_MQTT = "mqtt"
@@ -309,12 +273,27 @@ TRANSPORT_VALUES = [
     TRANSPORT_DISCORD,
 ]
 
+# The master list of target category names, independent of any one transport - both
+# `Target` (for qualifying a target, e.g. `topic:my/topic` or `target: {topic: ...}`)
+# and `Transport.target_categories` (for declaring which categories a transport accepts)
+# reference this same list, rather than transports and targets each keeping their own.
+TARGET_CATEGORY_VALUES = [
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_EMAIL,
+    ATTR_PHONE,
+    ATTR_MOBILE_APP_ID,
+    ATTR_TOPIC,
+    ATTR_DISCORD_CHANNEL,
+    ATTR_MATRIX_ROOM,
+]
+
 
 CONF_CONNECTION: Final[str] = "connection"
 CONF_ENCRYPTION: Final[str] = "encryption"
 
 CONF_DEVICE_DISCOVERY: Final[str] = "device_discovery"
-CONF_DEVICE_DOMAIN: Final[str] = OPTION_DEVICE_DOMAIN
+CONF_DEVICE_DOMAIN: Final[str] = "device_domain"
 CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
 CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
 

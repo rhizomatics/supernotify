@@ -158,6 +158,71 @@ def first_envelope(notification: Notification, delivery: str) -> Envelope:
     return notification.deliveries[delivery][EnvelopeOutcome.SUCCESS][0]  # type: ignore
 
 
+def _as_transport_type_dict(
+    transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None,
+) -> dict[type[Transport], dict[str, Any]]:
+    if transport_types is None:
+        return {}
+    if isinstance(transport_types, dict):
+        return dict(transport_types)
+    return {cls: {} for cls in transport_types}
+
+
+def _force_viable_class(cls: type[Transport]) -> type[Transport]:
+    """A dynamic subclass whose is_viable() always returns True - not a class-level
+    monkeypatch, so it can't leak between tests the way mutating `cls` itself would.
+
+    Exists to let a transport's *explicit* delivery register despite failing real discovery
+    (is_viable() can't see delivery-level config - see e.g. generic/email/chime's own
+    is_viable() docstrings in production for the general shape of this problem). It must
+    NOT also fabricate an auto-generated delivery out of nothing: most transports (per the
+    contract in transport.py) trust is_viable() was already checked and no longer re-verify
+    real discovery signals in build_standard_deliveries() themselves. So
+    build_standard_deliveries() here re-checks the class's *real*, un-forced is_viable()
+    first - a genuinely configured transport (real chime_aliases, a real direct-SMTP
+    connection, ...) still auto-generates normally; one that only passes because of the
+    forcing above does not.
+    """
+
+    def _build_standard_deliveries(self: Transport, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        if cls.is_viable(self, hass_api):
+            return cls.build_standard_deliveries(self, hass_api)
+        return {}
+
+    return type(
+        cls.__name__,
+        (cls,),
+        {"is_viable": lambda self, hass_api: True, "build_standard_deliveries": _build_standard_deliveries},
+    )
+
+
+def _resolve_transport_types(
+    transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None,
+    viable_transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None,
+    configured_transport_names: set[str],
+) -> dict[type[Transport], dict[str, Any]] | None:
+    """Combine transport_types (real is_viable()) and viable_transport_types (assumed
+    viable, for tests that just want to exercise a transport's mechanics) into one dict.
+
+    A class from transport_types is also assumed viable if it has its own `transports:`
+    config entry (in configured_transport_names) - explicitly configuring a transport is
+    itself a strong signal it's meant to be used, same reasoning as viable_transport_types.
+    """
+    strict = _as_transport_type_dict(transport_types)
+    assumed = _as_transport_type_dict(viable_transport_types)
+    if not strict and not assumed:
+        return None
+
+    # keyed by transport name, not class, so viable_transport_types properly replaces
+    # (rather than duplicate-registers alongside) the same transport from transport_types
+    by_name: dict[str, tuple[type[Transport], dict[str, Any]]] = {}
+    for cls, kwargs in strict.items():
+        by_name[cls.name] = (_force_viable_class(cls) if cls.name in configured_transport_names else cls, kwargs)
+    for cls, kwargs in assumed.items():
+        by_name[cls.name] = (_force_viable_class(cls), kwargs)
+    return dict(by_name.values())
+
+
 class TestingContext(Context):
     """Build a test context and associated services for unit testing.
 
@@ -176,6 +241,7 @@ class TestingContext(Context):
         transports: ConfigType | str | None = None,
         transport_instances: list[Transport] | None = None,
         transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
+        viable_transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
         entities: dict[str, Any] | None = None,
         hass_external_url: str | None = None,
@@ -219,10 +285,14 @@ class TestingContext(Context):
         if media_path:
             raw_config[CONF_MEDIA_PATH] = str(media_path)
         if transport_instances:
+            # left entirely alone - it's the caller's own responsibility to make an
+            # already-constructed instance behave as it needs
             TRANSPORT_VALUES.extend([t.name for t in transport_instances])
 
         if transport_types:
             TRANSPORT_VALUES.extend([t.name for t in transport_types])
+        if viable_transport_types:
+            TRANSPORT_VALUES.extend([t.name for t in viable_transport_types])
 
         self.config = FULL_CONFIG_SCHEMA(raw_config)
         self.components = components
@@ -234,6 +304,14 @@ class TestingContext(Context):
             _LOGGER.debug("TESTCONTEXT Mock HomeAssistant")
             self.hass = Mock(spec=MockableHomeAssistant)
             self.hass.states = Mock(StateMachine)
+            # a typical test install has a phone with a notify entity registered and a
+            # media player, so notify_entity's/media_player's/tts's is_viable() (each gated
+            # on at least one entity existing in their respective domain) behaves the same
+            # as it would in a real house by default
+            self.hass.states.async_entity_ids = lambda domain=None: {
+                "notify": ["notify.mock_notify_target"],
+                "media_player": ["media_player.mock_speaker"],
+            }.get(domain, [])
             self.hass.services = Mock(ServiceRegistry)
             self.hass.services.async_call = AsyncMock()
             self.hass.services.async_services_for_domain = lambda domain: self.services.get(domain, {})
@@ -245,6 +323,10 @@ class TestingContext(Context):
             self.device_registry.async_get = lambda did, **_kwargs: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
+            # a bare AsyncMock(spec=EntityRegistry).entities is an unconfigured Mock, not a
+            # real (iterable) dict - entity_ids_for_platform() (alexa_devices, html5) would
+            # crash on .entities.values() rather than just finding no match, without this
+            self.entity_registry.entities = {}
 
             self.hass.data["entity_registry"] = self.entity_registry
             self.hass.http = AsyncMock()
@@ -254,6 +336,12 @@ class TestingContext(Context):
             self.hass.data[DATA_MQTT].client = AsyncMock(spec=MQTT)
             self.hass.data[DATA_MQTT].client.connected = True
             self.hass.config_entries._entries = ConfigEntryItems(self.hass)
+            # a typical test install is assumed to have every config-entry-based integration
+            # transports check for in is_viable() (mobile_app, telegram_bot, mqtt, ...) - a
+            # test after a specific transport's non-viability uses a real `hass` fixture with
+            # MockConfigEntry instead (see test_transport_auto_configure.py), which bypasses
+            # this mock hass path entirely
+            self.hass.config_entries.async_entries = lambda domain, **_kwargs: [Mock(data={})]
             self.hass.loop_thread_id = 0
             self.hass.loop.time.return_value = 0.0
 
@@ -277,7 +365,7 @@ class TestingContext(Context):
                 self.services.setdefault(domain, {})
                 for action_or_action_kwargs in actions:
                     if isinstance(action_or_action_kwargs, dict):
-                        action = action_or_action_kwargs.pop("action")
+                        action = action_or_action_kwargs.pop("action", "test_action")
                         self.services[domain][action] = DummyService(self.hass, domain, action, **action_or_action_kwargs)
                     else:
                         self.services[domain][action_or_action_kwargs] = DummyService(
@@ -294,14 +382,22 @@ class TestingContext(Context):
             days=self.config.get(CONF_MEDIA_STORAGE_DAYS, 7),
         )
         dupe_checker = DupeChecker(self.config.get(CONF_DUPE_CHECK, {}))
-        if not transport_instances:
-            transport_types = transport_types or TRANSPORTS
+        transport_configs = self.config.get(CONF_TRANSPORT) or {}
+        if transport_instances:
+            resolved_transport_types = None
+        else:
+            # viable_transport_types *alone* means "just this transport" (a test
+            # exercising it in isolation) - to add it on top of the full default set
+            # instead, also pass transport_types=TRANSPORTS explicitly
+            if transport_types is None and viable_transport_types is None:
+                transport_types = TRANSPORTS
+            resolved_transport_types = _resolve_transport_types(transport_types, viable_transport_types, set(transport_configs))
 
         delivery_registry = DeliveryRegistry(
             deliveries=self.config.get(CONF_DELIVERY) or {},
             transport_instances=transport_instances or None,
-            transport_types=transport_types,
-            transport_configs=self.config.get(CONF_TRANSPORT) or {},
+            transport_types=resolved_transport_types,
+            transport_configs=transport_configs,
         )
         self.initialized: bool = False
         super().__init__(
@@ -323,7 +419,7 @@ class TestingContext(Context):
 
     async def test_initialize(self, transport_instances: list[Transport] | None = None) -> None:
         if transport_instances:
-            self.delivery_registry._transport_instances = transport_instances
+            super().configure_for_tests(transport_instances)
         await self.initialize()
         self.hass_api.initialize()
         if self.hass_external_url:
@@ -341,8 +437,17 @@ class TestingContext(Context):
 
         self.initialized = True
 
-    def transport(self, transport_name: str) -> Transport:
-        if self.initialized:
+    def transport(self, transport_name: str, force: bool = False) -> Transport:
+        """Get a transport by name.
+
+        By default, requires it to actually be registered (raises KeyError otherwise) - a
+        transport that failed to register (not is_viable() and no explicit delivery for it)
+        should fail the test loudly, not silently swap in a bare, unregistered stand-in.
+        Pass force=True for a test that wants a bare instance regardless - e.g. one
+        unit-testing is_viable()/auto_configure() itself, where "not registered" is the
+        point being tested.
+        """
+        if self.initialized and not force:
             return self.delivery_registry.transports[transport_name]
         return next(t for t in TRANSPORTS if t.name == transport_name)(self)
 
@@ -416,7 +521,7 @@ def register_mobile_app(
         trackers.extend(existing.attributes.get("device_trackers", []))
         hass_api.set_state(person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
 
-    device_registry = hass_api.device_registry()
+    device_registry = hass_api._device_registry()
     device_entry = None
     if device_registry:
         device_entry = device_registry.async_get_or_create(
@@ -436,7 +541,7 @@ def register_mobile_app(
         hass_api._hass.services.async_register(
             "notify", slugify(f"mobile_app_{device_name}"), service_func=fake_service, supports_response=SupportsResponse.NONE
         )
-    entity_registry: EntityRegistry | None = hass_api.entity_registry()
+    entity_registry: EntityRegistry | None = hass_api._entity_registry()
     if entity_registry and device_entry:
         entity_registry.async_get_or_create(
             "device_tracker", "mobile_app", device_name, suggested_object_id=device_slug, device_id=device_entry.id
@@ -475,7 +580,7 @@ def register_device(
         hass_api._hass.config_entries._entries._domain_index.setdefault(config_entry.domain, []).append(config_entry)
     except Exception as e:
         _LOGGER.warning("Unable to mess with HASS config entries for device registry: %s", e)
-    device_registry = hass_api.device_registry()
+    device_registry = hass_api._device_registry()
     device_entry = None
     if device_registry:
         device_entry = device_registry.async_get_or_create(

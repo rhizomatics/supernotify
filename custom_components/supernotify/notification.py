@@ -14,6 +14,7 @@ from homeassistant.components.notify.const import ATTR_DATA
 from homeassistant.const import ATTR_ENTITY_ID
 from voluptuous import humanize
 
+from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
 
 from .archive import ArchivableObject
@@ -42,7 +43,6 @@ from .const import (
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
-    OPTION_UNIQUE_TARGETS,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     TARGET_USE_FIXED,
@@ -62,6 +62,7 @@ from .model import (
     TargetRequired,
     TransportFeature,
 )
+from .options import OPTION_UNIQUE_TARGETS
 from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome
 
 if TYPE_CHECKING:
@@ -90,7 +91,7 @@ def set_version(version: str) -> None:
 
 
 # supernotify specific data items not to be passed to transports in data
-INTERNAL_DATA_KEYS = (ATTR_FORCE_RESEND, ATTR_SPOKEN_MESSAGE)
+# the existence of this is probably an indication of something not quite right
 
 type DeliveryName = str
 
@@ -147,6 +148,7 @@ class Notification(ArchivableObject):
         self.dupe: bool = False
         self.deliveries: dict[DeliveryName, dict[EnvelopeOutcome, list[str] | list[Envelope] | dict[str, Any]]] = {}
         self.delivery_exceptions: dict[DeliveryName, list[str]] = {}
+        self.uncategorized_targets: dict[DeliveryName, list[str]] = {}
         self._skip_reasons: list[SuppressionReason] = []
 
         self.validate_action_data(action_data)
@@ -160,6 +162,7 @@ class Notification(ArchivableObject):
 
         self.priority: str = action_data.get(ATTR_PRIORITY, PRIORITY_MEDIUM)
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
+        self.spoken_message: str | None = action_data.get(ATTR_SPOKEN_MESSAGE)
         self.force_resend: bool = action_data.get(ATTR_FORCE_RESEND, False)
         self.required_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_REQUIRE))
         self.applied_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_APPLY))
@@ -372,6 +375,11 @@ class Notification(ArchivableObject):
             self.action_groups = action_groups
 
     def select_deliveries(self) -> dict[str, DeliveryTargetOverride | None]:
+        # 'DEFAULT_x' backward compatibility: a delivery referenced by its bare
+        # transport name resolves to the auto-configured 'DEFAULT_x', if that's what
+        # actually exists in the registry.
+        resolve_name = self.context.delivery_registry.resolve_name
+
         scenario_enable_deliveries: list[str] = []
         scenario_disable_deliveries: list[str] = []
         default_enable_deliveries: list[str] = []
@@ -381,19 +389,19 @@ class Notification(ArchivableObject):
 
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(scenario.enabling_deliveries())
+                scenario_enable_deliveries.extend(resolve_name(d) for d in scenario.enabling_deliveries())
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(scenario.disabling_deliveries())
+                scenario_disable_deliveries.extend(resolve_name(d) for d in scenario.disabling_deliveries())
 
-            scenario_enable_deliveries = list(set(scenario_enable_deliveries))
-            scenario_disable_deliveries = list(set(scenario_disable_deliveries))
+            scenario_enable_deliveries = list(dict.fromkeys(scenario_enable_deliveries))
+            scenario_disable_deliveries = list(dict.fromkeys(scenario_disable_deliveries))
 
             for recipient in all_recipients:
-                recipients_enable_deliveries.extend(recipient.enabling_delivery_names())
+                recipients_enable_deliveries.extend(resolve_name(d) for d in recipient.enabling_delivery_names())
                 # See also Recipient.target() for the disabled cases
-                recipients_disable_deliveries.extend(recipient.disabling_delivery_names())
+                recipients_disable_deliveries.extend(resolve_name(d) for d in recipient.disabling_delivery_names())
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                # all deliveries with SELECTION_DEFAULT in CONF_SELECTION
+                # all deliveries with INCLUSION_DEFAULT in CONF_INCLUSION
                 default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
 
         self.debug_trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
@@ -405,7 +413,8 @@ class Notification(ArchivableObject):
         override_disable_deliveries: list[str] = []
 
         # apply the deliveries defined in the notification action call
-        for delivery, delivery_override in self.delivery_overrides.items():
+        for delivery_name, delivery_override in self.delivery_overrides.items():
+            delivery = resolve_name(delivery_name)
             if (
                 (delivery_override is None or delivery_override.enabled is not False)
                 and delivery in self.context.delivery_registry.enabled_deliveries
@@ -418,7 +427,7 @@ class Notification(ArchivableObject):
                 override_disable_deliveries.append(delivery)
 
         all_global_enabled: list[str] = list(
-            set(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
+            dict.fromkeys(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
         )
         all_enabled: list[str] = all_global_enabled + recipients_enable_deliveries
         # override_enable_deliveries takes precedence: if the action call explicitly
@@ -426,7 +435,7 @@ class Notification(ArchivableObject):
         all_disabled: list[str] = [
             d for d in scenario_disable_deliveries + override_disable_deliveries if d not in override_enable_deliveries
         ]
-        override_enabled: list[str] = list(set(scenario_enable_deliveries + override_enable_deliveries))
+        override_enabled: list[str] = list(dict.fromkeys(scenario_enable_deliveries + override_enable_deliveries))
         self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
         self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
@@ -438,8 +447,17 @@ class Notification(ArchivableObject):
         ]
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
-        last: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.LAST]
-        selected: list[str] = first + anywhere + last
+        config_last: list[str] = [
+            d.name
+            for d in unsorted_objs
+            if d.selection_rank == SelectionRank.LAST and d.provenance == DeliveryProvenance.CONFIG
+        ]
+        auto_last: list[str] = [
+            d.name
+            for d in unsorted_objs
+            if d.selection_rank == SelectionRank.LAST and d.provenance != DeliveryProvenance.CONFIG
+        ]
+        selected: list[str] = first + anywhere + config_last + auto_last
         self.debug_trace.record_delivery_selection("ranked", selected)
 
         selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)
@@ -449,14 +467,14 @@ class Notification(ArchivableObject):
             include_targets: list[str] = []
             exclude_targets: list[str] = []
             for recipient in all_recipients:
-                if personal_delivery in recipient.enabling_delivery_names():
+                if personal_delivery in (resolve_name(d) for d in recipient.enabling_delivery_names()):
                     if personal_delivery in all_global_enabled:
                         # delivery already selected, make sure this recipient also included
                         include_targets.append(recipient.entity_id)
                     else:
                         # this delivery has been explicitly enabled for individual recipients
                         fixed_targets.append(recipient.entity_id)
-                elif personal_delivery in recipient.disabling_delivery_names():
+                elif personal_delivery in (resolve_name(d) for d in recipient.disabling_delivery_names()):
                     exclude_targets.append(recipient.entity_id)
             selected_deliveries[personal_delivery] = DeliveryTargetOverride(
                 fixed=fixed_targets, exclude=exclude_targets, include=include_targets
@@ -590,7 +608,7 @@ class Notification(ArchivableObject):
                 return
 
             for envelope in envelopes:
-                if not self.force_resend and self.context.dupe_checker.check(envelope):
+                if not envelope.force_resend and self.context.dupe_checker.check(envelope):
                     _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self.message)
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
@@ -673,31 +691,59 @@ class Notification(ArchivableObject):
         object_refs = ["context", "ha_context", "people_registry", "delivery_registry"]
         keys_only = ["enabled_scenarios"]
         debug_only = ["debug_trace"]
-        exposed_if_populated = ["_delivery_error", "message_html", "extra_data", "actions", "_suppression_reason"]
+        exposed_if_populated = [
+            "_delivery_error",
+            "message_html",
+            "spoken_message",
+            "extra_data",
+            "actions",
+            "_suppression_reason",
+        ]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
             "id",
+            "outcome",
             "created",
             "message",
+            "spoken_message",
+            "message_html",
+            "priority",
+            "stats",
+            "delivered",
+            "failed",
+            "suppressed",
+            "skipped",
+            "fallback",
+            "error_count",
+            "dupe",
+            "force_resend",
+            "delivery_selection",
+            "delivery_overrides",
+            "delivery_selection",
+            "selected_deliveries",
             "applied_scenario_names",
             "constrain_scenario_names",
             "required_scenario_names",
             "enabled_scenarios",
             "selected_scenario_names",
-            "delivery_selection",
-            "delivery_overrides",
-            "delivery_selection",
-            "selected_deliveries",
-            "delivered",
-            "failed",
-            "suppressed",
-            "skipped",
-            "error_count",
             "delivery_exceptions",
+            "uncategorized_targets",
+            "unassigned_targets",
+            "extra_data",
             "deliveries",
+            "actions",
+            "delivery_exceptions",
+            "original_context",
+            "version",
         ]
         # preferred fields
-        result: dict[str, Any] = {"version": _VERSION, "outcome": self.outcome()}
+        raw: dict[str, Any] = dict(self.__dict__)
+        raw["unassigned_targets"] = self._unassigned_targets()
+        raw["stats"] = self._delivery_stats()
+        raw["version"] = _VERSION
+        raw["outcome"] = self.outcome()
+
+        result: dict[str, Any] = {}
         if self.ha_context is not None:
             # Context.as_dict() takes no kwargs, so it can't go through sanitize() like everything else
             original_context = dict(self.ha_context.as_dict())
@@ -706,18 +752,17 @@ class Notification(ArchivableObject):
                 user_name = self.people_registry.name_for_user_id(user_id)
                 if user_name:
                     original_context["user"] = user_name
-            result["original_context"] = original_context
+            raw["original_context"] = original_context
         result.update({
-            k: sanitize(
-                self.__dict__[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only)
-            )
+            k: sanitize(raw[k], minimal=minimal, occupancy_only=True, top_level_keys_only=(minimal and k in keys_only))
             for k in preferred_order
-            if k in self.__dict__
+            if k in raw and (k not in exposed_if_populated or raw[k])
         })
+
         # all the rest not explicitly excluded
         result.update({
             k: sanitize(v, minimal=minimal, occupancy_only=True)
-            for k, v in self.__dict__.items()
+            for k, v in raw.items()
             if k not in result
             and k not in exposed_if_populated
             and k not in object_refs
@@ -725,13 +770,17 @@ class Notification(ArchivableObject):
             and (not minimal or k not in keys_only)
             and (not minimal or k not in debug_only)
         })
-        # the exposed only if populated fields
+        # the exposed only if populated fields not already placed by preferred_order
         result.update({
-            k: sanitize(self.__dict__[k], minimal=minimal, occupancy_only=True)
+            k: sanitize(raw[k], minimal=minimal, occupancy_only=True)
             for k in exposed_if_populated
-            if self.__dict__.get(k)
+            if k not in result and raw.get(k)
         })
+        return result
+
+    def _delivery_stats(self) -> dict[str, Any]:
         # delivery_stats: aggregate delivery metrics
+        result: dict[str, Any] = {}
         try:
             all_durations: dict[str, float] = {}
             total_ok = 0
@@ -748,7 +797,7 @@ class Notification(ArchivableObject):
                 if outcomes.get(EnvelopeOutcome.SKIPPED):
                     total_all += 1
             if all_durations:
-                result["stats"] = {
+                result = {
                     "total_duration_ms": round(sum(all_durations.values()), 1),
                     "slowest_delivery": max(all_durations, key=lambda k: all_durations[k]),
                     "fastest_delivery": min(all_durations, key=lambda k: all_durations[k]),
@@ -768,7 +817,9 @@ class Notification(ArchivableObject):
         delivery_override: DeliveryCustomization | None = self.delivery_overrides.get(delivery.name)
         if delivery_override is None:
             delivery_override = self.delivery_overrides.get(delivery.transport.name)
-        return delivery_override.data if delivery_override and delivery_override.data else {}
+        # a copy: callers (Envelope.__init__) pop message/title out of this, and the same
+        # override can now be shared by more than one delivery on the same transport
+        return dict(delivery_override.data) if delivery_override and delivery_override.data else {}
 
     @property
     def delivered_envelopes(self) -> list[Envelope]:
@@ -799,7 +850,7 @@ class Notification(ArchivableObject):
         self.debug_trace.record_target(delivery.name, stages[1], computed_target)
         computed_target += self.resolve_scenario_targets(delivery)
         self.debug_trace.record_target(delivery.name, stages[2], computed_target)
-        computed_target = delivery.select_targets(computed_target)
+        computed_target = delivery.select_targets(computed_target, self.context.hass_api)
         self.debug_trace.record_target(delivery.name, stages[3], computed_target)
         return computed_target
 
@@ -888,11 +939,13 @@ class Notification(ArchivableObject):
             # if override doesn't use a valid delivery name, try a transport name instead
             delivery_override = self.delivery_overrides.get(delivery.transport.name)
         if delivery_override and delivery_override.target and delivery_override.target.has_targets():
-            override_target = delivery_override.target
+            # exclusively scoped to this one delivery, so safe to claim an unqualified value
+            override_target = delivery.reclassify_unqualified_target(delivery_override.target)
+            self._record_uncategorized(delivery, override_target)
             # handle and resolve indirect targets, like person->mobile device or email
             for indirect_target in self.resolve_indirect_targets(override_target, delivery):
                 override_target += indirect_target
-            computed_target = delivery.select_targets(override_target)
+            computed_target = delivery.select_targets(override_target, self.context.hass_api)
             self.debug_trace.record_target(delivery.name, "600_delivery_override_target", computed_target)
 
         split_targets: list[Target] = computed_target.split_by_target_data()
@@ -914,8 +967,44 @@ class Notification(ArchivableObject):
         for scenario in self.enabled_scenarios.values():
             customization: DeliveryCustomization | None = scenario.delivery_customization(delivery.name)
             if customization and customization.target and customization.target.has_targets():
-                resolved += customization.target
+                # exclusively scoped to this one delivery, so safe to claim an unqualified value
+                reclassified = delivery.reclassify_unqualified_target(customization.target)
+                self._record_uncategorized(delivery, reclassified)
+                resolved += reclassified
         return resolved
+
+    def _record_uncategorized(self, delivery: Delivery, target: Target) -> None:
+        """Track a delivery-scoped target's leftover uncategorised values, once
+
+        `Delivery.reclassify_unqualified_target()` has had its one chance to place them (it
+        already logs a warning) - collected here so the caller (`SupernotifyEngine.
+        async_send_message()`) can raise a single `UncategorizedTargetError` for the whole
+        notification, once delivery has fully finished and everything deliverable is sent.
+        """
+        if target.has_unknown_targets():
+            self.uncategorized_targets.setdefault(delivery.name, [])
+            self.uncategorized_targets[delivery.name].extend(target.custom_ids(Target.UNKNOWN_CUSTOM_CATEGORY))
+
+    def _unassigned_targets(self) -> dict[str, list[str]]:
+        """Archive-only diagnostic: requested target values with a recognisable category
+
+        (entity_id, email, phone, mobile_app_id, device_id, or an explicit custom category)
+        that never ended up in any envelope across the whole notification - as opposed to
+        `uncategorized_targets`, which tracks values with no recognisable shape at all.
+        Grouped by category, like `uncategorized_targets`, so a gap is easy to place when
+        debugging. Computed here rather than tracked as an instance attribute, since it's
+        only ever needed for the archive.
+        """
+        if not self._target:
+            return {}
+        result: dict[str, list[str]] = {}
+        for category, targets in self._target.direct().targets.items():
+            if category == Target.UNKNOWN_CUSTOM_CATEGORY:
+                continue
+            unassigned = [t for t in targets if t not in self._already_selected.targets.get(category, [])]
+            if unassigned:
+                result[category] = unassigned
+        return result
 
     def all_recipients(self) -> list[Recipient]:
         recipients: list[Recipient] = []
@@ -1017,9 +1106,7 @@ class Notification(ArchivableObject):
                         envelope_data.update(customization.data)
 
                 # apply data from action call last to prioritize it
-                envelope_data.update({
-                    k: v for k, v in self.extra_data.items() if k not in INTERNAL_DATA_KEYS
-                })  # action call data
+                envelope_data.update(self.extra_data)  # action call data
 
                 envelopes.append(
                     Envelope(delivery, self, target, envelope_data, context=self.context, ha_context=self.ha_context)

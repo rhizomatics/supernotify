@@ -5,11 +5,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 import mkdocs_gen_files
+from anyio import Path as AsyncPath
 from homeassistant.const import CONF_ACTION
 from homeassistant.core import HomeAssistant
 
 sys.path.append(str((Path(__file__).parent / "..").resolve()))
 # imports must come after sys.path append
+
+
 from custom_components.supernotify.const import CONF_TRANSPORT, PRIORITY_VALUES, TRANSPORT_EMAIL
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
@@ -29,7 +32,7 @@ async def create_examples() -> None:
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={"examples": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_ACTION: "notify.smtp"}},
-        template_path=Path("custom_components/supernotify/default_templates"),
+        template_path=AsyncPath("custom_components/supernotify/default_templates"),
     )
     await ctx.test_initialize()
     uut: EmailTransport = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))

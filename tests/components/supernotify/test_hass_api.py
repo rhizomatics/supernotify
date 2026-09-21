@@ -285,6 +285,31 @@ def test_finds_service(hass: HomeAssistant) -> None:
     assert hass_api.find_service("foo2", "supernotify.test_hass_api") == "foo2.clz"
 
 
+def test_finds_service_skips_per_target_aliases(hass: HomeAssistant) -> None:
+    """Legacy notify platforms with a targets property (e.g. alexa_media_player) register
+    extra per-target services (notify.<platform>_<device>) sharing the same bound method as
+    the base service. find_service must not settle on one of those aliases - it ignores any
+    target: passed by the caller and always speaks through its own hard-coded device - and
+    should hold out for the base platform service instead."""
+
+    class TestingNotifyService:
+        def __init__(self) -> None:
+            self.registered_targets = {"foo_device_one": "device_one", "foo_device_two": "device_two"}
+
+        async def service_call(self, call: ServiceCall) -> ServiceResponse | None:
+            return {}
+
+    svc = TestingNotifyService()
+
+    # per-target aliases registered first, as the real notify platform does, base service last
+    hass.services.async_register(domain="foo", service="foo_device_one", service_func=svc.service_call)  # type: ignore
+    hass.services.async_register(domain="foo", service="foo_device_two", service_func=svc.service_call)  # type: ignore
+    hass.services.async_register(domain="foo", service="foo", service_func=svc.service_call)  # type: ignore
+
+    hass_api = HomeAssistantAPI(hass)
+    assert hass_api.find_service("foo", "supernotify.test_hass_api") == "foo.foo"
+
+
 async def test_coerce_schema_does_nothing_for_unknown_service(hass) -> None:
     ctx = TestingContext(homeassistant=hass)
     await ctx.test_initialize()
@@ -401,7 +426,7 @@ def test_build_mobile_app_cache_no_entity_registry(mock_hass: HomeAssistant) -> 
     from unittest.mock import patch
 
     hass_api = HomeAssistantAPI(mock_hass)
-    with patch.object(hass_api, "entity_registry", return_value=None):
+    with patch.object(hass_api, "_entity_registry", return_value=None):
         hass_api.build_mobile_app_cache()  # should not raise
 
 
@@ -411,7 +436,7 @@ def test_discover_devices_skips_disabled(hass: HomeAssistant) -> None:
 
     hass_api = HomeAssistantAPI(hass)
     dev_entry = register_device(hass_api, domain="test_disabled", domain_id="dd_01")
-    dev_reg = hass_api.device_registry()
+    dev_reg = hass_api._device_registry()
     if dev_entry and dev_reg:
         dev_reg.async_update_device(dev_entry.id, disabled_by=DeviceEntryDisabler.USER)
     devices = hass_api.discover_devices("test_disabled")
@@ -567,7 +592,7 @@ def test_device_config_info_falls_back_to_deprecated_config_entries(hass: HomeAs
 def test_discover_devices_no_device_registry(hass: HomeAssistant) -> None:
     # Lines 554-555
     hass_api = HomeAssistantAPI(hass)
-    with patch.object(hass_api, "device_registry", return_value=None):
+    with patch.object(hass_api, "_device_registry", return_value=None):
         assert hass_api.discover_devices("mobile_app") == []
 
 
@@ -609,14 +634,14 @@ def test_entity_registry_handles_exception(hass: HomeAssistant) -> None:
     # Lines 646-647
     hass_api = HomeAssistantAPI(hass)
     with patch("custom_components.supernotify.hass_api.er.async_get", side_effect=RuntimeError("boom")):
-        assert hass_api.entity_registry() is None
+        assert hass_api._entity_registry() is None
 
 
 def test_device_registry_handles_exception(hass: HomeAssistant) -> None:
     # Lines 658-659
     hass_api = HomeAssistantAPI(hass)
     with patch("custom_components.supernotify.hass_api.dr.async_get", side_effect=RuntimeError("boom")):
-        assert hass_api.device_registry() is None
+        assert hass_api._device_registry() is None
 
 
 async def test_mqtt_available_raises_by_default(mock_hass: HomeAssistant) -> None:

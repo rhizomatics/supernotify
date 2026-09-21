@@ -9,13 +9,13 @@ from homeassistant.const import CONF_ACTION, CONF_OPTIONS
 from custom_components.supernotify.const import (
     CONF_TEMPLATE,
     CONF_TRANSPORT,
-    OPTION_STRICT_TEMPLATE,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transports.email import OPTION_STRICT_TEMPLATE
 
 from .hass_setup_lib import TestingContext
 

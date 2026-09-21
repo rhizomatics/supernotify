@@ -64,7 +64,7 @@ def _ctx(
         delivery_cfg["pushover_test"]["data"] = delivery_data  # ty: ignore[invalid-assignment]
     return TestingContext(
         deliveries=delivery_cfg,
-        transport_types=[PushoverTransport],
+        viable_transport_types=[PushoverTransport],
     )
 
 

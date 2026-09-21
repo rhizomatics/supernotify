@@ -31,9 +31,10 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
@@ -41,12 +42,16 @@ from custom_components.supernotify.const import (
     TRANSPORT_NTFY,
 )
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
+
+HA_NTFY_DOMAIN = "ntfy"
 
 _PRIORITY_MAP = {
     "critical": 5,  # urgent/max
@@ -101,6 +106,7 @@ class NtfyTransport(Transport):
     """Notify via ntfy push notification service."""
 
     name = TRANSPORT_NTFY
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -119,8 +125,15 @@ class NtfyTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.action = "ntfy.publish"
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_NTFY_DOMAIN) is not None
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY ntfy %s", envelope.message)

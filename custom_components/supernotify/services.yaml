@@ -88,6 +88,10 @@ notify:
           selector:
             text:
               multiline: true
+        spoken_message:
+          selector:
+            text:
+              multiline: true
         debug:
           selector:
             boolean:
@@ -95,6 +99,12 @@ notify:
           selector:
             boolean:
         data:
+          selector:
+            object:
+        timestamp:
+          selector:
+            text:
+        extra_data:
           selector:
             object:
 enquire_configuration:

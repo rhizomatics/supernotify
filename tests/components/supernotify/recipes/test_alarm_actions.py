@@ -6,6 +6,7 @@ import pytest
 
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
 if TYPE_CHECKING:
@@ -28,7 +29,7 @@ recipients:
         - mobile_app_id: mobile_app_joe_nokia
 
 delivery:
-  apple_push:
+  mobile_push:
     transport: mobile_push
 scenarios:
   alarm_disarmed:
@@ -68,6 +69,7 @@ action_groups:
       icon: "sfsymbols:airplane"
       """,
         services={"notify": ["mobile_app_joe_nokia"]},
+        viable_transport_types=[MobilePushTransport],
     )
     hass.states.async_set("alarm_control_panel.home_alarm", "pending")
     await hass.async_block_till_done()
@@ -84,9 +86,9 @@ async def test_mobile_push_only_has_arm_when_alarm_disarmed(fixture, hass: HomeA
     await uut.initialize()
     await uut.deliver()
     assert uut.selected_scenario_names == ["alarm_disarmed"]
-    assert len(uut.deliveries["apple_push"][EnvelopeOutcome.SUCCESS]) == 1
-    envelope: Envelope = uut.deliveries["apple_push"][EnvelopeOutcome.SUCCESS][0]  # type:ignore
-    assert envelope.delivery_name == "apple_push"
+    assert len(uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS]) == 1
+    envelope: Envelope = uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS][0]  # type:ignore
+    assert envelope.delivery_name == "mobile_push"
     assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]  # ty: ignore[not-subscriptable]
         {"action": "ALARM_PANEL_RESET", "title": "Arm Alarm Panel for at Home", "icon": "sfsymbols:bell"},
         {"action": "ALARM_PANEL_AWAY", "title": "Arm Alarm Panel for Going Away", "icon": "sfsymbols:airplane"},
@@ -102,9 +104,9 @@ async def test_mobile_push_only_has_disarm_when_alarm_armed(fixture, hass: HomeA
     await uut.initialize()
     await uut.deliver()
     assert uut.selected_scenario_names == ["alarm_armed"]
-    assert len(uut.deliveries["apple_push"][EnvelopeOutcome.SUCCESS]) == 1
-    envelope: Envelope = uut.deliveries["apple_push"][EnvelopeOutcome.SUCCESS][0]  # type:ignore
-    assert envelope.delivery_name == "apple_push"
+    assert len(uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS]) == 1
+    envelope: Envelope = uut.deliveries["mobile_push"][EnvelopeOutcome.SUCCESS][0]  # type:ignore
+    assert envelope.delivery_name == "mobile_push"
     assert envelope.calls[0].action_data["data"]["actions"] == [  # type: ignore[index]  # ty: ignore[not-subscriptable]
         {"action": "ALARM_PANEL_DISARM", "title": "Disarm Alarm Panel", "icon": "sfsymbols:bell.slash"},
         {"action": "ALARM_PANEL_RESET", "title": "Arm Alarm Panel for at Home", "icon": "sfsymbols:bell"},

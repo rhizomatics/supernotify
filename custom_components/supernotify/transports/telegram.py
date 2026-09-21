@@ -31,17 +31,22 @@ from __future__ import annotations
 
 import html
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_TELEGRAM
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
+
+HA_TELEGRAM_BOT_DOMAIN = "telegram_bot"
 
 _PRIORITY_MAP = {
     "critical": False,  # notify (sound + vibration)
@@ -146,6 +151,7 @@ class TelegramTransport(Transport):
     """Notify via Telegram using Home Assistant telegram_bot integration."""
 
     name = TRANSPORT_TELEGRAM
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -165,7 +171,14 @@ class TelegramTransport(Transport):
         config = TransportConfig()
         config.delivery_defaults.action = "telegram_bot.send_message"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_TELEGRAM_BOT_DOMAIN) is not None
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is one of the supported telegram_bot services."""
@@ -203,6 +216,7 @@ class TelegramTransport(Transport):
         # Also accept legacy raw shapes: dict, list, or scalar string/int.
         raw_target: Any = chat_id_override
         if not raw_target and envelope.delivery:
+            # TODO: this should probably be envelope.target like all the other transports
             raw_target = envelope.delivery.target
 
         # Target object: extract first id from preferred categories

@@ -7,7 +7,7 @@ to entity_ids within supernotify using the same core helper as HA entity actions
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -22,9 +22,6 @@ from custom_components.supernotify.const import (
     CONF_OPTIONS,
     CONF_TARGET_REQUIRED,
     CONF_TRANSPORT,
-    OPTION_TARGET_SELECTORS,
-    TARGET_SELECTORS_NATIVE,
-    TARGET_SELECTORS_RESOLVE,
     TRANSPORT_CHIME,
     TRANSPORT_GENERIC,
     TRANSPORT_NOTIFY_ENTITY,
@@ -35,6 +32,11 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI, TargetSelectorResolution
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.options import (
+    OPTION_TARGET_SELECTORS,
+    TARGET_SELECTORS_NATIVE,
+    TARGET_SELECTORS_RESOLVE,
+)
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -113,7 +115,7 @@ def test_service_accepts_target_selectors_survives_cache_errors(hass: HomeAssist
 
 async def test_load_service_descriptions(hass: HomeAssistant) -> None:
     uut = HomeAssistantAPI(hass)
-    descriptions = {"tts": {"speak": {"target": {"entity": []}}}}
+    descriptions: dict[str, dict[str, Any]] = {"tts": {"speak": {"target": {"entity": []}}}}
     with patch("custom_components.supernotify.hass_api.async_get_all_descriptions", AsyncMock(return_value=descriptions)):
         await uut.load_service_descriptions()
     assert uut.service_accepts_target_selectors("tts.speak") is True
@@ -222,7 +224,7 @@ def test_resolve_target_selectors_survives_errors(hass: HomeAssistant, caplog: p
 async def test_delivery_discovers_target_selectors(
     mock_context: Context, option: str | None, discovered: bool | None, expected: bool
 ) -> None:
-    mock_context.hass_api.service_accepts_target_selectors = Mock(return_value=discovered)
+    mock_context.hass_api.service_accepts_target_selectors = Mock(return_value=discovered)  # type: ignore[method-assign]
     conf = {CONF_OPTIONS: {OPTION_TARGET_SELECTORS: option}} if option else {}
     uut = Delivery("unit_testing", conf, NotifyEntityTransport(mock_context, {}))
     assert uut.passes_target_selectors is False
@@ -233,7 +235,7 @@ async def test_delivery_discovers_target_selectors(
 async def test_delivery_warns_on_unknown_target_selectors_option(
     mock_context: Context, caplog: pytest.LogCaptureFixture
 ) -> None:
-    mock_context.hass_api.service_accepts_target_selectors = Mock(return_value=None)
+    mock_context.hass_api.service_accepts_target_selectors = Mock(return_value=None)  # type: ignore[method-assign]
     uut = Delivery(
         "unit_testing", {CONF_OPTIONS: {OPTION_TARGET_SELECTORS: "garbage"}}, NotifyEntityTransport(mock_context, {})
     )

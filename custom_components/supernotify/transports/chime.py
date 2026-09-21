@@ -3,58 +3,97 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (  # ATTR_VARIABLES from script.const has import issues
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    CONF_ALIAS,
     CONF_DOMAIN,
     CONF_TARGET,
 )
 from homeassistant.exceptions import NoEntitySpecifiedError
+from homeassistant.helpers import config_validation as cv
 from voluptuous.humanize import humanize_error
 
 from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA,
     ATTR_PRIORITY,
+    CONF_DATA,
+    CONF_DURATION,
+    CONF_INCLUSION,
     CONF_TUNE,
-    OPTION_CHIME_ALIASES,
-    OPTION_DEVICE_DISCOVERY,
-    OPTION_DEVICE_DOMAIN,
-    OPTION_DEVICE_MODEL_SELECT,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_SELECT,
-    OPTION_TARGET_SELECTORS,
+    CONF_VOLUME,
+    INCLUSION_EXPLICIT,
     OPTIONS_CHIME_DOMAINS,
     RE_DEVICE_ID,
-    SELECT_EXCLUDE,
-    TARGET_SELECTORS_RESOLVE,
     TRANSPORT_CHIME,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
+    EntityCategory,
     SelectionRule,
     Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
-from custom_components.supernotify.schema import CHIME_ALIASES_SCHEMA
+from custom_components.supernotify.options import (
+    OPTION_DEVICE_DISCOVERY,
+    OPTION_DEVICE_DOMAIN,
+    OPTION_DEVICE_MODEL_SELECT,
+    OPTION_TARGET_SELECT,
+    OPTION_TARGET_SELECTORS,
+    SELECT_EXCLUDE,
+    TARGET_SELECTORS_RESOLVE,
+    DeliveryOption,
+)
+from custom_components.supernotify.schema import DATA_SCHEMA, TARGET_SCHEMA
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
+# kept in sync with RE_VALID_CHIME below and this transport's target_categories property
+CHIME_ENTITY_DOMAINS = ["switch", "script", "group", "rest_command", "siren", "media_player"]
 RE_VALID_CHIME = r"(switch|script|group|rest_command|siren|media_player)\.[A-Za-z0-9_]+"
+
+# extra standard delivery grouping every siren - see build_standard_deliveries() below
+STANDARD_DELIVERY_SIREN_ALL = f"{TRANSPORT_CHIME}_siren_all"
 
 _LOGGER = logging.getLogger(__name__)
 
+# device-registry scan (see HomeAssistantAPI.discover_devices), independent of whether
+# AlexaDevicesTransport itself is currently viable/loaded - HA doesn't reliably prune
+# device registry entries when a config entry is unloaded, so chime can keep finding and
+# targeting alexa_devices devices after that transport has gone away
 DEVICE_DOMAINS = ["alexa_devices"]
+
+OPTION_CHIME_ALIASES = "chime_aliases"
+CHIME_ALIASES_SCHEMA = vol.Schema({
+    vol.Required(OPTION_CHIME_ALIASES, default=dict): vol.Schema({
+        cv.string: vol.Schema({
+            cv.string: vol.Any(
+                vol.Any(None, cv.string, vol.In(OPTIONS_CHIME_DOMAINS)),
+                vol.Schema({
+                    vol.Optional(CONF_ALIAS): cv.string,
+                    vol.Optional(CONF_DOMAIN): cv.string,
+                    vol.Optional(CONF_TUNE): cv.string,
+                    vol.Optional(CONF_DATA): DATA_SCHEMA,
+                    vol.Optional(CONF_VOLUME): float,
+                    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+                    vol.Optional(CONF_DURATION): cv.positive_int,
+                }),
+            )
+        })
+    })
+})
 
 
 @dataclass
@@ -241,6 +280,9 @@ class MediaPlayerChimeTransport(MiniChimeTransport):
 
 class ChimeTransport(Transport):
     name = TRANSPORT_CHIME
+    declared_options: ClassVar[list[DeliveryOption]] = [
+        DeliveryOption(OPTION_CHIME_ALIASES, "Custom chime device aliases and their per-domain tuning"),
+    ]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -270,7 +312,7 @@ class ChimeTransport(Transport):
 
     @property
     def supported_features(self) -> TransportFeature:
-        return TransportFeature(0)
+        return TransportFeature.SOUND
 
     def extra_attributes(self) -> dict[str, Any]:
         return {"mini_transports": [t.domain for t in self.mini_transports.values()]}
@@ -279,8 +321,8 @@ class ChimeTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = TransportConfig()
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
+        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID, ATTR_DEVICE_ID],
             # chimes are actioned one entity at a time, so area/floor/label are resolved to entities here
             OPTION_TARGET_SELECTORS: TARGET_SELECTORS_RESOLVE,
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
@@ -290,8 +332,37 @@ class ChimeTransport(Transport):
         }
         return config
 
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
+
     def validate_action(self, action: str | None) -> bool:
         return action is None
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        # an explicit delivery can supply its own chime_aliases regardless of whether the
+        # transport-level default is configured - is_viable() can't see delivery-level
+        # config, so it can't rule that out; DeliveryRegistry prunes this transport
+        # entirely once it's confirmed no delivery (explicit or auto) actually uses it
+        return True
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        """Its own default (only if chime_aliases is configured - with none, there's
+        nothing to map a tune/priority to a target), plus "..._siren_all" - all siren.*
+        entities, regardless of chime_aliases: unlike the other chime domains,
+        SirenChimeTransport.build() doesn't need a tune/alias mapping to call
+        siren.turn_on, so this extra doesn't share the alias requirement."""
+        deliveries: dict[str, ConfigType] = {}
+        if OPTION_CHIME_ALIASES in self.delivery_defaults.options:
+            deliveries[self.name] = {}
+        siren_entity_ids = hass_api.entity_ids_for_domain("siren")
+        if siren_entity_ids:
+            deliveries[STANDARD_DELIVERY_SIREN_ALL] = {
+                CONF_TARGET: {ATTR_ENTITY_ID: siren_entity_ids},
+                CONF_INCLUSION: [INCLUSION_EXPLICIT],
+            }
+
+        return deliveries
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         data: dict[str, Any] = {}

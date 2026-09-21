@@ -40,8 +40,6 @@ Notes on the `kodi.call_method` service:
   transport pattern.
 - Pure overlay: no action buttons and no user interaction.
 
-Internal data keys filtered upstream by notification.py and NOT popped here:
-    force_resend, spoken_message
 
 References:
 - Kodi integration: https://www.home-assistant.io/integrations/kodi/
@@ -52,30 +50,34 @@ References:
 from __future__ import annotations
 
 import logging
-import re
 import urllib.parse
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
-    OPTION_TARGET_CATEGORIES,
-    OPTION_TARGET_SELECT,
+    RE_MEDIA_PLAYER_ENTITY_ID,
     TRANSPORT_KODI,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import (
+    DebugTrace,
+    EntityCategory,
+    TargetRequired,
+    TransportConfig,
+    TransportFeature,
+)
+from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
+    from custom_components.supernotify.hass_api import HomeAssistantAPI
 
 _LOGGER = logging.getLogger(__name__)
 
-RE_VALID_KODI = r"media_player\.[A-Za-z0-9_]+"
-
-_KODI_ENTITY_RE = re.compile(rf"^{RE_VALID_KODI}$")
+HA_KODI_DOMAIN = "kodi"
 
 # GUI.ShowNotification displaytime constraints (milliseconds)
 DEFAULT_DISPLAYTIME = 10000
@@ -115,6 +117,7 @@ class KodiTransport(Transport):
         super().__init__(*args, **kwargs)
 
     name = TRANSPORT_KODI
+    declared_options: ClassVar[list[DeliveryOption]] = [*MEDIA_OPTIONS]
 
     @property
     def supported_features(self) -> TransportFeature:
@@ -126,30 +129,24 @@ class KodiTransport(Transport):
         config.delivery_defaults.action = "kodi.call_method"
         config.delivery_defaults.target_required = TargetRequired.ALWAYS
         config.delivery_defaults.options = {
-            OPTION_TARGET_SELECT: [RE_VALID_KODI],
-            OPTION_TARGET_CATEGORIES: [ATTR_ENTITY_ID],
+            OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
         }
+        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def target_categories(self) -> list[str | EntityCategory]:
+        return [EntityCategory(domain="media_player")]
+
+    def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
+        return hass_api.find_config_entry_data(HA_KODI_DOMAIN) is not None
+
+    def build_standard_deliveries(self, hass_api: HomeAssistantAPI) -> dict[str, ConfigType]:
+        return {self.name: {}}
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the kodi call_method service."""
         return action == "kodi.call_method"
-
-    def select_targets(self, envelope: Envelope) -> list[str]:
-        """Filter envelope targets down to media_player entity ids.
-
-        `kodi.call_method` only accepts media_player entities; anything else
-        is dropped with a debug log. Duplicates are removed preserving order.
-        """
-        raw_targets: list[str] = envelope.target.entity_ids or [] if envelope.target else []
-        targets: list[str] = []
-        for target in raw_targets:
-            if isinstance(target, str) and _KODI_ENTITY_RE.match(target):
-                if target not in targets:
-                    targets.append(target)
-            else:
-                _LOGGER.debug("SUPERNOTIFY kodi: skipping invalid target %r", target)
-        return targets
 
     def _absolute_url(self, url: str) -> str:
         """Make a relative URL absolute so the Kodi host can fetch it.
@@ -207,7 +204,7 @@ class KodiTransport(Transport):
         attach_image = boolify(raw_data.pop("kodi_attach_image", False), default=False)
 
         # Resolve and pre-validate media_player targets
-        targets = self.select_targets(envelope)
+        targets = envelope.target.entity_ids if envelope.target else []
         if not targets and not self.has_action_target(self.action_target(envelope)):
             _LOGGER.warning("SUPERNOTIFY kodi: no valid media_player targets")
             self.record_error("no valid Kodi media_player targets", "deliver")

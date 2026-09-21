@@ -1,6 +1,8 @@
 import datetime as dt
 from unittest.mock import Mock
 
+from pytest import fixture
+
 from custom_components.supernotify.common import (
     CallRecord,
     DupeChecker,
@@ -12,8 +14,10 @@ from custom_components.supernotify.common import (
     safe_get,
 )
 from custom_components.supernotify.const import ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE, CONF_DUPE_POLICY
+from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.notification import Notification
+from custom_components.supernotify.transport import Transport
 
 
 def test_int_or_none():
@@ -69,8 +73,17 @@ def test_call_record():
     }
 
 
-def test_dupe_check_suppresses_same_priority_and_message() -> None:
-    delivery = Mock(name="tester")
+@fixture
+def delivery() -> Delivery:
+    d = Mock(Delivery, name="test_delivery", message=None, title=None)
+    d.name = "testdel"
+    d.transport = Mock(Transport, "test_transport")
+    d.transport.name = "testtrans"
+    d.transport.supported_features = 0
+    return d
+
+
+def test_dupe_check_suppresses_same_priority_and_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
@@ -78,8 +91,7 @@ def test_dupe_check_suppresses_same_priority_and_message() -> None:
     assert uut.check(e2) is True
 
 
-def test_dupe_check_allows_higher_priority_and_same_message() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_check_allows_higher_priority_and_same_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
@@ -87,8 +99,7 @@ def test_dupe_check_allows_higher_priority_and_same_message() -> None:
     assert uut.check(e2) is False
 
 
-def test_dupe_policy_mt_suppresses_same_message() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_policy_mt_suppresses_same_message(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
@@ -96,9 +107,8 @@ def test_dupe_policy_mt_suppresses_same_message() -> None:
     assert uut.check(e2) is True
 
 
-def test_dupe_policy_mt_suppresses_higher_priority_same_message() -> None:
+def test_dupe_policy_mt_suppresses_higher_priority_same_message(delivery: Delivery) -> None:
     """Unlike MTSLP, MT suppresses even when priority escalates."""
-    delivery = Mock(name="tester")
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
@@ -106,8 +116,7 @@ def test_dupe_policy_mt_suppresses_higher_priority_same_message() -> None:
     assert uut.check(e2) is True
 
 
-def test_dupe_policy_mt_allows_different_message() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_policy_mt_allows_different_message(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
@@ -115,8 +124,7 @@ def test_dupe_policy_mt_allows_different_message() -> None:
     assert uut.check(e2) is False
 
 
-def test_dupe_check_allows_different_camera_entity_same_message() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_check_allows_different_camera_entity_same_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
@@ -128,8 +136,7 @@ def test_dupe_check_allows_different_camera_entity_same_message() -> None:
     assert uut.check(e2) is False
 
 
-def test_dupe_check_suppresses_same_camera_entity_and_message() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_check_suppresses_same_camera_entity_and_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"camera_entity_id": "camera.a"}})
@@ -141,8 +148,7 @@ def test_dupe_check_suppresses_same_camera_entity_and_message() -> None:
     assert uut.check(e2) is True
 
 
-def test_dupe_check_allows_different_clip_url_same_message() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_check_allows_different_clip_url_same_message(delivery: Delivery) -> None:
     uut = DupeChecker({})
     e1 = Envelope(
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"clip_url": "http://cam/1.mp4"}})
@@ -154,8 +160,7 @@ def test_dupe_check_allows_different_clip_url_same_message() -> None:
     assert uut.check(e2) is False
 
 
-def test_dupe_policy_none_never_suppresses() -> None:
-    delivery = Mock(name="tester")
+def test_dupe_policy_none_never_suppresses(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
     assert uut.check(e1) is False
