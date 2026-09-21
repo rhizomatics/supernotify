@@ -13,6 +13,7 @@
 
 ### Notify Entities
 - The notify entities created for recipients now have the timestamp changed however they were notified by SuperNotify (previously only updated if the Notify Entity itself was used, as in `send_message`)
+- Home Assistant context is used for the Notify Entity timestamp, so its possible to look at a sent timestamp on an entity and see why it was notified
 
 ### Scenario and Recipient Switches
 

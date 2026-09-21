@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
+from homeassistant.core import Context as HAContext
 from pytest_asyncio import fixture
 from pytest_unordered import unordered
 
@@ -759,6 +760,22 @@ async def test_record_result_notifies_recipient_notify_entity_on_delivery(person
     personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
     personal_delivery_context.people_registry.people["person.bob"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
     personal_delivery_context.people_registry.people["person.carol"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+
+
+async def test_record_result_passes_calling_context_to_recipient_notify_entity(
+    personal_delivery_context: TestingContext,
+) -> None:
+    """The context of the supernotify.notify call that caused the delivery is handed on, so the
+    recipient's notify entity state change can be attributed to it"""
+    calling_context = HAContext(user_id="user123")
+
+    uut = Notification(personal_delivery_context, "testing 123", target=["person.alice"], ha_context=calling_context)
+    await uut.initialize()
+    await uut.deliver()
+
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once_with(  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+        calling_context
+    )
 
 
 async def test_record_result_skips_recipients_without_a_notify_entity(personal_delivery_context: TestingContext) -> None:

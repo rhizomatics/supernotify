@@ -251,7 +251,7 @@ class Envelope(DupeCheckable):
         for person_id in self.target.person_ids:
             recipient: Recipient | None = self.context.people_registry.people.get(person_id)
             if recipient is not None:
-                recipient.on_notification()
+                recipient.on_notification(self.ha_context)
 
     def _compute_title(self, ignore_usage: bool = False) -> str | None:
         # message and title reverse the usual defaulting, delivery config overrides runtime call

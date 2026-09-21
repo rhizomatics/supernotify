@@ -50,7 +50,7 @@ from .const import (
 from .model import DeliveryCustomization, NotifyEntityPlatform, Target
 
 if TYPE_CHECKING:
-    from homeassistant.core import State
+    from homeassistant.core import Context, State
 
     from .binary_sensor import SupernotifyRecipientBinarySensor
     from .hass_api import HomeAssistantAPI, TrackedDeviceDetails
@@ -104,7 +104,7 @@ class RecipientNotifyEntity(NotifyEntity):
             return None
         return {"last_notified": self._last_notified}
 
-    def record_notification(self) -> None:
+    def record_notification(self, context: Context | None = None) -> None:
         """Record that this recipient was notified via supernotify.notify's main pipeline
         (any target - person_id, email, mobile device...), not just via a direct call to
         this notify.recipient_<name> entity. Called from Notification.record_result().
@@ -119,7 +119,13 @@ class RecipientNotifyEntity(NotifyEntity):
         own async_send_message() - see convert_notify_entities() in notification.py, which
         short-circuits that target straight to a person_id to avoid calling back into this same
         entity in a loop - so without this explicit call, delivery via that pipeline would never
-        be reflected here at all."""
+        be reflected here at all.
+
+        `context` is the calling HA service context, if any, so the state change is attributed to
+        the action call (or automation, or user) that caused it, in the logbook and history, just
+        as it would be for a direct notify.recipient_<name> service call."""
+        if context is not None:
+            self.async_set_context(context)
         if hasattr(self, "_async_record_notification"):
             self._async_record_notification()
         else:
@@ -230,10 +236,10 @@ class Recipient:
                 _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
         _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict())
 
-    def on_notification(self) -> None:
+    def on_notification(self, context: Context | None = None) -> None:
         # Record that a notification has occurred for this person
         if self.notify_entity is not None:
-            self.notify_entity.record_notification()
+            self.notify_entity.record_notification(context)
 
     @property
     def enabled_mobile_devices(self) -> dict[str, dict[str, str | list[str] | None]]:

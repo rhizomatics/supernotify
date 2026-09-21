@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 import homeassistant.util.dt as dt_util
 from homeassistant.components import person
-from homeassistant.core import State
+from homeassistant.core import Context, State
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import CONF_PERSON
@@ -161,6 +161,36 @@ def test_recipient_notify_entity_record_notification(hass: HomeAssistant) -> Non
         assert recorded is not None
         assert before <= recorded <= after
         assert hass.states.get("notify.recipient_alice").attributes["last_notified"] == last_notified
+
+
+def test_recipient_notify_entity_record_notification_keeps_calling_context(hass: HomeAssistant) -> None:
+    """The state change is attributed to the action call that caused it, so it shows against that
+    call (and its user) in the logbook rather than as an unexplained change"""
+    recipient = Recipient({CONF_PERSON: "person.alice"})
+    uut = RecipientNotifyEntity("entry123_recipient_alice", recipient, Mock())
+    uut.hass = hass
+    calling_context = Context(user_id="user123", parent_id="parent456")
+
+    uut.record_notification(calling_context)
+
+    state = hass.states.get("notify.recipient_alice")
+    assert state is not None
+    assert state.context.id == calling_context.id
+    assert state.context.user_id == "user123"
+    assert state.context.parent_id == "parent456"
+
+
+def test_recipient_notify_entity_record_notification_without_context(hass: HomeAssistant) -> None:
+    recipient = Recipient({CONF_PERSON: "person.alice"})
+    uut = RecipientNotifyEntity("entry123_recipient_alice", recipient, Mock())
+    uut.hass = hass
+    unrelated_context = Context()
+
+    uut.record_notification()
+
+    state = hass.states.get("notify.recipient_alice")
+    assert state is not None
+    assert state.context.id != unrelated_context.id
 
 
 async def test_recipient_notify_entity_links_itself_to_recipient_on_added_to_hass(hass: HomeAssistant) -> None:
