@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_LABEL_ID,
 )
 from homeassistant.core import valid_entity_id
+from homeassistant.helpers.redact import partial_redact
 
 from .common import ensure_list
 from .const import (
@@ -448,5 +449,11 @@ class Target:
             return False
         return all(self.targets.get(category, []) == other.targets.get(category, []) for category in self.CATEGORIES)
 
-    def as_dict(self, **_kwargs: Any) -> dict[str, list[str]]:
-        return {k: v for k, v in self.targets.items() if v}
+    def as_dict(self, *, redact: bool = False, **_kwargs: Any) -> dict[str, list[str]]:
+        result = {k: v for k, v in self.targets.items() if v}
+        if redact:
+            if ATTR_EMAIL in result:
+                result[ATTR_EMAIL] = [partial_redact(v, unmasked_prefix=2, unmasked_suffix=1) for v in result[ATTR_EMAIL]]
+            if ATTR_PHONE in result:
+                result[ATTR_PHONE] = [partial_redact(v, unmasked_prefix=2, unmasked_suffix=1) for v in result[ATTR_PHONE]]
+        return result

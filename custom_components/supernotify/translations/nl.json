@@ -5,6 +5,9 @@
             "scenario": {
                 "name": "Scenario-voorwaarde {scenario}"
             },
+            "scenario_manual": {
+                "name": "Scenario handmatig {scenario}"
+            },
             "recipient": {
                 "name": "Ontvanger {recipient}"
             },

@@ -297,3 +297,23 @@ def test_split_by_target_data_drops_leftover_that_is_only_person_ids() -> None:
     uut += Target(["switch.kitchen"], target_data={"fi": 123}, target_specific_data=True)
 
     assert uut.split_by_target_data() == [Target(["switch.kitchen"], target_data={"fi": 123})]
+
+
+def test_as_dict_without_redact_leaves_values_untouched() -> None:
+    uut = Target({"email": ["bob@kmail.com"], "phone": ["+447911123456"], "entity_id": ["switch.kitchen"]})
+
+    assert uut.as_dict() == {
+        "email": ["bob@kmail.com"],
+        "phone": ["+447911123456"],
+        "entity_id": ["switch.kitchen"],
+    }
+
+
+def test_as_dict_with_redact_masks_email_and_phone() -> None:
+    uut = Target({"email": ["bob@kmail.com"], "phone": ["+447911123456"], "entity_id": ["switch.kitchen"]})
+
+    assert uut.as_dict(redact=True) == {
+        "email": ["bo***m"],
+        "phone": ["+4***6"],
+        "entity_id": ["switch.kitchen"],
+    }

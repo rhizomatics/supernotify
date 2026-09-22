@@ -4,6 +4,9 @@
             "scenario": {
                 "default": "mdi:clipboard-text"
             },
+            "scenario_manual": {
+                "default": "mdi:clipboard-edit"
+            },
             "recipient": {
                 "default": "mdi:account-arrow-left"
             },

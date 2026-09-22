@@ -13,7 +13,9 @@ entity_registry entry with a hand-written state and no Entity object behind it.
 Both are read-only: enabling and disabling a scenario or recipient is done by its switch entity
 (switch.py). The scenario binary_sensor is the only place a scenario's state - whether its
 conditions currently hold, as opposed to whether it is enabled - is exposed, so is kept for
-everyone, for any scenario that has conditions to evaluate. The recipient binary_sensor only mirrors the switch, so is deprecated, and only kept
+everyone, for any scenario that hasn't opted out with expose_state. For a scenario with conditions
+it is read-only, while one without conditions has a manual binary_sensor, which is the control for
+whether it applies, set from outside Supernotify. The recipient binary_sensor only mirrors the switch, so is deprecated, and only kept
 for an existing install that already has it, never created for a new one. A one-off repair tells
 anyone with it enabled that it will be removed in a future version (see repairs.py).
 
@@ -41,8 +43,11 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import EntityCategory, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory, Platform
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
 from .common import sanitize
@@ -61,9 +66,10 @@ from .repairs import (
 _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from homeassistant.core import Event, HomeAssistant
     from homeassistant.helpers.device_registry import DeviceInfo
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+    from homeassistant.helpers.event import EventStateChangedData
 
     from . import SupernotifyConfigEntry
     from .delivery import Delivery, DeliveryRegistry
@@ -77,8 +83,8 @@ async def async_setup_entry(
     entry: SupernotifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Expose the state of each scenario that has conditions to evaluate, and keep the deprecated
-    recipient, delivery and transport binary_sensors for an install that has them."""
+    """Expose the state of each scenario, and keep the deprecated recipient, delivery and
+    transport binary_sensors for an install that has them."""
     service = entry.runtime_data
     device_info = ha_device_info(entry.entry_id)
 
@@ -86,10 +92,11 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = []
     for scenario in service.context.scenario_registry.scenarios.values():
         if service.context.scenario_registry.scenario_has_state(scenario):
-            entities.append(SupernotifyScenarioBinarySensor(scenario, service.context.scenario_registry, device_info))
+            sensor_class = SupernotifyScenarioManualBinarySensor if scenario.is_manual else SupernotifyScenarioBinarySensor
+            entities.append(sensor_class(scenario, service.context.scenario_registry, device_info))
         elif entity_id := entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, f"scenario_{scenario.name}"):
-            # an install from before this had one, that could only ever have been unknown - remove
-            # it rather than leave it as an entity that's no longer provided
+            # an install from before that has since opted out with expose_state - remove it
+            # rather than leave it as an entity that's no longer provided
             _LOGGER.info("SUPERNOTIFY Removing binary_sensor for scenario %s, it has no state to show", scenario.name)
             entity_registry.async_remove(entity_id)
             hass.states.async_remove(entity_id)
@@ -137,8 +144,8 @@ def _existing_row(entity_registry: er.EntityRegistry, unique_id: str) -> er.Regi
 
 class SupernotifyScenarioBinarySensor(BinarySensorEntity):
     """A scenario's evaluated condition state - whether it currently applies, as opposed to
-    whether it is enabled, which is the scenario switch. Only created for a scenario that has
-    conditions to evaluate (see ScenarioRegistry.scenario_has_state()).
+    whether it is enabled, which is the scenario switch. A scenario with no conditions to
+    evaluate gets SupernotifyScenarioManualBinarySensor instead.
 
     Read-only: writing its state does not enable or disable the scenario.
 
@@ -177,6 +184,39 @@ class SupernotifyScenarioBinarySensor(BinarySensorEntity):
     async def async_will_remove_from_hass(self) -> None:
         self._registry.unregister_entity(self._scenario.name)
         await super().async_will_remove_from_hass()
+
+
+class SupernotifyScenarioManualBinarySensor(SupernotifyScenarioBinarySensor, RestoreEntity):
+    """The state of a scenario that has no conditions of its own to evaluate, set from outside
+    Supernotify - typically a script or automation writing its state, or calling a service on it.
+
+    Unlike the condition binary_sensor, this is the control: whatever it is set to is applied
+    back to the scenario, which then evaluates true while it is on, in the same way as one whose
+    conditions hold. It is restored across a restart. Whether the scenario is enabled is still
+    the scenario switch, and a disabled scenario never applies whatever this is set to.
+    """
+
+    _attr_translation_key = "scenario_manual"
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state in (STATE_ON, STATE_OFF):
+            self._scenario.manual_active = last_state.state == STATE_ON
+        self.async_on_remove(async_track_state_change_event(self.hass, [self.entity_id], self._async_state_changed))
+
+    @callback
+    def _async_state_changed(self, event: Event[EventStateChangedData]) -> None:
+        """Apply a state written to this entity from outside back to the scenario"""
+        new_state = event.data["new_state"]
+        if new_state is None or new_state.state not in (STATE_ON, STATE_OFF):
+            return
+        active = new_state.state == STATE_ON
+        if active != self._scenario.manual_active:
+            _LOGGER.info("SUPERNOTIFY Scenario %s manually set %s", self._scenario.name, new_state.state)
+            self._scenario.manual_active = active
+            # put back the entity's own attributes, which a plain state write would have replaced
+            self.async_write_ha_state()
 
 
 class SupernotifyRecipientBinarySensor(BinarySensorEntity):
