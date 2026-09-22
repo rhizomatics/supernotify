@@ -146,4 +146,4 @@ There's also a field `uncategorized_targets` that lists ones that couldn't be un
 
 ## Not All Transports Have Targets
 
-Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](../developer/transports.md)
+Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](../reference/transports.md)

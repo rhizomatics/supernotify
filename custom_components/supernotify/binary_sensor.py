@@ -5,8 +5,8 @@ runtime_data) is fully initialized - scenario_registry.scenarios and people_regi
 already populated by then, mirroring notify.py's own async_setup_entry for recipient notify
 entities.
 
-These replace the raw hass_api.expose_entity()/hass.states.async_set() writes previously used
-for scenario and recipient binary_sensors (see upstream issue #175, "Part B"): real
+These replace the raw entity registry and hass.states.async_set() writes previously used
+for these binary_sensors (see upstream issue #175, "Part B"): real
 BinarySensorEntity objects grouped under a single SuperNotify device, instead of a bare
 entity_registry entry with a hand-written state and no Entity object behind it.
 
@@ -19,21 +19,17 @@ whether it applies, set from outside Supernotify. The recipient binary_sensor on
 for an existing install that already has it, never created for a new one. A one-off repair tells
 anyone with it enabled that it will be removed in a future version (see repairs.py).
 
-entity_id and unique_id are chosen deliberately to line up with the pre-existing raw-write
-scheme (binary_sensor.supernotify_scenario_<name> / _recipient_<name>, unique_id
-"scenario_<name>" / "recipient_<name>" with no config-entry prefix) so that upgrading an
-existing installation adopts the same registry entry and history instead of creating a duplicate -
-see hass_api.expose_entity() for the scheme this continues. Delivery and transport
-binary_sensors are unchanged in this PR - they keep their existing raw exposure pending a
-separate, larger conversion to switch entities (entity_id migration + repair) discussed in the
-same issue.
-"""
+The delivery and transport binary_sensors are deprecated in the same way: enabling and disabling
+moved to their switches, so these only mirror whether each is enabled, are kept only for an
+existing install that already has them, and only for a delivery or transport that is loaded. A
+one-off repair tells anyone with one enabled that they will be removed in a future version.
 
-# CHANGELOG
-# 2026-09-08: fix from the multi-agent review of the native scenario/recipient entities work:
-# - SupernotifyRecipientBinarySensor: removed _attr_device_class = CONNECTIVITY, which was
-#   semantically wrong (it means a device is online/offline, not "enabled for delivery") - a
-#   disabled recipient showed as "Disconnected" in dashboards, which was misleading.
+entity_id and unique_id are chosen deliberately to line up with the raw state writes these
+entities replaced (binary_sensor.supernotify_scenario_<name> / _recipient_<name>, unique_id
+"scenario_<name>" / "recipient_<name>" / "delivery_<name>" / "transport_<name>" with no
+config-entry prefix) so that upgrading an existing installation adopts the same registry entry
+and history instead of creating a duplicate.
+"""
 
 from __future__ import annotations
 
@@ -49,8 +45,17 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN
 from .common import sanitize
+from .const import (
+    DELIVERY_UNRECORDED_ATTRIBUTES,
+    OVERRIDE_KIND_DELIVERY,
+    OVERRIDE_KIND_TRANSPORT,
+    TRANSPORT_UNRECORDED_ATTRIBUTES,
+)
 from .hass_api import ha_device_info
-from .repairs import async_create_recipient_binary_sensor_deprecated_issue
+from .repairs import (
+    async_create_delivery_transport_binary_sensor_deprecated_issue,
+    async_create_recipient_binary_sensor_deprecated_issue,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,8 +66,10 @@ if TYPE_CHECKING:
     from homeassistant.helpers.event import EventStateChangedData
 
     from . import SupernotifyConfigEntry
+    from .delivery import Delivery, DeliveryRegistry
     from .people import PeopleRegistry, Recipient
     from .scenario import Scenario, ScenarioRegistry
+    from .transport import Transport
 
 
 async def async_setup_entry(
@@ -70,8 +77,8 @@ async def async_setup_entry(
     entry: SupernotifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Expose the state of each scenario, and keep the deprecated
-    recipient binary_sensors for an install that has them."""
+    """Expose the state of each scenario, and keep the deprecated recipient, delivery and
+    transport binary_sensors for an install that has them."""
     service = entry.runtime_data
     device_info = ha_device_info(entry.entry_id)
 
@@ -88,23 +95,45 @@ async def async_setup_entry(
             entity_registry.async_remove(entity_id)
             hass.states.async_remove(entity_id)
 
-    # The recipient binary_sensor is deprecated, so only kept for an existing install that already
-    # has it, and never published for anyone new - which includes a recipient added to an
-    # existing install. Whether an entity exists is known from its registry entry, which is only
-    # created by adding the entity.
+    # The recipient, delivery and transport binary_sensors are deprecated, so only kept for an
+    # existing install that already has them, and never published for anyone new - which
+    # includes a recipient, delivery or transport added to an existing install. Whether an entity
+    # exists is known from its registry entry, which is only created by adding the entity.
     in_use = False
     for recipient in service.context.people_registry.people.values():
-        recipient_sensor = SupernotifyRecipientBinarySensor(recipient, service.context.people_registry, device_info)
-        entity_id = entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, recipient_sensor.unique_id or "")
-        registry_entry = entity_registry.async_get(entity_id) if entity_id else None
+        registry_entry = _existing_row(entity_registry, f"recipient_{recipient.name}")
         if registry_entry is not None:
-            entities.append(recipient_sensor)
+            entities.append(SupernotifyRecipientBinarySensor(recipient, service.context.people_registry, device_info))
             # only worth a warning if somebody could still be relying on it
             in_use = in_use or registry_entry.disabled_by is None
+
+    delivery_registry = service.context.delivery_registry
+    legacy_in_use = False
+    legacy_sensors: list[SupernotifyLegacyBinarySensor] = [
+        SupernotifyTransportBinarySensor(transport, delivery_registry, device_info)
+        for transport in delivery_registry.transports.values()
+    ]
+    legacy_sensors.extend(
+        SupernotifyDeliveryBinarySensor(delivery, delivery_registry, device_info)
+        for delivery in delivery_registry.deliveries.values()
+    )
+    for legacy_sensor in legacy_sensors:
+        registry_entry = _existing_row(entity_registry, legacy_sensor.unique_id or "")
+        if registry_entry is not None:
+            entities.append(legacy_sensor)
+            legacy_in_use = legacy_in_use or registry_entry.disabled_by is None
 
     async_add_entities(entities)
     if in_use:
         async_create_recipient_binary_sensor_deprecated_issue(hass)
+    if legacy_in_use:
+        async_create_delivery_transport_binary_sensor_deprecated_issue(hass)
+
+
+def _existing_row(entity_registry: er.EntityRegistry, unique_id: str) -> er.RegistryEntry | None:
+    """The registry entry of one of our binary_sensors, if an earlier version already created it."""
+    entity_id = entity_registry.async_get_entity_id(Platform.BINARY_SENSOR, DOMAIN, unique_id)
+    return entity_registry.async_get(entity_id) if entity_id else None
 
 
 class SupernotifyScenarioBinarySensor(BinarySensorEntity):
@@ -225,3 +254,59 @@ class SupernotifyRecipientBinarySensor(BinarySensorEntity):
     async def async_will_remove_from_hass(self) -> None:
         self._registry.unregister_entity(self._recipient.name)
         await super().async_will_remove_from_hass()
+
+
+class SupernotifyLegacyBinarySensor(BinarySensorEntity):
+    """Whether a delivery or transport is currently enabled. Deprecated, see its switch.
+
+    Read-only: writing its state no longer enables or disables anything. No entity_id is set,
+    as none is needed: an existing registry entry, found by unique_id, always provides it.
+    """
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_should_poll = False
+
+    def __init__(self, kind: str, model: Delivery | Transport, registry: DeliveryRegistry, device_info: DeviceInfo) -> None:
+        self._model = model
+        self._registry = registry
+        self._key = f"{kind}_{model.name}"
+        self._attr_unique_id = self._key
+        self._attr_device_info = device_info
+        self._attr_translation_placeholders = {kind: model.alias or model.name}
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self._model.enabled)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, object]:
+        return sanitize(self._model.attributes())
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self._registry.register_entity(self._key, self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._registry.unregister_entity(self._key)
+        await super().async_will_remove_from_hass()
+
+
+class SupernotifyDeliveryBinarySensor(SupernotifyLegacyBinarySensor):
+    """Whether a delivery is currently enabled. Deprecated, see the delivery switch."""
+
+    _attr_translation_key = "delivery"
+    _unrecorded_attributes = DELIVERY_UNRECORDED_ATTRIBUTES
+
+    def __init__(self, delivery: Delivery, registry: DeliveryRegistry, device_info: DeviceInfo) -> None:
+        super().__init__(OVERRIDE_KIND_DELIVERY, delivery, registry, device_info)
+
+
+class SupernotifyTransportBinarySensor(SupernotifyLegacyBinarySensor):
+    """Whether a transport is currently enabled. Deprecated, see the transport switch."""
+
+    _attr_translation_key = "transport"
+    _unrecorded_attributes = TRANSPORT_UNRECORDED_ATTRIBUTES
+
+    def __init__(self, transport: Transport, registry: DeliveryRegistry, device_info: DeviceInfo) -> None:
+        super().__init__(OVERRIDE_KIND_TRANSPORT, transport, registry, device_info)

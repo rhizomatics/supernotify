@@ -185,7 +185,7 @@ class SelectionRule:
 
 
 class DataFilter:
-    """Accepts a dict structure and returns a filtered copy, with arbitrary-depth key filtering.
+    r"""Accepts a dict structure and returns a filtered copy, with arbitrary-depth key filtering.
 
     Config format (same structure applies recursively at each level):
       str | list   -- shorthand: include only keys matching these patterns
@@ -509,6 +509,7 @@ class DebugTrace:
         self.target: dict[str, list[str]] | list[str] | str | None = list(target) if target else target
         self.resolved: dict[str, dict[str, Any]] = {}
         self.delivery_selection: dict[str, list[str]] = {}
+        self.delivery_provenance: dict[str, dict[str, list[str]]] = {}
         self.delivery_artefacts: dict[str, Any] = {}
         self.delivery_exceptions: dict[str, dict[str, list[list[str]]]] = {}
         self._last_stage: dict[str, str] = {}
@@ -525,6 +526,8 @@ class DebugTrace:
             "delivery_selection": self.delivery_selection,
             "resolved": self.resolved,
         }
+        if self.delivery_provenance:
+            results["delivery_provenance"] = self.delivery_provenance
         if self.delivery_artefacts:
             results["delivery_artefacts"] = self.delivery_artefacts
         if self.delivery_exceptions:
@@ -561,6 +564,19 @@ class DebugTrace:
         if not self.debug:
             return
         self.delivery_selection[stage] = delivery_selection
+
+    def record_delivery_provenance(self, delivery: str, effect: str, source: str) -> None:
+        """Debug support for recording which source switched a delivery on or off, where
+        `record_delivery_selection` only has the combined list per stage.
+
+        `effect` is `enabled_by` or `disabled_by`, `source` is `default`, `call`,
+        `scenario:<name>` or `recipient:<name>`.
+        """
+        if not self.debug:
+            return
+        sources = self.delivery_provenance.setdefault(delivery, {}).setdefault(effect, [])
+        if source not in sources:
+            sources.append(source)
 
     def record_delivery_artefact(self, delivery: str, artefact_name: str, artefact: Any) -> None:  # ruff: ignore[any-type]
         if not self.debug:

@@ -12,7 +12,7 @@ Several transport options use **Selection Rules** which allow a flexible set of 
 - `device_model_select`
 - `target_select`
 
-See [Options Table](options.md) for description and where these can be used.
+See [Options Table](../reference/options.md) for description and where these can be used.
 
 ## Rule Definitions
 

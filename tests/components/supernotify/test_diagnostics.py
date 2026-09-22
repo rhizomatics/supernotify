@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from custom_components.supernotify import DOMAIN
@@ -75,16 +74,8 @@ async def test_diagnostics_no_last_notification_before_any_send(hass: HomeAssist
     assert diagnostics["last_notification"] is None
 
 
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 async def test_diagnostics_includes_last_notification(hass: HomeAssistant, mock_hass: Mock) -> None:
-    """Once a message has been sent, its contents (in diagnostics mode) are included.
-
-    Pre-existing quirk, unrelated to diagnostics.py itself: Notification.contents(diagnostics=
-    True) -> common.sanitize() walks every attribute of a real Notification built against
-    mock_hass, and at least one of those turns out to be an AsyncMock exposing its own
-    auto-generated `.contents` attribute - sanitize() calls it like the real thing, producing
-    a coroutine nothing awaits. Doesn't happen against a real HomeAssistant instance.
-    """
+    """Once a message has been sent, its contents (in diagnostics mode) are included."""
     service = SupernotifyEngine(
         mock_hass,
         deliveries=DELIVERY,

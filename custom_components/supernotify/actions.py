@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
+import voluptuous as vol
 from homeassistant.const import (
     CONF_TARGET,
 )
@@ -46,6 +47,7 @@ from .const import (
     CONF_TEMPLATE_PATH,
     CONF_TITLE,
     CONF_TRANSPORTS,
+    OVERRIDE_KINDS,
 )
 from .engine import SupernotifyEngine
 from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
@@ -105,7 +107,11 @@ ACTION_NAMES: Final[tuple[str, ...]] = (
     "purge_archive",
     "purge_media",
     "refresh_entities",
+    "reset_overrides",
 )
+
+ATTR_KIND: Final[str] = "kind"
+RESET_OVERRIDES_SCHEMA: Final = vol.Schema({vol.Optional(ATTR_KIND): vol.In(OVERRIDE_KINDS)})
 
 
 @callback
@@ -190,7 +196,13 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     @callback
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
         # a callback, so run in the event loop - it writes entity state
-        return engine.expose_entities()
+        engine.refresh_entities()
+
+    @callback
+    def supplemental_action_reset_overrides(call: ServiceCall) -> dict[str, Any]:
+        # a callback, so run in the event loop - it writes entity state
+        kind: str | None = call.data.get(ATTR_KIND)
+        return {"reset": engine.reset_overrides((kind,) if kind else OVERRIDE_KINDS)}
 
     def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:
         return engine.enquire_implicit_deliveries()
@@ -333,6 +345,13 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         "refresh_entities",
         supplemental_action_refresh_entities,
         supports_response=SupportsResponse.NONE,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "reset_overrides",
+        supplemental_action_reset_overrides,
+        schema=RESET_OVERRIDES_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 

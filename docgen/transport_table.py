@@ -31,7 +31,7 @@ def format_category(category: str | TargetEntityCategory) -> str:
 
 
 def transport_doc() -> None:
-    doc_filename = "developer/transports.md"
+    doc_filename = "reference/transports.md"
     option_keys: list[str] = []
     mock_context = Mock(custom_template_path=Path())
     for transport_class in TRANSPORTS:
@@ -43,7 +43,7 @@ def transport_doc() -> None:
 
     with mkdocs_gen_files.open(doc_filename, "w") as df:
         df.write("# Transport Configuration\n\n")
-        df.write("See the [Options Reference](../configuration/options.md) for a description of each option.\n\n")
+        df.write("See the [Options Reference](../reference/options.md) for a description of each option.\n\n")
 
         df.write("## Default Inclusion\n")
 

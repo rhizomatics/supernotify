@@ -50,8 +50,8 @@ plugins:
       ignore_pages:
         - developer/schemas/*
         - developer/classes.md
-        - developer/transports.md
-        - configuration/options.md
+        - reference/transports.md
+        - reference/options.md
       ignore_urls:
         - ../../developer/schemas/*
         - ../developer/transports/*
@@ -99,7 +99,7 @@ plugins:
         Optional:
           - changelog.md: Release history
           - developer/design/*.md
-          - developer/transports.md: Writing a new transport
+          - reference/transports.md: Table of notification transports and capabilities
 
   - social:
       cards_layout_options:

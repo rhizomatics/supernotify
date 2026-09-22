@@ -29,7 +29,11 @@ tags:
     handler: python
     heading_level: 2
 
-::: custom_components.supernotify.model.Target
+::: custom_components.supernotify.people.Recipient
+    handler: python
+    heading_level: 2
+
+::: custom_components.supernotify.target.Target
     handler: python
     heading_level: 2
 
@@ -50,5 +54,13 @@ tags:
     heading_level: 2
 
 ::: custom_components.supernotify.people.PeopleRegistry
+    handler: python
+    heading_level: 2
+
+::: custom_components.supernotify.delivery.DeliveryRegistry
+    handler: python
+    heading_level: 2
+
+::: custom_components.supernotify.scenario.ScenarioRegistry
     handler: python
     heading_level: 2

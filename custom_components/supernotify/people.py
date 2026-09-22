@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.redact import partial_redact
 
 from .common import ensure_list
 from .const import (
@@ -184,12 +185,14 @@ class Recipient:
             k: DeliveryCustomization(config=v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
+        # as configured, which enabled can be overridden from at runtime by the recipient switch
+        self.config_enabled: bool = self.enabled
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
         self.mobile_devices: dict[str, dict[str, str | list[str] | None]] = {
             c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])
         }
         self.disabled_mobile_app_ids: list[str] = [k for k, v in self.mobile_devices.items() if not v.get(CONF_ENABLED, True)]
-        _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict())
+        _LOGGER.debug("SUPERNOTIFY Recipient config %s -> %s", config, self.as_dict(redact=True))
 
     def initialize(self, people_registry: PeopleRegistry) -> None:
 
@@ -271,7 +274,7 @@ class Recipient:
                 recipient_target += Target([], target_data=personal_delivery.data, target_specific_data=True)
         return recipient_target
 
-    def as_dict(self, occupancy_only: bool = False, **_kwargs: Any) -> dict[str, Any]:
+    def as_dict(self, occupancy_only: bool = False, redact: bool = False, **_kwargs: Any) -> dict[str, Any]:
         result = {CONF_PERSON: self.entity_id, CONF_ENABLED: self.enabled}
         if not occupancy_only:
             result.update({
@@ -286,6 +289,10 @@ class Recipient:
                 if self.delivery_overrides
                 else None,
             })
+        if redact:
+            for k in (CONF_EMAIL, CONF_PHONE_NUMBER):
+                if k in result:
+                    result[k] = partial_redact(result[k], unmasked_prefix=2, unmasked_suffix=1)
         return result
 
     def attributes(self) -> dict[str, Any]:
