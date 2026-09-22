@@ -179,3 +179,25 @@ async def test_button_is_on_the_supernotify_device(hass: HomeAssistant) -> None:
     state = hass.states.get("button.supernotify_reset_overrides")
     assert state is not None
     assert state.name == "SuperNotify Reset overrides"
+
+
+async def test_reset_leaves_manual_scenario_state_alone(hass: HomeAssistant) -> None:
+    """A manual scenario's on/off state is how it's driven from outside, not an override of its
+    configured `enabled`, so reset_overrides doesn't touch it - only the scenario's switch."""
+    config = _config()
+    config["scenarios"]["manuale"] = {"delivery": {"testing": {}}}
+    engine = await _setup(hass, config)
+    manual_id = "binary_sensor.supernotify_scenario_manuale"
+    hass.states.async_set(manual_id, STATE_ON)
+    await hass.async_block_till_done()
+    await _turn(hass, "switch.supernotify_scenario_manuale", on=False)
+    scenario = engine.context.scenario_registry.scenarios["manuale"]
+    assert scenario.manual_active is True
+    assert scenario.enabled is False
+
+    response = await _reset(hass, {"kind": "scenario"})
+
+    assert response == {"reset": {"scenario": ["manuale"]}}
+    assert scenario.enabled is True
+    assert scenario.manual_active is True
+    assert _state(hass, manual_id) == STATE_ON
