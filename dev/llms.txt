@@ -88,6 +88,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md)
 - [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md)
 - [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md)
+- [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md)
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
 - [Seasonal greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
