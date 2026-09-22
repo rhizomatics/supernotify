@@ -1,13 +1,3 @@
-# CHANGELOG
-# 2026-09-08: fixes from the multi-agent review of the native scenario/recipient entities work:
-# - ScenarioRegistry._batch_cvars (new) + scenario_is_on(): the occupancy/ConditionVariables for a
-#   batch refresh are computed once for the whole pass instead of once per scenario
-#   (determine_occupancy() was being called N times instead of 1 per refresh).
-# - The binary_sensor state no longer doubles as the scenario's enable/disable control, so
-#   ScenarioRegistry.handle_entity_state_change and _pending_first_publish (which stopped a
-#   scenario's own first state publish being mistaken for a manual disable) are gone. Enabling
-#   and disabling is done by the scenario switch entity (switch.py) instead.
-
 from __future__ import annotations
 
 import logging
@@ -70,8 +60,8 @@ class ScenarioRegistry:
         self._people_registry: PeopleRegistry = people_registry
         # Populated by binary_sensor.py's async_setup_entry once the platform is loaded (after
         # initialize() below) - see register_entity/unregister_entity. Empty (and harmless to
-        # look up against) before then, e.g. during initialize()'s own expose_entities() call
-        # and in tests that build ScenarioRegistry directly without a config entry.
+        # look up against) before then, e.g. in tests that build ScenarioRegistry directly
+        # without a config entry.
         self._entities: dict[str, SupernotifyScenarioBinarySensor] = {}
         # Shared occupancy/ConditionVariables snapshot for the scenario currently being batch
         # refreshed - set for the duration of async_refresh_scenario_states()'s loop, read by
@@ -253,6 +243,8 @@ class Scenario:
         self.hass_api: HomeAssistantAPI = hass_api
         self.delivery_registry = delivery_registry
         self.enabled: bool = scenario_definition.get(CONF_ENABLED, True)
+        # as configured, which enabled can be overridden from at runtime by the scenario switch
+        self.config_enabled: bool = self.enabled
         self.expose_state: bool = scenario_definition.get(CONF_EXPOSE_STATE, True)
         self.name: str = name
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)

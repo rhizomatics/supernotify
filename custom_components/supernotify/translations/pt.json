@@ -10,6 +10,12 @@
             },
             "recipient": {
                 "name": "Destinatário {recipient}"
+            },
+            "delivery": {
+                "name": "Entrega {delivery}"
+            },
+            "transport": {
+                "name": "Transporte {transport}"
             }
         },
         "sensor": {
@@ -26,6 +32,17 @@
             },
             "recipient_enabled": {
                 "name": "Destinatário {recipient} ativado"
+            },
+            "delivery_enabled": {
+                "name": "Entrega {delivery} ativada"
+            },
+            "transport_enabled": {
+                "name": "Transporte {transport} ativado"
+            }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Repor substituições"
             }
         }
     },
@@ -198,6 +215,16 @@
             "name": "Atualizar entidades",
             "description": "Atualiza todas as entidades expostas pelo SuperNotify para inspeção e controlo"
         },
+        "reset_overrides": {
+            "name": "Repor substituições",
+            "description": "Repõe o estado configurado de cada cenário, destinatário, entrega e transporte ativado ou desativado durante a execução",
+            "fields": {
+                "kind": {
+                    "name": "Tipo",
+                    "description": "Repor apenas este tipo de interruptor - todos os tipos se não for indicado"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Limpar snoozes",
             "description": "Limpa todos os snoozes atualmente ativos"
@@ -345,6 +372,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "Os sensores binários de destinatário serão removidos",
             "description": "Cada destinatário tem agora um interruptor (por exemplo `switch.supernotify_recipient_XXXX`) que o ativa e desativa. As entidades `binary_sensor` dos destinatários passam a ser só de leitura, apenas refletem se o destinatário está ativado, e serão removidas numa versão futura. Escrever o estado de um `binary_sensor` de destinatário deixa de ativar ou desativar o destinatário, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor do destinatário."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "Os sensores binários de entrega e transporte serão removidos",
+            "description": "Cada entrega e cada transporte tem agora um interruptor (por exemplo `switch.supernotify_delivery_XXXX` ou `switch.supernotify_transport_XXXX`) que o ativa e desativa. As entidades `binary_sensor` das entregas e dos transportes passam a ser só de leitura, apenas refletem se a entrega ou o transporte está ativado, e serão removidas numa versão futura. Escrever o estado de um destes `binary_sensor` deixa de ativar ou desativar a entrega ou o transporte, por isso altere qualquer automação, script ou painel que o faça, ou que dependa destas entidades, para usar o interruptor."
         }
     },
     "exceptions": {
