@@ -31,12 +31,6 @@ config-entry prefix) so that upgrading an existing installation adopts the same 
 and history instead of creating a duplicate.
 """
 
-# CHANGELOG
-# 2026-09-08: fix from the multi-agent review of the native scenario/recipient entities work:
-# - SupernotifyRecipientBinarySensor: removed _attr_device_class = CONNECTIVITY, which was
-#   semantically wrong (it means a device is online/offline, not "enabled for delivery") - a
-#   disabled recipient showed as "Disconnected" in dashboards, which was misleading.
-
 from __future__ import annotations
 
 import logging

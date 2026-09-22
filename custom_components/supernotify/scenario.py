@@ -1,13 +1,3 @@
-# CHANGELOG
-# 2026-09-08: fixes from the multi-agent review of the native scenario/recipient entities work:
-# - ScenarioRegistry._batch_cvars (new) + scenario_is_on(): the occupancy/ConditionVariables for a
-#   batch refresh are computed once for the whole pass instead of once per scenario
-#   (determine_occupancy() was being called N times instead of 1 per refresh).
-# - The binary_sensor state no longer doubles as the scenario's enable/disable control, so
-#   ScenarioRegistry.handle_entity_state_change and _pending_first_publish (which stopped a
-#   scenario's own first state publish being mistaken for a manual disable) are gone. Enabling
-#   and disabling is done by the scenario switch entity (switch.py) instead.
-
 from __future__ import annotations
 
 import logging
