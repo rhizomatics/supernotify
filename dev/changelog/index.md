@@ -4,6 +4,10 @@
 
 - Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
 
+### Internal
+
+- Cleaned up some spurious or noisy debug logging for test execution
+
 ## 2.7.0
 
 ### Native Entities
