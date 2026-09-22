@@ -117,8 +117,10 @@ async def test_debug_call_archives_trace_whatever_diagnostics(
         obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
         async with aiofiles.open(obj_path) as stream:
             reobj = json.loads("".join(await stream.readlines()))
+        # provenance is archived for every notification, the rest of the trace only with debug
+        assert reobj["delivery_provenance"]["chime"]["disabled_by"] == ["scenario:quiet"]
         if debug:
-            assert reobj["debug_trace"]["delivery_provenance"]["chime"]["disabled_by"] == ["scenario:quiet"]
+            assert "resolved" in reobj["debug_trace"]
         else:
             assert "debug_trace" not in reobj
 

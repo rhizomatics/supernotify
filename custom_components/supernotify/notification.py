@@ -102,7 +102,7 @@ class DeliveryTargetOverride:
     include: list[str]
     exclude: list[str]
 
-    def as_dict(self) -> dict[str, Any]:
+    def as_dict(self, **_kwargs: Any) -> dict[str, Any]:
         return {"fixed": self.fixed, "include": self.include, "exclude": self.exclude}
 
 
@@ -718,6 +718,7 @@ class Notification(ArchivableObject):
             "extra_data",
             "actions",
             "_suppression_reason",
+            "delivery_provenance",
         ]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
@@ -741,6 +742,7 @@ class Notification(ArchivableObject):
             "delivery_overrides",
             "delivery_selection",
             "selected_deliveries",
+            "delivery_provenance",
             "applied_scenario_names",
             "constrain_scenario_names",
             "required_scenario_names",
@@ -762,6 +764,7 @@ class Notification(ArchivableObject):
         raw["stats"] = self._delivery_stats()
         raw["version"] = _VERSION
         raw["outcome"] = self.outcome()
+        raw["delivery_provenance"] = self.debug_trace.delivery_provenance
 
         result: dict[str, Any] = {}
         if self.ha_context is not None:
