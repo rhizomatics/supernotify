@@ -5,8 +5,8 @@ from unittest.mock import Mock
 import mkdocs_gen_files
 
 from custom_components.supernotify.engine import TRANSPORTS
-from custom_components.supernotify.model import EntityCategory, Target
 from custom_components.supernotify.options import OPTION_UNIQUE_TARGETS
+from custom_components.supernotify.target import Target, TargetEntityCategory
 
 
 def esc(v: Any) -> str:  # ruff: ignore[any-type]
@@ -19,7 +19,7 @@ def format_selector_value(value: str | list[str]) -> str:
     return value if isinstance(value, str) else "/".join(value)
 
 
-def format_category(category: str | EntityCategory) -> str:
+def format_category(category: str | TargetEntityCategory) -> str:
     if isinstance(category, str):
         return "unqualified" if category == Target.UNKNOWN_CUSTOM_CATEGORY else esc(category)
     constraints = []

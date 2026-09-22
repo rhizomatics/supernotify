@@ -64,12 +64,12 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
 from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, DeliveryOption
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -136,8 +136,8 @@ class KodiTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
-        return [EntityCategory(domain="media_player")]
+    def target_categories(self) -> list[str | TargetEntityCategory]:
+        return [TargetEntityCategory(domain="media_player")]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_KODI_DOMAIN) is not None

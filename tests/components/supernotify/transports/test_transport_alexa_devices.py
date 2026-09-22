@@ -84,8 +84,7 @@ def test_alexa_transport_selects_targets(mock_hass, unmocked_config) -> None:  #
             "notify.kitchen_echo",
             "notify.alexa_media_player_announce",
             "group.family_room",
-        ]),
-        unmocked_config.hass_api,
+        ])
     ).entity_ids == unordered([
         "notify.living_room_echo_2_speak",
         "notify.bedroom_echo_announce",

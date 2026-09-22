@@ -82,7 +82,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class DeviceInfo:
+class TrackedDeviceDetails:
     device_id: str
     device_labels: list[str] | None = None
     mobile_app_id: str | None = None
@@ -120,6 +120,17 @@ class DeviceInfo:
         return other is not None and callable(as_dict) and as_dict() == self.as_dict()
 
 
+def ha_device_info(entry_id: str) -> dr.DeviceInfo:
+    """Home Assistant device-registry DeviceInfo for the single 'SuperNotify' device.
+
+    Groups the platform entities in binary_sensor.py/sensor.py/switch.py (scenario/recipient
+    state and control, notification/failure counters) under one device in the HA device
+    registry. Unrelated to `TrackedDeviceDetails` above, which describes a discovered mobile_app
+    device for targeting.
+    """
+    return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="SuperNotify", manufacturer="SuperNotify")
+
+
 class HomeAssistantAPI:
     def __init__(self, hass: HomeAssistant) -> None:
         self._hass: HomeAssistant = hass
@@ -132,10 +143,10 @@ class HomeAssistantAPI:
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.exposed_entities: list[str] = []
-        self.mobile_apps_by_tracker: dict[str, DeviceInfo] = {}
-        self.mobile_apps_by_app_id: dict[str, DeviceInfo] = {}
-        self.mobile_apps_by_device_id: dict[str, DeviceInfo] = {}
-        self.mobile_apps_by_user_id: dict[str, list[DeviceInfo]] = {}
+        self.mobile_apps_by_tracker: dict[str, TrackedDeviceDetails] = {}
+        self.mobile_apps_by_app_id: dict[str, TrackedDeviceDetails] = {}
+        self.mobile_apps_by_device_id: dict[str, TrackedDeviceDetails] = {}
+        self.mobile_apps_by_user_id: dict[str, list[TrackedDeviceDetails]] = {}
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
@@ -193,18 +204,6 @@ class HomeAssistantAPI:
 
     def is_state(self, entity_id: str, state: str) -> bool:
         return self._hass.states.is_state(entity_id, state)
-
-    def set_state(
-        self,
-        entity_id: str,
-        state: str | int | bool,
-        attributes: dict[str, Any] | None = None,
-        context: HomeAssistantContext | None = None,
-    ) -> None:
-        if self.in_hass_loop():
-            self._hass.states.async_set(entity_id, str(state), attributes=attributes, context=context)
-        else:
-            self._hass.states.set(entity_id, str(state), attributes=attributes, context=context)
 
     def has_service(self, domain: str, service: str) -> bool:
         return self._hass.services.has_service(domain, service)
@@ -297,10 +296,14 @@ class HomeAssistantAPI:
         entity_registry = self._entity_registry()
         if entity_registry is not None:
             try:
+                # single_config_entry integration, so the one entry (if any) owns every entity;
+                # attaching it also lets HA remove these entities along with the entry
+                config_entries = self._hass.config_entries.async_entries(DOMAIN)
                 entry: er.RegistryEntry = entity_registry.async_get_or_create(
                     platform,
                     DOMAIN,
                     entity_name,
+                    config_entry=config_entries[0] if config_entries else None,
                     entity_category=EntityCategory.DIAGNOSTIC,
                     original_name=original_name,
                     original_icon=original_icon,
@@ -311,7 +314,7 @@ class HomeAssistantAPI:
                 # continue anyway even if not registered as state is independent of entity
                 entity_id = f"{platform}.{DOMAIN}_{entity_name}"
         try:
-            self.set_state(entity_id, state, attributes)
+            self._hass.states.async_set(entity_id, str(state), attributes=attributes)
             self.exposed_entities.append(entity_id)
         except Exception as e:
             _LOGGER.error("SUPERNOTIFY Unable to set state for entity %s: %s", entity_id, e)
@@ -624,17 +627,17 @@ class HomeAssistantAPI:
             is_fixable=is_fixable,
         )
 
-    def mobile_app_by_tracker(self, device_tracker: str) -> DeviceInfo | None:
+    def mobile_app_by_tracker(self, device_tracker: str) -> TrackedDeviceDetails | None:
         return self.mobile_apps_by_tracker.get(device_tracker)
 
-    def mobile_app_by_id(self, mobile_app_id: str) -> DeviceInfo | None:
+    def mobile_app_by_id(self, mobile_app_id: str) -> TrackedDeviceDetails | None:
         mobile_app_id = mobile_app_id.replace("notify.", "", 1) if mobile_app_id.startswith("notify.") else mobile_app_id
         return self.mobile_apps_by_app_id.get(mobile_app_id)
 
-    def mobile_app_by_device_id(self, device_id: str) -> DeviceInfo | None:
+    def mobile_app_by_device_id(self, device_id: str) -> TrackedDeviceDetails | None:
         return self.mobile_apps_by_device_id.get(device_id)
 
-    def mobile_app_by_user_id(self, user_id: str) -> list[DeviceInfo] | None:
+    def mobile_app_by_user_id(self, user_id: str) -> list[TrackedDeviceDetails] | None:
         return self.mobile_apps_by_user_id.get(user_id)
 
     def build_mobile_app_cache(self) -> None:
@@ -705,8 +708,8 @@ class HomeAssistantAPI:
         device_os_select: SelectionRule | None = None,
         device_area_select: SelectionRule | None = None,
         device_label_select: SelectionRule | None = None,
-    ) -> list[DeviceInfo]:
-        devices: list[DeviceInfo] = []
+    ) -> list[TrackedDeviceDetails]:
+        devices: list[TrackedDeviceDetails] = []
         dev_reg: DeviceRegistry | None = self._device_registry()
         if dev_reg is None or not hasattr(dev_reg, "devices"):
             _LOGGER.warning(f"SUPERNOTIFY Unable to discover devices for {discover_domain} - no device registry found")
@@ -754,7 +757,7 @@ class HomeAssistantAPI:
                             skipped_devs += 1
                             continue
                         devices.append(
-                            DeviceInfo(
+                            TrackedDeviceDetails(
                                 device_id=dev.id,
                                 device_name=dev.name,
                                 manufacturer=dev.manufacturer,

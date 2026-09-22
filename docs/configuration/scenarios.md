@@ -81,8 +81,10 @@ scenarios:
 
 ## Entities
 
-Scenarios are exposed as `sensor.supernotify_scenario_XXXX` entities in Home Assistant, with the configuration and
-current state as `unavailable` ( since their conditions are not continually being evaluated, only on demand). They can be enabled or disabled like any other entities, for run-time control of notifications.
+Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable
+the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
+
+The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 
 
 ## Overriding Delivery Selection and Configuration
@@ -199,9 +201,7 @@ Regular expressions can be mixed and matched with literal delivery names, where 
 liternal name will work, where 2 regular expressions resolve to the same delivery, the last one to
 be applied is used.
 
-All deliveries are enabled by default - which makes regular scenarios easier to use - though can
-mean that a wildcard switches on more deliveries than might be the intention. The solution for this is
-to use an `enabled:` field, which won't force anything to be enabled.
+All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. The solution for this is to use an `enabled:` field, which won't force anything to be enabled.
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 
@@ -216,8 +216,13 @@ scenarios:
 
 ## Scenario Sensors
 
-Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its
-conditions currently hold: `on`, `off`, or `unknown` for a scenario that has nothing to evaluate between notifications — one with no conditions, or whose conditions depend only on the priority of the notification being sent.
+Each scenario is exposed as `binary_sensor.supernotify_scenario_<name>`, reporting whether its conditions currently hold: `on` or `off`. Scenarios can be prevented from being exposed this way using `expose_state: false` in their configuration.
+
+This is separate from whether the scenario itself is enabled, which is what the scenario's `switch` shows and controls. A scenario switched off will always have a binary_sensor that's off, whereas a scenario that's switched on will have a binary_sensor that's on or off depending on the condition. A scenario that only applies on a couple of days a year has a switch that stays `on` all year, and a `binary_sensor` that is `on` only on those days.
+
+Scenarios with conditions have `binary_sensor` that are read-only: writing its state does not enable or disable the scenario. Scenarios without conditions can be externally controlled by your own automations, dashboard toggles etc and have read/write binary sensors. This can be useful if the condition would be too complex to write in Home Assistant conditions logic.
+
+Manual control of scenarios via `binary_sensor` only affects which ones get automatically selected for deliveries. If a delivery declares `apply_scenarios`, then those scenarios will be selected regardless of manual setting.
 
 ### Live Scenarios
 
@@ -231,8 +236,7 @@ scenario_control:
   refresh_interval: 60 # seconds; 0 keeps the reactive path and drops the sweep
 ```
 
-An individual scenario can be kept out of it, which is useful for one expensive template among
-otherwise cheap scenarios:
+An individual scenario can be kept out of it, which is useful for one expensive template among otherwise cheap scenarios:
 
 ```yaml
 scenarios:
@@ -243,4 +247,4 @@ scenarios:
         value_template: "{{ states.binary_sensor | selectattr('state','eq','on') | list | count > 3 }}"
 ```
 
-Such a scenario still works normally for notifications; it simply stays `unknown` as an entity.
+Such a scenario still works normally for notifications; it simply has no `binary_sensor`.

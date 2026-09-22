@@ -1,5 +1,34 @@
 {
     "title": "Supernotify",
+    "entity": {
+        "binary_sensor": {
+            "scenario": {
+                "name": "Scenario Condition {scenario}"
+            },
+            "scenario_manual": {
+                "name": "Scenario Manual {scenario}"
+            },
+            "recipient": {
+                "name": "Recipient {recipient}"
+            }
+        },
+        "sensor": {
+            "notifications": {
+                "name": "Notifications sent"
+            },
+            "failures": {
+                "name": "Notification failures"
+            }
+        },
+        "switch": {
+            "scenario_enabled": {
+                "name": "Scenario {scenario}"
+            },
+            "recipient_enabled": {
+                "name": "Recipient {recipient} Enabled"
+            }
+        }
+    },
     "services": {
         "reload": {
             "name": "Reload",
@@ -398,6 +427,10 @@
         "delivery_lost_implicit_inclusion": {
             "title": "Delivery No Longer Included By Default",
             "description": "Delivery {delivery} does not set its own inclusion, and transport {transport} no longer defaults to 'default' - this delivery will not fire on every notification any more. Add inclusion: [default] to the delivery if you still want that."
+        },
+        "recipient_binary_sensor_deprecated": {
+            "title": "Recipient binary sensors will be removed",
+            "description": "Each recipient now has a switch (for example `switch.supernotify_recipient_XXXX`) that enables and disables it. The recipient `binary_sensor` entities are read-only from now on, only mirroring whether the recipient is enabled, and will be removed in a future version. Writing the state of a recipient `binary_sensor` no longer enables or disables the recipient, so change any automation, script or dashboard that does that, or otherwise relies on these entities, to use the recipient switch instead."
         }
     },
     "exceptions": {

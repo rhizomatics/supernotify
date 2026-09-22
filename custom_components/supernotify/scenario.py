@@ -1,3 +1,13 @@
+# CHANGELOG
+# 2026-09-08: fixes from the multi-agent review of the native scenario/recipient entities work:
+# - ScenarioRegistry._batch_cvars (new) + scenario_is_on(): the occupancy/ConditionVariables for a
+#   batch refresh are computed once for the whole pass instead of once per scenario
+#   (determine_occupancy() was being called N times instead of 1 per refresh).
+# - The binary_sensor state no longer doubles as the scenario's enable/disable control, so
+#   ScenarioRegistry.handle_entity_state_change and _pending_first_publish (which stopped a
+#   scenario's own first state publish being mistaken for a manual disable) are gone. Enabling
+#   and disabling is done by the scenario switch entity (switch.py) instead.
+
 from __future__ import annotations
 
 import logging
@@ -14,8 +24,6 @@ from homeassistant.helpers import issue_registry as ir
 
 from custom_components.supernotify.people import PeopleRegistry
 
-from . import DOMAIN
-from .common import sanitize
 from .const import (
     ATTR_MEDIA,
     CONF_EXPOSE_STATE,
@@ -29,9 +37,9 @@ from .model import DeliveryCustomization
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from homeassistant.core import State
     from homeassistant.helpers.typing import ConfigType
 
+    from .binary_sensor import SupernotifyScenarioBinarySensor
     from .delivery import Delivery, DeliveryRegistry
     from .hass_api import HomeAssistantAPI
     from .schema import ConditionsFunc
@@ -60,6 +68,17 @@ class ScenarioRegistry:
         self.scenarios: dict[str, Scenario] = {}
         self.scenario_control = scenario_control or {}
         self._people_registry: PeopleRegistry = people_registry
+        # Populated by binary_sensor.py's async_setup_entry once the platform is loaded (after
+        # initialize() below) - see register_entity/unregister_entity. Empty (and harmless to
+        # look up against) before then, e.g. during initialize()'s own expose_entities() call
+        # and in tests that build ScenarioRegistry directly without a config entry.
+        self._entities: dict[str, SupernotifyScenarioBinarySensor] = {}
+        # Shared occupancy/ConditionVariables snapshot for the scenario currently being batch
+        # refreshed - set for the duration of async_refresh_scenario_states()'s loop, read by
+        # scenario_is_on() so determine_occupancy() runs once per refresh instead of once per
+        # scenario. None outside of a batch refresh (each scenario_is_on() call then computes
+        # its own, e.g. a single entity being read on demand).
+        self._batch_cvars: ConditionVariables | None = None
 
     async def initialize(
         self,
@@ -92,40 +111,35 @@ class ScenarioRegistry:
             if self.scenario_state_interval:
                 hass_api.subscribe_interval(self.scenario_state_interval, self.async_refresh_scenario_states)
 
-    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
-        for scenario in self.scenarios.values():
-            hass_api.expose_entity(
-                f"scenario_{scenario.name}",
-                state=self._scenario_state(scenario),
-                attributes=sanitize(scenario.attributes(include_condition=False)),
-                original_name=f"{scenario.name} Scenario",
-                original_icon="mdi:clipboard-text",
-            )
+    def register_entity(self, name: str, entity: SupernotifyScenarioBinarySensor) -> None:
+        """Called by SupernotifyScenarioBinarySensor.async_added_to_hass()."""
+        self._entities[name] = entity
 
-    def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
-        """React to a scenario binary_sensor being toggled on/off.
+    def unregister_entity(self, name: str) -> None:
+        """Called by SupernotifyScenarioBinarySensor.async_will_remove_from_hass()."""
+        self._entities.pop(name, None)
 
-        Returns None if entity_id isn't one of ours, True if it was recognised and its
-        enabled state changed, False if recognised but unknown or already in that state.
-        """
-        prefix = f"binary_sensor.{DOMAIN}_scenario_"
-        if not entity_id.startswith(prefix):
+    @callback
+    def async_refresh_entity(self, name: str) -> None:
+        """Re-publish one scenario's binary_sensor now, whether or not periodic refresh is on"""
+        entity = self._entities.get(name)
+        if entity is not None:
+            entity.async_write_ha_state()
+
+    def scenario_has_state(self, scenario: Scenario) -> bool:
+        """Whether a scenario has any state to report - anything that hasn't opted out with
+        expose_state. That is the evaluated state of its conditions if it has any, otherwise
+        a manual state that something outside Supernotify sets, see Scenario.manual_active."""
+        return scenario.expose_state
+
+    def scenario_is_on(self, scenario: Scenario) -> bool | None:
+        """`is_on` for SupernotifyScenarioBinarySensor - None maps to STATE_UNKNOWN."""
+        if scenario.is_manual:
+            return scenario.manual_active
+        state = self._scenario_state(scenario, self._batch_cvars)
+        if state == STATE_UNKNOWN:
             return None
-
-        scenario = self.scenarios.get(entity_id.removeprefix(prefix))
-        if scenario is None:
-            _LOGGER.warning("SUPERNOTIFY Event for unknown scenario %s", entity_id)
-            return False
-        if new_state.state == STATE_OFF and scenario.enabled:
-            scenario.enabled = False
-            _LOGGER.info("SUPERNOTIFY Disabling scenario %s", scenario.name)
-            return True
-        if new_state.state == STATE_ON and not scenario.enabled:
-            scenario.enabled = True
-            _LOGGER.info("SUPERNOTIFY Enabling scenario %s", scenario.name)
-            return True
-        _LOGGER.debug("SUPERNOTIFY No change to scenario %s, already %s", scenario.name, new_state)
-        return False
+        return state == STATE_ON
 
     def _collect_scenario_condition_entities(self) -> dict[str, set[str]]:
         """Entities referenced by each scenario's conditions.
@@ -196,12 +210,15 @@ class ScenarioRegistry:
 
     @callback
     def async_refresh_scenario_states(self, *args: Any) -> None:
-        """Re-evaluate and re-publish the state of every scenario binary_sensor.
+        """Ask each affected scenario's binary_sensor entity to re-read and re-publish its state.
 
         Triggered by the 1-minute timer (time/date scenarios and any dependency
         not captured by entity extraction) and by state changes of the scenarios'
-        condition entities (immediate reactivity). Pure in-memory evaluation over
-        cached states; no I/O.
+        condition entities (immediate reactivity). The entity's own `is_on`
+        property (via scenario_is_on() above) does the actual (pure, in-memory)
+        evaluation on read; this only decides which entities need to refresh, and
+        is a no-op for a scenario with no entity registered yet (e.g. before the
+        binary_sensor platform has finished loading).
         """
         if not self.scenario_state_enabled:
             return
@@ -214,16 +231,19 @@ class ScenarioRegistry:
                 if not names:
                     return
 
+        # Computed once for the whole batch (see _batch_cvars/scenario_is_on) rather than once
+        # per scenario below - determine_occupancy() is only dict lookups, not real I/O, but
+        # doing it once per refresh instead of once per scenario is the correct scale for a
+        # mechanism meant to run on every relevant state change and every periodic sweep.
         occupiers = self._people_registry.determine_occupancy()
-        cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
-        for name, scenario in self.scenarios.items():
-            if names is not None and name not in names:
-                continue
-            self._hass_api.set_state(
-                f"binary_sensor.{DOMAIN}_scenario_{name}",
-                self._scenario_state(scenario, cvars),
-                sanitize(scenario.attributes(include_condition=False)),
-            )
+        self._batch_cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        try:
+            for name in self.scenarios if names is None else names:
+                entity = self._entities.get(name)
+                if entity is not None:
+                    entity.async_write_ha_state()
+        finally:
+            self._batch_cvars = None
 
 
 class Scenario:
@@ -238,6 +258,9 @@ class Scenario:
         self.alias: str | None = scenario_definition.get(CONF_ALIAS)
         self.conditions: ConditionsFunc | None = None
         self.conditions_config: list[ConfigType] | None = scenario_definition.get(CONF_CONDITIONS)
+        # With no conditions to evaluate, whether the scenario applies is set from outside, by
+        # the state of its binary_sensor - see SupernotifyScenarioManualBinarySensor
+        self.manual_active: bool = False
         self.media: dict[str, Any] | None = scenario_definition.get(CONF_MEDIA)
         self.action_groups: list[str] = scenario_definition.get(CONF_ACTION_GROUP_NAMES, [])
         self._config_delivery: dict[str, DeliveryCustomization]
@@ -272,6 +295,11 @@ class Scenario:
         else:
             _LOGGER.warning("SUPERNOTIFY No delivery definitions for scenario %s", self.name)
             self._config_delivery = {}
+
+    @property
+    def is_manual(self) -> bool:
+        """A scenario with no conditions, which only applies when its manual state is on"""
+        return not self.conditions_config
 
     async def validate(self, valid_action_group_names: list[str] | None = None) -> bool:
         """Validate Home Assistant conditiion definition at initiation"""
@@ -404,6 +432,8 @@ class Scenario:
     def evaluate(self, condition_variables: ConditionVariables) -> bool:
         """Evaluate scenario conditions"""
         result: bool | None = False
+        if self.enabled and self.is_manual:
+            return self.manual_active
         if self.enabled and self.conditions:
             try:
                 result = self.hass_api.evaluate_conditions(self.conditions, condition_variables)
@@ -422,6 +452,8 @@ class Scenario:
         """Trace scenario condition execution"""
         result: bool | None = False
         trace: ActionTrace | None = None
+        if self.enabled and self.is_manual:
+            return self.manual_active
         if self.enabled and self.conditions:
             result, trace = await self.hass_api.trace_conditions(
                 self.conditions, condition_variables, trace_name=f"scenario_{self.name}"

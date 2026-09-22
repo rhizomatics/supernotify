@@ -21,12 +21,11 @@ from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
-    Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.target import Target, TargetEntityCategory
 
 from .common import CallRecord
 from .const import (
@@ -121,10 +120,10 @@ class Transport:
         return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         """The target categories this transport understands, independent of any delivery.
 
-        A plain string names a category directly (e.g. `ATTR_EMAIL`); an `EntityCategory`
+        A plain string names a category directly (e.g. `ATTR_EMAIL`); an `TargetEntityCategory`
         declares that the `entity_id` category is accepted, but only for entities matching
         its domain/platform constraints. Empty by default - a transport that doesn't declare
         anything here relies entirely on `Delivery.select_targets()`'s other qualification

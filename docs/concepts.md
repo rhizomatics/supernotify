@@ -35,8 +35,7 @@ description: Core Concepts of Supernotify for Home Assistant, including Transpor
 or automatically selected using a standard Home Assistant `condition` block.
 - They make it easy to apply overrides in one place to many different deliveries or notifications,
 and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](usage/scenarios.md) and [Recipes](recipes/index.md) for more detail
-
+- See [Scenarios](configuration/scenarios.md) and [Recipes](recipes/index.md) for more detail
 
 ## Target
 - The target of a notification.

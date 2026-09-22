@@ -122,7 +122,7 @@ It's also useful if you want to micro-manage which targets of the same category 
                 target: notify.alexa_kitchen_announce
 ```
 
-This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](./scenarios.md) for more on how to use these pre-canned bits of config.
+This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](../configuration//scenarios.md) for more on how to use these pre-canned bits of config.
 
 ```yaml title="mix of targets"
 scenarios:

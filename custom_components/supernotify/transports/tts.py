@@ -16,10 +16,8 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
     MessageOnlyPolicy,
     SelectionRule,
-    Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -36,11 +34,12 @@ from custom_components.supernotify.options import (
     DeliveryOption,
 )
 from custom_components.supernotify.schema import SelectionRank
+from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
+    from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 
 _LOGGER = logging.getLogger(__name__)
 RE_MOBILE_APP = r"(notify\.)?mobile_app_[a-z0-9_]+"
@@ -104,8 +103,8 @@ class TTSTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
-        return [EntityCategory(domain="media_player"), ATTR_MOBILE_APP_ID]
+    def target_categories(self) -> list[str | TargetEntityCategory]:
+        return [TargetEntityCategory(domain="media_player"), ATTR_MOBILE_APP_ID]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
         _LOGGER.debug("SUPERNOTIFY tts: %s", envelope.message)
@@ -147,7 +146,7 @@ class TTSTransport(Transport):
         manufacturer_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MANUFACTURER_SELECT))
         at_least_one: bool = False
         for target in targets:
-            mobile_info: DeviceInfo | None = self.context.hass_api.mobile_app_by_id(target)
+            mobile_info: TrackedDeviceDetails | None = self.context.hass_api.mobile_app_by_id(target)
             if not mobile_info or not manufacturer_filter.match(mobile_info.manufacturer):
                 _LOGGER.debug("SUPERNOTIFY Skipping tts target excluded by manufacturer filter: %s", mobile_info)
             else:

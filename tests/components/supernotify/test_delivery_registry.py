@@ -11,6 +11,9 @@ from custom_components.supernotify.const import (
     CONF_LOAD,
     CONF_TRANSPORT,
     INCLUSION_BY_SCENARIO,
+    INCLUSION_DEFAULT,
+    INCLUSION_FALLBACK,
+    INCLUSION_FALLBACK_ON_ERROR,
     TRANSPORT_ALEXA,
     TRANSPORT_ALEXA_MEDIA_PLAYER,
     TRANSPORT_CHIME,
@@ -51,6 +54,33 @@ async def test_simple_create_with_defined_default_delivery() -> None:
 
     assert list(ctx.delivery_registry.deliveries.keys()) == ["chat"]
     assert [d.name for d in ctx.delivery_registry.implicit_deliveries] == ["chat"]
+
+
+async def test_runtime_enabled_delivery_joins_implicit_and_fallback_lists() -> None:
+    """A delivery disabled in config, then enabled at runtime (e.g. by its switch), is used
+    implicitly and as a fallback just like one enabled in config."""
+    ctx = TestingContext(
+        deliveries={
+            "chat": {
+                CONF_TRANSPORT: TRANSPORT_GENERIC,
+                CONF_ACTION: "notify.my_chat_server",
+                CONF_ENABLED: False,
+                CONF_INCLUSION: [INCLUSION_DEFAULT, INCLUSION_FALLBACK, INCLUSION_FALLBACK_ON_ERROR],
+            }
+        },
+        transport_types=[GenericTransport],
+    )
+    await ctx.test_initialize()
+    registry = ctx.delivery_registry
+    assert registry.implicit_deliveries == []
+    assert registry.fallback_by_default_deliveries == []
+    assert registry.fallback_on_error_deliveries == []
+
+    registry.deliveries["chat"].enabled = True
+
+    assert [d.name for d in registry.implicit_deliveries] == ["chat"]
+    assert [d.name for d in registry.fallback_by_default_deliveries] == ["chat"]
+    assert [d.name for d in registry.fallback_on_error_deliveries] == ["chat"]
 
 
 async def test_simple_create_with_defined_delivery() -> None:

@@ -30,9 +30,10 @@ from custom_components.supernotify.hass_api import (
     HomeAssistantAPI,
     force_strict_template_mode,
 )
-from custom_components.supernotify.model import ConditionVariables, SelectionRule, Target
+from custom_components.supernotify.model import ConditionVariables, SelectionRule
+from custom_components.supernotify.target import Target
 from custom_components.supernotify.transports.media_player import MediaPlayerTransport
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext, set_state
 
 from .hass_setup_lib import register_device, register_mobile_app
 
@@ -134,12 +135,12 @@ def test_roundtrips_entity_state(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
 
     assert hass_api.get_state("entity.testablity") is None
-    hass_api.set_state("entity.testablity", "on")
+    set_state(hass_api, "entity.testablity", "on")
     state = hass_api.get_state("entity.testablity")
     assert state is not None
     assert state.state == "on"
 
-    hass_api.set_state("entity.testablity", "off")
+    set_state(hass_api, "entity.testablity", "off")
     state = hass_api.get_state("entity.testablity")
     assert state is not None
     assert state.state == "off"
@@ -149,12 +150,12 @@ def test_async_roundtrips_entity_state(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
 
     assert hass_api.get_state("entity.testablity") is None
-    hass_api.set_state("entity.testablity", "on")
+    set_state(hass_api, "entity.testablity", "on")
     state = hass_api.get_state("entity.testablity")
     assert state is not None
     assert state.state == "on"
 
-    hass_api.set_state("entity.testablity", "off")
+    set_state(hass_api, "entity.testablity", "off")
     state = hass_api.get_state("entity.testablity")
     assert state is not None
     assert state.state == "off"
@@ -460,11 +461,11 @@ async def test_subscribe_and_unsubscribe(hass: HomeAssistant) -> None:
 
 
 def test_device_info_equality() -> None:
-    from custom_components.supernotify.hass_api import DeviceInfo
+    from custom_components.supernotify.hass_api import TrackedDeviceDetails
 
-    d1 = DeviceInfo(device_id="abc", device_name="My Device")
-    d2 = DeviceInfo(device_id="abc", device_name="My Device")
-    d3 = DeviceInfo(device_id="xyz", device_name="Other")
+    d1 = TrackedDeviceDetails(device_id="abc", device_name="My Device")
+    d2 = TrackedDeviceDetails(device_id="abc", device_name="My Device")
+    d3 = TrackedDeviceDetails(device_id="xyz", device_name="Other")
     assert d1 == d2
     assert d1 != d3
     assert d1 != None  # noqa: RUF100, E711
@@ -515,7 +516,7 @@ def test_discover_devices_skips_disabled(hass: HomeAssistant) -> None:
 def test_is_state(hass: HomeAssistant) -> None:
     # Line 178
     hass_api = HomeAssistantAPI(hass)
-    hass_api.set_state("entity.is_state_test", "on")
+    set_state(hass_api, "entity.is_state_test", "on")
     assert hass_api.is_state("entity.is_state_test", "on")
     assert not hass_api.is_state("entity.is_state_test", "off")
 

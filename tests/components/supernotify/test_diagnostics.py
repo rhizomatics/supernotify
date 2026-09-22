@@ -58,8 +58,8 @@ async def test_diagnostics_redacts_recipient_pii(hass: HomeAssistant, mock_hass:
     assert diagnostics["counters"] == {"sent": 0, "failures": 0}
     assert len(diagnostics["recipients"]) == 1
     recipient = diagnostics["recipients"][0]
-    assert recipient["email"] == "**REDACTED**"
-    assert recipient["phone_number"] == "**REDACTED**"
+    assert recipient["email"] == "me***t"
+    assert recipient["phone_number"] == "+2***3"
     assert recipient["user_id"] == "**REDACTED**"
     assert recipient["alias"] == "**REDACTED**"
     assert recipient[CONF_PERSON] == "person.new_home_owner"

@@ -4,6 +4,45 @@
 - Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied. Previously only Chime expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
   - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
 
+## 2.7.1
+
+### Privacy
+- Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
+
+## 2.7.0
+
+### Native Entities
+
+- Scenario and recipients are now real `switch` entities
+- Sent/failure notification counters are now real Home Assistant `sensor` entities
+- New real entities are grouped under a single **SuperNotify** device, instead of hand-written state writes with no `Entity` behind them - same `entity_id`s, no reconfiguration needed
+- Fixes the notification/failure counters resetting to 0 on every Home Assistant restart - they now restore their last value
+- The scenario `binary_sensor` stays read-only for conditional scenarios, as the place to see whether a scenario's conditions currently apply, while its new switch says whether it is enabled.
+  - A scenario with no conditions has a *Scenario Manual* read/write `binary_sensor`, which stays the way to control it from outside Supernotify: while it is `on` the scenario applies, as if its conditions held, and its state is restored across a restart
+- The recipient `binary_sensor` only mirrors the recipient switch, so is deprecated and will be removed in a future version. It is read-only, and not created on a new install, or for a recipient added to an existing one. A repair is raised once if you have it enabled
+- Delivery and transport `binary_sensor`s are otherwise unchanged for now - a separate, larger conversion to `switch` entities is tracked in [issue #175](https://github.com/rhizomatics/supernotify/issues/175) - but now belong to the config entry
+
+### Notify Entities
+- The notify entities created for recipients now have the timestamp changed however they were notified by SuperNotify (previously only updated if the Notify Entity itself was used, as in `send_message`)
+- Home Assistant context is used for the Notify Entity timestamp, so its possible to look at a sent timestamp on an entity and see why it was notified
+
+### Scenario and Recipient Switches
+
+- Each scenario and recipient now has a switch, `switch.supernotify_scenario_<name>` or `switch.supernotify_recipient_<name>`, to enable and disable it
+- **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it, use the switch instead. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag
+- Scenario and recipient entity names are translated, and put the type first so each sorts together in the entity list: `Scenario <name>` and `Recipient <name>` for the `binary_sensor`s, and `Scenario <name> Enabled` and `Recipient <name> Enabled` for the switches
+
+### Other
+- HomeAssistant compatibility moved to 2026.9.3
+- Fix handling of target specific data, that could lead to targets showing up in other envelopes
+- If a camera or other image source not available, the mobile push is text only rather than showing with a broken image
+- Fix a delivery disabled in config but enabled at run-time never being used implicitly or as a fallback
+- Fix `supernotify.refresh_entities` failing, as it wrote entity state from outside the event loop
+
+### Internal
+  - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
+
+
 ## 2.6.0
 
 ### Action Data
@@ -67,7 +106,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](roadmap/deliveries_and_transports.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/design/roadmap/deliveries_and_transports.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
   - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -324,7 +363,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](./roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](developer/design/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
   - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
   - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.

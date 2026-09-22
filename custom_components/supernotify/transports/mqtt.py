@@ -7,14 +7,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
-from custom_components.supernotify.model import (
-    DebugTrace,
-    EntityCategory,
-    Target,
-    TargetRequired,
-    TransportConfig,
-    TransportFeature,
-)
+from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import (
     Transport,
 )
@@ -48,7 +42,7 @@ class MQTTTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         # `topic` is a clean, dedicated category name for the mapping form (`target: {topic:
         # ...}`), distinct from overloading the transport's own name (`target: {mqtt: ...}`,
         # still handled separately by Delivery.select_targets()). A bare, unqualified

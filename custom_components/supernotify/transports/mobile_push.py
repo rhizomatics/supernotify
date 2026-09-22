@@ -66,15 +66,14 @@ from custom_components.supernotify.const import (
     MANUFACTURER_APPLE,
     TRANSPORT_MOBILE_PUSH,
 )
+from custom_components.supernotify.media_grab import select_avail_camera
 from custom_components.supernotify.model import (
     CommandType,
     DebugTrace,
-    EntityCategory,
     MessageOnlyPolicy,
     QualifiedTargetType,
     RecipientType,
     SelectionRule,
-    Target,
     TargetRequired,
     TransportConfig,
     TransportFeature,
@@ -91,11 +90,12 @@ from custom_components.supernotify.options import (
     OPTION_UNIQUE_TARGETS,
     DeliveryOption,
 )
+from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
     from custom_components.supernotify.envelope import Envelope
-    from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
+    from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,7 +165,7 @@ class MobilePushTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         return [ATTR_MOBILE_APP_ID]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
@@ -347,8 +347,13 @@ class MobilePushTransport(Transport):
                 image_url = await self.context.media_storage.share_path(image_path)
                 data[ATTR_IMAGE] = image_url or str(image_path)
             else:
-                # fall back to letting device take the image
-                data["entity_id"] = camera_entity_id
+                # fall back to letting device take the image, but only from a camera that's up,
+                # since one that's switched off or unavailable would only show a broken image
+                available_camera_entity_id = select_avail_camera(self.hass_api, self.context.cameras, camera_entity_id)
+                if available_camera_entity_id:
+                    data["entity_id"] = available_camera_entity_id
+                else:
+                    _LOGGER.info("SUPERNOTIFY mobile_push: no available camera for %s, sending without image", camera_entity_id)
         if clip_url:
             data[ATTR_VIDEO] = clip_url
 
@@ -392,7 +397,7 @@ class MobilePushTransport(Transport):
 
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
-            mobile_info: DeviceInfo | None = self.context.hass_api.mobile_app_by_id(mobile_target)
+            mobile_info: TrackedDeviceDetails | None = self.context.hass_api.mobile_app_by_id(mobile_target)
             if mobile_info is not None and not model_filter.match(mobile_info.model):
                 _LOGGER.debug("SUPERNOTIFY Skipping %s, model %s excluded by delivery filter", mobile_target, mobile_info.model)
                 continue
