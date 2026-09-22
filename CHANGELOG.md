@@ -1,9 +1,10 @@
-## Unreleased
+## v2.8.0
 
 ### Delivery and Transport Switches
 
 - Each loaded delivery and transport now has a switch, `switch.supernotify_delivery_<name>` or `switch.supernotify_transport_<name>`, named `Delivery <name> Enabled` and `Transport <name> Enabled`, on the SuperNotify device. Switching a transport off suppresses all of its deliveries, without changing their own switches
-- Delivery and transport `binary_sensor`s go the same way as the recipient one: they only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+- Delivery and transport `binary_sensor`s behave the same way as the recipients since v2.7.0
+ - Only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
 - Delivery switches and `binary_sensor`s have a `transport_enabled` attribute, updated as the transport is switched on or off, since a delivery is only used while its transport is enabled too
 
 ### Persistent Overrides
@@ -15,8 +16,6 @@
 ### Breaking
 
 - Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
-
-## 2.7.1
 
 ### Debug Trace
 - The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
