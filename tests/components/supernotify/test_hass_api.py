@@ -166,12 +166,14 @@ def test_group_members(hass: HomeAssistant) -> None:
     ent_reg = hass_api._entity_registry()
     assert ent_reg is not None
     ent_reg.async_get_or_create("media_player", "group", "all_speakers_uid", suggested_object_id="all_speakers")
-    hass_api.set_state("media_player.kitchen", "off")
-    hass_api.set_state("media_player.all_speakers", "off", {ATTR_ENTITY_ID: ["media_player.kitchen", "media_player.hall"]})
-    hass_api.set_state(
-        "group.downstairs", "on", {ATTR_ENTITY_ID: ["media_player.all_speakers", "switch.bell", "group.upstairs"]}
+    set_state(hass_api, "media_player.kitchen", "off")
+    set_state(hass_api, "media_player.all_speakers", "off", {ATTR_ENTITY_ID: ["media_player.kitchen", "media_player.hall"]})
+    set_state(
+        hass_api, "group.downstairs", "on", {ATTR_ENTITY_ID: ["media_player.all_speakers", "switch.bell", "group.upstairs"]}
     )
-    hass_api.set_state("group.upstairs", "on", {ATTR_ENTITY_ID: ["media_player.kitchen", "group.downstairs", "group.upstairs"]})
+    set_state(
+        hass_api, "group.upstairs", "on", {ATTR_ENTITY_ID: ["media_player.kitchen", "group.downstairs", "group.upstairs"]}
+    )
 
     assert hass_api.group_members("media_player.kitchen") is None
     assert hass_api.group_members("media_player.no_such_thing") is None
@@ -209,9 +211,9 @@ def test_group_members_outside_group_domain_needs_group_platform(hass: HomeAssis
     platform_group = ent_reg.async_get_or_create("media_player", "group", "speakers_uid").entity_id
     scene = ent_reg.async_get_or_create("scene", "homeassistant", "movie_uid").entity_id
     members = ("media_player.a", "media_player.b")
-    hass_api.set_state(platform_group, "off", {ATTR_ENTITY_ID: members})
-    hass_api.set_state(scene, "unknown", {ATTR_ENTITY_ID: list(members)})
-    hass_api.set_state("media_player.unregistered", "off", {ATTR_ENTITY_ID: members})
+    set_state(hass_api, platform_group, "off", {ATTR_ENTITY_ID: members})
+    set_state(hass_api, scene, "unknown", {ATTR_ENTITY_ID: list(members)})
+    set_state(hass_api, "media_player.unregistered", "off", {ATTR_ENTITY_ID: members})
 
     assert hass_api.group_members(platform_group) == list(members)
     # scene exposes an entity_id attribute but is not a group

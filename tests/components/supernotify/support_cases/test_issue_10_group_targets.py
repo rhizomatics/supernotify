@@ -97,7 +97,9 @@ async def test_select_targets_keeps_group_entity_id(transport_class: type[Transp
     admits the transport's own domain, so the group id is silently dropped."""
     domain = member.partition(".")[0]
     members = [f"{domain}.grouped_1", f"{domain}.grouped_2"]
-    ctx = TestingContext(transport_types=[transport_class], entities={group_id: MockGroup(members)})
+    # alexa_media_player only selects media_players registered by the alexa_media integration
+    platforms = dict.fromkeys([*members, member], "alexa_media") if transport_class is AlexaMediaPlayerTransport else None
+    ctx = TestingContext(transport_types=[transport_class], entities={group_id: MockGroup(members)}, entity_platforms=platforms)
     await ctx.test_initialize()
     uut = Delivery("unit_testing", {}, transport_class(ctx, {}))
 
