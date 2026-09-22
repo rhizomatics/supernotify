@@ -26,6 +26,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/index.md)
 - [Notification Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md)
 - [Conditions](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/index.md)
+- [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
 - [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md)
 - [Duplicate Detection](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md)
 - [e-Mail Notifications](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md)
