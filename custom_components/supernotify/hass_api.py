@@ -264,7 +264,7 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to get image from entity %s: %s", entity_id, e)
             return None
 
-    async def load_storage(self, key: str, version: int = 1) -> Any | None:  # ruff: ignore[any-type]
+    async def load_storage(self, key: str, version: int = 1) -> Any:  # ruff: ignore[any-type]
         """Load integration state previously persisted to Home Assistant's .storage/ area,
         via HA's own Store helper, or None if nothing has been persisted yet for this key."""
         try:
