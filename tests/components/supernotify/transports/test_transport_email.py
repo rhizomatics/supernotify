@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import importlib.util
-from contextlib import ExitStack
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import TYPE_CHECKING, cast
@@ -19,7 +17,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.setup import async_setup_component
 
 from custom_components.supernotify.const import (
     ATTR_DATA,
@@ -53,7 +50,8 @@ from custom_components.supernotify.transports.email import (
     OPTION_SENDER_NAME,
     EmailTransport,
 )
-from tests.components.supernotify.hass_setup_lib import TestingContext
+from tests.components.supernotify.hass_setup_lib import TestingContext, set_state
+from tests.components.supernotify.transports.transport_actions import setup_smtp, smtp_config_flow
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
@@ -119,7 +117,7 @@ async def test_deliver_with_template(hass: HomeAssistant) -> None:
         template_path=Path("tests/components/supernotify/fixtures/templates"),
         services={"notify": ["smtp"]},
     )
-    ctx.hass_api.set_state("device_tracker.joey_mctest", "home")
+    set_state(ctx.hass_api, "device_tracker.joey_mctest", "home")
     await ctx.test_initialize()
     uut = ctx.transport(TRANSPORT_EMAIL)
 
@@ -222,43 +220,6 @@ async def test_deliver_with_preformatted_html_and_image() -> None:
     )
 
 
-def _smtp_uses_config_entry() -> bool:
-    """Whether the installed HA version sets up smtp notify via a config entry import
-    flow (and so a direct SMTP connection can be reused from it), rather than as a
-    legacy discovered notify platform with no config entry to reuse."""
-    return importlib.util.find_spec("homeassistant.components.smtp.config_flow") is not None
-
-
-async def _setup_ha_smtp_notify(hass: HomeAssistant, extra_config: dict | None = None) -> None:
-    config = {
-        **(extra_config or {}),
-        "notify": [
-            {
-                "name": "mailservice",
-                "platform": "smtp",
-                "server": "localhost",
-                "encryption": "none",
-                "sender": "hass@localhost.org",
-                "recipient": ["tester@localhost.org"],
-            },
-        ],
-    }
-    if extra_config:
-        assert await async_setup_component(hass, next(iter(extra_config)), config)
-
-    with ExitStack() as stack:
-        if _smtp_uses_config_entry():
-            # HA >= 2026.x: smtp notify is set up via a config entry import flow
-            stack.enter_context(patch("homeassistant.components.smtp.config_flow.validate_input", return_value={}))
-            stack.enter_context(patch("homeassistant.components.smtp.helpers.SmtpClient.connect"))
-        else:
-            # older HA: smtp notify is a legacy discovered notify platform
-            stack.enter_context(patch("homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"))
-        assert await async_setup_component(hass, "notify", config)
-        await hass.async_block_till_done()
-    await hass.async_block_till_done()
-
-
 async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
     """With the HA smtp integration present and no explicit OPTION_MODE, the auto-configured
     delivery defaults to direct sending either way - OPTION_MODE: direct is always the
@@ -268,14 +229,14 @@ async def test_discover_smtp_integration(hass: HomeAssistant) -> None:
     the legacy notify-platform action path only wins if a delivery explicitly asks for
     EMAIL_OPTION_MODE_HA_SMTP."""
     ctx = TestingContext(homeassistant=hass)
-    await _setup_ha_smtp_notify(hass, {"notify_events": {"token": "ABC"}})
+    await setup_smtp(hass, {"notify_events": {"token": "ABC"}})
 
     await ctx.test_initialize()
     assert "email" in ctx.delivery_registry.deliveries
     delivery = ctx.delivery_registry.deliveries["email"]
     uut = cast("EmailTransport", ctx.transport(TRANSPORT_EMAIL))
     assert delivery.options.get(OPTION_MODE) == EMAIL_OPTION_MODE_DIRECT
-    if _smtp_uses_config_entry():
+    if smtp_config_flow():
         # a config entry exists to reuse a direct SMTP connection from
         assert uut.host == "localhost"
         assert uut.sender == "hass@localhost.org"
@@ -300,7 +261,7 @@ async def test_discover_smtp_integration_explicit_ha_smtp_mode(hass: HomeAssista
             },
         },
     )
-    await _setup_ha_smtp_notify(hass)
+    await setup_smtp(hass)
 
     await ctx.test_initialize()
     assert ctx.delivery_registry.deliveries["email"].action == "notify.gmail"
@@ -314,7 +275,7 @@ async def test_explicit_delivery_named_like_transport_overrides_discovery(hass: 
         homeassistant=hass,
         deliveries={"email": {CONF_TRANSPORT: TRANSPORT_EMAIL, CONF_TEMPLATE: "minimal_test.html.j2"}},
     )
-    await _setup_ha_smtp_notify(hass)
+    await setup_smtp(hass)
 
     await ctx.test_initialize()
     assert "email" in ctx.delivery_registry.deliveries

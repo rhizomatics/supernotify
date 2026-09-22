@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
     CONF_ACTION,
@@ -20,6 +19,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+
+from custom_components.supernotify.target import Target, TargetEntityCategory
 
 from . import DOMAIN
 from .common import ensure_list, sanitize
@@ -42,7 +43,7 @@ from .const import (
     RESERVED_DELIVERY_NAMES,
 )
 from .hass_api import HomeAssistantAPI
-from .model import ConditionVariables, DeliveryConfig, EntityCategory, SelectionRule, Target
+from .model import ConditionVariables, DeliveryConfig, SelectionRule
 from .options import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
@@ -71,7 +72,7 @@ if TYPE_CHECKING:
     from homeassistant.core import State
     from homeassistant.helpers.typing import ConfigType
 
-    from custom_components.supernotify.hass_api import DeviceInfo
+    from custom_components.supernotify.hass_api import TrackedDeviceDetails
     from custom_components.supernotify.transport import Transport
 
     from .context import Context
@@ -129,7 +130,7 @@ class Delivery(DeliveryConfig):
                 learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
             )
         if CONF_INCLUSION not in self._raw_conf and INCLUSION_DEFAULT not in self.inclusion:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "SUPERNOTIFY Delivery %s has no explicit inclusion, but transport %s no longer defaults to "
                 "'default' - it will not fire implicitly",
                 self.name,
@@ -243,7 +244,7 @@ class Delivery(DeliveryConfig):
                     if self.target is None:
                         self.target = Target()
                     if domain == "mobile_app":
-                        mobile_app: DeviceInfo | None = context.hass_api.mobile_app_by_device_id(d.device_id)
+                        mobile_app: TrackedDeviceDetails | None = context.hass_api.mobile_app_by_device_id(d.device_id)
                         if mobile_app and mobile_app.action:
                             mobile_app_id = mobile_app.mobile_app_id if mobile_app else None
                             if mobile_app_id and mobile_app_id not in self.target.mobile_app_ids:
@@ -263,7 +264,7 @@ class Delivery(DeliveryConfig):
                 _LOGGER.info(f"SUPERNOTIFY {self.name} Device discovery for {domain} found {discovered} devices, added {added}")
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         """The target categories this delivery accepts - the query point for "what does this
 
         delivery support", so callers never need to look at `Transport` and `OPTION_TARGET_
@@ -321,56 +322,14 @@ class Delivery(DeliveryConfig):
         result.extend(primary, unqualified)
         return result
 
-    def select_targets(self, target: Target, hass_api: HomeAssistantAPI | None = None) -> Target:
-        declared_categories = self.target_categories
-        plain_categories = {c for c in declared_categories if isinstance(c, str)}
-        entity_selectors = [c for c in declared_categories if isinstance(c, EntityCategory)]
-
-        def selected(category: str, targets: list[str]) -> list[str]:
-            if category in Target.EXPLICIT_INDIRECT_CATEGORIES:
-                # area/floor/label are either resolved to entity_ids before selection, or passed
-                # through untouched, and never subject to the target_select regex
-                return targets if self.passes_target_selectors else []
-            # a target category named after this delivery, or after its transport, is always
-            # destined here. The two serve different purposes and both stay available:
-            #  - the TRANSPORT name (`sms:value`) reaches every delivery of that transport, so
-            #    scenario/time/occupancy selection logic can still decide which one actually
-            #    fires - the same as it would for a plain, auto-matched value
-            #  - a specific DELIVERY name (`shortcode_sms:value`) pins the target to just that
-            #    one delivery, for when two deliveries of the same transport must stay distinct
-            #    (e.g. `email` vs `html_email`)
-            if category != self.name and category != self.transport.name:
-                if entity_selectors and category == ATTR_ENTITY_ID:
-                    targets = [
-                        t
-                        for t in targets
-                        if any(
-                            sel.matches(t, hass_api.platform_for_entity(t) if hass_api else None, check_platform=bool(hass_api))
-                            for sel in entity_selectors
-                        )
-                    ]
-                    if not targets:
-                        return []
-                elif plain_categories:
-                    # this delivery declares fixed categories (from its transport, its own
-                    # config, or both) - anything outside that set is rejected
-                    if category not in plain_categories:
-                        return []
-                # else: this delivery declares no categories at all (e.g. `generic` with no
-                # config) - nothing to restrict against
-            if self.target_selector:
-                targets = [t for t in targets if self.target_selector.match(t)]
-            return targets
-
-        filtered_target = Target({k: selected(k, v) for k, v in target.targets.items()}, target_data=target.target_data)
-        # TODO: in model class
-        if target.target_specific_data:
-            filtered_target.target_specific_data = {
-                (c, t): data
-                for (c, t), data in target.target_specific_data.items()
-                if c in target.targets and t in target.targets[c]
-            }
-        return filtered_target
+    def select_targets(self, target: Target) -> Target:
+        return target.select(
+            self.target_categories,
+            (self.name, self.transport.name),
+            self.transport.hass_api,
+            self.target_selector,
+            passes_selectors=self.passes_target_selectors,
+        )
 
     def evaluate_conditions(self, condition_variables: ConditionVariables) -> bool | None:
         if not self.enabled:
@@ -448,9 +407,6 @@ class DeliveryRegistry:
         self._deliveries: dict[str, Delivery] = {}
         self.transports: dict[str, Transport] = {}
         self._transport_configs: ConfigType = transport_configs or {}
-        self._fallback_on_error: list[Delivery] = []
-        self._fallback_by_default: list[Delivery] = []
-        self._implicit_deliveries: list[Delivery] = []
 
         self._transport_types: dict[type[Transport], dict[str, Any]]
         if isinstance(transport_types, list):
@@ -462,7 +418,6 @@ class DeliveryRegistry:
 
     async def initialize(self, context: Context) -> None:
         await self.initialize_transports(context)
-        await self.initialize_deliveries()
 
     def unload_unused_transports(self) -> None:
         """Drop any transport that ended up with no delivery at all - explicit or auto-generated.
@@ -538,20 +493,6 @@ class DeliveryRegistry:
 
         return None
 
-    async def initialize_deliveries(self) -> None:
-
-        for delivery in self._deliveries.values():
-            if delivery.enabled:
-                if INCLUSION_FALLBACK_ON_ERROR in delivery.inclusion:
-                    self._fallback_on_error.append(delivery)
-                if INCLUSION_FALLBACK in delivery.inclusion:
-                    self._fallback_by_default.append(delivery)
-                if INCLUSION_DEFAULT in delivery.inclusion:
-                    self._implicit_deliveries.append(delivery)
-                # delivery.inclusion can also be INCLUSION_BY_SCENARIO
-                # or INCLUSION_EXPLICIT to have it only used where asked for
-                # default is INCLUSION_DEFAULT so every delivery used implicitly
-
     def enable(self, delivery_name: str) -> bool:
         delivery = self._deliveries.get(delivery_name)
         if delivery and not delivery.enabled:
@@ -590,18 +531,22 @@ class DeliveryRegistry:
     def disabled_deliveries(self) -> dict[str, Delivery]:
         return {d: dconf for d, dconf in self._deliveries.items() if not dconf.enabled}
 
+    # Computed on each call, not cached at startup, so that a delivery enabled at runtime (by its
+    # switch) is included just like one enabled in config. delivery.inclusion can also be
+    # INCLUSION_BY_SCENARIO or INCLUSION_EXPLICIT to have it only used where asked for.
+
     @property
     def fallback_by_default_deliveries(self) -> list[Delivery]:
-        return [d for d in self._fallback_by_default if d.enabled]
+        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_FALLBACK in d.inclusion]
 
     @property
     def fallback_on_error_deliveries(self) -> list[Delivery]:
-        return [d for d in self._fallback_on_error if d.enabled]
+        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_FALLBACK_ON_ERROR in d.inclusion]
 
     @property
     def implicit_deliveries(self) -> list[Delivery]:
         """Deliveries switched on all the time via implicit inclusion"""
-        return [d for d in self._implicit_deliveries if d.enabled]
+        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_DEFAULT in d.inclusion]
 
     async def initialize_transports(self, context: Context) -> None:
         """Use configure_for_tests() to set transports to mocks or manually created fixtures"""

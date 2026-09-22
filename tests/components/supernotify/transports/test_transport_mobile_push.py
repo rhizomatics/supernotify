@@ -27,7 +27,7 @@ from custom_components.supernotify.const import (
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.envelope import Envelope
-from custom_components.supernotify.hass_api import DeviceInfo, HomeAssistantAPI
+from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.schema import EnvelopeOutcome
@@ -237,7 +237,7 @@ async def test_priority_interpretation(mock_hass: HomeAssistant, unmocked_config
     context = unmocked_config
     delivery_config = {"default": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}}
     uut = MobilePushTransport(context)
-    context.hass_api.mobile_app_by_id.return_value = DeviceInfo("id001", manufacturer="Apple", model="iPhone Fold 23")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Apple", model="iPhone Fold 23")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
     context.configure_for_tests([uut])
     await context.initialize()
     e: Envelope = Envelope(
@@ -644,6 +644,47 @@ async def test_deliver_camera_image_grabbed_shares_url() -> None:
     assert e.calls[0].action_data is not None
     data = e.calls[0].action_data["data"]
     assert data["image"] == "http://my.home/media/snap.jpg"
+
+
+async def _deliver_with_failed_grab(available_camera: str | None) -> dict[str, Any]:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": {"camera_entity_id": "camera.front"}}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    with (
+        patch.object(e, "grab_image", new_callable=AsyncMock, return_value=None),
+        patch("custom_components.supernotify.transports.mobile_push.select_avail_camera", return_value=available_camera),
+    ):
+        assert await uut.deliver(e) is True
+    assert e.calls
+    assert e.calls[0].action_data is not None
+    return cast("dict[str, Any]", e.calls[0].action_data["data"])
+
+
+async def test_deliver_lets_device_take_image_from_available_camera_when_grab_fails() -> None:
+    data = await _deliver_with_failed_grab("camera.front")
+
+    assert data["entity_id"] == "camera.front"
+    assert "image" not in data
+
+
+async def test_deliver_lets_device_take_image_from_available_alt_camera_when_grab_fails() -> None:
+    data = await _deliver_with_failed_grab("camera.driveway")
+
+    assert data["entity_id"] == "camera.driveway"
+
+
+async def test_deliver_sends_no_image_rather_than_broken_one_when_no_camera_available() -> None:
+    """A camera that is switched off (and any fallback also unavailable) would only give the
+    device a broken image, so none is asked for - the notification still goes out"""
+    data = await _deliver_with_failed_grab(None)
+
+    assert "entity_id" not in data
+    assert "image" not in data
 
 
 async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:

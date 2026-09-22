@@ -163,6 +163,7 @@ def test_alexa_media_player_features_and_validate() -> None:
 def test_alexa_transport_selects_targets() -> None:
     """Test on_notify_alexa."""
     context = TestingContext(deliveries={"announce": {CONF_TRANSPORT: TRANSPORT_ALEXA_MEDIA_PLAYER}})
+    context.hass_api.platform_for_entity = lambda entity_id: "alexa_media"  # type: ignore
     uut = Delivery("unit_testing", {}, AlexaMediaPlayerTransport(context, {}))
 
     assert uut.select_targets(Target(["switch.alexa_1", "media_player.hall_1"])).entity_ids == ["media_player.hall_1"]
@@ -182,9 +183,9 @@ def test_alexa_transport_selects_by_domain_and_platform() -> None:
     context.hass_api.platform_for_entity = lambda entity_id: platforms.get(entity_id)  # type: ignore
     uut = Delivery("unit_testing", {}, AlexaMediaPlayerTransport(context, {}))
 
-    assert uut.select_targets(
-        Target(["media_player.echo_kitchen", "media_player.chromecast_lounge"]), context.hass_api
-    ).entity_ids == ["media_player.echo_kitchen"]
+    assert uut.select_targets(Target(["media_player.echo_kitchen", "media_player.chromecast_lounge"])).entity_ids == [
+        "media_player.echo_kitchen"
+    ]
 
 
 def _make_transport(states=None):

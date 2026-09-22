@@ -41,6 +41,13 @@ NOTIFY_SERVICE_NAME = "supernotify"
 # yet configurable via ConfigFlow). Populated by async_setup, read by _entry_full_config.
 KEY_YAML_CONFIG = "yaml_config"
 
+# NOTIFY carries the main notify.supernotify action and per-recipient notify entities.
+# BINARY_SENSOR/SENSOR/SWITCH carry the scenario/recipient state, notification/failure counters
+# and scenario control as real entities (binary_sensor.py/sensor.py/switch.py) - see issue #175
+# "Part B". Their async_setup_entry read entry.runtime_data, so they must be forwarded to only
+# after it's set.
+PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+
 # Deferred import: schema.py imports ARCHIVE_DIR/MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.
 from .schema import SUPERNOTIFY_YAML_SCHEMA  # noqa: E402, RUF100, I001
@@ -152,12 +159,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
         _LOGGER.exception("SUPERNOTIFY Failed to initialize, will retry")
         raise ConfigEntryNotReady(f"SUPERNOTIFY Failed to initialize: {err}") from err
 
-    async_register_engine_actions(hass, engine, full_config)
     entry.runtime_data = engine
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
-    # Add NotifyEntities via notify.py (script matches the platform name)
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
+    # Add NotifyEntities via notify.py, plus the scenario/recipient entities and notification/
+    # failure counter sensors (binary_sensor.py/sensor.py/switch.py) - see PLATFORMS above.
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Only once the counter sensors have restored their last values, so nothing is counted
+    # before then and lost
+    async_register_engine_actions(hass, engine, full_config)
 
     ## Legacy Notification Service set-up
 
@@ -194,7 +205,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: SupernotifyConfigEn
 async def async_unload_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
     from .actions import async_unregister_engine_actions
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     engine: SupernotifyEngine | None = getattr(entry, "runtime_data", None)
     if engine is not None:
         engine.shutdown()

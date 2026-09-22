@@ -137,6 +137,7 @@ class Notification(ArchivableObject):
 
         self._target: Target | None = Target(self.convert_notify_entities(target)) if target else None
         self._already_selected: Target = Target()
+        self._recorded_person_ids: set[str] = set()  # recipients whose notify entity this notification has updated
         self._title: str | None = title
         self.id = str(uuid.uuid1())
         self.delivered: int = 0
@@ -654,6 +655,7 @@ class Notification(ArchivableObject):
             if envelope.delivered:
                 self.deliveries[delivery.name].setdefault(EnvelopeOutcome.SUCCESS, [])
                 self.deliveries[delivery.name][EnvelopeOutcome.SUCCESS].append(envelope)  # type: ignore
+                envelope.record_recipient_notifications(self._recorded_person_ids)
             else:
                 if suppression_reason:
                     envelope.skip_reason = suppression_reason
@@ -850,7 +852,7 @@ class Notification(ArchivableObject):
         self.debug_trace.record_target(delivery.name, stages[1], computed_target)
         computed_target += self.resolve_scenario_targets(delivery)
         self.debug_trace.record_target(delivery.name, stages[2], computed_target)
-        computed_target = delivery.select_targets(computed_target, self.context.hass_api)
+        computed_target = delivery.select_targets(computed_target)
         self.debug_trace.record_target(delivery.name, stages[3], computed_target)
         return computed_target
 
@@ -896,7 +898,8 @@ class Notification(ArchivableObject):
         primary_count = len(computed_target)
 
         if delivery.target_usage == TARGET_USE_ON_NO_DELIVERY_TARGETS:
-            if not computed_target.has_targets() and delivery.target:
+            # person_ids survive selection, but aren't targets to deliver to in their own right
+            if not computed_target.has_resolved_target() and delivery.target:
                 computed_target += delivery.target
                 self.debug_trace.record_target(delivery.name, "400_delivery_default_no_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_ON_NO_ACTION_TARGETS:
@@ -905,7 +908,7 @@ class Notification(ArchivableObject):
                 self.debug_trace.record_target(delivery.name, "401_delivery_default_no_action_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ON_DELIVERY_TARGETS:
             # merge in the delivery defaults if there's a target defined in action call
-            if computed_target.has_targets() and delivery.target:
+            if computed_target.has_resolved_target() and delivery.target:
                 computed_target += delivery.target
                 self.debug_trace.record_target(delivery.name, "402_delivery_merge_on_delivery_targets", computed_target)
         elif delivery.target_usage == TARGET_USE_MERGE_ALWAYS:
@@ -945,7 +948,7 @@ class Notification(ArchivableObject):
             # handle and resolve indirect targets, like person->mobile device or email
             for indirect_target in self.resolve_indirect_targets(override_target, delivery):
                 override_target += indirect_target
-            computed_target = delivery.select_targets(override_target, self.context.hass_api)
+            computed_target = delivery.select_targets(override_target)
             self.debug_trace.record_target(delivery.name, "600_delivery_override_target", computed_target)
 
         split_targets: list[Target] = computed_target.split_by_target_data()
@@ -959,8 +962,26 @@ class Notification(ArchivableObject):
             self.debug_trace.record_target(delivery.name, "630_make_unique_across_deliveries", direct_targets)
         for direct_target in direct_targets:
             self._already_selected += direct_target
+        # after the uniqueness bookkeeping above, so that only ever deals in what's delivered to
+        self._attach_person_ids(delivery, computed_target.person_ids, direct_targets)
         self.debug_trace.record_target(delivery.name, "999_final_cut", direct_targets)
         return direct_targets
+
+    def _attach_person_ids(self, delivery: Delivery, person_ids: list[str], envelope_targets: list[Target]) -> None:
+        """Record on each envelope target which of the notification's recipients it reaches
+
+        A recipient is only added to the envelope targets holding one of their own targets
+        for this delivery, so one with nothing this delivery can send to, or whose addresses
+        were all already sent in an earlier envelope, isn't counted as notified by this one.
+        """
+        for person_id in person_ids:
+            recipient: Recipient | None = self.people_registry.people.get(person_id)
+            if recipient is None:
+                continue
+            recipient_targets: set[str] = set(recipient.target(delivery.name).resolved_targets())
+            for envelope_target in envelope_targets:
+                if recipient_targets.intersection(envelope_target.resolved_targets()):
+                    envelope_target.extend(ATTR_PERSON_ID, person_id)
 
     def resolve_scenario_targets(self, delivery: Delivery) -> Target:
         resolved: Target = Target()

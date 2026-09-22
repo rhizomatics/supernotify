@@ -304,8 +304,23 @@ def mock_states(
     hass_api.is_state.side_effect = is_state_checker
 
 
-def test_select_camera_not_in_config(mock_hass) -> None:
-    assert select_avail_camera(mock_hass, {}, "camera.unconfigured") == "camera.unconfigured"
+def test_select_camera_not_in_config(mock_hass_api) -> None:
+    mock_states(mock_hass_api, home_entities=["camera.unconfigured"])
+    assert select_avail_camera(mock_hass_api, {}, "camera.unconfigured") == "camera.unconfigured"
+
+
+def test_select_unconfigured_image_source_that_is_unavailable(mock_hass_api) -> None:
+    """Applies to any image source, camera or image entity, not only ones with a cameras: config"""
+    mock_states(mock_hass_api, unavailable_entities=["camera.off", "image.anpr_driveway"])
+
+    assert select_avail_camera(mock_hass_api, {}, "camera.off") is None
+    assert select_avail_camera(mock_hass_api, {}, "image.anpr_driveway") is None
+
+
+def test_select_unconfigured_image_source_with_no_known_state_is_assumed_available(mock_hass_api) -> None:
+    mock_states(mock_hass_api)
+
+    assert select_avail_camera(mock_hass_api, {}, "image.anpr_driveway") == "image.anpr_driveway"
 
 
 def test_select_untracked_primary_camera(mock_hass_api) -> None:
@@ -551,7 +566,21 @@ def test_select_unavail_primary_with_unavail_alts(mock_hass_api: HomeAssistantAP
         },
         "camera.primary",
     )
-    assert result == "camera.alt1"
+    assert result is None
+
+
+def test_select_skips_unavail_alt_for_alt_with_no_entity_state(mock_hass_api: HomeAssistantAPI) -> None:
+    """Last resort is an alt with no known state, not just whichever alt comes first"""
+    mock_states(mock_hass_api, unavailable_entities=["camera.primary", "camera.alt1"])
+    result = select_avail_camera(
+        mock_hass_api,
+        {
+            "camera.primary": {CONF_CAMERA: "camera.primary", "alt_camera": ["camera.alt1", "camera.alt2"]},
+            "camera.alt1": {CONF_CAMERA: "camera.alt1"},
+        },
+        "camera.primary",
+    )
+    assert result == "camera.alt2"
 
 
 # --- write_image_from_bitmap ---

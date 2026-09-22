@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import time
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, patch
 
@@ -18,6 +20,8 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from homeassistant.core import HomeAssistant
 
 
@@ -104,6 +108,36 @@ async def test_purge_media_raises_when_media_not_configured(hass: HomeAssistant)
 
     with pytest.raises(ServiceValidationError, match="No media storage configured"):
         await hass.services.async_call(DOMAIN, "purge_media", blocking=True, return_response=True)
+
+
+async def test_purge_media_removes_old_files(hass: HomeAssistant, tmp_path: Path) -> None:
+    """purge_media deletes files older than the configured days by default, and honours a
+    per-call days override, reporting what was purged and what remains."""
+    old_file = tmp_path / "old.jpg"
+    mid_file = tmp_path / "mid.jpg"
+    new_file = tmp_path / "new.jpg"
+    now = time.time()
+    for file, age_days in ((old_file, 10), (mid_file, 3), (new_file, 0)):
+        file.write_bytes(b"x")
+        os.utime(file, (now - age_days * 86400, now - age_days * 86400))
+
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_MEDIA_PATH: str(tmp_path)}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    media_storage = entry.runtime_data.context.media_storage
+    interval = media_storage.purge_minute_interval
+
+    response = await hass.services.async_call(DOMAIN, "purge_media", blocking=True, return_response=True)
+    assert response == {"purged": 1, "remaining": 2, "interval": interval, "days": media_storage.days}
+    assert not old_file.exists()
+    assert mid_file.exists()
+    assert new_file.exists()
+
+    response = await hass.services.async_call(DOMAIN, "purge_media", {"days": 2}, blocking=True, return_response=True)
+    assert response == {"purged": 1, "remaining": 1, "interval": interval, "days": 2}
+    assert not mid_file.exists()
+    assert new_file.exists()
 
 
 async def test_unload_entry_removes_engine_actions(hass: HomeAssistant) -> None:

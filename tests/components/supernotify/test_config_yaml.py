@@ -254,14 +254,14 @@ async def test_exposed_states(hass: HomeAssistant) -> None:
 
 async def test_exposed_scenario_events(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
-    hass.states.async_set("binary_sensor.supernotify_scenario_simple", "off")
+    await hass.services.async_call("switch", "turn_off", {"entity_id": "switch.supernotify_scenario_simple"}, blocking=True)
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
     )
     await hass.async_block_till_done()
     assert response == {"somebody": {"enabled": ["chime_person"], "disabled": [], "applies": ["chime_person"]}}
-    hass.states.async_set("binary_sensor.supernotify_scenario_simple", "on")
+    await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.supernotify_scenario_simple"}, blocking=True)
     await hass.async_block_till_done()
     response = await hass.services.async_call(
         "supernotify", "enquire_deliveries_by_scenario", None, blocking=True, return_response=True
@@ -300,7 +300,9 @@ async def test_exposed_delivery_events(hass: HomeAssistant) -> None:
 
 async def test_exposed_recipients(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, SIMPLE_CONFIG)
-    hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "off")
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.supernotify_recipient_house_owner"}, blocking=True
+    )
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
     await hass.async_block_till_done()
@@ -330,7 +332,9 @@ async def test_exposed_recipients(hass: HomeAssistant) -> None:
         ]
     }
     assert response == expected_response
-    hass.states.async_set("binary_sensor.supernotify_recipient_house_owner", "on")
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.supernotify_recipient_house_owner"}, blocking=True
+    )
     await hass.async_block_till_done()
     response = await hass.services.async_call("supernotify", "enquire_recipients", None, blocking=True, return_response=True)
     await hass.async_block_till_done()
@@ -403,6 +407,18 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert_clean_notification(notification, expected_deliveries={"testing": 1, "chime_person": 1})
+
+
+async def test_refresh_entities_action(hass: HomeAssistant) -> None:
+    """supernotify.refresh_entities writes entity state, so has to run in the event loop -
+    as a plain function it was run in a worker thread, and failed."""
+    await _setup_supernotify(hass, SIMPLE_CONFIG)
+
+    await hass.services.async_call(DOMAIN, "refresh_entities", None, blocking=True)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.supernotify_notifications").state == "0"  # type: ignore[union-attr]
+    assert hass.states.get("switch.supernotify_scenario_simple").state == "on"  # type: ignore[union-attr]
 
 
 async def test_call_supplemental_actions(hass: HomeAssistant) -> None:

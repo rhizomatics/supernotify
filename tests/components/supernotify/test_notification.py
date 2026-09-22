@@ -1,11 +1,13 @@
 import tempfile
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
+from homeassistant.core import Context as HAContext
+from pytest_asyncio import fixture
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
@@ -21,6 +23,7 @@ from custom_components.supernotify.const import (
     CONF_MOBILE_DEVICES,
     CONF_OPTIONS,
     CONF_PERSON,
+    CONF_PHONE_NUMBER,
     CONF_SELECTION_RANK,
     CONF_TARGET_USAGE,
     CONF_TRANSPORT,
@@ -28,6 +31,7 @@ from custom_components.supernotify.const import (
     DELIVERY_SELECTION_IMPLICIT,
     INCLUSION_DEFAULT,
     TRANSPORT_GENERIC,
+    TRANSPORT_SMS,
 )
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import TRANSPORTS as ALL_TRANSPORT_TYPES
@@ -36,11 +40,12 @@ from custom_components.supernotify.media_grab import snap_notification_image
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES
+from custom_components.supernotify.people import RecipientNotifyEntity
 from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
-from custom_components.supernotify.transports.chime import ChimeTransport
 from custom_components.supernotify.transports.email import EmailTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
+from custom_components.supernotify.transports.sms import SMSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext, first_envelope
 
 DELIVERIES = """
@@ -210,12 +215,7 @@ async def test_unassigned_targets_reported_in_archive() -> None:
 
 
 async def test_call_transport_records_delivery_exception() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "mobile_push"})
@@ -231,12 +231,7 @@ async def test_call_transport_records_delivery_exception() -> None:
 
 
 async def test_custom_priority() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
 
     uut = Notification(ctx, "testing 123", action_data={ATTR_PRIORITY: "most_urgent"})
@@ -245,12 +240,7 @@ async def test_custom_priority() -> None:
 
 
 async def test_bad_priority() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
 
     with pytest.raises(vol.Invalid):
@@ -263,7 +253,6 @@ async def test_scenario_delivery_no_change() -> None:
         transports=TRANSPORTS,
         scenarios={"mockery": {}},
         transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
         services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
@@ -294,7 +283,6 @@ async def test_scenario_delivery_enable() -> None:
         scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
     ctx.delivery_registry.deliveries["chime"].enabled = False
@@ -319,7 +307,6 @@ async def test_action_data_disable_delivery() -> None:
         scenarios={"mockery": {}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
 
@@ -441,7 +428,11 @@ async def test_explicit_recipients_only_restricts_people_targets() -> None:
     assert recipients[0].email == ["bob@test.com", "jane@test.com"]
     bundles = uut.generate_envelopes(delivery, recipients)
     assert bundles == [
-        Envelope(Delivery("mail", ctx.delivery_config("mail"), email), uut, target=Target(["bob@test.com", "jane@test.com"]))
+        Envelope(
+            Delivery("mail", ctx.delivery_config("mail"), email),
+            uut,
+            target=Target({"email": ["bob@test.com", "jane@test.com"], "person_id": ["person.bob", "person.jane"]}),
+        )
     ]
 
 
@@ -463,7 +454,6 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
         transports=TRANSPORTS,
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
     )
     await ctx.test_initialize()
 
@@ -473,12 +463,7 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
 
 
 async def test_snapshot_url() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -499,12 +484,7 @@ async def test_snapshot_url() -> None:
 
 
 async def test_camera_entity() -> None:
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -528,12 +508,7 @@ async def test_deliver_skips_image_grab_when_no_delivery_uses_camera() -> None:
     """Capturing an image has real overhead (a service call, then polling for the file
     to appear) that must not be paid when no selected delivery would even use it — here
     only chime (no SNAPSHOT_IMAGE feature) is selected, despite camera media being present."""
-    ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        viable_transport_types=[ChimeTransport],
-    )
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
     uut = Notification(
         ctx,
@@ -553,11 +528,7 @@ async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
     """mobile (mobile_push) supports SNAPSHOT_IMAGE, so with camera media present the
     image grab must be kicked off."""
     ctx = TestingContext(
-        deliveries=DELIVERIES,
-        transports=TRANSPORTS,
-        transport_types=ALL_TRANSPORT_TYPES,
-        services=MOCK_SERVICES,
-        viable_transport_types=[ChimeTransport],
+        deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES, services=MOCK_SERVICES
     )
     await ctx.test_initialize()
     uut = Notification(
@@ -678,6 +649,172 @@ async def test_convert_notify_entities_resolves_recipient_notify_entity_in_dict_
     converted = uut.convert_notify_entities({"entity_id": ["notify.recipient_alice", "notify.some_other_integration"]})
 
     assert converted == {"entity_id": ["notify.some_other_integration"], "person_id": ["person.alice"]}
+
+
+async def test_envelope_person_ids_are_only_recipients_the_envelope_reaches() -> None:
+    """Selecting targets for a delivery keeps person_ids, but each envelope's target only ends up
+    with those whose own targets for that delivery are actually in it - not a recipient with
+    nothing this delivery can send to (bob has no phone number)."""
+    ctx = TestingContext(
+        deliveries={"sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        services={"notify": ["smsify"]},
+        recipients=[
+            {CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"},
+            {CONF_PERSON: "person.bob"},
+            {CONF_PERSON: "person.carol", CONF_PHONE_NUMBER: "+339875000456"},
+        ],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", target=["person.alice", "person.bob", "person.carol"])
+    await uut.initialize()
+
+    targets = uut.generate_targets(ctx.delivery("sms"))
+
+    assert len(targets) == 1
+    assert targets[0].phone == ["+339875000123", "+339875000456"]
+    assert targets[0].person_ids == ["person.alice", "person.carol"]
+
+
+async def test_envelope_person_ids_exclude_recipient_whose_address_went_in_earlier_envelope() -> None:
+    """With unique_targets, an address already sent to by an earlier delivery is dropped, and so
+    is the recipient it belonged to - they were reached by that earlier envelope instead."""
+    ctx = TestingContext(
+        deliveries={
+            "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
+            "sms2": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
+        },
+        services={"notify": ["smsify"]},
+        recipients=[{CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"}],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", target=["person.alice"])
+    await uut.initialize()
+
+    first = uut.generate_targets(ctx.delivery("sms"))
+    second = uut.generate_targets(ctx.delivery("sms2"))
+
+    assert first[0].person_ids == ["person.alice"]
+    assert second[0].phone == []
+    assert second[0].person_ids == []
+
+
+async def test_recipient_with_no_resolvable_target_does_not_block_delivery_target_fallback() -> None:
+    """person_ids surviving target selection must not count as having found a target - a delivery
+    that only falls back to its own configured target when nothing else resolves still has to."""
+    ctx = TestingContext(
+        deliveries={
+            "sms": {
+                CONF_TRANSPORT: TRANSPORT_SMS,
+                CONF_ACTION: "notify.smsify",
+                CONF_TARGET: ["+447700900123"],
+                CONF_TARGET_USAGE: "no_delivery",
+            }
+        },
+        services={"notify": ["smsify"]},
+        recipients=[{CONF_PERSON: "person.bob"}],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", target=["person.bob"])
+    await uut.initialize()
+
+    targets = uut.generate_targets(ctx.delivery("sms"))
+
+    assert len(targets) == 1
+    assert targets[0].phone == ["+447700900123"]
+    assert targets[0].person_ids == []
+
+
+@fixture
+async def personal_delivery_context() -> TestingContext:
+    ctx = TestingContext(
+        deliveries={"sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"}},
+        services={"notify": ["smsify"]},
+        recipients=[
+            {CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123"},
+            {CONF_PERSON: "person.bob"},
+            {CONF_PERSON: "person.carol", CONF_PHONE_NUMBER: "+339875000456"},
+        ],
+        viable_transport_types=[SMSTransport],
+    )
+    await ctx.test_initialize()
+    for p in ctx._recipients:
+        ctx.people_registry.people[p[CONF_PERSON]].notify_entity = Mock(spec=RecipientNotifyEntity)
+    return ctx
+
+
+async def test_record_result_notifies_recipient_notify_entity_on_delivery(personal_delivery_context: TestingContext) -> None:
+    """A successful envelope delivery updates the involved recipient's notify.recipient_<name>
+    entity (record_notification()), regardless of what target form got it there - a plain
+    person_id, an email/phone/mobile override, or notify.recipient_<name> itself (converted to
+    person_id by convert_notify_entities() before delivery). Every Recipient's Target always
+    includes its own person_id (Recipient.initialize()), so that's the reliable link back from
+    an arbitrary envelope to the Recipient objects it reached."""
+
+    uut = Notification(personal_delivery_context, "testing 123", target=["person.alice"])
+    await uut.initialize()
+    await uut.deliver()
+
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+    personal_delivery_context.people_registry.people["person.bob"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+    personal_delivery_context.people_registry.people["person.carol"].notify_entity.record_notification.assert_not_called()  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+
+
+async def test_record_result_notifies_recipient_notify_entity_once_however_many_deliveries_reach_them() -> None:
+    """Each update is a state write on the entity, so a recipient reached by several deliveries
+    (here, both SMS and email) is only recorded once for the notification - otherwise the logbook
+    fills with identical entries, all at the same moment and under the same context"""
+    ctx = TestingContext(
+        deliveries={
+            "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
+            "mail": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp"},
+        },
+        services={"notify": ["smsify", "smtp"]},
+        recipients=[{CONF_PERSON: "person.alice", CONF_PHONE_NUMBER: "+339875000123", CONF_EMAIL: "alice@test.com"}],
+        viable_transport_types=[SMSTransport, EmailTransport],
+    )
+    await ctx.test_initialize()
+    notify_entity = Mock(spec=RecipientNotifyEntity)
+    ctx.people_registry.people["person.alice"].notify_entity = notify_entity
+
+    uut = Notification(ctx, "testing 123", target=["person.alice"])
+    await uut.initialize()
+    await uut.deliver()
+
+    assert len(uut.delivered_envelopes) == 2
+    notify_entity.record_notification.assert_called_once()
+
+
+async def test_record_result_passes_calling_context_to_recipient_notify_entity(
+    personal_delivery_context: TestingContext,
+) -> None:
+    """The context of the supernotify.notify call that caused the delivery is handed on, so the
+    recipient's notify entity state change can be attributed to it"""
+    calling_context = HAContext(user_id="user123")
+
+    uut = Notification(personal_delivery_context, "testing 123", target=["person.alice"], ha_context=calling_context)
+    await uut.initialize()
+    await uut.deliver()
+
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity.record_notification.assert_called_once_with(  # type: ignore[attr-defined,union-attr]  #ty: ignore[unresolved-attribute]
+        calling_context
+    )
+
+
+async def test_record_result_skips_recipients_without_a_notify_entity(personal_delivery_context: TestingContext) -> None:
+    """A recipient with no notify_entity set (e.g. the notify platform hasn't loaded yet, or
+    tests building SupernotifyAction directly without a config entry) is silently skipped -
+    same tolerant fallback pattern used elsewhere for entity-less operation."""
+
+    personal_delivery_context.people_registry.people["person.alice"].notify_entity = None
+    personal_delivery_context.people_registry.people["person.bob"].notify_entity = None
+    personal_delivery_context.people_registry.people["person.carol"].notify_entity = None
+
+    uut = Notification(personal_delivery_context, "testing 123")
+    await uut.initialize()
+    await uut.deliver()
 
 
 async def test_notification_accepts_dict_shaped_target_without_crashing() -> None:

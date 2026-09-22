@@ -48,8 +48,8 @@ from .const import (
     CONF_TRANSPORTS,
 )
 from .engine import SupernotifyEngine
-from .model import Target
 from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
+from .target import Target
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -187,7 +187,9 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
         }
 
+    @callback
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
+        # a callback, so run in the event loop - it writes entity state
         return engine.expose_entities()
 
     def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:

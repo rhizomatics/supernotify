@@ -45,7 +45,7 @@ try:
         HASocketBlockedError,
     )
 except ImportError:
-    HASocketBlockedError = None
+    HASocketBlockedError = None  # type: ignore
 
 from custom_components.supernotify.archive import NotificationArchive
 from custom_components.supernotify.common import DupeChecker
@@ -240,7 +240,6 @@ def mock_context(
     context.hass_api = mock_hass_api
     context.cameras = {}
     context.snoozer = Snoozer()
-    context._fallback_by_default = []
     context.mobile_actions = {}
     context.hass_api.internal_url = "http://hass-dev"
     context.hass_api.external_url = "http://hass-dev.nabu.casa"
@@ -452,11 +451,11 @@ def verify_cleanup(
     if HASocketBlockedError is not None:
         try:
             # Verify no socket connections were attempted
-            assert not HASocketBlockedError.instances, "the test opens sockets"
+            assert not HASocketBlockedError.instances, "the test opens sockets"  # type:ignore
         except AssertionError:
-            for instance in HASocketBlockedError.instances:
+            for instance in HASocketBlockedError.instances:  # type:ignore
                 _LOGGER.exception("Socket opened during test", exc_info=instance)
             raise
         finally:
             # Reset socket connection instance count to not break subsequent tests
-            HASocketBlockedError.instances = []
+            HASocketBlockedError.instances = []  # type:ignore

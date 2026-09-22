@@ -72,7 +72,7 @@ There are more examples in the [Recipes](../recipes/index.md) section.
 
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
-- Use [Scenarios](../usage/scenarios.md) to apply common chunks of config
+- Use [Scenarios](../configuration/scenarios.md) to apply common chunks of config
 - Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, these do the same thing) for every delivery
   - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
@@ -103,7 +103,7 @@ For this delivery, whatever the `message` on the notification, it will be replac
     `message` and `title` are the two special cases where the values in the configuration
     override the values in the Action `data`. For everything else the Action wins.
 
-For amending rather than overriding, see the [Alexa Whisper Recipe](../recipes/alexa_whisper.md) for an example of using `message_template` in a [Scenario](../usage/scenarios.md).
+For amending rather than overriding, see the [Alexa Whisper Recipe](../recipes/alexa_whisper.md) for an example of using `message_template` in a [Scenario](../configuration/scenarios.md).
 
 ## Controlling Targets
 

@@ -3,9 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-)
+import homeassistant.util.dt as dt_util
 from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityFeature,
@@ -20,14 +18,11 @@ from homeassistant.const import (
     CONF_TARGET,
     STATE_HOME,
     STATE_NOT_HOME,
-    STATE_OFF,
-    STATE_ON,
-    EntityCategory,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
-from .common import ensure_list, sanitize
+from .common import ensure_list
 from .const import (
     ATTR_ALIAS,
     ATTR_EMAIL,
@@ -55,9 +50,10 @@ from .const import (
 from .model import DeliveryCustomization, NotifyEntityPlatform, Target
 
 if TYPE_CHECKING:
-    from homeassistant.core import State
+    from homeassistant.core import Context, State
 
-    from .hass_api import DeviceInfo, HomeAssistantAPI
+    from .binary_sensor import SupernotifyRecipientBinarySensor
+    from .hass_api import HomeAssistantAPI, TrackedDeviceDetails
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,13 +85,69 @@ class RecipientNotifyEntity(NotifyEntity):
         self._recipient = recipient
         self._engine = engine
         self.entity_id = f"notify.recipient_{recipient.name}"
+        # Fallback attribute for HA < 2026.3 (python_full_version < '3.14.2' in pyproject.toml
+        # pins homeassistant==2026.2.3) - NotifyEntity there has no _async_record_notification()
+        # and no other supported way to set its native `state` from outside a direct
+        # notify.recipient_<name> service call (the logic lives in the @final, HA-framework-only
+        # _async_send_message()). Left unused - and extra_state_attributes returns None - once
+        # running against a HA version that has _async_record_notification(); see
+        # record_notification() below for the runtime hasattr() check that picks a path. Support
+        # for the pre-2026.3 lane is time-limited: see the "python_313_deprecated" repair issue,
+        # dropped when HA 2026.10 ships - this whole fallback (and the property below) can go
+        # once that lane is gone.
+        self._last_notified: str | None = None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Only populated on the pre-2026.3 fallback path - see record_notification()."""
+        if hasattr(self, "_async_record_notification"):
+            return None
+        return {"last_notified": self._last_notified}
+
+    def record_notification(self, context: Context | None = None) -> None:
+        """Record that this recipient was notified via supernotify.notify's main pipeline
+        (any target - person_id, email, mobile device...), not just via a direct call to
+        this notify.recipient_<name> entity. Called from Notification.record_result().
+
+        Delegates to NotifyEntity._async_record_notification() when available - the same
+        HA-native method html5/mobile_app call on a direct notify.recipient_<name> service
+        call - so `state` reflects the most recent delivery via either path. On HA versions
+        before 2026.3 that method doesn't exist (see the docstring on self._last_notified in
+        __init__), so this falls back to the pre-refactor design: a separate extra_state_attributes
+        attribute, restored manually in async_added_to_hass() below. Either way, a message routed
+        through supernotify.notify's main pipeline (the common case) never invokes this entity's
+        own async_send_message() - see convert_notify_entities() in notification.py, which
+        short-circuits that target straight to a person_id to avoid calling back into this same
+        entity in a loop - so without this explicit call, delivery via that pipeline would never
+        be reflected here at all.
+
+        `context` is the calling HA service context, if any, so the state change is attributed to
+        the action call (or automation, or user) that caused it, in the logbook and history, just
+        as it would be for a direct notify.recipient_<name> service call."""
+        if context is not None:
+            self.async_set_context(context)
+        if hasattr(self, "_async_record_notification"):
+            self._async_record_notification()
+        else:
+            self._last_notified = dt_util.utcnow().isoformat()
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         self._recipient.notify_entity_id = self.entity_id
+        self._recipient.notify_entity = self
+        # Restoring `state` after a restart is handled for us by
+        # NotifyEntity.async_internal_added_to_hass() when _async_record_notification() is
+        # available. On the pre-2026.3 fallback path there's no such restore, so do it manually
+        # here, same as before the refactor.
+        if not hasattr(self, "_async_record_notification"):
+            last_state = await self.async_get_last_state()
+            if last_state is not None:
+                self._last_notified = last_state.attributes.get("last_notified")
 
     async def async_will_remove_from_hass(self) -> None:
         self._recipient.notify_entity_id = None
+        self._recipient.notify_entity = None
         await super().async_will_remove_from_hass()
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
@@ -104,17 +156,22 @@ class RecipientNotifyEntity(NotifyEntity):
 
 
 class Recipient:
-    """Recipient to distinguish from the native HA Person"""
+    """Recipient to distinguish from the native HA Person.
 
-    # for future native entity use
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:account-arrow-left"
+    The "future native entity use" this class was once staged for (BinarySensorDeviceClass,
+    EntityCategory, etc.) has arrived as SupernotifyRecipientBinarySensor in binary_sensor.py -
+    a wrapper Entity holding a reference to a Recipient, the same composition already used for
+    RecipientNotifyEntity above, rather than this plain domain object inheriting from Entity.
+    """
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
         self.entity_id: str = config[CONF_PERSON]
         self.notify_entity_id: str | None = None
+        # Set/cleared by RecipientNotifyEntity.async_added_to_hass()/async_will_remove_from_hass()
+        # - the live entity object itself, so record_notification() can be called directly from
+        # Notification.record_result() without a registry lookup by entity_id.
+        self.notify_entity: RecipientNotifyEntity | None = None
         self.name: str = self.entity_id.replace("person.", "")
         self.alias: str | None = config.get(CONF_ALIAS)
         self.email: str | None = config.get(CONF_EMAIL)
@@ -142,7 +199,7 @@ class Recipient:
         if self.phone_number:
             self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
-            discovered_devices: list[DeviceInfo] = people_registry.mobile_devices_for_person(self.entity_id)
+            discovered_devices: list[TrackedDeviceDetails] = people_registry.mobile_devices_for_person(self.entity_id)
             if discovered_devices:
                 new_ids = []
                 for d in discovered_devices:
@@ -177,7 +234,12 @@ class Recipient:
                 _LOGGER.debug("SUPERNOTIFY Person attrs found for %s: %s,%s", self.entity_id, self.alias, self.user_id)
             else:
                 _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
-        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict())
+        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict(redact=True))
+
+    def on_notification(self, context: Context | None = None) -> None:
+        # Record that a notification has occurred for this person
+        if self.notify_entity is not None:
+            self.notify_entity.record_notification(context)
 
     @property
     def enabled_mobile_devices(self) -> dict[str, dict[str, str | list[str] | None]]:
@@ -257,6 +319,10 @@ class PeopleRegistry:
         self._recipients: list[dict[str, Any]] = ensure_list(recipients)
         self.mobile_discovery = mobile_discovery
         self.discover = discover
+        # Populated by binary_sensor.py's async_setup_entry once the platform is loaded - see
+        # register_entity/unregister_entity. Empty (and harmless to look up against) before
+        # then, and in tests that build PeopleRegistry directly without a config entry.
+        self._entities: dict[str, SupernotifyRecipientBinarySensor] = {}
 
     def initialize(self) -> None:
         recipients: dict[str, dict[str, Any]] = {}
@@ -283,40 +349,24 @@ class PeopleRegistry:
 
             self.people[recipient.entity_id] = recipient
 
-    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
-        for recipient in self.people.values():
-            hass_api.expose_entity(
-                f"recipient_{recipient.name}",
-                state=STATE_ON if recipient.enabled else STATE_OFF,
-                attributes=sanitize(recipient.attributes()),
-                original_name=f"{recipient.name}",
-                original_icon="mdi:account-arrow-left",
-            )
+    def register_entity(self, name: str, entity: SupernotifyRecipientBinarySensor) -> None:
+        """Called by SupernotifyRecipientBinarySensor.async_added_to_hass()."""
+        self._entities[name] = entity
 
-    def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
-        """React to a recipient binary_sensor being toggled on/off.
+    def unregister_entity(self, name: str) -> None:
+        """Called by SupernotifyRecipientBinarySensor.async_will_remove_from_hass()."""
+        self._entities.pop(name, None)
 
-        Returns None if entity_id isn't one of ours, True if it was recognised and its
-        enabled state changed, False if recognised but unknown or already in that state.
-        """
-        prefix = f"binary_sensor.{DOMAIN}_recipient_"
-        if not entity_id.startswith(prefix):
-            return None
+    def recipient_entities(self) -> list[SupernotifyRecipientBinarySensor]:
+        """Every registered recipient binary_sensor - used by supernotify.refresh_entities."""
+        return list(self._entities.values())
 
-        recipient = self.people.get("person." + entity_id.removeprefix(prefix))
-        if recipient is None:
-            _LOGGER.warning("SUPERNOTIFY Event for unknown recipient %s", entity_id)
-            return False
-        if new_state.state == STATE_OFF and recipient.enabled:
-            recipient.enabled = False
-            _LOGGER.info("SUPERNOTIFY Disabling recipient %s", recipient.entity_id)
-            return True
-        if new_state.state == STATE_ON and not recipient.enabled:
-            recipient.enabled = True
-            _LOGGER.info("SUPERNOTIFY Enabling recipient %s", recipient.entity_id)
-            return True
-        _LOGGER.info("SUPERNOTIFY No change to recipient %s, already %s", recipient.entity_id, new_state)
-        return False
+    @callback
+    def async_refresh_entity(self, name: str) -> None:
+        """Re-publish one recipient's binary_sensor now"""
+        entity = self._entities.get(name)
+        if entity is not None:
+            entity.async_write_ha_state()
 
     def expose_notify_entities(
         self, entry_id: str, async_add_entities: AddConfigEntryEntitiesCallback, service: NotifyEntityPlatform
@@ -397,7 +447,7 @@ class PeopleRegistry:
                     results[STATE_NOT_HOME].append(person_config)
         return results
 
-    def mobile_devices_for_person(self, person_entity_id: str) -> list[DeviceInfo]:
+    def mobile_devices_for_person(self, person_entity_id: str) -> list[TrackedDeviceDetails]:
         """Auto detect mobile_app targets for a person.
 
         Targets not currently validated as async registration may not be complete at this stage

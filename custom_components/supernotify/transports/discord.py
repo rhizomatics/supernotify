@@ -62,12 +62,12 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
 from custom_components.supernotify.model import (
     DebugTrace,
-    EntityCategory,
     TargetRequired,
     TransportConfig,
     TransportFeature,
 )
 from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -110,7 +110,7 @@ class DiscordTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | EntityCategory]:
+    def target_categories(self) -> list[str | TargetEntityCategory]:
         # a numeric channel/user snowflake ID has no shape distinct enough for automatic
         # matching, so it's only ever reachable here via explicit qualification (prefix,
         # mapping, or this transport's/a delivery's own name) - select_channels() below
