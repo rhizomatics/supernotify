@@ -869,7 +869,7 @@ async def test_delivery_provenance_records_each_source() -> None:
             "loud": {"delivery": {"chime": {"enabled": True}}},
         },
         transport_types=ALL_TRANSPORT_TYPES,
-        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item]
+        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item] # ty: ignore[invalid-argument-type]
     )
     await ctx.test_initialize()
 
