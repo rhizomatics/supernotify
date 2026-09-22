@@ -6982,6 +6982,12 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
+## 2.7.1
+
+### Privacy
+
+- Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
+
 ## 2.7.0
 
 ### Native Entities
