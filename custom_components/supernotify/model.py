@@ -185,7 +185,7 @@ class SelectionRule:
 
 
 class DataFilter:
-    """Accepts a dict structure and returns a filtered copy, with arbitrary-depth key filtering.
+    r"""Accepts a dict structure and returns a filtered copy, with arbitrary-depth key filtering.
 
     Config format (same structure applies recursively at each level):
       str | list   -- shorthand: include only keys matching these patterns

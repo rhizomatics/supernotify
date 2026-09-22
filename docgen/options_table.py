@@ -41,7 +41,7 @@ def write_table(df: Any, options: list[DeliveryOption]) -> None:  # ruff: ignore
 
 
 def options_doc() -> None:
-    doc_filename = "configuration/options.md"
+    doc_filename = "reference/options.md"
     mkdocs_gen_files.set_edit_path(doc_filename, "../docgen/options_table.py")
     mock_context = Mock(custom_template_path=Path())
 
@@ -51,7 +51,7 @@ def options_doc() -> None:
             "Every `options:` key accepted by a delivery or transport, generated from the "
             "`DeliveryOption` metadata in [options.py](https://github.com/rhizomatics/supernotify/"
             "blob/main/custom_components/supernotify/options.py). See "
-            "[Default Options](../developer/transports.md#default-options) for the actual default value each "
+            "[Default Options](../reference/transports.md#default-options) for the actual default value each "
             "transport sets for these.\n\n"
         )
 
