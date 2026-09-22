@@ -10,6 +10,12 @@
             },
             "recipient": {
                 "name": "Recipient {recipient}"
+            },
+            "delivery": {
+                "name": "Delivery {delivery}"
+            },
+            "transport": {
+                "name": "Transport {transport}"
             }
         },
         "sensor": {
@@ -26,6 +32,17 @@
             },
             "recipient_enabled": {
                 "name": "Recipient {recipient} abilitato"
+            },
+            "delivery_enabled": {
+                "name": "Delivery {delivery} abilitata"
+            },
+            "transport_enabled": {
+                "name": "Transport {transport} abilitato"
+            }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Ripristina override"
             }
         }
     },
@@ -198,6 +215,16 @@
             "name": "Aggiorna Entità",
             "description": "Aggiorna tutte le entità esposte da SuperNotify per l'introspezione e il controllo"
         },
+        "reset_overrides": {
+            "name": "Ripristina Override",
+            "description": "Riporta allo stato configurato ogni scenario, recipient, delivery e transport attivato o disattivato durante l'esecuzione",
+            "fields": {
+                "kind": {
+                    "name": "Tipo",
+                    "description": "Ripristina solo questo tipo di switch - tutti i tipi se non indicato"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Cancella Snooze",
             "description": "Cancella tutti gli snooze attualmente attivi"
@@ -345,6 +372,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "I binary_sensor dei recipient verranno rimossi",
             "description": "Ogni recipient ha ora uno switch (ad esempio `switch.supernotify_recipient_XXXX`) che lo abilita e lo disabilita. Le entità `binary_sensor` dei recipient sono da ora in sola lettura, riflettono soltanto se il recipient è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di un `binary_sensor` di un recipient non abilita né disabilita più il recipient, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch del recipient."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "I binary_sensor di delivery e transport verranno rimossi",
+            "description": "Ogni delivery e ogni transport ha ora uno switch (ad esempio `switch.supernotify_delivery_XXXX` o `switch.supernotify_transport_XXXX`) che lo abilita e lo disabilita. Le entità `binary_sensor` di delivery e transport sono da ora in sola lettura, riflettono soltanto se la delivery o il transport è abilitato, e verranno rimosse in una versione futura. Scrivere lo stato di uno di questi `binary_sensor` non abilita né disabilita più la delivery o il transport, quindi modifica qualsiasi automazione, script o dashboard che lo faccia, o che si basi comunque su queste entità, in modo che usi lo switch."
         }
     },
     "exceptions": {

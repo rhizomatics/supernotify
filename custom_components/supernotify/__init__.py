@@ -44,9 +44,9 @@ KEY_YAML_CONFIG = "yaml_config"
 # NOTIFY carries the main notify.supernotify action and per-recipient notify entities.
 # BINARY_SENSOR/SENSOR/SWITCH carry the scenario/recipient state, notification/failure counters
 # and scenario control as real entities (binary_sensor.py/sensor.py/switch.py) - see issue #175
-# "Part B". Their async_setup_entry read entry.runtime_data, so they must be forwarded to only
-# after it's set.
-PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+# "Part B". BUTTON carries the reset overrides button (button.py). Their async_setup_entry read
+# entry.runtime_data, so they must be forwarded to only after it's set.
+PLATFORMS: list[Platform] = [Platform.NOTIFY, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
 
 # Deferred import: schema.py imports ARCHIVE_DIR/MEDIA_DIR/TEMPLATE_DIR back from this module, so it can
 # only be imported here once those (and DOMAIN) are already defined above.
@@ -125,9 +125,8 @@ def _async_remove_legacy_default_entities(hass: HomeAssistant) -> None:
     auto-configured delivery naming - a harmless no-op once they're gone.
 
     Removing the registry entry alone doesn't clear its last-known state - these were never
-    backed by a real Entity/EntityPlatform (see HomeAssistantAPI.expose_entity(), which writes
-    directly to the registry and state machine), so nothing else ever calls
-    hass.states.async_remove() for them either. Left alone, the state lingers in the state
+    backed by a real Entity/EntityPlatform (earlier versions wrote them directly to the registry
+    and state machine), so nothing else ever calls hass.states.async_remove() for them either. Left alone, the state lingers in the state
     machine (and so still shows in the UI/history) until a full restart, even though the
     registry entry is genuinely gone.
     """

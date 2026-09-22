@@ -185,6 +185,8 @@ class Recipient:
             k: DeliveryCustomization(config=v, target_specific=True) for k, v in config.get(CONF_DELIVERY, {}).items()
         }
         self.enabled: bool = config.get(CONF_ENABLED, True)
+        # as configured, which enabled can be overridden from at runtime by the recipient switch
+        self.config_enabled: bool = self.enabled
         self.mobile_discovery: bool = config.get(CONF_MOBILE_DISCOVERY, default_mobile_discovery)
         self.mobile_devices: dict[str, dict[str, str | list[str] | None]] = {
             c[CONF_MOBILE_APP_ID]: c for c in config.get(CONF_MOBILE_DEVICES, [])

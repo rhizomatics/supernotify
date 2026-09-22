@@ -34,7 +34,7 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
 
 5. Transports that cannot be auto-configured are ignored unless explicitly configured at Transport or Delivery level
 
-    No `binary_sensor` or similar entity created for transports which have a module supplied with Supernotify but never used in the home
+    No `switch` or similar entity created for transports which have a module supplied with Supernotify but never used in the home
 
     This also implies that each Transport knows its minimum viable configuration
 
@@ -46,13 +46,15 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
 
     Most of the transports would be usable with zero YAML, albeit there might be some more repetitive data elements, like telegram/slack IDs that could be simplified into a Delivery object, though for some people repetition simpler than abstract concepts, and learning YAML and Studio Code Server
 
-8. Switch entities continue as they are with delivery and transport
+8. Switch entities for delivery and transport
 
-    `switch.transport_email` switches off all email deliveries, including the default
-    `switch.delivery_email` switches off only the default delivery.
+    `switch.supernotify_transport_email` switches off all email deliveries, including the default
+    `switch.supernotify_delivery_email` switches off only the default delivery.
     For most people, these will equivalent, if they have 0 or 1 explicitly configured deliveries
 
-    The enabled/disabled state should in future persist across restarts.
+    The two flags are independent: switching a transport off doesn't change its delivery switches.
+
+    The enabled/disabled state persists across restarts and reloads, while the configured `enabled` value - the delivery's own, or its transport's when unset - is unchanged.
 
     Don't generate switches for transports that can't be used, e.g. Telegram if there's no Telegram integration in the home
 

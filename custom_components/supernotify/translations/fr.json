@@ -10,6 +10,12 @@
             },
             "recipient": {
                 "name": "Destinataire {recipient}"
+            },
+            "delivery": {
+                "name": "Livraison {delivery}"
+            },
+            "transport": {
+                "name": "Transport {transport}"
             }
         },
         "sensor": {
@@ -26,6 +32,17 @@
             },
             "recipient_enabled": {
                 "name": "Destinataire {recipient} activé"
+            },
+            "delivery_enabled": {
+                "name": "Livraison {delivery} activée"
+            },
+            "transport_enabled": {
+                "name": "Transport {transport} activé"
+            }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Réinitialiser les forçages"
             }
         }
     },
@@ -198,6 +215,16 @@
             "name": "Actualiser les entités",
             "description": "Actualise toutes les entités exposées par SuperNotify pour l'inspection et le contrôle"
         },
+        "reset_overrides": {
+            "name": "Réinitialiser les forçages",
+            "description": "Remet chaque scénario, destinataire, livraison et transport activé ou désactivé en cours d'exécution dans son état configuré",
+            "fields": {
+                "kind": {
+                    "name": "Type",
+                    "description": "Réinitialiser uniquement ce type d'interrupteur - tous les types si non précisé"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Effacer les snoozes",
             "description": "Efface tous les snoozes actuellement actifs"
@@ -345,6 +372,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "Les capteurs binaires de destinataire vont être supprimés",
             "description": "Chaque destinataire dispose désormais d'un interrupteur (par exemple `switch.supernotify_recipient_XXXX`) qui l'active et le désactive. Les entités `binary_sensor` des destinataires sont désormais en lecture seule, reflètent uniquement l'état activé du destinataire, et seront supprimées dans une version future. Écrire l'état d'un `binary_sensor` de destinataire n'active ni ne désactive plus le destinataire : modifiez toute automatisation, script ou tableau de bord qui le fait, ou qui s'appuie autrement sur ces entités, pour qu'il utilise l'interrupteur du destinataire."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "Les capteurs binaires de livraison et de transport vont être supprimés",
+            "description": "Chaque livraison et chaque transport dispose désormais d'un interrupteur (par exemple `switch.supernotify_delivery_XXXX` ou `switch.supernotify_transport_XXXX`) qui l'active et le désactive. Les entités `binary_sensor` des livraisons et des transports sont désormais en lecture seule, reflètent uniquement si la livraison ou le transport est activé, et seront supprimées dans une version future. Écrire l'état de l'un de ces `binary_sensor` n'active ni ne désactive plus la livraison ou le transport : modifiez toute automatisation, script ou tableau de bord qui le fait, ou qui s'appuie autrement sur ces entités, pour qu'il utilise l'interrupteur."
         }
     },
     "exceptions": {

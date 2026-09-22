@@ -16,17 +16,16 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OPTIONS,
     CONF_TARGET,
-    STATE_OFF,
-    STATE_ON,
 )
+from homeassistant.core import callback
 
 from custom_components.supernotify.target import Target, TargetEntityCategory
 
-from . import DOMAIN
-from .common import ensure_list, sanitize
+from .common import ensure_list
 from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
+    ATTR_TRANSPORT_ENABLED,
     CONF_DATA,
     CONF_INCLUSION,
     CONF_LOAD,
@@ -42,7 +41,6 @@ from .const import (
     INCLUSION_FALLBACK_ON_ERROR,
     RESERVED_DELIVERY_NAMES,
 )
-from .hass_api import HomeAssistantAPI
 from .model import ConditionVariables, DeliveryConfig, SelectionRule
 from .options import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
@@ -64,12 +62,12 @@ from .options import (
 from .static_config import TRANSPORT_NAMES
 
 if TYPE_CHECKING:
-    from homeassistant.core import State
     from homeassistant.helpers.typing import ConfigType
 
     from custom_components.supernotify.hass_api import TrackedDeviceDetails
     from custom_components.supernotify.transport import Transport
 
+    from .binary_sensor import SupernotifyLegacyBinarySensor
     from .context import Context
     from .schema import ConditionsFunc
 
@@ -100,7 +98,9 @@ class Delivery(DeliveryConfig):
             # isinstance check, not just a None check, is deliberate: a test double `Mock()`
             # transport can leave `self.target` as an auto-mocked attribute rather than None.)
             self.target = self.reclassify_unqualified_target(self.target)
-        self.enabled: bool = conf.get(CONF_ENABLED, self.transport.enabled)
+        # as configured, which enabled can be overridden from at runtime by the delivery switch
+        self.config_enabled: bool = conf.get(CONF_ENABLED, self.transport.config_enabled)
+        self.enabled: bool = self.config_enabled
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
         if self.options.get(OPTION_TARGET_SELECT):
@@ -341,6 +341,8 @@ class Delivery(DeliveryConfig):
             ATTR_NAME: self.name,
             ATTR_ENABLED: self.enabled,
             CONF_TRANSPORT: self.transport.name,
+            # a delivery is only used while its transport is enabled too
+            ATTR_TRANSPORT_ENABLED: self.transport.enabled,
             CONF_ACTION: self.action,
             CONF_OPTIONS: self.options,
             CONF_INCLUSION: self.inclusion,
@@ -370,6 +372,9 @@ class DeliveryRegistry:
         self._deliveries: dict[str, Delivery] = {}
         self.transports: dict[str, Transport] = {}
         self._transport_configs: ConfigType = transport_configs or {}
+        # The deprecated delivery and transport binary_sensors, by unique_id - populated by
+        # binary_sensor.py as each is added, only for an existing install that still has them
+        self._entities: dict[str, SupernotifyLegacyBinarySensor] = {}
 
         self._transport_types: dict[type[Transport], dict[str, Any]]
         if isinstance(transport_types, list):
@@ -397,80 +402,24 @@ class DeliveryRegistry:
                 _LOGGER.info("SUPERNOTIFY %s transport has no deliveries, unloading", name)
                 del self.transports[name]
 
-    def expose_entities(self, hass_api: HomeAssistantAPI) -> None:
-        for transport in self.transports.values():
-            # unload_unused_transports() already removed anything with zero deliveries -
-            # every transport still here has at least one, so it's worth a switch. Not
-            # gated on transport.enabled - a disabled-but-usable transport still needs a
-            # switch to re-enable it.
-            hass_api.expose_entity(
-                f"transport_{transport.name}",
-                state=STATE_ON if transport.enabled else STATE_OFF,
-                attributes=sanitize(transport.attributes()),
-                original_name=f"{transport.name} Transport Adaptor",
-                original_icon="mdi:truck-fast",
-            )
-        for delivery in self._deliveries.values():
-            hass_api.expose_entity(
-                f"delivery_{delivery.name}",
-                state=STATE_ON if delivery.enabled else STATE_OFF,
-                attributes=sanitize(delivery.attributes()),
-                original_name=f"{delivery.name} Delivery Configuration",
-                original_icon="mdi:package-variant",
-            )
+    def register_entity(self, unique_id: str, entity: SupernotifyLegacyBinarySensor) -> None:
+        """Called by a delivery or transport binary_sensor's async_added_to_hass()."""
+        self._entities[unique_id] = entity
 
-    def handle_entity_state_change(self, entity_id: str, new_state: State) -> bool | None:
-        """React to a delivery or transport binary_sensor being toggled on/off.
+    def unregister_entity(self, unique_id: str) -> None:
+        """Called by a delivery or transport binary_sensor's async_will_remove_from_hass()."""
+        self._entities.pop(unique_id, None)
 
-        Returns None if entity_id belongs to neither (not a delivery/transport entity of
-        ours), True if it was recognised and its enabled state changed, False if recognised
-        but unknown or already in that state.
-        """
-        delivery_prefix = f"binary_sensor.{DOMAIN}_delivery_"
-        transport_prefix = f"binary_sensor.{DOMAIN}_transport_"
-        if entity_id.startswith(delivery_prefix):
-            delivery_name = entity_id.removeprefix(delivery_prefix)
-            if new_state.state == STATE_OFF:
-                return self.disable(delivery_name)
-            if new_state.state == STATE_ON:
-                return self.enable(delivery_name)
-            _LOGGER.info("SUPERNOTIFY No change to delivery %s for state %s", delivery_name, new_state.state)
-            return False
+    def legacy_entities(self) -> list[SupernotifyLegacyBinarySensor]:
+        """Every registered delivery and transport binary_sensor - used by supernotify.refresh_entities."""
+        return list(self._entities.values())
 
-        if entity_id.startswith(transport_prefix):
-            transport_name = entity_id.removeprefix(transport_prefix)
-            transport = self.transports.get(transport_name)
-            if transport is None:
-                _LOGGER.warning("SUPERNOTIFY Event for unknown transport %s", entity_id)
-                return False
-            if new_state.state == STATE_OFF and transport.enabled:
-                transport.enabled = False
-                _LOGGER.info("SUPERNOTIFY Disabling transport %s", transport.name)
-                return True
-            if new_state.state == STATE_ON and not transport.enabled:
-                transport.enabled = True
-                _LOGGER.info("SUPERNOTIFY Enabling transport %s", transport.name)
-                return True
-            _LOGGER.info("SUPERNOTIFY No change to transport %s, already %s", transport.name, new_state)
-            return False
-
-        return None
-
-    def enable(self, delivery_name: str) -> bool:
-        delivery = self._deliveries.get(delivery_name)
-        if delivery and not delivery.enabled:
-            _LOGGER.info(f"SUPERNOTIFY Enabling delivery {delivery_name}")
-            delivery.enabled = True
-            return True
-        return False
-
-    def disable(self, delivery_name: str) -> bool:
-        delivery = self._deliveries.get(delivery_name)
-        if delivery and delivery.enabled:
-            _LOGGER.info(f"SUPERNOTIFY Disabling delivery {delivery_name}")
-            delivery.enabled = False
-            return True
-        return False
+    @callback
+    def async_refresh_entity(self, unique_id: str) -> None:
+        """Re-publish one delivery or transport binary_sensor now, by its unique_id"""
+        entity = self._entities.get(unique_id)
+        if entity is not None:
+            entity.async_write_ha_state()
 
     @property
     def deliveries(self) -> dict[str, Delivery]:

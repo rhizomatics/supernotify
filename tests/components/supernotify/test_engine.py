@@ -684,16 +684,3 @@ async def test_send_message_exception_handling(mock_hass: Mock) -> None:
     with patch("custom_components.supernotify.engine.Notification", side_effect=RuntimeError("boom")):
         await uut.async_send_message("test message")
     assert uut.failures == 1
-
-
-async def test_entity_state_change_unknown_scenario(mock_hass: Mock) -> None:
-    # Line 470: warning when state change is for unknown scenario
-    uut = SupernotifyEngine(mock_hass, deliveries=DELIVERY, scenarios=SCENARIOS)
-    await uut.initialize()
-    event = Mock()
-    event.event_type = "state_changed"
-    event.data = {
-        "entity_id": "binary_sensor.supernotify_scenario_nonexistent_xyz",
-        "new_state": Mock(state="on"),
-    }
-    await uut._entity_state_change_listener(event)  # should warn but not raise

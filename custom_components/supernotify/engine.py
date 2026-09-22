@@ -16,9 +16,7 @@ from homeassistant.core import (
 )
 from homeassistant.core import (
     Event,
-    EventStateChangedData,
     HomeAssistant,
-    State,
     callback,
 )
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -48,6 +46,11 @@ from .const import (
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
+    OVERRIDE_KIND_DELIVERY,
+    OVERRIDE_KIND_RECIPIENT,
+    OVERRIDE_KIND_SCENARIO,
+    OVERRIDE_KIND_TRANSPORT,
+    OVERRIDE_KINDS,
     PRIORITY_MEDIUM,
 )
 from .context import Context
@@ -65,6 +68,9 @@ from .static_config import TRANSPORTS
 
 if TYPE_CHECKING:
     import datetime as dt
+    from collections.abc import Iterable
+
+    from .switch import Overridable, SupernotifyOverridableSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,6 +114,9 @@ class SupernotifyEngine:
         # sensor.py hands them to Home Assistant once its platform loads
         self.notifications_sensor = SupernotifyCounterSensor("notifications", "notifications")
         self.failures_sensor = SupernotifyCounterSensor("failures", "failures")
+        # Every switch overriding a configured enabled flag, by unique_id - populated by switch.py
+        # as each is added to Home Assistant
+        self.override_switches: dict[str, SupernotifyOverridableSwitch] = {}
         hass_api = HomeAssistantAPI(hass)
 
         people_registry = PeopleRegistry(
@@ -147,19 +156,9 @@ class SupernotifyEngine:
         await self.context.media_storage.initialize(self.context.hass_api)
         await self.context.snoozer.initialize(self.context.hass_api)
 
-        # Delivery/transport binary_sensors are still raw hass_api.expose_entity() writes (a
-        # separate, larger conversion - see issue #175); scenario/recipient binary_sensors and
-        # the counters are real entities now and self-initialize when their platforms load
-        # (after this method returns - see __init__.py), so expose_entities() itself is only
-        # needed on demand (supernotify.refresh_entities), not eagerly here.
-        self.context.delivery_registry.expose_entities(self.context.hass_api)
+        # Every entity - switches, binary_sensors and counters - is a real platform entity, added
+        # once this method returns (see __init__.py), and keeps its own state current
         self.context.hass_api.subscribe_event("mobile_app_notification_action", self.on_mobile_action)
-
-        # Delivery/transport binary_sensors are still raw hass_api.expose_entity() writes, so
-        # only they need watching here for an external toggle (Developer Tools, an automation).
-        # Scenario switches and recipient binary_sensors are real entities, which handle
-        # their own state.
-        self.context.hass_api.subscribe_state(self.context.hass_api.exposed_entities, self._entity_state_change_listener)
 
         housekeeping_schedule = self.housekeeping.get(CONF_HOUSEKEEPING_TIME)
         if housekeeping_schedule:
@@ -261,35 +260,66 @@ class SupernotifyEngine:
                 # of the rest of the notification going out
                 raise UncategorizedTargetError(notification.delivered, notification.uncategorized_targets)
 
-    async def _entity_state_change_listener(self, event: Event[EventStateChangedData]) -> None:
-        if event is None:
-            return
-        _LOGGER.debug(f"SUPERNOTIFY {event.event_type} event for entity: {event.data}")
-        new_state: State | None = event.data["new_state"]
-        if new_state is None:
-            return
+    @callback
+    def refresh_entities(self) -> None:
+        """Re-publish the current state of every entity SuperNotify provides.
 
-        entity_id: str = event.data["entity_id"]
-        if self.context.delivery_registry.handle_entity_state_change(entity_id, new_state) is not None:
-            return
-        _LOGGER.warning("SUPERNOTIFY entity event with nothing to do:%s", event)
-
-    def expose_entities(self) -> None:
-        """Refresh every entity SuperNotify exposes for introspection/control.
-
-        Scenario and recipient entities, and the notification/failure counters, are real
-        platform entities added via async_forward_entry_setups and keep themselves current;
-        refreshing them here is a safe no-op before those platforms have loaded (e.g. in tests
-        that build SupernotifyEngine directly without a config entry). Delivery/transport
-        entities are still raw hass_api writes, pending a separate, larger conversion to switch
-        entities (see issue #175).
+        Entities are only refreshed once added to Home Assistant, so this is a safe no-op for any
+        whose platform hasn't loaded (e.g. in tests that build SupernotifyEngine directly without
+        a config entry). Must run in the event loop, as it writes entity state.
         """
         self.notifications_sensor.refresh()
         self.failures_sensor.refresh()
         self.context.scenario_registry.async_refresh_scenario_states()
         for entity in self.context.people_registry.recipient_entities():
             entity.async_write_ha_state()
-        self.context.delivery_registry.expose_entities(self.context.hass_api)
+        for legacy_entity in self.context.delivery_registry.legacy_entities():
+            legacy_entity.async_write_ha_state()
+        for switch in self.override_switches.values():
+            switch.async_write_ha_state()
+
+    def _overridables(self, kind: str) -> Iterable[Overridable]:
+        overridables: dict[str, Iterable[Overridable]] = {
+            OVERRIDE_KIND_SCENARIO: self.context.scenario_registry.scenarios.values(),
+            OVERRIDE_KIND_RECIPIENT: self.context.people_registry.people.values(),
+            OVERRIDE_KIND_DELIVERY: self.context.delivery_registry.deliveries.values(),
+            OVERRIDE_KIND_TRANSPORT: self.context.delivery_registry.transports.values(),
+        }
+        return overridables[kind]
+
+    @callback
+    def reset_overrides(self, kinds: Iterable[str] = OVERRIDE_KINDS) -> dict[str, list[str]]:
+        """Put everything switched on or off at runtime back to its configured enabled state,
+        returning the names reset for each kind.
+
+        Walks the scenarios, recipients, deliveries and transports themselves rather than their
+        switches, so one whose switch is disabled in the entity registry is reset too.
+        """
+        reset: dict[str, list[str]] = {}
+        for kind in kinds:
+            names = reset[kind] = []
+            for item in self._overridables(kind):
+                if item.enabled == item.config_enabled:
+                    continue
+                switch = self.override_switches.get(f"{kind}_{item.name}")
+                if switch is not None:
+                    switch.async_set_enabled(item.config_enabled)
+                else:
+                    item.enabled = item.config_enabled
+                    self._async_refresh_related(kind, item.name)
+                names.append(item.name)
+        return reset
+
+    @callback
+    def _async_refresh_related(self, kind: str, name: str) -> None:
+        """Re-publish the binary_sensor following the enabled flag of something with no switch
+        to do it - the same as that switch's own _refresh_related()."""
+        if kind == OVERRIDE_KIND_SCENARIO:
+            self.context.scenario_registry.async_refresh_entity(name)
+        elif kind == OVERRIDE_KIND_RECIPIENT:
+            self.context.people_registry.async_refresh_entity(name)
+        else:
+            self.context.delivery_registry.async_refresh_entity(f"{kind}_{name}")
 
     def enquire_implicit_deliveries(self) -> dict[str, Any]:
         v: dict[str, list[str]] = {}

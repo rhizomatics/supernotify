@@ -56,6 +56,12 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("it", "entity.switch.scenario_enabled.name"),  # "scenario" stays English in Italian, see CLAUDE.md
     ("nl", "entity.binary_sensor.scenario.name"),  # "Scenario" is also the Dutch word for scenario
     ("nl", "entity.switch.scenario_enabled.name"),  # "Scenario" is also the Dutch word for scenario
+    ("it", "entity.binary_sensor.delivery.name"),  # "delivery" stays English in Italian, see CLAUDE.md
+    ("it", "entity.binary_sensor.transport.name"),  # "transport" stays English in Italian, see CLAUDE.md
+    ("de", "entity.binary_sensor.transport.name"),  # "Transport" is also the German word for transport
+    ("fr", "entity.binary_sensor.transport.name"),  # "Transport" is also the French word for transport
+    ("nl", "entity.binary_sensor.transport.name"),  # "Transport" is also the Dutch word for transport
+    ("pl", "entity.binary_sensor.transport.name"),  # "Transport" is also the Polish word for transport
 }
 
 
