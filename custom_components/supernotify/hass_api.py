@@ -176,7 +176,7 @@ class HomeAssistantAPI:
         while self.unsubscribes:
             unsub = self.unsubscribes.pop()
             try:
-                _LOGGER.debug("SUPERNOTIFY Unsubscribing: %s", unsub)
+                _LOGGER.debug("SUPERNOTIFY Unsubscribing: %.100s", unsub)
                 unsub()
             except Exception as e:
                 _LOGGER.error("SUPERNOTIFY Failed to unsubscribe: %s", e)

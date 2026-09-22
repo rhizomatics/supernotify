@@ -8,7 +8,7 @@ import pathlib
 import threading
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
@@ -19,6 +19,7 @@ from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.components.notify.const import DOMAIN, NOTIFY_SERVICE_SCHEMA
 from homeassistant.components.notify.legacy import BaseNotificationService
+from homeassistant.components.person.const import DOMAIN as PERSON_DOMAIN
 from homeassistant.config_entries import ConfigEntryItems
 from homeassistant.const import (
     STATE_HOME,
@@ -118,15 +119,47 @@ def mock_issue_registry() -> IssueRegistry:
 
 @pytest.fixture
 def mock_hass(
-    mock_device_registry: DeviceRegistry, mock_entity_registry: EntityRegistry, mock_issue_registry: IssueRegistry
+    mock_device_registry: DeviceRegistry,
+    mock_entity_registry: EntityRegistry,
+    mock_issue_registry: IssueRegistry,
+    tmp_path: pathlib.Path,
 ) -> HomeAssistant:
     hass = Mock(spec=MockableHomeAssistant)
     hass.states = Mock(StateMachine)
-    hass.states.async_entity_ids.return_value = ["supernotify.test_1", "supernotify.test_2"]
+    auto_discovered_entity_ids = ["supernotify.test_1", "supernotify.test_2"]
+    # domain-blind: a real StateMachine.async_entity_ids(domain) only returns entities of that
+    # domain, but this stub returns the same list regardless of `domain` - so it also feeds
+    # find_people() (people.py, via entity_ids_for_domain(PERSON_DOMAIN)), auto-discovering
+    # these two as extra person recipients whenever recipients_discovery isn't disabled
+    hass.states.async_entity_ids.return_value = auto_discovered_entity_ids
+    # unconfigured, states.get() returns a bare Mock whose .state is itself a Mock, not a str -
+    # PeopleRegistry._fetch_person_entity_state() (people.py) then logs a misleading "Unexpected
+    # state" warning for every person recipient a test configures (including the two above, via
+    # the auto-discovery quirk noted there). Give person entities a real, valid state by default
+    # (STATE_HOME, matching _fetch_person_entity_state()'s own "default to at home if unknown
+    # tracker" fallback, so this changes no test's occupancy outcome) and leave every other
+    # domain's lookup exactly as before by falling through to DEFAULT
+    hass.states.get.side_effect = lambda entity_id: (
+        State(entity_id, STATE_HOME)
+        if entity_id.startswith(f"{PERSON_DOMAIN}.") or entity_id in auto_discovered_entity_ids
+        else DEFAULT
+    )
     hass.services = Mock(ServiceRegistry)
-    hass.services.async_call = AsyncMock()
+    # explicit return_value=None: an unconfigured AsyncMock's awaited result is itself an
+    # AsyncMock, not the None a real un-return_response'd service call gives back - that fake
+    # response then leaks into CallRecord.service_response and trips up production code (e.g.
+    # common.sanitize()'s hasattr(v, "contents") duck-typing) with unawaited-coroutine warnings
+    hass.services.async_call = AsyncMock(return_value=None)
+    # unconfigured, async_services_for_domain() returns a bare Mock rather than a dict -
+    # find_service() then blows up trying to iterate Mock().items() and silently swallows it,
+    # logging a misleading "Unable to find service" warning instead of just finding none
+    hass.services.async_services_for_domain = lambda _domain: {}
     hass.config.internal_url = "http://127.0.0.1:28123"
     hass.config.external_url = "https://my.home"
+    # Store (helpers.storage), used by load_storage()/save_storage(), needs a real path here -
+    # an unconfigured Mock trips `Path(hass.config.config_dir)` with a TypeError, which
+    # load_storage() logs as a misleading "Unable to load storage" warning
+    hass.config.config_dir = str(tmp_path)
     hass.data = {}
     hass.data["device_registry"] = mock_device_registry
     hass.data["entity_registry"] = mock_entity_registry
