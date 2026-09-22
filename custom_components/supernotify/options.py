@@ -68,7 +68,7 @@ COMMON_OPTIONS: list[DeliveryOption] = [
     DeliveryOption(OPTION_MESSAGE_USAGE, "Combine message and title, default title", examples=["combine_title", "use_title"]),
     DeliveryOption(
         OPTION_TARGET_SELECT,
-        "Only use targets fully matching these regular expressions",
+        "Only use targets fully matching these regular expressions, group members expanded first",
         value_type=SelectionRule,
     ),
     DeliveryOption(
