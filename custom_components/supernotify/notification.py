@@ -388,22 +388,37 @@ class Notification(ArchivableObject):
         recipients_disable_deliveries: list[str] = []
         all_recipients = self.all_recipients()
 
+        trace = self.debug_trace
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
-                scenario_enable_deliveries.extend(resolve_name(d) for d in scenario.enabling_deliveries())
+                for d in scenario.enabling_deliveries():
+                    name = resolve_name(d)
+                    scenario_enable_deliveries.append(name)
+                    trace.record_delivery_provenance(name, "enabled_by", f"scenario:{scenario.name}")
             for scenario in self.enabled_scenarios.values():
-                scenario_disable_deliveries.extend(resolve_name(d) for d in scenario.disabling_deliveries())
+                for d in scenario.disabling_deliveries():
+                    name = resolve_name(d)
+                    scenario_disable_deliveries.append(name)
+                    trace.record_delivery_provenance(name, "disabled_by", f"scenario:{scenario.name}")
 
             scenario_enable_deliveries = list(dict.fromkeys(scenario_enable_deliveries))
             scenario_disable_deliveries = list(dict.fromkeys(scenario_disable_deliveries))
 
             for recipient in all_recipients:
-                recipients_enable_deliveries.extend(resolve_name(d) for d in recipient.enabling_delivery_names())
+                for d in recipient.enabling_delivery_names():
+                    name = resolve_name(d)
+                    recipients_enable_deliveries.append(name)
+                    trace.record_delivery_provenance(name, "enabled_by", f"recipient:{recipient.name}")
                 # See also Recipient.target() for the disabled cases
-                recipients_disable_deliveries.extend(resolve_name(d) for d in recipient.disabling_delivery_names())
+                for d in recipient.disabling_delivery_names():
+                    name = resolve_name(d)
+                    recipients_disable_deliveries.append(name)
+                    trace.record_delivery_provenance(name, "disabled_by", f"recipient:{recipient.name}")
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
                 # all deliveries with INCLUSION_DEFAULT in CONF_INCLUSION
                 default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
+                for d in default_enable_deliveries:
+                    trace.record_delivery_provenance(d, "enabled_by", "default")
 
         self.debug_trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
         self.debug_trace.record_delivery_selection("scenario_disable_deliveries", scenario_disable_deliveries)
@@ -424,8 +439,10 @@ class Notification(ArchivableObject):
                 and delivery in self.context.delivery_registry.disabled_deliveries
             ):
                 override_enable_deliveries.append(delivery)
+                trace.record_delivery_provenance(delivery, "enabled_by", "call")
             elif delivery_override is not None and delivery_override.enabled is False:
                 override_disable_deliveries.append(delivery)
+                trace.record_delivery_provenance(delivery, "disabled_by", "call")
 
         all_global_enabled: list[str] = list(
             dict.fromkeys(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
