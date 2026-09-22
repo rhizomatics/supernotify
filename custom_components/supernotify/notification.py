@@ -63,7 +63,7 @@ from .model import (
     TransportFeature,
 )
 from .options import OPTION_UNIQUE_TARGETS
-from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome
+from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome, OutcomeSelection
 
 if TYPE_CHECKING:
     from homeassistant.core import Context as HAContext
@@ -316,6 +316,11 @@ class Notification(ArchivableObject):
         if self.skipped:
             return DeliveryOutcome.PARTIAL_DELIVERY
         return DeliveryOutcome.SUCCESS
+
+    def diagnostics_selected(self, outcome_policy: OutcomeSelection) -> bool:
+        """A notification sent with `debug: true` asked for its trace, so it is archived
+        with the full diagnostic content whatever the configured `diagnostics` outcomes"""
+        return bool(self.debug) or super().diagnostics_selected(outcome_policy)
 
     def media_requirements(self, data: dict[str, Any]) -> dict[str, Any]:
         """If no media defined, look for iOS / Android actions that have media defined

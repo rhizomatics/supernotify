@@ -55,6 +55,10 @@ class ArchivableObject:
     def outcome(self) -> DeliveryOutcome:
         return DeliveryOutcome.NO_DELIVERY
 
+    def diagnostics_selected(self, outcome_policy: OutcomeSelection) -> bool:
+        """Whether the archived copy should carry the full diagnostic content"""
+        return self.selected(outcome_policy)
+
     def selected(self, outcome_policy: OutcomeSelection) -> bool:
         if outcome_policy & OutcomeSelection.NONE:
             return False
@@ -105,7 +109,7 @@ class EventArchiver(ArchiveDestination):
 
     async def archive(self, archive_object: ArchivableObject) -> bool:
         try:
-            payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
+            payload = archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics))
             self.hass_api.fire_event(self.event_name, payload, context=archive_object.ha_context)
             return True
         except Exception:
@@ -142,7 +146,7 @@ class ArchiveTopic(ArchiveDestination):
     async def archive(self, archive_object: ArchivableObject) -> bool:
         if not self.enabled:
             return False
-        payload = archive_object.contents(diagnostics=archive_object.selected(self.diagnostics))
+        payload = archive_object.contents(diagnostics=archive_object.diagnostics_selected(self.diagnostics))
         topic = f"{self.topic}/{archive_object.base_filename()}"
         _LOGGER.debug(f"SUPERNOTIFY Publishing notification to {topic}")
         try:
@@ -191,7 +195,7 @@ class ArchiveDirectory(ArchiveDestination):
 
         if self.enabled and self.archive_path:  # archive_path to assuage mypy
             archive_filepath: Path | None = None
-            diagnostics: bool = archive_object.selected(self.diagnostics)
+            diagnostics: bool = archive_object.diagnostics_selected(self.diagnostics)
             try:
                 filename = f"{archive_object.base_filename()}.json"
                 archive_filepath = self.archive_path.joinpath(filename)

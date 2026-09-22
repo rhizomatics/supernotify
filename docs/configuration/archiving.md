@@ -27,6 +27,8 @@ A housekeeping job will run automatically each night to prune notifications olde
 The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content.
 Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration
 for this is the same as for selecting [Event Generation](#event-generation).
+A notification sent with `debug: true` in its `data` always gets the full diagnostic content, including its `debug_trace`,
+whatever `diagnostics` is set to - it doesn't change which outcomes generate events.
 
 ## Example Configuration
 
