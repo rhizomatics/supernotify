@@ -7,6 +7,7 @@ This preserves not just the notification data, but also key context like occupan
 Key fields to check if something doesn't seem right:
 
 - `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
+- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
 - `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
 
 A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.

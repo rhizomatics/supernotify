@@ -1059,6 +1059,7 @@ This preserves not just the notification data, but also key context like occupan
 Key fields to check if something doesn't seem right:
 
 - `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
+- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
 - `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
 
 A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.
@@ -6170,7 +6171,9 @@ data:
     debug: true
 ```
 
-The trace shows how the notification was put together: the deliveries chosen at each stage (`delivery_selection`), which source switched each delivery on or off (`delivery_provenance`, e.g. `{"chime": {"enabled_by": ["default"], "disabled_by": ["scenario:night"]}}`), and how the targets of each delivery were resolved, stage by stage (`resolved`).
+The trace shows how the notification was put together: the deliveries chosen at each stage (`delivery_selection`) and how the targets of each delivery were resolved, stage by stage (`resolved`).
+
+Which source switched each delivery on or off doesn't need the trace: every archived notification has it as `delivery_provenance`, e.g. `{"chime": {"enabled_by": ["default"], "disabled_by": ["scenario:night"]}}`.
 
 ## Example Configuration - Archiving
 
@@ -7180,9 +7183,13 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 
 ### Debug Trace
 
-- The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
+- Every archived notification records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where the debug trace's `delivery_selection` only has the combined list for each stage, so the archive shows which scenario turned a channel off, not just that one did. It is small, a few names per delivery, so unlike the rest of the debug trace it doesn't need `debug: true` and is kept in the minimal archive content too
 - A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
 - Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
+### Fixes
+
+- A notification where a recipient switches a delivery on or off for themselves could not be archived, full or minimal - `DeliveryTargetOverride.as_dict()` rejected the archive's keyword arguments
 
 ### Privacy
 

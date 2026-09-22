@@ -19,9 +19,13 @@
 
 ### Debug Trace
 
-- The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
+- Every archived notification records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where the debug trace's `delivery_selection` only has the combined list for each stage, so the archive shows which scenario turned a channel off, not just that one did. It is small, a few names per delivery, so unlike the rest of the debug trace it doesn't need `debug: true` and is kept in the minimal archive content too
 - A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
 - Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
+### Fixes
+
+- A notification where a recipient switches a delivery on or off for themselves could not be archived, full or minimal - `DeliveryTargetOverride.as_dict()` rejected the archive's keyword arguments
 
 ### Privacy
 
