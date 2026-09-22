@@ -17,10 +17,6 @@
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/tags/</loc>
-         <lastmod>2026-09-22</lastmod>
-    </url>
-    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/</loc>
          <lastmod>2026-09-22</lastmod>
     </url>
@@ -50,10 +46,6 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/</loc>
-         <lastmod>2026-09-22</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/configuration/options/</loc>
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>
@@ -97,10 +89,6 @@
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/</loc>
-         <lastmod>2026-09-22</lastmod>
-    </url>
-    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/coverage/</loc>
          <lastmod>2026-09-22</lastmod>
     </url>
@@ -109,7 +97,7 @@
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/transports/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/registry_classes/</loc>
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>
@@ -130,6 +118,30 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-minimum/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/core/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/notification/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/recipients_and_scenarios/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/transport/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/</loc>
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>
@@ -330,6 +342,22 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/reference/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/reference/options/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/reference/tags/</loc>
+         <lastmod>2026-09-22</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/reference/transports/</loc>
          <lastmod>2026-09-22</lastmod>
     </url>
     <url>

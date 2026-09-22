@@ -12,7 +12,7 @@ Several transport options use **Selection Rules** which allow a flexible set of 
 - `device_model_select`
 - `target_select`
 
-See [Options Table](https://supernotify.rhizomatics.org.uk/latest/configuration/options/index.md) for description and where these can be used.
+See [Options Table](https://supernotify.rhizomatics.org.uk/latest/reference/options/index.md) for description and where these can be used.
 
 ## Rule Definitions
 

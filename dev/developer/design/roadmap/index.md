@@ -4,11 +4,11 @@ See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/de
 
 ## Home Assistant Version Compatibility
 
-When the following versions meet the 6-month ago window for testing, here are the changes to make
+When the following versions fall out of the 6-month ago window for testing, here are the changes to make
 
 ### 2026.2
 
-Remove Py3.13 compatibility and testing
+Remove Py3.13 compatibility and testing Pillow >=12.1 - switch to get_flattened_data
 
 ### 2026.8
 

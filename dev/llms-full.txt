@@ -932,7 +932,7 @@ In the archived JSON, each delivery has an `envelope` with the targets assigned 
 
 ## Not All Transports Have Targets
 
-Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/developer/transports/index.md)
+Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md)
 
 # Voice
 
@@ -2490,7 +2490,7 @@ Several transport options use **Selection Rules** which allow a flexible set of 
 - `device_model_select`
 - `target_select`
 
-See [Options Table](https://supernotify.rhizomatics.org.uk/latest/configuration/options/index.md) for description and where these can be used.
+See [Options Table](https://supernotify.rhizomatics.org.uk/latest/reference/options/index.md) for description and where these can be used.
 
 ## Rule Definitions
 
@@ -3440,7 +3440,7 @@ Transport Adaptors are exposed as `sensor.supernotify_transport_XXXX` entities i
 
 ### Table of Options
 
-All of these are set by passing an `options` block in Delivery config or Transport defaults. See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/configuration/options/index.md) for the full, generated list of common and transport-specific options, their types, examples and descriptions - and [Default Options](https://supernotify.rhizomatics.org.uk/latest/developer/transports/#default-options) for the actual default value each transport sets.
+All of these are set by passing an `options` block in Delivery config or Transport defaults. See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/reference/options/index.md) for the full, generated list of common and transport-specific options, their types, examples and descriptions - and [Default Options](https://supernotify.rhizomatics.org.uk/latest/reference/transports/#default-options) for the actual default value each transport sets.
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.
 
@@ -8160,6 +8160,14 @@ All deprecations will be automatically handled in config as if newer config used
 
 First public release of productionized home code
 
+______________________________________________________________________
+
+# Reference Index
+
+Design principles, proposals, projects, roadmap.
+
+{{ pagetree(siblings) }}
+
 # ConfigFlow Implementation Approach
 
 ## Goals
@@ -8819,11 +8827,11 @@ See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/de
 
 ## Home Assistant Version Compatibility
 
-When the following versions meet the 6-month ago window for testing, here are the changes to make
+When the following versions fall out of the 6-month ago window for testing, here are the changes to make
 
 ### 2026.2
 
-Remove Py3.13 compatibility and testing
+Remove Py3.13 compatibility and testing Pillow >=12.1 - switch to get_flattened_data
 
 ### 2026.8
 
@@ -8956,7 +8964,7 @@ The plan is to make this a documented, supported setting, and decide which of th
 
 # Transport Configuration
 
-See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/configuration/options/index.md) for a description of each option.
+See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/reference/options/index.md) for a description of each option.
 
 ## Default Inclusion
 

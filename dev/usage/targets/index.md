@@ -149,4 +149,4 @@ In the archived JSON, each delivery has an `envelope` with the targets assigned 
 
 ## Not All Transports Have Targets
 
-Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/developer/transports/index.md)
+Also worth noting that some transports don't have targets at all, like the Persistent one. There's a handy table in the Developer documentation, [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md)

@@ -100,10 +100,11 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 ## Optional
 
 - [What's New](https://supernotify.rhizomatics.org.uk/latest/changelog/index.md): Release history
+- [Development Design Documents](https://supernotify.rhizomatics.org.uk/latest/developer/design/index.md)
 - [ConfigFlow Implementation Approach](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
 - [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md)
 - [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
 - [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md)
 - [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/index.md)
-- [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/developer/transports/index.md): Writing a new transport
+- [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md): Table of notification transports and capabilities
 
