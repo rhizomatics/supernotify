@@ -4,11 +4,12 @@ See also [Principles](./principles.md) for what guides development.
 
 ## Home Assistant Version Compatibility
 
-When the following versions meet the 6-month ago window for testing, here are the changes to make
+When the following versions fall out of the 6-month ago window for testing, here are the changes to make
 
 ### 2026.2
 
 Remove Py3.13 compatibility and testing
+Pillow >=12.1 - switch to get_flattened_data
 
 ### 2026.8
 
@@ -27,7 +28,6 @@ Second and further phases identified at [ConfigFlow](./configflow_approach.md)
 ### AI Friendly
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
-
 
 #### Register an LLM API.
 HA's homeassistant.helpers.llm lets an integration register a tool set through async_register_api. A notify tool with delivery, scenario and target parameters would work for Assist conversation agents. It should also be reachable through HA's MCP server. Check the current API before committing to this. It is the only option here that makes Supernotify callable by agents, not just easier to configure.

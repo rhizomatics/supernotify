@@ -38,8 +38,8 @@ state of the entity, whether via Developer Tools or another automation.
 ### Table of Options
 
 All of these are set by passing an `options` block in Delivery config or Transport defaults. See the
-[Options Reference](../configuration/options.md) for the full, generated list of common and transport-specific
-options, their types, examples and descriptions - and [Default Options](../developer/transports.md#default-options)
+[Options Reference](../reference/options.md) for the full, generated list of common and transport-specific
+options, their types, examples and descriptions - and [Default Options](../reference/transports.md#default-options)
 for the actual default value each transport sets.
 
 `jpeg_opts` can also be set per runtime call by passing in the `media` block.

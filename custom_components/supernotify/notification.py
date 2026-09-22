@@ -617,11 +617,7 @@ class Notification(ArchivableObject):
                     if await transport.deliver(envelope, debug_trace=self.debug_trace):
                         self.record_result(delivery, envelope)
                     else:
-                        _LOGGER.info(
-                            "SUPERNOTIFY No delivery for %s (targets: %s)",
-                            delivery.name,
-                            envelope.target.as_dict() if envelope.target else "NONE",
-                        )
+                        _LOGGER.info("SUPERNOTIFY No delivery for %s (id: %s)", delivery.name, envelope.notification_id)
                         self.record_result(delivery, envelope, suppression_reason=SuppressionReason.UNKNOWN)
                 except Exception as e2:
                     envelope.error_count = envelope.error_count + 1

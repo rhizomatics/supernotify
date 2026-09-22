@@ -323,7 +323,7 @@ class Transport:
                 )
             )
             self.log_delivery_failure(
-                e, "SUPERNOTIFY Failed to notify %s via %s, data=%s", self.name, qualified_action, action_data
+                e, "SUPERNOTIFY Failed to notify %s via %s.%s, id: %s", self.name, domain, service, envelope.notification_id
             )
             envelope.error_count += 1
             envelope.delivery_error = format_exception(e)

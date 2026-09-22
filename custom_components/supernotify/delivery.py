@@ -311,7 +311,7 @@ class Delivery(DeliveryConfig):
             _LOGGER.debug(
                 "SUPERNOTIFY No default in delivery %s for option %s, setting to default %s", self.name, option_name, default
             )
-            opt = default
+            opt = self.options[option_name] = default
         return opt
 
     def option_bool(self, option_name: str, default: bool = False) -> bool:

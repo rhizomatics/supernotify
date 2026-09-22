@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import tempfile
 import uuid
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -15,7 +16,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_HOME
 from homeassistant.core import (
     EventBus,
     HomeAssistant,
@@ -323,10 +324,19 @@ class TestingContext(Context):
                 "media_player": ["media_player.mock_speaker"],
             }.get(domain, [])
             self.hass.services = Mock(ServiceRegistry)
-            self.hass.services.async_call = AsyncMock()
+            # explicit return_value=None: an unconfigured AsyncMock's awaited result is itself
+            # an AsyncMock, not the None a real un-return_response'd service call gives back -
+            # that fake response then leaks into CallRecord.service_response and trips up
+            # production code (e.g. common.sanitize()'s hasattr(v, "contents") duck-typing)
+            # with unawaited-coroutine warnings
+            self.hass.services.async_call = AsyncMock(return_value=None)
             self.hass.services.async_services_for_domain = lambda domain: self.services.get(domain, {})
             self.hass.config.internal_url = "http://127.0.0.1:28123"
             self.hass.config.external_url = hass_external_url or "https://my.home"
+            # Store (helpers.storage), used by load_storage()/save_storage(), needs a real path
+            # here - an unconfigured Mock trips `Path(hass.config.config_dir)` with a TypeError,
+            # which load_storage() logs as a misleading "Unable to load storage" warning
+            self.hass.config.config_dir = tempfile.mkdtemp(prefix="supernotify_test_")
             self.hass.data = {}
             self.device_registry = AsyncMock(spec=DeviceRegistry)
             self.device_registry.devices = [dev for dev in self.devices.values() if dev.discover]
@@ -360,7 +370,12 @@ class TestingContext(Context):
 
             for recipient in self.config.get(CONF_RECIPIENTS, []):
                 if recipient.get(CONF_PERSON):
-                    self.entities[recipient.get(CONF_PERSON)] = Mock(spec=State, attributes=recipient)
+                    # explicit state=STATE_HOME: without it, an unconfigured Mock(spec=State)'s
+                    # .state is itself a Mock rather than a str, and PeopleRegistry's
+                    # _fetch_person_entity_state() (people.py) logs a misleading "Unexpected
+                    # state" warning for every configured recipient - tests that care about a
+                    # specific occupancy state already override this via set_state() below
+                    self.entities[recipient.get(CONF_PERSON)] = Mock(spec=State, state=STATE_HOME, attributes=recipient)
 
             self.hass.states.get.side_effect = lambda v: self.entities.get(v)
 

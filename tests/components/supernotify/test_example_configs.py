@@ -76,6 +76,11 @@ async def test_example_yaml_config(hass: HomeAssistant, config_name: str) -> Non
     sms.__module__ = "homeassistant.components.twilio_sms.notify"
     hass.services.async_register("notify", "twilio_sms", sms)
 
+    def megacorp_api(call: object) -> None:
+        return None
+
+    hass.services.async_register("notify", "megacorp_api", megacorp_api)
+
     # ... and, for these examples specifically, an Alexa Devices integration entity and a
     # paired mobile_app companion app too
     MockConfigEntry(domain="alexa_devices", data={}).add_to_hass(hass)

@@ -13,7 +13,7 @@ TAB_ORDER = [
     "Developer",
     "changelog.md",
 ]
-HIDDEN_TABS = {"tags.md"}
+HIDDEN_TABS: set[str] = set()
 
 
 def _key(item: Any) -> str:  # ruff: ignore[any-type]
@@ -22,11 +22,10 @@ def _key(item: Any) -> str:  # ruff: ignore[any-type]
 
 
 def on_nav(nav: Any, config: Any, files: Any, **kwargs: Any) -> Any:  # ruff: ignore[any-type]
-    """Order the top navigation tabs and hide the Tags tab.
+    """Order the top navigation tabs, optionally hiding some of them.
 
     The nav is auto-generated from the docs folder, so reorder it here rather
-    than listing every page in an explicit nav. The Tags page is still built,
-    it just isn't linked from the top navigation.
+    than listing every page in an explicit nav.
     """
     items = [item for item in nav.items if _key(item) not in HIDDEN_TABS]
     items.sort(key=lambda item: TAB_ORDER.index(_key(item)) if _key(item) in TAB_ORDER else len(TAB_ORDER))
