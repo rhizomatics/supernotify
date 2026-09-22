@@ -10,6 +10,12 @@
             },
             "recipient": {
                 "name": "Ontvanger {recipient}"
+            },
+            "delivery": {
+                "name": "Bezorging {delivery}"
+            },
+            "transport": {
+                "name": "Transport {transport}"
             }
         },
         "sensor": {
@@ -26,6 +32,17 @@
             },
             "recipient_enabled": {
                 "name": "Ontvanger {recipient} ingeschakeld"
+            },
+            "delivery_enabled": {
+                "name": "Bezorging {delivery} ingeschakeld"
+            },
+            "transport_enabled": {
+                "name": "Transport {transport} ingeschakeld"
+            }
+        },
+        "button": {
+            "reset_overrides": {
+                "name": "Overschrijvingen herstellen"
             }
         }
     },
@@ -198,6 +215,16 @@
             "name": "Entiteiten vernieuwen",
             "description": "Vernieuwt elke entiteit die SuperNotify blootstelt voor inspectie en controle"
         },
+        "reset_overrides": {
+            "name": "Overschrijvingen herstellen",
+            "description": "Zet elk scenario, elke ontvanger, bezorging en elk transport dat tijdens gebruik is in- of uitgeschakeld terug naar de geconfigureerde status",
+            "fields": {
+                "kind": {
+                    "name": "Soort",
+                    "description": "Alleen deze soort schakelaar herstellen - alle soorten indien niet opgegeven"
+                }
+            }
+        },
         "clear_snoozes": {
             "name": "Snoozes wissen",
             "description": "Wist alle momenteel actieve snoozes"
@@ -345,6 +372,10 @@
         "recipient_binary_sensor_deprecated": {
             "title": "Binary-sensoren voor ontvangers worden verwijderd",
             "description": "Elke ontvanger heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_recipient_XXXX`) waarmee hij wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van ontvangers zijn vanaf nu alleen-lezen, geven alleen weer of de ontvanger is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een `binary_sensor` van een ontvanger schakelt de ontvanger niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar van de ontvanger wordt gebruikt."
+        },
+        "delivery_transport_binary_sensor_deprecated": {
+            "title": "Binary-sensoren voor bezorgingen en transporten worden verwijderd",
+            "description": "Elke bezorging en elk transport heeft nu een schakelaar (bijvoorbeeld `switch.supernotify_delivery_XXXX` of `switch.supernotify_transport_XXXX`) waarmee deze wordt in- en uitgeschakeld. De `binary_sensor`-entiteiten van bezorgingen en transporten zijn vanaf nu alleen-lezen, geven alleen weer of de bezorging of het transport is ingeschakeld, en worden in een toekomstige versie verwijderd. Het schrijven van de status van een van deze `binary_sensor`-entiteiten schakelt de bezorging of het transport niet meer in of uit. Pas daarom elke automatisering, elk script of dashboard dat dat doet, of anderszins op deze entiteiten vertrouwt, aan zodat de schakelaar wordt gebruikt."
         }
     },
     "exceptions": {

@@ -22,25 +22,21 @@
 
 **Unified Notification for Home Assistant**
 
-### MAJOR CHANGE v2
-
->> Support for Python 3.13 and versions of Home Assistant prior to 2026.3.0 (the first to support v3.14 only) will be dropped when Home Assistant 2026.10 is released. Supernotify will continue to be tested against older compatible versions of Home Assistant.
+### v2 MAJOR CHANGE - Set up from Home Assistant UI
 
 >> `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
 
->> If you have an advanced configuration (deliveries, scenarios, cameras, persons, actions etc) then a *Repair* will be raised to move these to a new `supernotify.yaml` file and add an `include` statement to your `configuration.yaml`. Or you can choose to manually move the config out of `notify` block however you please.
-
->> In either case, nothing will be deleted or commented out, so it will be easy to revert the change. Remove the old config when you are comfortable the new version is working for you. This will also remove the `[homeassistant.components.notify] Failed to initialize notification service supernotify` warning from the log, which comes from the old notify implementation.
+>> A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
 
 >> An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
-A **unified notification interface** on top of HomeAssistant's built in `notify` platform, to greatly simplify multiple notification channels and complex scenarios, including multi-channel notifications, conditional notifications, voice announcements, mobile actions, camera snapshots, chimes and template based HTML emails.
+A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
 The goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with  **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-Start off with no YAML configuration and easily do [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), attach a camera snapshot to an e-mail, redirect [Frigate blueprint notifications to email](./recipes/frigate_emails.md), or automatically cut down on repeated duplicate notifications.
+**No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](./recipes/frigate_emails.md), add a [Dashboard](./configuration/dashboard.md) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant dashboard integration. And with advanced YAML configuration, the possibilities are endless.
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](./configuration/dashboard.md) integration. And with advanced YAML configuration, the possibilities are endless.
 
 !!! tip inline end "Recipes"
     Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
@@ -109,6 +105,7 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
     *  Can be combined with snoozing for specific people or transports
 * Notification **Archival** and **Debug Support**
     * Optionally archive notifications to file system and/or MQTT topic
+    * Full support for Home Assistant [Context](https://data.home-assistant.io/docs/context/) so notification actions can be traced back to source automations
     * Includes full debug information, including occupancy assumptions, delivery and target selections
     * HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](usage/actions.md)
     * Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
@@ -130,6 +127,8 @@ A lot can be done with the simple non-YAML configuration, including automation o
 - **Links** can be configured but not currently used.
 - YAML still required for Transport, Recipient, Action and additional custom Delivery
 - Versions of Home Assistant more than 6 major releases ( usually 6 months ) aren't tested against Supernotify
+  - It is tested against Python 3.13 and Home Assistant 2026.2.3 (the last to support v3.13 only), this will be dropped when Home Assistant 2026.10 is released.
+
 
 ##  Rhizomatics Open Source for Home Assistant
 

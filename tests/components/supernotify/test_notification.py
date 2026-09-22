@@ -852,3 +852,48 @@ async def test_contents_places_populated_exposed_fields_by_preferred_order() -> 
     assert keys[keys.index("message") : keys.index("message") + 4] == ["message", "spoken_message", "message_html", "priority"]
     assert "extra_data" in keys  # populated but not in preferred_order, so still exposed, after the ordered fields
     assert keys.index("extra_data") > keys.index("priority")
+
+
+async def test_delivery_provenance_records_each_source() -> None:
+    """The trace says which scenario, recipient, default inclusion or the call itself switched each
+    delivery on or off - the per-stage delivery_selection lists only have the combined result"""
+    ctx = TestingContext(
+        recipients=[{CONF_PERSON: "person.joe", CONF_EMAIL: "joe@mctest.org", CONF_DELIVERY: {"chatty": {CONF_ENABLED: True}}}],
+        deliveries={
+            "chime": {CONF_TRANSPORT: "chime", CONF_INCLUSION: ["default"]},
+            "chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_INCLUSION: ["explicit"]},
+        },
+        transports=TRANSPORTS,
+        scenarios={
+            "night": {"delivery": {"chime": {"enabled": False}, "mobile_push": {"enabled": True}}},
+            "loud": {"delivery": {"chime": {"enabled": True}}},
+        },
+        transport_types=ALL_TRANSPORT_TYPES,
+        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item] # ty: ignore[invalid-argument-type]
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(
+        ctx,
+        "testing 123",
+        action_data={ATTR_SCENARIOS_APPLY: ["night", "loud"], "delivery": {"email": {"enabled": False}}, "debug": True},
+    )
+    await uut.initialize()
+
+    provenance = uut.debug_trace.contents()["delivery_provenance"]
+    assert provenance["chime"] == {"enabled_by": ["scenario:loud", "default"], "disabled_by": ["scenario:night"]}
+    assert provenance["mobile_push"] == {"enabled_by": ["scenario:night", "default"]}
+    assert provenance["email"] == {"enabled_by": ["default"], "disabled_by": ["call"]}
+    assert provenance["chatty"] == {"enabled_by": ["recipient:joe"]}
+    # the combined lists are unchanged
+    assert "chime" in uut.debug_trace.delivery_selection["scenario_disable_deliveries"]
+    assert "chime" not in uut.selected_deliveries
+    assert "email" not in uut.selected_deliveries
+
+
+async def test_delivery_provenance_only_recorded_with_debug() -> None:
+    ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+    assert "delivery_provenance" not in uut.debug_trace.contents()

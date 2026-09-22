@@ -7,6 +7,7 @@ from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_SERVICE,
+    CONF_TARGET,
 )
 
 CONF_ACTIONS: Final[str] = "actions"  # not fully implemented
@@ -91,6 +92,7 @@ OCCUPANCY_ONLY_IN = "only_in"
 OCCUPANCY_ONLY_OUT = "only_out"
 
 ATTR_ENABLED = "enabled"
+ATTR_TRANSPORT_ENABLED = "transport_enabled"
 ATTR_PRIORITY = "priority"
 ATTR_ACTION = "action"
 ATTR_SCENARIOS_REQUIRE = "require_scenarios"
@@ -296,6 +298,27 @@ CONF_DEVICE_DISCOVERY: Final[str] = "device_discovery"
 CONF_DEVICE_DOMAIN: Final[str] = "device_domain"
 CONF_DEVICE_MODEL_INCLUDE: Final[str] = "device_model_include"
 CONF_DEVICE_MODEL_EXCLUDE: Final[str] = "device_model_exclude"
+
+# What a runtime override of a configured `enabled` flag can apply to - each also the unique_id
+# prefix of the switch for it, e.g. switch unique_id "delivery_<name>"
+OVERRIDE_KIND_SCENARIO: Final[str] = "scenario"
+OVERRIDE_KIND_RECIPIENT: Final[str] = "recipient"
+OVERRIDE_KIND_DELIVERY: Final[str] = "delivery"
+OVERRIDE_KIND_TRANSPORT: Final[str] = "transport"
+OVERRIDE_KINDS: Final[tuple[str, ...]] = (
+    OVERRIDE_KIND_SCENARIO,
+    OVERRIDE_KIND_RECIPIENT,
+    OVERRIDE_KIND_DELIVERY,
+    OVERRIDE_KIND_TRANSPORT,
+)
+# Entity state attributes too large, or changing too often, to be worth keeping in history
+DELIVERY_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({CONF_OPTIONS, CONF_DATA, CONF_TARGET})
+TRANSPORT_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({
+    CONF_DELIVERY_DEFAULTS,
+    "action_titles",
+    "action_title_failures",
+    "cached_templates",
+})
 
 CONF_SNOOZE = "snooze"
 CONF_SNOOZE_TIME = "snooze_time"

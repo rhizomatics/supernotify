@@ -4,8 +4,27 @@
 - Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied. Previously only Chime expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
   - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
 
-## 2.7.1
+## v2.8.0
 
+### Delivery and Transport Switches
+
+- Each loaded delivery and transport now has a switch, `switch.supernotify_delivery_<name>` or `switch.supernotify_transport_<name>`, named `Delivery <name> Enabled` and `Transport <name> Enabled`, on the SuperNotify device. Switching a transport off suppresses all of its deliveries, without changing their own switches
+- Delivery and transport `binary_sensor`s behave the same way as the recipients since v2.7.0
+ - Only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+- Delivery switches and `binary_sensor`s have a `transport_enabled` attribute, updated as the transport is switched on or off, since a delivery is only used while its transport is enabled too
+
+### Persistent Overrides
+
+- Switching a scenario, recipient, delivery or transport on or off now survives a Home Assistant restart and a reload, for as long as its configured `enabled` value - its own, or for a delivery without one, its transport's - is unchanged. Changing that value in the config takes back control. An override belongs to its switch: while the switch entity is disabled in Home Assistant, its override is not applied, and it comes back when the switch is enabled again
+- New `supernotify.reset_overrides` action puts everything switched on or off back to its configured state, for every kind or only for one `kind`, optionally returning the names reset
+- New **Reset overrides** button, `button.supernotify_reset_overrides`, on the SuperNotify device - the same as calling `supernotify.reset_overrides` for every kind
+
+### Breaking
+
+- Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
+
+### Debug Trace
+- The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
 ### Privacy
 - Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
 ### Internal

@@ -1,7 +1,7 @@
 """Tests for the native scenario/recipient entities and counter sensors.
 
 Covers the scenario and recipient switches (which own enabling and disabling), the now read-only
-scenario and recipient binary_sensors and their one-off deprecation repair, restorable notification counters, config entry ownership of exposed entities, and two
+scenario and recipient binary_sensors and their one-off deprecation repair, restorable notification counters, config entry ownership of delivery and transport switches, and two
 regressions found by the multi-agent review of this work: determine_occupancy() recomputed once
 per scenario in a batch refresh instead of once for the batch, and a misleading CONNECTIVITY
 device class on the recipient binary_sensor.
@@ -462,15 +462,17 @@ async def test_counter_sensors_are_on_the_supernotify_device(hass: HomeAssistant
     assert reg_entry.device_id is not None
 
 
-# --- Raw exposed entities ----------------------------------------------------------------------
+# --- Delivery and transport entities -----------------------------------------------------------
 
 
 async def test_delivery_entities_belong_to_the_config_entry(hass: HomeAssistant) -> None:
     await _setup_supernotify(hass, _stateful_scenario_config("on"))
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    reg_entry = er.async_get(hass).async_get("binary_sensor.supernotify_delivery_testing")
-    assert reg_entry is not None
-    assert reg_entry.config_entry_id == entry.entry_id
+    for entity_id in ("switch.supernotify_delivery_testing", "switch.supernotify_transport_generic"):
+        reg_entry = er.async_get(hass).async_get(entity_id)
+        assert reg_entry is not None
+        assert reg_entry.config_entry_id == entry.entry_id
+        assert reg_entry.device_id is not None
 
 
 # --- Medium bug: occupancy recomputed once per scenario in a batch refresh -----------------

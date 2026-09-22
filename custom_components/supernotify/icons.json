@@ -9,6 +9,12 @@
             },
             "recipient": {
                 "default": "mdi:account-arrow-left"
+            },
+            "delivery": {
+                "default": "mdi:package-variant"
+            },
+            "transport": {
+                "default": "mdi:truck-fast"
             }
         },
         "sensor": {
@@ -25,6 +31,17 @@
             },
             "recipient_enabled": {
                 "default": "mdi:account-check"
+            },
+            "delivery_enabled": {
+                "default": "mdi:package-variant"
+            },
+            "transport_enabled": {
+                "default": "mdi:truck-fast"
+            }
+        },
+        "button": {
+            "reset_overrides": {
+                "default": "mdi:restore"
             }
         }
     }
