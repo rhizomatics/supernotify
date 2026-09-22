@@ -1,5 +1,9 @@
 ## 2.7.1
 
+### Debug Trace
+
+- The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
+
 ### Privacy
 
 - Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
