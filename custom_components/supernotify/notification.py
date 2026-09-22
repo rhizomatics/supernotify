@@ -391,9 +391,9 @@ class Notification(ArchivableObject):
         default_enable_deliveries: list[str] = []
         recipients_enable_deliveries: list[str] = []
         recipients_disable_deliveries: list[str] = []
-        all_recipients = self.all_recipients()
+        all_recipients: list[Recipient] = self.all_recipients()
 
-        trace = self.debug_trace
+        trace: DebugTrace = self.debug_trace
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             for scenario in self.enabled_scenarios.values():
                 for d in scenario.enabling_deliveries():
@@ -425,10 +425,10 @@ class Notification(ArchivableObject):
                 for d in default_enable_deliveries:
                     trace.record_delivery_provenance(d, "enabled_by", "default")
 
-        self.debug_trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
-        self.debug_trace.record_delivery_selection("scenario_disable_deliveries", scenario_disable_deliveries)
-        self.debug_trace.record_delivery_selection("default_enable_deliveries", default_enable_deliveries)
-        self.debug_trace.record_delivery_selection("recipient_enable_deliveries", recipients_enable_deliveries)
+        trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
+        trace.record_delivery_selection("scenario_disable_deliveries", scenario_disable_deliveries)
+        trace.record_delivery_selection("default_enable_deliveries", default_enable_deliveries)
+        trace.record_delivery_selection("recipient_enable_deliveries", recipients_enable_deliveries)
 
         override_enable_deliveries: list[str] = []
         override_disable_deliveries: list[str] = []
@@ -459,8 +459,8 @@ class Notification(ArchivableObject):
             d for d in scenario_disable_deliveries + override_disable_deliveries if d not in override_enable_deliveries
         ]
         override_enabled: list[str] = list(dict.fromkeys(scenario_enable_deliveries + override_enable_deliveries))
-        self.debug_trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
-        self.debug_trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
+        trace.record_delivery_selection("override_disable_deliveries", override_disable_deliveries)
+        trace.record_delivery_selection("override_enable_deliveries", override_enable_deliveries)
 
         unsorted_maybe_objs: list[Delivery | None] = [
             self.delivery_registry.deliveries.get(d) for d in all_enabled if d not in all_disabled
@@ -481,7 +481,7 @@ class Notification(ArchivableObject):
             if d.selection_rank == SelectionRank.LAST and d.provenance != DeliveryProvenance.CONFIG
         ]
         selected: list[str] = first + anywhere + config_last + auto_last
-        self.debug_trace.record_delivery_selection("ranked", selected)
+        trace.record_delivery_selection("ranked", selected)
 
         selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)
         personal_deliveries = [d for d in selected if d in recipients_enable_deliveries]
