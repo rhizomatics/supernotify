@@ -20,7 +20,7 @@ A **unified notification interface** on top of HomeAssistant's built in `notify`
 
 The goal - to make the **simplest possible notification** do as **many notifications as you need** with a **single call**, with **no code**, **minimal configuration** and no need to understand the many quirks of different notification integrations.
 
-Start off with no YAML configuration and easily do [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), attach a camera snapshot to an e-mail, redirect [Frigate blueprint notifications to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), or automatically cut down on repeated duplicate notifications.
+Start off with no YAML configuration and easily do [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), attach a camera snapshot to an e-mail, redirect [Frigate blueprint notifications to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) or automatically cut down on repeated duplicate notifications.
 
 Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant dashboard integration. And with advanced YAML configuration, the possibilities are endless.
 
