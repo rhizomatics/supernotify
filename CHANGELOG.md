@@ -1,3 +1,9 @@
+## Unreleased
+
+### Debug Trace
+- A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
+- Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
 ## v2.8.0
 
 ### Delivery and Transport Switches
