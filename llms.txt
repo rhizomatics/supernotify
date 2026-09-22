@@ -26,6 +26,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/index.md)
 - [Notification Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md)
 - [Conditions](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/index.md)
+- [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
 - [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md)
 - [Duplicate Detection](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md)
 - [e-Mail Notifications](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md)
@@ -87,6 +88,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md)
 - [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md)
 - [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md)
+- [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md)
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
 - [Seasonal greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
@@ -100,10 +102,11 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 ## Optional
 
 - [What's New](https://supernotify.rhizomatics.org.uk/latest/changelog/index.md): Release history
+- [Development Design Documents](https://supernotify.rhizomatics.org.uk/latest/developer/design/index.md)
 - [ConfigFlow Implementation Approach](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
 - [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md)
 - [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
 - [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md)
 - [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/index.md)
-- [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/developer/transports/index.md): Writing a new transport
+- [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md): Table of notification transports and capabilities
 
