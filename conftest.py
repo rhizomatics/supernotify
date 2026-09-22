@@ -71,6 +71,11 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Quiet noisy upstream DEBUG chatter (bus event handling, event-loop teardown) so
+# `--log-cli-level=DEBUG` surfaces supernotify's own logs instead of HA/asyncio internals.
+logging.getLogger("homeassistant.core").setLevel(logging.INFO)
+logging.getLogger("asyncio").setLevel(logging.INFO)
+
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 
 
