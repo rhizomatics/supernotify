@@ -526,8 +526,6 @@ class DebugTrace:
             "delivery_selection": self.delivery_selection,
             "resolved": self.resolved,
         }
-        if self.delivery_provenance:
-            results["delivery_provenance"] = self.delivery_provenance
         if self.delivery_artefacts:
             results["delivery_artefacts"] = self.delivery_artefacts
         if self.delivery_exceptions:
@@ -566,14 +564,15 @@ class DebugTrace:
         self.delivery_selection[stage] = delivery_selection
 
     def record_delivery_provenance(self, delivery: str, effect: str, source: str) -> None:
-        """Debug support for recording which source switched a delivery on or off, where
-        `record_delivery_selection` only has the combined list per stage.
+        """Record which source switched a delivery on or off, where `record_delivery_selection`
+        only has the combined list per stage.
 
         `effect` is `enabled_by` or `disabled_by`, `source` is `default`, `call`,
         `scenario:<name>` or `recipient:<name>`.
+
+        Unlike the rest of the trace this is recorded without `debug`, since it is small - a few
+        names per delivery - and archived with every notification, as its `delivery_provenance`.
         """
-        if not self.debug:
-            return
         sources = self.delivery_provenance.setdefault(delivery, {}).setdefault(effect, [])
         if source not in sources:
             sources.append(source)

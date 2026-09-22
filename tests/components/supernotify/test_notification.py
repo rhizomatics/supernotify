@@ -880,7 +880,9 @@ async def test_delivery_provenance_records_each_source() -> None:
     )
     await uut.initialize()
 
-    provenance = uut.debug_trace.contents()["delivery_provenance"]
+    archived = uut.contents()  # a recipient's personal delivery used to break this, DeliveryTargetOverride.as_dict
+    assert archived["selected_deliveries"]["chatty"] == {"fixed": ["person.joe"], "include": [], "exclude": []}
+    provenance = archived["delivery_provenance"]
     assert provenance["chime"] == {"enabled_by": ["scenario:loud", "default"], "disabled_by": ["scenario:night"]}
     assert provenance["mobile_push"] == {"enabled_by": ["scenario:night", "default"]}
     assert provenance["email"] == {"enabled_by": ["default"], "disabled_by": ["call"]}
@@ -891,9 +893,12 @@ async def test_delivery_provenance_records_each_source() -> None:
     assert "email" not in uut.selected_deliveries
 
 
-async def test_delivery_provenance_only_recorded_with_debug() -> None:
+async def test_delivery_provenance_recorded_without_debug() -> None:
     ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
-    uut = Notification(ctx, "testing 123")
+    uut = Notification(ctx, "testing 123", action_data={"delivery": {"email": {"enabled": False}}})
     await uut.initialize()
-    assert "delivery_provenance" not in uut.debug_trace.contents()
+    # minimal archive content, as for a notification without debug and outside the diagnostics outcomes
+    minimal = uut.contents(diagnostics=False)
+    assert minimal["delivery_provenance"]["email"]["disabled_by"] == ["call"]
+    assert "debug_trace" not in minimal
