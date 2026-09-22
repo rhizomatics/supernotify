@@ -142,7 +142,22 @@ This is a config-time property of the delivery itself - whether it's a *candidat
 
 ## Entities
 
-Deliveries are exposed as `binary_sensor.supernotify_delivery_XXXX` entities in Home Assistant, with the configuration and current state. They can be enabled or disabled like any other entities, for run-time control of notifications. The transport is also exposed, as `binary_sensor.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled.
+Each delivery has a `switch.supernotify_delivery_XXXX` entity, on the **SuperNotify** device, that is the delivery `enabled` flag, with the delivery configuration as attributes. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the delivery, and turning it on enables it again, for run-time control of notifications. Each transport also has a switch, `switch.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled, without changing the delivery switches themselves. Only a transport that is loaded, and so usable, has a switch, as do only its deliveries. A switch left from a transport or delivery that is no longer loaded shows as unavailable, and can be deleted from its entity settings.
+
+Switching a delivery or transport on or off lasts across restarts and reloads, see [Overrides](#overrides).
+
+Deprecated
+
+The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
+
+### Overrides
+
+Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.
+
+- A scenario without conditions is driven by its *Scenario Manual* `binary_sensor`. That on/off state is not an override of the configuration, so `supernotify.reset_overrides` leaves it as it is, and only puts the scenario's switch back.
+- An override belongs to its switch entity. While the switch is disabled in Home Assistant, its override is not applied and the configured value is used, and `supernotify.reset_overrides` can't clear it. Enabling the switch again brings the override back - turn it back with the switch, or use `supernotify.reset_overrides` once the switch is enabled again.
+- A delivery with no `enabled` of its own follows its transport's configured `enabled`, so changing the transport's `enabled` in the configuration also ends that delivery's override.
+- The override is saved by Home Assistant's own restore state mechanism, so it lasts as long as the switch exists: it's forgotten if the switch has been missing for about 7 days, and, as Home Assistant saves it every 15 minutes and on a clean shutdown, a change up to 15 minutes before a crash can be lost.
 
 ## Removing
 

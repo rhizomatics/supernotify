@@ -92,7 +92,7 @@ Example Message to Some People
 
 ## Entities
 
-Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again. This lasts across restarts and reloads, until the recipient's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 Deprecated
 

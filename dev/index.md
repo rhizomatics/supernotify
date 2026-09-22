@@ -85,6 +85,7 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
   - Can be combined with snoozing for specific people or transports
 - Notification **Archival** and **Debug Support**
   - Optionally archive notifications to file system and/or MQTT topic
+  - Full support for Home Assistant [Context](https://data.home-assistant.io/docs/context/) so notification actions can be traced back to source automations
   - Includes full debug information, including occupancy assumptions, delivery and target selections
   - HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
   - Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI

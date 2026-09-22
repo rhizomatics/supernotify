@@ -71,7 +71,7 @@ scenarios:
 
 ## Entities
 
-Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
+Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification. This lasts across restarts and reloads, until the scenario's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 

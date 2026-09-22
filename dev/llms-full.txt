@@ -94,6 +94,7 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
   - Can be combined with snoozing for specific people or transports
 - Notification **Archival** and **Debug Support**
   - Optionally archive notifications to file system and/or MQTT topic
+  - Full support for Home Assistant [Context](https://data.home-assistant.io/docs/context/) so notification actions can be traced back to source automations
   - Includes full debug information, including occupancy assumptions, delivery and target selections
   - HomeAssistant Actions ( previously known as services ) to pull back live configuration or last known notification details. See [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
   - Deliveries, Transports, Recipients and Scenarios exposed as entities, and can be examined and switched on/off via the Home Assistant UI
@@ -283,11 +284,14 @@ To use any of these, prefix with `supernotify.`. Try them out via [Tools](https:
 | enquire_active_scenarios       | Compute all the scenario conditions and list which apply right now                                                   |
 | enquire_occupancy              | List all the recipients by whether in or out                                                                         |
 | enquire_snoozes                | List all the active snoozes                                                                                          |
-| refresh_entities               | Force all the exposed entities to be re-exposed                                                                      |
+| refresh_entities               | Re-publish the current state of every SuperNotify entity                                                             |
+| reset_overrides                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
 | clear_snoozes                  | Clear all active snoozes                                                                                             |
 | purge_archive                  | Force the archive housekeeping to run immediately and remove old notification records                                |
 | purge_media                    | Force the media storage housekeeping to run immediately and remove old media                                         |
 | snooze                         | Snooze notifications for a delivery or target                                                                        |
+
+The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides** button (`button.supernotify_reset_overrides`) on the SuperNotify device.
 
 # Mobile Actions and Action Groups
 
@@ -1063,7 +1067,7 @@ Tip
 
 Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archived notifications.
 
-The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration for this is the same as for selecting [Event Generation](#event-generation).
+The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration for this is the same as for selecting [Event Generation](#event-generation). A notification sent with `debug: true` in its `data` always gets the full diagnostic content, including its `debug_trace`, whatever `diagnostics` is set to - it doesn't change which outcomes generate events.
 
 ## Example Configuration
 
@@ -1692,7 +1696,22 @@ This is a config-time property of the delivery itself - whether it's a *candidat
 
 ## Entities
 
-Deliveries are exposed as `binary_sensor.supernotify_delivery_XXXX` entities in Home Assistant, with the configuration and current state. They can be enabled or disabled like any other entities, for run-time control of notifications. The transport is also exposed, as `binary_sensor.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled.
+Each delivery has a `switch.supernotify_delivery_XXXX` entity, on the **SuperNotify** device, that is the delivery `enabled` flag, with the delivery configuration as attributes. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the delivery, and turning it on enables it again, for run-time control of notifications. Each transport also has a switch, `switch.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled, without changing the delivery switches themselves. Only a transport that is loaded, and so usable, has a switch, as do only its deliveries. A switch left from a transport or delivery that is no longer loaded shows as unavailable, and can be deleted from its entity settings.
+
+Switching a delivery or transport on or off lasts across restarts and reloads, see [Overrides](#overrides).
+
+Deprecated
+
+The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
+
+### Overrides
+
+Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.
+
+- A scenario without conditions is driven by its *Scenario Manual* `binary_sensor`. That on/off state is not an override of the configuration, so `supernotify.reset_overrides` leaves it as it is, and only puts the scenario's switch back.
+- An override belongs to its switch entity. While the switch is disabled in Home Assistant, its override is not applied and the configured value is used, and `supernotify.reset_overrides` can't clear it. Enabling the switch again brings the override back - turn it back with the switch, or use `supernotify.reset_overrides` once the switch is enabled again.
+- A delivery with no `enabled` of its own follows its transport's configured `enabled`, so changing the transport's `enabled` in the configuration also ends that delivery's override.
+- The override is saved by Home Assistant's own restore state mechanism, so it lasts as long as the switch exists: it's forgotten if the switch has been missing for about 7 days, and, as Home Assistant saves it every 15 minutes and on a clean shutdown, a change up to 15 minutes before a crash can be lost.
 
 ## Removing
 
@@ -2211,7 +2230,7 @@ Example Message to Some People
 
 ## Entities
 
-Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again.
+Each recipient has a `switch.supernotify_recipient_XXXXX` entity, on the **SuperNotify** device, that is the recipient `enabled` flag. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the recipient, and turning it on enables them again. This lasts across restarts and reloads, until the recipient's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 Deprecated
 
@@ -2460,7 +2479,7 @@ scenarios:
 
 ## Entities
 
-Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification.
+Each scenario has a `switch.supernotify_scenario_<name>` entity, on the **SuperNotify** device, to enable or disable the scenario at run-time, for example from a dashboard or an automation. A disabled scenario never applies to a notification. This lasts across restarts and reloads, until the scenario's `enabled` value in the configuration is changed, or it is put back as configured using the `supernotify.reset_overrides` action - see [Overrides](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#overrides).
 
 The scenario's configuration is available as attributes of its `switch.supernotify_scenario_<name>`. Whether the scenario's conditions currently hold is shown by its `binary_sensor`, see [Scenario Sensors](#scenario-sensors).
 
@@ -3578,7 +3597,7 @@ transports:
 
 ## Entities
 
-Transport Adaptors are exposed as `sensor.supernotify_transport_XXXX` entities in Home Assistant, with the configuration and current state. All of the deliveries that use a given transport can be disabled, or re-enabled, by changing the state of the entity, whether via Developer Tools or another automation.
+Each loaded Transport Adaptor has a `switch.supernotify_transport_XXXX` entity in Home Assistant, with its configuration and current state as attributes. Turning it off, whether from a dashboard, Developer Tools or an automation, suppresses all of the deliveries that use that transport, and turning it on again re-enables them. The delivery switches keep their own state throughout. See [Delivery Entities](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#entities).
 
 ### Table of Options
 
@@ -6141,7 +6160,15 @@ logger:
 
 ## Implementation - Archiving
 
-Switch on debug mode for a delivery in the YAML configuration, so a `debug_trace` is preserved with each notification, and ensure that archiving to one or more of file / event / MQTT is enabled in the UI configuration.
+Send the notification with `debug: true` in its `data`, so a `debug_trace` is recorded and kept in the archived copy, whatever outcomes `diagnostics` selects in the archive configuration, and ensure that archiving to one or more of file / event / MQTT is enabled in the UI configuration. To keep the trace for every notification of some outcome, without changing the calls, select that outcome in `diagnostics` instead.
+
+```yaml
+action: notify.supernotify
+data:
+  message: Front door opened
+  data:
+    debug: true
+```
 
 The trace shows how the notification was put together: the deliveries chosen at each stage (`delivery_selection`), which source switched each delivery on or off (`delivery_provenance`, e.g. `{"chime": {"enabled_by": ["default"], "disabled_by": ["scenario:night"]}}`), and how the targets of each delivery were resolved, stage by stage (`resolved`).
 
@@ -7132,7 +7159,31 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
-## 2.7.1
+## Unreleased
+
+### Debug Trace
+
+- A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
+- Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
+## v2.8.0
+
+### Delivery and Transport Switches
+
+- Each loaded delivery and transport now has a switch, `switch.supernotify_delivery_<name>` or `switch.supernotify_transport_<name>`, named `Delivery <name> Enabled` and `Transport <name> Enabled`, on the SuperNotify device. Switching a transport off suppresses all of its deliveries, without changing their own switches
+- Delivery and transport `binary_sensor`s behave the same way as the recipients since v2.7.0
+- Only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+- Delivery switches and `binary_sensor`s have a `transport_enabled` attribute, updated as the transport is switched on or off, since a delivery is only used while its transport is enabled too
+
+### Persistent Overrides
+
+- Switching a scenario, recipient, delivery or transport on or off now survives a Home Assistant restart and a reload, for as long as its configured `enabled` value - its own, or for a delivery without one, its transport's - is unchanged. Changing that value in the config takes back control. An override belongs to its switch: while the switch entity is disabled in Home Assistant, its override is not applied, and it comes back when the switch is enabled again
+- New `supernotify.reset_overrides` action puts everything switched on or off back to its configured state, for every kind or only for one `kind`, optionally returning the names reset
+- New **Reset overrides** button, `button.supernotify_reset_overrides`, on the SuperNotify device - the same as calling `supernotify.reset_overrides` for every kind
+
+### Breaking
+
+- Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
 
 ### Debug Trace
 
@@ -8452,7 +8503,7 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
 
 1. Transports that cannot be auto-configured are ignored unless explicitly configured at Transport or Delivery level
 
-   No `binary_sensor` or similar entity created for transports which have a module supplied with Supernotify but never used in the home
+   No `switch` or similar entity created for transports which have a module supplied with Supernotify but never used in the home
 
    This also implies that each Transport knows its minimum viable configuration
 
@@ -8464,11 +8515,13 @@ Over time, autoconfigure of 'DEFAULT_xxxx' deliveries has closed some of that ga
 
    Most of the transports would be usable with zero YAML, albeit there might be some more repetitive data elements, like telegram/slack IDs that could be simplified into a Delivery object, though for some people repetition simpler than abstract concepts, and learning YAML and Studio Code Server
 
-1. Switch entities continue as they are with delivery and transport
+1. Switch entities for delivery and transport
 
-   `switch.transport_email` switches off all email deliveries, including the default `switch.delivery_email` switches off only the default delivery. For most people, these will equivalent, if they have 0 or 1 explicitly configured deliveries
+   `switch.supernotify_transport_email` switches off all email deliveries, including the default `switch.supernotify_delivery_email` switches off only the default delivery. For most people, these will equivalent, if they have 0 or 1 explicitly configured deliveries
 
-   The enabled/disabled state should in future persist across restarts.
+   The two flags are independent: switching a transport off doesn't change its delivery switches.
+
+   The enabled/disabled state persists across restarts and reloads, while the configured `enabled` value - the delivery's own, or its transport's when unset - is unchanged.
 
    Don't generate switches for transports that can't be used, e.g. Telegram if there's no Telegram integration in the home
 

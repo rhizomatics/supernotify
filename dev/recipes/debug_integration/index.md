@@ -19,7 +19,15 @@ logger:
 
 ## Implementation - Archiving
 
-Switch on debug mode for a delivery in the YAML configuration, so a `debug_trace` is preserved with each notification, and ensure that archiving to one or more of file / event / MQTT is enabled in the UI configuration.
+Send the notification with `debug: true` in its `data`, so a `debug_trace` is recorded and kept in the archived copy, whatever outcomes `diagnostics` selects in the archive configuration, and ensure that archiving to one or more of file / event / MQTT is enabled in the UI configuration. To keep the trace for every notification of some outcome, without changing the calls, select that outcome in `diagnostics` instead.
+
+```yaml
+action: notify.supernotify
+data:
+  message: Front door opened
+  data:
+    debug: true
+```
 
 The trace shows how the notification was put together: the deliveries chosen at each stage (`delivery_selection`), which source switched each delivery on or off (`delivery_provenance`, e.g. `{"chime": {"enabled_by": ["default"], "disabled_by": ["scenario:night"]}}`), and how the targets of each delivery were resolved, stage by stage (`resolved`).
 
