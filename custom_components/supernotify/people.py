@@ -234,7 +234,7 @@ class Recipient:
                 _LOGGER.debug("SUPERNOTIFY Person attrs found for %s: %s,%s", self.entity_id, self.alias, self.user_id)
             else:
                 _LOGGER.debug("SUPERNOTIFY No person attrs found for %s", self.entity_id)
-        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict())
+        _LOGGER.debug("SUPERNOTIFY Recipient %s target: %s", self.entity_id, self._target.as_dict(redact=True))
 
     def on_notification(self, context: Context | None = None) -> None:
         # Record that a notification has occurred for this person

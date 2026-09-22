@@ -1,3 +1,8 @@
+## 2.7.1
+
+### Privacy
+- Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
+
 ## 2.7.0
 
 ### Native Entities

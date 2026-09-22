@@ -9,23 +9,28 @@ report doesn't require walking the user through calling half a dozen services fi
 
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.redact import REDACTED, async_redact_data, partial_redact
 
 if TYPE_CHECKING:
     from . import SupernotifyConfigEntry
+
+_partial_redact = partial(partial_redact, unmasked_prefix=2, unmasked_suffix=1)
 
 # Person.as_dict() (people.py) is the source of every identifying field below - reached both
 # directly (enquire_recipients) and indirectly (a snooze or the last notification can reference
 # a recipient by the same fields). async_redact_data walks every nested dict/list, so listing
 # the field names here is enough regardless of where they turn up in the returned structure.
+# email/phone_number keep a couple of characters visible, as Target.as_dict() does, so a bug
+# report stays identifiable without exposing the whole address/number.
 TO_REDACT = {
-    "email",
-    "phone_number",
-    "user_id",
-    "alias",
+    "email": _partial_redact,
+    "phone_number": _partial_redact,
+    "user_id": lambda _value: REDACTED,
+    "alias": lambda _value: REDACTED,
 }
 
 
