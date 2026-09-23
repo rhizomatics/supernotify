@@ -7,7 +7,7 @@ This version brings target selection up to date with all the latest Home Assista
 - Mobile Discovery previously only automatically found mobile apps to push notifications to if the user also had a `Person` created in Home Assistant
 - Mobile apps will now be found for discovery if there's no Person defined
 - Recipient config now has `person_id` as optional, and takes a `user_id` (long UUID type number rather than an actual name in Home Assistant)
-- Tying together all the automation for people still benefits from having Person records, since this drives device tracking, location and occupancy
+- Tying together all the automation for people still benefits from having Person records, since this drives device tracking, location and occupancy and `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector)
 
 ### Areas, Floors and Labels
 
@@ -23,7 +23,8 @@ This version brings target selection up to date with all the latest Home Assista
 ### Groups
 
 - Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.
-- Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
+- Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports.
+- Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
 - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
 
 ### Internal
