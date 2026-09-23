@@ -11,11 +11,14 @@ from homeassistant.setup import async_setup_component
 
 from conftest import DummyNotificationService
 from custom_components.supernotify import DOMAIN
+from custom_components.supernotify.const import CONF_MEDIA_PATH
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from tests.components.supernotify.doubles_lib import MockCameraEntity
 from tests.components.supernotify.hass_setup_lib import register_mobile_app
 
 if TYPE_CHECKING:
+    import pathlib
+
     from homeassistant.core import HomeAssistant, ServiceCall
 
     from conftest import TestImage
@@ -55,7 +58,9 @@ async def test_notification_fires_from_event_triggered_automation(
     assert message == "Someone is at the door"
 
 
-async def test_context_propagates_to_camera_ptz_and_mobile_push(hass: HomeAssistant, sample_jpeg: TestImage) -> None:
+async def test_context_propagates_to_camera_ptz_and_mobile_push(
+    hass: HomeAssistant, sample_jpeg: TestImage, tmp_path: pathlib.Path
+) -> None:
     """An automation-triggered supernotify.notify call must propagate the automation's Context
     all the way down to the individual Home Assistant service calls it fans out to - both the
     camera PTZ movement and the mobile push notification. notify.supernotify can't do this (see
@@ -89,6 +94,7 @@ async def test_context_propagates_to_camera_ptz_and_mobile_push(hass: HomeAssist
     config = {
         "delivery": {"push": {"transport": "mobile_push"}},
         "recipients": [{"person": "person.test_user"}],
+        CONF_MEDIA_PATH: str(tmp_path),
     }
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
     assert await async_setup_component(
