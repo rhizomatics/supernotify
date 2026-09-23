@@ -94,6 +94,25 @@ For a target with no address type Supernotify can auto-detect (e.g. an MQTT topi
 
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of category names and the other ways to qualify a target (a mapping, or setting it directly on a delivery).
 
+## Area, Floor and Label Targets
+
+Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            area_id: kitchen
+            floor_id: ground_floor
+            label_id:
+              - chime
+```
+
+Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+
+An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
+
 ## Notification Priority
 
 Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or [scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) ( for example a siren to accompany 'critical' notifications).

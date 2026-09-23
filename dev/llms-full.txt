@@ -503,6 +503,25 @@ For a target with no address type Supernotify can auto-detect (e.g. an MQTT topi
 
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of category names and the other ways to qualify a target (a mapping, or setting it directly on a delivery).
 
+## Area, Floor and Label Targets
+
+Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            area_id: kitchen
+            floor_id: ground_floor
+            label_id:
+              - chime
+```
+
+Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+
+An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
+
 ## Notification Priority
 
 Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or [scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) ( for example a siren to accompany 'critical' notifications).
@@ -1672,6 +1691,8 @@ Additionally, `target_required` defines if this delivery needs targets to work, 
 - `always` - Targets are mandatory, skip this delivery if no targets identified for it
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
+
+Home Assistant `area_id`, `floor_id` and `label_id` targets are resolved to the entities they reference before anything else looks at them, using the same core logic as a Home Assistant entity action, so groups are expanded and an entity inherits the area of its device. The delivery's `target_categories` and `target_select` options then apply to those entities, exactly as they would to an entity named in the notification.
 
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more info on how to use them.
 
@@ -7161,6 +7182,12 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Transport Definition     | [Transport_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Transport_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Transport_Definition/index.md)     |
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
+
+## Unreleased
+
+### Targets
+
+- `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action. They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device. An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing. Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
 
 ## v2.9.0
 

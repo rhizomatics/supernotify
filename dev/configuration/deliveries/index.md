@@ -118,6 +118,8 @@ Additionally, `target_required` defines if this delivery needs targets to work, 
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
+Home Assistant `area_id`, `floor_id` and `label_id` targets are resolved to the entities they reference before anything else looks at them, using the same core logic as a Home Assistant entity action, so groups are expanded and an entity inherits the area of its device. The delivery's `target_categories` and `target_select` options then apply to those entities, exactly as they would to an entity named in the notification.
+
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more info on how to use them.
 
 ## Delivery Inclusion
