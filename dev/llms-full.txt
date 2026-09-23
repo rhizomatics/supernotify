@@ -2206,6 +2206,12 @@ It is also possible to have discovery off by default at platform level, then sel
 
 If you want to do the device registration manually, see [Manual Device Registration](#manual-device-registration)
 
+### Users without Person entries
+
+Home Assistant optionally supports *Person* entries, useful for device tracking, but these are not mandatory.
+
+From version `2.9.0`, Supernotify will also discover users and mobile app devices that only have user accounts, and generate recipients for them if auto discovery is on. Its still better to have Person records, to take advantage of occupancy and location tracking across multiple devices.
+
 ### Disabling Auto Discovered Devices
 
 Its usually easier to let Supernotify automatically find devices, and only intervene when there's one you don't want, or isn't working. Use the `enabled` flag to stop this being used for notifications.
@@ -7213,6 +7219,7 @@ This version brings target selection up to date with all the latest Home Assista
 - A reprocessed image keeps the format it is saved in: a PNG was written into a `.jpg` file, which misleads anything going by the extension, `MIMEImage` included
 - The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
 - All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
+- Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
 - New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
 
 ## v2.8.0
