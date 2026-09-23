@@ -60,7 +60,8 @@ If you want to do the device registration manually, see [Manual Device Registrat
 
 Home Assistant optionally supports *Person* entries, useful for device tracking, but these are not mandatory.
 
-From version `2.9.0`, Supernotify will also discover users and mobile app devices that only have user accounts, and generate recipients for them if auto discovery is on. Its still better to have Person records, to take advantage of occupancy and location tracking across multiple devices.
+From version `2.9.0`, Supernotify will also discover users and mobile app devices that only have user accounts, and generate recipients for them if auto discovery is on. Its still better to have Person records, to take advantage of occupancy and location tracking across multiple devices, plus `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector).
+
 
 ### Disabling Auto Discovered Devices
 
