@@ -118,19 +118,18 @@ def test_debug_trace_for_targets():
 
 def test_debug_trace_delivery_provenance() -> None:
     uut = DebugTrace("message", "title", {}, {})
-    assert "delivery_provenance" not in uut.contents()
     uut.record_delivery_provenance("chime", "enabled_by", "default")
     uut.record_delivery_provenance("chime", "enabled_by", "scenario:night")
     uut.record_delivery_provenance("chime", "enabled_by", "scenario:night")
     uut.record_delivery_provenance("chime", "disabled_by", "call")
 
-    assert uut.contents()["delivery_provenance"] == {
-        "chime": {"enabled_by": ["default", "scenario:night"], "disabled_by": ["call"]}
-    }
-    assert_json_round_trip(uut.contents())
+    assert uut.delivery_provenance == {"chime": {"enabled_by": ["default", "scenario:night"], "disabled_by": ["call"]}}
+    # archived at the top level of the notification, not inside the trace
+    assert "delivery_provenance" not in uut.contents()
+    assert_json_round_trip(uut.delivery_provenance)
 
 
-def test_debug_trace_delivery_provenance_not_recorded_without_debug() -> None:
+def test_debug_trace_delivery_provenance_recorded_without_debug() -> None:
     uut = DebugTrace("message", "title", {}, {}, debug=False)
     uut.record_delivery_provenance("chime", "enabled_by", "default")
-    assert "delivery_provenance" not in uut.contents()
+    assert uut.delivery_provenance == {"chime": {"enabled_by": ["default"]}}

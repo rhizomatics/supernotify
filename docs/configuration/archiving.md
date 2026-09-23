@@ -16,6 +16,7 @@ This preserves not just the notification data, but also key context like occupan
 Key fields to check if something doesn't seem right:
 
 - `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
+- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
 - `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
 
 A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.
@@ -27,6 +28,8 @@ A housekeeping job will run automatically each night to prune notifications olde
 The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content.
 Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration
 for this is the same as for selecting [Event Generation](#event-generation).
+A notification sent with `debug: true` in its `data` always gets the full diagnostic content, including its `debug_trace`,
+whatever `diagnostics` is set to - it doesn't change which outcomes generate events.
 
 ## Example Configuration
 

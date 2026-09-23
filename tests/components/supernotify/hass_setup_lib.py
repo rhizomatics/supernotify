@@ -16,7 +16,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
-from homeassistant.const import CONF_NAME, STATE_HOME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_HOME
 from homeassistant.core import (
     EventBus,
     HomeAssistant,
@@ -27,7 +27,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
@@ -138,6 +138,14 @@ def assert_clean_notification(
     assert notobj["suppressed"] == expected_suppressed
 
 
+class MockGroup:
+    """Minimal stand-in for a HA group state, exposing members in the entity_id attribute as a tuple, as HA does"""
+
+    def __init__(self, entities: list[str]) -> None:
+        self.state = "on"
+        self.attributes = {ATTR_ENTITY_ID: tuple(entities)}
+
+
 class MockableHomeAssistant(HomeAssistant):
     config: ConfigEntries = Mock(spec=ConfigEntries)  # type: ignore
     services: ServiceRegistry = AsyncMock(spec=ServiceRegistry)
@@ -245,6 +253,7 @@ class TestingContext(Context):
         viable_transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
         entities: dict[str, Any] | None = None,
+        entity_platforms: dict[str, str] | None = None,
         hass_external_url: str | None = None,
         archive_config: ConfigType | str | None = None,
         homeassistant: HomeAssistant | None = None,
@@ -261,6 +270,7 @@ class TestingContext(Context):
             for ddomain, did, discover in devices or []
         }
         self.entities = entities or {}
+        self.entity_platforms = entity_platforms or {}
         self.services: dict[str, Any] = {}
 
         raw_config: ConfigType = cast("ConfigType", load_config(yaml))
@@ -333,6 +343,9 @@ class TestingContext(Context):
             self.device_registry.async_get = lambda did, **_kwargs: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
+            self.entity_registry.async_get = lambda eid: (
+                Mock(spec=RegistryEntry, platform=self.entity_platforms[eid]) if eid in self.entity_platforms else None
+            )
             # a bare AsyncMock(spec=EntityRegistry).entities is an unconfigured Mock, not a
             # real (iterable) dict - entity_ids_for_platform() (alexa_devices, html5) would
             # crash on .entities.values() rather than just finding no match, without this

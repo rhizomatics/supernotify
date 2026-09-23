@@ -1,8 +1,17 @@
+<<<<<<< HEAD
 ## Unreleased
 
 ### Targets
 
 - `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action. They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device. An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing. Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
+=======
+## v2.9.0
+
+### Groups
+- Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.
+  - Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
+  - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
+>>>>>>> upstream/main
 
 ## v2.8.0
 
@@ -24,7 +33,13 @@
 - Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
 
 ### Debug Trace
-- The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
+- Every archived notification records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where the debug trace's `delivery_selection` only has the combined list for each stage, so the archive shows which scenario turned a channel off, not just that one did. It is small, a few names per delivery, so unlike the rest of the debug trace it doesn't need `debug: true` and is kept in the minimal archive content too
+- A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
+- Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
+### Fixes
+- A notification where a recipient switches a delivery on or off for themselves could not be archived, full or minimal - `DeliveryTargetOverride.as_dict()` rejected the archive's keyword arguments
+
 ### Privacy
 - Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
 ### Internal
