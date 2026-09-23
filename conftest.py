@@ -75,6 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 # `--log-cli-level=DEBUG` surfaces supernotify's own logs instead of HA/asyncio internals.
 logging.getLogger("homeassistant.core").setLevel(logging.INFO)
 logging.getLogger("asyncio").setLevel(logging.INFO)
+logging.getLogger("PIL").setLevel(logging.INFO)
 
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 
@@ -299,16 +300,19 @@ def mock_context(
     return context
 
 
-@pytest.fixture(scope="module", params=["jpeg", "png", "gif"])
+def test_image(format: str = "jpeg") -> TestImage:  # ruff: ignore[pytest-parameter-with-default-argument]
+    path = IMAGE_PATH / f"example_image.{format}"
+    return TestImage(io.FileIO(path, "rb").readall(), path, format, f"image/{format}")
+
+
+@pytest.fixture(scope="module", params=["jpeg", "png", "gif", "webp"])
 def sample_image(request) -> TestImage:
-    path = IMAGE_PATH / f"example_image.{request.param}"
-    return TestImage(io.FileIO(path, "rb").readall(), path, request.param, f"image/{request.param}")
+    return test_image(request.param)
 
 
 @pytest.fixture
 def sample_jpeg(request) -> TestImage:
-    path = IMAGE_PATH / "example_image.jpeg"
-    return TestImage(io.FileIO(path, "rb").readall(), path, "jpeg", "image/jpeg")
+    return test_image("jpeg")
 
 
 @pytest.fixture

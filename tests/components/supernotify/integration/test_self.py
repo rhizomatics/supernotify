@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers import entity_registry as er
 
-from . import House
+from .framework import House
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

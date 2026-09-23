@@ -12,9 +12,8 @@ from homeassistant.setup import async_setup_component
 from conftest import DummyNotificationService
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.hass_api import HomeAssistantAPI
-
-from .doubles_lib import MockCameraEntity
-from .hass_setup_lib import register_mobile_app
+from tests.components.supernotify.doubles_lib import MockCameraEntity
+from tests.components.supernotify.hass_setup_lib import register_mobile_app
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall

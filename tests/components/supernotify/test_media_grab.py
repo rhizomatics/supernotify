@@ -191,8 +191,8 @@ async def test_snap_image_entity(
 
 
 @pytest.mark.enable_socket
-async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+async def test_grab_image(hass: HomeAssistant, local_server, sample_image, tmp_aiopath: Path) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
@@ -210,9 +210,9 @@ async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> No
 
 
 @pytest.mark.enable_socket
-async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sample_image) -> None:
+async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sample_image, tmp_aiopath: Path) -> None:
     """grab_image must not raise if the raw snap has vanished by the time it's read back."""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
@@ -228,9 +228,9 @@ async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sa
 
 
 @pytest.mark.enable_socket
-async def test_grab_image_processed_file_cache(hass: HomeAssistant, local_server, sample_image) -> None:
+async def test_grab_image_processed_file_cache(hass: HomeAssistant, local_server, sample_image, tmp_aiopath: Path) -> None:
     """grab_image reuses the processed file for a second delivery with identical settings."""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
@@ -679,16 +679,16 @@ async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistan
 # --- grab_image ---
 
 
-async def test_grab_image_no_media_path(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+async def test_grab_image_no_media_path(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     ctx.media_storage.media_path = None
     notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://test"}})
     assert await grab_image(notification, ctx.delivery("mail"), ctx) is None
 
 
-async def test_grab_image_invalid_reprocess(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+async def test_grab_image_invalid_reprocess(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
     notification.media[MEDIA_OPTION_REPROCESS] = "bogus"  # inject directly — not in schema
@@ -698,10 +698,10 @@ async def test_grab_image_invalid_reprocess(hass: HomeAssistant) -> None:
     assert result is not None
 
 
-async def test_grab_image_preserve_without_options(hass: HomeAssistant) -> None:
+async def test_grab_image_preserve_without_options(hass: HomeAssistant, tmp_aiopath: Path) -> None:
     """`reprocess: preserve` with no jpeg/png options: the options default to None, which used
     to blow up building the cache key, so nothing was ever reprocessed"""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
     notification.media[MEDIA_OPTION_REPROCESS] = "preserve"  # inject directly - not in schema
@@ -712,10 +712,10 @@ async def test_grab_image_preserve_without_options(hass: HomeAssistant) -> None:
     assert str(result).endswith(".jpeg")
 
 
-async def test_grab_image_keeps_png_format(hass: HomeAssistant) -> None:
+async def test_grab_image_keeps_png_format(hass: HomeAssistant, tmp_aiopath: Path) -> None:
     """A reprocessed PNG stays a PNG, since that is the format it is saved in - it used to be
     written into a .jpg file, which confuses anything going by the extension"""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
     fixture_path = anyio.Path(IMAGE_PATH / "example_image.png")
@@ -726,10 +726,10 @@ async def test_grab_image_keeps_png_format(hass: HomeAssistant) -> None:
     assert Image.open(BytesIO(await result.read_bytes())).format == "PNG"
 
 
-async def test_grab_image_cache_key_stable_across_restarts(hass: HomeAssistant) -> None:
+async def test_grab_image_cache_key_stable_across_restarts(hass: HomeAssistant, tmp_aiopath: Path) -> None:
     """The cache key of a reprocessed image is a digest, not hash(), which is salted per
     process and so never matched a file written before the last restart"""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     fixture_path = anyio.Path(IMAGE_PATH / "example_image.jpeg")
     names: list[str] = []

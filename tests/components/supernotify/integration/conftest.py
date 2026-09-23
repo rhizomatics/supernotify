@@ -5,12 +5,14 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
     from homeassistant.core import HomeAssistant
-from . import House
+from .framework import House
 
 
 @pytest.fixture
-async def town_house(hass: HomeAssistant) -> House:
+async def town_house(hass: HomeAssistant) -> AsyncGenerator[House]:
     """This house has a minimal Home Assistant setup, with no technical
     users, and a completely default Supernotify installation with zero YAML.
 
@@ -40,4 +42,7 @@ async def town_house(hass: HomeAssistant) -> House:
         pirs={"hall_pir": "lounge", "garden_pir": None},
     )
     await house.setup(hass)
-    return house
+    try:
+        yield house
+    finally:
+        house.cleanup()
