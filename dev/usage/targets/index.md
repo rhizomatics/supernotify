@@ -4,6 +4,12 @@ Home Assistant notifications use *target* for any address used in a notification
 
 Supernotify has the ability to take a big, mixed bag of targets and send off the right notification for that target, and lets you associate targets with people, using the *Recipient* config, so you can pick a person and that automatically gets their e-mail address or mobile app name for push alerts.
 
+## Default Targets
+
+If no `targets` are specified on the action call, a default list will be used based on all the recipients configured or auto-discovered. This usually means everyone with a Home Assistant app on their phone or other device gets a mobile push notification.
+
+Choosing any explicit targets switches this defaulting off. Targets can be re-added manually where needed, and there's a shortcut in the Home Assistant target UI where you choose the Supernotify **Device** and this will be read as switching back on those "out of the box" targets.
+
 ## Target Categories
 
 A **Target Category** is used to identify what kind of target it is, and how to use it. Some categories are used by multiple transports, Entity ID for Notify Entity or Media Players, and others are unique to some transports, like `discord_channel`, `matrix_room` or `topic`.
