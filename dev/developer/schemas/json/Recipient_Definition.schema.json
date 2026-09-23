@@ -4,6 +4,9 @@
     "person": {
       "type": "string"
     },
+    "user_id": {
+      "type": "string"
+    },
     "alias": {
       "type": "string"
     },
@@ -255,9 +258,6 @@
       "default": {}
     }
   },
-  "required": [
-    "person"
-  ],
   "additionalProperties": false,
   "title": "Recipient Definition",
   "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Recipient_Definition.json",

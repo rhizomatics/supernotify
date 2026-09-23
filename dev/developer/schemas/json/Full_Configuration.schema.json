@@ -302,6 +302,9 @@
           "person": {
             "type": "string"
           },
+          "user_id": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -553,9 +556,6 @@
             "default": {}
           }
         },
-        "required": [
-          "person"
-        ],
         "additionalProperties": false
       },
       "default": []
