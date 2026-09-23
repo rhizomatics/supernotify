@@ -15,7 +15,7 @@ async def test_notify_targets_ground_floor_alexa_devices(hass: HomeAssistant, to
             floor_id: ground
     """)
 
-    assert len(town_house.service_calls["notify"]) == 1
+    assert town_house.calls_by_domain() == {"notify": 1}
     assert town_house.entity_ids_called("notify") == [
         "notify.garage",
         "notify.kitchen",
@@ -30,7 +30,7 @@ async def test_notify_targets_kitchen_alexa_devices(hass: HomeAssistant, town_ho
             area_id: kitchen
     """)
 
-    assert len(town_house.service_calls["notify"]) == 1
+    assert town_house.calls_by_domain() == {"notify": 1}
     assert town_house.entity_ids_called("notify") == [
         "notify.kitchen",
     ]
@@ -47,7 +47,7 @@ async def test_notify_targets_floor_and_area(hass: HomeAssistant, town_house: Ho
               - ground
     """)
 
-    assert len(town_house.service_calls["notify"]) == 1
+    assert town_house.calls_by_domain() == {"notify": 1}
     assert town_house.entity_ids_called("notify") == [
         "notify.garage",
         "notify.kitchen",

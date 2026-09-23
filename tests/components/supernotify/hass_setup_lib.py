@@ -513,7 +513,7 @@ def set_state(
 
 def register_mobile_app(
     hass_api: HomeAssistantAPI | None,
-    person: str = "person.test_user",
+    person: str | None = "person.test_user",
     manufacturer: str = "xUnit",
     model: str = "PyTest001",
     device_name: str = "phone01",
@@ -522,19 +522,23 @@ def register_mobile_app(
     os_name: str = "iOS",
     user_id: str | None = None,
 ) -> DeviceEntry | None:
-
+    """person=None registers the device against a bare user_id, with no Person entity at all -
+    as real HA mobile_app itself only requires a User (see CONF_USER_ID in const.py). A user_id
+    must then be supplied explicitly, since there's no person state to read or store it on."""
     if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
         return None
     # set_state(hass_api, person, "home")
-    existing: State | None = hass_api.get_state(person)
+    existing: State | None = hass_api.get_state(person) if person else None
     if existing and existing.attributes and ATTR_USER_ID in existing.attributes:
         user_id = existing.attributes[ATTR_USER_ID]
-    else:
+    elif person:
         user_id = user_id or str(uuid.uuid1())
         attrs = dict(existing.attributes) if existing and existing.attributes else {}
         attrs[ATTR_USER_ID] = user_id
         set_state(hass_api, person, "home", attributes=attrs)
+    else:
+        user_id = user_id or str(uuid.uuid1())
 
     config_entry = config_entries.ConfigEntry(
         domain=domain,
@@ -555,17 +559,18 @@ def register_mobile_app(
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking: %s", e)
 
     device_slug: str = slugify(device_name)
-    if not existing or "device_trackers" not in existing.attributes:
-        set_state(
-            hass_api,
-            person,
-            "home",
-            attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]},
-        )
-    else:
-        trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
-        trackers.extend(existing.attributes.get("device_trackers", []))
-        set_state(hass_api, person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
+    if person:
+        if not existing or "device_trackers" not in existing.attributes:
+            set_state(
+                hass_api,
+                person,
+                "home",
+                attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]},
+            )
+        else:
+            trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
+            trackers.extend(existing.attributes.get("device_trackers", []))
+            set_state(hass_api, person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
 
     device_registry = hass_api._device_registry()
     device_entry = None

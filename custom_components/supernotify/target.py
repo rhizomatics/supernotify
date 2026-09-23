@@ -226,11 +226,14 @@ class Target:
 
     @classmethod
     def is_entity_id(cls, target: str) -> bool:
-        return valid_entity_id(target) and not target.startswith("person.")
+        return valid_entity_id(target) and not target.startswith(("person.", "recipient."))
 
     @classmethod
     def is_person_id(cls, target: str) -> bool:
-        return target.startswith("person.") and valid_entity_id(target)
+        """True for a real Person entity_id, or a Recipient's synthetic `recipient.<name>` id -
+        used to identify a recipient with no Person record (see people.Recipient.entity_id).
+        Both are `person_id`-category target values, resolved the same way downstream."""
+        return target.startswith(("person.", "recipient.")) and valid_entity_id(target)
 
     @classmethod
     def is_phone(cls, target: str) -> bool:

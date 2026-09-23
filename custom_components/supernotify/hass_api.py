@@ -157,10 +157,10 @@ class HomeAssistantAPI:
         self.__device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
-        self.mobile_apps_by_tracker: dict[str, TrackedDeviceDetails] = {}
-        self.mobile_apps_by_app_id: dict[str, TrackedDeviceDetails] = {}
-        self.mobile_apps_by_device_id: dict[str, TrackedDeviceDetails] = {}
-        self.mobile_apps_by_user_id: dict[str, list[TrackedDeviceDetails]] = {}
+        self._mobile_apps_by_tracker: dict[str, TrackedDeviceDetails] = {}
+        self._mobile_apps_by_app_id: dict[str, TrackedDeviceDetails] = {}
+        self._mobile_apps_by_device_id: dict[str, TrackedDeviceDetails] = {}
+        self._mobile_apps_by_user_id: dict[str, list[TrackedDeviceDetails]] = {}
 
     def initialize(self) -> None:
         self.hass_name = self._hass.config.location_name
@@ -635,17 +635,17 @@ class HomeAssistantAPI:
         )
 
     def mobile_app_by_tracker(self, device_tracker: str) -> TrackedDeviceDetails | None:
-        return self.mobile_apps_by_tracker.get(device_tracker)
+        return self._mobile_apps_by_tracker.get(device_tracker)
 
     def mobile_app_by_id(self, mobile_app_id: str) -> TrackedDeviceDetails | None:
         mobile_app_id = mobile_app_id.replace("notify.", "", 1) if mobile_app_id.startswith("notify.") else mobile_app_id
-        return self.mobile_apps_by_app_id.get(mobile_app_id)
+        return self._mobile_apps_by_app_id.get(mobile_app_id)
 
     def mobile_app_by_device_id(self, device_id: str) -> TrackedDeviceDetails | None:
-        return self.mobile_apps_by_device_id.get(device_id)
+        return self._mobile_apps_by_device_id.get(device_id)
 
     def mobile_app_by_user_id(self, user_id: str) -> list[TrackedDeviceDetails] | None:
-        return self.mobile_apps_by_user_id.get(user_id)
+        return self._mobile_apps_by_user_id.get(user_id)
 
     def build_mobile_app_cache(self) -> None:
         """All enabled mobile apps"""
@@ -679,13 +679,13 @@ class HomeAssistantAPI:
                 mobile_app_info.action = notify_action
 
                 found += 1
-                self.mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
-                self.mobile_apps_by_device_id[mobile_app_info.device_id] = mobile_app_info
+                self._mobile_apps_by_app_id[mobile_app_id] = mobile_app_info
+                self._mobile_apps_by_device_id[mobile_app_info.device_id] = mobile_app_info
                 if device_tracker:
-                    self.mobile_apps_by_tracker[device_tracker] = mobile_app_info
+                    self._mobile_apps_by_tracker[device_tracker] = mobile_app_info
                 if mobile_app_info.user_id is not None:
-                    self.mobile_apps_by_user_id.setdefault(mobile_app_info.user_id, [])
-                    self.mobile_apps_by_user_id[mobile_app_info.user_id].append(mobile_app_info)
+                    self._mobile_apps_by_user_id.setdefault(mobile_app_info.user_id, [])
+                    self._mobile_apps_by_user_id[mobile_app_info.user_id].append(mobile_app_info)
 
             except Exception as e:
                 _LOGGER.error("SUPERNOTIFY Failure examining device %s: %s", mobile_app_info, e)
