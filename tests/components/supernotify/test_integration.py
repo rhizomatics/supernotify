@@ -3,10 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from unittest.mock import Mock
 
-from homeassistant.core import Context
+from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify.const import NOTIFY_SERVICE_SCHEMA
+from homeassistant.core import Context, SupportsResponse
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
+from conftest import DummyNotificationService
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 
@@ -16,7 +19,7 @@ from .hass_setup_lib import register_mobile_app
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
 
-    from conftest import DummyNotificationService, TestImage
+    from conftest import TestImage
 
 
 async def test_notification_fires_from_event_triggered_automation(
@@ -162,3 +165,44 @@ async def test_legacy_notification_fires_from_event_triggered_automation(
     assert len(dummy_notify.calls) == 1
     message, _title, _target, _kwargs = dummy_notify.calls[0]
     assert message == "Someone is at the door"
+
+
+async def test_notify_action_group_fans_out_to_members(hass: HomeAssistant) -> None:
+    """https://www.home-assistant.io/integrations/group/#notify-action-groups: a legacy
+    `notify: - platform: group` service fans a single call out to its member notify services.
+    Supernotify needs no group-specific handling for this - the generic transport just calls the
+    group's own service name like any other notify action, and Home Assistant does the fan-out."""
+    phone_a = DummyNotificationService()
+    phone_b = DummyNotificationService()
+    for name, service in (("phone_a", phone_a), ("phone_b", phone_b)):
+        hass.services.async_register(
+            NOTIFY_DOMAIN,
+            name,
+            service._async_notify_message_service,
+            schema=NOTIFY_SERVICE_SCHEMA,
+            supports_response=SupportsResponse.NONE,
+        )
+    assert await async_setup_component(
+        hass,
+        "notify",
+        {
+            "notify": [
+                {
+                    "platform": "group",
+                    "name": "Family",
+                    "services": [{"action": "phone_a"}, {"action": "phone_b"}],
+                }
+            ]
+        },
+    )
+    config = {"delivery": {"family": {"transport": "generic", "action": "notify.family", "inclusion": ["default"]}}}
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "notify", {"message": "dinner is ready"}, blocking=True)
+    await hass.async_block_till_done()
+
+    for service in (phone_a, phone_b):
+        assert len(service.calls) == 1
+        message, _title, _target, _kwargs = service.calls[0]
+        assert message == "dinner is ready"

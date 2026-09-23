@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING
+
+import pytest
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -93,6 +96,7 @@ async def test_notify_targets_floor_and_area_with_default_deliveries(hass: HomeA
     assert town_house.services_called("notify") == ["mobile_app_alice_phone", "mobile_app_bob_phone", "send_message"]
 
 
+@pytest.mark.skipif(sys.version_info < (3, 13), reason="Requires Python 3.13 or higher for HA with device loookup")
 async def test_notify_targets_floor_and_area_with_default_deliveries_via_own_device(
     hass: HomeAssistant, town_house: House
 ) -> None:
