@@ -1,10 +1,19 @@
-## Unreleased
-
-### Targets
-
-- `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action. They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device. An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing. Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
-
 ## v2.9.0
+
+This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
+
+### Areas, Floors and Labels
+
+- `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action.
+- They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device.
+- An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing.
+- Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
+
+### Groups
+
+- Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.
+- Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
+- Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
 
 ### Fixes
 
@@ -12,12 +21,6 @@
 - A reprocessed image keeps the format it is saved in: a PNG was written into a `.jpg` file, which misleads anything going by the extension, `MIMEImage` included
 - The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
 - All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
-
-### Groups
-
-- Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.
-- Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports. Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
-- Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
 
 ## v2.8.0
 
