@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     CONF_ACTION,
     CONF_DEVICE_ID,
 )
@@ -17,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -116,6 +120,19 @@ class TrackedDeviceDetails:
         """Test support"""
         as_dict = getattr(other, "as_dict", None)
         return other is not None and callable(as_dict) and as_dict() == self.as_dict()
+
+
+@dataclass
+class TargetSelectorResolution:
+    """Outcome of resolving area/floor/label selectors to the entities they reference"""
+
+    entity_ids: list[str] = field(default_factory=list)
+    missing_areas: list[str] = field(default_factory=list)
+    missing_floors: list[str] = field(default_factory=list)
+    missing_labels: list[str] = field(default_factory=list)
+
+    def has_missing(self) -> bool:
+        return bool(self.missing_areas or self.missing_floors or self.missing_labels)
 
 
 def ha_device_info(entry_id: str) -> dr.DeviceInfo:
@@ -392,6 +409,36 @@ class HomeAssistantAPI:
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
         return supports_response or SupportsResponse.NONE  # default to no response
+
+    def resolve_target_selectors(
+        self,
+        area_ids: list[str] | None = None,
+        floor_ids: list[str] | None = None,
+        label_ids: list[str] | None = None,
+    ) -> TargetSelectorResolution:
+        """Resolve HA area/floor/label selectors to the entities they reference, through the same
+        core helper as HA entity actions, so groups are expanded and entities inherit the area of
+        their device.
+        """
+        resolution = TargetSelectorResolution()
+        if not (area_ids or floor_ids or label_ids):
+            return resolution
+        selection: dict[str, list[str]] = {}
+        if area_ids:
+            selection[ATTR_AREA_ID] = list(area_ids)
+        if floor_ids:
+            selection[ATTR_FLOOR_ID] = list(floor_ids)
+        if label_ids:
+            selection[ATTR_LABEL_ID] = list(label_ids)
+        try:
+            selected = async_extract_referenced_entity_ids(self._hass, TargetSelection(selection), expand_group=True)
+            resolution.entity_ids = sorted(selected.referenced | selected.indirectly_referenced)
+            resolution.missing_areas = sorted(selected.missing_areas)
+            resolution.missing_floors = sorted(selected.missing_floors)
+            resolution.missing_labels = sorted(selected.missing_labels)
+        except Exception as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to resolve target selectors %s: %s", selection, e)
+        return resolution
 
     def find_service(self, domain: str, module: str) -> str | None:
         try:

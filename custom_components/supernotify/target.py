@@ -308,6 +308,54 @@ class Target:
         t.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
         return t
 
+    def resolve_selectors(self, hass_api: HomeAssistantAPI) -> Target:
+        """Replace `area_id`/`floor_id`/`label_id` targets with the entities they reference
+
+        Resolution goes through the same core helper as a Home Assistant entity action, so
+        groups are expanded and an entity inherits the area of its device. An entity in more
+        than one of them - the kitchen, the first floor and the `voice` label - is kept once,
+        and data attached to a selector is inherited by each of its entities, the same way as
+        for a group member. Transports therefore never see a selector, and only the exception
+        of an action that genuinely knows about areas needs `extra_data`.
+
+        Returns this target untouched when there is no selector to resolve.
+        """
+        if not any(self.targets.get(category) for category in self.EXPLICIT_INDIRECT_CATEGORIES):
+            return self
+        kwarg: dict[str, str] = {ATTR_AREA_ID: "area_ids", ATTR_FLOOR_ID: "floor_ids", ATTR_LABEL_ID: "label_ids"}
+        targets: dict[str, list[str]] = {
+            category: list(values)
+            for category, values in self.targets.items()
+            if category not in self.EXPLICIT_INDIRECT_CATEGORIES
+        }
+        entity_ids: list[str] = targets.setdefault(ATTR_ENTITY_ID, [])
+        inherited: dict[tuple[str, str], dict[str, Any]] = {}
+        unknown: list[str] = []
+        for category in self.EXPLICIT_INDIRECT_CATEGORIES:
+            for value in self.targets.get(category, []):
+                # one selector at a time, so data attached to it follows its own entities
+                resolution = hass_api.resolve_target_selectors(**{kwarg[category]: [value]})
+                if resolution.has_missing():
+                    unknown.append(f"{category}:{value}")
+                data: dict[str, Any] | None = (self.target_specific_data or {}).get((category, value))
+                for entity_id in resolution.entity_ids:
+                    if entity_id not in entity_ids:
+                        entity_ids.append(entity_id)
+                    if data and (ATTR_ENTITY_ID, entity_id) not in inherited:
+                        inherited[(ATTR_ENTITY_ID, entity_id)] = data
+        if unknown:
+            # a typo in an area or label would otherwise silently resolve to nothing
+            _LOGGER.warning("SUPERNOTIFY Unknown target selectors %s", ", ".join(unknown))
+        resolved = Target(targets, target_data=self.target_data)
+        if inherited or self.target_specific_data:
+            # data attached to the entity itself wins over data inherited from a selector
+            resolved.target_specific_data = inherited | {
+                key: data
+                for key, data in (self.target_specific_data or {}).items()
+                if key[0] not in self.EXPLICIT_INDIRECT_CATEGORIES
+            }
+        return resolved
+
     def select(
         self,
         categories: Sequence[str | TargetEntityCategory],
@@ -333,6 +381,11 @@ class Target:
         envelope). They are kept out of the `target_selector` too, as it's for choosing
         between values a transport can address.
         """
+        if any(self.targets.get(category) for category in self.EXPLICIT_INDIRECT_CATEGORIES):
+            # area/floor/label always become entities first, so everything downstream - the
+            # category checks, `target_select`, the transports - only ever sees entity_ids
+            return self.resolve_selectors(hass_api).select(categories, own_names, hass_api, target_selector)
+
         plain_categories = {c for c in categories if isinstance(c, str)}
         entity_selectors = [c for c in categories if isinstance(c, TargetEntityCategory)]
         # HA groups (`group.*` helpers and platform groups such as media player groups) are
