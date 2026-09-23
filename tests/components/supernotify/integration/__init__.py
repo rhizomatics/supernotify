@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from homeassistant.auth.models import User
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
@@ -37,23 +38,25 @@ class House:
         self,
         floors: list[str] | None = None,
         areas: dict[str, str | None] | None = None,
-        users: dict[str, str] | None = None,
+        users: dict[str, str | None] | None = None,
         mobile_apps: dict[str, str] | None = None,
-        user_accounts: dict[str, str] | None = None,
         cameras: dict[str, str | None] | None = None,
         pirs: dict[str, str | None] | None = None,
     ) -> None:
         self._floors: list[str] = floors or []
-        self.floors: dict[str, FloorEntry] = {}
         self._areas: dict[str, str | None] = areas or {}
+
+        self.floors: dict[str, FloorEntry] = {}
         self.areas: dict[str, AreaEntry] = {}
-        # users: person slug -> friendly name, creates a person.<slug> entity
-        self.users: dict[str, str] = users or {}
-        # mobile_apps: device name -> owning user slug from `users`
+        # users: HA account name -> Person slug to also create and link via user_id, or None
+        # for a User-only account with no Person record at all (see CONF_USER_ID in const.py -
+        # a real HA mobile_app is owned by a User; a Person is a separate, optional layer)
+        self.users: dict[str, str | None] = users or {}
+        # populated during setup() with each account's real hass.auth user id, keyed by the
+        # account name (the `users` key)
+        self.user_ids: dict[str, str] = {}
+        # mobile_apps: device name -> owning account name from `users`
         self.mobile_apps: dict[str, str] = mobile_apps or {}
-        # user_accounts: device name -> raw user_id, with no Person entity at all - a household
-        # that only set up HA Users, same as CONF_USER_ID recipients (see const.py)
-        self.user_accounts: dict[str, str] = user_accounts or {}
         # cameras/pirs: entity name -> optional area slug from `areas`
         self.cameras: dict[str, str | None] = cameras or {}
         self.pirs: dict[str, str | None] = pirs or {}
@@ -84,22 +87,30 @@ class House:
             entity_registry.async_update_entity(entry.entity_id, area_id=area_entry.id)
             hass.states.async_set(entry.entity_id, "unknown")
 
-        if self.mobile_apps or self.user_accounts:
+        for account_name, person_slug in self.users.items():
+            user: User = await hass.auth.async_create_user(account_name)
+            self.user_ids[account_name] = user.id
+            if person_slug is not None:
+                hass.states.async_set(f"person.{person_slug}", "home", attributes={"user_id": user.id})
+
+        if self.mobile_apps:
             hass_api = HomeAssistantAPI(hass)
             for device_name, owner in self.mobile_apps.items():
-                register_mobile_app(hass_api, person=f"person.{owner}", device_name=device_name)
-            for device_name, user_id in self.user_accounts.items():
-                register_mobile_app(hass_api, person=None, device_name=device_name, user_id=user_id)
+                person_slug = self.users[owner]
+                person_id = f"person.{person_slug}" if person_slug is not None else None
+                register_mobile_app(hass_api, person=person_id, device_name=device_name, user_id=self.user_ids[owner])
             await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
 
-        for slug, friendly_name in self.users.items():
-            # registering a mobile app above may have already created this person entity -
-            # merge onto its attributes rather than overwriting them
-            person_id = f"person.{slug}"
-            existing = hass.states.get(person_id)
-            attributes = dict(existing.attributes) if existing else {}
-            attributes["friendly_name"] = friendly_name
-            hass.states.async_set(person_id, existing.state if existing else "home", attributes)
+        for account_name, person_slug in self.users.items():
+            # registering a mobile app above may have overwritten this person's attributes
+            # wholesale (it only knows about user_id/device_trackers) - merge friendly_name
+            # back on now rather than racing to set it first
+            if person_slug is not None:
+                person_id = f"person.{person_slug}"
+                existing = hass.states.get(person_id)
+                attributes = dict(existing.attributes) if existing else {}
+                attributes["friendly_name"] = account_name
+                hass.states.async_set(person_id, existing.state if existing else "home", attributes)
 
         for name, camera_area in self.cameras.items():
             entry = entity_registry.async_get_or_create("camera", "generic", f"{name}_id", suggested_object_id=name)
@@ -125,7 +136,7 @@ class House:
         hass.services.async_remove("notify", "send_message")
         hass.services.async_register("notify", "send_message", fake_call_service)
 
-        for device_name in (*self.mobile_apps, *self.user_accounts):
+        for device_name in self.mobile_apps:
             service_name = slugify(f"mobile_app_{device_name}")
             hass.services.async_remove("notify", service_name)
             hass.services.async_register("notify", service_name, fake_call_service)
@@ -147,6 +158,15 @@ class House:
                 for call in calls:
                     entity_ids.extend(call.data.get("entity_id", []))
         return sorted(entity_ids)
+
+    def services_called(self, domain: str | None) -> list[str]:
+        services: list[str] = []
+        for service_domain, calls in self.service_calls.items():
+            if domain is None or service_domain == domain:
+                for call in calls:
+                    if call.service:
+                        services.append(call.service)
+        return sorted(services)
 
     def calls_by_domain(self) -> dict[str, int]:
         result: dict[str, int] = {}

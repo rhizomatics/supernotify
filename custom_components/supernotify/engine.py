@@ -145,7 +145,7 @@ class SupernotifyEngine:
     async def initialize(self) -> None:
         await self.context.initialize()
         self.context.hass_api.initialize()
-        self.context.people_registry.initialize()
+        await self.context.people_registry.initialize()
         await self.context.delivery_registry.initialize(self.context)
         await self.context.scenario_registry.initialize(
             self.context.delivery_registry,

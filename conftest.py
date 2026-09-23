@@ -179,6 +179,12 @@ def mock_hass(
     hass.config_entries.async_entries = lambda domain, **_kwargs: [Mock(data={})] if domain == "mobile_app" else []
     hass.loop_thread_id = "99999"
     hass.loop.time.return_value = 0.0  # timers (async_track_time_interval) do arithmetic on loop.time()
+    # unconfigured, auth.async_get_users() awaits to a bare Mock, which async_real_user_ids()
+    # (hass_api.py, feeding PeopleRegistry's User-only recipient auto-discovery) can't iterate -
+    # no real HA users in this mocked house by default, same "give it a sensible default" as the
+    # rest of this fixture, not the empty-Mock behavior Mock(spec=...) would otherwise leave in
+    hass.auth = AsyncMock()
+    hass.auth.async_get_users = AsyncMock(return_value=[])
     return hass
 
 
@@ -353,7 +359,7 @@ def unmocked_hass_api(hass: HomeAssistant) -> HomeAssistantAPI:
 async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: HomeAssistant) -> Context:
     config = uninitialized_unmocked_config
     await config.initialize()
-    config.people_registry.initialize()
+    await config.people_registry.initialize()
     hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
     await config.scenario_registry.initialize(config.delivery_registry, {}, hass_api)

@@ -225,6 +225,23 @@ class HomeAssistantAPI:
     def entity_ids_for_domain(self, domain: str) -> list[str]:
         return self._hass.states.async_entity_ids(domain)
 
+    async def async_real_user_ids(self) -> dict[str, str]:
+        """Active, non-system HA user ids mapped to their login username - for discovering
+        recipients that have no Person record (see CONF_USER_ID in const.py), excluding
+        internal accounts like Supervisor/Home Assistant Content that aren't real people."""
+        users = await self._hass.auth.async_get_users()
+        result: dict[str, str] = {}
+        for user in users:
+            if not user.is_active or user.system_generated:
+                continue
+            # same lookup HA's own user-management API uses (homeassistant/components/config/auth.py)
+            username = next(
+                (cred.data.get("username") for cred in user.credentials if cred.auth_provider_type == "homeassistant"),
+                None,
+            )
+            result[user.id] = username or user.name or user.id
+        return result
+
     def platform_for_entity(self, entity_id: str) -> str | None:
         """The integration that registered this entity (RegistryEntry.platform), if any."""
         entity_registry: EntityRegistry | None = self._entity_registry()

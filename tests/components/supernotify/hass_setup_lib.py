@@ -453,7 +453,7 @@ class TestingContext(Context):
         self.hass_api.initialize()
         if self.hass_external_url:
             self.hass_api.external_url = self.hass_external_url
-        self.people_registry.initialize()
+        await self.people_registry.initialize()
         await self.archive.initialize()
         await self.media_storage.initialize(self.hass_api)
         await self.delivery_registry.initialize(self)
