@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.setup import async_setup_component
@@ -140,6 +141,17 @@ class House:
             service_name = slugify(f"mobile_app_{device_name}")
             hass.services.async_remove("notify", service_name)
             hass.services.async_register("notify", service_name, fake_call_service)
+
+    def supernotify_device_id(self) -> str:
+        """The HA device-registry id of the single 'SuperNotify' device, for tests targeting it
+        (see HomeAssistantAPI.is_own_device) - not a literal constant, since HA assigns it at
+        setup, but stable for the lifetime of this House.
+        """
+        device_registry = dr.async_get(self._hass)
+        entry = self._hass.config_entries.async_entries(SUPERNOTIFY_DOMAIN)[0]
+        device = device_registry.async_get_device_by_identifier((SUPERNOTIFY_DOMAIN, entry.entry_id), entry.entry_id)
+        assert device is not None
+        return device.id
 
     async def call(self, yaml_data: str) -> None:
         json: list[Any] | dict[Any, Any] | str = cast("JSON_TYPE", parse_yaml(yaml_data))

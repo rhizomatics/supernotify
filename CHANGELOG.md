@@ -14,6 +14,9 @@ This version brings target selection up to date with all the latest Home Assista
   - An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing.
   - Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
 
+### Targets
+- If Supernotify itself is added as a device to the target selector, this
+is interpreted to mean include all "out of the box" targets, that is the default targets that would be selected if the target list were otherwise empty
 
 ### Groups
 - Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.

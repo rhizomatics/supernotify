@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from voluptuous import humanize
 
 from custom_components.supernotify.delivery import DeliveryProvenance
@@ -43,6 +43,7 @@ from .const import (
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
+    INCLUSION_DEFAULT,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
     TARGET_USE_FIXED,
@@ -136,6 +137,15 @@ class Notification(ArchivableObject):
             target = ensure_list(target) + ensure_list(action_data.get(ATTR_RECIPIENTS))
 
         self._target: Target | None = Target(self.convert_notify_entities(target)) if target else None
+        # targeting this integration's own device is never a real target - treat it as a request to
+        # also apply each default delivery's own target alongside whatever else was targeted (see
+        # HomeAssistantAPI.is_own_device and the merge in generate_targets)
+        self._apply_delivery_defaults: bool = False
+        if self._target and self._target.device_ids:
+            own_device_ids = [d for d in self._target.device_ids if context.hass_api.is_own_device(d)]
+            if own_device_ids:
+                self._target.remove(ATTR_DEVICE_ID, own_device_ids)
+                self._apply_delivery_defaults = True
         self._already_selected: Target = Target()
         self._recorded_person_ids: set[str] = set()  # recipients whose notify entity this notification has updated
         self._title: str | None = title
@@ -909,6 +919,9 @@ class Notification(ArchivableObject):
                 if target_override.exclude:
                     computed_target -= Target(target_override.exclude)
             self.debug_trace.record_target(delivery.name, "202_action_target", computed_target)
+            if self._apply_delivery_defaults and INCLUSION_DEFAULT in delivery.inclusion:
+                computed_target += self.default_person_ids(delivery)
+                self.debug_trace.record_target(delivery.name, "203_action_target_plus_defaults", computed_target)
 
         # 1st round of filtering for snooze and resolving people->direct targets
         computed_target = self._filter_resolve_select_targets(

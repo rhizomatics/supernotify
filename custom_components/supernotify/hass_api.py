@@ -860,6 +860,11 @@ class HomeAssistantAPI:
             # older HA
             return cast("DeviceEntry|None", reg.async_get(device_id))
 
+    def is_own_device(self, device_id: str) -> bool:
+        """True if `device_id` is this integration's own 'SuperNotify' device (see `ha_device_info`)"""
+        device = self.find_device(device_id)
+        return device is not None and any(domain == DOMAIN for domain, _identifier in device.identifiers)
+
     async def mqtt_available(self, raise_on_error: bool = True) -> bool:
         from homeassistant.components import mqtt
 
