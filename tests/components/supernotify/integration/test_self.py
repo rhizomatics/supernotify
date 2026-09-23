@@ -53,7 +53,7 @@ async def test_town_house_mobile_apps(hass: HomeAssistant, town_house: House) ->
     assert entity_registry.async_get("device_tracker.bob_phone") is not None
 
     await hass.services.async_call("notify", "mobile_app_alice_phone", {"message": "hi"}, blocking=True)
-    assert town_house.calls_by_domain() == {"notify": 1}
+    assert len(town_house.service_calls["notify"]) == 1
 
 
 async def test_town_house_cameras_and_pirs(hass: HomeAssistant, town_house: House) -> None:

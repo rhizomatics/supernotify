@@ -2,37 +2,58 @@ from __future__ import annotations
 
 import tempfile
 from contextlib import chdir
-from typing import TYPE_CHECKING
+from io import BytesIO
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import Mock
 
 from homeassistant.auth.models import User
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
-from homeassistant.util import slugify
-from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-
-from tests.components.supernotify.doubles_lib import MockCameraEntity
-
-if TYPE_CHECKING:
-    from homeassistant.helpers.area_registry import AreaEntry
-    from homeassistant.helpers.floor_registry import FloorEntry
-from typing import TYPE_CHECKING, Any, cast
-
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import floor_registry as fr
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
+from PIL import Image, ImageDraw, ImageStat
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
 from conftest import test_image
 from custom_components.supernotify import DOMAIN as SUPERNOTIFY_DOMAIN
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+from tests.components.supernotify.doubles_lib import MockCameraEntity
 
 from ..hass_setup_lib import register_mobile_app
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
+    from homeassistant.helpers.area_registry import AreaEntry
+    from homeassistant.helpers.floor_registry import FloorEntry
+
+# a small palette of maximally-distinct colors, one per camera, stamped as a solid block onto
+# that camera's still - see setup()/_camera_for_image(). Flat blocks survive the JPEG re-encode
+# in write_image_from_bitmap almost losslessly (unlike fine detail or text), so a plain nearest-
+# color match on the block's average is a cheap, reliable way to tell two cameras' images apart
+# after the full round trip through the delivery pipeline.
+_CAMERA_MARKER_COLORS: list[tuple[int, int, int]] = [
+    (220, 20, 60),  # crimson
+    (30, 144, 255),  # dodger blue
+    (50, 205, 50),  # lime green
+    (255, 165, 0),  # orange
+    (148, 0, 211),  # dark violet
+]
+_CAMERA_MARKER_BOX = (0, 0, 96, 96)  # top-left corner, clear of the format-label text in fixtures/media
+
+
+def _stamp_camera_image(color: tuple[int, int, int]) -> bytes:
+    """A copy of the shared example image with a solid marker block painted over one corner,
+    encoded fresh - so each camera's mock still is cheaply distinguishable from every other."""
+    image = Image.open(str(test_image().path)).convert("RGB")
+    ImageDraw.Draw(image).rectangle(_CAMERA_MARKER_BOX, fill=color)
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG")
+    return buffer.getvalue()
 
 
 class House:
@@ -69,6 +90,9 @@ class House:
         # template paths, so they resolve under a throwaway directory rather than the real cwd -
         # see setup() and cleanup()
         self._media_root: tempfile.TemporaryDirectory[str] | None = None
+        # camera entity_id -> the marker color stamped onto that camera's mock still in setup(),
+        # used by _camera_for_image() to identify which camera a delivered image came from
+        self._camera_markers: dict[str, tuple[int, int, int]] = {}
 
     async def setup(self, hass: HomeAssistant) -> None:
 
@@ -124,13 +148,15 @@ class House:
 
         if self._cameras:
             camera_entities: dict[str, MockCameraEntity] = {}
-            for name, camera_area in self._cameras.items():
+            for index, (name, camera_area) in enumerate(self._cameras.items()):
                 entry = entity_registry.async_get_or_create("camera", "generic", f"{name}_id", suggested_object_id=name)
                 if camera_area:
                     entity_registry.async_update_entity(entry.entity_id, area_id=self.areas[camera_area].id)
                 hass.states.async_set(entry.entity_id, "idle")
+                color = _CAMERA_MARKER_COLORS[index % len(_CAMERA_MARKER_COLORS)]
+                self._camera_markers[entry.entity_id] = color
                 camera_entity = MockCameraEntity(test_image().path)
-                await camera_entity.load()
+                camera_entity.bytes = _stamp_camera_image(color)  # skip load(): pre-baked per-camera still
                 camera_entities[entry.entity_id] = camera_entity
             hass.data["camera"] = Mock(spec=EntityComponent)
             hass.data["camera"].get_entity = Mock(side_effect=camera_entities.get)
@@ -194,29 +220,6 @@ class House:
         )
         await self._hass.async_block_till_done()
 
-    def entity_ids_called(self, domain: str | None) -> list[str]:
-        entity_ids: list[str] = []
-        for service_domain, calls in self.service_calls.items():
-            if domain is None or service_domain == domain:
-                for call in calls:
-                    entity_ids.extend(call.data.get("entity_id", []))
-        return sorted(entity_ids)
-
-    def services_called(self, domain: str | None) -> list[str]:
-        services: list[str] = []
-        for service_domain, calls in self.service_calls.items():
-            if domain is None or service_domain == domain:
-                for call in calls:
-                    if call.service:
-                        services.append(call.service)
-        return sorted(services)
-
-    def calls_by_domain(self) -> dict[str, int]:
-        result: dict[str, int] = {}
-        for service_domain, calls in self.service_calls.items():
-            result[service_domain] = len(calls)
-        return result
-
     async def image_bytes(self, image_share_path: str) -> bytes:
         """Resolve a mobile-push 'image' share path (as attached to a notify call's
         service_data['data']['image'], see MediaStorage.share_path) back to the raw bytes of
@@ -229,12 +232,26 @@ class House:
             return await f.read()
 
     async def assert_e2e(
-        self, call_data: str, expected_calls: dict[str, list[str]], expected_entities: dict[str, list[str]]
+        self,
+        call_data: str,
+        expected_calls: dict[str, list[str]] | None = None,
+        expected_entities: dict[str, list[str]] | None = None,
+        expected_images: dict[str, list[str]] | None = None,
     ) -> None:
+        """Send `call_data` and assert the resulting service calls, entities and images.
+
+        `expected_calls`/`expected_entities` mirror services_called()/entity_ids_called(), but
+        per domain rather than flattened across all of them - `None` means no calls at all in
+        that domain. `expected_images` lists, per domain, which camera each *distinct* image
+        attached to that domain's calls came from (not one entry per call - multiple targets in
+        the same domain are sent the same processed image, so it's deduplicated by share path
+        first - see MediaStorage.share_path and _camera_for_image()).
+        """
         await self.call(call_data)
 
         actual_calls: dict[str, list[str]] = {}
         actual_entities: dict[str, list[str]] = {}
+        actual_image_paths: dict[str, list[str]] = {}
         for service_domain, calls in self.service_calls.items():
             for call in calls:
                 if call.service:
@@ -243,6 +260,36 @@ class House:
                 if "entity_id" in call.data:
                     actual_entities.setdefault(service_domain, [])
                     actual_entities[service_domain].extend(call.data.get("entity_id", []))
+                image_path = call.data.get("data", {}).get("image")
+                if image_path:
+                    actual_image_paths.setdefault(service_domain, [])
+                    if image_path not in actual_image_paths[service_domain]:
+                        actual_image_paths[service_domain].append(image_path)
 
-        assert expected_calls == actual_calls
-        assert expected_entities == actual_entities
+        if expected_calls is None:
+            assert not actual_calls
+        else:
+            assert expected_calls == actual_calls
+        if expected_entities is None:
+            assert not actual_entities
+        else:
+            assert expected_entities == actual_entities
+        if expected_images is None:
+            assert not actual_image_paths
+        else:
+            actual_cameras = {
+                domain: [self._camera_for_image(await self.image_bytes(path)) for path in paths]
+                for domain, paths in actual_image_paths.items()
+            }
+            assert expected_images == actual_cameras
+
+    def _camera_for_image(self, image_data: bytes) -> str:
+        """Identify which camera an image came from, by nearest match on the marker color
+        stamped onto that camera's still in setup()."""
+        region = Image.open(BytesIO(image_data)).convert("RGB").crop(_CAMERA_MARKER_BOX)
+        sample = tuple(ImageStat.Stat(region).mean)
+
+        def distance(color: tuple[int, int, int]) -> float:
+            return sum((a - b) ** 2 for a, b in zip(sample, color, strict=True))
+
+        return min(self._camera_markers, key=lambda entity_id: distance(self._camera_markers[entity_id]))

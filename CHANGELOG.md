@@ -30,6 +30,7 @@ This version brings target selection up to date with all the latest Home Assista
 - All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
 - Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
 - Media handling now tested with `webp` images (in addition to existing `jpeg`,`png` and `gif`)
+- Test images now stamped with format so easier to see if correct image appearing
 - Fixed test cleanup so test images don't build up in local directory
 - New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
 
