@@ -25,6 +25,7 @@ This version brings target selection up to date with all the latest Home Assista
 - A reprocessed image keeps the format it is saved in: a PNG was written into a `.jpg` file, which misleads anything going by the extension, `MIMEImage` included
 - The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
 - All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
+- Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
 - New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
 
 

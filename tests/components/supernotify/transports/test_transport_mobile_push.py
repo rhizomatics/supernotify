@@ -665,6 +665,29 @@ async def _deliver_with_failed_grab(available_camera: str | None) -> dict[str, A
     return cast("dict[str, Any]", e.calls[0].action_data["data"])
 
 
+async def test_deliver_excludes_the_already_failed_camera_from_the_device_fallback() -> None:
+    """Regression test: a camera that fails to grab must not be handed straight back to the
+    device as a fallback target - see the exclude_primary docstring on select_avail_camera().
+    Without it, a camera disabled at the device (state still reads as available) is offered to
+    the device on every single notification, each producing an unloadable attachment."""
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": {"camera_entity_id": "camera.front"}}),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_iphone"]}),
+    )
+    with (
+        patch.object(e, "grab_image", new_callable=AsyncMock, return_value=None),
+        patch(
+            "custom_components.supernotify.transports.mobile_push.select_avail_camera", return_value=None
+        ) as mock_select_avail_camera,
+    ):
+        assert await uut.deliver(e) is True
+    mock_select_avail_camera.assert_called_once_with(uut.hass_api, ctx.cameras, "camera.front", exclude_primary=True)
+
+
 async def test_deliver_lets_device_take_image_from_available_camera_when_grab_fails() -> None:
     data = await _deliver_with_failed_grab("camera.front")
 

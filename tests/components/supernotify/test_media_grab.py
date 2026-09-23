@@ -332,6 +332,38 @@ def test_select_untracked_primary_camera(mock_hass_api) -> None:
     )
 
 
+def test_select_excludes_primary_camera_even_when_its_state_says_available(mock_hass_api) -> None:
+    """Regression test: a camera disabled at the device (e.g. privacy/feed toggle) can keep
+    reporting a normal, non-unavailable entity state throughout - camera_available() has no way
+    to tell. A caller that already knows, from an actual failed fetch, that this camera isn't
+    currently deliverable must pass exclude_primary=True rather than get the same camera back."""
+    mock_states(mock_hass_api, home_entities=["camera.untracked"])
+
+    assert (
+        select_avail_camera(
+            mock_hass_api, {"camera.untracked": {"alias": "Test Untracked"}}, "camera.untracked", exclude_primary=True
+        )
+        is None
+    )
+
+
+def test_select_excludes_primary_camera_but_still_offers_an_available_alt(mock_hass_api) -> None:
+    mock_states(mock_hass_api, home_entities=["camera.untracked", "camera.alt1"])
+
+    assert (
+        select_avail_camera(
+            mock_hass_api,
+            {
+                "camera.untracked": {"camera": "camera.untracked", "alt_camera": ["camera.alt1"]},
+                "camera.alt1": {"camera": "camera.alt1"},
+            },
+            "camera.untracked",
+            exclude_primary=True,
+        )
+        == "camera.alt1"
+    )
+
+
 def test_select_tracked_primary_camera(mock_hass_api) -> None:
     mock_states(mock_hass_api, ["device_tracker.cam1"], [])
     assert (

@@ -348,8 +348,13 @@ class MobilePushTransport(Transport):
                 data[ATTR_IMAGE] = image_url or str(image_path)
             else:
                 # fall back to letting device take the image, but only from a camera that's up,
-                # since one that's switched off or unavailable would only show a broken image
-                available_camera_entity_id = select_avail_camera(self.hass_api, self.context.cameras, camera_entity_id)
+                # since one that's switched off or unavailable would only show a broken image.
+                # camera_entity_id itself already failed the grab above - exclude it here, since
+                # a camera disabled at the device (rather than truly unavailable) won't show that
+                # in its entity state, so re-offering it would just repeat the same failed fetch
+                available_camera_entity_id = select_avail_camera(
+                    self.hass_api, self.context.cameras, camera_entity_id, exclude_primary=True
+                )
                 if available_camera_entity_id:
                     data["entity_id"] = available_camera_entity_id
                 else:

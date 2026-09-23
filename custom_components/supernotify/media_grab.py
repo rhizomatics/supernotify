@@ -243,7 +243,18 @@ def camera_available(hass_api: HomeAssistantAPI, camera_config: dict[str, Any], 
         return False
 
 
-def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], camera_entity_id: str) -> str | None:
+def select_avail_camera(
+    hass_api: HomeAssistantAPI, cameras: dict[str, Any], camera_entity_id: str, exclude_primary: bool = False
+) -> str | None:
+    """exclude_primary skips re-offering camera_entity_id itself, for a *configured* camera
+    (one with a `cameras:` entry - an unconfigured entity has no alternative to weigh it
+    against, so it's unaffected). A configured camera's own availability check is state-based
+    (see camera_available()) and can't detect one that's live-disabled at the device without
+    that showing up as entity state - so a caller that already knows, from an actual failed
+    fetch rather than just this heuristic, that camera_entity_id isn't currently deliverable
+    (e.g. mobile_push falling back after grab_image() found nothing) should set this, or it'll
+    just be handed the same unusable camera again.
+    """
     avail_camera_entity_id: str | None = None
 
     preferred_cam = cameras.get(camera_entity_id)
@@ -256,7 +267,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
         if camera_available(hass_api, {CONF_CAMERA: camera_entity_id}, non_entity=True):
             return camera_entity_id
         return None
-    if camera_available(hass_api, preferred_cam):
+    if not exclude_primary and camera_available(hass_api, preferred_cam):
         return camera_entity_id
 
     alt_cams: list[dict[str, Any]] = [cameras[c] for c in preferred_cam.get(CONF_ALT_CAMERA, []) if c in cameras]
@@ -270,7 +281,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
 
     if avail_camera_entity_id is None:
         _LOGGER.warning("SUPERNOTIFY %s not available, finding best alternative available", camera_entity_id)
-        if camera_available(hass_api, preferred_cam, non_entity=True):
+        if not exclude_primary and camera_available(hass_api, preferred_cam, non_entity=True):
             _LOGGER.info("SUPERNOTIFY Selecting camera %s with no known entity", camera_entity_id)
             return camera_entity_id
         for alt_cam in alt_cams:
