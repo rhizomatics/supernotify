@@ -1,4 +1,4 @@
-## Unreleased
+## v2.9.0
 
 ### Fixes
 - `reprocess: preserve` with no `jpeg_opts`/`png_opts` configured raised an `AttributeError` building the cache key, since those options are `None` rather than empty, so the image was never reprocessed
@@ -6,7 +6,6 @@
 - The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
 - All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
 
-## v2.9.0
 
 ### Groups
 - Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.

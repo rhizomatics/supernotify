@@ -629,7 +629,7 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
     buf = BytesIO()
     image.save(buf, "jpeg")
     bitmap = buf.getvalue()
-    mock_hass_api.create_job.side_effect = lambda func, *args: func(*args)  # type: ignore[attr-defined]
+    mock_hass_api.create_job.side_effect = lambda func, *args: func(*args)  # type: ignore[attr-defined] # ty:ignore[unresolved-attribute]
     output_path = tmp_aiopath / "image" / "out.jpg"
     result = await write_image_from_bitmap(mock_hass_api, bitmap, output_path, ReprocessOption.ALWAYS)
     assert result is not None

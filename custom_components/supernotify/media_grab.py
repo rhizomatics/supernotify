@@ -438,7 +438,7 @@ async def grab_image(
         # a stable digest, unlike hash(), which is salted per process and so never matched an
         # image reprocessed before the last restart
         key = hashlib.sha1(  # not security, just a cache key
-            json.dumps([reprocess_option, relevant_opts], sort_keys=True, default=str).encode()
+            json.dumps([reprocess_option, relevant_opts], sort_keys=True, default=str).encode(), usedforsecurity=False
         ).hexdigest()[:12]
         processed_name = f"{notification.id}_{key}.{processed_ext}"
     processed_path = Path(media_path) / "image" / processed_name
@@ -476,7 +476,7 @@ def _reprocess_bitmap(
         # Pillow API changed in 12.1.0 and the original call will be removed in 2027
         # https://pillow.readthedocs.io/en/stable/releasenotes/12.1.0.html#image-getdata
         if hasattr(image, "get_flattened_data"):
-            clean_image.putdata(image.get_flattened_data())  # added in jan 2026
+            clean_image.putdata(image.get_flattened_data())  # added in jan 2026  # ty:ignore[call-non-callable]
         else:
             clean_image.putdata(image.getdata())  # being removed in 2027
 
