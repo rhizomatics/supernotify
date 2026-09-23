@@ -629,10 +629,11 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
     buf = BytesIO()
     image.save(buf, "jpeg")
     bitmap = buf.getvalue()
-    mock_hass_api.create_job.return_value = Image.open(BytesIO(bitmap))  # type: ignore
+    mock_hass_api.create_job.side_effect = lambda func, *args: func(*args)  # type: ignore[attr-defined]
     output_path = tmp_aiopath / "image" / "out.jpg"
     result = await write_image_from_bitmap(mock_hass_api, bitmap, output_path, ReprocessOption.ALWAYS)
     assert result is not None
+    assert Image.open(BytesIO(await result.read_bytes())).format == "JPEG"
 
 
 async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistantAPI) -> None:
@@ -663,6 +664,56 @@ async def test_grab_image_invalid_reprocess(hass: HomeAssistant) -> None:
     with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
         result = await grab_image(notification, ctx.delivery("mail"), ctx)
     assert result is not None
+
+
+async def test_grab_image_preserve_without_options(hass: HomeAssistant) -> None:
+    """`reprocess: preserve` with no jpeg/png options: the options default to None, which used
+    to blow up building the cache key, so nothing was ever reprocessed"""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
+    notification.media[MEDIA_OPTION_REPROCESS] = "preserve"  # inject directly - not in schema
+    fixture_path = anyio.Path(IMAGE_PATH / "example_image.jpeg")
+    with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
+        result = await grab_image(notification, ctx.delivery("mail"), ctx)
+    assert result is not None
+    assert str(result).endswith(".jpeg")
+
+
+async def test_grab_image_keeps_png_format(hass: HomeAssistant) -> None:
+    """A reprocessed PNG stays a PNG, since that is the format it is saved in - it used to be
+    written into a .jpg file, which confuses anything going by the extension"""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
+    fixture_path = anyio.Path(IMAGE_PATH / "example_image.png")
+    with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
+        result = await grab_image(notification, ctx.delivery("mail"), ctx)
+    assert result is not None
+    assert str(result).endswith(".png")
+    assert Image.open(BytesIO(await result.read_bytes())).format == "PNG"
+
+
+async def test_grab_image_cache_key_stable_across_restarts(hass: HomeAssistant) -> None:
+    """The cache key of a reprocessed image is a digest, not hash(), which is salted per
+    process and so never matched a file written before the last restart"""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    await ctx.test_initialize()
+    fixture_path = anyio.Path(IMAGE_PATH / "example_image.jpeg")
+    names: list[str] = []
+    for _ in range(2):
+        notification = Notification(
+            ctx,
+            "Test",
+            action_data={"media": {"snapshot_url": "http://x", "jpeg_opts": {"quality": 30}}},
+        )
+        notification.id = "fixed-id"
+        with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
+            result = await grab_image(notification, ctx.delivery("mail"), ctx)
+        assert result is not None
+        names.append(anyio.Path(str(result)).name)
+    assert names[0] == names[1]
+    assert names[0].startswith("fixed-id_") and names[0].endswith(".jpeg")
 
 
 async def test_grab_image_with_existing_snapshot_path(hass: HomeAssistant, tmp_aiopath: Path) -> None:
