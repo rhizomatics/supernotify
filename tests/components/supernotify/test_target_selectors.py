@@ -59,7 +59,7 @@ def _resolver(mapping: dict[str, list[str]], missing: tuple[str, ...] = ()) -> o
 
 def _hass_api(mapping: dict[str, list[str]], missing: tuple[str, ...] = ()) -> HomeAssistantAPI:
     hass_api = object.__new__(HomeAssistantAPI)
-    hass_api.resolve_target_selectors = _resolver(mapping, missing)  # type: ignore[method-assign, assignment]
+    hass_api.resolve_target_selectors = _resolver(mapping, missing)  # type: ignore[method-assign, assignment] # ty:ignore[invalid-assignment]
     return hass_api
 
 
