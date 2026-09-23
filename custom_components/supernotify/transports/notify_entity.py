@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.const has import issues
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
@@ -86,10 +87,14 @@ class NotifyEntityTransport(Transport):
         return {self.name: {}}
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:
-        target_data: dict[str, Any] = self.action_target(envelope, envelope.target.entity_ids or None)
-        if not self.has_action_target(target_data):
+        targets = envelope.target.entity_ids or []
+        if not targets:
             _LOGGER.warning("SUPERNOTIFY notify_entity: no targets")
             return False
+        target_data: dict[str, Any] = {ATTR_ENTITY_ID: targets}
+        # area_id
+        # device_id
+        # label_id
         action_data = envelope.core_action_data()
 
         return await self.call_action(envelope, FIXED_ACTION, action_data=action_data, target_data=target_data)

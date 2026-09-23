@@ -44,9 +44,7 @@ from custom_components.supernotify.options import (
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
     OPTION_TARGET_SELECT,
-    OPTION_TARGET_SELECTORS,
     SELECT_EXCLUDE,
-    TARGET_SELECTORS_RESOLVE,
     DeliveryOption,
 )
 from custom_components.supernotify.schema import DATA_SCHEMA, TARGET_SCHEMA
@@ -322,8 +320,6 @@ class ChimeTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
-            # chimes are actioned one entity at a time, so area/floor/label are resolved to entities here
-            OPTION_TARGET_SELECTORS: TARGET_SELECTORS_RESOLVE,
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,

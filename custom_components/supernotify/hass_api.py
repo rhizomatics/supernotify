@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.person import ATTR_USER_ID
 from homeassistant.const import (
     ATTR_AREA_ID,
+    ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
     CONF_ACTION,
@@ -19,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.util import slugify
 
 if TYPE_CHECKING:
@@ -43,6 +45,7 @@ from typing import TYPE_CHECKING, cast
 import homeassistant.components.camera as ha_camera
 import homeassistant.components.image as ha_image
 import homeassistant.components.trace
+from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.group import expand_entity_ids
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.components.trace.models import ActionTrace
@@ -56,8 +59,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.service import async_get_all_descriptions, async_get_cached_service_description
-from homeassistant.helpers.target import TargetSelection, async_extract_referenced_entity_ids
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
@@ -123,7 +124,7 @@ class TrackedDeviceDetails:
 
 @dataclass
 class TargetSelectorResolution:
-    """Outcome of resolving area/floor/label selectors locally"""
+    """Outcome of resolving area/floor/label selectors to the entities they reference"""
 
     entity_ids: list[str] = field(default_factory=list)
     missing_areas: list[str] = field(default_factory=list)
@@ -155,7 +156,6 @@ class HomeAssistantAPI:
         self.__entity_registry: er.EntityRegistry | None = None
         self.__device_registry: dr.DeviceRegistry | None = None
         self._service_info: dict[tuple[str, str], Any] = {}
-        self._service_descriptions: dict[str, dict[str, Any]] = {}
         self.unsubscribes: list[CALLBACK_TYPE] = []
         self.mobile_apps_by_tracker: dict[str, TrackedDeviceDetails] = {}
         self.mobile_apps_by_app_id: dict[str, TrackedDeviceDetails] = {}
@@ -410,48 +410,15 @@ class HomeAssistantAPI:
             _LOGGER.warning("SUPERNOTIFY Unable to get service info for %s.%s: %s", domain, service, e)
         return supports_response or SupportsResponse.NONE  # default to no response
 
-    async def load_service_descriptions(self) -> None:
-        """Cache the action descriptions (services.yaml) of every loaded integration.
-
-        Used to discover, without inspecting schemas, which actions accept the HA
-        target selectors (entity/device/area/floor/label), i.e. those declaring a
-        `target:` block in their description - the same signal the frontend uses.
-        """
-        if not self.hass_avail("services"):
-            return
-        try:
-            self._service_descriptions = await async_get_all_descriptions(self._hass)
-            _LOGGER.debug("SUPERNOTIFY Cached action descriptions for %s domains", len(self._service_descriptions))
-        except Exception as e:
-            _LOGGER.warning("SUPERNOTIFY Unable to load action descriptions: %s", e)
-
-    def service_accepts_target_selectors(self, qualified_action: str | None) -> bool | None:
-        """Discover whether an action accepts HA target selectors (area_id, floor_id, label_id)
-
-        Returns True if the action description declares a `target` block, False if the action is
-        known and doesn't, and None if the action is unknown or descriptions are unavailable.
-        """
-        if not qualified_action or "." not in qualified_action:
-            return None
-        domain, service = qualified_action.split(".", 1)
-        description: dict[str, Any] | None = self._service_descriptions.get(domain, {}).get(service)
-        if description is None and self.hass_avail("services"):
-            try:
-                description = async_get_cached_service_description(self._hass, domain, service)
-            except Exception as e:
-                _LOGGER.debug("SUPERNOTIFY Unable to get cached description for %s: %s", qualified_action, e)
-        if description is None:
-            return None
-        return description.get("target") is not None
-
     def resolve_target_selectors(
         self,
         area_ids: list[str] | None = None,
         floor_ids: list[str] | None = None,
         label_ids: list[str] | None = None,
     ) -> TargetSelectorResolution:
-        """Resolve HA area/floor/label selectors to the entities they reference, using the same
-        core helper as HA entity actions, so groups are expanded and device areas are honoured.
+        """Resolve HA area/floor/label selectors to the entities they reference, through the same
+        core helper as HA entity actions, so groups are expanded and entities inherit the area of
+        their device.
         """
         resolution = TargetSelectorResolution()
         if not (area_ids or floor_ids or label_ids):
@@ -516,6 +483,33 @@ class HomeAssistantAPI:
 
     def expand_group(self, entity_ids: str | list[str]) -> list[str]:
         return expand_entity_ids(self._hass, entity_ids)
+
+    def group_members(self, entity_id: str, _seen: set[str] | None = None) -> list[str] | None:
+        """Fully expanded members of a `group.*` helper or a platform group (media_player, light... groups
+        created by the group integration expose members in an `entity_id` state attribute). None if not a group.
+
+        Other entities, e.g. `scene.*` or min/max `sensor.*`, also expose an `entity_id` attribute, so anything
+        outside the `group` domain is only treated as a group if the entity registry says its platform is `group`.
+        """
+        if not self.hass_avail("states"):
+            return None
+        state = self._hass.states.get(entity_id)
+        members = state.attributes.get(ATTR_ENTITY_ID) if state else None
+        if not isinstance(members, (list, tuple)):
+            return None
+        if entity_id.partition(".")[0] != GROUP_DOMAIN and self.platform_for_entity(entity_id) != GROUP_DOMAIN:
+            return None
+        seen: set[str] = _seen if _seen is not None else set()
+        seen.add(entity_id)
+        expanded: list[str] = []
+        for member in members:
+            if member in seen:
+                continue
+            nested = self.group_members(member, seen)
+            for e in nested if nested is not None else [member]:
+                if e not in expanded:
+                    expanded.append(e)
+        return expanded
 
     def template(self, template_format: str) -> Template:
         return Template(template_format, self._hass)

@@ -1,3 +1,9 @@
+## Unreleased
+
+### Targets
+
+- `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action. They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device. An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing. Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
+
 ## v2.8.0
 
 ### Delivery and Transport Switches

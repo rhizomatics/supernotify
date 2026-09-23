@@ -75,6 +75,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
@@ -223,7 +224,7 @@ class HTML5Transport(Transport):
 
         # Resolve and pre-validate notify entity targets
         targets = envelope.target.resolved_targets() if envelope.target else []
-        if not targets and not self.has_action_target(self.action_target(envelope)):
+        if not targets:
             _LOGGER.warning("SUPERNOTIFY html5: no valid targets (expected notify.* entities)")
             self.record_error("no valid html5 notify entity targets", "deliver")
             return False
@@ -314,5 +315,5 @@ class HTML5Transport(Transport):
                 sorted(raw_data),
             )
 
-        target_data = self.action_target(envelope, targets)
+        target_data = {ATTR_ENTITY_ID: targets}
         return await self.call_action(envelope, action_data=action_data, target_data=target_data)

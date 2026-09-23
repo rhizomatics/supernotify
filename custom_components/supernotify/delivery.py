@@ -56,13 +56,8 @@ from .options import (
     OPTION_TARGET_CATEGORIES,
     OPTION_TARGET_INCLUDE_RE,
     OPTION_TARGET_SELECT,
-    OPTION_TARGET_SELECTORS,
     SELECT_EXCLUDE,
     SELECT_INCLUDE,
-    TARGET_SELECTORS_AUTO,
-    TARGET_SELECTORS_NATIVE,
-    TARGET_SELECTORS_RESOLVE,
-    TARGET_SELECTORS_VALUES,
 )
 from .static_config import TRANSPORT_NAMES
 
@@ -112,9 +107,6 @@ class Delivery(DeliveryConfig):
             self.target_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_SELECT))
         else:
             self.target_selector = None
-        # whether area_id/floor_id/label_id targets pass through to the action untouched,
-        # decided at initialization by explicit option or discovery from the action description
-        self.passes_target_selectors: bool = False
         self.upgrade_deprecations(conf)
 
     async def initialize(self, context: Context) -> bool:
@@ -182,33 +174,8 @@ class Delivery(DeliveryConfig):
                 errors += 1
 
         self.discover_devices(context)
-        self.passes_target_selectors = self.discover_target_selectors(context)
         self.transport_data = self.transport.setup_delivery_options(self.options, self.name)
         return errors == 0
-
-    def discover_target_selectors(self, context: Context) -> bool:
-        """Decide if HA target selectors (area/floor/label) are passed through to the action, or
-        resolved to entity_ids by supernotify first.
-
-        The `target_selectors` option overrides with `native` or `resolve`; the default `auto` trusts
-        the action description, and falls back to resolving locally when the action is unknown or
-        doesn't declare a `target` block.
-        """
-        mode: str = self.options.get(OPTION_TARGET_SELECTORS, TARGET_SELECTORS_AUTO)
-        if mode == TARGET_SELECTORS_NATIVE:
-            return True
-        if mode == TARGET_SELECTORS_RESOLVE:
-            return False
-        if mode != TARGET_SELECTORS_AUTO:
-            _LOGGER.warning(
-                "SUPERNOTIFY Delivery %s has unknown target_selectors option %s, expected one of %s",
-                self.name,
-                mode,
-                TARGET_SELECTORS_VALUES,
-            )
-        discovered: bool | None = context.hass_api.service_accepts_target_selectors(self.action)
-        _LOGGER.debug("SUPERNOTIFY Delivery %s action %s target selectors discovery: %s", self.name, self.action, discovered)
-        return discovered is True
 
     def upgrade_deprecations(self, conf: ConfigType) -> None:
         # v1.9.0
@@ -324,11 +291,7 @@ class Delivery(DeliveryConfig):
 
     def select_targets(self, target: Target) -> Target:
         return target.select(
-            self.target_categories,
-            (self.name, self.transport.name),
-            self.transport.hass_api,
-            self.target_selector,
-            passes_selectors=self.passes_target_selectors,
+            self.target_categories, (self.name, self.transport.name), self.transport.hass_api, self.target_selector
         )
 
     def evaluate_conditions(self, condition_variables: ConditionVariables) -> bool | None:
@@ -498,9 +461,6 @@ class DeliveryRegistry:
         return [d for d in self._deliveries.values() if d.enabled and INCLUSION_DEFAULT in d.inclusion]
 
     async def initialize_transports(self, context: Context) -> None:
-        """Use configure_for_tests() to set transports to mocks or manually created fixtures"""
-        # action descriptions drive discovery of target selector support per delivery
-        await context.hass_api.load_service_descriptions()
         if self._transport_instances:
             """Used by configure_for_tests() and TestingContext to set transports to mocks or manually created fixtures"""
             for transport in self._transport_instances:
