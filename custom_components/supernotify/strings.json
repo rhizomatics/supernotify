@@ -399,7 +399,7 @@
                 },
                 "data_description": {
                     "action_tools": "Send notifications, and snooze or silence them",
-                    "diagnostic_tools": "Explain recent notifications, dry-run who a notification would reach, and list snoozes"
+                    "diagnostic_tools": "Explain recent notifications, dry-run who a notification would reach, list snoozes, and look up the Supernotify documentation online"
                 }
             }
         }

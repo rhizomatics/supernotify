@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Inviare notifiche, posticiparle o silenziarle",
-                    "diagnostic_tools": "Spiegare le notifiche recenti, simulare chi raggiungerebbe una notifica ed elencare i posticipi"
+                    "diagnostic_tools": "Spiegare le notifiche recenti, simulare chi raggiungerebbe una notifica, elencare i posticipi e consultare online la documentazione di Supernotify"
                 }
             }
         }

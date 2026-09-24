@@ -3,7 +3,7 @@
 Home Assistant's `llm` integration merges the tools from every integration's `llm` platform into
 its built-in Assist API, which is also what the MCP server offers by default. Nothing here is
 offered until switched on in the Supernotify options, where action tools (send, snooze) and
-diagnostic tools (recent notifications, dry run, snoozes) are switched on separately.
+diagnostic tools (recent notifications, dry run, snoozes, documentation) are switched on separately.
 
 The tools deliberately leave out Supernotify's more open-ended fields - `custom_target` (any
 e-mail address, phone number etc), `actions`, and media URLs - so an agent can only reach the
@@ -13,13 +13,19 @@ recipients, deliveries and scenarios already configured.
 from __future__ import annotations
 
 import datetime as dt
+import logging
+import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
+import aiohttp
 import voluptuous as vol
 from homeassistant.components.llm import LLMTools  # type: ignore[import-not-found,unused-ignore]  # HA < 2026.x on py3.13
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from . import DOMAIN
 from .const import (
@@ -39,9 +45,72 @@ if TYPE_CHECKING:
     from .engine import SupernotifyEngine
     from .people import Recipient
 
+_LOGGER = logging.getLogger(__name__)
+
 EVERYONE = "everyone"
 MAX_HOURS = 7 * 24
 MAX_NOTIFICATIONS = 50
+
+# The documentation site publishes every page as one markdown file for LLMs, plus an index with links
+DOCS_SITE = "https://supernotify.rhizomatics.org.uk/"
+DOCS_URL = f"{DOCS_SITE}llms-full.txt"
+DOCS_INDEX_URL = f"{DOCS_SITE}llms.txt"
+DOCS_CACHE_TIME = dt.timedelta(days=1)
+DOCS_SECTIONS_RETURNED = 3
+DOCS_SECTION_MAX_CHARS = 4000
+DOCS_STOP_WORDS = frozenset([
+    "a",
+    "an",
+    "and",
+    "are",
+    "can",
+    "do",
+    "does",
+    "for",
+    "from",
+    "how",
+    "i",
+    "in",
+    "is",
+    "it",
+    "my",
+    "of",
+    "on",
+    "or",
+    "the",
+    "to",
+    "use",
+    "using",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "why",
+    "with",
+    # words in almost every page of these docs
+    "notification",
+    "notifications",
+    "notify",
+    "supernotify",
+    "send",
+])
+
+
+@dataclass
+class DocsPage:
+    title: str
+    url: str | None
+    text: str
+
+
+@dataclass
+class _DocsCache:
+    fetched: dt.datetime
+    pages: list[DocsPage]
+
+
+DOCS_CACHE: HassKey[_DocsCache] = HassKey(f"{DOMAIN}_llm_docs")
 
 SNOOZE_ACTIONS: dict[str, CommandType | None] = {
     "snooze": CommandType.SNOOZE,
@@ -74,7 +143,7 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext, api_id: str) -
     if options.get(CONF_LLM_ACTION_TOOLS):
         tools.extend([NotifyTool(engine), SnoozeTool(engine)])
     if options.get(CONF_LLM_DIAGNOSTIC_TOOLS):
-        tools.extend([RecentNotificationsTool(engine), DryRunTool(engine), SnoozesTool(engine)])
+        tools.extend([RecentNotificationsTool(engine), DryRunTool(engine), SnoozesTool(engine), HelpTool(engine)])
     if not tools:
         return None
     return LLMTools(tools=tools, prompt=_prompt(engine))
@@ -404,3 +473,114 @@ class SnoozesTool(SupernotifyTool):
     async def async_call(self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext) -> JsonObjectType:
         snoozes: dict[str, Any] = {"snoozes": self.engine.enquire_snoozes()}
         return {"success": True, "result": snoozes}
+
+
+def split_docs(text: str, index: str = "") -> list[DocsPage]:
+    """Split the combined documentation into pages, each starting at a top level heading with a
+    blank line either side - which a comment in a code example rarely has - with each page's link
+    taken from the index where the titles match"""
+    urls: dict[str, str] = {
+        title.casefold(): url.removesuffix("index.md")
+        for title, url in re.findall(r"^- \[([^\]]+)\]\(([^)]+)\)", index, flags=re.MULTILINE)
+    }
+    pages: list[DocsPage] = []
+    title: str | None = None
+    lines: list[str] = text.splitlines()
+    body: list[str] = []
+
+    def url_for(page_title: str) -> str | None:
+        # recipe pages are titled "Recipe - X", where the index often has a longer "X ..."
+        wanted = page_title.casefold().removeprefix("recipe - ")
+        return urls.get(wanted) or next((u for t, u in urls.items() if t.startswith(wanted)), None)
+
+    def finish() -> None:
+        if title and (page_text := "\n".join(body).strip()):
+            pages.append(DocsPage(title, url_for(title), page_text))
+
+    for i, line in enumerate(lines):
+        if line.startswith("# ") and (i == 0 or not lines[i - 1].strip()) and (i + 1 == len(lines) or not lines[i + 1].strip()):
+            finish()
+            title, body = line[2:].strip(), []
+        else:
+            body.append(line)
+    finish()
+    return pages
+
+
+def search_docs(pages: list[DocsPage], question: str) -> list[DocsPage]:
+    """The pages that best match the question - most of all in the title, then by how many of its
+    words they contain, then by how densely, so a long page doesn't win just by being long.
+    Words are matched by their stem, so 'snooze' finds 'Snoozing'."""
+    stems = {
+        w[: max(4, len(w) - 3)]
+        for w in re.findall(r"[a-z0-9_]+", question.casefold())
+        if len(w) > 2 and w not in DOCS_STOP_WORDS
+    }
+    scored: list[tuple[float, int, DocsPage]] = []
+    for position, page in enumerate(pages):
+        title, text = page.title.casefold(), page.text.casefold()
+        score = 0.0
+        for stem in stems:
+            if count := text.count(stem):
+                score += 2 + min(count * 1000 / len(text), 3)
+            if stem in title:
+                score += 6
+        if score:
+            scored.append((-score, position, page))
+    return [page for _score, _position, page in sorted(scored)[:DOCS_SECTIONS_RETURNED]]
+
+
+async def _docs(hass: HomeAssistant) -> list[DocsPage]:
+    """The documentation pages, fetched on first use and then at most once a day"""
+    cached: _DocsCache | None = hass.data.get(DOCS_CACHE)
+    if cached and dt_util.utcnow() - cached.fetched < DOCS_CACHE_TIME:
+        return cached.pages
+    session = async_get_clientsession(hass)
+    timeout = aiohttp.ClientTimeout(total=15)
+    async with session.get(DOCS_URL, timeout=timeout) as response:
+        response.raise_for_status()
+        text = await response.text()
+    index = ""
+    try:
+        async with session.get(DOCS_INDEX_URL, timeout=timeout) as response:
+            response.raise_for_status()
+            index = await response.text()
+    except (aiohttp.ClientError, TimeoutError) as e:
+        _LOGGER.debug("SUPERNOTIFY Documentation index not fetched, pages will have no links: %s", e)
+    pages = split_docs(text, index)
+    hass.data[DOCS_CACHE] = _DocsCache(dt_util.utcnow(), pages)
+    return pages
+
+
+class HelpTool(SupernotifyTool):
+    name = "supernotify__help"
+    description = (
+        "Look up the Supernotify documentation, for how-to questions such as 'how do I e-mail a camera snapshot?' "
+        "or 'what does inclusion fallback mean?'. Returns the best matching pages, with configuration examples "
+        "and recipes, to answer from. The documentation is for the latest release, in English."
+    )
+
+    def __init__(self, engine: SupernotifyEngine) -> None:
+        super().__init__(engine)
+        self.parameters = vol.Schema({
+            vol.Required("question", description="What to look up, in a few words or a whole question"): str
+        })
+
+    @override
+    async def async_call(self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext) -> JsonObjectType:
+        args = self.parameters(tool_input.tool_args)
+        try:
+            pages = await _docs(hass)
+        except (aiohttp.ClientError, TimeoutError) as e:
+            _LOGGER.warning("SUPERNOTIFY Unable to fetch documentation from %s: %s", DOCS_URL, e)
+            return {"success": False, "error": f"The documentation site could not be reached ({e})"}
+        found: dict[str, Any] = {
+            "site": DOCS_SITE,
+            "pages": [
+                {"title": page.title, "url": page.url, "text": page.text[:DOCS_SECTION_MAX_CHARS]}
+                for page in search_docs(pages, args["question"])
+            ],
+        }
+        if not found["pages"]:
+            found["note"] = "Nothing matched, try other words"
+        return {"success": True, "result": found}

@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Meldingen versturen, en ze sluimeren of dempen",
-                    "diagnostic_tools": "Recente meldingen uitleggen, proefdraaien wie een melding zou bereiken en sluimeringen tonen"
+                    "diagnostic_tools": "Recente meldingen uitleggen, proefdraaien wie een melding zou bereiken, sluimeringen tonen en de Supernotify-documentatie online opzoeken"
                 }
             }
         }

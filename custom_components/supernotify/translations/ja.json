@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "通知を送信し、スヌーズまたはミュートする",
-                    "diagnostic_tools": "最近の通知を説明し、通知が誰に届くかを試算し、スヌーズを一覧表示する"
+                    "diagnostic_tools": "最近の通知を説明し、通知が誰に届くかを試算し、スヌーズを一覧表示し、Supernotify のドキュメントをオンラインで調べる"
                 }
             }
         }

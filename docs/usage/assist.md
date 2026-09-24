@@ -27,10 +27,20 @@ Nothing is offered until you switch it on. In **Settings** > **Devices & service
 | Switch           | Tools                                               |
 |------------------|-----------------------------------------------------|
 | Action tools     | Send notifications, and snooze or silence them      |
-| Diagnostic tools | Recent notifications, dry runs, and current snoozes |
+| Diagnostic tools | Recent notifications, dry runs, current snoozes, and documentation lookup |
 
-You also need a conversation agent that uses an AI model, such as OpenAI, Anthropic, Google Gemini or
-Ollama, set to **Control Home Assistant** with **Assist**.
+!!! note "Needs an AI conversation agent"
+    The tools are only used by a conversation agent that runs an AI model, such as OpenAI, Anthropic,
+    Google Gemini or Ollama. Home Assistant's own built-in agent matches fixed sentences and can't use
+    them. If Assist answers "Sorry, I couldn't understand that", or "I am not aware of any device
+    called…", the built-in agent is answering.
+
+    1. Add an AI conversation integration, and in its options set **Control Home Assistant** to
+       **Assist**.
+    2. In **Settings** > **Voice assistants**, choose that conversation agent for the assistant you talk
+       or chat to.
+
+    The tools also need a recent Home Assistant. They don't appear on 2026.2 or earlier.
 
 ## What You Can Ask
 
@@ -41,6 +51,9 @@ Ollama, set to **Control Home Assistant** with **Assist**.
 | `supernotify__recent_notifications` | "Why didn't I get the washing machine alert?"                |
 | `supernotify__dry_run`              | "If the smoke alarm goes off, who gets told and how?"        |
 | `supernotify__snoozes`              | "What notifications have I snoozed?"                         |
+| `supernotify__help`                 | "How do I e-mail a camera snapshot with Supernotify?"        |
+
+Ask in your own words - there's no need to name the tools.
 
 The agent is told the names of your deliveries, scenarios and recipients, including any `alias`, so
 it can match "the family chat" to a delivery. Good aliases help it choose well.
@@ -84,3 +97,11 @@ recent notification since Home Assistant started is known.
 would reach, without sending anything. It makes the same checks as a real notification, including
 snoozes, priorities, conditions and who is home, except the duplicate check. E-mail addresses and
 phone numbers are partly masked.
+
+### Help from the Documentation
+
+`supernotify__help` looks up this documentation site, including the recipes and configuration
+examples, and gives the agent the best matching pages to answer from, with links. It fetches the
+documentation from `supernotify.rhizomatics.org.uk` the first time it's used, then at most once a
+day. The documentation is for the latest release, and in English, though the agent can answer in
+your language.

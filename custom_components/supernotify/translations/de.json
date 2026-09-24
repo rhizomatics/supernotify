@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Benachrichtigungen senden sowie schlummern oder stummschalten",
-                    "diagnostic_tools": "Letzte Benachrichtigungen erklären, testen, wen eine Benachrichtigung erreichen würde, und Schlummerzeiten auflisten"
+                    "diagnostic_tools": "Letzte Benachrichtigungen erklären, testen, wen eine Benachrichtigung erreichen würde, Schlummerzeiten auflisten und online in der Supernotify-Dokumentation nachschlagen"
                 }
             }
         }

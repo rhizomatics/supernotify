@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Envoyer des notifications, les mettre en pause ou en sourdine",
-                    "diagnostic_tools": "Expliquer les notifications récentes, simuler qui une notification atteindrait et lister les mises en pause"
+                    "diagnostic_tools": "Expliquer les notifications récentes, simuler qui une notification atteindrait, lister les mises en pause et consulter la documentation de Supernotify en ligne"
                 }
             }
         }

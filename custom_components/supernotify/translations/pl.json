@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Wysyłanie powiadomień oraz ich drzemka lub wyciszenie",
-                    "diagnostic_tools": "Wyjaśnianie ostatnich powiadomień, symulacja, do kogo dotarłoby powiadomienie, i lista drzemek"
+                    "diagnostic_tools": "Wyjaśnianie ostatnich powiadomień, symulacja, do kogo dotarłoby powiadomienie, lista drzemek i wyszukiwanie w dokumentacji Supernotify online"
                 }
             }
         }

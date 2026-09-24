@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Enviar notificações e adiá-las ou silenciá-las",
-                    "diagnostic_tools": "Explicar notificações recentes, simular quem uma notificação alcançaria e listar os adiamentos"
+                    "diagnostic_tools": "Explicar notificações recentes, simular quem uma notificação alcançaria, listar os adiamentos e consultar a documentação do Supernotify online"
                 }
             }
         }

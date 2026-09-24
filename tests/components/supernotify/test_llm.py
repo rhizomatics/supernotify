@@ -21,11 +21,20 @@ pytest.importorskip("homeassistant.components.llm")
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from pytest_homeassistant_custom_component.test_util.aiohttp import (  # type: ignore[import-untyped,unused-ignore]
+        AiohttpClientMocker,
+    )
+
     from custom_components.supernotify.engine import SupernotifyEngine
 
 ALICE_USER_ID = "alice-user-id"
 ACTION_TOOLS = {"supernotify__notify", "supernotify__snooze"}
-DIAGNOSTIC_TOOLS = {"supernotify__recent_notifications", "supernotify__dry_run", "supernotify__snoozes"}
+DIAGNOSTIC_TOOLS = {
+    "supernotify__recent_notifications",
+    "supernotify__dry_run",
+    "supernotify__snoozes",
+    "supernotify__help",
+}
 
 
 def _config(archive_path: Path | None = None) -> dict[str, Any]:
@@ -343,3 +352,118 @@ async def test_recent_notifications_from_archive(hass: HomeAssistant, tmp_path: 
     summary = next(n for n in for_alice["result"]["notifications"] if n["message"] == "for alice")
     assert summary["deliveries"]["chat"] == {"success": 1, "recipients": ["Alice"]}
     assert summary["occupancy"] == {"home": ["Alice"], "not_home": ["Bob"]}
+
+
+DOCS = """# Home Assistant Supernotify
+
+Preamble
+
+# Snoozing
+
+Snoozing can be selected from a mobile action, and made for a set time.
+
+# Recipe - Alexa Whispering
+
+Make Alexa whisper low priority notifications.
+
+```yaml
+# a comment in an example
+
+delivery:
+  alexa_whisper:
+    transport: alexa_devices
+```
+
+# Recipe - Email CC
+
+Copy every e-mail to one address.
+"""
+DOCS_INDEX = """# Home Assistant Supernotify
+
+## Using Supernotify
+
+- [Snoozing](https://example.org/latest/usage/snoozing/index.md)
+
+## Recipes
+
+- [Alexa Whispering Low Priority Announcements](https://example.org/latest/recipes/alexa_whisper/index.md)
+"""
+
+
+def test_split_docs_by_page() -> None:
+    from custom_components.supernotify.llm import split_docs
+
+    pages = split_docs(DOCS, DOCS_INDEX)
+
+    assert [(p.title, p.url) for p in pages] == [
+        ("Home Assistant Supernotify", None),
+        ("Snoozing", "https://example.org/latest/usage/snoozing/"),
+        ("Recipe - Alexa Whispering", "https://example.org/latest/recipes/alexa_whisper/"),
+        ("Recipe - Email CC", None),
+    ]
+    assert "# a comment in an example" in pages[2].text
+
+
+def test_search_docs_prefers_title_and_matches_stems() -> None:
+    from custom_components.supernotify.llm import search_docs, split_docs
+
+    pages = split_docs(DOCS, DOCS_INDEX)
+
+    assert [p.title for p in search_docs(pages, "how do I snooze a notification?")] == ["Snoozing"]
+    assert next(p.title for p in search_docs(pages, "make alexa whisper")) == "Recipe - Alexa Whispering"
+    assert search_docs(pages, "the notification") == []
+
+
+async def test_help_fetches_docs_once_and_answers(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    from custom_components.supernotify.llm import DOCS_INDEX_URL, DOCS_URL
+
+    aioclient_mock.get(DOCS_URL, text=DOCS)
+    aioclient_mock.get(DOCS_INDEX_URL, text=DOCS_INDEX)
+    await _setup(hass)
+
+    result = await _call(hass, "supernotify__help", {"question": "snoozing from a phone"})
+    await _call(hass, "supernotify__help", {"question": "alexa"})
+
+    assert result["success"] is True
+    [page] = result["result"]["pages"]
+    assert page["title"] == "Snoozing"
+    assert page["url"] == "https://example.org/latest/usage/snoozing/"
+    assert page["text"].startswith("Snoozing can be selected")
+    assert aioclient_mock.call_count == 2
+
+
+async def test_help_without_index_still_answers(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    from custom_components.supernotify.llm import DOCS_INDEX_URL, DOCS_URL
+
+    aioclient_mock.get(DOCS_URL, text=DOCS)
+    aioclient_mock.get(DOCS_INDEX_URL, status=404)
+    await _setup(hass)
+
+    result = await _call(hass, "supernotify__help", {"question": "snoozing"})
+
+    assert result["result"]["pages"][0]["url"] is None
+
+
+async def test_help_nothing_matched(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    from custom_components.supernotify.llm import DOCS_INDEX_URL, DOCS_URL
+
+    aioclient_mock.get(DOCS_URL, text=DOCS)
+    aioclient_mock.get(DOCS_INDEX_URL, text=DOCS_INDEX)
+    await _setup(hass)
+
+    result = await _call(hass, "supernotify__help", {"question": "zeppelin"})
+
+    assert result["result"]["pages"] == []
+    assert "Nothing matched" in result["result"]["note"]
+
+
+async def test_help_site_unreachable(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
+    from custom_components.supernotify.llm import DOCS_URL
+
+    aioclient_mock.get(DOCS_URL, exc=TimeoutError())
+    await _setup(hass)
+
+    result = await _call(hass, "supernotify__help", {"question": "snoozing"})
+
+    assert result["success"] is False
+    assert "could not be reached" in result["error"]

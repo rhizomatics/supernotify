@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "发送通知，并可暂停或静音通知",
-                    "diagnostic_tools": "解释最近的通知，试算通知会送达谁，并列出暂停项"
+                    "diagnostic_tools": "解释最近的通知，试算通知会送达谁，列出暂停项，并在线查阅 Supernotify 文档"
                 }
             }
         }

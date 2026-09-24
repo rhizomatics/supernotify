@@ -488,7 +488,7 @@
                 },
                 "data_description": {
                     "action_tools": "Enviar notificaciones y posponerlas o silenciarlas",
-                    "diagnostic_tools": "Explicar las notificaciones recientes, simular a quién llegaría una notificación y listar las pausas"
+                    "diagnostic_tools": "Explicar las notificaciones recientes, simular a quién llegaría una notificación, listar las pausas y consultar la documentación de Supernotify en línea"
                 }
             }
         }
