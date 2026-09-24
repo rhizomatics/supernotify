@@ -38,6 +38,14 @@ Every field's description, example and selector are what an LLM sees when it dis
 #### Structured errors and diagnostics.
 Config validation errors that name the key and the valid options let an agent self-correct. diagnostics.py helps the same way.
 
+### Respond to Dynamic Home Assistant Changes
+
+Listen out for changes to users, persons, integrations and change integrations
+
+- User account added, auto-discover incl mobile devices
+- Integration added, reassess viability and add if so ( or remove if integration no longer available )
+- Same code running at supernotify startup and on listen events so consistent behaviour
+
 ### Configurable links for email
 
 ### Actions for email
