@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_sensor_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-24 15:20 +0000
+            created at 2026-09-24 15:45 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -123,7 +123,7 @@
     <p class="run run2"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">    <span class="nam">ATTR_DATA</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="nam">ATTR_DEBUG</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">    <span class="nam">ATTR_DELIVERY</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">    <span class="nam">ATTR_DELIVERY_CONFIG</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">    <span class="nam">ATTR_DELIVERY_CONTROL</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">    <span class="nam">ATTR_DELIVERY_SELECTION</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">    <span class="nam">ATTR_DUPE_POLICY_MT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">    <span class="nam">ATTR_DUPE_POLICY_MTSLP</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -701,7 +701,7 @@
     <p class="run run2"><span class="n"><a id="t619" href="#t619">619</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_CUSTOM_TARGET</span><span class="op">)</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">All</span><span class="op">(</span><span class="nam">cv</span><span class="op">.</span><span class="nam">ensure_list</span><span class="op">,</span> <span class="op">[</span><span class="nam">cv</span><span class="op">.</span><span class="nam">string</span><span class="op">]</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t620" href="#t620">620</a></span><span class="t">        <span class="com"># the delivery dropdown can only give names, so this takes any form `delivery` does, and</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t621" href="#t621">621</a></span><span class="t">        <span class="com"># actions.py&#x27;s action_notify merges the two into `delivery` before Notification sees them</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_DELIVERY_CONFIG</span><span class="op">)</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Any</span><span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="nam">DELIVERY_FIELD_SCHEMA</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t622" href="#t622">622</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_DELIVERY_CONTROL</span><span class="op">)</span><span class="op">:</span> <span class="nam">vol</span><span class="op">.</span><span class="nam">Any</span><span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="nam">DELIVERY_FIELD_SCHEMA</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t623" href="#t623">623</a></span><span class="t">        <span class="com"># promoted out of media: for their own selectors - notify.py&#x27;s action_notify</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t624" href="#t624">624</a></span><span class="t">        <span class="com"># merges them back into media before Notification ever sees them</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t625" href="#t625">625</a></span><span class="t">        <span class="nam">vol</span><span class="op">.</span><span class="nam">Optional</span><span class="op">(</span><span class="nam">ATTR_MEDIA_CAMERA_ENTITY_ID</span><span class="op">)</span><span class="op">:</span> <span class="nam">cv</span><span class="op">.</span><span class="nam">entity_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -718,7 +718,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_sensor_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-24 15:20 +0000
+            created at 2026-09-24 15:45 +0000
         </p>
     </div>
 </footer>

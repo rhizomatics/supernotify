@@ -441,7 +441,7 @@
         "type": "string"
       }
     },
-    "delivery_config": {
+    "delivery_control": {
       "anyOf": [
         {
           "type": "string"
