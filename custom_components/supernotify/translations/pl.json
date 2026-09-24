@@ -400,7 +400,8 @@
                 "menu_options": {
                     "archive": "Ustawienia archiwum",
                     "dupe_check": "Wykrywanie duplikatów",
-                    "housekeeping": "Konserwacja"
+                    "housekeeping": "Konserwacja",
+                    "llm_tools": "Narzędzia LLM (beta)"
                 },
                 "title": "Opcje Supernotify"
             },
@@ -477,6 +478,18 @@
                     "media_storage_days": "Przez ile dni przechowywane są media, np. zrzuty i załączniki"
                 },
                 "title": "Opcje konserwacji"
+            },
+            "llm_tools": {
+                "title": "Narzędzia LLM (beta)",
+                "description": "Beta: pozwala agentom konwersacji Assist oraz agentom AI połączonym przez serwer MCP Home Assistant korzystać z Supernotify. Narzędzia docierają tylko do już skonfigurowanych odbiorców, dostaw i scenariuszy.",
+                "data": {
+                    "action_tools": "Narzędzia działań",
+                    "diagnostic_tools": "Narzędzia diagnostyczne"
+                },
+                "data_description": {
+                    "action_tools": "Wysyłanie powiadomień oraz ich drzemka lub wyciszenie",
+                    "diagnostic_tools": "Wyjaśnianie ostatnich powiadomień, symulacja, do kogo dotarłoby powiadomienie, i lista drzemek"
+                }
             }
         }
     },

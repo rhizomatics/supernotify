@@ -2,17 +2,20 @@ reload:
 notify:
   fields:
     message:
+      example: "The front door has been opened"
       required: true
       selector:
         text:
           multiline: true
     title:
+      example: "Security"
       selector:
         text:
     target:
       selector:
         target:
     custom_target:
+      example: "alice@example.com"
       selector:
         text:
           multiple: true
@@ -41,36 +44,46 @@ notify:
             - value: implicit
               label: Implicit
     delivery:
+      example: "[email, mobile_push]"
       selector:
         object:
     multimedia:
       collapsed: false
       fields:
         camera_entity_id:
+          example: "camera.front_door"
           selector:
             entity:
               domain: camera
         snapshot_url:
+          example: "https://example.com/front_door.jpg"
           selector:
             text:
         clip_url:
+          example: "https://example.com/front_door.mp4"
           selector:
             text:
         media:
+          example: |
+            camera_ptz_preset: front_gate
+            camera_delay: 2
           selector:
             object:
     scenarios:
       collapsed: false
       fields:
         require_scenarios:
+          example: "night"
           selector:
             text:
               multiple: true
         apply_scenarios:
+          example: "night"
           selector:
             text:
               multiple: true
         constrain_scenarios:
+          example: "night"
           selector:
             text:
               multiple: true
@@ -78,17 +91,23 @@ notify:
       collapsed: true
       fields:
         actions:
+          example: |
+            - action: OPEN_GATE
+              title: Open the gate
           selector:
             object:
         action_groups:
+          example: "gate_actions"
           selector:
             text:
               multiple: true
         message_html:
+          example: "The <b>front door</b> has been opened"
           selector:
             text:
               multiline: true
         spoken_message:
+          example: "The front door has been opened"
           selector:
             text:
               multiline: true
@@ -102,9 +121,11 @@ notify:
           selector:
             object:
         timestamp:
+          example: "%H:%M"
           selector:
             text:
         extra_data:
+          example: "tag: front_door"
           selector:
             object:
 enquire_configuration:

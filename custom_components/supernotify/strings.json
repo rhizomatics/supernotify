@@ -311,7 +311,8 @@
                 "menu_options": {
                     "archive": "Archive Settings",
                     "dupe_check": "Duplicate Detection",
-                    "housekeeping": "Housekeeping"
+                    "housekeeping": "Housekeeping",
+                    "llm_tools": "LLM Tools (beta)"
                 },
                 "title": "Supernotify Options"
             },
@@ -388,6 +389,18 @@
                     "media_storage_days": "How many days of stored media, such as snapshots and attachments, to keep"
                 },
                 "title": "Housekeeping Options"
+            },
+            "llm_tools": {
+                "title": "LLM Tools (beta)",
+                "description": "Beta: let Assist conversation agents, and AI agents connected through Home Assistant's MCP server, use Supernotify. Tools only reach the recipients, deliveries and scenarios already configured.",
+                "data": {
+                    "action_tools": "Action tools",
+                    "diagnostic_tools": "Diagnostic tools"
+                },
+                "data_description": {
+                    "action_tools": "Send notifications, and snooze or silence them",
+                    "diagnostic_tools": "Explain recent notifications, dry-run who a notification would reach, and list snoozes"
+                }
             }
         }
     },

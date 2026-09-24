@@ -400,7 +400,8 @@
                 "menu_options": {
                     "archive": "Paramètres d'archivage",
                     "dupe_check": "Détection des doublons",
-                    "housekeeping": "Entretien"
+                    "housekeeping": "Entretien",
+                    "llm_tools": "Outils LLM (bêta)"
                 },
                 "title": "Options de Supernotify"
             },
@@ -477,6 +478,18 @@
                     "media_storage_days": "Nombre de jours de conservation des médias stockés, comme les captures et pièces jointes"
                 },
                 "title": "Options d'entretien"
+            },
+            "llm_tools": {
+                "title": "Outils LLM (bêta)",
+                "description": "Bêta : permet aux agents de conversation Assist, et aux agents IA connectés via le serveur MCP de Home Assistant, d'utiliser Supernotify. Les outils n'atteignent que les destinataires, livraisons et scénarios déjà configurés.",
+                "data": {
+                    "action_tools": "Outils d'action",
+                    "diagnostic_tools": "Outils de diagnostic"
+                },
+                "data_description": {
+                    "action_tools": "Envoyer des notifications, les mettre en pause ou en sourdine",
+                    "diagnostic_tools": "Expliquer les notifications récentes, simuler qui une notification atteindrait et lister les mises en pause"
+                }
             }
         }
     },

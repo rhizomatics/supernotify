@@ -97,6 +97,12 @@ Listen out for changes to users, persons, integrations and change integrations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement. `delivery_provenance` (v2.8.0) now records which source enabled or disabled each delivery; suppression reasons and multiple selectors are still to do.
 
+### Error Handling
+
+Dead letter queue for failed deliveries, so admin can get by email if preferred, with options to throttle / group / summarize
+
+Similar to above but for cases where delivery went ahead with errors, like mis-configured delivery or unknown scenario.
+
 ### Telemetry
 
 - HACS may get included in basic stats

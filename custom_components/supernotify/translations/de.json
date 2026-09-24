@@ -400,7 +400,8 @@
                 "menu_options": {
                     "archive": "Archiveinstellungen",
                     "dupe_check": "Duplikaterkennung",
-                    "housekeeping": "Wartung"
+                    "housekeeping": "Wartung",
+                    "llm_tools": "LLM-Werkzeuge (Beta)"
                 },
                 "title": "Supernotify-Optionen"
             },
@@ -477,6 +478,18 @@
                     "media_storage_days": "Wie viele Tage gespeicherte Medien, z. B. Snapshots und Anhänge, aufbewahrt werden"
                 },
                 "title": "Wartungsoptionen"
+            },
+            "llm_tools": {
+                "title": "LLM-Werkzeuge (Beta)",
+                "description": "Beta: Assist-Gesprächsagenten und über den MCP-Server von Home Assistant verbundene KI-Agenten dürfen Supernotify nutzen. Die Werkzeuge erreichen nur bereits konfigurierte Empfänger, Zustellungen und Szenarien.",
+                "data": {
+                    "action_tools": "Aktionswerkzeuge",
+                    "diagnostic_tools": "Diagnosewerkzeuge"
+                },
+                "data_description": {
+                    "action_tools": "Benachrichtigungen senden sowie schlummern oder stummschalten",
+                    "diagnostic_tools": "Letzte Benachrichtigungen erklären, testen, wen eine Benachrichtigung erreichen würde, und Schlummerzeiten auflisten"
+                }
             }
         }
     },

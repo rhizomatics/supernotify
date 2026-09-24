@@ -400,7 +400,8 @@
                 "menu_options": {
                     "archive": "Configuración de archivo",
                     "dupe_check": "Detección de duplicados",
-                    "housekeeping": "Mantenimiento"
+                    "housekeeping": "Mantenimiento",
+                    "llm_tools": "Herramientas LLM (beta)"
                 },
                 "title": "Opciones de Supernotify"
             },
@@ -477,6 +478,18 @@
                     "media_storage_days": "Cuántos días se conservan los medios almacenados, como capturas y adjuntos"
                 },
                 "title": "Opciones de mantenimiento"
+            },
+            "llm_tools": {
+                "title": "Herramientas LLM (beta)",
+                "description": "Beta: permite que los agentes de conversación de Assist y los agentes de IA conectados mediante el servidor MCP de Home Assistant usen Supernotify. Las herramientas solo llegan a los destinatarios, entregas y escenarios ya configurados.",
+                "data": {
+                    "action_tools": "Herramientas de acción",
+                    "diagnostic_tools": "Herramientas de diagnóstico"
+                },
+                "data_description": {
+                    "action_tools": "Enviar notificaciones y posponerlas o silenciarlas",
+                    "diagnostic_tools": "Explicar las notificaciones recientes, simular a quién llegaría una notificación y listar las pausas"
+                }
             }
         }
     },

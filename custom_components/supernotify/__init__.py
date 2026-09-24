@@ -140,7 +140,7 @@ def _async_remove_legacy_default_entities(hass: HomeAssistant) -> None:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
-    from .actions import async_register_engine_actions
+    from .actions import async_describe_configured_names, async_register_engine_actions
     from .engine import build_supernotify_engine
     from .notification import set_version
     from .notify import SuperNotificationService
@@ -168,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     # Only once the counter sensors have restored their last values, so nothing is counted
     # before then and lost
     async_register_engine_actions(hass, engine, full_config)
+    await async_describe_configured_names(hass, engine)
 
     ## Legacy Notification Service set-up
 

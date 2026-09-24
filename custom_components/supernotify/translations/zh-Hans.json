@@ -400,7 +400,8 @@
                 "menu_options": {
                     "archive": "存档设置",
                     "dupe_check": "重复检测",
-                    "housekeeping": "维护"
+                    "housekeeping": "维护",
+                    "llm_tools": "LLM 工具（测试版）"
                 },
                 "title": "Supernotify 选项"
             },
@@ -477,6 +478,18 @@
                     "media_storage_days": "存储的媒体（例如快照和附件）保留的天数"
                 },
                 "title": "维护选项"
+            },
+            "llm_tools": {
+                "title": "LLM 工具（测试版）",
+                "description": "测试版：允许 Assist 对话代理以及通过 Home Assistant 的 MCP 服务器连接的 AI 代理使用 Supernotify。这些工具只能触达已配置的接收人、投递方式和场景。",
+                "data": {
+                    "action_tools": "操作工具",
+                    "diagnostic_tools": "诊断工具"
+                },
+                "data_description": {
+                    "action_tools": "发送通知，并可暂停或静音通知",
+                    "diagnostic_tools": "解释最近的通知，试算通知会送达谁，并列出暂停项"
+                }
             }
         }
     },

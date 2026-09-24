@@ -16,6 +16,9 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.loader import async_get_integration
+from homeassistant.util.yaml import load_yaml_dict
 
 from . import DOMAIN
 from .archive import ARCHIVE_PURGE_MIN_INTERVAL
@@ -23,11 +26,15 @@ from .common import ensure_list
 from .const import (
     ATTR_CUSTOM_TARGET,
     ATTR_DATA,
+    ATTR_DELIVERY,
     ATTR_EXTRA_DATA,
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
     ATTR_MEDIA_SNAPSHOT_URL,
+    ATTR_SCENARIOS_APPLY,
+    ATTR_SCENARIOS_CONSTRAIN,
+    ATTR_SCENARIOS_REQUIRE,
     CONF_ACTION_GROUPS,
     CONF_ACTIONS,
     CONF_ARCHIVE,
@@ -359,6 +366,29 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         schema=RESET_OVERRIDES_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )
+
+
+async def async_describe_configured_names(hass: HomeAssistant, engine: SupernotifyEngine) -> None:
+    """Show the deliveries and scenarios configured now in supernotify.notify's description.
+
+    services.yaml can only hold a fixed description, so it's copied and set again with the scenario
+    fields as dropdowns (still taking a typed name), and the configured delivery names as the
+    delivery field's example - that field stays a free-form object, since it also takes a mapping.
+    Names and descriptions still come from the translations, which are looked up by field.
+    Called on every config entry setup, so a reload picks up changed names.
+    """
+    integration = await async_get_integration(hass, DOMAIN)
+    services: dict[str, Any] = await hass.async_add_executor_job(load_yaml_dict, str(integration.file_path / "services.yaml"))
+    notify: dict[str, Any] = services["notify"]
+    fields: dict[str, Any] = notify["fields"]
+    if deliveries := list(engine.context.delivery_registry.deliveries):
+        fields[ATTR_DELIVERY]["example"] = f"[{', '.join(deliveries)}]"
+    if scenarios := list(engine.context.scenario_registry.scenarios):
+        for field in (ATTR_SCENARIOS_REQUIRE, ATTR_SCENARIOS_APPLY, ATTR_SCENARIOS_CONSTRAIN):
+            fields["scenarios"]["fields"][field]["selector"] = {
+                "select": {"options": scenarios, "multiple": True, "custom_value": True}
+            }
+    async_set_service_schema(hass, DOMAIN, "notify", notify)
 
 
 @callback

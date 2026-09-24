@@ -200,8 +200,8 @@ class SupernotifyEngine:
         target: list[str] | str | dict[str, Any] | None = None,
         context: HAContext | None = None,
         **kwargs: Any,
-    ) -> None:
-        """Send a message via chosen transport."""
+    ) -> Notification | None:
+        """Send a message via chosen transport, returning the notification, if one could be made"""
         data = kwargs.get(ATTR_DATA, {})
         notification = None
         _LOGGER.debug("SUPERNOTIFY Message: %s, target: %s, data: %s", message, target, data)
@@ -259,6 +259,19 @@ class SupernotifyEngine:
                 # already has been, so one uncategorized target must never get in the way
                 # of the rest of the notification going out
                 raise UncategorizedTargetError(notification.delivered, notification.uncategorized_targets)
+        return notification
+
+    async def async_dry_run(
+        self,
+        message: str = "",
+        title: str | None = None,
+        target: list[str] | str | dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Which deliveries a notification would use right now, and who it would reach, without sending it"""
+        notification = Notification(self.context, message, title, target, action_data=data)
+        await notification.initialize()
+        return notification.plan()
 
     @callback
     def refresh_entities(self) -> None:

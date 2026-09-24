@@ -223,6 +223,24 @@ class ArchiveDirectory(ArchiveDestination):
             return sum(1 for p in await aiofiles.os.listdir(path) if p != WRITE_TEST)
         return 0
 
+    async def recent(self, since: dt.datetime, limit: int) -> list[dict[str, Any]]:
+        """Archived notifications written since a given time, newest first"""
+        if not self.archive_path or not await self.archive_path.exists():
+            return []
+        cutoff: float = since.timestamp()
+        candidates: list[tuple[float, str]] = []
+        for entry in await aiofiles.os.scandir(self.archive_path):
+            if entry.name.endswith(".json") and (modified := entry.stat().st_mtime) >= cutoff:
+                candidates.append((modified, entry.path))
+        results: list[dict[str, Any]] = []
+        for _modified, path in sorted(candidates, reverse=True)[:limit]:
+            try:
+                async with aiofiles.open(path) as file:
+                    results.append(json.loads(await file.read()))
+            except (OSError, ValueError) as e:
+                _LOGGER.warning("SUPERNOTIFY Unable to read archived notification %s: %s", path, e)
+        return results
+
     async def cleanup(self, days: int, force: bool) -> int:
         if (
             not force
@@ -300,6 +318,9 @@ class NotificationArchive:
 
     async def size(self) -> int:
         return await self.archive_directory.size() if self.archive_directory else 0
+
+    async def recent(self, since: dt.datetime, limit: int) -> list[dict[str, Any]]:
+        return await self.archive_directory.recent(since, limit) if self.archive_directory else []
 
     async def cleanup(self, days: int | None = None, force: bool = False) -> int:
         days = days or self.archive_days

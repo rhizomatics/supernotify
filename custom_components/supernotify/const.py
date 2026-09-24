@@ -325,6 +325,11 @@ TRANSPORT_UNRECORDED_ATTRIBUTES: Final[frozenset[str]] = frozenset({
 CONF_SNOOZE = "snooze"
 CONF_SNOOZE_TIME = "snooze_time"
 
+# Config entry options for the LLM tools offered to Assist and MCP (beta), see llm.py
+CONF_LLM_TOOLS: Final[str] = "llm_tools"
+CONF_LLM_ACTION_TOOLS: Final[str] = "action_tools"
+CONF_LLM_DIAGNOSTIC_TOOLS: Final[str] = "diagnostic_tools"
+
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
 # May need condition, and also enabled if delivery disabled
 # CONF_OCCUPANCY="occupancy"

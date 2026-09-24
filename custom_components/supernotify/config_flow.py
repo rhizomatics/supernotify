@@ -41,6 +41,9 @@ from .const import (
     CONF_DUPE_POLICY,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
+    CONF_LLM_ACTION_TOOLS,
+    CONF_LLM_DIAGNOSTIC_TOOLS,
+    CONF_LLM_TOOLS,
     CONF_MEDIA_PATH,
     CONF_MEDIA_STORAGE_DAYS,
     CONF_MEDIA_URL_PREFIX,
@@ -273,10 +276,10 @@ class SupernotifyConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class SupernotifyOptionsFlow(OptionsFlow):
-    """Options pages for archive, dupe_check and housekeeping settings."""
+    """Options pages for archive, dupe_check, housekeeping and LLM tools settings."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        return self.async_show_menu(step_id="init", menu_options=["archive", "dupe_check", "housekeeping"])
+        return self.async_show_menu(step_id="init", menu_options=["archive", "dupe_check", "housekeeping", "llm_tools"])
 
     async def async_step_archive(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         current: dict[str, Any] = self.config_entry.options.get(CONF_ARCHIVE, {})
@@ -386,3 +389,14 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=current.get(CONF_MEDIA_STORAGE_DAYS, 7)): cv.positive_int,
         })
         return self.async_show_form(step_id="housekeeping", data_schema=schema)
+
+    async def async_step_llm_tools(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Beta: which tools llm.py offers to Assist conversation agents and the MCP server"""
+        current: dict[str, Any] = self.config_entry.options.get(CONF_LLM_TOOLS, {})
+        if user_input is not None:
+            return self.async_create_entry(title="", data={**self.config_entry.options, CONF_LLM_TOOLS: user_input})
+        schema = vol.Schema({
+            vol.Optional(CONF_LLM_ACTION_TOOLS, default=current.get(CONF_LLM_ACTION_TOOLS, False)): cv.boolean,
+            vol.Optional(CONF_LLM_DIAGNOSTIC_TOOLS, default=current.get(CONF_LLM_DIAGNOSTIC_TOOLS, False)): cv.boolean,
+        })
+        return self.async_show_form(step_id="llm_tools", data_schema=schema)

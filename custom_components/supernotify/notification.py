@@ -219,6 +219,40 @@ class Notification(ArchivableObject):
         self._raw_image_path: Any = None
         self._delivery_error: list[str] | None = None
         self.condition_variables: ConditionVariables
+        self.unknown_names: dict[str, list[str]] = self._unknown_names()
+
+    def _unknown_names(self) -> dict[str, list[str]]:
+        """Delivery and scenario names in the call that aren't configured, which are otherwise ignored"""
+        if not (
+            self.delivery_overrides
+            or self.required_scenario_names
+            or self.applied_scenario_names
+            or self.constrain_scenario_names
+        ):
+            return {}
+        registry: DeliveryRegistry = self.delivery_registry
+        known_deliveries: set[str] = {*registry.deliveries, *registry.transports}
+        scenarios: list[str] = list(self.context.scenario_registry.scenarios)
+        requested: dict[str, tuple[list[str], list[str]]] = {
+            ATTR_DELIVERY: (
+                [n for n in self.delivery_overrides if registry.resolve_name(n) not in known_deliveries],
+                list(registry.deliveries),
+            ),
+            ATTR_SCENARIOS_REQUIRE: ([n for n in self.required_scenario_names if n not in scenarios], scenarios),
+            ATTR_SCENARIOS_APPLY: ([n for n in self.applied_scenario_names if n not in scenarios], scenarios),
+            ATTR_SCENARIOS_CONSTRAIN: ([n for n in self.constrain_scenario_names if n not in scenarios], scenarios),
+        }
+        unknown: dict[str, list[str]] = {}
+        for field, (names, valid) in requested.items():
+            if names:
+                _LOGGER.warning(
+                    "SUPERNOTIFY Ignoring unknown %s %s, configured names are: %s",
+                    field,
+                    ", ".join(names),
+                    ", ".join(valid) or "none",
+                )
+                unknown[field] = names
+        return unknown
 
     async def initialize(self) -> None:
         """Async post-construction initialization"""
@@ -609,28 +643,67 @@ class Notification(ArchivableObject):
                 if isinstance(result, BaseException):
                     _LOGGER.error("SUPERNOTIFY Unexpected error in parallel delivery: %s", result)
 
+    def delivery_skip_reason(self, delivery: Delivery) -> SuppressionReason | None:
+        """Why a selected delivery won't be attempted at all, checked before any targets are worked out"""
+        if not delivery.transport.enabled:
+            return SuppressionReason.TRANSPORT_DISABLED
+        if self.context.snoozer.is_delivery_snoozed(self.priority, delivery, self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)):
+            return SuppressionReason.SNOOZED
+        if self.delivery_selection != DELIVERY_SELECTION_FIXED:
+            delivery_priorities: list[str] = delivery.priority
+            if self.priority and delivery_priorities and self.priority not in delivery_priorities:
+                return SuppressionReason.PRIORITY
+            if not delivery.evaluate_conditions(self.condition_variables):
+                return SuppressionReason.DELIVERY_CONDITION
+        return None
+
+    def plan(self) -> dict[str, Any]:
+        """Work out which deliveries would send, and to whom, without sending anything.
+
+        Makes the same checks as deliver(), except the dupe check, since the dupe checker
+        remembers what it's asked about.
+        """
+        deliveries: dict[str, dict[str, Any]] = {}
+        if self._suppression_reason is None:
+            for delivery_name, target_override in self.selected_deliveries.items():
+                delivery: Delivery | None = self.context.delivery_registry.deliveries.get(delivery_name)
+                if delivery is None:
+                    continue
+                reason: SuppressionReason | None = self.delivery_skip_reason(delivery)
+                targets: list[Target] = [] if reason else self.generate_targets(delivery, target_override)
+                # the same test generate_envelopes() makes, without building the envelopes
+                if not reason and not any(
+                    t.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS for t in targets
+                ):
+                    reason = SuppressionReason.NO_TARGET
+                if reason:
+                    deliveries[delivery_name] = {"skipped": str(reason)}
+                else:
+                    deliveries[delivery_name] = {
+                        "recipients": sorted({p for t in targets for p in t.person_ids}),
+                        "targets": [t.direct().as_dict(redact=True) for t in targets if t.has_resolved_target()],
+                    }
+        result: dict[str, Any] = {
+            "priority": self.priority,
+            "scenarios": list(self.enabled_scenarios),
+            "occupancy": {state: [r.entity_id for r in people] for state, people in self.occupancy.items()},
+            "deliveries": deliveries,
+            "delivery_provenance": self.debug_trace.delivery_provenance,
+        }
+        if self._suppression_reason is not None:
+            result["suppressed"] = str(self._suppression_reason)
+        elif not any("skipped" not in d for d in deliveries.values()):
+            result["fallback"] = [d.name for d in self.context.delivery_registry.fallback_by_default_deliveries]
+        return result
+
     async def call_transport(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> None:
         try:
             transport: Transport = delivery.transport
-            if not transport.enabled:
-                self.record_result(delivery, suppression_reason=SuppressionReason.TRANSPORT_DISABLED)
-                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on transport disabled", delivery)
+            skip_reason: SuppressionReason | None = self.delivery_skip_reason(delivery)
+            if skip_reason is not None:
+                self.record_result(delivery, suppression_reason=skip_reason)
+                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s, %s", delivery, skip_reason)
                 return
-            if self.context.snoozer.is_delivery_snoozed(self.priority, delivery, self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)):
-                self.record_result(delivery, suppression_reason=SuppressionReason.SNOOZED)
-                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on snooze", delivery)
-                return
-
-            delivery_priorities: list[str] = delivery.priority
-            if self.delivery_selection != DELIVERY_SELECTION_FIXED:
-                if self.priority and delivery_priorities and self.priority not in delivery_priorities:
-                    _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on priority (%s)", delivery, self.priority)
-                    self.record_result(delivery, suppression_reason=SuppressionReason.PRIORITY)
-                    return
-                if not delivery.evaluate_conditions(self.condition_variables):
-                    _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on conditions", delivery)
-                    self.record_result(delivery, suppression_reason=SuppressionReason.DELIVERY_CONDITION)
-                    return
 
             targets: list[Target] = self.generate_targets(delivery, target_override)
             envelopes: list[Envelope] = self.generate_envelopes(delivery, targets)
@@ -733,6 +806,7 @@ class Notification(ArchivableObject):
             "actions",
             "_suppression_reason",
             "delivery_provenance",
+            "unknown_names",
         ]
         # fine tune dict order to ease the eye-burden when reviewing archived notifications
         preferred_order = [
@@ -765,6 +839,7 @@ class Notification(ArchivableObject):
             "delivery_exceptions",
             "uncategorized_targets",
             "unassigned_targets",
+            "unknown_names",
             "extra_data",
             "deliveries",
             "actions",
