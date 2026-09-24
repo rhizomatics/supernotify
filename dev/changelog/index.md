@@ -19,6 +19,7 @@
 - Archive has new feature to return recent messages
 - Notifications collect unknown names
 - The `engine` has a new dry run function
+- Fix the web links for 'Learn More' links in Home Assistant
 - Improved Italian translations, provided by @lollox80
 
 ## v2.9.1 - Snooze Fix
