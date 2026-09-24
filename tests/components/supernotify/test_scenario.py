@@ -67,12 +67,20 @@ async def test_validate(mock_hass_api: HomeAssistantAPI, mock_delivery_registry)
     assert "snoozes" in uut.action_groups
     assert uut.startup_issue_count == 2
 
+    mock_hass_api.raise_issue.assert_any_call(  # type: ignore
+        "scenario_testing_delivery_bad",
+        is_fixable=False,
+        issue_key="scenario_delivery",
+        issue_map={"scenario": "testing", "delivery": "bad", "deliveries": "good, ok"},
+        learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
+        severity=IssueSeverity.WARNING,
+    )
     mock_hass_api.raise_issue.assert_called_with(  # type: ignore
         "scenario_testing_action_group_lights",
         is_fixable=False,
-        issue_key="scenario_delivery",
-        issue_map={"scenario": "testing", "action_group": "lights"},
-        learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
+        issue_key="scenario_action_group",
+        issue_map={"scenario": "testing", "action_group": "lights", "action_groups": "snoozes"},
+        learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
         severity=IssueSeverity.WARNING,
     )
 

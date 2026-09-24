@@ -119,7 +119,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_reserved_name",
                 issue_key="delivery_reserved_name",
                 issue_map={"delivery": self.name},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
         if CONF_INCLUSION not in self._raw_conf and INCLUSION_DEFAULT not in self.inclusion:
             _LOGGER.info(
@@ -132,7 +132,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_lost_implicit_inclusion",
                 issue_key="delivery_lost_implicit_inclusion",
                 issue_map={"delivery": self.name, "transport": self.transport.name},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
         if self.name in RESERVED_DELIVERY_NAMES:
             _LOGGER.warning("SUPERNOTIFY Delivery uses reserved word %s", self.name)
@@ -140,7 +140,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_reserved_name",
                 issue_key="delivery_reserved_name",
                 issue_map={"delivery": self.name},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
             errors += 1
         if not self.transport.validate_action(self.action):
@@ -149,7 +149,7 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_invalid_action",
                 issue_key="delivery_invalid_action",
                 issue_map={"delivery": self.name, "action": self.action or ""},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
             errors += 1
 
@@ -169,7 +169,7 @@ class Delivery(DeliveryConfig):
                     f"delivery_{self.name}_invalid_condition",
                     issue_key="delivery_invalid_condition",
                     issue_map={"delivery": self.name, "condition": str(self.conditions_config), "exception": exception},
-                    learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
                 )
                 errors += 1
 
@@ -491,8 +491,12 @@ class DeliveryRegistry:
             context.hass_api.raise_issue(
                 f"delivery_{bad_del.get(CONF_NAME)}_for_transport_{bad_del.get(CONF_TRANSPORT)}_failed_to_configure",
                 issue_key="delivery_unknown_transport",
-                issue_map={"delivery": bad_del.get(CONF_NAME), "transport": bad_del.get(CONF_TRANSPORT)},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/deliveries",
+                issue_map={
+                    "delivery": bad_del.get(CONF_NAME),
+                    "transport": bad_del.get(CONF_TRANSPORT),
+                    "transports": ", ".join(sorted(self.transports)),
+                },
+                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
 
         self.unload_unused_transports()

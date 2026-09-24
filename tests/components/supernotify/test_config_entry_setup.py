@@ -591,3 +591,33 @@ async def test_notify_action_extra_data_passed_as_data_and_wins(hass: HomeAssist
     assert notification is not None
     assert notification.priority == "medium"
     assert notification.extra_data == {"colour": "red", "ttl": 5, "priority": "high"}
+
+
+async def test_notify_description_offers_configured_names(hass: HomeAssistant) -> None:
+    """supernotify.notify's scenario fields become dropdowns of the scenarios configured, still
+    taking a typed name, and the delivery field's example lists the deliveries configured"""
+    from homeassistant.helpers.service import async_get_cached_service_description
+    from homeassistant.setup import async_setup_component
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "delivery": {"chat": {"transport": "generic", "action": "testing.mock_notification"}},
+                "scenarios": {"night": {}, "away": {}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    description = async_get_cached_service_description(hass, DOMAIN, "notify")
+    assert description is not None
+    fields = description["fields"]
+    assert "chat" in fields["delivery"]["example"]
+    assert fields["delivery"]["selector"] == {"object": None}
+    for field in ("require_scenarios", "apply_scenarios", "constrain_scenarios"):
+        assert fields["scenarios"]["fields"][field]["selector"] == {
+            "select": {"options": ["night", "away"], "multiple": True, "custom_value": True}
+        }
+    assert fields["message"]["required"] is True

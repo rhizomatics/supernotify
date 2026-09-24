@@ -439,19 +439,19 @@
         },
         "scenario_delivery": {
             "title": "Invalid Delivery for Scenario",
-            "description": "Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration"
+            "description": "Scenario definition {scenario} refers to a delivery {delivery} that doesn't exist in supernotify configuration. Configured deliveries: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Invalid Mobile Action Group for Scenario",
-            "description": "Scenario definition {scenario} refers to a delivery {action_group} that doesn't exist in supernotify configuration"
+            "description": "Scenario definition {scenario} refers to an action group {action_group} that doesn't exist in supernotify configuration. Configured action groups: {action_groups}"
         },
         "scenario_condition": {
             "title": "Invalid Condition for Scenario",
-            "description": "Scenario definition {scenario} contains a condition that cannor be evaluated by Home Assistant"
+            "description": "Scenario definition {scenario} contains a condition that cannot be evaluated by Home Assistant: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Unknown Transport for Delivery",
-            "description": "Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify"
+            "description": "Delivery configuration {delivery} refers to a transport {transport} that is not provided by SuperNotify. Available transports: {transports}"
         },
         "media_path": {
             "title": "Media Path Cannot be Used",
@@ -467,7 +467,7 @@
         },
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",
-            "description": "The {delivery} delivery has an invalid condition {condition}"
+            "description": "The {delivery} delivery has an invalid condition {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "Delivery No Longer Included By Default",

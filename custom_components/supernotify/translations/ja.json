@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "シナリオの配信が無効です",
-            "description": "シナリオ定義 {scenario} は、Supernotify設定に存在しない配信 {delivery} を参照しています"
+            "description": "シナリオ定義 {scenario} は、Supernotify設定に存在しない配信 {delivery} を参照しています。設定済みの配信: {deliveries}"
         },
         "scenario_action_group": {
             "title": "シナリオのモバイルアクショングループが無効です",
-            "description": "シナリオ定義 {scenario} は、Supernotify設定に存在しない配信 {action_group} を参照しています"
+            "description": "シナリオ定義 {scenario} は、Supernotify設定に存在しないアクショングループ {action_group} を参照しています。設定済みのアクショングループ: {action_groups}"
         },
         "scenario_condition": {
             "title": "シナリオの条件が無効です",
-            "description": "シナリオ定義 {scenario} には、Home Assistantで評価できない条件が含まれています"
+            "description": "シナリオ定義 {scenario} には、Home Assistantで評価できない条件が含まれています：{error}"
         },
         "delivery_unknown_transport": {
             "title": "配信のトランスポートが不明です",
-            "description": "配信設定 {delivery} は、SuperNotifyが提供していないトランスポート {transport} を参照しています"
+            "description": "配信設定 {delivery} は、SuperNotifyが提供していないトランスポート {transport} を参照しています。利用可能なトランスポート: {transports}"
         },
         "media_path": {
             "title": "メディアパスを使用できません",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "配信の条件が無効です",
-            "description": "配信 {delivery} には無効な条件 {condition} があります"
+            "description": "配信 {delivery} には無効な条件 {condition} があります：{exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "配信がデフォルトで含まれなくなりました",

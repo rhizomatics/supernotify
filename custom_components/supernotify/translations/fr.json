@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Livraison invalide pour le scénario",
-            "description": "La définition du scénario {scenario} fait référence à une livraison {delivery} qui n'existe pas dans la configuration de supernotify"
+            "description": "La définition du scénario {scenario} fait référence à une livraison {delivery} qui n'existe pas dans la configuration de supernotify. Livraisons configurées : {deliveries}"
         },
         "scenario_action_group": {
             "title": "Groupe d'actions mobile invalide pour le scénario",
-            "description": "La définition du scénario {scenario} fait référence à une livraison {action_group} qui n'existe pas dans la configuration de supernotify"
+            "description": "La définition du scénario {scenario} fait référence à un groupe d'actions {action_group} qui n'existe pas dans la configuration de supernotify. Groupes d'actions configurés : {action_groups}"
         },
         "scenario_condition": {
             "title": "Condition invalide pour le scénario",
-            "description": "La définition du scénario {scenario} contient une condition qui ne peut pas être évaluée par Home Assistant"
+            "description": "La définition du scénario {scenario} contient une condition qui ne peut pas être évaluée par Home Assistant : {error}"
         },
         "delivery_unknown_transport": {
             "title": "Transport inconnu pour la livraison",
-            "description": "La configuration de livraison {delivery} fait référence à un transport {transport} qui n'est pas fourni par SuperNotify"
+            "description": "La configuration de livraison {delivery} fait référence à un transport {transport} qui n'est pas fourni par SuperNotify. Transports disponibles : {transports}"
         },
         "media_path": {
             "title": "Le chemin des médias ne peut pas être utilisé",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "La livraison a une condition invalide",
-            "description": "La livraison {delivery} a une condition invalide {condition}"
+            "description": "La livraison {delivery} a une condition invalide {condition} : {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "La livraison n'est plus incluse par défaut",

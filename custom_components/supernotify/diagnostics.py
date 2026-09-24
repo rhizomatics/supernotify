@@ -13,6 +13,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.redact import REDACTED, async_redact_data, partial_redact
 
 if TYPE_CHECKING:
@@ -59,6 +60,17 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: Superno
         "last_notification": last_notification.contents(diagnostics=True) if last_notification else None,
         "archive_enabled": service.context.archive.enabled,
         "media_storage_configured": bool(service.context.media_storage.media_path),
+        # configuration problems, each naming what's wrong and, where there's a choice, what's configured
+        "issues": [
+            {
+                "issue_id": issue.issue_id,
+                "translation_key": issue.translation_key,
+                "placeholders": issue.translation_placeholders,
+                "severity": issue.severity,
+            }
+            for (domain, _issue_id), issue in ir.async_get(hass).issues.items()
+            if domain == entry.domain and issue.active
+        ],
     }
 
     return async_redact_data(data, TO_REDACT)

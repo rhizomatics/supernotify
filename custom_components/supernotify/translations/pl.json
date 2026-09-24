@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Nieprawidłowe dostarczenie dla scenariusza",
-            "description": "Definicja scenariusza {scenario} odwołuje się do dostarczenia {delivery}, które nie istnieje w konfiguracji Supernotify"
+            "description": "Definicja scenariusza {scenario} odwołuje się do dostarczenia {delivery}, które nie istnieje w konfiguracji Supernotify. Skonfigurowane dostarczenia: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Nieprawidłowa mobilna grupa akcji dla scenariusza",
-            "description": "Definicja scenariusza {scenario} odwołuje się do dostarczenia {action_group}, które nie istnieje w konfiguracji Supernotify"
+            "description": "Definicja scenariusza {scenario} odwołuje się do grupy akcji {action_group}, która nie istnieje w konfiguracji Supernotify. Skonfigurowane grupy akcji: {action_groups}"
         },
         "scenario_condition": {
             "title": "Nieprawidłowy warunek dla scenariusza",
-            "description": "Definicja scenariusza {scenario} zawiera warunek, który nie może być oceniony przez Home Assistant"
+            "description": "Definicja scenariusza {scenario} zawiera warunek, który nie może być oceniony przez Home Assistant: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Nieznany transport dla dostarczenia",
-            "description": "Konfiguracja dostarczenia {delivery} odwołuje się do transportu {transport}, który nie jest dostarczany przez SuperNotify"
+            "description": "Konfiguracja dostarczenia {delivery} odwołuje się do transportu {transport}, który nie jest dostarczany przez SuperNotify. Dostępne transporty: {transports}"
         },
         "media_path": {
             "title": "Ścieżka mediów nie może być użyta",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "Dostarczenie ma nieprawidłowy warunek",
-            "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}"
+            "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "Dostarczenie nie jest już domyślnie uwzględniane",

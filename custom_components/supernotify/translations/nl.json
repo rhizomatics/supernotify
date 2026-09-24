@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Ongeldige bezorging voor scenario",
-            "description": "Scenariodefinitie {scenario} verwijst naar een bezorging {delivery} die niet bestaat in de Supernotify-configuratie"
+            "description": "Scenariodefinitie {scenario} verwijst naar een bezorging {delivery} die niet bestaat in de Supernotify-configuratie. Geconfigureerde bezorgingen: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Ongeldige mobiele actiegroep voor scenario",
-            "description": "Scenariodefinitie {scenario} verwijst naar een bezorging {action_group} die niet bestaat in de Supernotify-configuratie"
+            "description": "Scenariodefinitie {scenario} verwijst naar een actiegroep {action_group} die niet bestaat in de Supernotify-configuratie. Geconfigureerde actiegroepen: {action_groups}"
         },
         "scenario_condition": {
             "title": "Ongeldige voorwaarde voor scenario",
-            "description": "Scenariodefinitie {scenario} bevat een voorwaarde die niet door Home Assistant kan worden geëvalueerd"
+            "description": "Scenariodefinitie {scenario} bevat een voorwaarde die niet door Home Assistant kan worden geëvalueerd: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Onbekend transport voor bezorging",
-            "description": "Bezorgingsconfiguratie {delivery} verwijst naar een transport {transport} dat niet door SuperNotify wordt geleverd"
+            "description": "Bezorgingsconfiguratie {delivery} verwijst naar een transport {transport} dat niet door SuperNotify wordt geleverd. Beschikbare transporten: {transports}"
         },
         "media_path": {
             "title": "Mediapad kan niet worden gebruikt",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "Bezorging heeft een ongeldige voorwaarde",
-            "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}"
+            "description": "Bezorging {delivery} heeft een ongeldige voorwaarde {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "Bezorging wordt niet meer standaard opgenomen",

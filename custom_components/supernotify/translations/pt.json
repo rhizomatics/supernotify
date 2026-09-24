@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Entrega inválida para o cenário",
-            "description": "A definição do cenário {scenario} faz referência a uma entrega {delivery} que não existe na configuração do Supernotify"
+            "description": "A definição do cenário {scenario} faz referência a uma entrega {delivery} que não existe na configuração do Supernotify. Entregas configuradas: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Grupo de ação móvel inválido para o cenário",
-            "description": "A definição do cenário {scenario} faz referência a uma entrega {action_group} que não existe na configuração do Supernotify"
+            "description": "A definição do cenário {scenario} faz referência a um grupo de ações {action_group} que não existe na configuração do Supernotify. Grupos de ações configurados: {action_groups}"
         },
         "scenario_condition": {
             "title": "Condição inválida para o cenário",
-            "description": "A definição do cenário {scenario} contém uma condição que não pode ser avaliada pelo Home Assistant"
+            "description": "A definição do cenário {scenario} contém uma condição que não pode ser avaliada pelo Home Assistant: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Transporte desconhecido para a entrega",
-            "description": "A configuração de entrega {delivery} faz referência a um transporte {transport} que não é fornecido pelo SuperNotify"
+            "description": "A configuração de entrega {delivery} faz referência a um transporte {transport} que não é fornecido pelo SuperNotify. Transportes disponíveis: {transports}"
         },
         "media_path": {
             "title": "O caminho de mídia não pode ser usado",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "A entrega tem uma condição inválida",
-            "description": "A entrega {delivery} tem uma condição inválida {condition}"
+            "description": "A entrega {delivery} tem uma condição inválida {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "A entrega não é mais incluída por padrão",

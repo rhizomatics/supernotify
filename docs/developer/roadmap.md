@@ -132,22 +132,18 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
 
-#### Provide LLM tools.
-Add an `llm.py` platform whose `async_get_tools` returns a `supernotify__notify` tool when `api_id` is `assist`. HA merges it into the built-in Assist API, so conversation agents and HA's MCP server both get it with no extra setup. `async_register_api` would give a separate API that users must select in every agent and in the MCP server, so avoid it. The tool list is rebuilt for each request, so `delivery`, `scenario` and `recipients` can be `vol.In` over the configured names. Tool names must start with `supernotify__` (unprefixed names break in HA 2027.3). The design work is in safety: make the tool opt-in, leave out `custom_target`, `actions` and media URLs, and consider capping priority. Check which HA release added the `llm` platform against the `hacs.json` minimum. On older HA the platform is just never loaded. Users can already wrap `supernotify.notify` in a script and expose it to Assist. A built-in tool is worth adding only because it can list and describe the real deliveries, scenarios and recipients. It is the only option here that makes Supernotify callable by agents, not just easier to configure.
+v2.10.0 shipped a first beta, see [Assist and AI Agents](../usage/assist.md):
 
-Besides sending, these tools would be useful:
+- `llm.py` gives Assist, and so HA's MCP server, tools to send, snooze, explain recent notifications, dry run, and list snoozes. They are switched on in the options, with action and diagnostic tools separate.
+- `supernotify.notify` fields have examples. The scenario fields are dropdowns of the configured scenarios, and the delivery field's example lists the configured deliveries.
+- Unknown delivery and scenario names in a call are logged with the configured names, and kept as `unknown_names` in the archive.
+- Repair issues for unknown deliveries, action groups and transports list what's configured, condition issues include the error, and diagnostics include open issues.
 
-- **Explain what happened**, for example "Why didn't I get the doorbell alert?" or "What went out today?". Builds on `enquire_last_notification`, and needs a new archive query filtered by time and recipient.
-- **Snooze and unsnooze by voice**, with `enquire_snoozes` and `clear_snoozes`. `register_snooze` exists, but today only mobile push actions can create a snooze, so this needs a new action.
-- **Dry run**: which deliveries and targets would a notification resolve to right now, without sending. This is better than combining `enquire_implicit_deliveries`, `enquire_deliveries_by_scenario`, `enquire_active_scenarios` and `enquire_recipients`. Occupancy belongs only here and in explanations, as the reason a recipient was chosen. Supernotify is not a primary source of occupancy, so it gets no tool of its own.
+Still to do:
 
-Enable switches for scenarios, recipients, deliveries and transports need no tool. Assist can already turn exposed switches on and off, so the work there is good entity names and aliases. Don't expose `purge_media`, `purge_archive`, `reload` or `reset_overrides`. `enquire_configuration` returns a lot of data and may include addresses or tokens, so leave it out or redact it. Voice users mostly want to send, snooze and ask what just happened. MCP agents mostly want read-only diagnosis. Both usually reach tools through the Assist API, so use separate opt-in options for action tools and diagnostic tools rather than trying to tell them apart.
-
-#### Richer services.yaml descriptions.
-Every field's description, example and selector are what an LLM sees when it discovers actions. Dynamic delivery and scenario dropdowns via `async_set_service_schema` would help agents as well, since they would see the real delivery names.
-
-#### Structured errors and diagnostics.
-Config validation errors that name the key and the valid options let an agent self-correct. `diagnostics.py` helps the same way.
+- Check which HA release added the `llm` platform, against the `hacs.json` minimum. On older HA the tools just don't appear.
+- The delivery field stays a free-form object, since it also takes a mapping that tunes deliveries. A dropdown would push that form into YAML.
+- Gather beta feedback on how well agents choose and fill in the tools, then decide what to keep, and whether to leave beta.
 
 ## Internal Improvements
 

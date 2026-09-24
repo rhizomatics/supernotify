@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "场景的推送无效",
-            "description": "场景定义 {scenario} 引用了 Supernotify 配置中不存在的推送 {delivery}"
+            "description": "场景定义 {scenario} 引用了 Supernotify 配置中不存在的推送 {delivery}。已配置的推送：{deliveries}"
         },
         "scenario_action_group": {
             "title": "场景的移动操作组无效",
-            "description": "场景定义 {scenario} 引用了 Supernotify 配置中不存在的推送 {action_group}"
+            "description": "场景定义 {scenario} 引用了 Supernotify 配置中不存在的操作组 {action_group}。已配置的操作组：{action_groups}"
         },
         "scenario_condition": {
             "title": "场景条件无效",
-            "description": "场景定义 {scenario} 包含 Home Assistant 无法评估的条件"
+            "description": "场景定义 {scenario} 包含 Home Assistant 无法评估的条件：{error}"
         },
         "delivery_unknown_transport": {
             "title": "推送的传输方式未知",
-            "description": "推送配置 {delivery} 引用了 SuperNotify 不提供的传输方式 {transport}"
+            "description": "推送配置 {delivery} 引用了 SuperNotify 不提供的传输方式 {transport}。可用的传输方式：{transports}"
         },
         "media_path": {
             "title": "无法使用媒体路径",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "推送的条件无效",
-            "description": "推送 {delivery} 包含无效条件 {condition}"
+            "description": "推送 {delivery} 包含无效条件 {condition}：{exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "推送不再默认包含",

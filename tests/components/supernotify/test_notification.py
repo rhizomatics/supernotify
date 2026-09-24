@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 from homeassistant.const import CONF_ACTION, CONF_EMAIL, CONF_ENABLED, CONF_TARGET
 from homeassistant.core import Context as HAContext
+from homeassistant.core import HomeAssistant
 from pytest_asyncio import fixture
 from pytest_unordered import unordered
 
@@ -902,3 +903,44 @@ async def test_delivery_provenance_recorded_without_debug() -> None:
     minimal = uut.contents(diagnostics=False)
     assert minimal["delivery_provenance"]["email"]["disabled_by"] == ["call"]
     assert "debug_trace" not in minimal
+
+
+async def test_unknown_delivery_and_scenario_names_warned_not_fatal(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A delivery or scenario name the call gives that isn't configured is still ignored, but now
+    logged with the configured names, and kept on the notification for the archive"""
+    from homeassistant.core import ServiceCall
+    from homeassistant.setup import async_setup_component
+
+    from custom_components.supernotify import DOMAIN
+
+    async def _mock_notification(_call: ServiceCall) -> None:
+        return None
+
+    hass.services.async_register("testing", "mock_notification", _mock_notification)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "delivery": {
+                    "chat": {"transport": "generic", "action": "testing.mock_notification", "target_required": "never"}
+                },
+                "scenarios": {"night": {}},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    engine = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+
+    notification = await engine.async_send_message(
+        "hello", data={"delivery": ["chat", "fax"], "apply_scenarios": ["nite"], "require_scenarios": ["night"]}
+    )
+
+    assert notification is not None
+    assert notification.unknown_names == {"delivery": ["fax"], "apply_scenarios": ["nite"]}
+    assert notification.contents()["unknown_names"] == {"delivery": ["fax"], "apply_scenarios": ["nite"]}
+    assert "Ignoring unknown delivery fax, configured names are:" in caplog.text
+    assert "Ignoring unknown apply_scenarios nite, configured names are: night" in caplog.text
+    assert "unknown_names" not in (await engine.async_send_message("again", data={"delivery": ["chat"]})).contents()

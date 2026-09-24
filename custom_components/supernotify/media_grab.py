@@ -569,7 +569,7 @@ class MediaStorage:
                     "media_path",
                     "media_path",
                     {"path": str(self.media_path), "error": str(e)},
-                    learn_more_url="https://supernotify.rhizomatics.org.uk/#getting-started",
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/getting_started/",
                 )
                 self.media_path = None
         if self.media_path is not None:

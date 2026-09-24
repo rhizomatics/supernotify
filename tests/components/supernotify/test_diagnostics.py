@@ -93,3 +93,32 @@ async def test_diagnostics_includes_last_notification(hass: HomeAssistant, mock_
 
     assert diagnostics["last_notification"] is not None
     assert diagnostics["last_notification"]["message"] == "hello"
+
+
+async def test_diagnostics_includes_open_issues(hass: HomeAssistant, mock_hass: Mock) -> None:
+    """Supernotify's repair issues are included, so a bug report or an agent sees what's misconfigured"""
+    from homeassistant.helpers import issue_registry as ir
+
+    service = SupernotifyEngine(mock_hass, deliveries=DELIVERY, recipients_discovery=False)
+    await service.initialize()
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "scenario_night_delivery_fax",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="scenario_delivery",
+        translation_placeholders={"scenario": "night", "delivery": "fax", "deliveries": "persistent"},
+    )
+    ir.async_create_issue(hass, "other", "not_ours", is_fixable=False, severity=ir.IssueSeverity.WARNING, translation_key="x")
+
+    diagnostics = await async_get_config_entry_diagnostics(hass, _entry(hass, service))
+
+    assert diagnostics["issues"] == [
+        {
+            "issue_id": "scenario_night_delivery_fax",
+            "translation_key": "scenario_delivery",
+            "placeholders": {"scenario": "night", "delivery": "fax", "deliveries": "persistent"},
+            "severity": "warning",
+        }
+    ]

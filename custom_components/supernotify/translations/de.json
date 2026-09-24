@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Ungültige Lieferung für Szenario",
-            "description": "Die Szenariodefinition {scenario} verweist auf eine Lieferung {delivery}, die in der Supernotify-Konfiguration nicht existiert"
+            "description": "Die Szenariodefinition {scenario} verweist auf eine Lieferung {delivery}, die in der Supernotify-Konfiguration nicht existiert. Konfigurierte Lieferungen: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Ungültige Mobile Aktionsgruppe für Szenario",
-            "description": "Die Szenariodefinition {scenario} verweist auf eine Lieferung {action_group}, die in der Supernotify-Konfiguration nicht existiert"
+            "description": "Die Szenariodefinition {scenario} verweist auf eine Aktionsgruppe {action_group}, die in der Supernotify-Konfiguration nicht existiert. Konfigurierte Aktionsgruppen: {action_groups}"
         },
         "scenario_condition": {
             "title": "Ungültige Bedingung für Szenario",
-            "description": "Die Szenariodefinition {scenario} enthält eine Bedingung, die von Home Assistant nicht ausgewertet werden kann"
+            "description": "Die Szenariodefinition {scenario} enthält eine Bedingung, die von Home Assistant nicht ausgewertet werden kann: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Unbekannter Transport für Lieferung",
-            "description": "Die Lieferungskonfiguration {delivery} verweist auf einen Transport {transport}, der nicht von SuperNotify bereitgestellt wird"
+            "description": "Die Lieferungskonfiguration {delivery} verweist auf einen Transport {transport}, der nicht von SuperNotify bereitgestellt wird. Verfügbare Transporte: {transports}"
         },
         "media_path": {
             "title": "Medienpfad kann nicht verwendet werden",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "Lieferung hat eine ungültige Bedingung",
-            "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}"
+            "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "Lieferung wird nicht mehr standardmäßig eingeschlossen",

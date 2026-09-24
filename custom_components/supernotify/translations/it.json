@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Consegna non valida per scenario",
-            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di supernotify"
+            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di supernotify. Delivery configurate: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Gruppo azione mobile non valido per scenario",
-            "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {action_group} che non esiste nella configurazione di supernotify"
+            "description": "La definizione dello scenario {scenario} fa riferimento a un gruppo di azioni {action_group} che non esiste nella configurazione di supernotify. Gruppi di azioni configurati: {action_groups}"
         },
         "scenario_condition": {
             "title": "Condizione non valida per scenario",
-            "description": "La definizione dello scenario {scenario} contiene una condizione che non può essere valutata da Home Assistant"
+            "description": "La definizione dello scenario {scenario} contiene una condizione che non può essere valutata da Home Assistant: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Transport sconosciuto per delivery",
-            "description": "La configurazione della consegna {delivery} fa riferimento a un transport {transport} non fornito da SuperNotify"
+            "description": "La configurazione della consegna {delivery} fa riferimento a un transport {transport} non fornito da SuperNotify. Transport disponibili: {transports}"
         },
         "media_path": {
             "title": "Percorso media non utilizzabile",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "La consegna ha una condizione non valida",
-            "description": "La consegna {delivery} ha una condizione non valida {condition}"
+            "description": "La consegna {delivery} ha una condizione non valida {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "La consegna non è più inclusa per impostazione predefinita",

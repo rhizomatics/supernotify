@@ -49,7 +49,7 @@ Supernotify è un componente personalizzato disponibile tramite il [Home Assista
 
 ## Documentazione
 
-Prova [Iniziare](https://supernotify.rhizomatics.org.uk/getting_started/), la spiegazione dei [concetti fondamentali](https://supernotify.rhizomatics.org.uk/it/concepts/) e gli [adattatori di trasporto](https://supernotify.rhizomatics.org.uk/transports/) disponibili. [Notifiche](https://supernotify.rhizomatics.org.uk/usage/notifying/) mostra come chiamare Supernotify dalle automazioni o dalla pagina degli strumenti per sviluppatori.
+Prova [Iniziare](https://supernotify.rhizomatics.org.uk/getting_started/), la spiegazione dei [concetti fondamentali](https://supernotify.rhizomatics.org.uk/it/concepts/) e gli [adattatori di transport](https://supernotify.rhizomatics.org.uk/transports/) disponibili. [Notifiche](https://supernotify.rhizomatics.org.uk/usage/notifying/) mostra come chiamare Supernotify dalle automazioni o dalla pagina degli strumenti per sviluppatori.
 
 Ci sono molte [ricette](https://supernotify.rhizomatics.org.uk/recipes/) con esempi di configurazione, o sfoglia per [tag](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -88,7 +88,7 @@ Ci sono molte [ricette](https://supernotify.rhizomatics.org.uk/recipes/) con ese
     * Supporta telecamere, immagini MQTT e URL di immagini
     * Riposiziona le telecamere verso preimpostazioni PTZ prima e dopo uno snapshot
 * Scelta del livello di configurazione
-    * Imposta valori predefiniti a livello di adattatore di trasporto, consegna e azione
+    * Imposta valori predefiniti a livello di adattatore di transport, consegna e azione
 * Soppressione di **notifiche duplicate**
     * Regola il tempo di attesa prima di riconsentire
 * **Archiviazione** delle notifiche e **supporto al debug**
@@ -113,7 +113,7 @@ Molto può essere fatto con la semplice configurazione non-YAML, inclusa l'autom
 ## Limitazioni note
 
 - I **link (Links)** possono essere configurati ma al momento non vengono utilizzati.
-- YAML è ancora richiesto per Consegna, Trasporto, Destinatario, Azione ecc.
+- YAML è ancora richiesto per Consegna, Transport, Destinatario, Azione ecc.
 
 ##  Rhizomatics Open Source per Home Assistant
 

@@ -318,7 +318,7 @@ class Scenario:
                     issue_key="scenario_condition",
                     issue_map={"scenario": self.name, "error": error},
                     severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
                 )
 
         for name_or_pattern, config in self._config_delivery.items():
@@ -350,9 +350,13 @@ class Scenario:
                     f"scenario_{self.name}_delivery_{name_or_pattern.replace('.', 'DOT').replace('*', 'STAR')}",
                     is_fixable=False,
                     issue_key="scenario_delivery",
-                    issue_map={"scenario": self.name, "delivery": name_or_pattern},
+                    issue_map={
+                        "scenario": self.name,
+                        "delivery": name_or_pattern,
+                        "deliveries": ", ".join(self.delivery_registry.deliveries),
+                    },
                     severity=ir.IssueSeverity.WARNING,
-                    learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
+                    learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
                 )
 
         if valid_action_group_names is not None:
@@ -365,10 +369,14 @@ class Scenario:
                     self.hass_api.raise_issue(
                         f"scenario_{self.name}_action_group_{action_group_name}",
                         is_fixable=False,
-                        issue_key="scenario_delivery",
-                        issue_map={"scenario": self.name, "action_group": action_group_name},
+                        issue_key="scenario_action_group",
+                        issue_map={
+                            "scenario": self.name,
+                            "action_group": action_group_name,
+                            "action_groups": ", ".join(valid_action_group_names),
+                        },
                         severity=ir.IssueSeverity.WARNING,
-                        learn_more_url="https://supernotify.rhizomatics.org.uk/scenarios/",
+                        learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/scenarios/",
                     )
             for action_group_name in invalid_action_groups:
                 self.action_groups.remove(action_group_name)

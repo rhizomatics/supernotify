@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "Entrega no válida para el escenario",
-            "description": "La definición del escenario {scenario} hace referencia a una entrega {delivery} que no existe en la configuración de supernotify"
+            "description": "La definición del escenario {scenario} hace referencia a una entrega {delivery} que no existe en la configuración de supernotify. Entregas configuradas: {deliveries}"
         },
         "scenario_action_group": {
             "title": "Grupo de acción móvil no válido para el escenario",
-            "description": "La definición del escenario {scenario} hace referencia a una entrega {action_group} que no existe en la configuración de supernotify"
+            "description": "La definición del escenario {scenario} hace referencia a un grupo de acciones {action_group} que no existe en la configuración de supernotify. Grupos de acciones configurados: {action_groups}"
         },
         "scenario_condition": {
             "title": "Condición no válida para el escenario",
-            "description": "La definición del escenario {scenario} contiene una condición que no puede ser evaluada por Home Assistant"
+            "description": "La definición del escenario {scenario} contiene una condición que no puede ser evaluada por Home Assistant: {error}"
         },
         "delivery_unknown_transport": {
             "title": "Transporte desconocido para la entrega",
-            "description": "La configuración de entrega {delivery} hace referencia a un transporte {transport} que no es proporcionado por SuperNotify"
+            "description": "La configuración de entrega {delivery} hace referencia a un transporte {transport} que no es proporcionado por SuperNotify. Transportes disponibles: {transports}"
         },
         "media_path": {
             "title": "La ruta de medios no puede ser utilizada",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "La entrega tiene una condición no válida",
-            "description": "La entrega {delivery} tiene una condición no válida {condition}"
+            "description": "La entrega {delivery} tiene una condición no válida {condition}: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "La entrega ya no se incluye de forma predeterminada",

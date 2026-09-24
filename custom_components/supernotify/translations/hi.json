@@ -308,19 +308,19 @@
     "issues": {
         "scenario_delivery": {
             "title": "परिदृश्य के लिए अमान्य डिलीवरी",
-            "description": "परिदृश्य परिभाषा {scenario} एक डिलीवरी {delivery} को संदर्भित करती है जो सुपरनोटिफाई कॉन्फ़िगरेशन में मौजूद नहीं है"
+            "description": "परिदृश्य परिभाषा {scenario} एक डिलीवरी {delivery} को संदर्भित करती है जो सुपरनोटिफाई कॉन्फ़िगरेशन में मौजूद नहीं है। कॉन्फ़िगर की गई डिलीवरी: {deliveries}"
         },
         "scenario_action_group": {
             "title": "परिदृश्य के लिए अमान्य मोबाइल क्रिया समूह",
-            "description": "परिदृश्य परिभाषा {scenario} एक डिलीवरी {action_group} को संदर्भित करती है जो सुपरनोटिफाई कॉन्फ़िगरेशन में मौजूद नहीं है"
+            "description": "परिदृश्य परिभाषा {scenario} एक क्रिया समूह {action_group} को संदर्भित करती है जो सुपरनोटिफाई कॉन्फ़िगरेशन में मौजूद नहीं है। कॉन्फ़िगर किए गए क्रिया समूह: {action_groups}"
         },
         "scenario_condition": {
             "title": "परिदृश्य के लिए अमान्य शर्त",
-            "description": "परिदृश्य परिभाषा {scenario} में एक शर्त है जिसे Home Assistant द्वारा मूल्यांकित नहीं किया जा सकता"
+            "description": "परिदृश्य परिभाषा {scenario} में एक शर्त है जिसे Home Assistant द्वारा मूल्यांकित नहीं किया जा सकता: {error}"
         },
         "delivery_unknown_transport": {
             "title": "डिलीवरी के लिए अज्ञात परिवहन",
-            "description": "डिलीवरी कॉन्फ़िगरेशन {delivery} एक परिवहन {transport} को संदर्भित करती है जो SuperNotify द्वारा प्रदान नहीं की जाती"
+            "description": "डिलीवरी कॉन्फ़िगरेशन {delivery} एक परिवहन {transport} को संदर्भित करती है जो SuperNotify द्वारा प्रदान नहीं की जाती। उपलब्ध परिवहन: {transports}"
         },
         "media_path": {
             "title": "मीडिया पथ का उपयोग नहीं किया जा सकता",
@@ -336,7 +336,7 @@
         },
         "delivery_invalid_condition": {
             "title": "डिलीवरी की शर्त अमान्य है",
-            "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है"
+            "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है: {exception}"
         },
         "delivery_lost_implicit_inclusion": {
             "title": "डिलीवरी अब डिफ़ॉल्ट रूप से शामिल नहीं है",
