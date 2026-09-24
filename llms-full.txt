@@ -215,7 +215,7 @@ Find lots of ideas with example configuration in the [Recipes](https://supernoti
 - The target of a notification.
 - This could be a *direct* target, like an `entity_id`, `device_id`, e-mail address, phone number, or some custom ID for a specialist transport like Telegram or API calls.
 - It also has some support, more to come, for *indirect* targets. The primary one is `person_id`, although some other Home Assistant ones will be supported in future, like `label_id`,`floor_id` and `area_id`.
-- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify will exploded these for the *Chime* integration, but otherwise ignore them.
+- There's also the in-between type, *group*, which is sort of both indirect and direct. Supernotify will explode Home Assistant groups (`group.*` helpers and platform groups, such as media player groups) into their member entities before each delivery selects its targets.
 - Targets can be qualified for a specific delivery, like `discord:839439434`
 - Targets for Notify Entity, Email and SMS are automatically routed to first available delivery for the appropriate transport
 - See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information
@@ -503,6 +503,25 @@ For a target with no address type Supernotify can auto-detect (e.g. an MQTT topi
 
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of category names and the other ways to qualify a target (a mapping, or setting it directly on a delivery).
 
+## Area, Floor and Label Targets
+
+Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            area_id: kitchen
+            floor_id: ground_floor
+            label_id:
+              - chime
+```
+
+Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+
+An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
+
 ## Notification Priority
 
 Use the `priority` key in `data` to set an optional priority. This can be used within Supernotify to switch on or off deliveries or [scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) ( for example a siren to accompany 'critical' notifications).
@@ -787,6 +806,12 @@ The user is determined by matching the mobile device id in the event to the regi
 Home Assistant notifications use *target* for any address used in a notification - that could be an e-mail address, a phone number for SMS, a Slack/Discord/Telegram ID, a smart speaker or any of the new-style Notify Entities.
 
 Supernotify has the ability to take a big, mixed bag of targets and send off the right notification for that target, and lets you associate targets with people, using the *Recipient* config, so you can pick a person and that automatically gets their e-mail address or mobile app name for push alerts.
+
+## Default Targets
+
+If no `targets` are specified on the action call, a default list will be used based on all the recipients configured or auto-discovered. This usually means everyone with a Home Assistant app on their phone or other device gets a mobile push notification.
+
+Choosing any explicit targets switches this defaulting off. Targets can be re-added manually where needed, and there's a shortcut in the Home Assistant target UI where you choose the Supernotify **Device** and this will be read as switching back on those "out of the box" targets.
 
 ## Target Categories
 
@@ -1673,6 +1698,8 @@ Additionally, `target_required` defines if this delivery needs targets to work, 
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
+Home Assistant `area_id`, `floor_id` and `label_id` targets are resolved to the entities they reference before anything else looks at them, using the same core logic as a Home Assistant entity action, so groups are expanded and an entity inherits the area of its device. The delivery's `target_categories` and `target_select` options then apply to those entities, exactly as they would to an entity named in the notification.
+
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more info on how to use them.
 
 ## Delivery Inclusion
@@ -2184,6 +2211,12 @@ or using, the advanced YAML config, per recipient:
 It is also possible to have discovery off by default at platform level, then selectively re-enabled for the folk you want, using the `recipients` configuration.
 
 If you want to do the device registration manually, see [Manual Device Registration](#manual-device-registration)
+
+### Users without Person entries
+
+Home Assistant optionally supports *Person* entries, useful for device tracking, but these are not mandatory.
+
+From version `2.9.0`, Supernotify will also discover users and mobile app devices that only have user accounts, and generate recipients for them if auto discovery is on. Its still better to have Person records, to take advantage of occupancy and location tracking across multiple devices, plus `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector).
 
 ### Disabling Auto Discovered Devices
 
@@ -7161,6 +7194,47 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Transport Definition     | [Transport_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Transport_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Transport_Definition/index.md)     |
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
+
+## v2.9.0
+
+This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
+
+### People
+
+- Mobile Discovery previously only automatically found mobile apps to push notifications to if the user also had a `Person` created in Home Assistant
+- Mobile apps will now be found for discovery if there's no Person defined
+- Recipient config now has `person_id` as optional, and takes a `user_id` (long UUID type number rather than an actual name in Home Assistant)
+- Tying together all the automation for people still benefits from having Person records, since this drives device tracking, location and occupancy and `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector)
+
+### Areas, Floors and Labels
+
+- `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action.
+- They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device.
+- An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing.
+- Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
+
+### Targets
+
+- If Supernotify itself is added as a device to the target selector, this is interpreted to mean include all "out of the box" targets, that is the default targets that would be selected if the target list were otherwise empty
+
+### Groups
+
+- Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.
+- Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports.
+- Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
+- Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
+
+### Internal
+
+- `reprocess: preserve` with no `jpeg_opts`/`png_opts` configured raised an `AttributeError` building the cache key, since those options are `None` rather than empty, so the image was never reprocessed
+- A reprocessed image keeps the format it is saved in: a PNG was written into a `.jpg` file, which misleads anything going by the extension, `MIMEImage` included
+- The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
+- All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
+- Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
+- Media handling now tested with `webp` images (in addition to existing `jpeg`,`png` and `gif`)
+- Test images now stamped with format so easier to see if correct image appearing
+- Fixed test cleanup so test images don't build up in local directory
+- New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
 
 ## v2.8.0
 
