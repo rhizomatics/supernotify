@@ -18,7 +18,7 @@ Each delivery can be individually configured, or have defaults provided by a `tr
 | Transport Adaptor Defaults  | Code               | -                                                                                                                                                                    |                                                                                                                                                                                                                                                                                                                                                 |
 | Underlying action defaults  | Other Integrations | -                                                                                                                                                                    | These are configured outside Supernotify                                                                                                                                                                                                                                                                                                        |
 
-For example, if there's one specific automation you didn't want to have your `alexa_announce` delivery applied, you could disable it like this rather than adding more rules to the supernotify config for just one case:
+For example, if there's one specific automation you didn't want to have your `alexa_devices_announce_all` delivery applied, you could disable it like this rather than adding more rules to the supernotify config for just one case:
 
 ```yaml
   - action: supernotify.notify
@@ -26,7 +26,7 @@ For example, if there's one specific automation you didn't want to have your `al
         title: For Your Eyes Only
         message: There might be someone in the house!!!
         delivery:
-            alexa_announce:
+            alexa_devices_announce_all:
                 enabled: false
 ```
 

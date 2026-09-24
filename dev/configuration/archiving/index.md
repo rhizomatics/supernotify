@@ -119,7 +119,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
       "override_disable_deliveries": [],
       "override_enable_deliveries": [],
       "scenario_enable_deliveries": [
-        "plain_email",
+        "email",
         "alexa_announce",
         "mobile_push",
         "high_chime_alert"
@@ -227,8 +227,8 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
   "selected_delivery_names": [
     "high_chime_alert",
     "mobile_push",
-    "alexa_announce",
-    "plain_email"
+    "alexa_devices_announce_all",
+    "email"
   ],
   "enabled_scenarios": {
     "high_alert": {
@@ -242,8 +242,8 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
         "lights"
       ],
       "delivery": {
-        "plain_email": null,
-        "alexa_announce": null,
+        "email": null,
+        "alexa_devices_announce_all": null,
         "mobile_push": null,
         "high_chime_alert": null
       },

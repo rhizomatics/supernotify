@@ -124,7 +124,7 @@ mix of targets
         delivery:
             discord:
                 target: 0987654321
-            plain_email:
+            email:
                 target: jjh@34acacia.avenue.com
             html_email:
                 target: bigdave@34acacia.avenue.com

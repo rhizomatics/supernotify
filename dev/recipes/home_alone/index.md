@@ -33,8 +33,8 @@ scenarios:
               - armed_night
         delivery:
             - mobile_push
-            - alexa_announce
-            - plain_email
+            - alexa_devices_announce_all
+            - email
             - chimes
 ```
 

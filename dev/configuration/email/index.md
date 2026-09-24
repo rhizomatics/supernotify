@@ -4,26 +4,9 @@ Source: https://supernotify.rhizomatics.org.uk/latest/configuration/email/
 
 ## Configuration
 
-If you have e-mail configured in Home Assistant, you can include it in Supernotify by setting up an e-mail delivery:
+If you have e-mail configured in Home Assistant, it will automatically get detected and an `email` delivery made available.
 
-Supernotify config
-
-```yaml
-supernotify:
-  delivery:
-      plain_email:
-        transport: email
-```
-
-The `email` for `transport` must match the `name` given to a [SMTP](https://www.home-assistant.io/integrations/smtp/) notify integration in your config, which will look like this Amazon Simple Email Service example:
-
-SMTP config
-
-```yaml
-- name: email
-  platform: smtp
-  ...
-```
+Its possible to override this by defining a transport or delivery in YAML and providing a custom `action` to call.
 
 ## Targets
 
@@ -40,7 +23,7 @@ Supernotify Config
 ```yaml
 supernotify:
   delivery:
-      plain_email:
+      email:
         transport: email
         target:
           - joe@mcdoe.com

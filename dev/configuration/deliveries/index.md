@@ -22,7 +22,7 @@ In any case, the `inclusion` key can be used, either in the Transport or Deliver
 
 ## Customizing Delivery
 
-You may want to create multiple Deliveries for the same channel, for example a `plain_email` and `html_email` delivery, or different custom notification platforms using the `generic` transport. Be careful to have constraints, like priority, occupancy or conditions, if there are multiple deliveries so you don't get duplicate notifications.
+You may want to create multiple Deliveries for the same channel, for example a plain `email` and `html_email` delivery, or different custom notification platforms using the `generic` transport. Be careful to have constraints, like priority, occupancy or conditions, if there are multiple deliveries so you don't get duplicate notifications.
 
 Or more simply, you can customize the standard delivery created for each transport, here's an example, which refines the standard `sms` delivery, created because the home already has a working SMS integration, and switches on the delivery only if notification priority is critical or high
 
@@ -68,7 +68,7 @@ There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
 - Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) to apply common chunks of config
-- Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, these do the same thing) for every delivery
+- Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, which is also offered in the action editor's Delivery list) for every delivery, or all at once with [Delivery Control](#delivery-control)
 - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
 In this snippet, all Delivery configurations for `alexa_devices` will use the defined target group.
@@ -128,13 +128,21 @@ See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.
 
 A list of `inclusion` options controls how deliveries are included, each delivery can have multiple options included, though some of them are mutually impossible, like `default` and `explicit`
 
-| Option              | Default | Usage                                                                                        |
-| ------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `default`           | Y       | Use this delivery for every notification if there are targets and its not overridden         |
-| `scenario`          | N       | Only use this delivery if a scenario enables it                                              |
-| `explicit`          | N       | Doesn't do anything but can make your config easier to read than merely absence of `default` |
-| `fallback`          | N       | Use this delivery only if no other delivery was selected                                     |
-| `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors    |
+| Option              | Default | Usage                                                                                     |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `default`           | Y       | Use this delivery for every notification if there are targets and its not overridden      |
+| `scenario`          | N       | Only use this delivery if a scenario enables it                                           |
+| `explicit`          | N       | Only use this delivery if a notification asks for it, or a scenario enables it            |
+| `fallback`          | N       | Use this delivery only if no other delivery was selected                                  |
+| `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors |
+
+`explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
+
+### Delivery Control
+
+A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices and HTML5, and `explicit` for the rest. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
+
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
 
 Info
 

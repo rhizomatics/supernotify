@@ -243,7 +243,7 @@ One notification from an automation can turn into several different notification
 - Using YAML more deliveries can be created, for example `html_email` in addition to plain text `email`, or different deliveries for particular voice assistants.
 - Transports which can definitively select targets, like Email, Mobile Push, SMS, Alexa Devices and Notify Entity, are included by default in handling targets.
 - Others can be included via configuration, by using Scenarios or asking for them to be included in a notification
-- You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
+- You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a plain `email` and `html_email` deliveries.
 - The [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) acts as a *toolbox* for creating a delivery for almost anything Home Assistant could do that's not already covered by a standard Transport
 - See [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
@@ -717,7 +717,7 @@ Implicit (default) - implied by a mapping
               clickAction: https://my.home.net/dashboard
 ```
 
-In this example, `mobile_push` and `plain_email` are selected as deliveries, even if they are not default ones. In addition any deliveries selected by conditions or scenarios will be added to the list.
+In this example, `mobile_push` and `email` are selected as deliveries, even if they are not default ones. In addition any deliveries selected by conditions or scenarios will be added to the list.
 
 Explicit - implied by a list
 
@@ -727,10 +727,10 @@ Explicit - implied by a list
         message: Garden sensor triggered
         delivery:
             - mobile_push
-            - plain_email
+            - email
 ```
 
-In this case `plain_email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
+In this case `email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
 
 Fixed - always set explicitly
 
@@ -740,7 +740,7 @@ Fixed - always set explicitly
         message: Garden sensor triggered
         delivery_selection: fixed
         delivery:
-            - plain_email
+            - email
 ```
 
 ### Delivery and Delivery Control
@@ -757,7 +757,7 @@ Delivery picked, and tuned in Delivery Control
         message: Garden sensor triggered
         delivery:
             - mobile_push
-            - plain_email
+            - email
         delivery_control:
             mobile_push:
                 data:
@@ -768,7 +768,7 @@ Names picked in the dropdown mean "only these", so when Delivery Control holds a
 
 `delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a list or a mapping directly, as in the examples above, in both `supernotify.notify` and `notify.supernotify`.
 
-!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
+!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` works the same as `inclusion: scenario` when sending, except that explicit deliveries are offered in the action editor's Delivery list, and scenario-only ones aren't.
 
 ### When Scenarios Disagree
 
@@ -814,7 +814,7 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
     data:
       message: Dishwasher is finished
       delivery:
-        plain_email:
+        email:
           enabled:
 ```
 
@@ -869,7 +869,7 @@ Channel Specific Messages
         message: Garden sensor triggered
         title: Something has happened
         delivery:
-            plain_email: # only effects the delivery called `plain_email`
+            email: # only effects the delivery called `email`
               data:
                 message: Garden sensor was triggered
             sms: # refers to a transport, so effects all deliveries based on SMS transport
@@ -1087,7 +1087,7 @@ mix of targets
         delivery:
             discord:
                 target: 0987654321
-            plain_email:
+            email:
                 target: jjh@34acacia.avenue.com
             html_email:
                 target: bigdave@34acacia.avenue.com
@@ -1362,7 +1362,7 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
       "override_disable_deliveries": [],
       "override_enable_deliveries": [],
       "scenario_enable_deliveries": [
-        "plain_email",
+        "email",
         "alexa_announce",
         "mobile_push",
         "high_chime_alert"
@@ -1470,8 +1470,8 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
   "selected_delivery_names": [
     "high_chime_alert",
     "mobile_push",
-    "alexa_announce",
-    "plain_email"
+    "alexa_devices_announce_all",
+    "email"
   ],
   "enabled_scenarios": {
     "high_alert": {
@@ -1485,8 +1485,8 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
         "lights"
       ],
       "delivery": {
-        "plain_email": null,
-        "alexa_announce": null,
+        "email": null,
+        "alexa_devices_announce_all": null,
         "mobile_push": null,
         "high_chime_alert": null
       },
@@ -1774,7 +1774,7 @@ In any case, the `inclusion` key can be used, either in the Transport or Deliver
 
 ## Customizing Delivery
 
-You may want to create multiple Deliveries for the same channel, for example a `plain_email` and `html_email` delivery, or different custom notification platforms using the `generic` transport. Be careful to have constraints, like priority, occupancy or conditions, if there are multiple deliveries so you don't get duplicate notifications.
+You may want to create multiple Deliveries for the same channel, for example a plain `email` and `html_email` delivery, or different custom notification platforms using the `generic` transport. Be careful to have constraints, like priority, occupancy or conditions, if there are multiple deliveries so you don't get duplicate notifications.
 
 Or more simply, you can customize the standard delivery created for each transport, here's an example, which refines the standard `sms` delivery, created because the home already has a working SMS integration, and switches on the delivery only if notification priority is critical or high
 
@@ -1820,7 +1820,7 @@ There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
 - Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) to apply common chunks of config
-- Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, these do the same thing) for every delivery
+- Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, which is also offered in the action editor's Delivery list) for every delivery, or all at once with [Delivery Control](#delivery-control)
 - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
 In this snippet, all Delivery configurations for `alexa_devices` will use the defined target group.
@@ -1880,13 +1880,21 @@ See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.
 
 A list of `inclusion` options controls how deliveries are included, each delivery can have multiple options included, though some of them are mutually impossible, like `default` and `explicit`
 
-| Option              | Default | Usage                                                                                        |
-| ------------------- | ------- | -------------------------------------------------------------------------------------------- |
-| `default`           | Y       | Use this delivery for every notification if there are targets and its not overridden         |
-| `scenario`          | N       | Only use this delivery if a scenario enables it                                              |
-| `explicit`          | N       | Doesn't do anything but can make your config easier to read than merely absence of `default` |
-| `fallback`          | N       | Use this delivery only if no other delivery was selected                                     |
-| `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors    |
+| Option              | Default | Usage                                                                                     |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `default`           | Y       | Use this delivery for every notification if there are targets and its not overridden      |
+| `scenario`          | N       | Only use this delivery if a scenario enables it                                           |
+| `explicit`          | N       | Only use this delivery if a notification asks for it, or a scenario enables it            |
+| `fallback`          | N       | Use this delivery only if no other delivery was selected                                  |
+| `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors |
+
+`explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
+
+### Delivery Control
+
+A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices and HTML5, and `explicit` for the rest. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
+
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
 
 Info
 
@@ -2031,26 +2039,9 @@ Source: https://supernotify.rhizomatics.org.uk/latest/configuration/email/
 
 ## Configuration
 
-If you have e-mail configured in Home Assistant, you can include it in Supernotify by setting up an e-mail delivery:
+If you have e-mail configured in Home Assistant, it will automatically get detected and an `email` delivery made available.
 
-Supernotify config
-
-```yaml
-supernotify:
-  delivery:
-      plain_email:
-        transport: email
-```
-
-The `email` for `transport` must match the `name` given to a [SMTP](https://www.home-assistant.io/integrations/smtp/) notify integration in your config, which will look like this Amazon Simple Email Service example:
-
-SMTP config
-
-```yaml
-- name: email
-  platform: smtp
-  ...
-```
+Its possible to override this by defining a transport or delivery in YAML and providing a custom `action` to call.
 
 ## Targets
 
@@ -2067,7 +2058,7 @@ Supernotify Config
 ```yaml
 supernotify:
   delivery:
-      plain_email:
+      email:
         transport: email
         target:
           - joe@mcdoe.com
@@ -2176,7 +2167,7 @@ Each delivery can be individually configured, or have defaults provided by a `tr
 | Transport Adaptor Defaults  | Code               | -                                                                                                                                                                    |                                                                                                                                                                                                                                                                                                                                                 |
 | Underlying action defaults  | Other Integrations | -                                                                                                                                                                    | These are configured outside Supernotify                                                                                                                                                                                                                                                                                                        |
 
-For example, if there's one specific automation you didn't want to have your `alexa_announce` delivery applied, you could disable it like this rather than adding more rules to the supernotify config for just one case:
+For example, if there's one specific automation you didn't want to have your `alexa_devices_announce_all` delivery applied, you could disable it like this rather than adding more rules to the supernotify config for just one case:
 
 ```yaml
   - action: supernotify.notify
@@ -2184,7 +2175,7 @@ For example, if there's one specific automation you didn't want to have your `al
         title: For Your Eyes Only
         message: There might be someone in the house!!!
         delivery:
-            alexa_announce:
+            alexa_devices_announce_all:
                 enabled: false
 ```
 
@@ -5275,6 +5266,19 @@ Info
 
 This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
 
+## Video on Apple Devices
+
+Apple's mobile apps, on iPhone, iPad and Mac, can't always show an `.mp4` video attached to a push, such as the clip the Frigate blueprint adds. Set the `apple_drop_mp4` option to leave `.mp4` video out of pushes to Apple devices, both the `video` URL and an `attachment` pointing at an `.mp4`. Images are kept, and Android devices still get the video.
+
+```yaml
+delivery:
+  mobile_push:
+    options:
+      apple_drop_mp4: true
+```
+
+To switch it on for every mobile push delivery, turn on **Leave video out of Apple pushes** in **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control**.
+
 ## Notification Grouping
 
 Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device (iOS thread-id / Android notification group):
@@ -6061,7 +6065,7 @@ scenarios:
           - "{{notification_priority not in ['critical','high','low']}}"
       delivery:
         - mobile_push
-        - alexa_announce
+        - alexa_devices_announce_all
         - alexa_backup_announce
 ```
 
@@ -6075,7 +6079,7 @@ Make all low priority Alexa announcements in a whisper.
 
 ## Implementation
 
-A scenario using Home Assistant conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_inform`.
+A scenario using Home Assistant conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_devices_speak_all`.
 
 ## Example Configuration
 
@@ -6086,9 +6090,9 @@ scenarios:
       conditions: "{{notification_priority in ['low']}}"
 
       delivery:
-        plain_email:
+        email:
         mobile_push:
-        alexa_inform:
+        alexa_devices_speak_all:
           data:
             message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'
 ```
@@ -6610,7 +6614,7 @@ This will work identically for any transport, there's nothing email specific in 
 
 ### Multiple e-mail deliveries
 
-You have both `html_email` and `plain_email` deliveries, and only want to cc the plain ones.
+You have both `html_email` and plain `email` deliveries, and only want to cc the plain ones.
 
 In this case, define the defaults at delivery level rather than transport level.
 
@@ -6618,8 +6622,7 @@ The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.co
 
 ```yaml
     delivery:
-      plain_email:
-        action: notify.smtp
+      email:
         delivery_defaults:
             target_usage: merge_delivery
             target:
@@ -6887,8 +6890,8 @@ scenarios:
               - armed_night
         delivery:
             - mobile_push
-            - alexa_announce
-            - plain_email
+            - alexa_devices_announce_all
+            - email
             - chimes
 ```
 
@@ -7303,7 +7306,7 @@ genai:
 
 ### Home Assistant
 
-This assumes that you have `delivery` configurations for `alexa_announce` and `mobile_push` and that you have Home Assistant available at `http://homeassistant.local:8123`.
+This assumes that `delivery` configurations have been automatically or manually defined for `alexa_devices_announce_all` and `mobile_push` and that you have Home Assistant available at `http://homeassistant.local:8123`.
 
 The automation subscribes to the Frigate MQTT topic, ignores certain messages, strips the "MEDIUM RISK" etc preface off the message and derives the notification priority from the risk level assessed by GenAI.
 
@@ -7342,7 +7345,7 @@ automations:
         snapshot_url: http://homeassistant.local:8123/api/frigate/notifications/{{trigger.payload_json.id}}/thumbnail.jpg
         camera_entity_id: camera.{{trigger.payload_json.camera}}
       delivery:
-        - alexa_announce
+        - alexa_devices_announce_all
         - mobile_push
 ```
 
@@ -7432,7 +7435,7 @@ scenarios:
       delivery:
         mobile_push:
           enabled: false
-        plain_email:
+        email:
           enabled: false
 ```
 
@@ -7500,19 +7503,37 @@ Source: https://supernotify.rhizomatics.org.uk/latest/changelog/
 
 ### Action UI
 
-- Schemas and deliveries now get populated for easy picking
-- The list is built when Supernotify starts up, and doesn't take into account subsequent enable/disable actions
-- Delivery config free-form text and Delivery Selection Basis moved to Advanced section
+- Scenarios and deliveries now get populated for easy picking
+- The list is built when Supernotify starts up, is reloaded, or options saved - and after this doesn't take into account subsequent enable/disable actions
+- Scenario only and fallback only deliveries won't be offered as choices
+- *Delivery Control* free-form text and *Delivery Selection* moved to Advanced section
+
+### Delivery Control Options from UI
+
+- Three new delivery options that further reduce need to create and edit YAML config
+- Default Inclusion for Deliveries
+  - Unset by default
+  - Switch this to `explicit` or `scenario` to have NO deliveries fire by default, unless overridden by YAML delivery config or a scenario
+  - There will only be any notification if the action explicitly selects them or they're switched on by scenario
+  - This is a recommended option for full control, since it means every notification is scenario controlled and noisy notifications get filtered out easily
+- Voice Occupancy Control - set a default for the `occupancy` setting for all deliveries using a SPOKEN transport, for example `TTS`, *Alexa Devices*, *Alexa Media Player*
+  - This means no Alexa notifications to an empty house, or whatever occupancy variation you like
+  - Can be overridden at delivery level, though for now that needs YAML setup
+- MP4 Filtering for Apple Mobile Push
+  - A common Frigate blueprint problem is broken images on mobile push to Apple devices caused by Safari handling of MP4 video
+  - This will filter out any video URLs or attachments with MP4 extension from being pushed to known Apple devices
+  - Frigate notifications will fall back to the static thumbnail
 
 ### Home Assistant Assist
 
 - First beta of integrating with [Assist](https://www.home-assistant.io/voice_control/)
 - Works with voice or the chat icon built into the app
 - For built-in (non-AI) assist
-  - Send notifications
+  - Send notifications, including matching only on first name (if unique)
   - Snooze / unsnooze notifications
   - Get the last notification
-- For AI backed agents
+  - English only
+- For AI backed agents (Home Assistant 2026.3 or later)
   - Send notifications
   - Arbitrary addresses like emails and phones not accepted for safety (can be used via Recipients or Notify Entities)
   - Custom actions for mobile push also not supported for safety
@@ -7521,16 +7542,25 @@ Source: https://supernotify.rhizomatics.org.uk/latest/changelog/
   - Dry run a notification
   - Get help from the Supernotify documentation
 - All integration controlled via config UI, so can be fully or partially switched on or off
-- Functionality also available via Home Assistant's native MCP server
+- AI Tools functionality also available via Home Assistant's native MCP server
 
 ### Other
 
 - Action UI now has example values to help understand what fields do
-- Archive has new feature to return recent messages
-- Notifications collect unknown names
-- The `engine` has a new dry run function
-- Fix the web links for 'Learn More' links in Home Assistant
+- New `supernotify.enquire_archive` action, contributed by @lollox80
 - Improved Italian translations, provided by @lollox80
+- Inclusion now distinguishes `scenario` and `explicit`
+- `explicit` can be chosen in an action or when enabled by a scenario
+- `scenario` can only be selected by automated conditions, so won't appear as options on the Delivery choice in Actions UI
+
+### Internal
+
+- `llms-full.txt` for agent support now includes each page's URL for better help lookup
+- Unknown delivery or scenario names in a call are now logged along with the configured names, and kept as unknown_names in the archive
+- The `engine` has a new dry run function, available to users via the AI tooling
+- Repair issues now list what's configured, condition issues include the error, and diagnostics include open issues. The scenario action-group repair used the wrong message, now fixed.
+- Occupancy value in transport `delivery_defaults` now correctly respected when building deliveries
+- Fix the web links for 'Learn More' links in Home Assistant
 
 ## v2.9.1 - Snooze Fix
 

@@ -177,7 +177,7 @@ Implicit (default) - implied by a mapping
               clickAction: https://my.home.net/dashboard
 ```
 
-In this example, `mobile_push` and `plain_email` are selected as deliveries, even if they are not default ones. In addition any deliveries selected by conditions or scenarios will be added to the list.
+In this example, `mobile_push` and `email` are selected as deliveries, even if they are not default ones. In addition any deliveries selected by conditions or scenarios will be added to the list.
 
 Explicit - implied by a list
 
@@ -187,10 +187,10 @@ Explicit - implied by a list
         message: Garden sensor triggered
         delivery:
             - mobile_push
-            - plain_email
+            - email
 ```
 
-In this case `plain_email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
+In this case `email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
 
 Fixed - always set explicitly
 
@@ -200,7 +200,7 @@ Fixed - always set explicitly
         message: Garden sensor triggered
         delivery_selection: fixed
         delivery:
-            - plain_email
+            - email
 ```
 
 ### Delivery and Delivery Control
@@ -217,7 +217,7 @@ Delivery picked, and tuned in Delivery Control
         message: Garden sensor triggered
         delivery:
             - mobile_push
-            - plain_email
+            - email
         delivery_control:
             mobile_push:
                 data:
@@ -228,7 +228,7 @@ Names picked in the dropdown mean "only these", so when Delivery Control holds a
 
 `delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a list or a mapping directly, as in the examples above, in both `supernotify.notify` and `notify.supernotify`.
 
-!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
+!!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` works the same as `inclusion: scenario` when sending, except that explicit deliveries are offered in the action editor's Delivery list, and scenario-only ones aren't.
 
 ### When Scenarios Disagree
 
@@ -274,7 +274,7 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
     data:
       message: Dishwasher is finished
       delivery:
-        plain_email:
+        email:
           enabled:
 ```
 
@@ -329,7 +329,7 @@ Channel Specific Messages
         message: Garden sensor triggered
         title: Something has happened
         delivery:
-            plain_email: # only effects the delivery called `plain_email`
+            email: # only effects the delivery called `email`
               data:
                 message: Garden sensor was triggered
             sms: # refers to a transport, so effects all deliveries based on SMS transport

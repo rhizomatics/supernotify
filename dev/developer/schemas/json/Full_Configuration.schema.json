@@ -222,8 +222,7 @@
               "only_out",
               "all",
               "none"
-            ],
-            "default": "all"
+            ]
           },
           "conditions": {
             "type": "array",
@@ -1029,8 +1028,7 @@
                   "only_out",
                   "all",
                   "none"
-                ],
-                "default": "all"
+                ]
               },
               "conditions": {
                 "type": "array",
@@ -1195,6 +1193,38 @@
           "type": "integer",
           "minimum": 0,
           "default": 60
+        }
+      },
+      "additionalProperties": false,
+      "default": {}
+    },
+    "delivery_control": {
+      "type": "object",
+      "properties": {
+        "default_inclusion": {
+          "type": "string",
+          "enum": [
+            "default",
+            "explicit",
+            "scenario"
+          ]
+        },
+        "voice_occupancy": {
+          "type": "string",
+          "enum": [
+            "all_in",
+            "all_out",
+            "any_in",
+            "any_out",
+            "only_in",
+            "only_out",
+            "all",
+            "none"
+          ]
+        },
+        "apple_drop_mp4": {
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false,

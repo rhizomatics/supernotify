@@ -54,7 +54,7 @@ One notification from an automation can turn into several different notification
 - Using YAML more deliveries can be created, for example `html_email` in addition to plain text `email`, or different deliveries for particular voice assistants.
 - Transports which can definitively select targets, like Email, Mobile Push, SMS, Alexa Devices and Notify Entity, are included by default in handling targets.
 - Others can be included via configuration, by using Scenarios or asking for them to be included in a notification
-- You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a `plain_email` and `html_email` deliveries.
+- You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a plain `email` and `html_email` deliveries.
 - The [Generic Transport](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md) acts as a *toolbox* for creating a delivery for almost anything Home Assistant could do that's not already covered by a standard Transport
 - See [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md) and [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) for more detail
 
