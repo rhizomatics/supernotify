@@ -29,15 +29,61 @@ Packages are built as modules inside Supernotify, set up as config subentries. A
 
 ### 1. Snooze enforcement
 
-`SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_*` snoozes, from the button mobile push adds to every camera notification, are recorded but appear not to be applied. `Snoozer.is_global_snooze()` only checks `EVERYTHING` and `NONCRITICAL`, and `Snoozer.filter_recipients()` only acts on user-scoped snoozes, so everyone-scoped camera, delivery, transport and priority snoozes have no effect. Camera snoozes also need the notification's camera to compare with.
+`SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_*` snoozes, from the button mobile push adds to every camera notification, were recorded but not applied, along with everyone-scoped delivery, transport, priority and mobile snoozes; a user-scoped *snooze everything* silenced everyone; targets containing underscores registered nothing; and the snooze button's typed minutes were ignored.
 
-Confirm with a regression test first.
+Fixed, with regression tests in `test_snooze_enforcement.py`. Camera snoozes currently compare with the notification's `camera_entity_id`; once there's a [notification source](#2-notification-source), they could match its `subject` instead, so snoozing a Frigate camera also covers notifications about it that carry only a snapshot URL.
 
 ## Notification Model
 
 ### 2. Notification source
 
-A `source` field on `supernotify.notify`, such as `frigate:driveway` or `appliance:dishwasher`, carried into the archive, debug trace and scenario condition variables. Lets users write scenarios for one package or one camera without matching message text, and gives cooldown, snoozing and lifecycle something to key on. Packages set it; automations can too.
+Where a notification came from, so users can write scenarios for all Frigate events, all Frigate motion, or everything on the driveway without matching message text, and so cooldown, snoozing and lifecycle have something to key on.
+
+A single path like `frigate.driveway` isn't enough: Frigate alone has separate review, motion, ANPR and GenAI flows, and a scenario may want to group by any of those, or by camera, or by place. So the source is a set of named parts, and a match can use any subset of them:
+
+| Part       | Meaning                                                | Frigate                             | Appliance package                   | Automation                            |
+| ---------- | ------------------------------------------------------ | ----------------------------------- | ----------------------------------- | ------------------------------------- |
+| `origin`   | What sent it                                           | `frigate`                           | `appliance`                         | `automation` or `script`              |
+| `flow`     | Which kind of event, from a documented list per origin | `review`, `motion`, `anpr`, `genai` | `cycle`, `maintenance`              | the trigger platform, such as `state` |
+| `subject`  | The Home Assistant entity it's about                   | `camera.driveway`                   | `sensor.dishwasher_operation_state` | the trigger entity                    |
+| `instance` | Which configured instance produced it                  | the package subentry                | the package subentry                | `automation.driveway_alert`           |
+
+Because `subject` is a real entity, matching can also use its area, floor or label, so a driveway PIR, a gate sensor and the Frigate camera can all count as "driveway" without listing them - reusing the area, floor and label resolution added in v2.9.0.
+
+Event detail is kept separate from the source, in an `event` block: object labels and sub-labels, zones, severity, plate, threat level, progress. These change per event, so scenarios test them in conditions rather than group by them.
+
+How the source is set:
+
+- **Packages** set it explicitly, and run with their own Home Assistant `Context`
+- **Automations and scripts** get it derived automatically. Home Assistant fires `automation_triggered` and `script_started` with the context their run then uses, so Supernotify can keep a short-lived map from context to origin, and fill in `origin`, `instance` and, from the trigger, `flow` and `subject` for each `supernotify.notify` call. Existing automations then get source-aware scenarios, cooldown and snoozing without changes. This is best effort: calls from Developer Tools have no origin, and trigger descriptions are text
+- **An explicit `source`** on `supernotify.notify` overrides any part, for example to group several automations under one name
+
+As purpose-specific Home Assistant triggers reach more device types, such as appliances finishing, they fill in `flow` and `subject` for automation-derived sources more usefully, and let appliance packages use them instead of watching integration-specific states. They say *when* something happened; the lifecycle below still says how a notification relates to the ones before it.
+
+Scenarios can match on source in two ways:
+
+- **Templates** in any condition, using a `notification_source` condition variable, for example `{{ notification_source.origin == 'frigate' and notification_source.flow == 'motion' }}`
+- **A declarative `sources` matcher** on the scenario - a list of part and value maps, any of which may match, with `subject` also accepting `area_id`, `floor_id` and `label_id`. Package config flows can offer this as dropdowns, since package users won't write templates
+
+Example scenario matching
+
+```yaml
+scenarios:
+  quiet_frigate_motion:
+    sources:
+      - origin: frigate
+        flow: motion
+    delivery:
+      .*:
+        enabled: false
+  driveway_loud:
+    sources:
+      - subject:
+          area_id: driveway
+    priority: high
+```
+
+`flow` values must be a documented list for each origin, not free text, or scenarios end up coupled to whatever each package happens to call its events.
 
 ### 3. Notification lifecycle and tag
 
@@ -51,7 +97,7 @@ This replaces the Live Activity recipe's per-delivery `clear_notification` messa
 
 ### 4. Cooldown per source
 
-Minimum time between `new` notifications from the same source, as the Frigate blueprint's `cooldown`. Updates and ends of a tag already sent aren't limited. A first step toward the Rate Limiting roadmap item.
+Minimum time between `new` notifications from the same source, as the Frigate blueprint's `cooldown`, keyed on `origin`, `flow` and `subject` by default, so driveway motion doesn't hold back driveway ANPR. Updates and ends of a tag already sent aren't limited. A first step toward the Rate Limiting roadmap item.
 
 ### 5. Scenario priority
 
