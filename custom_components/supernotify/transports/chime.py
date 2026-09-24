@@ -169,9 +169,7 @@ class MiniChimeTransport:
 class RestCommandChimeTransport(MiniChimeTransport):
     domain = "rest_command"
 
-    def build(
-        self, target_config: ChimeTargetConfig, entity_name: str | None, **_kwargs: Any
-    ) -> ActionCall | None:
+    def build(self, target_config: ChimeTargetConfig, entity_name: str | None, **_kwargs: Any) -> ActionCall | None:
         if entity_name is None:
             _LOGGER.warning("SUPERNOTIFY rest_command chime target requires entity")
             return None
@@ -182,18 +180,14 @@ class RestCommandChimeTransport(MiniChimeTransport):
 class SwitchChimeTransport(MiniChimeTransport):
     domain = "switch"
 
-    def build(
-        self, target_config: ChimeTargetConfig, **_kwargs: Any
-    ) -> ActionCall | None:
+    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:
         return ActionCall(self.domain, "turn_on", target_data={ATTR_ENTITY_ID: target_config.entity_id})
 
 
 class SirenChimeTransport(MiniChimeTransport):
     domain = "siren"
 
-    def build(
-        self, target_config: ChimeTargetConfig, **_kwargs: Any
-    ) -> ActionCall | None:
+    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:
         output_data: dict[str, Any] = {ATTR_DATA: {}}
         if target_config.tune:
             output_data[ATTR_DATA]["tone"] = target_config.tune
@@ -238,9 +232,7 @@ class ScriptChimeTransport(MiniChimeTransport):
 class AlexaDevicesChimeTransport(MiniChimeTransport):
     domain = "alexa_devices"
 
-    def build(
-        self, target_config: ChimeTargetConfig, **_kwargs: Any
-    ) -> ActionCall | None:
+    def build(self, target_config: ChimeTargetConfig, **_kwargs: Any) -> ActionCall | None:
         output_data: dict[str, Any] = {
             "device_id": target_config.device_id,
             "sound": target_config.tune,
