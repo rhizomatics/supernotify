@@ -27,7 +27,7 @@ from .const import (
     ATTR_CUSTOM_TARGET,
     ATTR_DATA,
     ATTR_DELIVERY,
-    ATTR_DELIVERY_CONFIG,
+    ATTR_DELIVERY_CONTROL,
     ATTR_DELIVERY_SELECTION,
     ATTR_EXTRA_DATA,
     ATTR_MEDIA,
@@ -103,31 +103,31 @@ def lift_legacy_nested_data(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def merge_delivery_fields(data: dict[str, Any]) -> dict[str, Any]:
-    """Fold supernotify.notify's delivery dropdown and free-form Delivery Config into one `delivery`,
+    """Fold supernotify.notify's delivery dropdown and free-form Delivery Control into one `delivery`,
     written as it could have been in YAML.
 
-    Names alone stay a list, restricting to those deliveries. Once Delivery Config has a mapping, the
-    two become one mapping, and a delivery in both takes the form it has in Delivery Config. A mapping
+    Names alone stay a list, restricting to those deliveries. Once Delivery Control has a mapping, the
+    two become one mapping, and a delivery in both takes the form it has in Delivery Control. A mapping
     on its own only tunes deliveries without restricting them, so when names were also picked from the
-    dropdown, the selection is made explicit - unless the call set it - keeping the dropdown's meaning
-    of "only these".
+    dropdown - which the UI pre-fills with the implicit deliveries, to add to or take from - the
+    selection is made explicit, unless the call set it, keeping the dropdown's meaning of "only these".
     """
     data = dict(data)
-    config: Any = data.pop(ATTR_DELIVERY_CONFIG, None)
+    control: Any = data.pop(ATTR_DELIVERY_CONTROL, None)
     picked: Any = data.get(ATTR_DELIVERY)
-    if not config:
+    if not control:
         return data
     if not picked:
-        data[ATTR_DELIVERY] = config
+        data[ATTR_DELIVERY] = control
         return data
-    if isinstance(config, dict) or isinstance(picked, dict):
+    if isinstance(control, dict) or isinstance(picked, dict):
         merged: dict[str, Any] = dict(picked) if isinstance(picked, dict) else dict.fromkeys(ensure_list(picked))
-        merged.update(config if isinstance(config, dict) else dict.fromkeys(ensure_list(config)))
+        merged.update(control if isinstance(control, dict) else dict.fromkeys(ensure_list(control)))
         data[ATTR_DELIVERY] = merged
         if not isinstance(picked, dict):
             data.setdefault(ATTR_DELIVERY_SELECTION, DELIVERY_SELECTION_EXPLICIT)
     else:
-        data[ATTR_DELIVERY] = list(dict.fromkeys([*ensure_list(picked), *ensure_list(config)]))
+        data[ATTR_DELIVERY] = list(dict.fromkeys([*ensure_list(picked), *ensure_list(control)]))
     return data
 
 
@@ -404,8 +404,10 @@ async def async_describe_configured_names(hass: HomeAssistant, engine: Supernoti
     """Show the deliveries and scenarios configured now in supernotify.notify's description.
 
     services.yaml can only hold a fixed description, so it's copied and set again with the delivery
-    and scenario fields as dropdowns, still taking a typed name. Tuning deliveries, which needs a
-    mapping, has its own free-form Delivery Config field - see merge_delivery_fields().
+    and scenario fields as dropdowns, still taking a typed name. The delivery field is pre-filled
+    with the implicit deliveries - what's used when it's left out - to add to or take from. Tuning
+    deliveries, which needs a mapping, has its own free-form Delivery Control field - see
+    merge_delivery_fields().
     Names and descriptions still come from the translations, which are looked up by field.
     Called on every config entry setup, so a reload picks up changed names.
     """
@@ -415,6 +417,7 @@ async def async_describe_configured_names(hass: HomeAssistant, engine: Supernoti
     fields: dict[str, Any] = notify["fields"]
     if deliveries := list(engine.context.delivery_registry.deliveries):
         fields[ATTR_DELIVERY]["selector"] = {"select": {"options": deliveries, "multiple": True, "custom_value": True}}
+        fields[ATTR_DELIVERY]["default"] = [d.name for d in engine.context.delivery_registry.implicit_deliveries]
     if scenarios := list(engine.context.scenario_registry.scenarios):
         for field in (ATTR_SCENARIOS_REQUIRE, ATTR_SCENARIOS_APPLY, ATTR_SCENARIOS_CONSTRAIN):
             fields["scenarios"]["fields"][field]["selector"] = {

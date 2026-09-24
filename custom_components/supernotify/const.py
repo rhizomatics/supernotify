@@ -106,7 +106,7 @@ ATTR_DEFAULT = "default"
 ATTR_NOTIFICATION_ID = "notification_id"
 ATTR_DELIVERY_SELECTION = "delivery_selection"
 # supernotify.notify's free-form delivery field, merged into `delivery` with the delivery dropdown
-ATTR_DELIVERY_CONFIG = "delivery_config"
+ATTR_DELIVERY_CONTROL = "delivery_control"
 ATTR_RECIPIENTS = "recipients"
 ATTR_CUSTOM_TARGET = "custom_target"
 ATTR_DATA = "data"

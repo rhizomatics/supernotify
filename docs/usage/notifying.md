@@ -210,29 +210,35 @@ In this case `plain_email` will be chosen even if the delivery `condition` or `p
             - plain_email
 ```
 
-### Delivery and Delivery Config
+### Delivery and Delivery Control
 
-In the action editor, `supernotify.notify` has a **Delivery** dropdown of the configured deliveries, and
-under **Advanced** a free-form **Delivery Config** (`delivery_config`), which takes anything `delivery:`
-would. The two are merged into one `delivery:` before the notification is made. A delivery in both takes
-its form from Delivery Config, so it can be picked in the dropdown and tuned in Delivery Config:
+In the action editor, `supernotify.notify` has a **Delivery** dropdown of the configured deliveries. When
+added, it starts with the deliveries used by default, the same as `supernotify.enquire_implicit_deliveries`
+lists, so you can add to or take away from what would normally be used.
 
-```yaml title="Delivery picked, and tuned in Delivery Config"
+Under **Advanced**, a free-form **Delivery Control** (`delivery_control`) takes anything `delivery:` would.
+The two are merged into one `delivery:` before the notification is made. A delivery in both takes its
+form from Delivery Control, so it can be picked in the dropdown and tuned in Delivery Control:
+
+```yaml title="Delivery picked, and tuned in Delivery Control"
   - action: supernotify.notify
     data:
         message: Garden sensor triggered
         delivery:
             - mobile_push
             - plain_email
-        delivery_config:
+        delivery_control:
             mobile_push:
                 data:
                     clickAction: https://my.home.net/dashboard
 ```
 
-Names picked in the dropdown mean "only these", so when Delivery Config holds a mapping, the merged
-selection is `explicit` unless **Delivery Selection Basis** (`delivery_selection`) says otherwise.
-`delivery:` still accepts a mapping directly too, as in the examples above.
+Names picked in the dropdown mean "only these", so when Delivery Control holds a mapping, the merged
+selection is `explicit`. **Delivery Selection** (`delivery_selection`), also under Advanced, changes
+that. Left out entirely, delivery selection stays `implicit`, as before.
+
+`delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a
+list or a mapping directly, as in the examples above, in both `supernotify.notify` and `notify.supernotify`.
 
 !!! info Delivery *Selection* vs *Inclusion*
     `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](../configuration/deliveries.md#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes

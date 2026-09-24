@@ -81,12 +81,12 @@
                     "description": "Gebruikt om bezorgingen en scenario's in/uit te schakelen, en indien ondersteund toegewezen aan de eigen prioriteits-/urgentievlag van het onderliggende transport (bijv. mobiele push, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Basis van bezorgingsselectie",
-                    "description": "Hoe de gekozen bezorgingen worden gebruikt - implicit (toegevoegd aan de standaardwaarden), explicit (alleen deze, plus door scenario's ingeschakelde) of fixed (alleen deze, scenario's worden genegeerd). Bezorgingen kiezen maakt dit explicit, tenzij hier ingesteld."
+                    "name": "Bezorgingsselectie",
+                    "description": "Hoe de Bezorging-lijst en/of de gegevens van Bezorgingsbeheer worden gebruikt - explicit (impliciete bezorgingen negeren), implicit (deze gebruiken naast de impliciete bezorgingen) of fixed (alleen deze gebruiken en alle voorwaardelijke logica voor het kiezen van bezorgingen negeren)."
                 },
                 "delivery": {
                     "name": "Bezorging",
-                    "description": "Alleen deze bezorgingen gebruiken, plus die een scenario inschakelt. Leeg laten om automatisch te kiezen."
+                    "description": "Alleen deze bezorgingen gebruiken, plus die een scenario inschakelt. Begint met de standaard gebruikte bezorgingen, om aan toe te voegen of uit te halen. Weglaten om automatisch te kiezen."
                 },
                 "require_scenarios": {
                     "name": "Vereiste scenario's",
@@ -152,8 +152,8 @@
                     "name": "Extra gegevens",
                     "description": "Doorgegeven gegevens en transportafstemming voor transporten/blueprints die hier hun eigen velden verwachten, bijv. attributen uit een Frigate-meldingsblueprint."
                 },
-                "delivery_config": {
-                    "name": "Bezorgingsconfiguratie",
+                "delivery_control": {
+                    "name": "Bezorgingsbeheer",
                     "description": "Bezorgingsnamen, een lijst daarvan of een mapping om elke bezorging af te stemmen, zoals delivery: in YAML geschreven zou worden. Samengevoegd met de hierboven gekozen bezorgingen; een bezorging die in beide staat, krijgt de vorm van hier."
                 }
             },

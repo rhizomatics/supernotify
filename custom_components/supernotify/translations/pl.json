@@ -81,12 +81,12 @@
                     "description": "Używany do włączania/wyłączania dostarczeń i scenariuszy oraz mapowany na własną flagę priorytetu/pilności bazowego transportu, jeśli jest obsługiwana (np. powiadomienia push mobilne, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Podstawa wyboru dostarczenia",
-                    "description": "Jak używane są wybrane dostarczenia - implicit (dodawane do domyślnych), explicit (tylko te, plus włączone przez scenariusz) lub fixed (tylko te, scenariusze są ignorowane). Wybranie dostarczeń ustawia explicit, chyba że ustawiono tutaj."
+                    "name": "Wybór dostarczenia",
+                    "description": "Jak używana jest lista Dostarczenie i/lub dane Sterowania dostarczeniem - explicit (ignoruj dostarczenia domyślne), implicit (użyj tych oprócz dostarczeń domyślnych) lub fixed (użyj tylko tych, ignorując wszelką logikę warunkową wyboru dostarczeń)."
                 },
                 "delivery": {
                     "name": "Dostarczenie",
-                    "description": "Używaj tylko tych dostarczeń oraz tych, które włączy scenariusz. Pozostaw puste, aby wybrać automatycznie."
+                    "description": "Używaj tylko tych dostarczeń oraz tych, które włączy scenariusz. Zaczyna od dostarczeń używanych domyślnie, do których można dodawać lub je usuwać. Pomiń, aby wybrać automatycznie."
                 },
                 "require_scenarios": {
                     "name": "Wymagane scenariusze",
@@ -152,8 +152,8 @@
                     "name": "Dodatkowe dane",
                     "description": "Dane przekazywane dalej i dostrajanie transportu dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
                 },
-                "delivery_config": {
-                    "name": "Konfiguracja dostarczenia",
+                "delivery_control": {
+                    "name": "Sterowanie dostarczeniem",
                     "description": "Nazwy dostarczeń, ich lista lub mapowanie do dostrojenia każdego dostarczenia, tak jak delivery: zapisano by w YAML. Łączone z dostarczeniami wybranymi powyżej; dostarczenie podane w obu przyjmuje postać stąd."
                 }
             },

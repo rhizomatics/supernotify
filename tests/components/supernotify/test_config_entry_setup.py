@@ -9,7 +9,7 @@ import pytest
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context
+from homeassistant.core import Context, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
@@ -595,7 +595,7 @@ async def test_notify_action_extra_data_passed_as_data_and_wins(hass: HomeAssist
 
 async def test_notify_description_offers_configured_names(hass: HomeAssistant) -> None:
     """supernotify.notify's delivery and scenario fields become dropdowns of what's configured, still
-    taking a typed name, with tuning deliveries left to the free-form delivery_config"""
+    taking a typed name, with tuning deliveries left to the free-form delivery_control"""
     from homeassistant.helpers.service import async_get_cached_service_description
     from homeassistant.setup import async_setup_component
 
@@ -617,7 +617,7 @@ async def test_notify_description_offers_configured_names(hass: HomeAssistant) -
     delivery_names = fields["delivery"]["selector"]["select"]["options"]
     assert "chat" in delivery_names
     assert fields["delivery"]["selector"]["select"]["custom_value"] is True
-    assert fields["advanced"]["fields"]["delivery_config"]["selector"] == {"object": None}
+    assert fields["advanced"]["fields"]["delivery_control"]["selector"] == {"object": None}
     assert "delivery_selection" in fields["advanced"]["fields"]
     for field in ("require_scenarios", "apply_scenarios", "constrain_scenarios"):
         assert fields["scenarios"]["fields"][field]["selector"] == {
@@ -658,7 +658,7 @@ def test_merge_delivery_fields(picked: object, config: object, expected: dict) -
     if picked is not None:
         data["delivery"] = picked
     if config is not None:
-        data["delivery_config"] = config
+        data["delivery_control"] = config
 
     assert merge_delivery_fields(data) == {"message": "hi", **expected}
 
@@ -668,7 +668,7 @@ def test_merge_delivery_fields_keeps_callers_selection() -> None:
 
     merged = merge_delivery_fields({
         "delivery": ["email"],
-        "delivery_config": {"chime": None},
+        "delivery_control": {"chime": None},
         "delivery_selection": "fixed",
     })
 
@@ -678,7 +678,6 @@ def test_merge_delivery_fields_keeps_callers_selection() -> None:
 async def test_notify_action_merges_delivery_dropdown_and_config(hass: HomeAssistant) -> None:
     """The deliveries picked and the free-form Delivery Config reach the notification as one
     `delivery`, with the config's tuning applied, and nothing else sent"""
-    from homeassistant.core import ServiceCall
     from homeassistant.setup import async_setup_component
 
     calls: list[ServiceCall] = []
@@ -698,7 +697,7 @@ async def test_notify_action_merges_delivery_dropdown_and_config(hass: HomeAssis
     await hass.services.async_call(
         DOMAIN,
         "notify",
-        {"message": "hello", "delivery": ["pager", "siren"], "delivery_config": {"pager": {"data": {"urgent": True}}}},
+        {"message": "hello", "delivery": ["pager", "siren"], "delivery_control": {"pager": {"data": {"urgent": True}}}},
         blocking=True,
     )
 
@@ -706,3 +705,66 @@ async def test_notify_action_merges_delivery_dropdown_and_config(hass: HomeAssis
     assert engine.last_notification is not None
     assert list(engine.last_notification.selected_deliveries) == ["pager", "siren"]
     assert sorted(c.data.get("urgent", False) for c in calls) == [False, True]
+
+
+async def _setup_delivery_choice(hass: HomeAssistant) -> list[ServiceCall]:
+    from homeassistant.setup import async_setup_component
+
+    calls: list[ServiceCall] = []
+
+    async def _mock_notification(call: ServiceCall) -> None:
+        calls.append(call)
+
+    hass.services.async_register("testing", "mock_notification", _mock_notification)
+    generic = {"transport": "generic", "action": "testing.mock_notification", "target_required": "never"}
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"delivery": {"chat": {**generic, "inclusion": ["default"]}, "pager": generic, "siren": generic}}},
+    )
+    await hass.async_block_till_done()
+    return calls
+
+
+async def test_delivery_field_prefilled_with_implicit_deliveries(hass: HomeAssistant) -> None:
+    from homeassistant.helpers.service import async_get_cached_service_description
+
+    await _setup_delivery_choice(hass)
+
+    description = async_get_cached_service_description(hass, DOMAIN, "notify")
+    assert description is not None
+    assert description["fields"]["delivery"]["default"] == ["chat"]
+    assert {"chat", "pager", "siren"} <= set(description["fields"]["delivery"]["selector"]["select"]["options"])
+
+
+@pytest.mark.parametrize(
+    ("delivery", "expected"),
+    [
+        ("pager", {"pager"}),
+        (["pager", "siren"], {"pager", "siren"}),
+        # a mapping tunes deliveries without restricting to them, so the default chat is still used
+        ({"pager": {"data": {"urgent": True}}}, {"chat", "pager"}),
+    ],
+    ids=["name", "list", "mapping"],
+)
+@pytest.mark.parametrize("call_style", ["supernotify.notify", "supernotify.notify legacy data", "notify.supernotify"])
+async def test_delivery_block_backward_compatible(
+    hass: HomeAssistant, delivery: object, expected: set[str], call_style: str
+) -> None:
+    """A `delivery:` name, list or mapping means the same as before the delivery dropdown and
+    delivery_control were added, whichever way the action is called"""
+    await _setup_delivery_choice(hass)
+
+    if call_style == "supernotify.notify":
+        await hass.services.async_call(DOMAIN, "notify", {"message": "hello", "delivery": delivery}, blocking=True)
+    elif call_style == "supernotify.notify legacy data":
+        await hass.services.async_call(DOMAIN, "notify", {"message": "hello", "data": {"delivery": delivery}}, blocking=True)
+    else:
+        await hass.services.async_call(
+            "notify", "supernotify", {"message": "hello", "data": {"delivery": delivery}}, blocking=True
+        )
+
+    engine = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    assert engine.last_notification is not None
+    assert set(engine.last_notification.selected_deliveries) == expected
+    assert engine.last_notification.unknown_names == {}

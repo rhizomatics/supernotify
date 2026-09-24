@@ -81,12 +81,12 @@
                     "description": "Used to enable/disable deliveries and scenarios, and mapped to the underlying transport's own priority/urgency flag where supported (e.g. mobile push, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Delivery Selection Basis",
-                    "description": "How the chosen deliveries are used - implicit (added to the defaults), explicit (only these, plus scenario-enabled ones), or fixed (only these, ignoring scenarios). Picking deliveries makes it explicit unless set here."
+                    "name": "Delivery Selection",
+                    "description": "How the Delivery list and/or Delivery Control data is used - explicit (ignore implicit deliveries), implicit (use these in addition to the implicit deliveries), or fixed (only use these, ignoring any conditional logic to select deliveries)."
                 },
                 "delivery": {
                     "name": "Delivery",
-                    "description": "Use only these deliveries, as well as any a scenario turns on. Leave empty to choose automatically."
+                    "description": "Use only these deliveries, as well as any a scenario turns on. Starts with the deliveries used by default, to add to or take away from. Leave out to choose automatically."
                 },
                 "require_scenarios": {
                     "name": "Required Scenarios",
@@ -152,9 +152,9 @@
                     "name": "Extra Data",
                     "description": "Passthrough data and transport tuning for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
                 },
-                "delivery_config": {
-                    "name": "Delivery Config",
-                    "description": "Delivery names, a list of them, or a mapping to tune each delivery, as delivery: would be written in YAML. Merged with the deliveries picked above, and a delivery given in both takes its form from here."
+                "delivery_control": {
+                    "name": "Delivery Control",
+                    "description": "Delivery names, a list of them, or a mapping to tune each delivery, as delivery: would be written in YAML. Merged with the deliveries chosen above, and a delivery given in both takes its form from here."
                 }
             },
             "sections": {

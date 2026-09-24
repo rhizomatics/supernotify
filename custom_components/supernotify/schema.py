@@ -41,7 +41,7 @@ from .const import (
     ATTR_DATA,
     ATTR_DEBUG,
     ATTR_DELIVERY,
-    ATTR_DELIVERY_CONFIG,
+    ATTR_DELIVERY_CONTROL,
     ATTR_DELIVERY_SELECTION,
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
@@ -619,7 +619,7 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         vol.Optional(ATTR_CUSTOM_TARGET): vol.All(cv.ensure_list, [cv.string]),
         # the delivery dropdown can only give names, so this takes any form `delivery` does, and
         # actions.py's action_notify merges the two into `delivery` before Notification sees them
-        vol.Optional(ATTR_DELIVERY_CONFIG): vol.Any(None, DELIVERY_FIELD_SCHEMA),
+        vol.Optional(ATTR_DELIVERY_CONTROL): vol.Any(None, DELIVERY_FIELD_SCHEMA),
         # promoted out of media: for their own selectors - notify.py's action_notify
         # merges them back into media before Notification ever sees them
         vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,
