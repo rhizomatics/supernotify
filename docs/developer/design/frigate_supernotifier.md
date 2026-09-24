@@ -25,13 +25,14 @@ flowchart LR
     D -->|"mobile_app_notification_action"| C
 ```
 
-- **Separate integration**, for example `frigate_supernotifier`, with `dependencies: [supernotify, mqtt]` and
-  `after_dependencies: [frigate]`
-- **Config entry per Frigate instance**, discovered from existing `frigate` config entries. The MQTT topic prefix,
-  proxy client ID and base URL are read from the Frigate entry and Home Assistant's external URL, replacing the
-  blueprint's `base_url`, `client_id` and `mqtt_topic` inputs
-- **Config subentry per notification profile** - a set of cameras with their own filters and notification. Most users
-  have one; someone wanting the driveway treated differently from the garden adds a second
+- **Package module inside Supernotify**, with `mqtt` and `frigate` as `after_dependencies`, only offered when both are
+  loaded. A thin *Frigate SuperNotifier* HACS repository can follow later for visibility
+- **Config subentry per notification profile** of the Supernotify entry - a Frigate instance and a set of cameras with
+  their own filters and notification. Most users have one; someone wanting the driveway treated differently from the
+  garden adds a second
+- **Frigate settings discovered** from the existing `frigate` config entry. The MQTT topic prefix, proxy client ID and
+  base URL are read from the Frigate entry and Home Assistant's external URL, replacing the blueprint's `base_url`,
+  `client_id` and `mqtt_topic` inputs
 - **Runtime**: one MQTT subscription per entry; a review tracker keeps per-review state (severity, objects,
   sub-labels, zones, last sent) in memory, replacing the blueprint's `wait_for_trigger` loop. Everything is in code,
   so improvements reach existing users on upgrade

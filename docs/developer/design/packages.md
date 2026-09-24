@@ -18,14 +18,15 @@ The "packages" could also be selected after the fact, either directly in the mai
 
 ## Implementation
 
-Separate custom component on HACS, per package, as Supernotify "plugins".
-More noticeable, e.g. someone looking for help with Frigate more likely to pick a Frigate Supernotify plugin from HACS than examine Supernotify and find the small print.
+A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again.
+
+Later, a thin custom component on HACS per package, purely for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It would only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
+
+See [Package Support](./package_support.md) for the changes needed in Supernotify first.
 
 ### Alternatives
 
-A new sub-package within Supernotify, with a module per package. At set-up or startup the modules are called to see if they are applicable. If use chooses to ignore them, this ignore state is persisted so not bothered again.
-
-Config sub-entries?
+A separate custom component on HACS per package, holding the package logic, as Supernotify "plugins". Rejected for now, since neither HACS nor Home Assistant will install Supernotify as its dependency.
 
 ### Branding
 
