@@ -401,7 +401,7 @@
                     "archive": "アーカイブ設定",
                     "dupe_check": "重複検出",
                     "housekeeping": "ハウスキーピング",
-                    "llm_tools": "LLM ツール（ベータ）"
+                    "llm_tools": "Assist と AI エージェント（ベータ）"
                 },
                 "title": "Supernotify オプション"
             },
@@ -480,15 +480,17 @@
                 "title": "ハウスキーピングオプション"
             },
             "llm_tools": {
-                "title": "LLM ツール（ベータ）",
-                "description": "ベータ: Assist の会話エージェントと、Home Assistant の MCP サーバー経由で接続された AI エージェントが Supernotify を使えるようにします。ツールが届くのは、設定済みの受信者、配信、シナリオだけです。",
+                "title": "Assist と AI エージェント（ベータ）",
+                "description": "ベータ: Assist が Supernotify を使えるようにします。ツールは AI モデルを使う会話エージェントと、Home Assistant の MCP サーバー経由で接続された AI エージェント向けで、設定済みの受信者、配信、シナリオだけに届きます。AI を使わない内蔵エージェントはツールを使えませんが、代わりにいくつかの英語の文を理解します。",
                 "data": {
                     "action_tools": "アクションツール",
-                    "diagnostic_tools": "診断ツール"
+                    "diagnostic_tools": "診断ツール",
+                    "sentence_commands": "内蔵エージェントの文"
                 },
                 "data_description": {
                     "action_tools": "通知を送信し、スヌーズまたはミュートする",
-                    "diagnostic_tools": "最近の通知を説明し、通知が誰に届くかを試算し、スヌーズを一覧表示し、Supernotify のドキュメントをオンラインで調べる"
+                    "diagnostic_tools": "最近の通知を説明し、通知が誰に届くかを試算し、スヌーズを一覧表示し、Supernotify のドキュメントをオンラインで調べる",
+                    "sentence_commands": "内蔵エージェント向けの英語の文。例: 'tell Alice that dinner is ready'、'snooze my notifications for 30 minutes'"
                 }
             }
         }

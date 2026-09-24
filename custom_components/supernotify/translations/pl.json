@@ -401,7 +401,7 @@
                     "archive": "Ustawienia archiwum",
                     "dupe_check": "Wykrywanie duplikatów",
                     "housekeeping": "Konserwacja",
-                    "llm_tools": "Narzędzia LLM (beta)"
+                    "llm_tools": "Assist i agenci AI (beta)"
                 },
                 "title": "Opcje Supernotify"
             },
@@ -480,15 +480,17 @@
                 "title": "Opcje konserwacji"
             },
             "llm_tools": {
-                "title": "Narzędzia LLM (beta)",
-                "description": "Beta: pozwala agentom konwersacji Assist oraz agentom AI połączonym przez serwer MCP Home Assistant korzystać z Supernotify. Narzędzia docierają tylko do już skonfigurowanych odbiorców, dostaw i scenariuszy.",
+                "title": "Assist i agenci AI (beta)",
+                "description": "Beta: pozwala Assist korzystać z Supernotify. Narzędzia są dla agentów konwersacji używających modelu AI oraz agentów AI połączonych przez serwer MCP Home Assistant i docierają tylko do już skonfigurowanych odbiorców, dostaw i scenariuszy. Wbudowany agent, który nie używa AI, nie może z nich korzystać, ale zamiast tego rozumie kilka angielskich zdań.",
                 "data": {
                     "action_tools": "Narzędzia działań",
-                    "diagnostic_tools": "Narzędzia diagnostyczne"
+                    "diagnostic_tools": "Narzędzia diagnostyczne",
+                    "sentence_commands": "Zdania wbudowanego agenta"
                 },
                 "data_description": {
                     "action_tools": "Wysyłanie powiadomień oraz ich drzemka lub wyciszenie",
-                    "diagnostic_tools": "Wyjaśnianie ostatnich powiadomień, symulacja, do kogo dotarłoby powiadomienie, lista drzemek i wyszukiwanie w dokumentacji Supernotify online"
+                    "diagnostic_tools": "Wyjaśnianie ostatnich powiadomień, symulacja, do kogo dotarłoby powiadomienie, lista drzemek i wyszukiwanie w dokumentacji Supernotify online",
+                    "sentence_commands": "Angielskie zdania dla wbudowanego agenta, np. 'tell Alice that dinner is ready' lub 'snooze my notifications for 30 minutes'"
                 }
             }
         }

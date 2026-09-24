@@ -49,6 +49,7 @@ from .const import (
     CONF_MEDIA_URL_PREFIX,
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
     CONF_TEMPLATE_PATH,
     CONF_TTL,
@@ -391,12 +392,14 @@ class SupernotifyOptionsFlow(OptionsFlow):
         return self.async_show_form(step_id="housekeeping", data_schema=schema)
 
     async def async_step_llm_tools(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Beta: which tools llm.py offers to Assist conversation agents and the MCP server"""
+        """Beta: which tools llm.py offers to AI conversation agents and the MCP server, and whether
+        sentences.py registers commands with the built-in agent"""
         current: dict[str, Any] = self.config_entry.options.get(CONF_LLM_TOOLS, {})
         if user_input is not None:
             return self.async_create_entry(title="", data={**self.config_entry.options, CONF_LLM_TOOLS: user_input})
         schema = vol.Schema({
             vol.Optional(CONF_LLM_ACTION_TOOLS, default=current.get(CONF_LLM_ACTION_TOOLS, False)): cv.boolean,
             vol.Optional(CONF_LLM_DIAGNOSTIC_TOOLS, default=current.get(CONF_LLM_DIAGNOSTIC_TOOLS, False)): cv.boolean,
+            vol.Optional(CONF_SENTENCE_COMMANDS, default=current.get(CONF_SENTENCE_COMMANDS, False)): cv.boolean,
         })
         return self.async_show_form(step_id="llm_tools", data_schema=schema)

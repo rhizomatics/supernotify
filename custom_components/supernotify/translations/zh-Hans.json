@@ -401,7 +401,7 @@
                     "archive": "存档设置",
                     "dupe_check": "重复检测",
                     "housekeeping": "维护",
-                    "llm_tools": "LLM 工具（测试版）"
+                    "llm_tools": "Assist 与 AI 代理（测试版）"
                 },
                 "title": "Supernotify 选项"
             },
@@ -480,15 +480,17 @@
                 "title": "维护选项"
             },
             "llm_tools": {
-                "title": "LLM 工具（测试版）",
-                "description": "测试版：允许 Assist 对话代理以及通过 Home Assistant 的 MCP 服务器连接的 AI 代理使用 Supernotify。这些工具只能触达已配置的接收人、投递方式和场景。",
+                "title": "Assist 与 AI 代理（测试版）",
+                "description": "测试版：允许 Assist 使用 Supernotify。这些工具供使用 AI 模型的对话代理以及通过 Home Assistant 的 MCP 服务器连接的 AI 代理使用，只能触达已配置的接收人、投递方式和场景。不使用 AI 的内置代理无法使用这些工具，但可以理解一些英文语句。",
                 "data": {
                     "action_tools": "操作工具",
-                    "diagnostic_tools": "诊断工具"
+                    "diagnostic_tools": "诊断工具",
+                    "sentence_commands": "内置代理语句"
                 },
                 "data_description": {
                     "action_tools": "发送通知，并可暂停或静音通知",
-                    "diagnostic_tools": "解释最近的通知，试算通知会送达谁，列出暂停项，并在线查阅 Supernotify 文档"
+                    "diagnostic_tools": "解释最近的通知，试算通知会送达谁，列出暂停项，并在线查阅 Supernotify 文档",
+                    "sentence_commands": "供内置代理使用的英文语句，例如 'tell Alice that dinner is ready' 或 'snooze my notifications for 30 minutes'"
                 }
             }
         }

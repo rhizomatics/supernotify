@@ -433,6 +433,21 @@ class PeopleRegistry:
                 return recipient.alias or recipient.name
         return None
 
+    def person_id_for_name(self, name: str) -> str | None:
+        """The recipient called this, by alias or name, ignoring case and underscores"""
+        wanted: str = name.replace("_", " ").casefold().strip()
+        for recipient in self.people.values():
+            names = {n.replace("_", " ").casefold() for n in (recipient.alias, recipient.name) if n}
+            if wanted in names:
+                return recipient.entity_id
+        return None
+
+    def person_id_for_user_id(self, user_id: str | None) -> str | None:
+        for recipient in self.people.values():
+            if user_id and recipient.user_id == user_id:
+                return recipient.entity_id
+        return None
+
     def find_people(self) -> list[str]:
         return self.hass_api.entity_ids_for_domain(PERSON_DOMAIN)
 

@@ -30,6 +30,7 @@ from custom_components.supernotify.const import (
     CONF_MEDIA_URL_PREFIX,
     CONF_MOBILE_DISCOVERY,
     CONF_RECIPIENTS_DISCOVERY,
+    CONF_SENTENCE_COMMANDS,
     CONF_SIZE,
     CONF_TEMPLATE_PATH,
     CONF_TTL,
@@ -220,19 +221,23 @@ async def test_options_flow_llm_tools(hass: HomeAssistant) -> None:
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "llm_tools"})
     assert menu_result["step_id"] == "llm_tools"
     defaults = {str(k): k.default() for k in menu_result["data_schema"].schema}
-    assert defaults == {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: False}
+    assert defaults == {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: False, CONF_SENTENCE_COMMANDS: False}
 
     result = await hass.config_entries.options.async_configure(
-        menu_result["flow_id"], {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: True}
+        menu_result["flow_id"], {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: True, CONF_SENTENCE_COMMANDS: True}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
-    assert entry.options[CONF_LLM_TOOLS] == {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: True}
+    assert entry.options[CONF_LLM_TOOLS] == {
+        CONF_LLM_ACTION_TOOLS: False,
+        CONF_LLM_DIAGNOSTIC_TOOLS: True,
+        CONF_SENTENCE_COMMANDS: True,
+    }
 
     options_again = await hass.config_entries.options.async_init(entry.entry_id)
     menu_again = await hass.config_entries.options.async_configure(options_again["flow_id"], {"next_step_id": "llm_tools"})
     defaults = {str(k): k.default() for k in menu_again["data_schema"].schema}
-    assert defaults == {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: True}
+    assert defaults == {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: True, CONF_SENTENCE_COMMANDS: True}
 
 
 async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:

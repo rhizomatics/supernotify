@@ -401,7 +401,7 @@
                     "archive": "Paramètres d'archivage",
                     "dupe_check": "Détection des doublons",
                     "housekeeping": "Entretien",
-                    "llm_tools": "Outils LLM (bêta)"
+                    "llm_tools": "Assist et agents IA (bêta)"
                 },
                 "title": "Options de Supernotify"
             },
@@ -480,15 +480,17 @@
                 "title": "Options d'entretien"
             },
             "llm_tools": {
-                "title": "Outils LLM (bêta)",
-                "description": "Bêta : permet aux agents de conversation Assist, et aux agents IA connectés via le serveur MCP de Home Assistant, d'utiliser Supernotify. Les outils n'atteignent que les destinataires, livraisons et scénarios déjà configurés.",
+                "title": "Assist et agents IA (bêta)",
+                "description": "Bêta : permet à Assist d'utiliser Supernotify. Les outils sont destinés aux agents de conversation utilisant un modèle d'IA et aux agents IA connectés via le serveur MCP de Home Assistant, et n'atteignent que les destinataires, livraisons et scénarios déjà configurés. L'agent intégré, qui n'utilise pas d'IA, ne peut pas les utiliser, mais comprend à la place quelques phrases en anglais.",
                 "data": {
                     "action_tools": "Outils d'action",
-                    "diagnostic_tools": "Outils de diagnostic"
+                    "diagnostic_tools": "Outils de diagnostic",
+                    "sentence_commands": "Phrases de l'agent intégré"
                 },
                 "data_description": {
                     "action_tools": "Envoyer des notifications, les mettre en pause ou en sourdine",
-                    "diagnostic_tools": "Expliquer les notifications récentes, simuler qui une notification atteindrait, lister les mises en pause et consulter la documentation de Supernotify en ligne"
+                    "diagnostic_tools": "Expliquer les notifications récentes, simuler qui une notification atteindrait, lister les mises en pause et consulter la documentation de Supernotify en ligne",
+                    "sentence_commands": "Phrases en anglais pour l'agent intégré, comme 'tell Alice that dinner is ready' ou 'snooze my notifications for 30 minutes'"
                 }
             }
         }

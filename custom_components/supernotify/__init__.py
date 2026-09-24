@@ -141,6 +141,7 @@ def _async_remove_legacy_default_entities(hass: HomeAssistant) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) -> bool:
     from .actions import async_describe_configured_names, async_register_engine_actions
+    from .const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS
     from .engine import build_supernotify_engine
     from .notification import set_version
     from .notify import SuperNotificationService
@@ -169,6 +170,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SupernotifyConfigEntry) 
     # before then and lost
     async_register_engine_actions(hass, engine, full_config)
     await async_describe_configured_names(hass, engine)
+
+    if entry.options.get(CONF_LLM_TOOLS, {}).get(CONF_SENTENCE_COMMANDS):
+        from .sentences import async_register_sentences
+
+        if remove_sentences := await async_register_sentences(hass, engine):
+            entry.async_on_unload(remove_sentences)
 
     ## Legacy Notification Service set-up
 

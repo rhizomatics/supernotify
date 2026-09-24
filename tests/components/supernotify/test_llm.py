@@ -376,6 +376,8 @@ delivery:
 
 # Recipe - Email CC
 
+Source: https://example.org/latest/recipes/email_cc/
+
 Copy every e-mail to one address.
 """
 DOCS_INDEX = """# Home Assistant Supernotify
@@ -399,9 +401,10 @@ def test_split_docs_by_page() -> None:
         ("Home Assistant Supernotify", None),
         ("Snoozing", "https://example.org/latest/usage/snoozing/"),
         ("Recipe - Alexa Whispering", "https://example.org/latest/recipes/alexa_whisper/"),
-        ("Recipe - Email CC", None),
+        ("Recipe - Email CC", "https://example.org/latest/recipes/email_cc/"),
     ]
     assert "# a comment in an example" in pages[2].text
+    assert pages[3].text == "Copy every e-mail to one address."
 
 
 def test_search_docs_prefers_title_and_matches_stems() -> None:

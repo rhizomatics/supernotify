@@ -401,7 +401,7 @@
                     "archive": "Configurações de arquivo",
                     "dupe_check": "Detecção de duplicados",
                     "housekeeping": "Manutenção",
-                    "llm_tools": "Ferramentas LLM (beta)"
+                    "llm_tools": "Assist e agentes de IA (beta)"
                 },
                 "title": "Opções do Supernotify"
             },
@@ -480,15 +480,17 @@
                 "title": "Opções de manutenção"
             },
             "llm_tools": {
-                "title": "Ferramentas LLM (beta)",
-                "description": "Beta: permite que os agentes de conversa do Assist, e os agentes de IA ligados pelo servidor MCP do Home Assistant, usem o Supernotify. As ferramentas só chegam aos destinatários, entregas e cenários já configurados.",
+                "title": "Assist e agentes de IA (beta)",
+                "description": "Beta: permite que o Assist use o Supernotify. As ferramentas são para agentes de conversa que usam um modelo de IA e para agentes de IA ligados pelo servidor MCP do Home Assistant, e só chegam aos destinatários, entregas e cenários já configurados. O agente integrado, que não usa IA, não as pode usar, mas entende em vez disso algumas frases em inglês.",
                 "data": {
                     "action_tools": "Ferramentas de ação",
-                    "diagnostic_tools": "Ferramentas de diagnóstico"
+                    "diagnostic_tools": "Ferramentas de diagnóstico",
+                    "sentence_commands": "Frases do agente integrado"
                 },
                 "data_description": {
                     "action_tools": "Enviar notificações e adiá-las ou silenciá-las",
-                    "diagnostic_tools": "Explicar notificações recentes, simular quem uma notificação alcançaria, listar os adiamentos e consultar a documentação do Supernotify online"
+                    "diagnostic_tools": "Explicar notificações recentes, simular quem uma notificação alcançaria, listar os adiamentos e consultar a documentação do Supernotify online",
+                    "sentence_commands": "Frases em inglês para o agente integrado, como 'tell Alice that dinner is ready' ou 'snooze my notifications for 30 minutes'"
                 }
             }
         }

@@ -329,6 +329,8 @@ CONF_SNOOZE_TIME = "snooze_time"
 CONF_LLM_TOOLS: Final[str] = "llm_tools"
 CONF_LLM_ACTION_TOOLS: Final[str] = "action_tools"
 CONF_LLM_DIAGNOSTIC_TOOLS: Final[str] = "diagnostic_tools"
+# sentences for Home Assistant's built-in conversation agent, which can't use LLM tools, see sentences.py
+CONF_SENTENCE_COMMANDS: Final[str] = "sentence_commands"
 
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check
 # May need condition, and also enabled if delivery disabled

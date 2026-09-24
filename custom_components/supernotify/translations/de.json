@@ -401,7 +401,7 @@
                     "archive": "Archiveinstellungen",
                     "dupe_check": "Duplikaterkennung",
                     "housekeeping": "Wartung",
-                    "llm_tools": "LLM-Werkzeuge (Beta)"
+                    "llm_tools": "Assist und KI-Agenten (Beta)"
                 },
                 "title": "Supernotify-Optionen"
             },
@@ -480,15 +480,17 @@
                 "title": "Wartungsoptionen"
             },
             "llm_tools": {
-                "title": "LLM-Werkzeuge (Beta)",
-                "description": "Beta: Assist-Gesprächsagenten und über den MCP-Server von Home Assistant verbundene KI-Agenten dürfen Supernotify nutzen. Die Werkzeuge erreichen nur bereits konfigurierte Empfänger, Zustellungen und Szenarien.",
+                "title": "Assist und KI-Agenten (Beta)",
+                "description": "Beta: Assist darf Supernotify nutzen. Die Werkzeuge sind für Gesprächsagenten mit einem KI-Modell und für über den MCP-Server von Home Assistant verbundene KI-Agenten gedacht und erreichen nur bereits konfigurierte Empfänger, Zustellungen und Szenarien. Der eingebaute Agent ohne KI kann sie nicht nutzen, versteht aber stattdessen einige englische Sätze.",
                 "data": {
                     "action_tools": "Aktionswerkzeuge",
-                    "diagnostic_tools": "Diagnosewerkzeuge"
+                    "diagnostic_tools": "Diagnosewerkzeuge",
+                    "sentence_commands": "Sätze für den eingebauten Agenten"
                 },
                 "data_description": {
                     "action_tools": "Benachrichtigungen senden sowie schlummern oder stummschalten",
-                    "diagnostic_tools": "Letzte Benachrichtigungen erklären, testen, wen eine Benachrichtigung erreichen würde, Schlummerzeiten auflisten und online in der Supernotify-Dokumentation nachschlagen"
+                    "diagnostic_tools": "Letzte Benachrichtigungen erklären, testen, wen eine Benachrichtigung erreichen würde, Schlummerzeiten auflisten und online in der Supernotify-Dokumentation nachschlagen",
+                    "sentence_commands": "Englische Sätze für den eingebauten Agenten, wie 'tell Alice that dinner is ready' oder 'snooze my notifications for 30 minutes'"
                 }
             }
         }

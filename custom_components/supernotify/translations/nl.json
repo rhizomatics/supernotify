@@ -401,7 +401,7 @@
                     "archive": "Archiefinstellingen",
                     "dupe_check": "Duplicaatdetectie",
                     "housekeeping": "Onderhoud",
-                    "llm_tools": "LLM-hulpmiddelen (bèta)"
+                    "llm_tools": "Assist en AI-agenten (bèta)"
                 },
                 "title": "Supernotify-opties"
             },
@@ -480,15 +480,17 @@
                 "title": "Onderhoudsopties"
             },
             "llm_tools": {
-                "title": "LLM-hulpmiddelen (bèta)",
-                "description": "Bèta: laat Assist-gespreksagenten en AI-agenten die via de MCP-server van Home Assistant verbonden zijn Supernotify gebruiken. De hulpmiddelen bereiken alleen de al geconfigureerde ontvangers, bezorgingen en scenario's.",
+                "title": "Assist en AI-agenten (bèta)",
+                "description": "Bèta: laat Assist Supernotify gebruiken. De hulpmiddelen zijn voor gespreksagenten die een AI-model gebruiken en voor AI-agenten die via de MCP-server van Home Assistant verbonden zijn, en bereiken alleen de al geconfigureerde ontvangers, bezorgingen en scenario's. De ingebouwde agent, die geen AI gebruikt, kan ze niet gebruiken, maar begrijpt in plaats daarvan enkele Engelse zinnen.",
                 "data": {
                     "action_tools": "Actiehulpmiddelen",
-                    "diagnostic_tools": "Diagnosehulpmiddelen"
+                    "diagnostic_tools": "Diagnosehulpmiddelen",
+                    "sentence_commands": "Zinnen voor de ingebouwde agent"
                 },
                 "data_description": {
                     "action_tools": "Meldingen versturen, en ze sluimeren of dempen",
-                    "diagnostic_tools": "Recente meldingen uitleggen, proefdraaien wie een melding zou bereiken, sluimeringen tonen en de Supernotify-documentatie online opzoeken"
+                    "diagnostic_tools": "Recente meldingen uitleggen, proefdraaien wie een melding zou bereiken, sluimeringen tonen en de Supernotify-documentatie online opzoeken",
+                    "sentence_commands": "Engelse zinnen voor de ingebouwde agent, zoals 'tell Alice that dinner is ready' of 'snooze my notifications for 30 minutes'"
                 }
             }
         }

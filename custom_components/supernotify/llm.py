@@ -56,6 +56,8 @@ DOCS_SITE = "https://supernotify.rhizomatics.org.uk/"
 DOCS_URL = f"{DOCS_SITE}llms-full.txt"
 DOCS_INDEX_URL = f"{DOCS_SITE}llms.txt"
 DOCS_CACHE_TIME = dt.timedelta(days=1)
+# the line under each page title giving its link, from docgen/llms_preprocess.py
+DOCS_SOURCE_PREFIX = "Source: "
 DOCS_SECTIONS_RETURNED = 3
 DOCS_SECTION_MAX_CHARS = 4000
 DOCS_STOP_WORDS = frozenset([
@@ -174,10 +176,7 @@ def _recipient_names(engine: SupernotifyEngine) -> list[str]:
 
 
 def _person_id(engine: SupernotifyEngine, name: str) -> str | None:
-    for recipient in engine.context.people_registry.people.values():
-        if name.casefold() in (_display_name(recipient).casefold(), recipient.name.casefold()):
-            return recipient.entity_id
-    return None
+    return engine.context.people_registry.person_id_for_name(name)
 
 
 def _names_for(engine: SupernotifyEngine, person_ids: list[str]) -> list[str]:
@@ -388,11 +387,7 @@ class SnoozeTool(SupernotifyTool):
 
     def _requesting_person(self, llm_context: LLMContext) -> str | None:
         user_id: str | None = llm_context.context.user_id if llm_context.context else None
-        if user_id:
-            for recipient in self.engine.context.people_registry.people.values():
-                if recipient.user_id == user_id:
-                    return recipient.entity_id
-        return None
+        return self.engine.context.people_registry.person_id_for_user_id(user_id)
 
 
 class RecentNotificationsTool(SupernotifyTool):
@@ -477,8 +472,8 @@ class SnoozesTool(SupernotifyTool):
 
 def split_docs(text: str, index: str = "") -> list[DocsPage]:
     """Split the combined documentation into pages, each starting at a top level heading with a
-    blank line either side - which a comment in a code example rarely has - with each page's link
-    taken from the index where the titles match"""
+    blank line either side - which a comment in a code example rarely has. Each page's link is its
+    own "Source:" line, published since v2.10.0, else taken from the index where the titles match"""
     urls: dict[str, str] = {
         title.casefold(): url.removesuffix("index.md")
         for title, url in re.findall(r"^- \[([^\]]+)\]\(([^)]+)\)", index, flags=re.MULTILINE)
@@ -495,7 +490,11 @@ def split_docs(text: str, index: str = "") -> list[DocsPage]:
 
     def finish() -> None:
         if title and (page_text := "\n".join(body).strip()):
-            pages.append(DocsPage(title, url_for(title), page_text))
+            first_line, _, rest = page_text.partition("\n")
+            if first_line.startswith(DOCS_SOURCE_PREFIX):
+                pages.append(DocsPage(title, first_line.removeprefix(DOCS_SOURCE_PREFIX).strip(), rest.strip()))
+            else:
+                pages.append(DocsPage(title, url_for(title), page_text))
 
     for i, line in enumerate(lines):
         if line.startswith("# ") and (i == 0 or not lines[i - 1].strip()) and (i + 1 == len(lines) or not lines[i + 1].strip()):
