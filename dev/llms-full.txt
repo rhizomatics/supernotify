@@ -8703,7 +8703,7 @@ v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhi
 
 Still to do:
 
-- Check which HA release added the `llm` platform, against the `hacs.json` minimum. On older HA the tools just don't appear.
+- The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so the `hacs.json` minimum of 2025.12.2 installs fine but the tools don't appear. Pin down the release and say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
 - The delivery field stays a free-form object, since it also takes a mapping that tunes deliveries. A dropdown would push that form into YAML.
 - Gather beta feedback on how well agents choose and fill in the tools, then decide what to keep, and whether to leave beta.
 
