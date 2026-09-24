@@ -7502,6 +7502,8 @@ Source: https://supernotify.rhizomatics.org.uk/latest/changelog/
 
 ## v2.10.0 - Assist Assist
 
+If an option or menu entry shows without a label after upgrading, the browser is showing its cached copy of the old text - hard-refresh the page, or in the companion app use *Settings* > *Companion app* > *Debugging* > *Reset frontend cache*.
+
 ### Action UI
 
 - Scenarios and deliveries now get populated for easy picking
