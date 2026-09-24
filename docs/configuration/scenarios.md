@@ -30,6 +30,14 @@ Scenarios can override specific delivery configurations, general media configura
     * Even if no notification occurs, there can still be an archive notification, to file system or MQTT as a record,
     for example if you are experimenting with tuning out noise, see [Archive](../configuration/archiving.md).
 
+#### Switching on Fully Scenario Driven Configuration
+
+In these example settings, a fully scenario driven configuration has been chosen by setting default Delivery Inclusion to "Delivery Must Be Selected in Action or Scenario" ("Delivery Must Be Selected in Scenario" would also work, but wouldn't have option to override in actions)
+
+![Delivery Control](../assets/images/delivery_control.png){width=300}
+
+Its also possible to use the same Delivery Control options to have a fully Action Driven Configuration, but this means remembering to put a list of deliveries in every single action notification, whereas scenarios can do that once for all automations, and you only have to change it in one place.
+
 ## Conditions
 
 For more on the conditions, see the [ Home Assistant Conditions documentation](https://www.home-assistant.io/docs/scripts/conditions/) since the conditions are all evaluated at time of
