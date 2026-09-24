@@ -145,11 +145,15 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/registry_classes/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/registry/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/transport/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
