@@ -262,7 +262,7 @@
   ],
   "additionalProperties": false,
   "title": "Delivery Definition",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Delivery_Definition.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Delivery_Definition.schema.json",
   "description": "Voluptuous validation schema for Delivery_Definition",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

@@ -120,7 +120,7 @@
   },
   "additionalProperties": false,
   "title": "Delivery Customization",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Delivery_Customization.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Delivery_Customization.schema.json",
   "description": "Voluptuous validation schema for Delivery_Customization",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

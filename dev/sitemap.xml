@@ -165,6 +165,50 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Camera_Definition/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Customization/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Definition/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Full_Configuration/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Recipient_Definition/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Scenario_Definition/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Transport_Definition/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
@@ -186,50 +230,6 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Camera_Definition/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Customization/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Definition/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Full_Configuration/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action_Data/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Recipient_Definition/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Scenario_Definition/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Transport_Definition/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>

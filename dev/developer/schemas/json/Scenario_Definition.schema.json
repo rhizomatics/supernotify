@@ -199,7 +199,7 @@
   },
   "additionalProperties": false,
   "title": "Scenario Definition",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Scenario_Definition.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Scenario_Definition.schema.json",
   "description": "Voluptuous validation schema for Scenario_Definition",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

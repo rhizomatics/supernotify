@@ -97,7 +97,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 
 ## Reference
 
-- [JSON Schema for Supernotify](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/index.md): JSON Schemas for configuration and the notify action data
+- [JSON Schema for Supernotify](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/index.md): JSON Schemas for configuration and the notify action data
 
 ## Optional
 

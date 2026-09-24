@@ -35,7 +35,7 @@ Supernotify also adds more context variables to use in conditions, see the full 
 
 Tip
 
-There's a [Scenario Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Scenario_Definition/index.md) defined for the configuration, and [debugging hints](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#debugging-conditions)
+There's a [Scenario Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Scenario_Definition/index.md) defined for the configuration, and [debugging hints](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#debugging-conditions)
 
 ## Examples
 

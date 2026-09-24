@@ -355,4 +355,4 @@ These examples assume you've named the Supernotify notifier as `supernotify` sin
 
 ## References
 
-The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action_Data/index.md)
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/index.md)

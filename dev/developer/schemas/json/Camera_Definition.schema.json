@@ -56,7 +56,7 @@
   ],
   "additionalProperties": false,
   "title": "Camera Definition",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Camera_Definition.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Camera_Definition.schema.json",
   "description": "Voluptuous validation schema for Camera_Definition",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

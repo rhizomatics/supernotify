@@ -171,7 +171,7 @@
   ],
   "additionalProperties": false,
   "title": "Chime Aliases Definition",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Chime_Aliases_Definition.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Chime_Aliases_Definition.schema.json",
   "description": "Voluptuous validation schema for Chime_Aliases_Definition",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

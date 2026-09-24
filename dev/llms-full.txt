@@ -785,7 +785,7 @@ These examples assume you've named the Supernotify notifier as `supernotify` sin
 
 ## References
 
-The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action_Data/index.md)
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/index.md)
 
 # Snoozing
 
@@ -1776,7 +1776,7 @@ transports:
 
 ## Extreme Example
 
-Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Definition/index.md) definition.
+Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Definition/index.md) definition.
 
 Complex Example
 
@@ -2007,15 +2007,15 @@ Delivery configuration can be done in lots of different ways to suit different c
 
 Each delivery can be individually configured, or have defaults provided by a `transport` configuration. A limited set of overrides - `target`,`data`,`enabled` - can then be applied by scenarios, people definitions in `recipients` or in the notification call. (The limited set is to keep both the code and configuration from being so flexible its too complicated to work with.)
 
-| Where                       | Where              | Schema                                                                                                                                                     | Notes                                                                                                                                                                                                                                                                                                                                           |
-| --------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Action Data                 | Runtime call       | [Delivery Customization](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Customization/index.md)                                  | Only `target`,`enabled` and `data` can be overridden                                                                                                                                                                                                                                                                                            |
-| Recipient delivery override | Runtime call       | [Delivery Customization](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Customization/index.md)                                  | Only `target`,`enabled` and `data` can be overridden                                                                                                                                                                                                                                                                                            |
-| Scenario delivery override  | Runtime call       | [Delivery Customization](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Customization/index.md)                                  | Multiple scenarios applied in no special order. Only `target`,`enabled` and `data` can be overridden. `enabled` can also be left empty so scenario only applies to deliveries already selected. `enabled: true` will force the delivery on and `enabled: false` will force it off, whether an implicit delivery or selected by another scenario |
-| Delivery definition         | Configuration      | [Delivery](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Definition/index.md)                                                   | `message` and `title` are the exceptions which override Action Data                                                                                                                                                                                                                                                                             |
-| Transport Delivery Defaults | Configuration      | [Transport Delivery Defaults](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Transport_Definition/#property-transport-definition-enabled) |                                                                                                                                                                                                                                                                                                                                                 |
-| Transport Adaptor Defaults  | Code               | -                                                                                                                                                          |                                                                                                                                                                                                                                                                                                                                                 |
-| Underlying action defaults  | Other Integrations | -                                                                                                                                                          | These are configured outside Supernotify                                                                                                                                                                                                                                                                                                        |
+| Where                       | Where              | Schema                                                                                                                                                               | Notes                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Action Data                 | Runtime call       | [Delivery Customization](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Customization/index.md)                                  | Only `target`,`enabled` and `data` can be overridden                                                                                                                                                                                                                                                                                            |
+| Recipient delivery override | Runtime call       | [Delivery Customization](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Customization/index.md)                                  | Only `target`,`enabled` and `data` can be overridden                                                                                                                                                                                                                                                                                            |
+| Scenario delivery override  | Runtime call       | [Delivery Customization](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Customization/index.md)                                  | Multiple scenarios applied in no special order. Only `target`,`enabled` and `data` can be overridden. `enabled` can also be left empty so scenario only applies to deliveries already selected. `enabled: true` will force the delivery on and `enabled: false` will force it off, whether an implicit delivery or selected by another scenario |
+| Delivery definition         | Configuration      | [Delivery](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Definition/index.md)                                                   | `message` and `title` are the exceptions which override Action Data                                                                                                                                                                                                                                                                             |
+| Transport Delivery Defaults | Configuration      | [Transport Delivery Defaults](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Transport_Definition/#property-transport-definition-enabled) |                                                                                                                                                                                                                                                                                                                                                 |
+| Transport Adaptor Defaults  | Code               | -                                                                                                                                                                    |                                                                                                                                                                                                                                                                                                                                                 |
+| Underlying action defaults  | Other Integrations | -                                                                                                                                                                    | These are configured outside Supernotify                                                                                                                                                                                                                                                                                                        |
 
 For example, if there's one specific automation you didn't want to have your `alexa_announce` delivery applied, you could disable it like this rather than adding more rules to the supernotify config for just one case:
 
@@ -2135,7 +2135,7 @@ Home Assistant default camera entities have built-in device tracking, so the ent
   - Note that ONVIF may have numeric reference for presets while Frigate uses text labels
   - The camera configuration, or a good ONVIF client like [IP Cams](https://ipcams.app), will show the preset number and description. Its good practice to make preset `1` your default.
   - This will automatically default if not provided based on the camera's platform
-- Configuration documentation for [Camera Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Camera_Definition/index.md).
+- Configuration documentation for [Camera Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Camera_Definition/index.md).
 
 Example Camera Enhanced Configuration
 
@@ -2498,7 +2498,7 @@ Supernotify also adds more context variables to use in conditions, see the full 
 
 Tip
 
-There's a [Scenario Schema](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Scenario_Definition/index.md) defined for the configuration, and [debugging hints](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#debugging-conditions)
+There's a [Scenario Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Scenario_Definition/index.md) defined for the configuration, and [debugging hints](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/#debugging-conditions)
 
 ## Examples
 
@@ -3872,7 +3872,7 @@ Config Snippet
 
 For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. For everything else, you need to pass the list of target entity IDs in the notification action call.
 
-The formal schema is published as [Chime Aliases Definition](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md). Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.
+The formal schema is published as [Chime Aliases Definition](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/index.md). Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.
 
 ## Device Types
 
@@ -7205,18 +7205,18 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 
 ## JSON Schema Files
 
-| Schema                   | JSON Definition                                                                                                                            | Documentation                                                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| Full Configuration       | [Full_Configuration.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json)             | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Full_Configuration/index.md)       |
-| Scenario Definition      | [Scenario_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Scenario_Definition.schema.json)           | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Scenario_Definition/index.md)      |
-| Notify Action Data       | [Notify_Action_Data.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action_Data.schema.json)             | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action_Data/index.md)       |
-| Notify Action            | [Notify_Action.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action.schema.json)                       | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Notify_Action/index.md)            |
-| Delivery Definition      | [Delivery_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Delivery_Definition.schema.json)           | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Definition/index.md)      |
-| Delivery Customization   | [Delivery_Customization.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Delivery_Customization.schema.json)     | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Delivery_Customization/index.md)   |
-| Recipient Definition     | [Recipient_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Recipient_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Recipient_Definition/index.md)     |
-| Camera Definition        | [Camera_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Camera_Definition.schema.json)               | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Camera_Definition/index.md)        |
-| Transport Definition     | [Transport_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Transport_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Transport_Definition/index.md)     |
-| Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
+| Schema                   | JSON Definition                                                                                                                            | Documentation                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Full Configuration       | [Full_Configuration.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json)             | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Full_Configuration/index.md)       |
+| Scenario Definition      | [Scenario_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Scenario_Definition.schema.json)           | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Scenario_Definition/index.md)      |
+| Notify Action Data       | [Notify_Action_Data.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action_Data.schema.json)             | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/index.md)       |
+| Notify Action            | [Notify_Action.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action.schema.json)                       | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action/index.md)            |
+| Delivery Definition      | [Delivery_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Delivery_Definition.schema.json)           | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Definition/index.md)      |
+| Delivery Customization   | [Delivery_Customization.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Delivery_Customization.schema.json)     | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Customization/index.md)   |
+| Recipient Definition     | [Recipient_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Recipient_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Recipient_Definition/index.md)     |
+| Camera Definition        | [Camera_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Camera_Definition.schema.json)               | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Camera_Definition/index.md)        |
+| Transport Definition     | [Transport_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Transport_Definition.schema.json)         | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Transport_Definition/index.md)     |
+| Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
 ## v2.9.1
@@ -7225,13 +7225,14 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 
 - Fixed truncated entity and delivery names where they had underscores
 - Fixed `minutes to snooze` duration ignored
-- Fixed camera notifications snooze action
-- Fixed 'everyone' snoozes
+- Fixed camera notifications snooze action not snoozing
+- Fixed 'everyone' snoozes not firing
 - Improved e2e testing around snoozes
 
-### Live Activity Support
-
 ### Minor
+
+- JSON schema IDs corrected
+- Developer documentation restructured and concepts added with diagram
 
 ## v2.9.0
 

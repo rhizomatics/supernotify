@@ -260,7 +260,7 @@
   },
   "additionalProperties": false,
   "title": "Recipient Definition",
-  "$id": "https://supernotify.rhizomatics.github.io/developer/schemas/Recipient_Definition.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Recipient_Definition.schema.json",
   "description": "Voluptuous validation schema for Recipient_Definition",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }
