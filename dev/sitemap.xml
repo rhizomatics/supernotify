@@ -85,11 +85,19 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/de/concepts/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/class_diagram/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/concepts/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
@@ -217,7 +225,15 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/es/concepts/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/fr/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/fr/concepts/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
@@ -225,7 +241,15 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/hi/concepts/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/it/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/it/concepts/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
@@ -233,7 +257,15 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/ja/concepts/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/nl/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/nl/concepts/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
@@ -241,7 +273,15 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/pl/concepts/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/pt/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/pt/concepts/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
@@ -486,6 +526,10 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/concepts/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
 </urlset>
