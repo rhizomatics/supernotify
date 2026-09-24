@@ -1,5 +1,6 @@
 
 .agents/
+TODO/
 
 config/
 !docs/developer/reference/schemas/index.md
