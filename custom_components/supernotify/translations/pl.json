@@ -257,6 +257,32 @@
                     "description": "Zastępuje skonfigurowany okres przechowywania dla tego czyszczenia, w dniach"
                 }
             }
+        },
+        "enquire_archive": {
+            "name": "Zapytaj archiwum",
+            "description": "Zwraca zarchiwizowane powiadomienia. Bez 'id' lista; z 'id' pelne szczegoly.",
+            "fields": {
+                "id": {
+                    "name": "Id powiadomienia",
+                    "description": "Pelne szczegoly tego powiadomienia."
+                },
+                "limit": {
+                    "name": "Limit",
+                    "description": "Maksymalna liczba (domyslnie 20, maks 100)."
+                },
+                "after": {
+                    "name": "Po",
+                    "description": "Tylko powiadomienia po tej dacie."
+                },
+                "before": {
+                    "name": "Przed",
+                    "description": "Tylko powiadomienia przed ta data."
+                },
+                "outcome": {
+                    "name": "Wynik",
+                    "description": "Tylko powiadomienia z tym wynikiem."
+                }
+            }
         }
     },
     "config": {
@@ -396,7 +422,10 @@
         },
         "no_media_storage_configured": {
             "message": "Dla tej instancji Supernotify nie skonfigurowano magazynu multimediów"
-        }
+        },
+    "archive_entry_not_found": {
+      "message": "Nie znaleziono zarchiwizowanego powiadomienia o id {notification_id}"
+    }
     },
     "options": {
         "step": {
