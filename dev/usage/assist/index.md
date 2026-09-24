@@ -2,15 +2,19 @@
 
 Source: https://supernotify.rhizomatics.org.uk/latest/usage/assist/
 
-Beta
+Early Access
 
-This is a first beta, limited to English. Feedback and help with other languages is very welcome on [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your conversation agent picks the right tool and fills it in.
+This is an initial implementation, limited to English. Feedback and help with other languages is very welcome on [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your conversation agent picks the right tool and fills it in.
 
 Supernotify can give tools to [Assist](https://www.home-assistant.io/voice_control/), so a conversation agent can send notifications, snooze them, and explain what happened to them. It works by voice or from the chat icon in the app.
 
 The same tools are offered to AI agents connected through Home Assistant's [Model Context Protocol Server](https://www.home-assistant.io/integrations/mcp_server/), as long as the server exposes the Assist API.
 
 A more limited set of interactions, without the flexibility of AI understanding, is available for the basic non-AI Assist agent, using a set of fixed sentence structures, see [Built-in Agent Sentences](#built-in-agent-sentences) for more info.
+
+Not Just Voice
+
+Even if you only ever type to the agent in a chat window, the place in Home Assistant where you manage them is called **Voice Assistants**.
 
 ## Switching On
 
@@ -77,6 +81,10 @@ Turn on the file [archive](https://supernotify.rhizomatics.org.uk/latest/configu
 ### Help from the Documentation
 
 `supernotify__help` looks up this documentation site, including the recipes and configuration examples, and gives the agent the best matching pages to answer from, with links. It fetches the documentation from `supernotify.rhizomatics.org.uk` the first time it's used, then at most once a day. The documentation is for the latest release, and in English, though the agent can answer in your language.
+
+### Tuning the Agent Character
+
+Additional prompts to use before conversations can be set in the *Voice Assistants* configuration, see [Creating a Voice Assistant Personality](https://www.home-assistant.io/voice_control/assist_create_open_ai_personality/#creating-a-voice-assistant-personalitywith-an-llm-based-conversation-agent).
 
 ## Built-in Agent Sentences
 
