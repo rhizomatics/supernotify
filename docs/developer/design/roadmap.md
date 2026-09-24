@@ -103,7 +103,7 @@ Better explain in the archived message, the basis on which any single delivery w
 
 ### Packages
 
-See [Packages](./packages.md)
+See [Packages](./packages.md), starting with [Frigate SuperNotifier](./frigate_supernotifier.md)
 
 ### UI
 
