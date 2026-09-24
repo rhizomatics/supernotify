@@ -1,3 +1,26 @@
+## v2.10.0 - Assist Assist
+
+### Home Assistant Assist Integration
+
+- First beta of integrating with [Assist](https://www.home-assistant.io/voice_control/)
+- Works with voice or the chat icon built into the app
+- Send notifications
+  - Arbitrary addresses like emails and phones not accepted for safety (can be used via Recipients or Notify Entities)
+  - Custom actions for mobile push also not supported for safety
+- Explain why a notification was delivered the way it was
+- Snooze or un-snooze notifications
+- Dry run a notification
+- All integration controlled via config UI, so can be fully or partially switched on or off
+- Functionality also available via Home Assistant's native MCP server
+
+### Other
+
+- Action UI now has example values to help understand what fields do
+- Archive has new feature to return recent messages
+- Notifications collect unknown names
+- The `engine` has a new dry run function
+- Improved Italian translations, provided by @lollox80
+
 ## v2.9.1 - Snooze Fix
 
 ### Snoozing

@@ -15,6 +15,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 
 - [Usage](https://supernotify.rhizomatics.org.uk/latest/usage/index.md)
 - [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
+- [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md)
 - [Mobile Actions and Action Groups](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md)
 - [Notifying](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md)
 - [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
