@@ -1,4 +1,6 @@
 
+.agents/
+
 config/
 !docs/developer/reference/schemas/index.md
 docs/developer/reference/schemas/
