@@ -24,6 +24,7 @@ Moving window quota per priority. Per delivery / scenario limits.
 ### Time Ranges
 
 Time ranges for notifications.
+ - See [Supernotify Bands Card](https://github.com/lollox80/supernotify-cards/blob/main/README.md#supernotify-bands-card)
 
 ### Per-delivery Priority
 
@@ -38,7 +39,16 @@ Randomization for greetings and sounds. Sleigh bells are nice on first notificat
 ### Other Features
 
 - Transport overrides for scenarios
-- MQTT Publish action
+  - Selecting by transport rather than by name.
+    - Patterns only work if deliveries follow a naming convention. A scenario can't say "every delivery using the email transport", so user-named deliveries like plain_email, html_email and alerts_to_sue are only caught by luck. One option is a key such as transport: email, or a transport:email prefix, resolved against Delivery.transport.name.
+  - Overriding more than enabled, target and data (see also ideas on `data` improvements)
+    - A scenario can't change the delivery or transport settings that matter most in a scenario:
+    - options (for example target_select, message formatting, chime tune mappings)
+    - the delivery's priority filter
+    - target_usage
+    - selection_rank
+  - Switching a whole transport off.
+    - Today this means a delivery pattern with enabled: false, which fails the same way as in point 1. The alternative is the transport's own switch, but that's global, not per scenario.
 
 ## Email
 
@@ -109,10 +119,10 @@ Make it easier for people to use an AI Agent to setup, maintain or debug notific
 HA's homeassistant.helpers.llm lets an integration register a tool set through async_register_api. A notify tool with delivery, scenario and target parameters would work for Assist conversation agents. It should also be reachable through HA's MCP server. Check the current API before committing to this. It is the only option here that makes Supernotify callable by agents, not just easier to configure.
 
 #### Richer services.yaml descriptions.
-Every field's description, example and selector are what an LLM sees when it discovers actions. Dynamic delivery and scenario dropdowns via async_set_service_schema would help agents as well, since they would see the real delivery names.
+Every field's description, example and selector are what an LLM sees when it discovers actions. Dynamic delivery and scenario dropdowns via `async_set_service_schema` would help agents as well, since they would see the real delivery names.
 
 #### Structured errors and diagnostics.
-Config validation errors that name the key and the valid options let an agent self-correct. diagnostics.py helps the same way.
+Config validation errors that name the key and the valid options let an agent self-correct. `diagnostics.py` helps the same way.
 
 ## Internal Improvements
 
@@ -178,6 +188,7 @@ Fields like `message_html`,`spoken_message`,`priority` are treated inconsistentl
 - Area, floor and label targets, expanded before envelope generation with dupes resolved
    - v2.9.0
    - [https://github.com/rhizomatics/supernotify/pull/188]
+- MQTT Publish action
 
 ## Rejected Roadmap
 

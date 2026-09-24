@@ -61,9 +61,10 @@ flowchart LR
     D2 --> N3
     D3 --> N4
     D4 --> N5
+    D5 -.-> N6["🔕 Nothing sent"]
 
     classDef skipped stroke-dasharray: 5 5,opacity:0.5
-    class D5 skipped
+    class D5,N6 skipped
 ```
 
 ## Transport Adaptors
