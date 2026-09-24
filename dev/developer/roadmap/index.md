@@ -131,7 +131,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
 
-v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md). It's all switched on in the options, on the **Assist and AI agents (beta)** page, and off by default.
+v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md). It's all switched on in the options, on the **Assist and AI agents** page, and off by default.
 
 - **LLM tools** (`llm.py`) for conversation agents that use an AI model, and so for HA's MCP server. Action tools send and snooze. Diagnostic tools explain recent notifications, dry run a notification, list snoozes, and look up the documentation site (`llms-full.txt`, fetched at most daily).
 - **Built-in agent sentences** (`sentences.py`) for the agent without AI, registered as conversation triggers: notify someone or everyone, snooze, silence, resume, and ask for the last notification.

@@ -340,7 +340,7 @@ A more limited set of interactions, without the flexibility of AI understanding,
 
 ## Switching On
 
-Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** > **Configure**, choose **Assist and AI agents (beta)**. There are three switches:
+Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** > **Configure**, choose **Assist and AI agents**. There are three switches:
 
 | Switch                   | What it gives                                                                 |
 | ------------------------ | ----------------------------------------------------------------------------- |
@@ -418,7 +418,7 @@ Home Assistant's built-in conversation agent doesn't use an AI model, so it can'
 | "Turn my notifications back on"                     | Undoes the snooze or silence              |
 | "What was the last notification"                    | Says what it was, and what sent it        |
 
-"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
 
 The sentences are English only for now - if you'd like them in your language, please suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues).
 
@@ -8926,7 +8926,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
 
-v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md). It's all switched on in the options, on the **Assist and AI agents (beta)** page, and off by default.
+v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md). It's all switched on in the options, on the **Assist and AI agents** page, and off by default.
 
 - **LLM tools** (`llm.py`) for conversation agents that use an AI model, and so for HA's MCP server. Action tools send and snooze. Diagnostic tools explain recent notifications, dry run a notification, list snoozes, and look up the documentation site (`llms-full.txt`, fetched at most daily).
 - **Built-in agent sentences** (`sentences.py`) for the agent without AI, registered as conversation triggers: notify someone or everyone, snooze, silence, resume, and ask for the last notification.
