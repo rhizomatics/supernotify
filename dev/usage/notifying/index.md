@@ -203,6 +203,27 @@ Fixed - always set explicitly
             - plain_email
 ```
 
+### Delivery and Delivery Config
+
+In the action editor, `supernotify.notify` has a **Delivery** dropdown of the configured deliveries, and under **Advanced** a free-form **Delivery Config** (`delivery_config`), which takes anything `delivery:` would. The two are merged into one `delivery:` before the notification is made. A delivery in both takes its form from Delivery Config, so it can be picked in the dropdown and tuned in Delivery Config:
+
+Delivery picked, and tuned in Delivery Config
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            - mobile_push
+            - plain_email
+        delivery_config:
+            mobile_push:
+                data:
+                    clickAction: https://my.home.net/dashboard
+```
+
+Names picked in the dropdown mean "only these", so when Delivery Config holds a mapping, the merged selection is `explicit` unless **Delivery Selection Basis** (`delivery_selection`) says otherwise. `delivery:` still accepts a mapping directly too, as in the examples above.
+
 !!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` is identical in all respects to `inclusion: scenario`, and which one you use is what makes most sense for you in describing the configuration.
 
 ### When Scenarios Disagree

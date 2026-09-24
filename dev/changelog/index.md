@@ -2,6 +2,12 @@ Source: https://supernotify.rhizomatics.org.uk/latest/changelog/
 
 ## v2.10.0 - Assist Assist
 
+### Action UI
+
+- Schemas and deliveries now get populated for easy picking
+- The list is built when Supernotify starts up, and doesn't take into account subsequent enable/disable actions
+- Delivery config free-form text and Delivery Selection Basis moved to Advanced section
+
 ### Home Assistant Assist
 
 - First beta of integrating with [Assist](https://www.home-assistant.io/voice_control/)
