@@ -99,4 +99,4 @@ de manier waarop ze wordt verstuurd.
 
 ## Ontwikkelaars { #developers }
 
-Zie [Developer Concepts](../developer/concepts.md) voor hoe meldingen door deliveries, doelen en *Envelopes* stromen, en de [Design Principles](../developer/design/principles.md).
+Zie [Developer Concepts](../developer/concepts.md) voor hoe meldingen door deliveries, doelen en *Envelopes* stromen, en de [Design Principles](../developer/principles.md).

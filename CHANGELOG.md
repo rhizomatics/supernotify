@@ -1,3 +1,17 @@
+## v2.9.1
+
+### Snoozing
+- Fixed truncated entity and delivery names where they had underscores
+- Fixed `minutes to snooze` duration ignored
+- Fixed camera notifications snooze action
+- Fixed 'everyone' snoozes
+- Improved e2e testing around snoozes
+
+### Live Activity Support
+
+### Minor
+
+
 ## v2.9.0
 
 This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
@@ -122,7 +136,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Documentation
 - Fix automatically generated validation schema documentation
 - Added automated test for the YAML examples in docs
-- [Roadmap](developer/design/roadmap.md) of technial and features added
+- [Roadmap](developer/roadmap.md) of technial and features added
 ### Technical
 - `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 
@@ -164,7 +178,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/design/deliveries_and_transports.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/rfcs/deliveries_and_transports.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
   - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -421,7 +435,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](developer/design/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](developer/rfcs/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
   - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
   - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.

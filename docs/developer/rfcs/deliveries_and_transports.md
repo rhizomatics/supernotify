@@ -1,6 +1,6 @@
 # Deliveries and Transports
 
-See also [Principles](./principles.md).
+See also [Principles](../principles.md).
 
 ## Context
 

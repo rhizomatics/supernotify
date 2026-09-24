@@ -616,6 +616,10 @@ class Notification(ArchivableObject):
                 self.record_result(delivery, suppression_reason=SuppressionReason.TRANSPORT_DISABLED)
                 _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on transport disabled", delivery)
                 return
+            if self.context.snoozer.is_delivery_snoozed(self.priority, delivery, self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)):
+                self.record_result(delivery, suppression_reason=SuppressionReason.SNOOZED)
+                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s based on snooze", delivery)
+                return
 
             delivery_priorities: list[str] = delivery.priority
             if self.delivery_selection != DELIVERY_SELECTION_FIXED:
@@ -876,7 +880,9 @@ class Notification(ArchivableObject):
         self, computed_target: Target, delivery: Delivery, stages: tuple[str, str, str, str]
     ) -> Target:
         """Snooze-filter, resolve indirect/scenario targets, then apply delivery target selection."""
-        computed_target = self.context.snoozer.filter_recipients(computed_target, self.priority, delivery)
+        computed_target = self.context.snoozer.filter_recipients(
+            computed_target, self.priority, delivery, self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+        )
         self.debug_trace.record_target(delivery.name, stages[0], computed_target)
         for indirect_target in self.resolve_indirect_targets(computed_target, delivery):
             computed_target += indirect_target

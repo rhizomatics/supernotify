@@ -8,7 +8,15 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
-from .const import ATTR_ACTION, ATTR_MOBILE_APP_ID, ATTR_PERSON_ID, CONF_SNOOZE_TIME, PRIORITY_CRITICAL, PRIORITY_MEDIUM
+from .const import (
+    ATTR_ACTION,
+    ATTR_MOBILE_APP_ID,
+    ATTR_PERSON_ID,
+    ATTR_REPLY_TEXT,
+    CONF_SNOOZE_TIME,
+    PRIORITY_CRITICAL,
+    PRIORITY_MEDIUM,
+)
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
 
 if TYPE_CHECKING:
@@ -183,13 +191,23 @@ class Snoozer:
                 return
             cmd = CommandType[event_parts[1]]
             recipient_type = RecipientType[event_parts[2]]
+            # a text input reply carries the minutes, so the whole remainder is the target;
+            # otherwise a trailing number is minutes, which is ambiguous for names ending in _<digits>
+            reply_text: str | None = event.data.get(ATTR_REPLY_TEXT)
+            reply_minutes: int | None = int(reply_text) if reply_text and reply_text.strip().isdigit() else None
             if event_parts[3] in QualifiedTargetType and len(event_parts) > 4:
                 target_type = QualifiedTargetType[event_parts[3]]
-                target = event_parts[4]
-                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 6 else self.snooze_period
+                target_parts: list[str] = event_parts[4:]
+                if reply_text is None and len(target_parts) > 1 and target_parts[-1].isdigit():
+                    reply_minutes = int(target_parts[-1])
+                    target_parts = target_parts[:-1]
+                target = "_".join(target_parts)
             elif event_parts[3] in GlobalTargetType and len(event_parts) >= 4:
                 target_type = GlobalTargetType[event_parts[3]]
-                snooze_for = timedelta(minutes=int(event_parts[-1])) if len(event_parts) == 5 else self.snooze_period
+                if reply_text is None and len(event_parts) == 5:
+                    reply_minutes = int(event_parts[-1])
+            if reply_minutes:
+                snooze_for = timedelta(minutes=reply_minutes)
 
             if cmd is None or target_type is None or recipient_type is None:
                 _LOGGER.warning("SUPERNOTIFY Invalid mobile event name %s", event_name)
@@ -304,7 +322,7 @@ class Snoozer:
 
     def is_global_snooze(self, priority: str = PRIORITY_MEDIUM) -> bool:
         for snooze in self.snoozes.values():
-            if snooze.active():
+            if snooze.active() and snooze.recipient_type == RecipientType.EVERYONE:
                 match snooze.target_type:
                     case GlobalTargetType.EVERYTHING:
                         return True
@@ -314,35 +332,56 @@ class Snoozer:
 
         return False
 
-    def filter_recipients(self, recipients: Target, priority: str, delivery: Delivery) -> Target:
+    def is_delivery_snoozed(self, priority: str, delivery: Delivery, camera_entity_id: str | None = None) -> bool:
+        """Everyone-scoped delivery, transport, priority or camera snoozes stop the whole delivery"""
+        for snooze in self.current_snoozes(priority, delivery):
+            if snooze.recipient_type != RecipientType.EVERYONE:
+                continue
+            if snooze.target_type in (
+                QualifiedTargetType.DELIVERY,
+                QualifiedTargetType.TRANSPORT,
+                QualifiedTargetType.PRIORITY,
+            ):
+                return True
+            if snooze.target_type == QualifiedTargetType.CAMERA and camera_entity_id and snooze.target == camera_entity_id:
+                return True
+        return False
+
+    def filter_recipients(
+        self, recipients: Target, priority: str, delivery: Delivery, camera_entity_id: str | None = None
+    ) -> Target:
         inscope_snoozes: list[Snooze] = self.current_snoozes(priority, delivery)
         for snooze in inscope_snoozes:
-            if snooze.recipient_type == RecipientType.USER:
-                # assume the everyone checks are made before notification gets this far
-                if (
-                    (snooze.target_type == QualifiedTargetType.DELIVERY and snooze.target == delivery.name)
-                    or (snooze.target_type == QualifiedTargetType.TRANSPORT and snooze.target == delivery.transport.name)
-                    or (
-                        snooze.target_type == QualifiedTargetType.PRIORITY
-                        and (snooze.target == priority or (isinstance(snooze.target, list) and priority in snooze.target))
-                    )
-                    or snooze.target_type == GlobalTargetType.EVERYTHING
-                    or (snooze.target_type == GlobalTargetType.NONCRITICAL and priority != PRIORITY_CRITICAL)
-                ):
-                    recipients_to_remove: list[str] = []
-                    for recipient in recipients.person_ids:
-                        if recipient == snooze.recipient:
-                            recipients_to_remove.append(recipient)
-                            _LOGGER.info("SUPERNOTIFY Snoozing %s", snooze.recipient)
+            # everyone-scoped snoozes are checked by is_global_snooze and is_delivery_snoozed
+            if snooze.recipient_type == RecipientType.USER and (
+                (snooze.target_type == QualifiedTargetType.DELIVERY and snooze.target == delivery.name)
+                or (snooze.target_type == QualifiedTargetType.TRANSPORT and snooze.target == delivery.transport.name)
+                or (
+                    snooze.target_type == QualifiedTargetType.PRIORITY
+                    and (snooze.target == priority or (isinstance(snooze.target, list) and priority in snooze.target))
+                )
+                or (
+                    snooze.target_type == QualifiedTargetType.CAMERA
+                    and camera_entity_id is not None
+                    and snooze.target == camera_entity_id
+                )
+                or snooze.target_type == GlobalTargetType.EVERYTHING
+                or (snooze.target_type == GlobalTargetType.NONCRITICAL and priority != PRIORITY_CRITICAL)
+            ):
+                recipients_to_remove: list[str] = []
+                for recipient in recipients.person_ids:
+                    if recipient == snooze.recipient:
+                        recipients_to_remove.append(recipient)
+                        _LOGGER.info("SUPERNOTIFY Snoozing %s", snooze.recipient)
 
-                    recipients.remove(ATTR_PERSON_ID, recipients_to_remove)
+                recipients.remove(ATTR_PERSON_ID, recipients_to_remove)
 
-                if snooze.target_type == QualifiedTargetType.MOBILE:
-                    to_remove: list[str] = []
-                    for recipient in recipients.mobile_app_ids:
-                        if recipient == snooze.target:
-                            _LOGGER.debug("SUPERNOTIFY Snoozing %s for %s", snooze.recipient, snooze.target)
-                            to_remove.append(recipient)
-                    if to_remove:
-                        recipients.remove(ATTR_MOBILE_APP_ID, to_remove)
+            if snooze.target_type == QualifiedTargetType.MOBILE:
+                to_remove: list[str] = []
+                for recipient in recipients.mobile_app_ids:
+                    if recipient == snooze.target:
+                        _LOGGER.debug("SUPERNOTIFY Snoozing %s for %s", snooze.std_recipient(), snooze.target)
+                        to_remove.append(recipient)
+                if to_remove:
+                    recipients.remove(ATTR_MOBILE_APP_ID, to_remove)
         return recipients

@@ -99,4 +99,4 @@ jede passend zu dem Weg, auf dem sie verschickt wird.
 
 ## Entwickler { #developers }
 
-Siehe [Developer Concepts](../developer/concepts.md) dazu, wie Benachrichtigungen durch Deliveries, Ziele und *Envelopes* laufen, sowie die [Design Principles](../developer/design/principles.md).
+Siehe [Developer Concepts](../developer/concepts.md) dazu, wie Benachrichtigungen durch Deliveries, Ziele und *Envelopes* laufen, sowie die [Design Principles](../developer/principles.md).

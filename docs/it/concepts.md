@@ -99,4 +99,4 @@ al modo in cui viene inviata.
 
 ## Sviluppatori { #developers }
 
-Vedi [Developer Concepts](../developer/concepts.md) per il percorso delle notifiche attraverso delivery, destinazioni ed *Envelope*, e i [Design Principles](../developer/design/principles.md).
+Vedi [Developer Concepts](../developer/concepts.md) per il percorso delle notifiche attraverso delivery, destinazioni ed *Envelope*, e i [Design Principles](../developer/principles.md).

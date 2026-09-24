@@ -76,7 +76,7 @@ Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a
 
 ### Extended UI Configuration
 
-Second and further phases identified at [ConfigFlow](./configflow_approach.md)
+Second and further phases identified at [ConfigFlow](./rfcs/configflow_approach.md)
 
 ### Respond to Dynamic Home Assistant Changes
 
@@ -103,17 +103,17 @@ Better explain in the archived message, the basis on which any single delivery w
 
 ### Packages
 
-See [Packages](./packages.md), starting with [Frigate SuperNotifier](./frigate_supernotifier.md)
+See [Packages](./rfcs/packages.md), starting with [Frigate SuperNotifier](./rfcs/frigate_supernotifier.md). The Supernotify changes needed first are in [Package Support](./rfcs/package_support.md).
 
 ### UI
 
-There must be a better way of sharing dashboards than manual copy and paste of YAML from the [dashboard recipe](../../recipes/notification_dashboard.md)
+There must be a better way of sharing dashboards than manual copy and paste of YAML from the [dashboard recipe](../recipes/notification_dashboard.md)
 
 SignalK has nice idea of having recommended plugins, could be feature PR for HACS
 
 ### Extensibility
 
-- Other developers able to create add-ons, see also [Packages](./packages.md)
+- Other developers able to create add-ons, see also [Packages](./rfcs/packages.md)
 - Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
 - Consider moving Generic transport to its own notification toolbox plugin
 
@@ -184,10 +184,10 @@ Fields like `message_html`,`spoken_message`,`priority` are treated inconsistentl
 
 ## Completed Roadmap
 
-- [ConfigFlow](./configflow_approach.md)
+- [ConfigFlow](./rfcs/configflow_approach.md)
    - v2.0.0
    - Partially completed, basic YAML only
-- [Deliveries and Transports](./deliveries_and_transports.md)
+- [Deliveries and Transports](./rfcs/deliveries_and_transports.md)
    - v2.5.0
 - Delivery provenance in the archive, the first part of [Delivery Explanations](#delivery-explanations)
    - v2.8.0

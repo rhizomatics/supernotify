@@ -98,4 +98,4 @@ description: Home Assistant用Supernotifyのコアコンセプト（Transport、
 
 ## 開発者向け { #developers }
 
-通知がdelivery、ターゲット、*Envelope*をどう流れるかは[Developer Concepts](../developer/concepts.md)を、あわせて[Design Principles](../developer/design/principles.md)もご覧ください。
+通知がdelivery、ターゲット、*Envelope*をどう流れるかは[Developer Concepts](../developer/concepts.md)を、あわせて[Design Principles](../developer/principles.md)もご覧ください。

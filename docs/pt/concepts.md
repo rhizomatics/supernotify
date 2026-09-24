@@ -99,4 +99,4 @@ Uma única notificação de uma automação pode se transformar em várias notif
 
 ## Desenvolvedores { #developers }
 
-Veja [Developer Concepts](../developer/concepts.md) para saber como as notificações passam por deliveries, destinos e *Envelopes*, e os [Design Principles](../developer/design/principles.md).
+Veja [Developer Concepts](../developer/concepts.md) para saber como as notificações passam por deliveries, destinos e *Envelopes*, e os [Design Principles](../developer/principles.md).

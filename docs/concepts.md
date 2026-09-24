@@ -99,4 +99,4 @@ way it's sent.
 
 ## Developers
 
-See [Developer Concepts](developer/concepts.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](developer/design/principles.md).
+See [Developer Concepts](developer/concepts.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](developer/principles.md).

@@ -99,38 +99,9 @@ Remaining profile settings, with the fix recipe:
 
 ## Changes needed in Supernotify
 
-### For packages in general
-
-1. **Notification source** - a `source` field on `supernotify.notify` (for example `frigate:driveway`), carried into the
-   archive, the debug trace and scenario condition variables, so users can write scenarios that only apply to Frigate,
-   or one camera
-2. **Updates to an existing notification** - promote `mobile_push_notification_tag` to a transport-neutral
-   notification `tag`, plus an `update` flag meaning *replace, and don't alert again*. Transports then decide: mobile
-   push replaces silently, email and TTS skip updates by default. Duplicate checking must not suppress an update of
-   the same tag
-3. **Cooldown / rate limiting per source** - the blueprint's `cooldown`; overlaps the Rate Limiting roadmap item
-4. **Snooze enforcement** - `SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_*` snoozes are recorded but appear not to be applied:
-   `Snoozer.is_global_snooze()` only checks `EVERYTHING` and `NONCRITICAL`, and `filter_recipients()` only acts on
-   user-scoped snoozes. The camera snooze button on every camera push, and everyone-scoped delivery, transport and
-   priority snoozes, need a regression test and fix. Camera snoozes also need the notification's camera to compare with
-5. **Richer `services.yaml`** - the action editor is the whole customization UI, so field descriptions, examples and
-   dynamic delivery and scenario dropdowns (via `async_set_service_schema`) matter far more than today
-6. **Stable config for packages** - packages need to find existing deliveries and recipients (for example to warn if
-   there's no mobile push delivery); `enquire_*` actions cover most of this, but a small Python API on the Supernotify
-   config entry would be cleaner
-
-### Mobile push gaps
-
-7. **Media precedence** - if a notification has both `camera_entity_id` and `snapshot_url`, today the camera grab wins.
-   Frigate needs the snapshot URL for the image and the camera entity only for iOS live view, grouping and snoozing
-8. **iOS video attachment** - `clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and
-   `content-type` derived from the URL (`application/vnd.apple.mpegurl` for `.m3u8`), which is where the Apple fix option
-   plugs in
-9. **Tap URL** - no cross-platform field for tapping the notification (iOS `url`, Android `clickAction`); today it only
-   works as passthrough `extra_data`, which can't differ per platform
-10. **Silent updates** - map an update to iOS `sound: none` with `passive` interruption level and Android
-    `alert_once: true`, rather than needing a separate priority
-11. **Live view entity** - allow iOS `entity_id` (live camera view) to be set independently of the image source
+See [Package Support](./package_support.md), which covers these for all packages. For Frigate, the essentials are
+snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and
+live view changes.
 
 ## Open Questions
 

@@ -99,4 +99,4 @@ do sposobu, w jaki jest wysyłane.
 
 ## Deweloperzy { #developers }
 
-Zobacz [Developer Concepts](../developer/concepts.md), aby dowiedzieć się, jak powiadomienia przechodzą przez deliveries, cele i *Envelopes*, oraz [Design Principles](../developer/design/principles.md).
+Zobacz [Developer Concepts](../developer/concepts.md), aby dowiedzieć się, jak powiadomienia przechodzą przez deliveries, cele i *Envelopes*, oraz [Design Principles](../developer/principles.md).

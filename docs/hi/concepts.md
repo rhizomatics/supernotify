@@ -99,4 +99,4 @@ description: Home Assistant के लिए Supernotify की मुख्य 
 
 ## डेवलपर { #developers }
 
-सूचनाएँ deliveries, लक्ष्यों और *Envelopes* से कैसे गुज़रती हैं, यह जानने के लिए [Developer Concepts](../developer/concepts.md) देखें, और [Design Principles](../developer/design/principles.md) भी।
+सूचनाएँ deliveries, लक्ष्यों और *Envelopes* से कैसे गुज़रती हैं, यह जानने के लिए [Developer Concepts](../developer/concepts.md) देखें, और [Design Principles](../developer/principles.md) भी।

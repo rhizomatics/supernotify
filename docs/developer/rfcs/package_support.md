@@ -72,7 +72,7 @@ Let a scenario set the notification's priority, not just a delivery's `data.prio
 "armed and night" raise to `high` and "occupied and not dangerous" drop to `low`. The priority then has to be settled
 before delivery selection, while scenario conditions can themselves use priority - so a scenario's priority applies
 after scenarios are chosen and doesn't re-trigger selection. Relates to *Per-delivery Priority* on the
-[Roadmap](./roadmap.md).
+[Roadmap](../roadmap.md).
 
 ## Mobile Push
 

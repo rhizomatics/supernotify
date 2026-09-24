@@ -98,7 +98,9 @@ plugins:
           - developer/schemas/index.md: JSON Schemas for configuration and the notify action data
         Optional:
           - changelog.md: Release history
-          - developer/design/*.md
+          - developer/roadmap.md: Roadmap of planned features and improvements
+          - developer/principles.md: Design principles
+          - developer/rfcs/*.md
           - reference/transports.md: Table of notification transports and capabilities
 
   - social:
@@ -116,7 +118,7 @@ plugins:
       enable_creation_date: true
       type: timeago
   - coverage:
-      page_path: developer/coverage
+      page_path: developer/reference/coverage
       html_report_dir: htmlcov
   - mkdocstrings:
       handlers:
