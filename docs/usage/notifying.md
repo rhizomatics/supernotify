@@ -212,9 +212,11 @@ In this case `email` will be chosen even if the delivery `condition` or `priorit
 
 ### Delivery and Delivery Control
 
-In the action editor, `supernotify.notify` has a **Delivery** dropdown of the configured deliveries. When
-added, it starts with the deliveries used by default, the same as `supernotify.enquire_implicit_deliveries`
-lists, so you can add to or take away from what would normally be used.
+In the action editor, `supernotify.notify` has a **Delivery** picker of the configured deliveries. When
+added, it starts with the implicit deliveries used by default, and you can add to or take away from these
+as needed.
+
+![Delivery Selection](../assets/images/delivery_choice.png)
 
 Under **Advanced**, a free-form **Delivery Control** (`delivery_control`) takes anything `delivery:` would.
 The two are merged into one `delivery:` before the notification is made. A delivery in both takes its
