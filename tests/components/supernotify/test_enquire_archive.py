@@ -111,9 +111,7 @@ async def test_enquire_archive_limit(hass: HomeAssistant, tmp_path: pathlib.Path
         _write_archive_entry(tmp_path, f"n{i:02d}", base + dt.timedelta(minutes=i))
 
     await _setup(hass, str(tmp_path))
-    response = await hass.services.async_call(
-        DOMAIN, "enquire_archive", {"limit": 2}, blocking=True, return_response=True
-    )
+    response = await hass.services.async_call(DOMAIN, "enquire_archive", {"limit": 2}, blocking=True, return_response=True)
     assert response["count"] == 2
 
 
@@ -152,7 +150,5 @@ async def test_enquire_archive_id_not_found(hass: HomeAssistant, tmp_path: pathl
     """enquire_archive raises when the requested id does not exist."""
     await _setup(hass, str(tmp_path))
     with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN, "enquire_archive", {"id": "does-not-exist"}, blocking=True, return_response=True
-        )
+        await hass.services.async_call(DOMAIN, "enquire_archive", {"id": "does-not-exist"}, blocking=True, return_response=True)
     assert exc_info.value.translation_key == "archive_entry_not_found"

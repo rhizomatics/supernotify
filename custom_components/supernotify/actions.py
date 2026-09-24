@@ -299,9 +299,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         outcome: str | None = call.data.get("outcome")
         after = dt.datetime.fromisoformat(after_raw) if after_raw else None
         before = dt.datetime.fromisoformat(before_raw) if before_raw else None
-        entries = await archive.archive_directory.list_entries(
-            limit=limit, after=after, before=before, outcome=outcome
-        )
+        entries = await archive.archive_directory.list_entries(limit=limit, after=after, before=before, outcome=outcome)
         return {"notifications": entries, "count": len(entries)}
 
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
