@@ -8,7 +8,7 @@ description: Notification class descriptions in Supernotify for Home Assistant
 
 !!! info
 
-    See the [Class Diagram](../class_diagram.md) for how these relate to each other.
+    See the [Class Diagram](../../class_diagram.md) for how these relate to each other.
 
 
 ::: custom_components.supernotify.notification.Notification

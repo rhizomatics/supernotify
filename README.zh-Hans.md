@@ -101,7 +101,7 @@ Supernotify 是通过 [Home Assistant 社区商店](https://hacs.xyz)（**HACS**
 
 Supernotify 目前支持使用标准 Home Assistant UI 进行基本设置配置，并支持[基于 YAML 的配置](https://supernotify.rhizomatics.org.uk/configuration/yaml/)以实现高级功能。保留 YAML 是为了便于处理更大的规则集。
 
-使用简单的非 YAML 配置即可完成很多操作，包括移动推送设置的自动化。请参阅文档中的[使用示例](recipes/index.md)，以及以下移动推送示例：
+使用简单的非 YAML 配置即可完成很多操作，包括移动推送设置的自动化。请参阅文档中的[使用示例](https://supernotify.rhizomatics.org.uk/recipes/)，以及以下移动推送示例：
 
 ```yaml title="零 YAML，全部通过 UI 配置"
   - action: supernotify.notify

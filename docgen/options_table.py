@@ -13,7 +13,7 @@ from custom_components.supernotify.options import COMMON_OPTIONS, DeliveryOption
 TYPE_LABELS: dict[Any, str] = {
     cv.boolean: "bool",
     cv.string: "str",
-    SelectionRule: "[Selection Rules](selection_rules.md)",
+    SelectionRule: "[Selection Rules](../configuration/selection_rules.md)",
     dict: "mapping",
     list: "list[str]",
     int: "int",

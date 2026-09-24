@@ -101,7 +101,7 @@ Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voo
 
 Supernotify ondersteunt momenteel standaard Home Assistant UI-configuratie voor de basisinstelling, en [YAML-configuratie](https://supernotify.rhizomatics.org.uk/configuration/yaml/) voor geavanceerde functies. YAML blijft behouden om het werken met grotere regelsets te vergemakkelijken.
 
-Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief automatisering van de mobiele push-instelling. Zie de [recepten](recipes/index.md) in de documentatie, en dit mobiele push-voorbeeld:
+Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief automatisering van de mobiele push-instelling. Zie de [recepten](https://supernotify.rhizomatics.org.uk/recipes/) in de documentatie, en dit mobiele push-voorbeeld:
 
 ```yaml title="Met nul YAML, alles via de UI geconfigureerd"
   - action: supernotify.notify

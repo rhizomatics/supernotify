@@ -101,7 +101,7 @@ Es gibt viele [Rezepte](https://supernotify.rhizomatics.org.uk/recipes/) mit Bei
 
 Supernotify unterstützt derzeit die standardmäßige Home Assistant UI-Konfiguration für die Basiseinrichtung sowie [YAML-Konfiguration](https://supernotify.rhizomatics.org.uk/configuration/yaml/) für erweiterte Funktionen. YAML bleibt erhalten, um die Arbeit mit größeren Regelwerken zu erleichtern.
 
-Mit der einfachen Nicht-YAML-Konfiguration lässt sich bereits viel erreichen, einschließlich der automatischen Einrichtung von Mobile Push. Siehe die [Rezepte](recipes/index.md) in der Dokumentation, sowie dieses Mobile-Push-Beispiel:
+Mit der einfachen Nicht-YAML-Konfiguration lässt sich bereits viel erreichen, einschließlich der automatischen Einrichtung von Mobile Push. Siehe die [Rezepte](https://supernotify.rhizomatics.org.uk/recipes/) in der Dokumentation, sowie dieses Mobile-Push-Beispiel:
 
 ```yaml title="Mit null YAML, alles per UI konfiguriert"
   - action: supernotify.notify

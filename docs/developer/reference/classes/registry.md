@@ -8,7 +8,7 @@ description: Core class descriptions for the registry classes of Supernotify for
 
 !!! info
 
-    See the [Class Diagram](../class_diagram.md) for how these relate to each other.
+    See the [Class Diagram](../../class_diagram.md) for how these relate to each other.
 
 ::: custom_components.supernotify.people.PeopleRegistry
     handler: python

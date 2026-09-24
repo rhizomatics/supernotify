@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import sys
 import typing
 from pathlib import Path
@@ -14,6 +15,20 @@ import mkdocs_gen_files
 from json_schema_for_humans.generate import generate_from_schema  # type: ignore
 from json_schema_for_humans.generation_configuration import GenerationConfiguration  # type: ignore
 from probatio import UNSUPPORTED, to_openapi
+
+
+def _unlink_missing_anchors(markdown: str) -> str:
+    """json_schema_for_humans links to additionalProperties sub-schemas it doesn't always write a heading for"""
+    anchors = set(re.findall(r'<a name="([^"]+)"></a>', markdown))
+    link = re.compile(r"\[((?:[^\[\]]|\[[^\]]*\]\([^)]*\))*)\]\(#([^)]+)\)")
+    return link.sub(
+        lambda m: (
+            (m.group(1) or "Additional properties")
+            if "additionalProperties" in m.group(2) and m.group(2) not in anchors
+            else m.group(0)
+        ),
+        markdown,
+    )
 
 
 def _fixup_ha_validators(node: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
@@ -94,7 +109,7 @@ def schema_doc() -> None:
             lines = generate_from_schema(schema_path, config=config)
             doc_filename = f"developer/schemas/{schema_link_name}.md"
             with mkdocs_gen_files.open(doc_filename, "w") as df:
-                df.write(lines)
+                df.write(_unlink_missing_anchors(lines))
             mkdocs_gen_files.set_edit_path(
                 doc_filename,
                 f"https://github.com/search?q=repo%3Arhizomatics%2Fsupernotify+path%3Acustom_components%2Fsupernotify%2F__init__.py+{schema_id}&type=code",

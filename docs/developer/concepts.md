@@ -9,7 +9,7 @@ description: Technical Concepts for Supernotify
 ---
 # Developer Concepts
 
-These build on the user-facing [Core Concepts](../concepts.md), describing how the pieces fit together inside the code. For the classes themselves, see [Classes](classes/index.md) and the [Class Diagram](class_diagram.md).
+These build on the user-facing [Core Concepts](../concepts.md), describing how the pieces fit together inside the code. For the classes themselves, see [Classes](reference/classes/index.md) and the [Class Diagram](class_diagram.md).
 
 ## How a Notification Flows
 

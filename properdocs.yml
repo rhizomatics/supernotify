@@ -59,6 +59,9 @@ plugins:
         - ../transports/*
         - ../options/*
         - transports.md*
+        - "*reference/options/*"
+        - "*reference/transports/*"
+        - schemas/json/*
         - options.md*
 
   - autorefs
@@ -104,6 +107,7 @@ plugins:
           - reference/transports.md: Table of notification transports and capabilities
 
   - social:
+      enabled: !ENV [CI, false]
       cards_layout_options:
         logo: docs/assets/images/icon.png
         background_image: docs/assets/images/logo-dim-social-640x320.png

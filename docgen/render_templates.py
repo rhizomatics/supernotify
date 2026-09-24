@@ -22,7 +22,7 @@ from tests.components.supernotify.hass_setup_lib import TestingContext
 if TYPE_CHECKING:
     from custom_components.supernotify.transports.email import EmailTransport
 
-output_root = "developer/HTML Email Renders"
+output_root = "developer/reference/HTML Email Renders"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,9 @@ async def create_examples() -> None:
                     t.write(html)
                     t.write("\n")
 
-            nav["configuration", "example", "html_email_template", priority] = f"../developer/html_email_renders/{dest_page}"
+            nav["configuration", "example", "html_email_template", priority] = (
+                f"../developer/reference/html_email_renders/{dest_page}"
+            )
 
         _LOGGER.debug("Finished template render")
     except Exception as e:
@@ -76,5 +78,7 @@ async def create_examples() -> None:
 
 
 logging.basicConfig()
+# the example renders run against a bare HomeAssistant, which has no URLs or device registry
+logging.getLogger("custom_components.supernotify.hass_api").setLevel(logging.ERROR)
 
 asyncio.run(create_examples())

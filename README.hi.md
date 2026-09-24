@@ -101,7 +101,7 @@ Supernotify [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) के 
 
 Supernotify अब बुनियादी सेटअप के लिए मानक Home Assistant UI आधारित कॉन्फ़िगरेशन और उन्नत सुविधाओं के लिए [YAML कॉन्फ़िगरेशन](https://supernotify.rhizomatics.org.uk/configuration/yaml/) का समर्थन करता है। बड़े नियम आधारों के साथ काम करना आसान बनाने के लिए YAML बना रहेगा।
 
-सरल गैर-YAML कॉन्फ़िगरेशन से बहुत कुछ किया जा सकता है, जिसमें मोबाइल पुश सेटअप का स्वचालन भी शामिल है। दस्तावेज़ में [रेसिपी](recipes/index.md) देखें, और यह मोबाइल पुश उदाहरण:
+सरल गैर-YAML कॉन्फ़िगरेशन से बहुत कुछ किया जा सकता है, जिसमें मोबाइल पुश सेटअप का स्वचालन भी शामिल है। दस्तावेज़ में [रेसिपी](https://supernotify.rhizomatics.org.uk/recipes/) देखें, और यह मोबाइल पुश उदाहरण:
 
 ```yaml title="शून्य YAML के साथ, सब कुछ UI से कॉन्फ़िगर"
   - action: supernotify.notify
