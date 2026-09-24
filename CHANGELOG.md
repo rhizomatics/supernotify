@@ -3,8 +3,8 @@
 ### Snoozing
 - Fixed truncated entity and delivery names where they had underscores
 - Fixed `minutes to snooze` duration ignored
-- Fixed camera notifications snooze action
-- Fixed 'everyone' snoozes
+- Fixed camera notifications snooze action not snoozing
+- Fixed 'everyone' snoozes not firing
 - Improved e2e testing around snoozes
 
 ### Minor
