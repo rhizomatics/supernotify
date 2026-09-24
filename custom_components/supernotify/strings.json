@@ -467,6 +467,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Notification delivered ({delivered_count} delivery/deliveries sent), but {uncategorized_count} target(s) could not be matched to any delivery and were dropped: {uncategorized_targets} (deliveries checked: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "No archive is configured for this Supernotify instance"
+        },
+        "no_media_storage_configured": {
+            "message": "No media storage path is configured for this Supernotify instance"
         }
     },
     "selector": {
