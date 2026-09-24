@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -27,6 +28,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 EVERYONE = ("everyone", "everybody", "all")
+# 15:30, 3:30pm, 3 pm - hours without minutes need am or pm, so a bare number isn't taken as a time
+CLOCK_TIME = re.compile(r"(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\.?|(\d{1,2}):(\d{2})", re.IGNORECASE)
 
 # hassil sentence templates - (a|b) is a choice, [a] is optional and {slot} is a wildcard.
 # A wildcard needs fixed words between it and the next one, so the message is always introduced.
@@ -36,8 +39,10 @@ SENTENCES: dict[str, list[str]] = {
         "send [a] (message|notification) to {name} (that|saying) {message}",
     ],
     "snooze_minutes": ["(snooze|mute|pause) [all] [my] notifications for [the] [next] {minutes} minutes"],
+    "snooze_until": ["(snooze|mute|pause) [all] [my] notifications until {time}"],
     "snooze_hour": ["(snooze|mute|pause) [all] [my] notifications for [an|one] hour"],
-    "silence": ["(silence|mute) [all] [my] notifications [until I say]"],
+    # "mute ... until I say" is left to snooze_until, so it doesn't match both
+    "silence": ["(silence|mute) [all] [my] notifications", "silence [all] [my] notifications until I say"],
     "resume": [
         "(unsnooze|unmute|resume) [all] [my] notifications",
         "turn [all] [my] notifications back on",
@@ -86,6 +91,14 @@ async def async_respond(engine: SupernotifyEngine, command: str, slots: dict[str
         if not minutes.isdigit() or int(minutes) < 1:
             return "Say how many minutes as a number, for example snooze notifications for 30 minutes"
         return _snooze(engine, CommandType.SNOOZE, context, dt.timedelta(minutes=int(minutes)))
+    if command == "snooze_until":
+        spoken = str(slots.get("time", ""))
+        if spoken.strip().casefold() == "i say":
+            return _snooze(engine, CommandType.SILENCE, context)
+        until = _next_time(spoken)
+        if until is None:
+            return "Say a time like 15:30 or 3:30pm, for example snooze notifications until 15:30"
+        return _snooze(engine, CommandType.SNOOZE, context, until - dt_util.now())
     if command == "snooze_hour":
         return _snooze(engine, CommandType.SNOOZE, context, dt.timedelta(hours=1))
     if command == "silence":
@@ -110,6 +123,27 @@ async def _notify(engine: SupernotifyEngine, name: str, message: str, context: H
     if notification is None or not notification.delivered:
         return "Sorry, the notification wasn't sent"
     return "Sent" if target is None else f"Sent to {name}"
+
+
+def _next_time(spoken: str) -> dt.datetime | None:
+    """The next time the clock shows this time, today or tomorrow"""
+    match = CLOCK_TIME.fullmatch(spoken.strip())
+    if match is None:
+        return None
+    hour_12, minute_12, meridiem, hour_24, minute_24 = match.groups()
+    if meridiem:
+        hour = int(hour_12)
+        if not 1 <= hour <= 12:
+            return None
+        hour = hour % 12 + (12 if meridiem.lower() == "p" else 0)
+        minute = int(minute_12 or 0)
+    else:
+        hour, minute = int(hour_24), int(minute_24)
+    if hour > 23 or minute > 59:
+        return None
+    now = dt_util.as_local(dt_util.now())
+    until = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    return until if until > now else until + dt.timedelta(days=1)
 
 
 def _snooze(engine: SupernotifyEngine, cmd: CommandType, context: HAContext, snooze_for: dt.timedelta | None = None) -> str:

@@ -6,11 +6,14 @@ commands are called directly, and the trigger registration is checked with it pa
 
 from __future__ import annotations
 
+import datetime as dt
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS
@@ -18,6 +21,8 @@ from custom_components.supernotify.model import GlobalTargetType, RecipientType
 from custom_components.supernotify.sentences import SENTENCES, async_respond
 
 if TYPE_CHECKING:
+    from freezegun.api import FrozenDateTimeFactory
+
     from custom_components.supernotify.engine import SupernotifyEngine
 
 JEY_USER_ID = "jey-user-id"
@@ -155,6 +160,48 @@ async def test_snooze_minutes_must_be_a_number(hass: HomeAssistant) -> None:
 
     assert "as a number" in response
     assert engine.context.snoozer.snoozes == {}
+
+
+@pytest.mark.parametrize(
+    ("spoken", "expected"),
+    [
+        ("15:30", "2026-09-24 15:30"),
+        ("3:30 pm", "2026-09-24 15:30"),
+        ("3pm", "2026-09-24 15:00"),
+        ("12 a.m.", "2026-09-25 00:00"),
+        ("09:15", "2026-09-25 09:15"),
+    ],
+)
+async def test_snooze_until_time(hass: HomeAssistant, freezer: FrozenDateTimeFactory, spoken: str, expected: str) -> None:
+    freezer.move_to(dt_util.as_utc(dt.datetime(2026, 9, 24, 10, 0, tzinfo=dt_util.get_default_time_zone())))
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"time": spoken}, Context())
+
+    assert response == f"Snoozed all notifications until {expected[-5:]}"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.snooze_until is not None
+    assert dt_util.as_local(snooze.snooze_until).strftime("%Y-%m-%d %H:%M") == expected
+
+
+@pytest.mark.parametrize("spoken", ["30", "25:00", "13pm", "teatime"])
+async def test_snooze_until_must_be_a_time(hass: HomeAssistant, spoken: str) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"time": spoken}, Context())
+
+    assert "Say a time like 15:30" in response
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_mute_until_i_say_silences(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"time": "I say"}, Context())
+
+    assert response == "Silenced all notifications until you turn them back on"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.snooze_until is None
 
 
 async def test_snooze_hour_for_everyone_when_asker_unknown(hass: HomeAssistant) -> None:

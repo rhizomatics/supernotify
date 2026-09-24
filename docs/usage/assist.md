@@ -6,6 +6,10 @@ tags:
   - openai
   - gemini
   - voice
+  - claude
+  - mcp
+  - chatgpt
+  - ollama
   - chat
 description: Let Home Assistant Assist, and AI agents connected through its MCP server, send, snooze and explain notifications
 ---
@@ -116,7 +120,7 @@ Additional prompts to use before conversations can be set in the *Voice Assistan
 
 ## Built-in Agent Sentences
 
-Home Assistant's built-in conversation agent doesn't use an AI model, so it can't use the tools above, but it can understand fixed sentences. Switch on **Built-in agent sentences** and it understands these, by voice or in the chat:
+Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrations/conversation) agent doesn't use an AI model, so it can't use the tools above, but it can understand fixed sentences. Switch on **Built-in agent sentences** and it understands these, by voice or in the chat:
 
 | Say                                                      | Does                                          |
 |----------------------------------------------------------|-----------------------------------------------|
@@ -124,10 +128,12 @@ Home Assistant's built-in conversation agent doesn't use an AI model, so it can'
 | "Send a message to *everyone* saying *leaving now*"      | Notifies everyone, as an automation would     |
 | "Snooze my notifications for *30* minutes"               | Snoozes everything                            |
 | "Mute all notifications for an hour"                     | Snoozes everything for an hour                |
+| "Snooze notifications until *15:30*"                     | Snoozes everything until then, today or tomorrow |
 | "Silence notifications"                                  | Silences everything until turned back on      |
 | "Turn my notifications back on"                          | Undoes the snooze or silence                  |
 | "What was the last notification"                         | Says what it was, and what sent it            |
 
+Times can be 24 hour like *15:30*, or with am or pm like *3:30pm* or *3pm*.
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message.
 A recipient can be named by their full name, alias, or just their first name when no one else shares it -
 if two do, the agent asks which one you mean.
@@ -136,3 +142,10 @@ a recipient, otherwise for everyone.
 
 The sentences are English only for now - if you'd like them in your language, please suggest
 wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues).
+
+This functionality is also available to scripts and automations from the `conversation.process` action.
+
+## Further Reading
+
+- [AI Agents for the Smart Home](https://www.home-assistant.io/blog/2024/06/07/ai-agents-for-the-smart-home/) - 2024 vision paper from Home Assistant team
+- [Home Assistant MCP](https://www.home-assistant.io/integrations/mcp/) - Official integrations
