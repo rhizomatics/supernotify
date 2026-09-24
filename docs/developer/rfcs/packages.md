@@ -22,7 +22,7 @@ The "packages" could also be selected after the fact, either directly in the mai
 
 ## Implementation
 
-A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again.
+A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again. Packages create their own HA Context, as an automation would do, for tying together downstream calls and state changes.
 
 Later, a thin custom component on HACS per package, purely for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It would only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
 
