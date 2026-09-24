@@ -2,6 +2,10 @@
 
 (provisional name for implementation)
 
+## Feedback
+
+[Github Discussion #197](https://github.com/rhizomatics/supernotify/discussions/197)
+
 ## Problem
 
 Often SuperNotify is a small part of what's needed for example setting up notifications - Frigate involves understanding blueprints using live activities for a dishwasher requires setting up multiple automations and fine tuning mobile push the blocks. The real value from SuperNotify comes when a less technical user is able to immediately start getting notifications from things like their washing machine or dishwasher of Frigate with minimal technical understanding zero knowledge of YAML and minimal automation set up.

@@ -1,7 +1,7 @@
 # Developer Documentation
 
 * [Concepts](concepts.md) - How a notification flows through scenarios, deliveries, targets, envelopes and transports
-* [Roadmap](roadmap.md), [RFCs](rfcs/index.md) and [Design Principles](principles.md)
+* [Roadmap](roadmap.md), feature and architecture [RFCs](rfcs/index.md) and [Design Principles](principles.md)
 * [Schemas](reference/schemas/index.md)
     - Automatically generated from Home Assistant `voluptuous` Python schemas, covering both configuration and *Action* `data`
     - Also available as plain JSON Schema documents, for example [Full_Configuration.schema.json](./schemas/json/Full_Configuration.schema.json)

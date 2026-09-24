@@ -2,6 +2,11 @@
 
 See also [Principles](./principles.md) for what guides development.
 
+## Feedback
+
+[Github Discussion #202](https://github.com/rhizomatics/supernotify/discussions/202)
+
+
 ## Home Assistant Version Compatibility
 
 When the following versions fall out of the 6-month ago window for testing, here are the changes to make
