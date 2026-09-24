@@ -48,12 +48,12 @@ plugins:
       skip_downloads: True
       validate_external_urls: False
       ignore_pages:
-        - developer/schemas/*
+        - developer/reference/schemas/*
         - developer/classes.md
         - reference/transports.md
         - reference/options.md
       ignore_urls:
-        - ../../developer/schemas/*
+        - "*developer/reference/schemas/*"
         - ../developer/transports/*
         - ../configuration/options/*
         - ../transports/*
@@ -98,7 +98,7 @@ plugins:
         Recipes:
           - recipes/*.md
         Reference:
-          - developer/schemas/index.md: JSON Schemas for configuration and the notify action data
+          - developer/reference/schemas/index.md: JSON Schemas for configuration and the notify action data
         Optional:
           - changelog.md: Release history
           - developer/roadmap.md: Roadmap of planned features and improvements
@@ -143,6 +143,7 @@ plugins:
 
 extra_javascript:
   - javascripts/markdown_actions.js
+  - javascripts/nav_collapse.js
 
 hooks:
   - docgen/optimize_social_cards.py

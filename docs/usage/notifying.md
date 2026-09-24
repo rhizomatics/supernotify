@@ -359,4 +359,4 @@ Supernotify also has compatibility with the original "legacy" notification platf
 
 ## References
 
-The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](../developer/schemas/Notify_Action_Data.md)
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](../developer/reference/schemas/Notify_Action_Data.md)

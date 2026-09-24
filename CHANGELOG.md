@@ -7,10 +7,9 @@
 - Fixed 'everyone' snoozes
 - Improved e2e testing around snoozes
 
-### Live Activity Support
-
 ### Minor
-
+- JSON schema IDs corrected
+- Developer documentation restructured and concepts added with diagram
 
 ## v2.9.0
 

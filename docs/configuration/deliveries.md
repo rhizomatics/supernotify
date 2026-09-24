@@ -181,7 +181,7 @@ transports:
 
 ## Extreme Example
 
-Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](../developer/schemas/Delivery_Definition.md) definition.
+Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](../developer/reference/schemas/Delivery_Definition.md) definition.
 
 ```yaml title="Complex Example"
 delivery:

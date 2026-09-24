@@ -38,7 +38,7 @@ Supernotify also adds more context variables to use in conditions, see the full 
 
 
 !!! tip
-    There's a [Scenario Schema](../developer/schemas/Scenario_Definition.md) defined for the configuration,
+    There's a [Scenario Schema](../developer/reference/schemas/Scenario_Definition.md) defined for the configuration,
     and [debugging hints](../configuration/conditions.md#debugging-conditions)
 
 

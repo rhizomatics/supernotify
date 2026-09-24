@@ -14,11 +14,11 @@ set of overrides - `target`,`data`,`enabled` - can then be applied by scenarios,
 
 | Where                       | Where        | Schema                                                                   | Notes                                                |
 |-----------------------------|--------------|--------------------------------------------------------------------------|------------------------------------------------------|
-| Action Data                 | Runtime call | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden |
-| Recipient delivery override | Runtime call | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden |
-| Scenario delivery override  | Runtime call  | [Delivery Customization](../developer/schemas/Delivery_Customization.md) | Multiple scenarios applied in no special order. Only `target`,`enabled` and `data` can be overridden. `enabled` can also be left empty so scenario only applies to deliveries already selected. `enabled: true` will force the delivery on and `enabled: false` will force it off, whether an implicit delivery or selected by another scenario |
-| Delivery definition         | Configuration | [Delivery](../developer/schemas/Delivery_Definition.md)                  | `message` and `title` are the exceptions which override Action Data                                   |
-| Transport Delivery Defaults        | Configuration         |  [Transport Delivery Defaults](../developer/schemas/Transport_Definition.md#property-transport-definition-enabled)                                              |
+| Action Data                 | Runtime call | [Delivery Customization](../developer/reference/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden |
+| Recipient delivery override | Runtime call | [Delivery Customization](../developer/reference/schemas/Delivery_Customization.md) | Only `target`,`enabled` and `data` can be overridden |
+| Scenario delivery override  | Runtime call  | [Delivery Customization](../developer/reference/schemas/Delivery_Customization.md) | Multiple scenarios applied in no special order. Only `target`,`enabled` and `data` can be overridden. `enabled` can also be left empty so scenario only applies to deliveries already selected. `enabled: true` will force the delivery on and `enabled: false` will force it off, whether an implicit delivery or selected by another scenario |
+| Delivery definition         | Configuration | [Delivery](../developer/reference/schemas/Delivery_Definition.md)                  | `message` and `title` are the exceptions which override Action Data                                   |
+| Transport Delivery Defaults        | Configuration         |  [Transport Delivery Defaults](../developer/reference/schemas/Transport_Definition.md#property-transport-definition-enabled)                                              |
 | Transport Adaptor Defaults        | Code         |  - |                                            |
 | Underlying action defaults        | Other Integrations | - | These are configured outside Supernotify       |
 

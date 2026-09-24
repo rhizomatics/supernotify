@@ -31,6 +31,14 @@ def _unlink_missing_anchors(markdown: str) -> str:
     )
 
 
+def _add_json_link(markdown: str, json_link: str) -> str:
+    """Put the link under the page title, or at the top if there isn't one"""
+    title, sep, rest = markdown.partition("\n")
+    if title.startswith("# "):
+        return f"{title}\n\n{json_link}\n{sep}{rest}"
+    return f"{json_link}\n\n{markdown}"
+
+
 def _fixup_ha_validators(node: typing.Any) -> typing.Any:  # ruff: ignore[any-type]
     """Home Assistant's cv.url/string/boolean are plain functions typed to accept
     Any, so probatio can't infer a JSON type from their signature; recognize them
@@ -54,7 +62,7 @@ import custom_components.supernotify.transports.chime
 
 _LOGGER = logging.getLogger(__name__)
 
-ROOT_URL = "https://supernotify.rhizomatics.github.io/developer/schemas/"
+ROOT_URL = "https://supernotify.rhizomatics.org.uk/developer/schemas/json/"
 
 SCHEMAS_BY_MODULE = {
     custom_components.supernotify.schema: {
@@ -75,8 +83,8 @@ SCHEMAS_BY_MODULE = {
 
 
 def schema_doc() -> None:
-    Path("docs/developer/schemas").mkdir(exist_ok=True)
-    Path("docs/developer/schemas/js").mkdir(exist_ok=True)
+    Path("docs/developer/reference/schemas").mkdir(exist_ok=True)
+    Path("docs/developer/reference/schemas/js").mkdir(exist_ok=True)
 
     j_schemas = {}
     for module, schema_defs in SCHEMAS_BY_MODULE.items():
@@ -98,7 +106,7 @@ def schema_doc() -> None:
         _LOGGER.info(f"Exporting {schema_name}")
         try:
             schema.setdefault("title", schema_name)
-            schema.setdefault("$id", ROOT_URL + schema_link_name + ".json")
+            schema.setdefault("$id", f"{ROOT_URL}{schema_link_name}.schema.json")
             schema.setdefault("description", f"Voluptuous validation schema for {schema_link_name}")
             schema.setdefault("$schema", "https://json-schema.org/draft/2020-12/schema")
             schema_filename = f"developer/schemas/json/{schema_link_name}.schema.json"
@@ -107,9 +115,10 @@ def schema_doc() -> None:
                 schema_path = f.name
 
             lines = generate_from_schema(schema_path, config=config)
-            doc_filename = f"developer/schemas/{schema_link_name}.md"
+            doc_filename = f"developer/reference/schemas/{schema_link_name}.md"
+            json_link = f"JSON Schema: [{schema_link_name}.schema.json](../../schemas/json/{schema_link_name}.schema.json)"
             with mkdocs_gen_files.open(doc_filename, "w") as df:
-                df.write(_unlink_missing_anchors(lines))
+                df.write(_add_json_link(_unlink_missing_anchors(lines), json_link))
             mkdocs_gen_files.set_edit_path(
                 doc_filename,
                 f"https://github.com/search?q=repo%3Arhizomatics%2Fsupernotify+path%3Acustom_components%2Fsupernotify%2F__init__.py+{schema_id}&type=code",
@@ -118,7 +127,7 @@ def schema_doc() -> None:
             _LOGGER.exception(f"Error processing schema {schema_name}")
             continue
 
-    with mkdocs_gen_files.open("developer/schemas/index.md", "w") as df:
+    with mkdocs_gen_files.open("developer/reference/schemas/index.md", "w") as df:
         df.write("# JSON Schema for Supernotify\n")
         df.write("""These are auto-generated from the Home Assistant
          [voluptuous](https://github.com/alecthomas/voluptuous) schema definitions
@@ -128,12 +137,12 @@ def schema_doc() -> None:
         df.write("|------|---------------|-------|\n")
         for schema_name, _schema in j_schemas.values():
             schema_link_name = schema_name.replace(" ", "_")
-            df.write(f"|{schema_name}|[{schema_link_name}.json](json/{schema_link_name}.schema.json)|")
+            df.write(f"|{schema_name}|[{schema_link_name}.json](../../schemas/json/{schema_link_name}.schema.json)|")
             df.write(f"[Schema Doc]({schema_link_name}.md)|\n")
 
         df.write("\n")
 
-    mkdocs_gen_files.set_edit_path("developer/schemas/index.md", "../docgen/schema_extractor.py")
+    mkdocs_gen_files.set_edit_path("developer/reference/schemas/index.md", "../docgen/schema_extractor.py")
 
 
 schema_doc()
