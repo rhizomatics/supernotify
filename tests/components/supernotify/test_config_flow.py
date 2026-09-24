@@ -8,6 +8,7 @@ from homeassistant.const import CONF_ENABLED, CONF_NAME
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.supernotify import DOMAIN, MEDIA_DIR, TEMPLATE_DIR
+from custom_components.supernotify.config_flow import ARCHIVE_DOCS_URL, DUPE_CHECK_DOCS_URL
 from custom_components.supernotify.const import (
     ATTR_DUPE_POLICY_MT,
     CONF_ARCHIVE,
@@ -141,6 +142,7 @@ async def test_options_flow_archive(hass: HomeAssistant) -> None:
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "archive"})
     assert menu_result["type"] == FlowResultType.FORM
     assert menu_result["step_id"] == "archive"
+    assert menu_result["description_placeholders"] == {"learn_more_url": ARCHIVE_DOCS_URL}
 
     result = await hass.config_entries.options.async_configure(
         menu_result["flow_id"],
@@ -182,6 +184,7 @@ async def test_options_flow_dupe_check(hass: HomeAssistant) -> None:
     options_init = await hass.config_entries.options.async_init(entry.entry_id)
     menu_result = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "dupe_check"})
     assert menu_result["step_id"] == "dupe_check"
+    assert menu_result["description_placeholders"] == {"learn_more_url": DUPE_CHECK_DOCS_URL}
 
     result = await hass.config_entries.options.async_configure(
         menu_result["flow_id"], {CONF_TTL: 30, CONF_SIZE: 10, CONF_DUPE_POLICY: ATTR_DUPE_POLICY_MT}
