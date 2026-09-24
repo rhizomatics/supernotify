@@ -21,7 +21,7 @@ A more limited set of interactions, without the flexibility of AI understanding,
 ## Switching On
 
 Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** >
-**Configure**, choose **Assist and AI agents (beta)**. There are three switches:
+**Configure**, choose **Assist and AI agents**. There are three switches:
 
 | Switch                   | What it gives                                                             |
 |--------------------------|---------------------------------------------------------------------------|
@@ -121,6 +121,8 @@ Home Assistant's built-in conversation agent doesn't use an AI model, so it can'
 | "What was the last notification"                         | Says what it was, and what sent it            |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message.
+A recipient can be named by their full name, alias, or just their first name when no one else shares it -
+if two do, the agent asks which one you mean.
 Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to
 a recipient, otherwise for everyone.
 

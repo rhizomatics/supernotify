@@ -23,7 +23,9 @@ if TYPE_CHECKING:
 JEY_USER_ID = "jey-user-id"
 
 
-async def _setup(hass: HomeAssistant, sentence_commands: bool = False) -> tuple[SupernotifyEngine, list[ServiceCall]]:
+async def _setup(
+    hass: HomeAssistant, sentence_commands: bool = False, extra_people: dict[str, str] | None = None
+) -> tuple[SupernotifyEngine, list[ServiceCall]]:
     calls: list[ServiceCall] = []
 
     async def _mock_notification(call: ServiceCall) -> None:
@@ -32,6 +34,8 @@ async def _setup(hass: HomeAssistant, sentence_commands: bool = False) -> tuple[
     hass.services.async_register("testing", "mock_notification", _mock_notification)
     hass.states.async_set("person.jey_burrows", "home", {"friendly_name": "Jey Burrows", "user_id": JEY_USER_ID})
     hass.states.async_set("person.bob", "home", {"friendly_name": "Bob"})
+    for entity_id, friendly_name in (extra_people or {}).items():
+        hass.states.async_set(entity_id, "home", {"friendly_name": friendly_name})
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -45,7 +49,11 @@ async def _setup(hass: HomeAssistant, sentence_commands: bool = False) -> tuple[
                         "inclusion": ["default"],
                     }
                 },
-                "recipients": [{"person": "person.jey_burrows"}, {"person": "person.bob"}],
+                "recipients": [
+                    {"person": "person.jey_burrows"},
+                    {"person": "person.bob"},
+                    *({"person": entity_id} for entity_id in extra_people or {}),
+                ],
             }
         },
     )
@@ -67,6 +75,34 @@ async def test_notify_named_recipient(hass: HomeAssistant) -> None:
     assert engine.last_notification is not None
     assert engine.last_notification._target is not None
     assert engine.last_notification._target.person_ids == ["person.jey_burrows"]
+
+
+async def test_notify_by_unique_first_name(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    response = await async_respond(engine, "notify", {"name": "jey", "message": "dinner needs to be made"}, Context())
+
+    assert response == "Sent to jey"
+    assert len(calls) == 1
+    assert engine.last_notification is not None
+    assert engine.last_notification._target is not None
+    assert engine.last_notification._target.person_ids == ["person.jey_burrows"]
+
+
+async def test_notify_asks_which_when_first_name_shared(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass, extra_people={"person.jey_smith": "Jey Smith"})
+
+    response = await async_respond(engine, "notify", {"name": "Jey", "message": "hello"}, Context())
+
+    assert response == "Which Jey do you mean: Jey Burrows or Jey Smith?"
+    assert calls == []
+
+
+async def test_full_name_wins_over_shared_first_name(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass, extra_people={"person.jey_smith": "Jey Smith"})
+
+    assert await async_respond(engine, "notify", {"name": "jey smith", "message": "hi"}, Context()) == "Sent to jey smith"
+    assert len(calls) == 1
 
 
 async def test_notify_everyone(hass: HomeAssistant) -> None:

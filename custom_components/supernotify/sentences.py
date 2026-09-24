@@ -99,11 +99,13 @@ async def _notify(engine: SupernotifyEngine, name: str, message: str, context: H
     people = engine.context.people_registry
     target: list[str] | None = None
     if name.strip().casefold() not in EVERYONE:
-        person_id: str | None = people.person_id_for_name(name)
-        if person_id is None:
+        named = people.people_named(name)
+        if len(named) > 1:
+            return f"Which {name} do you mean: {' or '.join(sorted(r.alias or r.name for r in named))}?"
+        if not named:
             known = ", ".join(sorted(r.alias or r.name for r in people.enabled_recipients())) or "nobody yet"
             return f"I don't know anyone called {name}. I can notify {known}, or everyone"
-        target = [person_id]
+        target = [named[0].entity_id]
     notification = await engine.async_send_message(message, target=target, context=context)
     if notification is None or not notification.delivered:
         return "Sorry, the notification wasn't sent"

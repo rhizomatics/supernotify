@@ -313,10 +313,10 @@
         "step": {
             "init": {
                 "menu_options": {
-                    "archive": "Archive Settings",
+                    "archive": "Archiving",
                     "dupe_check": "Duplicate Detection",
                     "housekeeping": "Housekeeping",
-                    "llm_tools": "Assist and AI agents (beta)"
+                    "llm_tools": "Assist and AI agents"
                 },
                 "title": "Supernotify Options"
             },
@@ -395,7 +395,7 @@
                 "title": "Housekeeping Options"
             },
             "llm_tools": {
-                "title": "Assist and AI agents (beta)",
+                "title": "Assist and AI agents",
                 "description": "Beta: let Assist use Supernotify. The tools are for conversation agents that use an AI model, and AI agents connected through Home Assistant's MCP server, and only reach the recipients, deliveries and scenarios already configured. The built-in agent, which doesn't use AI, can't use them, but can understand a few English sentences instead.",
                 "data": {
                     "action_tools": "Action tools",

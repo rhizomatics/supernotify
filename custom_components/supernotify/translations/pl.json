@@ -405,7 +405,7 @@
                     "archive": "Ustawienia archiwum",
                     "dupe_check": "Wykrywanie duplikatów",
                     "housekeeping": "Konserwacja",
-                    "llm_tools": "Assist i agenci AI (beta)"
+                    "llm_tools": "Assist i agenci AI"
                 },
                 "title": "Opcje Supernotify"
             },
@@ -484,7 +484,7 @@
                 "title": "Opcje konserwacji"
             },
             "llm_tools": {
-                "title": "Assist i agenci AI (beta)",
+                "title": "Assist i agenci AI",
                 "description": "Beta: pozwala Assist korzystać z Supernotify. Narzędzia są dla agentów konwersacji używających modelu AI oraz agentów AI połączonych przez serwer MCP Home Assistant i docierają tylko do już skonfigurowanych odbiorców, dostaw i scenariuszy. Wbudowany agent, który nie używa AI, nie może z nich korzystać, ale zamiast tego rozumie kilka angielskich zdań.",
                 "data": {
                     "action_tools": "Narzędzia działań",

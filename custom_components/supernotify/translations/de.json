@@ -405,7 +405,7 @@
                     "archive": "Archiveinstellungen",
                     "dupe_check": "Duplikaterkennung",
                     "housekeeping": "Wartung",
-                    "llm_tools": "Assist und KI-Agenten (Beta)"
+                    "llm_tools": "Assist und KI-Agenten"
                 },
                 "title": "Supernotify-Optionen"
             },
@@ -484,7 +484,7 @@
                 "title": "Wartungsoptionen"
             },
             "llm_tools": {
-                "title": "Assist und KI-Agenten (Beta)",
+                "title": "Assist und KI-Agenten",
                 "description": "Beta: Assist darf Supernotify nutzen. Die Werkzeuge sind für Gesprächsagenten mit einem KI-Modell und für über den MCP-Server von Home Assistant verbundene KI-Agenten gedacht und erreichen nur bereits konfigurierte Empfänger, Zustellungen und Szenarien. Der eingebaute Agent ohne KI kann sie nicht nutzen, versteht aber stattdessen einige englische Sätze.",
                 "data": {
                     "action_tools": "Aktionswerkzeuge",

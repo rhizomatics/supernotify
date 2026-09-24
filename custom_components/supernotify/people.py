@@ -433,14 +433,22 @@ class PeopleRegistry:
                 return recipient.alias or recipient.name
         return None
 
-    def person_id_for_name(self, name: str) -> str | None:
-        """The recipient called this, by alias or name, ignoring case and underscores"""
+    def people_named(self, name: str) -> list[Recipient]:
+        """The recipients called this, by alias or name, ignoring case and underscores - or failing
+        that, those with it as their first name, so 'jey' finds 'Jey Burrows'"""
         wanted: str = name.replace("_", " ").casefold().strip()
-        for recipient in self.people.values():
-            names = {n.replace("_", " ").casefold() for n in (recipient.alias, recipient.name) if n}
-            if wanted in names:
-                return recipient.entity_id
-        return None
+        full_names: dict[str, set[str]] = {
+            recipient.entity_id: {n.replace("_", " ").casefold().strip() for n in (recipient.alias, recipient.name) if n}
+            for recipient in self.people.values()
+        }
+        if exact := [r for r in self.people.values() if wanted in full_names[r.entity_id]]:
+            return exact
+        return [r for r in self.people.values() if wanted in {n.split(" ")[0] for n in full_names[r.entity_id]}]
+
+    def person_id_for_name(self, name: str) -> str | None:
+        """The one recipient called this, by full name, alias or unique first name"""
+        named: list[Recipient] = self.people_named(name)
+        return named[0].entity_id if len(named) == 1 else None
 
     def person_id_for_user_id(self, user_id: str | None) -> str | None:
         for recipient in self.people.values():

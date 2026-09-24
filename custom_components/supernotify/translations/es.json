@@ -405,7 +405,7 @@
                     "archive": "Configuración de archivo",
                     "dupe_check": "Detección de duplicados",
                     "housekeeping": "Mantenimiento",
-                    "llm_tools": "Assist y agentes de IA (beta)"
+                    "llm_tools": "Assist y agentes de IA"
                 },
                 "title": "Opciones de Supernotify"
             },
@@ -484,7 +484,7 @@
                 "title": "Opciones de mantenimiento"
             },
             "llm_tools": {
-                "title": "Assist y agentes de IA (beta)",
+                "title": "Assist y agentes de IA",
                 "description": "Beta: permite que Assist use Supernotify. Las herramientas son para agentes de conversación que usan un modelo de IA y para agentes de IA conectados mediante el servidor MCP de Home Assistant, y solo llegan a los destinatarios, entregas y escenarios ya configurados. El agente integrado, que no usa IA, no puede usarlas, pero entiende en su lugar algunas frases en inglés.",
                 "data": {
                     "action_tools": "Herramientas de acción",
