@@ -158,7 +158,7 @@ class MiniChimeTransport:
     def build(
         self,
         target_config: ChimeTargetConfig,
-        action_data: dict[str, Any],
+        action_data: dict[str, Any] | None = None,
         entity_name: str | None = None,
         envelope: Envelope | None = None,
         **_kwargs: Any,
@@ -169,7 +169,7 @@ class MiniChimeTransport:
 class RestCommandChimeTransport(MiniChimeTransport):
     domain = "rest_command"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    def build(
         self, target_config: ChimeTargetConfig, entity_name: str | None, **_kwargs: Any
     ) -> ActionCall | None:
         if entity_name is None:
@@ -182,7 +182,7 @@ class RestCommandChimeTransport(MiniChimeTransport):
 class SwitchChimeTransport(MiniChimeTransport):
     domain = "switch"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    def build(
         self, target_config: ChimeTargetConfig, **_kwargs: Any
     ) -> ActionCall | None:
         return ActionCall(self.domain, "turn_on", target_data={ATTR_ENTITY_ID: target_config.entity_id})
@@ -191,7 +191,7 @@ class SwitchChimeTransport(MiniChimeTransport):
 class SirenChimeTransport(MiniChimeTransport):
     domain = "siren"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    def build(
         self, target_config: ChimeTargetConfig, **_kwargs: Any
     ) -> ActionCall | None:
         output_data: dict[str, Any] = {ATTR_DATA: {}}
@@ -209,7 +209,7 @@ class SirenChimeTransport(MiniChimeTransport):
 class ScriptChimeTransport(MiniChimeTransport):
     domain = "script"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    def build(
         self,
         target_config: ChimeTargetConfig,
         entity_name: str | None,
@@ -238,7 +238,7 @@ class ScriptChimeTransport(MiniChimeTransport):
 class AlexaDevicesChimeTransport(MiniChimeTransport):
     domain = "alexa_devices"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    def build(
         self, target_config: ChimeTargetConfig, **_kwargs: Any
     ) -> ActionCall | None:
         output_data: dict[str, Any] = {
@@ -251,8 +251,8 @@ class AlexaDevicesChimeTransport(MiniChimeTransport):
 class MediaPlayerChimeTransport(MiniChimeTransport):
     domain = "media_player"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
-        self, target_config: ChimeTargetConfig, action_data: dict[str, Any], **_kwargs: Any
+    def build(
+        self, target_config: ChimeTargetConfig, action_data: dict[str, Any] | None = None, **_kwargs: Any
     ) -> ActionCall | None:
         input_data = target_config.data or {}
         if action_data:
