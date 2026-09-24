@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Repor substituições"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Notificação {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Notificação entregue ({delivered_count} entrega(s) enviada(s)), mas {uncategorized_count} destino(s) não puderam ser associados a nenhuma entrega e foram descartados: {uncategorized_targets} (entregas verificadas: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "Nenhum arquivo configurado para esta instância do Supernotify"
+        },
+        "no_media_storage_configured": {
+            "message": "Nenhum armazenamento de mídia configurado para esta instância do Supernotify"
         }
     },
     "options": {

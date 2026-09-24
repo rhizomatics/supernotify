@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "ओवरराइड रीसेट करें"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "सूचना {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "सूचना भेज दी गई ({delivered_count} डिलीवरी भेजी गईं), लेकिन {uncategorized_count} लक्ष्य किसी भी डिलीवरी से मेल नहीं खा सके और उन्हें छोड़ दिया गया: {uncategorized_targets} (जाँची गई डिलीवरी: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "इस Supernotify इंस्टेंस के लिए कोई संग्रह कॉन्फ़िगर नहीं किया गया है"
+        },
+        "no_media_storage_configured": {
+            "message": "इस Supernotify इंस्टेंस के लिए कोई मीडिया संग्रहण कॉन्फ़िगर नहीं किया गया है"
         }
     },
     "options": {

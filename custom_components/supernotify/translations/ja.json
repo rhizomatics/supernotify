@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "オーバーライドのリセット"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "通知 {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "通知は送信されました({delivered_count} 件の配信を実行)が、{uncategorized_count} 件のターゲットはどの配信にも分類できず、破棄されました: {uncategorized_targets}(確認した配信: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "この Supernotify インスタンスにはアーカイブが設定されていません"
+        },
+        "no_media_storage_configured": {
+            "message": "この Supernotify インスタンスにはメディアストレージが設定されていません"
         }
     },
     "options": {

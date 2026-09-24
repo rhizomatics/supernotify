@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Ripristina override"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Notify {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Notifica consegnata ({delivered_count} consegna/e inviata/e), ma {uncategorized_count} destinazione/i non è stato possibile associarla/e a nessuna consegna ed è stata/e scartata/e: {uncategorized_targets} (consegne verificate: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "Nessun archivio configurato per questa istanza di Supernotify"
+        },
+        "no_media_storage_configured": {
+            "message": "Nessuna memoria multimediale configurata per questa istanza di Supernotify"
         }
     },
     "options": {

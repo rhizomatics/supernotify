@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Overschrijvingen herstellen"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Melding {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Melding verzonden ({delivered_count} bezorging(en) verstuurd), maar {uncategorized_count} doel(en) konden niet aan een bezorging worden gekoppeld en zijn genegeerd: {uncategorized_targets} (gecontroleerde bezorgingen: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "Er is geen archief geconfigureerd voor deze Supernotify-instantie"
+        },
+        "no_media_storage_configured": {
+            "message": "Er is geen media-opslag geconfigureerd voor deze Supernotify-instantie"
         }
     },
     "options": {

@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Réinitialiser les forçages"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Notification {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Notification envoyée ({delivered_count} livraison(s) effectuée(s)), mais {uncategorized_count} cible(s) n'ont pas pu être associées à une livraison et ont été ignorées : {uncategorized_targets} (livraisons vérifiées : {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "Aucune archive n'est configurée pour cette instance Supernotify"
+        },
+        "no_media_storage_configured": {
+            "message": "Aucun stockage multimédia n'est configuré pour cette instance Supernotify"
         }
     },
     "options": {
