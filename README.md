@@ -91,8 +91,9 @@ Translations for the Home Assistant UI are available for Dutch, English, French,
 * Easy **HTML email templates**
     * Standard HomeAssistant Jinja2, defined in YAML config, action calls or as stand-alone files in the `config` director
     * Default general template supplied
-* **Dashboard Integration**
+* **Home Assistant App**
     * [Supernotify Cards](https://github.com/lollox80/supernotify-cards) has cards for controlling deliveries, sending out messages, testing configuration and more
+    * Voice Assist and chat integration for Nabu Casa and AI agents, to send, snooze or explain notifications
 * **Mobile Actions**
     * Set up a single set of consistent mobile actions across multiple notifications and reuse across many notifications
     * Include *snoozing* actions to silence based on criteria
