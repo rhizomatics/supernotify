@@ -109,50 +109,6 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-critical/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-high/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-low/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-medium/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/HTML%20Email%20Renders/example-default-minimum/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/core/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/notification/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/recipients_and_scenarios/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/registry/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/transport/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
@@ -162,6 +118,50 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/quality_scale_audit_q4_2025/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/HTML%20Email%20Renders/example-default-critical/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/HTML%20Email%20Renders/example-default-high/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/HTML%20Email%20Renders/example-default-low/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/HTML%20Email%20Renders/example-default-medium/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/HTML%20Email%20Renders/example-default-minimum/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/classes/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/classes/core/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/classes/notification/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/classes/recipients_and_scenarios/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/classes/registry/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/classes/transport/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
