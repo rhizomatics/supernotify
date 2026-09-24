@@ -1,5 +1,7 @@
 ## v2.10.0 - Assist Assist
 
+If an option or menu entry shows without a label after upgrading, the browser is showing its cached copy of the old text - hard-refresh the page, or in the companion app use *Settings* > *Companion app* > *Debugging* > *Reset frontend cache*.
+
 ### Action UI
 - Scenarios and deliveries now get populated for easy picking
   - The list is built when Supernotify starts up, is reloaded, or options saved - and after this doesn't take into account subsequent enable/disable actions
