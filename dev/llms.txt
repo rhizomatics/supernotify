@@ -102,11 +102,13 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 ## Optional
 
 - [What's New](https://supernotify.rhizomatics.org.uk/latest/changelog/index.md): Release history
-- [Development Design Documents](https://supernotify.rhizomatics.org.uk/latest/developer/design/index.md)
-- [ConfigFlow Implementation Approach](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
-- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md)
-- [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
-- [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md)
-- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/index.md)
+- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md): Roadmap of planned features and improvements
+- [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md): Design principles
+- [Development Design RFCs](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/index.md)
+- [ConfigFlow Implementation Approach](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/index.md)
+- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/index.md)
+- [Frigate SuperNotifier](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md)
+- [Package Support](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/index.md)
+- [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md)
 - [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md): Table of notification transports and capabilities
 

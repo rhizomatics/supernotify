@@ -275,7 +275,7 @@ For the technically minded, there's a [Class Diagram](https://supernotify.rhizom
 
 ## Developers
 
-See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md).
+See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
 # Using Supernotify
 
 # Usage
@@ -7219,6 +7219,20 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
+## v2.9.1
+
+### Snoozing
+
+- Fixed truncated entity and delivery names where they had underscores
+- Fixed `minutes to snooze` duration ignored
+- Fixed camera notifications snooze action
+- Fixed 'everyone' snoozes
+- Improved e2e testing around snoozes
+
+### Live Activity Support
+
+### Minor
+
 ## v2.9.0
 
 This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
@@ -7366,7 +7380,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 - Fix automatically generated validation schema documentation
 - Added automated test for the YAML examples in docs
-- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/index.md) of technial and features added
+- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md) of technial and features added
 
 ### Technical
 
@@ -7411,7 +7425,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/index.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
 - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -7701,7 +7715,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/index.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
 - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
 - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.
@@ -8465,11 +8479,284 @@ All deprecations will be automatically handled in config as if newer config used
 
 First public release of productionized home code
 
+# Roadmap
+
+See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md) for what guides development.
+
+## Home Assistant Version Compatibility
+
+When the following versions fall out of the 6-month ago window for testing, here are the changes to make
+
+### 2026.2
+
+Remove Py3.13 compatibility and testing Pillow >=12.1 - switch to get_flattened_data
+
+### 2026.8
+
+Switch from `voluptuous` to `probatio`
+
+## Notification Features
+
+### Rate Limiting
+
+Moving window quota per priority. Per delivery / scenario limits.
+
+### Time Ranges
+
+Time ranges for notifications.
+
+- See [Supernotify Bands Card](https://github.com/lollox80/supernotify-cards/blob/main/README.md#supernotify-bands-card)
+
+### Per-delivery Priority
+
+Setting `priority` in a delivery, target or scenario `data` block changes the priority of just that delivery, for example to downgrade one channel while the rest stay at the call's priority. It works, but is not documented, and only affects what the transport sees. Delivery selection by priority, snoozing and scenario conditions still use the priority of the original call.
+
+The plan is to make this a documented, supported setting, and decide which of those should follow it. See also the priority ordering in [Overhaul use of `data` in pipeline](#overhaul-use-of-data-in-pipeline).
+
+### Holiday Support
+
+Randomization for greetings and sounds. Sleigh bells are nice on first notification, annoying after that if every announcement has same one.
+
+### Other Features
+
+- Transport overrides for scenarios
+- Selecting by transport rather than by name.
+  - Patterns only work if deliveries follow a naming convention. A scenario can't say "every delivery using the email transport", so user-named deliveries like plain_email, html_email and alerts_to_sue are only caught by luck. One option is a key such as transport: email, or a transport:email prefix, resolved against Delivery.transport.name.
+- Overriding more than enabled, target and data (see also ideas on `data` improvements)
+  - A scenario can't change the delivery or transport settings that matter most in a scenario:
+  - options (for example target_select, message formatting, chime tune mappings)
+  - the delivery's priority filter
+  - target_usage
+  - selection_rank
+- Switching a whole transport off.
+  - Today this means a delivery pattern with enabled: false, which fails the same way as in point 1. The alternative is the transport's own switch, but that's global, not per scenario.
+
+## Email
+
+### HTML Email
+
+Revisit the HTML template, review if more than 1 needed, and ways to make it more useful in bringing HA context into a notification
+
+### Links and Actions
+
+- Configurable links for email
+- Actions for email
+- Option to add notification details and link to archive object onto e-mail footer
+
+## Delivery and Target Selection
+
+### Inclusion Default
+
+An advanced and very usable mode is to have all deliveries selected only explicitly/by scenario so nothing is notified unless asked for, rather than by default everything. This works well to minimize noise. However it means every delivery has to have inclusion set to `scenario` or `explicit` manually - make an option in configflow UI to set a global default.
+
+Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a useful delivery mode which is effectively target driven - only consider the transport if there's a target that needs it. On other hand deliveries like Persistence that only make sense if explicit.
+
+## Setup and Configuration
+
+### Extended UI Configuration
+
+Second and further phases identified at [ConfigFlow](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/index.md)
+
+### Respond to Dynamic Home Assistant Changes
+
+Listen out for changes to users, persons, integrations and change integrations
+
+- User account added, auto-discover incl mobile devices
+- Integration added, reassess viability and add if so ( or remove if integration no longer available )
+- Same code running at supernotify startup and on listen events so consistent behaviour
+
+## Observability
+
+### Delivery Explanations
+
+Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement. `delivery_provenance` (v2.8.0) now records which source enabled or disabled each delivery; suppression reasons and multiple selectors are still to do.
+
+### Telemetry
+
+- HACS may get included in basic stats
+- Current downloads mix direct downloads and clones - https://rhizomatics.github.io/hacs-downloads/
+- See also extracted core version support data - https://claude.ai/artifact/7aGj3qD4uJXa8g3MFvuvNx
+- No obvious way to find out which transport or features are used, other than HA stats on underlying transport usage, e.g. hardly anyone uses SMTP
+
+## Ecosystem
+
+### Packages
+
+See [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md), starting with [Frigate SuperNotifier](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md). The Supernotify changes needed first are in [Package Support](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/index.md).
+
+### UI
+
+There must be a better way of sharing dashboards than manual copy and paste of YAML from the [dashboard recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
+
+SignalK has nice idea of having recommended plugins, could be feature PR for HACS
+
+### Extensibility
+
+- Other developers able to create add-ons, see also [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md)
+- Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
+- Consider moving Generic transport to its own notification toolbox plugin
+
+### AI Friendly
+
+Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
+
+#### Register an LLM API.
+
+HA's homeassistant.helpers.llm lets an integration register a tool set through async_register_api. A notify tool with delivery, scenario and target parameters would work for Assist conversation agents. It should also be reachable through HA's MCP server. Check the current API before committing to this. It is the only option here that makes Supernotify callable by agents, not just easier to configure.
+
+#### Richer services.yaml descriptions.
+
+Every field's description, example and selector are what an LLM sees when it discovers actions. Dynamic delivery and scenario dropdowns via `async_set_service_schema` would help agents as well, since they would see the real delivery names.
+
+#### Structured errors and diagnostics.
+
+Config validation errors that name the key and the valid options let an agent self-correct. `diagnostics.py` helps the same way.
+
+## Internal Improvements
+
+The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining all reasonable backward compatibility.
+
+### Overhaul use of `data` in pipeline
+
+`extra_data` (and the older nested `data` of `notify.supernotify`) is currently merged into the same `data` that carries delivery, target and scenario data, all the way to the transports. That has some side effects:
+
+- Supernotify's own transports read their options from it, for example `matrix_format` or `chime_tune`, so it is not purely data for the underlying integration
+- `priority`, `message_html`, `spoken_message`, `force_resend` and `timestamp` are taken out of it by the envelope, so a value meant for the target integration, such as a mobile app push's own `priority`, never reaches it
+- some transports, such as email and the generic `ntfy` and `notify_events` handling, read `media` and `actions` from that data rather than from the notification's own, which needs checking against the top level `media` and `actions` used by `supernotify.notify`
+
+The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other than `extra_data` should terminate as soon as action handled. This also means finding another home or some other way of separating the data elements picked up by Supernotify transports. See also ideas on [extending options](#transport-usage-of-extra-data).
+
+Consider simplifying or renaming the `data` section needed for `delivery` definitions and overrides. This could mean that the term `data` only ever appears at the top of an action notification, as Home Assistant standard, and nowhere else.
+
+Overhaul the Envelope's use of pop and get to pick out data elements such as priority. For something like priority the order should be:
+
+- Notification Level
+- Global defaults
+- Action Data
+- Scenarios
+- Envelope Level
+- Target level overrides
+- Delivery Config level overrides
+- Delivery Action Data overrides
+
+The `priority` on the action data would always win, *unless* the action data also had a delivery override with a different priority. (Question - scenarios, deliveries etc should be able to override too, so does a delivery level config priority win over a notification level action priority? Probably should do so, and use delivery overrides in action to resolve that if the default behaviour doesn't suit)
+
+#### Transport Usage of Extra Data
+
+Its possible these are really the same thing as options, but lacking the documentation and passed a different way. Review and see if they can brought into the options setup, so there's automatic document generation for them, and they can be passed in `options` rather than `data`. Check if that completely removes Supernotify usage of `extra_data` and also review use of `options` from actions rather than static config.
+
+(Analyzed for `v2.6.0-beta1`)
+
+| Group                      | Keys                                                                                                                                     | Notes                                                                                                     |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Prefixed transport options | `chime_*`, `discord_*`, `gotify_*`, `html5_*`, `kodi_*`, `lametric_*`, `matrix_*`, `mobile_push_*`, `ntfy_*`, `pushover_*`, `telegram_*` | Removed by their transport, only the remainder reaches the integration                                    |
+| Email                      | `template`, `footer`, `action_url`, `action_url_title`, `snapshot_url` (or `media.snapshot_url`)                                         | `template` and `footer` are Supernotify's own                                                             |
+| Alexa Media Player         | `volume`, `type`, `pause_music`, `restore_volume`, `tts_char_speed`, `volume_fallback`, `wait_for_tts`                                   | Unprefixed                                                                                                |
+| Chime                      | `chime_tune`, `chime_volume`, `chime_duration`, `enqueue`, `announce`                                                                    | `enqueue` and `announce` are `media_player` fields                                                        |
+| Generic                    | `variables`, `value`, `media`, `actions`, `token`, `level`                                                                               | `token` and `level` are for `notify_events`; `media` and `actions` are also top level notification fields |
+| MQTT and persistent        | `topic`, `payload`, `notification_id`                                                                                                    |                                                                                                           |
+| TTS                        | `language`, `cache`, `options`, `media_stream`                                                                                           | Fields of `tts.speak` selected by the transport, so borderline pass-through                               |
+| Handled by the envelope    | `priority`, `message_html`, `spoken_message`, `force_resend`, `timestamp`                                                                | Taken out before the transports see the data, never passed to integrations                                |
+
+#### Other clean-up
+
+Fields like `message_html`,`spoken_message`,`priority` are treated inconsistently across notification and envelope. some belong to both objects as attributes, some to just one.
+
+## Completed Roadmap
+
+- [ConfigFlow](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/index.md)
+- v2.0.0
+- Partially completed, basic YAML only
+- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/index.md)
+- v2.5.0
+- Delivery provenance in the archive, the first part of [Delivery Explanations](#delivery-explanations)
+- v2.8.0
+- Area, floor and label targets, expanded before envelope generation with dupes resolved
+- v2.9.0
+- [https://github.com/rhizomatics/supernotify/pull/188]
+- MQTT Publish action
+
+## Rejected Roadmap
+
+### Native Area, Floor and Label Targets
+
+Area, floor and label targets are always resolved to entities before any transport sees them. Support transports that understand them natively as an exception, rather than relying on `extra_data`.
+
+No existing standard Home Assistant integrations do this, so its an edge case that can be handled by `extra_data` fine. Reconsider if that ever changes, though its likely that all 'well-behaved' Home Assistant integrations will continue to let the platform resolve these entity selectors.
+
+# Principles
+
+1. There is no configuration unless configuration is necessary.
+
+   If configuration can be reliably inferred, borrowed or defaulted then it should do so.
+
+1. A do-nothing UI only configured integration should do something.
+
+   If Home Assistant already configured for SMTP, or Mobile Apps configured, then by default an integration that has had zero options defined, and a notification that only has a `message` can do something sensible.
+
+1. Keep the power of flexible configuration but don't let it get in the way
+
+   Nobody needs to know about Delivery, Scenario or Transport until it solves a problem they have, or they like a Recipe that needs them.
+
+1. Transports come in different categories, make those obvious and consistent
+
+   a. Targets
+
+   Some transports have unambiguous targets, like a phone number or email address, or a target that can could easily be made unambiguous, for example with a domain prefix, like `discord:123456789012345678`
+
+   Other transports have no targets, like Persistent.
+
+   Some transports have targets that are relatively fixed, like Alexa devices, while others are in theory unbounded, like email.
+
+   Some transports have targets that are personal, like email or SMS, and others tied to a location, like a chime.
+
+   Sometimes multiple transports can handle the same targets, like Alexa Media Player, TTS, Chime, Alexa Devices
+
+   b. Configuration
+
+   Some transports have everything needed configured in their own Home Assistant integration, other than perhaps which target to pick
+
+   Chime and Generic are the extreme examples where they only make sense when explicitly configured within supernotify (although in theory something like sirens could be a notification target, and combined with floor/label etc).
+
+1. The most natural way to select deliveries is to select targets.
+
+   Rather than select a list of configuration items, if I send to "me@house.org,+439549582331,discord:554855344" I've made my intentions clear that I want to use email, SMS and Discord.
+
+   On the other hand, no targets defined doesn't mean a notification should go to either ALL or NONE. It probably shouldn't target a persistent notification or a siren, on the other hand if there are email addresses and mobile apps defined for people, it makes sense to select them.
+
+1. Home Assistant's native notifications, and custom add-ons, remain unsatisfactory
+
+   There are many ways of doing the same thing, `notify.platform`,`notfiy.send_message`,`notify.mobile_app_my_old_macbook`,`assist_satellite.announce`,`alexa_devices.send_sound` etc, sometimes a dedicated action per target, sometimes a generic action, sometimes to an entity, sometimes to a device.
+
+   Notify Entities regularize the interface but have very limited functionality, and the purist implementation means all email addresses must be pre-registered in config before use. (Some recognition of external entities with unambiguous name formats is overdue).
+
+   v2.0.0 of Supernotify has started pulling away from the 'legacy' notification platform, with separate config, and a much easier to use notification automation UI.
+
+1. Align with Home Assistant architecture and standards
+
+   Make Supernotify more accessible to more users, including non-technical ones who will never use YAML. Supernotify should itself make HomeAssistant more accessible, for example by simplifying mobile push setup.
+
+   Move towards Platinum quality scale level and maintain this quality
+
+   Note the tension with Principle #6
+
+1. Align with a likely vision of the future home automation
+
+   AI will be increasingly used to drive automation, from advanced users using it for YAML to others who won't even touch ConfigFlow UI. Documentation on concepts and configuration will have agents as the primary audience.
+
+   E-mail and SMS use are declining. Only 2% of known HA installs have the SMTP integration, SMS is much more marginal than that.
+
+1. Don't lose intent
+
+   If a user has marked a delivery `enabled: false` then don't confuse this in config or run time with a delivery that has incomplete configuration or not selected.
+
+1. Entia non sunt multiplicanda praeter necessitatem.
+
+   Minimize unnecessary concepts in config, and Home Assistant entities/devices/helpers.
+
 ______________________________________________________________________
 
-# Reference Index
-
-Design principles, proposals, projects, roadmap.
+# Requests for Comments
 
 {{ pagetree(siblings) }}
 
@@ -8547,7 +8834,7 @@ Breakdown:
 ### Third
 
 - Upgrade to Gold level quality.
-- Move Delivery, Transport, Recipient and Camera to ConfigFlow, following the design in [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md).
+- Move Delivery, Transport, Recipient and Camera to ConfigFlow, following the design in [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/index.md).
 - Transport is the primary ConfigFlow object, not Delivery: every auto-configurable Transport is implicitly also a Delivery of the same name (Design Decision 1), so a Transport options page covers the common case without a separate Delivery step.
 - Delivery only needs its own ConfigFlow entry for the advanced case of more than one preset per Transport (e.g. a low-priority and high-priority chime) - Principle #3, Design Decision 2.
 - Prerequisite engine change, ahead of or alongside the UI work rather than part of it: merge the `DELIVERY_SCHEMA` extensions back into `DELIVERY_CONFIG_SCHEMA` (Design Decision 1), so there's a single config shape to expose instead of two.
@@ -8569,7 +8856,7 @@ Breakdown:
 
 # Deliveries and Transports
 
-See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md).
+See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
 
 ## Context
 
@@ -8706,6 +8993,215 @@ target:
     delivery: email
 ````
 
+# Frigate SuperNotifier
+
+The first [Package](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md): a new module (with optional separate HACS custom component for visibility) that replaces the [Frigate Notifications blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications) (beta `0.14.0.3l`) for review events, sending everything through Supernotify.
+
+## Goals
+
+- 100% ConfigFlow, no YAML needed to set up or use
+- Sensible defaults, so a user only picks cameras and gets working mobile, email and voice notifications
+- Every part of the `supernotify.notify` call can still be tuned, using the same UI as an automation action
+- Supernotify's own YAML still applies, so users can add scenarios or deliveries that react to Frigate notifications
+- The [Apple push fix](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) is built in, with an option to turn it off
+
+Out of scope for the first release: GenAI review summaries (`frigate/tracked_object_update` and the `genai` review type), ANPR, Telegram inline keyboards and Android TV overlays. Telegram and TV remain possible as ordinary Supernotify deliveries.
+
+## Architecture
+
+```
+flowchart LR
+    F["Frigate<br/>MQTT frigate/reviews"] --> C["Frigate SuperNotifier<br/>filters + review tracker"]
+    C -->|"supernotify.notify<br/>(stored action, with variables)"| S["Supernotify"]
+    S --> D["Deliveries<br/>mobile push, email, TTS..."]
+    D -->|"mobile_app_notification_action"| C
+```
+
+- **Package module inside Supernotify**, with `mqtt` and `frigate` as `after_dependencies`, only offered when both are loaded. A thin *Frigate SuperNotifier* HACS repository can follow later for visibility
+- **Config subentry per notification profile** of the Supernotify entry - a Frigate instance and a set of cameras with their own filters and notification. Most users have one; someone wanting the driveway treated differently from the garden adds a second
+- **Frigate settings discovered** from the existing `frigate` config entry. The MQTT topic prefix, proxy client ID and base URL are read from the Frigate entry and Home Assistant's external URL, replacing the blueprint's `base_url`, `client_id` and `mqtt_topic` inputs
+- **Runtime**: one MQTT subscription per entry; a review tracker keeps per-review state (severity, objects, sub-labels, zones, last sent) in memory, replacing the blueprint's `wait_for_trigger` loop. Everything is in code, so improvements reach existing users on upgrade
+
+## Customization UI
+
+HA integration config flows can't show an automation editor in general, but they can show the **action selector**. Core already does this, for example the Template helper's alarm panel uses `ActionSelector` for its arm and disarm actions (`homeassistant/components/template/config_flow.py`).
+
+So each profile stores its notification as an action:
+
+- The **Notification** step of the subentry flow shows an `ActionSelector`, pre-filled with a `supernotify.notify` call using the default title, message, media, priority and actions
+- The user sees exactly the `supernotify.notify` UI they'd get in an automation, and can change any field, add `delivery` overrides, `apply_scenarios`, or even add further actions before or after
+- The component runs the stored actions with `homeassistant.helpers.script.Script`, passing the review as variables, so templates like `{{ label }}` work as they do in the blueprint
+- A **Reset to default** option replaces the stored action with the current default, for when the default improves
+
+Variables passed to the action:
+
+| Variable                                                             | Meaning                                                                    |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `camera`, `camera_name`, `camera_entity_id`                          | Frigate camera name, title-cased name, and its HA camera entity            |
+| `label`, `objects`, `sub_labels`                                     | Formatted label (with sub-labels merged, as the blueprint does), raw lists |
+| `zones`, `severity`, `review_id`, `detection_id`                     | From the review payload                                                    |
+| `snapshot_url`, `thumbnail_url`, `clip_url`, `hls_url`, `review_url` | Pre-built proxy URLs, so users don't need to know the API paths            |
+| `is_update`, `is_final`, `update_reason`                             | Whether this is a follow-up for the same review, and why it was sent       |
+
+Filters stay as structured fields, not templates:
+
+| Blueprint input                                                                                             | Profile setting                                                         |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `camera`                                                                                                    | Multi-select of Frigate cameras                                         |
+| `review_severity`                                                                                           | Alert / detection                                                       |
+| `labels`, `zones`, `zone_multi`, `zone_order_enforced`                                                      | Selects populated from the Frigate config for the chosen cameras        |
+| `presence_filter`                                                                                           | Person/zone entity select - or leave to Supernotify occupancy scenarios |
+| `state_filter`, `state_entity`, `state_filter_states`, `disable_times`, `master_condition`, `custom_filter` | One `ConditionSelector`, pre-filled empty                               |
+| `cooldown`, `timeout`, `initial_delay`, `final_delay`, `final_update`, `alert_once`                         | Number and boolean fields in an *Advanced* section                      |
+| `update_sub_label`                                                                                          | Boolean                                                                 |
+
+Delivery-level inputs from the blueprint are **not** profile settings, because Supernotify already owns them:
+
+| Blueprint input                                                  | Where it lives instead                                                                        |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `notify_device`, `notify_group`                                  | Supernotify recipients and mobile push delivery - fixes the blueprint's notify group problems |
+| `critical`, `interruption_level`, `sound`, `volume`              | `priority` in the action, mapped by the mobile push transport                                 |
+| `color`, `icon`, `sticky`, `channel`, `android_auto`, `subtitle` | `extra_data` in the action; `mobile_push_*` options where they exist                          |
+| `group`, `tag`                                                   | Set by the component from camera and review ID                                                |
+| `attachment`, `attachment_2`, `video`, `ios_live_view`           | `media` in the action (`snapshot_url`, `clip_url`, `camera_entity_id`)                        |
+| `tap_action`, `button_1..3`, `url_1..3`, `icon_1..3`             | `actions` in the action, default *View Clip* and *View Snapshot*                              |
+| `button_3` silence, `silence_timer`                              | Supernotify's own camera snooze action                                                        |
+| `tts`, `tts_helper`                                              | A TTS delivery, or `mobile_push_tts_text`; dedupe per review is component state               |
+| `custom_action_manual`, `custom_action_auto(_multi)`             | Extra actions in the stored action sequence; manual ones via a component action button        |
+| `telegram_*`, `tv_*`                                             | Ordinary Supernotify deliveries, later                                                        |
+| `debug`, `redacted`                                              | Supernotify archive and debug trace                                                           |
+
+Remaining profile settings, with the fix recipe:
+
+- **Apple-compatible video links** (default on) - Apple devices get the HLS `master.m3u8` link and no `clip.mp4` attachment or `clickAction`, as in the [recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md). Off sends the same links to every device, as the blueprint does
+
+## Changes needed in Supernotify
+
+See [Package Support](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/index.md), which covers these for all packages. For Frigate, the essentials are snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and live view changes.
+
+## Open Questions
+
+- Spike: confirm `ActionSelector` defaults render pre-filled in a subentry flow, and that templates in `data` survive storage and run through `Script` with the review variables
+- Spike: confirm `ConditionSelector` renders in config flows, since no core integration uses it there yet
+- How does the component know Frigate's camera list, zones and labels during the flow - from the Frigate integration's coordinator data, or the Frigate API?
+- Should a default profile be created automatically when a Frigate entry is found, or only offered?
+- Naming - see [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/#questions)
+
+# Package Support
+
+Changes needed in Supernotify before any [Package](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md) is built, collected from the proposed packages: [Frigate](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md), appliance Live Activities (smart and power monitored), and motion sensors.
+
+Packages are built as modules inside Supernotify, set up as config subentries. A thin HACS repository per package, for example *Frigate SuperNotifier*, can come later purely so people searching HACS find it; it would only guide the user to install or enable Supernotify.
+
+## Needs by Package
+
+| Upgrade                               | Frigate | Appliance Live Activity | Power Monitored | Motion |
+| ------------------------------------- | ------- | ----------------------- | --------------- | ------ |
+| 1. Snooze enforcement                 | ●       |                         |                 | ●      |
+| 2. Notification source                | ●       | ●                       | ●               | ●      |
+| 3. Notification lifecycle and tag     | ●       | ●                       | ●               |        |
+| 4. Cooldown per source                | ●       |                         |                 | ●      |
+| 5. Scenario priority                  | ○       |                         |                 | ●      |
+| 6. Mobile push media precedence       | ●       |                         |                 | ○      |
+| 7. iOS video attachment               | ●       |                         |                 |        |
+| 8. Tap URL                            | ●       | ○                       | ○               | ○      |
+| 9. Live view entity                   | ●       |                         |                 | ○      |
+| 10. Live Activity fields              | ○       | ●                       | ●               |        |
+| 11. Package framework                 | ●       | ●                       | ●               | ●      |
+| 12. Stored notification action        | ●       | ●                       | ●               | ●      |
+| 13. Richer `services.yaml`            | ●       | ●                       | ●               | ●      |
+| 14. Optional integration dependencies | ●       | ●                       |                 |        |
+
+● needed, ○ useful
+
+## Fixes
+
+### 1. Snooze enforcement
+
+`SUPERNOTIFY_SNOOZE_EVERYONE_CAMERA_*` snoozes, from the button mobile push adds to every camera notification, are recorded but appear not to be applied. `Snoozer.is_global_snooze()` only checks `EVERYTHING` and `NONCRITICAL`, and `Snoozer.filter_recipients()` only acts on user-scoped snoozes, so everyone-scoped camera, delivery, transport and priority snoozes have no effect. Camera snoozes also need the notification's camera to compare with.
+
+Confirm with a regression test first.
+
+## Notification Model
+
+### 2. Notification source
+
+A `source` field on `supernotify.notify`, such as `frigate:driveway` or `appliance:dishwasher`, carried into the archive, debug trace and scenario condition variables. Lets users write scenarios for one package or one camera without matching message text, and gives cooldown, snoozing and lifecycle something to key on. Packages set it; automations can too.
+
+### 3. Notification lifecycle and tag
+
+Promote `mobile_push_notification_tag` to a transport-neutral `tag`, and add a `lifecycle` of `new` (default), `update` or `end`:
+
+- **update** - replaces the earlier notification with the same tag without alerting again. Mobile push replaces silently (iOS `sound: none` and `passive`, Android `alert_once`); email and spoken transports skip updates by default
+- **end** - mobile push sends `clear_notification` for the tag, or a final silent update if the package wants the result to stay visible; other transports send a normal notification, such as "Dishwasher finished"
+- Duplicate checking treats a changed update of the same tag as new, rather than suppressing it
+
+This replaces the Live Activity recipe's per-delivery `clear_notification` message and `delivery_selection: fixed`.
+
+### 4. Cooldown per source
+
+Minimum time between `new` notifications from the same source, as the Frigate blueprint's `cooldown`. Updates and ends of a tag already sent aren't limited. A first step toward the Rate Limiting roadmap item.
+
+### 5. Scenario priority
+
+Let a scenario set the notification's priority, not just a delivery's `data.priority`, so a motion package can have "armed and night" raise to `high` and "occupied and not dangerous" drop to `low`. The priority then has to be settled before delivery selection, while scenario conditions can themselves use priority - so a scenario's priority applies after scenarios are chosen and doesn't re-trigger selection. Relates to *Per-delivery Priority* on the [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md).
+
+## Mobile Push
+
+### 6. Media precedence
+
+With both `camera_entity_id` and `snapshot_url`, the camera grab currently wins. Frigate needs the snapshot URL for the image, with the camera entity used only for live view, grouping and snoozing. Use `snapshot_url` for the image when given, and only grab from the camera without one.
+
+### 7. iOS video attachment
+
+`clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL (`application/vnd.apple.mpegurl` for `.m3u8`). An option to leave out `.mp4` clips for Apple devices builds in the [Frigate Apple fix](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md), so it no longer needs `data_keys_select`.
+
+### 8. Tap URL
+
+A cross-platform URL opened when the notification is tapped, becoming iOS `url` and Android `clickAction`. Today it only works as passthrough `extra_data`, which can't differ per platform.
+
+### 9. Live view entity
+
+Set the iOS live camera view (`entity_id`) independently of where the image comes from.
+
+### 10. Live Activity fields
+
+First-class fields for [Live Activities](https://companion.home-assistant.io/docs/notifications/live-activities): `live_update`, `progress`, `progress_max`, `chronometer`, `when` and the notification icon, mapped for iOS and Android, and left out entirely when the source value is `unavailable`. Combined with lifecycle `update` and `end`, an appliance package only needs to send the current state.
+
+## Package Framework
+
+### 11. Package modules and subentries
+
+- A `packages` sub-package with a base class per package: `detect(hass)`, a subentry flow, default notification, and runtime start and stop hooks for listeners
+- Each package is a config subentry type of the Supernotify entry, so it appears as *Add Frigate notifications* on the integration page. Needs HA config subentries, which the current minimum Home Assistant version supports
+- Discovery: on startup, a package that detects something it could handle raises a fixable repair issue offering to set it up. Repairs' own *Ignore* gives the "don't ask again" behaviour without new storage
+- Packages run inside Supernotify, so they're loaded, reloaded and unloaded with the config entry
+
+### 12. Stored notification action
+
+Each subentry keeps its notification as an action sequence, edited with the `ActionSelector`, pre-filled with a `supernotify.notify` call, and run with `helpers.script.Script` with the package's variables. The core Template helper already uses `ActionSelector` in its config flow. Also needs:
+
+- a *Reset to default* option, so users can pick up improved defaults
+- validation on load, raising a repair issue if a stored action no longer matches the `supernotify.notify` schema
+- spikes: that defaults show pre-filled in a subentry flow and templates survive storage, and that `ConditionSelector` works in a config flow, since no core integration uses it there yet
+
+### 13. Richer `services.yaml`
+
+The action editor becomes the whole customization UI for packages, so `supernotify.notify` field descriptions, examples and selectors matter far more, including dynamic delivery and scenario dropdowns via `async_set_service_schema`, and translations for all of it.
+
+### 14. Optional integration dependencies
+
+Packages bundled in Supernotify can't add `mqtt` or `frigate` to `dependencies`, since that would force them on every user. Add them to `after_dependencies` instead, check at runtime, and only offer a package when its integrations are loaded.
+
+## Suggested Order
+
+1. **Snooze enforcement** - a bug today, small, and packages depend on it
+1. **Mobile push media, iOS video, tap URL, live view** (6-9) - self-contained and useful to existing Frigate blueprint users
+1. **Source, lifecycle and tag, cooldown** (2-4) - the core model packages build on
+1. **Live Activity fields** (10) - makes the existing dishwasher recipe much simpler
+1. **Scenario priority** (5)
+1. **Package framework, stored action and `services.yaml`** (11-14), after the spikes, then the first package
+
 # Packages
 
 (provisional name for implementation)
@@ -8726,13 +9222,15 @@ The "packages" could also be selected after the fact, either directly in the mai
 
 ## Implementation
 
-Separate custom component on HACS, per package, as Supernotify "plugins". More noticeable, e.g. someone looking for help with Frigate more likely to pick a Frigate Supernotify plugin from HACS than examine Supernotify and find the small print.
+A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again.
+
+Later, a thin custom component on HACS per package, purely for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It would only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
+
+See [Package Support](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/index.md) for the changes needed in Supernotify first.
 
 ### Alternatives
 
-A new sub-package within Supernotify, with a module per package. At set-up or startup the modules are called to see if they are applicable. If use chooses to ignore them, this ignore state is persisted so not bothered again.
-
-Config sub-entries?
+A separate custom component on HACS per package, holding the package logic, as Supernotify "plugins". Rejected for now, since neither HACS nor Home Assistant will install Supernotify as its dependency.
 
 ### Branding
 
@@ -8984,6 +9482,8 @@ The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Fri
 
 The Frigate `package` would pick up that there's a known MQTT topic or Frigate proxy, and set up an MQTT subscription for mobile push, email and voice announce by default. It would offer everything the blueprint has, address known bugs and workarounds like faking a `notify_device` and avoiding broken images.
 
+See [Frigate SuperNotifier](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md) for the design.
+
 Current Supernotify usage of Frigate Blueprint
 
 ```yaml
@@ -9059,281 +9559,6 @@ Live Activities would be a great fit for ongoing events in Frigate, where its po
 - "Notification Presets"?
 - "Routines"?
 - Reuse "Recipe" - manual recipes in the docs, automatic recipes in the code. Though recipe sounds like a set of steps for doing things yourself, this is more like buying the cake already baked and iced.
-
-# Principles
-
-1. There is no configuration unless configuration is necessary.
-
-   If configuration can be reliably inferred, borrowed or defaulted then it should do so.
-
-1. A do-nothing UI only configured integration should do something.
-
-   If Home Assistant already configured for SMTP, or Mobile Apps configured, then by default an integration that has had zero options defined, and a notification that only has a `message` can do something sensible.
-
-1. Keep the power of flexible configuration but don't let it get in the way
-
-   Nobody needs to know about Delivery, Scenario or Transport until it solves a problem they have, or they like a Recipe that needs them.
-
-1. Transports come in different categories, make those obvious and consistent
-
-   a. Targets
-
-   Some transports have unambiguous targets, like a phone number or email address, or a target that can could easily be made unambiguous, for example with a domain prefix, like `discord:123456789012345678`
-
-   Other transports have no targets, like Persistent.
-
-   Some transports have targets that are relatively fixed, like Alexa devices, while others are in theory unbounded, like email.
-
-   Some transports have targets that are personal, like email or SMS, and others tied to a location, like a chime.
-
-   Sometimes multiple transports can handle the same targets, like Alexa Media Player, TTS, Chime, Alexa Devices
-
-   b. Configuration
-
-   Some transports have everything needed configured in their own Home Assistant integration, other than perhaps which target to pick
-
-   Chime and Generic are the extreme examples where they only make sense when explicitly configured within supernotify (although in theory something like sirens could be a notification target, and combined with floor/label etc).
-
-1. The most natural way to select deliveries is to select targets.
-
-   Rather than select a list of configuration items, if I send to "me@house.org,+439549582331,discord:554855344" I've made my intentions clear that I want to use email, SMS and Discord.
-
-   On the other hand, no targets defined doesn't mean a notification should go to either ALL or NONE. It probably shouldn't target a persistent notification or a siren, on the other hand if there are email addresses and mobile apps defined for people, it makes sense to select them.
-
-1. Home Assistant's native notifications, and custom add-ons, remain unsatisfactory
-
-   There are many ways of doing the same thing, `notify.platform`,`notfiy.send_message`,`notify.mobile_app_my_old_macbook`,`assist_satellite.announce`,`alexa_devices.send_sound` etc, sometimes a dedicated action per target, sometimes a generic action, sometimes to an entity, sometimes to a device.
-
-   Notify Entities regularize the interface but have very limited functionality, and the purist implementation means all email addresses must be pre-registered in config before use. (Some recognition of external entities with unambiguous name formats is overdue).
-
-   v2.0.0 of Supernotify has started pulling away from the 'legacy' notification platform, with separate config, and a much easier to use notification automation UI.
-
-1. Align with Home Assistant architecture and standards
-
-   Make Supernotify more accessible to more users, including non-technical ones who will never use YAML. Supernotify should itself make HomeAssistant more accessible, for example by simplifying mobile push setup.
-
-   Move towards Platinum quality scale level and maintain this quality
-
-   Note the tension with Principle #6
-
-1. Align with a likely vision of the future home automation
-
-   AI will be increasingly used to drive automation, from advanced users using it for YAML to others who won't even touch ConfigFlow UI. Documentation on concepts and configuration will have agents as the primary audience.
-
-   E-mail and SMS use are declining. Only 2% of known HA installs have the SMTP integration, SMS is much more marginal than that.
-
-1. Don't lose intent
-
-   If a user has marked a delivery `enabled: false` then don't confuse this in config or run time with a delivery that has incomplete configuration or not selected.
-
-1. Entia non sunt multiplicanda praeter necessitatem.
-
-   Minimize unnecessary concepts in config, and Home Assistant entities/devices/helpers.
-
-# Roadmap
-
-See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md) for what guides development.
-
-## Home Assistant Version Compatibility
-
-When the following versions fall out of the 6-month ago window for testing, here are the changes to make
-
-### 2026.2
-
-Remove Py3.13 compatibility and testing Pillow >=12.1 - switch to get_flattened_data
-
-### 2026.8
-
-Switch from `voluptuous` to `probatio`
-
-## Notification Features
-
-### Rate Limiting
-
-Moving window quota per priority. Per delivery / scenario limits.
-
-### Time Ranges
-
-Time ranges for notifications.
-
-- See [Supernotify Bands Card](https://github.com/lollox80/supernotify-cards/blob/main/README.md#supernotify-bands-card)
-
-### Per-delivery Priority
-
-Setting `priority` in a delivery, target or scenario `data` block changes the priority of just that delivery, for example to downgrade one channel while the rest stay at the call's priority. It works, but is not documented, and only affects what the transport sees. Delivery selection by priority, snoozing and scenario conditions still use the priority of the original call.
-
-The plan is to make this a documented, supported setting, and decide which of those should follow it. See also the priority ordering in [Overhaul use of `data` in pipeline](#overhaul-use-of-data-in-pipeline).
-
-### Holiday Support
-
-Randomization for greetings and sounds. Sleigh bells are nice on first notification, annoying after that if every announcement has same one.
-
-### Other Features
-
-- Transport overrides for scenarios
-- Selecting by transport rather than by name.
-  - Patterns only work if deliveries follow a naming convention. A scenario can't say "every delivery using the email transport", so user-named deliveries like plain_email, html_email and alerts_to_sue are only caught by luck. One option is a key such as transport: email, or a transport:email prefix, resolved against Delivery.transport.name.
-- Overriding more than enabled, target and data (see also ideas on `data` improvements)
-  - A scenario can't change the delivery or transport settings that matter most in a scenario:
-  - options (for example target_select, message formatting, chime tune mappings)
-  - the delivery's priority filter
-  - target_usage
-  - selection_rank
-- Switching a whole transport off.
-  - Today this means a delivery pattern with enabled: false, which fails the same way as in point 1. The alternative is the transport's own switch, but that's global, not per scenario.
-
-## Email
-
-### HTML Email
-
-Revisit the HTML template, review if more than 1 needed, and ways to make it more useful in bringing HA context into a notification
-
-### Links and Actions
-
-- Configurable links for email
-- Actions for email
-- Option to add notification details and link to archive object onto e-mail footer
-
-## Delivery and Target Selection
-
-### Inclusion Default
-
-An advanced and very usable mode is to have all deliveries selected only explicitly/by scenario so nothing is notified unless asked for, rather than by default everything. This works well to minimize noise. However it means every delivery has to have inclusion set to `scenario` or `explicit` manually - make an option in configflow UI to set a global default.
-
-Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a useful delivery mode which is effectively target driven - only consider the transport if there's a target that needs it. On other hand deliveries like Persistence that only make sense if explicit.
-
-## Setup and Configuration
-
-### Extended UI Configuration
-
-Second and further phases identified at [ConfigFlow](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
-
-### Respond to Dynamic Home Assistant Changes
-
-Listen out for changes to users, persons, integrations and change integrations
-
-- User account added, auto-discover incl mobile devices
-- Integration added, reassess viability and add if so ( or remove if integration no longer available )
-- Same code running at supernotify startup and on listen events so consistent behaviour
-
-## Observability
-
-### Delivery Explanations
-
-Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement. `delivery_provenance` (v2.8.0) now records which source enabled or disabled each delivery; suppression reasons and multiple selectors are still to do.
-
-### Telemetry
-
-- HACS may get included in basic stats
-- Current downloads mix direct downloads and clones - https://rhizomatics.github.io/hacs-downloads/
-- See also extracted core version support data - https://claude.ai/artifact/7aGj3qD4uJXa8g3MFvuvNx
-- No obvious way to find out which transport or features are used, other than HA stats on underlying transport usage, e.g. hardly anyone uses SMTP
-
-## Ecosystem
-
-### Packages
-
-See [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
-
-### UI
-
-There must be a better way of sharing dashboards than manual copy and paste of YAML from the [dashboard recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
-
-SignalK has nice idea of having recommended plugins, could be feature PR for HACS
-
-### Extensibility
-
-- Other developers able to create add-ons, see also [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
-- Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
-- Consider moving Generic transport to its own notification toolbox plugin
-
-### AI Friendly
-
-Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
-
-#### Register an LLM API.
-
-HA's homeassistant.helpers.llm lets an integration register a tool set through async_register_api. A notify tool with delivery, scenario and target parameters would work for Assist conversation agents. It should also be reachable through HA's MCP server. Check the current API before committing to this. It is the only option here that makes Supernotify callable by agents, not just easier to configure.
-
-#### Richer services.yaml descriptions.
-
-Every field's description, example and selector are what an LLM sees when it discovers actions. Dynamic delivery and scenario dropdowns via `async_set_service_schema` would help agents as well, since they would see the real delivery names.
-
-#### Structured errors and diagnostics.
-
-Config validation errors that name the key and the valid options let an agent self-correct. `diagnostics.py` helps the same way.
-
-## Internal Improvements
-
-The internals of the code get more complex and harder to debug over time as functionality added, so continual need to go back over and force it to be simpler, while maintaining all reasonable backward compatibility.
-
-### Overhaul use of `data` in pipeline
-
-`extra_data` (and the older nested `data` of `notify.supernotify`) is currently merged into the same `data` that carries delivery, target and scenario data, all the way to the transports. That has some side effects:
-
-- Supernotify's own transports read their options from it, for example `matrix_format` or `chime_tune`, so it is not purely data for the underlying integration
-- `priority`, `message_html`, `spoken_message`, `force_resend` and `timestamp` are taken out of it by the envelope, so a value meant for the target integration, such as a mobile app push's own `priority`, never reaches it
-- some transports, such as email and the generic `ntfy` and `notify_events` handling, read `media` and `actions` from that data rather than from the notification's own, which needs checking against the top level `media` and `actions` used by `supernotify.notify`
-
-The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other than `extra_data` should terminate as soon as action handled. This also means finding another home or some other way of separating the data elements picked up by Supernotify transports. See also ideas on [extending options](#transport-usage-of-extra-data).
-
-Consider simplifying or renaming the `data` section needed for `delivery` definitions and overrides. This could mean that the term `data` only ever appears at the top of an action notification, as Home Assistant standard, and nowhere else.
-
-Overhaul the Envelope's use of pop and get to pick out data elements such as priority. For something like priority the order should be:
-
-- Notification Level
-- Global defaults
-- Action Data
-- Scenarios
-- Envelope Level
-- Target level overrides
-- Delivery Config level overrides
-- Delivery Action Data overrides
-
-The `priority` on the action data would always win, *unless* the action data also had a delivery override with a different priority. (Question - scenarios, deliveries etc should be able to override too, so does a delivery level config priority win over a notification level action priority? Probably should do so, and use delivery overrides in action to resolve that if the default behaviour doesn't suit)
-
-#### Transport Usage of Extra Data
-
-Its possible these are really the same thing as options, but lacking the documentation and passed a different way. Review and see if they can brought into the options setup, so there's automatic document generation for them, and they can be passed in `options` rather than `data`. Check if that completely removes Supernotify usage of `extra_data` and also review use of `options` from actions rather than static config.
-
-(Analyzed for `v2.6.0-beta1`)
-
-| Group                      | Keys                                                                                                                                     | Notes                                                                                                     |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Prefixed transport options | `chime_*`, `discord_*`, `gotify_*`, `html5_*`, `kodi_*`, `lametric_*`, `matrix_*`, `mobile_push_*`, `ntfy_*`, `pushover_*`, `telegram_*` | Removed by their transport, only the remainder reaches the integration                                    |
-| Email                      | `template`, `footer`, `action_url`, `action_url_title`, `snapshot_url` (or `media.snapshot_url`)                                         | `template` and `footer` are Supernotify's own                                                             |
-| Alexa Media Player         | `volume`, `type`, `pause_music`, `restore_volume`, `tts_char_speed`, `volume_fallback`, `wait_for_tts`                                   | Unprefixed                                                                                                |
-| Chime                      | `chime_tune`, `chime_volume`, `chime_duration`, `enqueue`, `announce`                                                                    | `enqueue` and `announce` are `media_player` fields                                                        |
-| Generic                    | `variables`, `value`, `media`, `actions`, `token`, `level`                                                                               | `token` and `level` are for `notify_events`; `media` and `actions` are also top level notification fields |
-| MQTT and persistent        | `topic`, `payload`, `notification_id`                                                                                                    |                                                                                                           |
-| TTS                        | `language`, `cache`, `options`, `media_stream`                                                                                           | Fields of `tts.speak` selected by the transport, so borderline pass-through                               |
-| Handled by the envelope    | `priority`, `message_html`, `spoken_message`, `force_resend`, `timestamp`                                                                | Taken out before the transports see the data, never passed to integrations                                |
-
-#### Other clean-up
-
-Fields like `message_html`,`spoken_message`,`priority` are treated inconsistently across notification and envelope. some belong to both objects as attributes, some to just one.
-
-## Completed Roadmap
-
-- [ConfigFlow](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
-- v2.0.0
-- Partially completed, basic YAML only
-- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md)
-- v2.5.0
-- Delivery provenance in the archive, the first part of [Delivery Explanations](#delivery-explanations)
-- v2.8.0
-- Area, floor and label targets, expanded before envelope generation with dupes resolved
-- v2.9.0
-- [https://github.com/rhizomatics/supernotify/pull/188]
-- MQTT Publish action
-
-## Rejected Roadmap
-
-### Native Area, Floor and Label Targets
-
-Area, floor and label targets are always resolved to entities before any transport sees them. Support transports that understand them natively as an exception, rather than relying on `extra_data`.
-
-No existing standard Home Assistant integrations do this, so its an edge case that can be handled by `extra_data` fine. Reconsider if that ever changes, though its likely that all 'well-behaved' Home Assistant integrations will continue to let the platform resolve these entity selectors.
 
 # Transport Configuration
 

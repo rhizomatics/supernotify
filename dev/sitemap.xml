@@ -101,15 +101,11 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/coverage/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/principles/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/quality_scale_audit_q4_2025/</loc>
-         <lastmod>2026-09-24</lastmod>
-    </url>
-    <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/registry_classes/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
@@ -149,31 +145,43 @@
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/registry_classes/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/classes/transport/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/coverage/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/reference/quality_scale_audit_q4_2025/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/</loc>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/</loc>
+         <lastmod>2026-09-24</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/</loc>
          <lastmod>2026-09-24</lastmod>
     </url>
     <url>

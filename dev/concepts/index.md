@@ -90,4 +90,4 @@ For the technically minded, there's a [Class Diagram](https://supernotify.rhizom
 
 ## Developers
 
-See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md).
+See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
