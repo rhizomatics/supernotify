@@ -73,7 +73,9 @@ There are more examples in the [Recipes](../recipes/index.md) section.
 - If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
 - If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
 - Use [Scenarios](../configuration/scenarios.md) to apply common chunks of config
-- Move to a scenario-only configuration (recommended) by setting `inclusion` to `scenario` (or `explicit`, which is also offered in the action editor's Delivery list) for every delivery, or all at once with [Delivery Control](#delivery-control)
+- Move to a scenario-only configuration (recommended)
+  - From v2.10.0 this is a simple change in the *Delivery Control* settings
+  - In older versions, it requires a YAML change, setting `inclusion` to `scenario` (or `explicit`, which is also offered in the action editor's Delivery list) for every delivery, or all at once with [Delivery Control](#delivery-control)
   - This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
 
 In this snippet, all Delivery configurations for `alexa_devices` will use the defined target group.

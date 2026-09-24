@@ -22,7 +22,8 @@ Scenarios can override specific delivery configurations, general media configura
 * Scenarios used to factor out common code from multiple `delivery` configs in Supernotify, or complicated automations, sequences, scripts, appdaemon apps etc.
 ### Major
 * Fully scenario driven configuration
-    * All `delivery` configurations have `inclusion: scenario` set so they are not enabled by default
+    * All `delivery` configurations have `inclusion: scenario` or `inclusion: explicit` set so they are not enabled by default
+      * From v2.10.0 there's a quick switch in *Delivery Control* options to do this in the UI for all deliveries
     * Notifications that don't match a scenario get dropped
         * Alternatively, a fallback delivery can be selected if every message goes somewhere
     * This is a good option when you're comfortable with the integration and its configuration, and you have noisy notifications, which should be either dropped, or result only in a chime ringing or an Alexa sound playing.
