@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Reset overrides"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Notify {recipient}"
+            }
         }
     },
     "services": {
