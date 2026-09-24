@@ -257,6 +257,32 @@
                     "description": "Überschreibt die konfigurierte Aufbewahrungsdauer für diese Bereinigung, in Tagen"
                 }
             }
+        },
+        "enquire_archive": {
+            "name": "Archiv abfragen",
+            "description": "Gibt archivierte Benachrichtigungen zurueck. Ohne 'id' eine Liste (neueste zuerst); mit 'id' das vollstaendige Detail.",
+            "fields": {
+                "id": {
+                    "name": "Benachrichtigungs-Id",
+                    "description": "Vollstaendiges Detail dieser Benachrichtigung."
+                },
+                "limit": {
+                    "name": "Limit",
+                    "description": "Maximale Anzahl (Standard 20, max 100)."
+                },
+                "after": {
+                    "name": "Nach",
+                    "description": "Nur Benachrichtigungen nach diesem Zeitpunkt."
+                },
+                "before": {
+                    "name": "Vor",
+                    "description": "Nur Benachrichtigungen vor diesem Zeitpunkt."
+                },
+                "outcome": {
+                    "name": "Ergebnis",
+                    "description": "Nur Benachrichtigungen mit diesem Ergebnis."
+                }
+            }
         }
     },
     "config": {
@@ -396,7 +422,10 @@
         },
         "no_media_storage_configured": {
             "message": "Für diese Supernotify-Instanz ist kein Medienspeicher konfiguriert"
-        }
+        },
+    "archive_entry_not_found": {
+      "message": "Kein archivierter Benachrichtigungeintrag mit id {notification_id} gefunden"
+    }
     },
     "options": {
         "step": {

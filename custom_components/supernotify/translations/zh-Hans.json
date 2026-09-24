@@ -257,6 +257,32 @@
                     "description": "覆盖此次清理的配置保留期限，以天为单位"
                 }
             }
+        },
+        "enquire_archive": {
+            "name": "cha xun gui dang",
+            "description": "fan hui yi gui dang de tong zhi. bu dai 'id' fan hui lie biao; dai 'id' fan hui xiang qing.",
+            "fields": {
+                "id": {
+                    "name": "tong zhi id",
+                    "description": "fan hui gai tong zhi de xiang qing."
+                },
+                "limit": {
+                    "name": "shu liang xian zhi",
+                    "description": "fan hui de zui da tong zhi shu liang (mo ren 20, zui duo 100)."
+                },
+                "after": {
+                    "name": "zai ci zhi hou",
+                    "description": "jin fan hui ci ri qi hou chuang jian de tong zhi."
+                },
+                "before": {
+                    "name": "zai ci zhi qian",
+                    "description": "jin fan hui ci ri qi qian chuang jian de tong zhi."
+                },
+                "outcome": {
+                    "name": "jie guo",
+                    "description": "jin fan hui ju you ci jie guo de tong zhi."
+                }
+            }
         }
     },
     "config": {
@@ -396,7 +422,10 @@
         },
         "no_media_storage_configured": {
             "message": "此 Supernotify 实例未配置媒体存储"
-        }
+        },
+    "archive_entry_not_found": {
+      "message": "wei zhao dao id wei {notification_id} de yi gui dang tong zhi"
+    }
     },
     "options": {
         "step": {

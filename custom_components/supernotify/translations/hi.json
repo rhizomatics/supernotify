@@ -257,6 +257,32 @@
                     "description": "इस शुद्धिकरण के लिए कॉन्फ़िगर की गई रिटेंशन अवधि को दिनों में ओवरराइड करें"
                 }
             }
+        },
+        "enquire_archive": {
+            "name": "Sangrah se poochhataachh karen",
+            "description": "Sangrahit adhisoochanaen lautaata hai.",
+            "fields": {
+                "id": {
+                    "name": "Adhisoochana id",
+                    "description": "Is adhisoochana ka poora vivaran."
+                },
+                "limit": {
+                    "name": "Seema",
+                    "description": "Adhiktam adhisoochanaen (default 20, max 100)."
+                },
+                "after": {
+                    "name": "Baad",
+                    "description": "Is dina ke baad banai gayi adhisoochanaen."
+                },
+                "before": {
+                    "name": "Pahle",
+                    "description": "Is dina se pahle banai gayi adhisoochanaen."
+                },
+                "outcome": {
+                    "name": "Parinam",
+                    "description": "Keval is parinam vaali adhisoochanaen."
+                }
+            }
         }
     },
     "config": {
@@ -396,7 +422,10 @@
         },
         "no_media_storage_configured": {
             "message": "इस Supernotify इंस्टेंस के लिए कोई मीडिया संग्रहण कॉन्फ़िगर नहीं किया गया है"
-        }
+        },
+    "archive_entry_not_found": {
+      "message": "id {notification_id} ke saath koi sangraheet adhisoochana nahin mili"
+    }
     },
     "options": {
         "step": {

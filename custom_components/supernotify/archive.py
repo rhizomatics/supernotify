@@ -217,6 +217,61 @@ class ArchiveDirectory(ArchiveDestination):
                         _LOGGER.exception("SUPERNOTIFY Unable to archive minimal notification")
         return archived
 
+    async def list_entries(
+        self,
+        limit: int = 20,
+        after: dt.datetime | None = None,
+        before: dt.datetime | None = None,
+        outcome: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return up to *limit* archived notifications, newest first.
+
+        Optional *after* and *before* filter by the ``created`` timestamp stored in
+        each archive file. Optional *outcome* keeps only notifications whose top-level
+        ``outcome`` field matches (case-sensitive, e.g. ``"SUCCESS"``).
+        """
+        if not self.archive_path or not await self.archive_path.exists():
+            return []
+        entries: list[dict[str, Any]] = []
+        try:
+            raw_scan = await aiofiles.os.scandir(self.archive_path)
+            files = [e for e in raw_scan if e.name.endswith(".json") and e.name != WRITE_TEST]
+            files.sort(key=lambda e: e.stat().st_ctime, reverse=True)
+            for entry in files:
+                if len(entries) >= limit:
+                    break
+                try:
+                    async with aiofiles.open(entry.path, mode="r") as fh:
+                        data: dict[str, Any] = json.loads(await fh.read())
+                except Exception as exc:
+                    _LOGGER.debug("SUPERNOTIFY Skipping unreadable archive file %s: %s", entry.name, exc)
+                    continue
+                created_raw: str | None = data.get("created")
+                if after is not None and created_raw is not None and created_raw < after.isoformat():
+                    continue
+                if before is not None and created_raw is not None and created_raw > before.isoformat():
+                    continue
+                if outcome is not None and data.get("outcome") != outcome:
+                    continue
+                entries.append(data)
+        except Exception as exc:
+            _LOGGER.warning("SUPERNOTIFY Unable to list archive entries: %s", exc)
+        return entries
+
+    async def read_entry(self, notification_id: str) -> dict[str, Any] | None:
+        """Return the full JSON of one archived notification by its id, or ``None``."""
+        if not self.archive_path or not await self.archive_path.exists():
+            return None
+        try:
+            raw_scan = await aiofiles.os.scandir(self.archive_path)
+            for entry in raw_scan:
+                if entry.name.endswith(".json") and notification_id in entry.name:
+                    async with aiofiles.open(entry.path, mode="r") as fh:
+                        return json.loads(await fh.read())
+        except Exception as exc:
+            _LOGGER.warning("SUPERNOTIFY Unable to read archive entry %s: %s", notification_id, exc)
+        return None
+
     async def size(self) -> int:
         path = self.archive_path
         if path and await path.exists():

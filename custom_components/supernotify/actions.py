@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
@@ -133,6 +134,7 @@ def merge_delivery_fields(data: dict[str, Any]) -> dict[str, Any]:
 
 ACTION_NAMES: Final[tuple[str, ...]] = (
     "notify",
+    "enquire_archive",
     "enquire_configuration",
     "enquire_implicit_deliveries",
     "enquire_deliveries_by_scenario",
@@ -275,6 +277,33 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     def supplemental_action_enquire_recipients(_call: ServiceCall) -> dict[str, Any]:
         return {"recipients": engine.enquire_recipients()}
 
+    async def supplemental_action_enquire_archive(call: ServiceCall) -> dict[str, Any]:
+        archive = engine.context.archive
+        if not archive.enabled or not archive.archive_directory:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_archive_configured",
+            )
+        notification_id: str | None = call.data.get("id")
+        if notification_id:
+            entry = await archive.archive_directory.read_entry(notification_id)
+            if entry is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="archive_entry_not_found",
+                )
+            return entry
+        limit: int = int(call.data.get("limit", 20))
+        after_raw: str | None = call.data.get("after")
+        before_raw: str | None = call.data.get("before")
+        outcome: str | None = call.data.get("outcome")
+        after = dt.datetime.fromisoformat(after_raw) if after_raw else None
+        before = dt.datetime.fromisoformat(before_raw) if before_raw else None
+        entries = await archive.archive_directory.list_entries(
+            limit=limit, after=after, before=before, outcome=outcome
+        )
+        return {"notifications": entries, "count": len(entries)}
+
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
         if not engine.context.archive.enabled:
@@ -329,6 +358,12 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         DOMAIN,
         "enquire_deliveries_by_scenario",
         supplemental_action_enquire_deliveries_by_scenario,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "enquire_archive",
+        supplemental_action_enquire_archive,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
