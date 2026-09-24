@@ -260,27 +260,27 @@
         },
         "enquire_archive": {
             "name": "Consultar arquivo",
-            "description": "Retorna notificacoes arquivadas. Sem 'id' uma lista; com 'id' o detalhe completo.",
+            "description": "Devolve as notificações arquivadas. Sem 'id' devolve uma lista (a mais recente primeiro); com 'id' devolve o detalhe completo de uma notificação.",
             "fields": {
                 "id": {
-                    "name": "Id da notificacao",
-                    "description": "Detalhe completo desta notificacao."
+                    "name": "Id da notificação",
+                    "description": "Devolver o detalhe completo desta notificação."
                 },
                 "limit": {
                     "name": "Limite",
-                    "description": "Numero maximo (padrao 20, max 100)."
+                    "description": "Número máximo de notificações a devolver (20 por predefinição, 100 no máximo)."
                 },
                 "after": {
-                    "name": "Apos",
-                    "description": "Apenas notificacoes apos esta data."
+                    "name": "Depois de",
+                    "description": "Devolver apenas as notificações criadas depois desta data e hora."
                 },
                 "before": {
                     "name": "Antes de",
-                    "description": "Apenas notificacoes antes desta data."
+                    "description": "Devolver apenas as notificações criadas antes desta data e hora."
                 },
                 "outcome": {
                     "name": "Resultado",
-                    "description": "Apenas notificacoes com este resultado."
+                    "description": "Devolver apenas as notificações com este resultado."
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "Nenhum armazenamento de mídia configurado para esta instância do Supernotify"
         },
-    "archive_entry_not_found": {
-      "message": "Nenhuma notificacao arquivada encontrada com id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "Nenhuma notificação arquivada encontrada com o id {notification_id}"
+        }
     },
     "options": {
         "step": {

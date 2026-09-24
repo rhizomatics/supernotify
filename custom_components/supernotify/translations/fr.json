@@ -259,28 +259,28 @@
             }
         },
         "enquire_archive": {
-            "name": "Consulter l archive",
-            "description": "Retourne les notifications archivees. Sans 'id' une liste; avec 'id' le detail complet.",
+            "name": "Consulter l'archive",
+            "description": "Renvoie les notifications archivées. Sans 'id', renvoie une liste (la plus récente d'abord) ; avec 'id', renvoie le détail complet d'une notification.",
             "fields": {
                 "id": {
                     "name": "Id de notification",
-                    "description": "Retourne le detail complet."
+                    "description": "Renvoyer le détail complet de cette notification."
                 },
                 "limit": {
                     "name": "Limite",
-                    "description": "Nombre maximum (par defaut 20, max 100)."
+                    "description": "Nombre maximum de notifications à renvoyer (20 par défaut, 100 au maximum)."
                 },
                 "after": {
-                    "name": "Apres",
-                    "description": "Uniquement les notifications apres cette date."
+                    "name": "Après",
+                    "description": "Renvoyer uniquement les notifications créées après cette date et heure."
                 },
                 "before": {
                     "name": "Avant",
-                    "description": "Uniquement les notifications avant cette date."
+                    "description": "Renvoyer uniquement les notifications créées avant cette date et heure."
                 },
                 "outcome": {
-                    "name": "Resultat",
-                    "description": "Uniquement les notifications avec ce resultat."
+                    "name": "Résultat",
+                    "description": "Renvoyer uniquement les notifications ayant ce résultat."
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "Aucun stockage multimédia n'est configuré pour cette instance Supernotify"
         },
-    "archive_entry_not_found": {
-      "message": "Aucune notification archivee trouvee avec l id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "Aucune notification archivée trouvée avec l'id {notification_id}"
+        }
     },
     "options": {
         "step": {

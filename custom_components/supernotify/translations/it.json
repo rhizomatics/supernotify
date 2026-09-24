@@ -260,7 +260,7 @@
         },
         "enquire_archive": {
             "name": "Interroga archivio",
-            "description": "Restituisce le notifiche archiviate. Senza 'id' una lista (dalla piu recente); con 'id' il dettaglio completo di una notifica.",
+            "description": "Restituisce le notifiche archiviate. Senza 'id' una lista (dalla più recente); con 'id' il dettaglio completo di una notifica.",
             "fields": {
                 "id": {
                     "name": "Id notifica",
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "Nessuna memoria multimediale configurata per questa istanza di Supernotify"
         },
-    "archive_entry_not_found": {
-      "message": "Nessuna notifica archiviata trovata con id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "Nessuna notifica archiviata trovata con id {notification_id}"
+        }
     },
     "options": {
         "step": {

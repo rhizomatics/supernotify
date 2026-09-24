@@ -260,27 +260,27 @@
         },
         "enquire_archive": {
             "name": "Archiv abfragen",
-            "description": "Gibt archivierte Benachrichtigungen zurueck. Ohne 'id' eine Liste (neueste zuerst); mit 'id' das vollstaendige Detail.",
+            "description": "Gibt archivierte Benachrichtigungen zurück. Ohne 'id' eine Liste (neueste zuerst); mit 'id' alle Details einer Benachrichtigung.",
             "fields": {
                 "id": {
-                    "name": "Benachrichtigungs-Id",
-                    "description": "Vollstaendiges Detail dieser Benachrichtigung."
+                    "name": "Benachrichtigungs-ID",
+                    "description": "Alle Details dieser einen Benachrichtigung zurückgeben."
                 },
                 "limit": {
-                    "name": "Limit",
-                    "description": "Maximale Anzahl (Standard 20, max 100)."
+                    "name": "Höchstanzahl",
+                    "description": "Maximale Anzahl zurückgegebener Benachrichtigungen (Standard 20, höchstens 100)."
                 },
                 "after": {
                     "name": "Nach",
-                    "description": "Nur Benachrichtigungen nach diesem Zeitpunkt."
+                    "description": "Nur Benachrichtigungen zurückgeben, die nach diesem Datum und dieser Uhrzeit erstellt wurden."
                 },
                 "before": {
                     "name": "Vor",
-                    "description": "Nur Benachrichtigungen vor diesem Zeitpunkt."
+                    "description": "Nur Benachrichtigungen zurückgeben, die vor diesem Datum und dieser Uhrzeit erstellt wurden."
                 },
                 "outcome": {
                     "name": "Ergebnis",
-                    "description": "Nur Benachrichtigungen mit diesem Ergebnis."
+                    "description": "Nur Benachrichtigungen mit diesem Ergebnis zurückgeben."
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "Für diese Supernotify-Instanz ist kein Medienspeicher konfiguriert"
         },
-    "archive_entry_not_found": {
-      "message": "Kein archivierter Benachrichtigungeintrag mit id {notification_id} gefunden"
-    }
+        "archive_entry_not_found": {
+            "message": "Keine archivierte Benachrichtigung mit der ID {notification_id} gefunden"
+        }
     },
     "options": {
         "step": {

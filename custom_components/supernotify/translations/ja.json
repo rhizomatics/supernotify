@@ -259,28 +259,28 @@
             }
         },
         "enquire_archive": {
-            "name": "akaibu wo shokai",
-            "description": "akaibu sareta tsuchi wo henkyaku shimasu.",
+            "name": "アーカイブを照会",
+            "description": "アーカイブされた通知を返します。'id' を指定しない場合は一覧（新しい順）、'id' を指定した場合はその通知の詳細をすべて返します。",
             "fields": {
                 "id": {
-                    "name": "tsuchi id",
-                    "description": "kono tsuchi no kanzen na shousai."
+                    "name": "通知 ID",
+                    "description": "この通知の詳細をすべて返します。"
                 },
                 "limit": {
-                    "name": "jougen",
-                    "description": "henkyaku suru tsuchi no saidai-su (default 20, max 100)."
+                    "name": "上限",
+                    "description": "返す通知の最大数（既定値 20、最大 100）。"
                 },
                 "after": {
-                    "name": "igo",
-                    "description": "kono nichiji igo ni sakusei sareta tsuchi nomi."
+                    "name": "以降",
+                    "description": "この日時より後に作成された通知のみを返します。"
                 },
                 "before": {
-                    "name": "izen",
-                    "description": "kono nichiji izen ni sakusei sareta tsuchi nomi."
+                    "name": "以前",
+                    "description": "この日時より前に作成された通知のみを返します。"
                 },
                 "outcome": {
-                    "name": "kekka",
-                    "description": "kono kekka no tsuchi nomi."
+                    "name": "結果",
+                    "description": "この結果の通知のみを返します。"
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "この Supernotify インスタンスにはメディアストレージが設定されていません"
         },
-    "archive_entry_not_found": {
-      "message": "id {notification_id} no akaibu sareta tsuchi ga mitsukarimasen"
-    }
+        "archive_entry_not_found": {
+            "message": "ID {notification_id} のアーカイブされた通知が見つかりません"
+        }
     },
     "options": {
         "step": {

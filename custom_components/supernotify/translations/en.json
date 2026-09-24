@@ -524,9 +524,9 @@
         "no_media_storage_configured": {
             "message": "No media storage configured for this Supernotify instance"
         },
-    "archive_entry_not_found": {
-      "message": "No archived notification found with id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "No archived notification found with id {notification_id}"
+        }
     },
     "selector": {
         "dupe_policy": {

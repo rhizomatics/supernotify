@@ -259,28 +259,28 @@
             }
         },
         "enquire_archive": {
-            "name": "Sangrah se poochhataachh karen",
-            "description": "Sangrahit adhisoochanaen lautaata hai.",
+            "name": "संग्रह से पूछताछ करें",
+            "description": "संग्रहीत सूचनाएँ लौटाता है। 'id' के बिना एक सूची (सबसे नई पहले); 'id' के साथ एक सूचना का पूरा विवरण।",
             "fields": {
                 "id": {
-                    "name": "Adhisoochana id",
-                    "description": "Is adhisoochana ka poora vivaran."
+                    "name": "सूचना id",
+                    "description": "इस एक सूचना का पूरा विवरण लौटाएँ।"
                 },
                 "limit": {
-                    "name": "Seema",
-                    "description": "Adhiktam adhisoochanaen (default 20, max 100)."
+                    "name": "सीमा",
+                    "description": "लौटाई जाने वाली सूचनाओं की अधिकतम संख्या (डिफ़ॉल्ट 20, अधिकतम 100)।"
                 },
                 "after": {
-                    "name": "Baad",
-                    "description": "Is dina ke baad banai gayi adhisoochanaen."
+                    "name": "इसके बाद",
+                    "description": "केवल इस तिथि/समय के बाद बनी सूचनाएँ लौटाएँ।"
                 },
                 "before": {
-                    "name": "Pahle",
-                    "description": "Is dina se pahle banai gayi adhisoochanaen."
+                    "name": "इससे पहले",
+                    "description": "केवल इस तिथि/समय से पहले बनी सूचनाएँ लौटाएँ।"
                 },
                 "outcome": {
-                    "name": "Parinam",
-                    "description": "Keval is parinam vaali adhisoochanaen."
+                    "name": "परिणाम",
+                    "description": "केवल इस परिणाम वाली सूचनाएँ लौटाएँ।"
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "इस Supernotify इंस्टेंस के लिए कोई मीडिया संग्रहण कॉन्फ़िगर नहीं किया गया है"
         },
-    "archive_entry_not_found": {
-      "message": "id {notification_id} ke saath koi sangraheet adhisoochana nahin mili"
-    }
+        "archive_entry_not_found": {
+            "message": "id {notification_id} वाली कोई संग्रहीत सूचना नहीं मिली"
+        }
     },
     "options": {
         "step": {

@@ -260,27 +260,27 @@
         },
         "enquire_archive": {
             "name": "Consultar archivo",
-            "description": "Devuelve notificaciones archivadas. Sin 'id' una lista; con 'id' el detalle completo.",
+            "description": "Devuelve las notificaciones archivadas. Sin 'id' devuelve una lista (la más reciente primero); con 'id' devuelve todo el detalle de una notificación.",
             "fields": {
                 "id": {
-                    "name": "Id de notificacion",
-                    "description": "Devuelve el detalle completo."
+                    "name": "Id de notificación",
+                    "description": "Devolver todo el detalle de esta notificación."
                 },
                 "limit": {
-                    "name": "Limite",
-                    "description": "Maximo de notificaciones (por defecto 20, max 100)."
+                    "name": "Límite",
+                    "description": "Número máximo de notificaciones a devolver (20 por defecto, 100 como máximo)."
                 },
                 "after": {
-                    "name": "Despues de",
-                    "description": "Solo notificaciones despues de esta fecha."
+                    "name": "Después de",
+                    "description": "Devolver solo las notificaciones creadas después de esta fecha y hora."
                 },
                 "before": {
                     "name": "Antes de",
-                    "description": "Solo notificaciones antes de esta fecha."
+                    "description": "Devolver solo las notificaciones creadas antes de esta fecha y hora."
                 },
                 "outcome": {
                     "name": "Resultado",
-                    "description": "Solo notificaciones con este resultado."
+                    "description": "Devolver solo las notificaciones con este resultado."
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "No hay ningún almacenamiento de medios configurado para esta instancia de Supernotify"
         },
-    "archive_entry_not_found": {
-      "message": "No se encontro ninguna notificacion archivada con id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "No se encontró ninguna notificación archivada con el id {notification_id}"
+        }
     },
     "options": {
         "step": {

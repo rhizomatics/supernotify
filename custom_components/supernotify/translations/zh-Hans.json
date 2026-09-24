@@ -259,28 +259,28 @@
             }
         },
         "enquire_archive": {
-            "name": "cha xun gui dang",
-            "description": "fan hui yi gui dang de tong zhi. bu dai 'id' fan hui lie biao; dai 'id' fan hui xiang qing.",
+            "name": "查询归档",
+            "description": "返回已归档的通知。不带 'id' 时返回列表（最新的在前）；带 'id' 时返回该通知的完整详情。",
             "fields": {
                 "id": {
-                    "name": "tong zhi id",
-                    "description": "fan hui gai tong zhi de xiang qing."
+                    "name": "通知 ID",
+                    "description": "返回这条通知的完整详情。"
                 },
                 "limit": {
-                    "name": "shu liang xian zhi",
-                    "description": "fan hui de zui da tong zhi shu liang (mo ren 20, zui duo 100)."
+                    "name": "数量上限",
+                    "description": "返回的通知的最大数量（默认 20，最多 100）。"
                 },
                 "after": {
-                    "name": "zai ci zhi hou",
-                    "description": "jin fan hui ci ri qi hou chuang jian de tong zhi."
+                    "name": "之后",
+                    "description": "只返回在此日期时间之后创建的通知。"
                 },
                 "before": {
-                    "name": "zai ci zhi qian",
-                    "description": "jin fan hui ci ri qi qian chuang jian de tong zhi."
+                    "name": "之前",
+                    "description": "只返回在此日期时间之前创建的通知。"
                 },
                 "outcome": {
-                    "name": "jie guo",
-                    "description": "jin fan hui ju you ci jie guo de tong zhi."
+                    "name": "结果",
+                    "description": "只返回具有此结果的通知。"
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "此 Supernotify 实例未配置媒体存储"
         },
-    "archive_entry_not_found": {
-      "message": "wei zhao dao id wei {notification_id} de yi gui dang tong zhi"
-    }
+        "archive_entry_not_found": {
+            "message": "未找到 ID 为 {notification_id} 的已归档通知"
+        }
     },
     "options": {
         "step": {

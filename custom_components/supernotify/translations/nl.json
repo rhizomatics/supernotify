@@ -260,27 +260,27 @@
         },
         "enquire_archive": {
             "name": "Archief opvragen",
-            "description": "Geeft gearchiveerde meldingen terug. Zonder 'id' een lijst; met 'id' het volledige detail.",
+            "description": "Geeft gearchiveerde meldingen terug. Zonder 'id' een lijst (nieuwste eerst); met 'id' alle details van één melding.",
             "fields": {
                 "id": {
                     "name": "Meldings-id",
-                    "description": "Het volledige detail van deze melding."
+                    "description": "Alle details van deze ene melding teruggeven."
                 },
                 "limit": {
                     "name": "Limiet",
-                    "description": "Maximaal (standaard 20, max 100)."
+                    "description": "Maximaal aantal meldingen om terug te geven (standaard 20, maximaal 100)."
                 },
                 "after": {
                     "name": "Na",
-                    "description": "Alleen meldingen na deze datum."
+                    "description": "Alleen meldingen teruggeven die na deze datum en tijd zijn gemaakt."
                 },
                 "before": {
                     "name": "Voor",
-                    "description": "Alleen meldingen voor deze datum."
+                    "description": "Alleen meldingen teruggeven die vóór deze datum en tijd zijn gemaakt."
                 },
                 "outcome": {
                     "name": "Resultaat",
-                    "description": "Alleen meldingen met dit resultaat."
+                    "description": "Alleen meldingen met dit resultaat teruggeven."
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "Er is geen media-opslag geconfigureerd voor deze Supernotify-instantie"
         },
-    "archive_entry_not_found": {
-      "message": "Geen gearchiveerde melding gevonden met id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "Geen gearchiveerde melding gevonden met id {notification_id}"
+        }
     },
     "options": {
         "step": {

@@ -260,27 +260,27 @@
         },
         "enquire_archive": {
             "name": "Zapytaj archiwum",
-            "description": "Zwraca zarchiwizowane powiadomienia. Bez 'id' lista; z 'id' pelne szczegoly.",
+            "description": "Zwraca zarchiwizowane powiadomienia. Bez 'id' zwraca listę (najnowsze najpierw); z 'id' pełne szczegóły jednego powiadomienia.",
             "fields": {
                 "id": {
                     "name": "Id powiadomienia",
-                    "description": "Pelne szczegoly tego powiadomienia."
+                    "description": "Zwróć pełne szczegóły tego jednego powiadomienia."
                 },
                 "limit": {
-                    "name": "Limit",
-                    "description": "Maksymalna liczba (domyslnie 20, maks 100)."
+                    "name": "Maksymalna liczba",
+                    "description": "Maksymalna liczba zwracanych powiadomień (domyślnie 20, najwyżej 100)."
                 },
                 "after": {
                     "name": "Po",
-                    "description": "Tylko powiadomienia po tej dacie."
+                    "description": "Zwróć tylko powiadomienia utworzone po tej dacie i godzinie."
                 },
                 "before": {
                     "name": "Przed",
-                    "description": "Tylko powiadomienia przed ta data."
+                    "description": "Zwróć tylko powiadomienia utworzone przed tą datą i godziną."
                 },
                 "outcome": {
                     "name": "Wynik",
-                    "description": "Tylko powiadomienia z tym wynikiem."
+                    "description": "Zwróć tylko powiadomienia z tym wynikiem."
                 }
             }
         }
@@ -423,9 +423,9 @@
         "no_media_storage_configured": {
             "message": "Dla tej instancji Supernotify nie skonfigurowano magazynu multimediów"
         },
-    "archive_entry_not_found": {
-      "message": "Nie znaleziono zarchiwizowanego powiadomienia o id {notification_id}"
-    }
+        "archive_entry_not_found": {
+            "message": "Nie znaleziono zarchiwizowanego powiadomienia o id {notification_id}"
+        }
     },
     "options": {
         "step": {
