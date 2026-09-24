@@ -7219,7 +7219,7 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
-## v2.9.1
+## v2.9.1 - Snooze Fix
 
 ### Snoozing
 
@@ -7234,7 +7234,7 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 - JSON schema IDs corrected
 - Developer documentation restructured and concepts added with diagram
 
-## v2.9.0
+## v2.9.0 - Target Selection
 
 This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
 
@@ -7275,7 +7275,7 @@ This version brings target selection up to date with all the latest Home Assista
 - Fixed test cleanup so test images don't build up in local directory
 - New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
 
-## v2.8.0
+## v2.8.0 - Proper Entities Part 2
 
 ### Delivery and Transport Switches
 
@@ -7312,7 +7312,7 @@ This version brings target selection up to date with all the latest Home Assista
 
 - Cleaned up some spurious or noisy debug logging for test execution
 
-## 2.7.0
+## 2.7.0 - Proper Entities Part 1
 
 ### Native Entities
 
@@ -7348,7 +7348,7 @@ This version brings target selection up to date with all the latest Home Assista
 
 - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
 
-## 2.6.0
+## 2.6.0 - Notification UI
 
 ### Action Data
 
@@ -7387,7 +7387,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 
 - `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 
-## 2.5.3
+## 2.5.3 - Voice Improvements
 
 ### Spoken Notifications
 
@@ -7422,7 +7422,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 - Simple *Live Activity* for a dishwasher
 - This will be improved to support progress bars etc
 
-## 2.5.0
+## 2.5.0 - Delivery Overhaul
 
 ### Deliveries
 
