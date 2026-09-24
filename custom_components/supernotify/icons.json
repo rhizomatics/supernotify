@@ -43,6 +43,11 @@
             "reset_overrides": {
                 "default": "mdi:restore"
             }
+        },
+        "notify": {
+            "recipient": {
+                "default": "mdi:account-bell"
+            }
         }
     }
 }
