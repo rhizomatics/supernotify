@@ -35,7 +35,7 @@ SENTENCES: dict[str, list[str]] = {
         "(tell|notify|message) {name} (that|saying) {message}",
         "send [a] (message|notification) to {name} (that|saying) {message}",
     ],
-    "snooze_minutes": ["(snooze|mute|pause) [all] [my] notifications for {minutes} minutes"],
+    "snooze_minutes": ["(snooze|mute|pause) [all] [my] notifications for [the] [next] {minutes} minutes"],
     "snooze_hour": ["(snooze|mute|pause) [all] [my] notifications for [an|one] hour"],
     "silence": ["(silence|mute) [all] [my] notifications [until I say]"],
     "resume": [
@@ -82,7 +82,7 @@ async def async_respond(engine: SupernotifyEngine, command: str, slots: dict[str
     if command == "last":
         return _last(engine)
     if command == "snooze_minutes":
-        minutes = str(slots.get("minutes", "")).strip()
+        minutes = str(slots.get("minutes", "")).strip().removeprefix("the ").strip().removeprefix("next ").strip()
         if not minutes.isdigit() or int(minutes) < 1:
             return "Say how many minutes as a number, for example snooze notifications for 30 minutes"
         return _snooze(engine, CommandType.SNOOZE, context, dt.timedelta(minutes=int(minutes)))

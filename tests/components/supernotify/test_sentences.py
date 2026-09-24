@@ -138,6 +138,16 @@ async def test_snooze_minutes_for_person_asking(hass: HomeAssistant) -> None:
     assert snooze.snooze_until is not None
 
 
+async def test_snooze_for_the_next_minutes(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_minutes", {"minutes": "the next 40"}, Context())
+
+    assert response.startswith("Snoozed all notifications until ")
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.snooze_until is not None
+
+
 async def test_snooze_minutes_must_be_a_number(hass: HomeAssistant) -> None:
     engine, _calls = await _setup(hass)
 
