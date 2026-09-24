@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "Opcje archiwum"
+                "title": "Opcje archiwum",
+                "description": "[Dowiedz się więcej]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "Maksymalna liczba ostatnich powiadomień zapamiętywanych na potrzeby wykrywania duplikatów",
                     "dupe_policy": "Jak rygorystycznie porównywane są powiadomienia w celu wykrycia duplikatów"
                 },
-                "title": "Opcje wykrywania duplikatów"
+                "title": "Opcje wykrywania duplikatów",
+                "description": "[Dowiedz się więcej]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

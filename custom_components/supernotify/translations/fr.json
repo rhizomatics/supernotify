@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "Options d'archivage"
+                "title": "Options d'archivage",
+                "description": "[En savoir plus]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "Nombre maximal de notifications récentes mémorisées pour la détection des doublons",
                     "dupe_policy": "Avec quelle rigueur les notifications sont comparées pour détecter les doublons"
                 },
-                "title": "Options de détection des doublons"
+                "title": "Options de détection des doublons",
+                "description": "[En savoir plus]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

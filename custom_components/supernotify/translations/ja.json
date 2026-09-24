@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "アーカイブオプション"
+                "title": "アーカイブオプション",
+                "description": "[詳細]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "重複検出のために記憶される最近の通知の最大数",
                     "dupe_policy": "重複を検出するために通知をどの程度厳密に比較するか"
                 },
-                "title": "重複検出オプション"
+                "title": "重複検出オプション",
+                "description": "[詳細]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

@@ -395,7 +395,8 @@
                         }
                     }
                 },
-                "title": "Archive Options"
+                "title": "Archive Options",
+                "description": "[Learn more]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -408,7 +409,8 @@
                     "size": "Maximum number of recent notifications remembered for duplicate detection",
                     "dupe_policy": "How strictly notifications are compared to detect duplicates"
                 },
-                "title": "Duplicate Detection Options"
+                "title": "Duplicate Detection Options",
+                "description": "[Learn more]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

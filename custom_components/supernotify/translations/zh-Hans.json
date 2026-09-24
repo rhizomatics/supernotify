@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "存档选项"
+                "title": "存档选项",
+                "description": "[了解更多]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "用于重复检测而记住的最近通知的最大数量",
                     "dupe_policy": "比较通知以检测重复项的严格程度"
                 },
-                "title": "重复检测选项"
+                "title": "重复检测选项",
+                "description": "[了解更多]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "Archivoptionen"
+                "title": "Archivoptionen",
+                "description": "[Mehr erfahren]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "Maximale Anzahl kürzlich gespeicherter Benachrichtigungen zur Duplikaterkennung",
                     "dupe_policy": "Wie streng Benachrichtigungen verglichen werden, um Duplikate zu erkennen"
                 },
-                "title": "Optionen für Duplikaterkennung"
+                "title": "Optionen für Duplikaterkennung",
+                "description": "[Mehr erfahren]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

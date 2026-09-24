@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "Archiefopties"
+                "title": "Archiefopties",
+                "description": "[Meer informatie]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "Maximaal aantal recente meldingen dat wordt onthouden voor duplicaatdetectie",
                     "dupe_policy": "Hoe strikt meldingen worden vergeleken om duplicaten te detecteren"
                 },
-                "title": "Opties voor duplicaatdetectie"
+                "title": "Opties voor duplicaatdetectie",
+                "description": "[Meer informatie]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {

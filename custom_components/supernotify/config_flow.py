@@ -66,6 +66,11 @@ _LOGGER = logging.getLogger(__name__)
 
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
 
+# Linked from the options pages that have their own documentation page - the "?" help icon can only
+# link to the manifest's one documentation URL
+ARCHIVE_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/"
+DUPE_CHECK_DOCS_URL = "https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/"
+
 # The Delivery Control choices meaning "not set", which leave deliveries with their transport's own
 # default - never stored, the option is left out instead
 NOT_SET_INCLUSION = "transport"
@@ -375,7 +380,9 @@ class SupernotifyOptionsFlow(OptionsFlow):
             },
         }
         schema = self.add_suggested_values_to_schema(schema, suggested_values)
-        return self.async_show_form(step_id="archive", data_schema=schema)
+        return self.async_show_form(
+            step_id="archive", data_schema=schema, description_placeholders={"learn_more_url": ARCHIVE_DOCS_URL}
+        )
 
     async def async_step_dupe_check(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         current: dict[str, Any] = self.config_entry.options.get(CONF_DUPE_CHECK, {})
@@ -388,7 +395,9 @@ class SupernotifyOptionsFlow(OptionsFlow):
                 SelectSelectorConfig(options=_DUPE_POLICIES, translation_key="dupe_policy")
             ),
         })
-        return self.async_show_form(step_id="dupe_check", data_schema=schema)
+        return self.async_show_form(
+            step_id="dupe_check", data_schema=schema, description_placeholders={"learn_more_url": DUPE_CHECK_DOCS_URL}
+        )
 
     async def async_step_housekeeping(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         current: dict[str, Any] = self.config_entry.options.get(CONF_HOUSEKEEPING, {})

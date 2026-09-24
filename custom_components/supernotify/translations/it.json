@@ -487,7 +487,8 @@
                         }
                     }
                 },
-                "title": "Opzioni archivio"
+                "title": "Opzioni archivio",
+                "description": "[Scopri di più]({learn_more_url})"
             },
             "dupe_check": {
                 "data": {
@@ -500,7 +501,8 @@
                     "size": "Numero massimo di notifiche recenti ricordate ai fini del rilevamento dei duplicati",
                     "dupe_policy": "Con quale rigore le notifiche vengono confrontate per rilevare i duplicati"
                 },
-                "title": "Opzioni rilevamento duplicati"
+                "title": "Opzioni rilevamento duplicati",
+                "description": "[Scopri di più]({learn_more_url})"
             },
             "housekeeping": {
                 "data": {
