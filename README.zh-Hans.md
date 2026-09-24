@@ -49,7 +49,7 @@ Supernotify 是通过 [Home Assistant 社区商店](https://hacs.xyz)（**HACS**
 
 ## 文档
 
-请查阅[快速入门](https://supernotify.rhizomatics.org.uk/getting_started/)、[核心概念](https://supernotify.rhizomatics.org.uk/concepts/)说明以及可用的[传输适配器](https://supernotify.rhizomatics.org.uk/transports/)。[发送通知](https://supernotify.rhizomatics.org.uk/usage/notifying/)介绍了如何从自动化或开发者工具操作页面调用 Supernotify。
+请查阅[快速入门](https://supernotify.rhizomatics.org.uk/getting_started/)、[核心概念](https://supernotify.rhizomatics.org.uk/zh-Hans/concepts/)说明以及可用的[传输适配器](https://supernotify.rhizomatics.org.uk/transports/)。[发送通知](https://supernotify.rhizomatics.org.uk/usage/notifying/)介绍了如何从自动化或开发者工具操作页面调用 Supernotify。
 
 还有许多包含示例配置的[使用示例](https://supernotify.rhizomatics.org.uk/recipes/)，也可按[标签](https://supernotify.rhizomatics.org.uk/tags/)浏览。
 

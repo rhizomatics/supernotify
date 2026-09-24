@@ -21,6 +21,19 @@ Switch from `voluptuous` to `probatio`
 
 See [Packages](./packages.md)
 
+### Telemetry
+
+- HACS may get included in basic stats
+- Current downloads mix direct downloads and clones - https://rhizomatics.github.io/hacs-downloads/
+  - See also extracted core version support data - https://claude.ai/artifact/7aGj3qD4uJXa8g3MFvuvNx
+- No obvious way to find out which transport or features are used, other than HA stats on underlying transport usage, e.g. hardly anyone uses SMTP
+
+### Extensibility
+
+- Other developers able to create add-ons, see also [Packages](./packages.md)
+- Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
+- Consider moving Generic transport to its own notification toolbox plugin
+
 ### Extended UI Configuration
 
 Second and further phases identified at [ConfigFlow](./configflow_approach.md)
@@ -56,7 +69,7 @@ Moving window quota per priority. Per delivery / scenario limits.
 
 ### Holiday support
 
-Randomization for greetings and sounds.
+Randomization for greetings and sounds. Sleigh bells are nice on first notification, annoying after that if every announcement has same one.
 
 ### Miscellaneous
 
@@ -74,6 +87,12 @@ Randomization for greetings and sounds.
 ### Delivery Explanations
 
 Better explain in the archived message, the basis on which any single delivery was added or suppressed, including if several methods selected it, and if the code that made the decision is felt to be in need of improvement.
+
+Option to add notification details and link to archive object onto e-mail footer.
+
+### HTML Email
+
+Revisit the HTML template, review if more than 1 needed, and ways to make it more useful in bringing HA context into a notification
 
 ### Inclusion Default
 
@@ -96,7 +115,7 @@ The internals of the code get more complex and harder to debug over time as func
   from that data rather than from the notification's own, which needs checking against the top level `media`
   and `actions` used by `supernotify.notify`
 
-The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other than `extra_data` should terminate as soon as action handled. This also means finding another home or some other way of separating the data elements picked up by Supernotify transports.
+The plan is for `extra_data` to be passed through untouched, with Supernotify's own transport options and fields kept apart from it. Generic `data` mapping other than `extra_data` should terminate as soon as action handled. This also means finding another home or some other way of separating the data elements picked up by Supernotify transports. See also ideas on [extending options](#transport-usage-of-extra-data).
 
 Consider simplifying or renaming the `data` section needed for `delivery` definitions and overrides. This could mean that the term `data` only ever appears at the top of an action notification, as Home Assistant standard, and nowhere else.
 

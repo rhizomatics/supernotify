@@ -15,37 +15,7 @@ description: Core Concepts of Supernotify for Home Assistant, including Transpor
 One notification from an automation can turn into several different notifications, each one shaped for the
 way it's sent.
 
-```mermaid
-flowchart LR
-    A["🏠 Automation<br/>'Someone is at<br/>the front door'<br/>to Joe, Sue and<br/>the kitchen speaker"] --> S["⚙️ Supernotify"]
-    S --> T["<b>① Target list</b><br/>👤 Joe - e-mail, phone app<br/>👤 Sue - phone app, mobile number<br/>🔊 Kitchen speaker"]
-    T --> D
-
-    subgraph D ["② Pick the deliveries to use"]
-        D1["📧 E-mail"]
-        D2["📱 Mobile app"]
-        D3["💬 Text message"]
-        D4["🔊 Alexa announce"]
-        D5["🔔 Chime<br/>not needed this time"]
-    end
-
-    subgraph N ["③ Send to the targets each delivery can reach"]
-        N1["📧 E-mail<br/>to Joe's inbox"]
-        N2["📱 Push alert<br/>to Joe's phone"]
-        N3["📱 Push alert<br/>to Sue's phone"]
-        N4["💬 Text<br/>to Sue's mobile"]
-        N5["🔊 Spoken announcement<br/>in the kitchen"]
-    end
-
-    D1 --> N1
-    D2 --> N2
-    D2 --> N3
-    D3 --> N4
-    D4 --> N5
-
-    classDef skipped stroke-dasharray: 5 5,opacity:0.5
-    class D5 skipped
-```
+![One notification from an automation becoming an e-mail, two phone push alerts, a text and a speaker announcement](assets/images/concepts_flow.svg)
 
 1. **Targets** - people are turned into the ways they can be reached, using their [Recipient](#recipient) details
 2. **Deliveries** - the [Deliveries](#delivery) that apply are chosen, by default or by [Scenarios](#scenario)
@@ -71,7 +41,7 @@ flowchart LR
 ## Recipient
 - A person, with optional e-mail address, phone number, mobile devices or custom targets.
   - By default auto-discovered from the User accounts and Person entities already on Home Assistant
-- This makes it easier to refer to people in automations, use `person.joe_mctest` rather than trying to remember Joe's email address in every automation notification. Also works for phone numbers if compatible SMS integration installed, or custom identifies like Telegram or Discord.
+- This makes it easier to refer to people in automations, use `person.joe_mctest` rather than trying to remember Joe's email address in every automation notification. Also works for phone numbers if compatible SMS integration installed, or custom identifiers like Telegram or Discord.
 - Each recipient also has a Home Assistant `switch` entity, so it's easy to stop someone being bothered by notifications
 - See [People](configuration/people.md) and [Recipes](recipes/index.md) for more detail
 
@@ -90,7 +60,7 @@ flowchart LR
 
 - A **Delivery** defines each notification channel you want to use
   - Out of the box, every Transport has a Delivery with the same name, for example `email` or `mobile_push`.
-  - Some transports will auto create additional deliveries, like `alexa_devices_announce_all` or `chimes_siren_all`
+  - Some transports will auto create additional deliveries, like `alexa_devices_announce_all` or `chime_siren_all`
   - Using YAML more deliveries can be created, for example `html_email` in addition to plain text `email`, or different deliveries for particular voice assistants.
 - Transports which can definitively select targets, like Email, Mobile Push, SMS, Alexa Devices and Notify Entity, are included by default in handling targets.
   - Others can be included via configuration, by using Scenarios or asking for them to be included in a notification

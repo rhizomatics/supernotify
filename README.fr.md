@@ -49,7 +49,7 @@ Supernotify est un composant personnalisé disponible via le [Home Assistant Com
 
 ## Documentation
 
-Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
+Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/fr/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
 
 Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) avec des exemples de configuration, ou parcourez par [tags](https://supernotify.rhizomatics.org.uk/tags/).
 

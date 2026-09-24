@@ -49,7 +49,7 @@ Supernotify is een aangepast component beschikbaar via de [Home Assistant Commun
 
 ## Documentatie
 
-Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
+Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/nl/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
 
 Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voorbeeldconfiguraties, of blader op [tags](https://supernotify.rhizomatics.org.uk/tags/).
 

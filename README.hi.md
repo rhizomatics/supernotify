@@ -49,7 +49,7 @@ Supernotify [Home Assistant Community Shop](https://hacs.xyz) (**HACS**) के 
 
 ## दस्तावेज़ीकरण
 
-[शुरुआत करना](https://supernotify.rhizomatics.org.uk/getting_started/), [मुख्य अवधारणाओं](https://supernotify.rhizomatics.org.uk/concepts/) की व्याख्या और उपलब्ध [ट्रांसपोर्ट अडैप्टर](https://supernotify.rhizomatics.org.uk/transports/) आज़माएं।
+[शुरुआत करना](https://supernotify.rhizomatics.org.uk/getting_started/), [मुख्य अवधारणाओं](https://supernotify.rhizomatics.org.uk/hi/concepts/) की व्याख्या और उपलब्ध [ट्रांसपोर्ट अडैप्टर](https://supernotify.rhizomatics.org.uk/transports/) आज़माएं।
 
 बहुत सारे [व्यंजन](https://supernotify.rhizomatics.org.uk/recipes/) उदाहरण कॉन्फ़िगरेशन के साथ उपलब्ध हैं, या [टैग](https://supernotify.rhizomatics.org.uk/tags/) द्वारा ब्राउज़ करें।
 

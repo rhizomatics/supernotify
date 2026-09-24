@@ -49,7 +49,7 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
 
 ## ドキュメント
 
-[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
+[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/ja/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
 
 サンプル設定を含む多くの[レシピ](https://supernotify.rhizomatics.org.uk/recipes/)もあります。[タグ](https://supernotify.rhizomatics.org.uk/tags/)で絞り込むこともできます。
 
