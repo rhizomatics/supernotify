@@ -103,6 +103,12 @@ Better explain in the archived message, the basis on which any single delivery w
 
 See [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
 
+### UI
+
+There must be a better way of sharing dashboards than manual copy and paste of YAML from the [dashboard recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
+
+SignalK has nice idea of having recommended plugins, could be feature PR for HACS
+
 ### Extensibility
 
 - Other developers able to create add-ons, see also [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
