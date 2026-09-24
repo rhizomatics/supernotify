@@ -81,12 +81,12 @@
                     "description": "用于启用/禁用推送和场景，并在底层传输方式支持时映射到其自身的优先级/紧急标志（例如移动推送、SMTP、Telegram、Gotify、ntfy）。"
                 },
                 "delivery_selection": {
-                    "name": "推送选择",
-                    "description": "推送字段（如已设置）的解释方式——implicit（在默认值基础上添加）、explicit（仅这些，加上由场景启用的）或 fixed（仅这些，忽略场景）。"
+                    "name": "推送选择依据",
+                    "description": "所选推送的使用方式——implicit（添加到默认推送）、explicit（仅这些，加上由场景启用的）或 fixed（仅这些，忽略场景）。除非在此设置，选择推送会使其成为 explicit。"
                 },
                 "delivery": {
                     "name": "推送",
-                    "description": "按名称限制或调整特定推送。名称列表将限制为仅这些；映射还可以按推送覆盖选项。"
+                    "description": "只使用这些推送，以及场景启用的推送。留空则自动选择。"
                 },
                 "require_scenarios": {
                     "name": "必需场景",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "额外数据",
                     "description": "供期望在此处提供自有字段的传输方式/蓝图使用的透传数据和传输调优，例如来自 Frigate 通知蓝图的属性。"
+                },
+                "delivery_config": {
+                    "name": "推送配置",
+                    "description": "推送名称、名称列表，或用于调整每个推送的映射，写法与 YAML 中的 delivery: 相同。与上面选择的推送合并，两处都有的推送以这里的形式为准。"
                 }
             },
             "sections": {

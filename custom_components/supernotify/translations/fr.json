@@ -81,12 +81,12 @@
                     "description": "Utilisée pour activer/désactiver les livraisons et les scénarios, et associée à l'indicateur de priorité/urgence propre au transport sous-jacent lorsqu'il est pris en charge (par ex. notification push mobile, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Sélection de livraison",
-                    "description": "Comment le champ Livraison (s'il est défini) est interprété - implicit (s'ajoute aux valeurs par défaut), explicit (uniquement celles-ci, plus celles activées par un scénario) ou fixed (uniquement celles-ci, en ignorant les scénarios)."
+                    "name": "Base de sélection de livraison",
+                    "description": "Comment les livraisons choisies sont utilisées - implicit (ajoutées aux valeurs par défaut), explicit (uniquement celles-ci, plus celles activées par un scénario) ou fixed (uniquement celles-ci, en ignorant les scénarios). Choisir des livraisons le rend explicit sauf si défini ici."
                 },
                 "delivery": {
                     "name": "Livraison",
-                    "description": "Restreindre ou ajuster des livraisons spécifiques par nom. Une liste de noms restreint à celles-ci uniquement ; une correspondance peut aussi remplacer des options par livraison."
+                    "description": "Utiliser uniquement ces livraisons, ainsi que celles activées par un scénario. Laisser vide pour un choix automatique."
                 },
                 "require_scenarios": {
                     "name": "Scénarios requis",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Données supplémentaires",
                     "description": "Données transmises et réglages de transport pour les transports/blueprints qui attendent leurs propres champs ici, par ex. les attributs d'un blueprint de notification Frigate."
+                },
+                "delivery_config": {
+                    "name": "Configuration de livraison",
+                    "description": "Des noms de livraisons, une liste de noms ou une correspondance pour ajuster chaque livraison, comme delivery: s'écrirait en YAML. Fusionné avec les livraisons choisies ci-dessus ; une livraison indiquée dans les deux prend sa forme ici."
                 }
             },
             "sections": {

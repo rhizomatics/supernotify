@@ -81,12 +81,12 @@
                     "description": "Aktiviert/deaktiviert Zustellungen und Szenarien und wird, sofern unterstützt, auf das eigene Prioritäts-/Dringlichkeits-Flag des zugrunde liegenden Transports abgebildet (z. B. Mobile Push, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Zustellungsauswahl",
-                    "description": "Wie das Feld „Zustellung“ (falls gesetzt) interpretiert wird – implicit (ergänzt die Standardwerte), explicit (nur diese, plus durch Szenarien aktivierte) oder fixed (nur diese, Szenarien werden ignoriert)."
+                    "name": "Grundlage der Zustellungsauswahl",
+                    "description": "Wie die gewählten Zustellungen verwendet werden – implicit (ergänzt die Standardwerte), explicit (nur diese, plus durch Szenarien aktivierte) oder fixed (nur diese, Szenarien werden ignoriert). Ausgewählte Zustellungen machen dies explicit, sofern hier nicht gesetzt."
                 },
                 "delivery": {
                     "name": "Zustellung",
-                    "description": "Bestimmte Zustellungen nach Namen einschränken oder anpassen. Eine Liste von Namen schränkt auf genau diese ein; eine Zuordnung kann zusätzlich Optionen je Zustellung überschreiben."
+                    "description": "Nur diese Zustellungen verwenden, sowie alle, die ein Szenario aktiviert. Leer lassen für automatische Auswahl."
                 },
                 "require_scenarios": {
                     "name": "Erforderliche Szenarien",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Zusätzliche Daten",
                     "description": "Durchgereichte Daten und Transport-Feinabstimmung für Transporte/Blueprints, die hier eigene Felder erwarten, z. B. Attribute aus einem Frigate-Benachrichtigungs-Blueprint."
+                },
+                "delivery_config": {
+                    "name": "Zustellungskonfiguration",
+                    "description": "Zustellungsnamen, eine Liste davon oder eine Zuordnung zum Anpassen jeder Zustellung, so wie delivery: in YAML geschrieben würde. Wird mit den oben gewählten Zustellungen zusammengeführt; eine Zustellung, die in beiden steht, übernimmt ihre Form von hier."
                 }
             },
             "sections": {

@@ -81,12 +81,12 @@
                     "description": "Usata per abilitare/disabilitare consegne e scenari, e mappata sul proprio flag di priorità/urgenza del transport sottostante, se supportato (ad es. push mobile, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Selezione consegna",
-                    "description": "Come viene interpretato il campo Consegna (se impostato) - implicit (si aggiunge ai valori predefiniti), explicit (solo queste, più quelle abilitate da uno scenario) o fixed (solo queste, ignorando gli scenari)."
+                    "name": "Base di selezione delivery",
+                    "description": "Come vengono usate le delivery scelte - implicit (aggiunte a quelle predefinite), explicit (solo queste, più quelle abilitate da uno scenario) o fixed (solo queste, ignorando gli scenario). Scegliere delle delivery la rende explicit, se non è impostata qui."
                 },
                 "delivery": {
                     "name": "Consegna",
-                    "description": "Limita o modifica consegne specifiche per nome. Un elenco di nomi limita solo a quelle; una mappatura può anche sovrascrivere le opzioni per singola consegna."
+                    "description": "Usa solo queste delivery, oltre a quelle attivate da uno scenario. Lascia vuoto per la scelta automatica."
                 },
                 "require_scenarios": {
                     "name": "Scenari richiesti",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Dati aggiuntivi",
                     "description": "Dati inoltrati così come sono e regolazioni specifiche del transport, per transport o blueprint che richiedono campi propri, es. gli attributi del blueprint di notifica di Frigate."
+                },
+                "delivery_config": {
+                    "name": "Configurazione delivery",
+                    "description": "Nomi di delivery, un elenco di nomi o una mappatura per regolare ogni delivery, come si scriverebbe delivery: in YAML. Viene unita alle delivery scelte sopra, e una delivery presente in entrambe prende la forma indicata qui."
                 }
             },
             "sections": {

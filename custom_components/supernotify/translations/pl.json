@@ -81,12 +81,12 @@
                     "description": "Używany do włączania/wyłączania dostarczeń i scenariuszy oraz mapowany na własną flagę priorytetu/pilności bazowego transportu, jeśli jest obsługiwana (np. powiadomienia push mobilne, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Wybór dostarczenia",
-                    "description": "Jak interpretowane jest pole Dostarczenie (jeśli ustawione) - implicit (dodaje do wartości domyślnych), explicit (tylko te, plus włączone przez scenariusz) lub fixed (tylko te, scenariusze są ignorowane)."
+                    "name": "Podstawa wyboru dostarczenia",
+                    "description": "Jak używane są wybrane dostarczenia - implicit (dodawane do domyślnych), explicit (tylko te, plus włączone przez scenariusz) lub fixed (tylko te, scenariusze są ignorowane). Wybranie dostarczeń ustawia explicit, chyba że ustawiono tutaj."
                 },
                 "delivery": {
                     "name": "Dostarczenie",
-                    "description": "Ogranicz lub dostrój konkretne dostarczenia według nazwy. Lista nazw ogranicza tylko do nich; mapowanie może również nadpisywać opcje dla poszczególnych dostarczeń."
+                    "description": "Używaj tylko tych dostarczeń oraz tych, które włączy scenariusz. Pozostaw puste, aby wybrać automatycznie."
                 },
                 "require_scenarios": {
                     "name": "Wymagane scenariusze",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Dodatkowe dane",
                     "description": "Dane przekazywane dalej i dostrajanie transportu dla transportów/blueprintów, które oczekują tutaj własnych pól, np. atrybutów z blueprintu powiadomień Frigate."
+                },
+                "delivery_config": {
+                    "name": "Konfiguracja dostarczenia",
+                    "description": "Nazwy dostarczeń, ich lista lub mapowanie do dostrojenia każdego dostarczenia, tak jak delivery: zapisano by w YAML. Łączone z dostarczeniami wybranymi powyżej; dostarczenie podane w obu przyjmuje postać stąd."
                 }
             },
             "sections": {

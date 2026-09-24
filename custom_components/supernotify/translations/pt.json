@@ -81,12 +81,12 @@
                     "description": "Usada para ativar/desativar entregas e cenários, e mapeada para o próprio sinalizador de prioridade/urgência do transporte subjacente, quando suportado (por exemplo, push móvel, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Seleção de entrega",
-                    "description": "Como o campo Entrega (se definido) é interpretado - implicit (adiciona aos padrões), explicit (apenas estas, mais as ativadas por cenário) ou fixed (apenas estas, ignorando os cenários)."
+                    "name": "Base de seleção de entrega",
+                    "description": "Como as entregas escolhidas são usadas - implicit (adicionadas às predefinidas), explicit (apenas estas, mais as ativadas por cenário) ou fixed (apenas estas, ignorando os cenários). Escolher entregas torna-o explicit, a menos que definido aqui."
                 },
                 "delivery": {
                     "name": "Entrega",
-                    "description": "Restringe ou ajusta entregas específicas por nome. Uma lista de nomes restringe apenas a essas; um mapeamento também pode substituir opções por entrega."
+                    "description": "Usar apenas estas entregas, além das que um cenário ativar. Deixe vazio para escolher automaticamente."
                 },
                 "require_scenarios": {
                     "name": "Cenários exigidos",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Dados extra",
                     "description": "Dados de passagem e ajustes do transporte para transportes/blueprints que esperam os seus próprios campos aqui, por exemplo, atributos de um blueprint de notificação Frigate."
+                },
+                "delivery_config": {
+                    "name": "Configuração de entrega",
+                    "description": "Nomes de entregas, uma lista deles ou um mapeamento para ajustar cada entrega, como delivery: seria escrito em YAML. É combinado com as entregas escolhidas acima, e uma entrega indicada em ambos fica com a forma daqui."
                 }
             },
             "sections": {

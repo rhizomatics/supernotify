@@ -81,12 +81,12 @@
                     "description": "Used to enable/disable deliveries and scenarios, and mapped to the underlying transport's own priority/urgency flag where supported (e.g. mobile push, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Delivery Selection",
-                    "description": "How the Delivery field (if set) is interpreted - implicit (adds to the defaults), explicit (only these, plus scenario-enabled ones), or fixed (only these, ignoring scenarios)."
+                    "name": "Delivery Selection Basis",
+                    "description": "How the chosen deliveries are used - implicit (added to the defaults), explicit (only these, plus scenario-enabled ones), or fixed (only these, ignoring scenarios). Picking deliveries makes it explicit unless set here."
                 },
                 "delivery": {
                     "name": "Delivery",
-                    "description": "Restrict or tune specific deliveries by name. A single delivery name, or list of names, restricts to just those. A mapping can also be used to override delivery configurations without limiting the deliveries."
+                    "description": "Use only these deliveries, as well as any a scenario turns on. Leave empty to choose automatically."
                 },
                 "require_scenarios": {
                     "name": "Required Scenarios",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Extra Data",
                     "description": "Passthrough data and transport tuning for transports/blueprints that expect their own fields here, e.g. attributes from a Frigate notification blueprint."
+                },
+                "delivery_config": {
+                    "name": "Delivery Config",
+                    "description": "Delivery names, a list of them, or a mapping to tune each delivery, as delivery: would be written in YAML. Merged with the deliveries picked above, and a delivery given in both takes its form from here."
                 }
             },
             "sections": {

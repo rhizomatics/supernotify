@@ -41,6 +41,7 @@ from .const import (
     ATTR_DATA,
     ATTR_DEBUG,
     ATTR_DELIVERY,
+    ATTR_DELIVERY_CONFIG,
     ATTR_DELIVERY_SELECTION,
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
@@ -562,9 +563,12 @@ FULL_CONFIG_SCHEMA = SUPERNOTIFY_YAML_SCHEMA.extend({
 })
 
 
+# A delivery name, a list of names to restrict to, or a mapping of names to tuning
+DELIVERY_FIELD_SCHEMA = vol.Any(cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)})
+
 _ACTION_DATA_FIELDS_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_DELIVERY): vol.Any(cv.string, [cv.string], {cv.string: vol.Any(None, DELIVERY_CUSTOMIZE_SCHEMA)}),
+        vol.Optional(ATTR_DELIVERY): DELIVERY_FIELD_SCHEMA,
         vol.Optional(ATTR_PRIORITY): vol.Any(int, str, vol.In(list(PRIORITY_VALUES.keys()))),
         vol.Optional(ATTR_SCENARIOS_REQUIRE): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_SCENARIOS_APPLY): vol.All(cv.ensure_list, [cv.string]),
@@ -613,6 +617,9 @@ NOTIFY_ACTION_SCHEMA = vol.All(
         # addresses, phone numbers, Slack ids etc. notify.py's action_notify merges
         # it back into target before Notification ever sees it
         vol.Optional(ATTR_CUSTOM_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        # the delivery dropdown can only give names, so this takes any form `delivery` does, and
+        # actions.py's action_notify merges the two into `delivery` before Notification sees them
+        vol.Optional(ATTR_DELIVERY_CONFIG): vol.Any(None, DELIVERY_FIELD_SCHEMA),
         # promoted out of media: for their own selectors - notify.py's action_notify
         # merges them back into media before Notification ever sees them
         vol.Optional(ATTR_MEDIA_CAMERA_ENTITY_ID): cv.entity_id,

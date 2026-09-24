@@ -81,12 +81,12 @@
                     "description": "Se usa para activar/desactivar entregas y escenarios, y se asigna a la propia bandera de prioridad/urgencia del transporte subyacente cuando es compatible (por ejemplo, notificación push móvil, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
-                    "name": "Selección de entrega",
-                    "description": "Cómo se interpreta el campo Entrega (si está definido): implicit (se añade a los valores predeterminados), explicit (solo estos, más los habilitados por escenario) o fixed (solo estos, ignorando los escenarios)."
+                    "name": "Base de selección de entrega",
+                    "description": "Cómo se usan las entregas elegidas: implicit (se añaden a las predeterminadas), explicit (solo estas, más las habilitadas por escenario) o fixed (solo estas, ignorando los escenarios). Elegir entregas lo hace explicit salvo que se defina aquí."
                 },
                 "delivery": {
                     "name": "Entrega",
-                    "description": "Restringe o ajusta entregas específicas por nombre. Una lista de nombres restringe solo a esas; un mapeo también puede sobrescribir opciones por entrega."
+                    "description": "Usar solo estas entregas, además de las que active un escenario. Dejar vacío para elegir automáticamente."
                 },
                 "require_scenarios": {
                     "name": "Escenarios requeridos",
@@ -151,6 +151,10 @@
                 "extra_data": {
                     "name": "Datos adicionales",
                     "description": "Datos de paso y ajustes del transporte para transportes/blueprints que esperan sus propios campos aquí, por ejemplo, atributos de un blueprint de notificación de Frigate."
+                },
+                "delivery_config": {
+                    "name": "Configuración de entrega",
+                    "description": "Nombres de entregas, una lista de ellos o un mapeo para ajustar cada entrega, como se escribiría delivery: en YAML. Se combina con las entregas elegidas arriba, y una entrega indicada en ambos toma su forma de aquí."
                 }
             },
             "sections": {
