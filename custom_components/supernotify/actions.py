@@ -438,7 +438,8 @@ async def async_describe_configured_names(hass: HomeAssistant, engine: Supernoti
 
     services.yaml can only hold a fixed description, so it's copied and set again with the delivery
     and scenario fields as dropdowns, still taking a typed name. The delivery field is pre-filled
-    with the implicit deliveries - what's used when it's left out - to add to or take from. Tuning
+    with the implicit deliveries - what's used when it's left out - to add to or take from - and
+    offers only deliveries with `default` or `explicit` inclusion, not scenario-only ones. Tuning
     deliveries, which needs a mapping, has its own free-form Delivery Control field - see
     merge_delivery_fields().
     Names and descriptions still come from the translations, which are looked up by field.
@@ -448,7 +449,7 @@ async def async_describe_configured_names(hass: HomeAssistant, engine: Supernoti
     services: dict[str, Any] = await hass.async_add_executor_job(load_yaml_dict, str(integration.file_path / "services.yaml"))
     notify: dict[str, Any] = services["notify"]
     fields: dict[str, Any] = notify["fields"]
-    if deliveries := list(engine.context.delivery_registry.deliveries):
+    if deliveries := list(engine.context.delivery_registry.choosable_deliveries):
         fields[ATTR_DELIVERY]["selector"] = {"select": {"options": deliveries, "multiple": True, "custom_value": True}}
         fields[ATTR_DELIVERY]["default"] = [d.name for d in engine.context.delivery_registry.implicit_deliveries]
     if scenarios := list(engine.context.scenario_registry.scenarios):

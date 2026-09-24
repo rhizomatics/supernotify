@@ -41,6 +41,7 @@ from custom_components.supernotify.const import (
     CONF_ARCHIVE,
     CONF_CAMERAS,
     CONF_DELIVERY,
+    CONF_DELIVERY_CONTROL,
     CONF_DUPE_CHECK,
     CONF_LINKS,
     CONF_MEDIA_PATH,
@@ -427,6 +428,7 @@ class TestingContext(Context):
             transport_instances=transport_instances or None,
             transport_types=resolved_transport_types,
             transport_configs=transport_configs,
+            delivery_control=self.config.get(CONF_DELIVERY_CONTROL),
         )
         self.initialized: bool = False
         super().__init__(

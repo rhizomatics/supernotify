@@ -27,6 +27,7 @@ from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
+    CONF_APPLE_DROP_MP4,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
@@ -37,6 +38,8 @@ from .const import (
     CONF_ARCHIVE_MQTT_TOPIC,
     CONF_ARCHIVE_PATH,
     CONF_ARCHIVE_PURGE_INTERVAL,
+    CONF_DEFAULT_INCLUSION,
+    CONF_DELIVERY_CONTROL,
     CONF_DUPE_CHECK,
     CONF_DUPE_POLICY,
     CONF_HOUSEKEEPING,
@@ -53,12 +56,20 @@ from .const import (
     CONF_SIZE,
     CONF_TEMPLATE_PATH,
     CONF_TTL,
+    CONF_VOICE_OCCUPANCY,
+    DEFAULT_INCLUSION_VALUES,
+    OCCUPANCY_VALUES,
 )
 from .schema import OutcomeSelection
 
 _LOGGER = logging.getLogger(__name__)
 
 _DUPE_POLICIES = [ATTR_DUPE_POLICY_MTSLP, ATTR_DUPE_POLICY_MT, ATTR_DUPE_POLICY_NONE]
+
+# The Delivery Control choices meaning "not set", which leave deliveries with their transport's own
+# default - never stored, the option is left out instead
+NOT_SET_INCLUSION = "transport"
+NOT_SET_OCCUPANCY = "not_controlled"
 
 
 def _event_policy_str(value: Any) -> str:  # ruff: ignore[any-type]
@@ -280,7 +291,9 @@ class SupernotifyOptionsFlow(OptionsFlow):
     """Options pages for archive, dupe_check, housekeeping and LLM tools settings."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        return self.async_show_menu(step_id="init", menu_options=["archive", "dupe_check", "housekeeping", "llm_tools"])
+        return self.async_show_menu(
+            step_id="init", menu_options=["archive", "dupe_check", "housekeeping", "delivery_control", "llm_tools"]
+        )
 
     async def async_step_archive(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         current: dict[str, Any] = self.config_entry.options.get(CONF_ARCHIVE, {})
@@ -390,6 +403,32 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_MEDIA_STORAGE_DAYS, default=current.get(CONF_MEDIA_STORAGE_DAYS, 7)): cv.positive_int,
         })
         return self.async_show_form(step_id="housekeeping", data_schema=schema)
+
+    async def async_step_delivery_control(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Defaults for deliveries that don't set their own - inclusion, occupancy for spoken
+        deliveries, and dropping .mp4 video from pushes to Apple devices"""
+        current: dict[str, Any] = self.config_entry.options.get(CONF_DELIVERY_CONTROL, {})
+        if user_input is not None:
+            control: dict[str, Any] = {CONF_APPLE_DROP_MP4: user_input[CONF_APPLE_DROP_MP4]}
+            if user_input[CONF_DEFAULT_INCLUSION] != NOT_SET_INCLUSION:
+                control[CONF_DEFAULT_INCLUSION] = user_input[CONF_DEFAULT_INCLUSION]
+            if user_input[CONF_VOICE_OCCUPANCY] != NOT_SET_OCCUPANCY:
+                control[CONF_VOICE_OCCUPANCY] = user_input[CONF_VOICE_OCCUPANCY]
+            return self.async_create_entry(title="", data={**self.config_entry.options, CONF_DELIVERY_CONTROL: control})
+        schema = vol.Schema({
+            vol.Optional(
+                CONF_DEFAULT_INCLUSION, default=current.get(CONF_DEFAULT_INCLUSION, NOT_SET_INCLUSION)
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[NOT_SET_INCLUSION, *DEFAULT_INCLUSION_VALUES], translation_key=CONF_DEFAULT_INCLUSION
+                )
+            ),
+            vol.Optional(CONF_VOICE_OCCUPANCY, default=current.get(CONF_VOICE_OCCUPANCY, NOT_SET_OCCUPANCY)): SelectSelector(
+                SelectSelectorConfig(options=[NOT_SET_OCCUPANCY, *OCCUPANCY_VALUES], translation_key=CONF_VOICE_OCCUPANCY)
+            ),
+            vol.Optional(CONF_APPLE_DROP_MP4, default=current.get(CONF_APPLE_DROP_MP4, False)): cv.boolean,
+        })
+        return self.async_show_form(step_id="delivery_control", data_schema=schema)
 
     async def async_step_llm_tools(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Beta: which tools llm.py offers to AI conversation agents and the MCP server, and whether

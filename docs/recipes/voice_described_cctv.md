@@ -81,7 +81,7 @@ genai:
 
 ### Home Assistant
 
-This assumes that you have `delivery` configurations for `alexa_announce` and `mobile_push` and
+This assumes that `delivery` configurations have been automatically or manually defined for `alexa_devices_announce_all` and `mobile_push` and
 that you have Home Assistant available at `http://homeassistant.local:8123`.
 
 The automation subscribes to the Frigate MQTT topic, ignores certain messages, strips the "MEDIUM RISK" etc
@@ -122,7 +122,7 @@ automations:
         snapshot_url: http://homeassistant.local:8123/api/frigate/notifications/{{trigger.payload_json.id}}/thumbnail.jpg
         camera_entity_id: camera.{{trigger.payload_json.camera}}
       delivery:
-        - alexa_announce
+        - alexa_devices_announce_all
         - mobile_push
 ```
 
@@ -213,7 +213,7 @@ scenarios:
       delivery:
         mobile_push:
           enabled: false
-        plain_email:
+        email:
           enabled: false
 ```
 

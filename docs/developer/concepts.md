@@ -108,7 +108,7 @@ The result is ordered by each delivery's `selection_rank`: `FIRST`, then `ANY`, 
 
 Targets are categorized when a `Target` is built, either automatically (e-mail, phone, entity, device, mobile app) or by a category prefix or mapping. Area, floor and label targets are resolved to entities, with groups expanded, before any delivery selects from them.
 
-Each direct target is claimed once, by the first delivery in selection order that accepts its category, so the same e-mail address isn't sent by both `plain_email` and `html_email`. A delivery's own `target` config is scoped only to it, so there `Delivery.reclassify_unqualified_target()` can claim values that didn't match any category for that delivery's transport.
+Each direct target is claimed once, by the first delivery in selection order that accepts its category, so the same e-mail address isn't sent by both plain `email` and `html_email`. A delivery's own `target` config is scoped only to it, so there `Delivery.reclassify_unqualified_target()` can claim values that didn't match any category for that delivery's transport.
 
 What's left over is recorded in the archive:
 

@@ -51,6 +51,6 @@ scenarios:
           - "{{notification_priority not in ['critical','high','low']}}"
       delivery:
         - mobile_push
-        - alexa_announce
+        - alexa_devices_announce_all
         - alexa_backup_announce
 ```

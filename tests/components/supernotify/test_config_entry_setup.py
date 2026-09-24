@@ -720,7 +720,17 @@ async def _setup_delivery_choice(hass: HomeAssistant) -> list[ServiceCall]:
     assert await async_setup_component(
         hass,
         DOMAIN,
-        {DOMAIN: {"delivery": {"chat": {**generic, "inclusion": ["default"]}, "pager": generic, "siren": generic}}},
+        {
+            DOMAIN: {
+                "delivery": {
+                    "chat": {**generic, "inclusion": ["default"]},
+                    "pager": generic,
+                    "siren": generic,
+                    "alarm_bell": {**generic, "inclusion": ["scenario"]},
+                    "backup": {**generic, "inclusion": ["fallback"]},
+                }
+            }
+        },
     )
     await hass.async_block_till_done()
     return calls
@@ -734,7 +744,10 @@ async def test_delivery_field_prefilled_with_implicit_deliveries(hass: HomeAssis
     description = async_get_cached_service_description(hass, DOMAIN, "notify")
     assert description is not None
     assert description["fields"]["delivery"]["default"] == ["chat"]
-    assert {"chat", "pager", "siren"} <= set(description["fields"]["delivery"]["selector"]["select"]["options"])
+    options = set(description["fields"]["delivery"]["selector"]["select"]["options"])
+    assert {"chat", "pager", "siren"} <= options
+    # scenario-only and fallback-only deliveries aren't chosen for a notification
+    assert not {"alarm_bell", "backup"} & options
 
 
 @pytest.mark.parametrize(

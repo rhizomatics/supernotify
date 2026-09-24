@@ -128,7 +128,7 @@ async def test_options_flow_menu(hass: HomeAssistant) -> None:
 
     options_result = await hass.config_entries.options.async_init(entry_id)
     assert options_result["type"] == FlowResultType.MENU
-    assert options_result["menu_options"] == ["archive", "dupe_check", "housekeeping", "llm_tools"]
+    assert options_result["menu_options"] == ["archive", "dupe_check", "housekeeping", "delivery_control", "llm_tools"]
 
 
 async def test_options_flow_archive(hass: HomeAssistant) -> None:
@@ -238,6 +238,35 @@ async def test_options_flow_llm_tools(hass: HomeAssistant) -> None:
     menu_again = await hass.config_entries.options.async_configure(options_again["flow_id"], {"next_step_id": "llm_tools"})
     defaults = {str(k): k.default() for k in menu_again["data_schema"].schema}
     assert defaults == {CONF_LLM_ACTION_TOOLS: False, CONF_LLM_DIAGNOSTIC_TOOLS: True, CONF_SENTENCE_COMMANDS: True}
+
+
+async def test_options_flow_delivery_control(hass: HomeAssistant) -> None:
+    """Delivery Control's "not set" choices are stored by leaving the option out, so deliveries keep
+    their transport's own defaults"""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    entry_result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    await hass.async_block_till_done()
+    entry = entry_result["result"]
+
+    async def configure(user_input: dict) -> None:
+        options_init = await hass.config_entries.options.async_init(entry.entry_id)
+        menu = await hass.config_entries.options.async_configure(options_init["flow_id"], {"next_step_id": "delivery_control"})
+        assert menu["step_id"] == "delivery_control"
+        done = await hass.config_entries.options.async_configure(menu["flow_id"], user_input)
+        assert done["type"] == FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+
+    await configure({"default_inclusion": "explicit", "voice_occupancy": "only_in", "apple_drop_mp4": True})
+    assert entry.options["delivery_control"] == {
+        "default_inclusion": "explicit",
+        "voice_occupancy": "only_in",
+        "apple_drop_mp4": True,
+    }
+    assert entry.runtime_data.context.delivery_registry.default_inclusion == "explicit"
+
+    await configure({"default_inclusion": "transport", "voice_occupancy": "not_controlled", "apple_drop_mp4": False})
+    assert entry.options["delivery_control"] == {"apple_drop_mp4": False}
+    assert entry.runtime_data.context.delivery_registry.default_inclusion is None
 
 
 async def test_import_mirrors_yaml_config(hass: HomeAssistant) -> None:

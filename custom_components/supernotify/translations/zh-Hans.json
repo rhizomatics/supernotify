@@ -434,6 +434,7 @@
                     "archive": "存档设置",
                     "dupe_check": "重复检测",
                     "housekeeping": "维护",
+                    "delivery_control": "推送控制",
                     "llm_tools": "Assist 与 AI 代理（测试版）"
                 },
                 "title": "Supernotify 选项"
@@ -525,6 +526,20 @@
                     "diagnostic_tools": "解释最近的通知，试算通知会送达谁，列出暂停项，并在线查阅 Supernotify 文档",
                     "sentence_commands": "供内置代理使用的英文语句，例如 'tell Alice that dinner is ready' 或 'snooze my notifications for 30 minutes'"
                 }
+            },
+            "delivery_control": {
+                "title": "推送控制",
+                "description": "为未在 YAML 中自行设置的推送提供默认值。YAML 中传输方式的 delivery_defaults 仍然优先。",
+                "data": {
+                    "default_inclusion": "默认包含方式",
+                    "voice_occupancy": "语音推送的在家条件",
+                    "apple_drop_mp4": "Apple 推送中省略视频"
+                },
+                "data_description": {
+                    "default_inclusion": "推送何时被使用，除非推送自身的 inclusion 另有指定。保持各传输方式自己的默认值即可维持当前行为。",
+                    "voice_occupancy": "语音推送（如 Alexa 和 TTS 播报）面向谁，按谁在家决定——除非推送设置了自己的 occupancy。",
+                    "apple_drop_mp4": "在发往 Apple 设备的移动推送通知中省略 .mp4 视频（如 Frigate 片段），因为这些设备并不总能显示。Android 设备仍会收到。"
+                }
             }
         }
     },
@@ -545,6 +560,27 @@
                 "error": "错误",
                 "dupe": "重复",
                 "all": "所有结果"
+            }
+        },
+        "default_inclusion": {
+            "options": {
+                "transport": "各传输方式自己的默认值",
+                "default": "默认——每条通知都使用",
+                "explicit": "明确——仅在为通知选择时",
+                "scenario": "场景——仅在场景启用时"
+            }
+        },
+        "voice_occupancy": {
+            "options": {
+                "not_controlled": "不控制",
+                "all": "所有人，无论在家与否",
+                "all_in": "所有人，仅当所有人都在家",
+                "all_out": "所有人，仅当所有人都外出",
+                "any_in": "所有人，当有人在家时",
+                "any_out": "所有人，当有人外出时",
+                "only_in": "仅在家的人",
+                "only_out": "仅外出的人",
+                "none": "无人"
             }
         }
     }

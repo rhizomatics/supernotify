@@ -434,6 +434,7 @@
                     "archive": "アーカイブ設定",
                     "dupe_check": "重複検出",
                     "housekeeping": "ハウスキーピング",
+                    "delivery_control": "配信コントロール",
                     "llm_tools": "Assist と AI エージェント（ベータ）"
                 },
                 "title": "Supernotify オプション"
@@ -525,6 +526,20 @@
                     "diagnostic_tools": "最近の通知を説明し、通知が誰に届くかを試算し、スヌーズを一覧表示し、Supernotify のドキュメントをオンラインで調べる",
                     "sentence_commands": "内蔵エージェント向けの英語の文。例: 'tell Alice that dinner is ready'、'snooze my notifications for 30 minutes'"
                 }
+            },
+            "delivery_control": {
+                "title": "配信コントロール",
+                "description": "YAML で独自の値を設定していない配信の既定値です。YAML でのトランスポートの delivery_defaults が引き続き優先されます。",
+                "data": {
+                    "default_inclusion": "既定の inclusion",
+                    "voice_occupancy": "音声配信の在宅条件",
+                    "apple_drop_mp4": "Apple へのプッシュで動画を省く"
+                },
+                "data_description": {
+                    "default_inclusion": "配信が使われるタイミング。配信自身の inclusion で別に指定されていない場合に適用されます。現在の動作を保つには、各トランスポートの既定値のままにしてください。",
+                    "voice_occupancy": "Alexa や TTS のアナウンスなどの音声配信を誰に向けるか、在宅状況で決めます。配信が独自の occupancy を設定している場合を除きます。",
+                    "apple_drop_mp4": "Frigate のクリップなどの .mp4 動画を、Apple デバイスへのモバイルプッシュ通知から省きます。Apple デバイスでは表示できないことがあるためです。Android デバイスには引き続き送られます。"
+                }
             }
         }
     },
@@ -545,6 +560,27 @@
                 "error": "エラー",
                 "dupe": "重複",
                 "all": "すべての結果"
+            }
+        },
+        "default_inclusion": {
+            "options": {
+                "transport": "各トランスポートの既定値",
+                "default": "既定 - すべての通知で使用",
+                "explicit": "明示 - 通知で選ばれたときのみ",
+                "scenario": "シナリオ - シナリオが有効にしたときのみ"
+            }
+        },
+        "voice_occupancy": {
+            "options": {
+                "not_controlled": "制御しない",
+                "all": "全員（在宅・外出を問わず）",
+                "all_in": "全員（全員が在宅のときのみ）",
+                "all_out": "全員（全員が外出中のときのみ）",
+                "any_in": "全員（誰かが在宅のとき）",
+                "any_out": "全員（誰かが外出中のとき）",
+                "only_in": "在宅中の人のみ",
+                "only_out": "外出中の人のみ",
+                "none": "誰にも送らない"
             }
         }
     }

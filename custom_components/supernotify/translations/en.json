@@ -342,6 +342,7 @@
                     "archive": "Archiving",
                     "dupe_check": "Duplicate Detection",
                     "housekeeping": "Housekeeping",
+                    "delivery_control": "Delivery Control",
                     "llm_tools": "Assist and AI agents"
                 },
                 "title": "Supernotify Options"
@@ -432,6 +433,20 @@
                     "action_tools": "Send notifications, and snooze or silence them",
                     "diagnostic_tools": "Explain recent notifications, dry-run who a notification would reach, list snoozes, and look up the Supernotify documentation online",
                     "sentence_commands": "English sentences for the built-in agent, such as 'tell Alice that dinner is ready' or 'snooze my notifications for 30 minutes'"
+                }
+            },
+            "delivery_control": {
+                "title": "Delivery Control",
+                "description": "Defaults for deliveries that don't set their own in YAML. A transport's delivery_defaults in YAML still override these.",
+                "data": {
+                    "default_inclusion": "Default inclusion",
+                    "voice_occupancy": "Spoken delivery occupancy",
+                    "apple_drop_mp4": "Leave video out of Apple pushes"
+                },
+                "data_description": {
+                    "default_inclusion": "When a delivery is used, unless its own inclusion says otherwise. Leave as each transport's own default to keep today's behaviour.",
+                    "voice_occupancy": "Who spoken deliveries, such as Alexa and TTS announcements, are for, by who is home - unless a delivery sets its own occupancy.",
+                    "apple_drop_mp4": "Leave .mp4 video, such as a Frigate clip, out of mobile push notifications to Apple devices, which can't always show it. Android devices still get it."
                 }
             }
         }
@@ -545,6 +560,27 @@
                 "error": "Error",
                 "dupe": "Duplicate",
                 "all": "All Outcomes"
+            }
+        },
+        "default_inclusion": {
+            "options": {
+                "transport": "Each transport's own default",
+                "default": "Default - used for every notification",
+                "explicit": "Explicit - only when chosen for a notification",
+                "scenario": "Scenario - only when a scenario turns it on"
+            }
+        },
+        "voice_occupancy": {
+            "options": {
+                "not_controlled": "Not controlled",
+                "all": "Everyone, home or away",
+                "all_in": "Everyone, only when all are home",
+                "all_out": "Everyone, only when all are away",
+                "any_in": "Everyone, when anyone is home",
+                "any_out": "Everyone, when anyone is away",
+                "only_in": "Only people at home",
+                "only_out": "Only people away",
+                "none": "No one"
             }
         }
     }

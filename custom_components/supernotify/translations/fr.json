@@ -434,6 +434,7 @@
                     "archive": "Paramètres d'archivage",
                     "dupe_check": "Détection des doublons",
                     "housekeeping": "Entretien",
+                    "delivery_control": "Contrôle des livraisons",
                     "llm_tools": "Assist et agents IA (bêta)"
                 },
                 "title": "Options de Supernotify"
@@ -525,6 +526,20 @@
                     "diagnostic_tools": "Expliquer les notifications récentes, simuler qui une notification atteindrait, lister les mises en pause et consulter la documentation de Supernotify en ligne",
                     "sentence_commands": "Phrases en anglais pour l'agent intégré, comme 'tell Alice that dinner is ready' ou 'snooze my notifications for 30 minutes'"
                 }
+            },
+            "delivery_control": {
+                "title": "Contrôle des livraisons",
+                "description": "Valeurs par défaut des livraisons qui ne définissent pas les leurs en YAML. Les delivery_defaults d'un transport en YAML restent prioritaires.",
+                "data": {
+                    "default_inclusion": "Inclusion par défaut",
+                    "voice_occupancy": "Présence pour les livraisons vocales",
+                    "apple_drop_mp4": "Retirer la vidéo des notifications Apple"
+                },
+                "data_description": {
+                    "default_inclusion": "Quand une livraison est utilisée, sauf si sa propre inclusion en décide autrement. Laisser la valeur propre à chaque transport pour garder le comportement actuel.",
+                    "voice_occupancy": "À qui s'adressent les livraisons vocales, comme les annonces Alexa et TTS, selon qui est à la maison - sauf si une livraison définit sa propre occupancy.",
+                    "apple_drop_mp4": "Retirer la vidéo .mp4, comme un clip Frigate, des notifications push vers les appareils Apple, qui ne peuvent pas toujours l'afficher. Les appareils Android la reçoivent toujours."
+                }
             }
         }
     },
@@ -545,6 +560,27 @@
                 "error": "Erreur",
                 "dupe": "Doublon",
                 "all": "Tous les résultats"
+            }
+        },
+        "default_inclusion": {
+            "options": {
+                "transport": "Valeur propre à chaque transport",
+                "default": "Par défaut - utilisée pour chaque notification",
+                "explicit": "Explicite - seulement si choisie pour une notification",
+                "scenario": "Scénario - seulement quand un scénario l'active"
+            }
+        },
+        "voice_occupancy": {
+            "options": {
+                "not_controlled": "Non contrôlé",
+                "all": "Tout le monde, présent ou absent",
+                "all_in": "Tout le monde, seulement quand tous sont à la maison",
+                "all_out": "Tout le monde, seulement quand tous sont absents",
+                "any_in": "Tout le monde, quand quelqu'un est à la maison",
+                "any_out": "Tout le monde, quand quelqu'un est absent",
+                "only_in": "Seulement les personnes à la maison",
+                "only_out": "Seulement les personnes absentes",
+                "none": "Personne"
             }
         }
     }

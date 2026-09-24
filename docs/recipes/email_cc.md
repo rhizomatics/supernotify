@@ -33,17 +33,15 @@ This will work identically for any transport, there's nothing email specific in 
 
 ### Multiple e-mail deliveries
 
-You have both `html_email` and `plain_email` deliveries, and only want to cc the plain ones.
+You have both `html_email` and plain `email` deliveries, and only want to cc the plain ones.
 
 In this case, define the defaults at delivery level rather than transport level.
 
-The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.com` address will
-only be added if there's already an e-mail being sent with other targets.
+The `target_usage: merge_delivery` setting means that the `mailarchive@mymail.com` address will only be added if there's already an e-mail being sent with other targets.
 
 ```yaml
     delivery:
-      plain_email:
-        action: notify.smtp
+      email:
         delivery_defaults:
             target_usage: merge_delivery
             target:

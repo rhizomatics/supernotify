@@ -31,6 +31,7 @@ from .const import (
     CONF_ARCHIVE,
     CONF_CAMERAS,
     CONF_DELIVERY,
+    CONF_DELIVERY_CONTROL,
     CONF_DUPE_CHECK,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
@@ -106,6 +107,7 @@ class SupernotifyEngine:
         dupe_check: dict[str, Any] | None = None,
         snooze: dict[str, Any] | None = None,
         scenario_control: dict[str, Any] | None = None,
+        delivery_control: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the service."""
         self.last_notification: Notification | None = None
@@ -126,7 +128,7 @@ class SupernotifyEngine:
             hass_api,
             people_registry,
             ScenarioRegistry(scenarios or {}, scenario_control, people_registry),
-            DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS),
+            DeliveryRegistry(deliveries or {}, transport_configs or {}, TRANSPORTS, delivery_control=delivery_control),
             DupeChecker(dupe_check or {}),
             NotificationArchive(archive or {}, hass_api),
             MediaStorage(
@@ -446,4 +448,5 @@ def build_supernotify_engine(hass: HomeAssistant, config: ConfigType) -> Superno
         dupe_check=config[CONF_DUPE_CHECK],
         snooze=config[CONF_SNOOZE],
         scenario_control=config.get(CONF_SCENARIO_CONTROL),
+        delivery_control=config.get(CONF_DELIVERY_CONTROL),
     )

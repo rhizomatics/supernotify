@@ -74,6 +74,7 @@ from .const import (
     CONF_ACTION_GROUPS,
     CONF_ACTION_TEMPLATE,
     CONF_ALT_CAMERA,
+    CONF_APPLE_DROP_MP4,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
@@ -89,7 +90,9 @@ from .const import (
     CONF_CLASS,
     CONF_CONNECTION,
     CONF_DATA,
+    CONF_DEFAULT_INCLUSION,
     CONF_DELIVERY,
+    CONF_DELIVERY_CONTROL,
     CONF_DELIVERY_DEFAULTS,
     CONF_DEVICE_DISCOVERY,
     CONF_DEVICE_DOMAIN,
@@ -147,9 +150,10 @@ from .const import (
     CONF_TTL,
     CONF_URI,
     CONF_USER_ID,
+    CONF_VOICE_OCCUPANCY,
+    DEFAULT_INCLUSION_VALUES,
     DELIVERY_SELECTION_VALUES,
     INCLUSION_VALUES,
-    OCCUPANCY_ALL,
     OCCUPANCY_VALUES,
     PRIORITY_VALUES,
     PTZ_DELAY_DEFAULT,
@@ -331,7 +335,8 @@ DELIVERY_CONFIG_SCHEMA = vol.Schema({  # shared by Transport Defaults and Delive
     vol.Optional(CONF_TEMPLATE): cv.string,
     vol.Optional(CONF_MESSAGE): vol.Any(None, cv.string),
     vol.Optional(CONF_TITLE): vol.Any(None, cv.string),
-    vol.Optional(CONF_OCCUPANCY, default=OCCUPANCY_ALL): vol.In(OCCUPANCY_VALUES),
+    # no default here, which would hide a transport's own - DeliveryConfig falls back to OCCUPANCY_ALL
+    vol.Optional(CONF_OCCUPANCY): vol.In(OCCUPANCY_VALUES),
     vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
 })
 
@@ -529,6 +534,14 @@ SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
 
 # The 8 ConfigEntry-owned keys only (entry.data/entry.options) - deliberately separate from
 # SUPERNOTIFY_YAML_SCHEMA rather than folded into one combined schema: __init__.py's
+# Defaults for every delivery, from the Delivery Control options page - each left out when not set,
+# so deliveries keep their transport's own default
+DELIVERY_CONTROL_SCHEMA = vol.Schema({
+    vol.Optional(CONF_DEFAULT_INCLUSION): vol.In(DEFAULT_INCLUSION_VALUES),
+    vol.Optional(CONF_VOICE_OCCUPANCY): vol.In(OCCUPANCY_VALUES),
+    vol.Optional(CONF_APPLE_DROP_MP4, default=False): cv.boolean,
+})
+
 # _entry_full_config validates entry.data/entry.options through this schema, then merges in the
 # top-level YAML section's already-validated dict as-is. Re-validating that already-validated
 # dict a second time (as a single combined schema would require) breaks - cv.template/
@@ -536,6 +549,7 @@ SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
 # object the second time round ("template value should be a string").
 CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_DELIVERY_CONTROL, default=dict): DELIVERY_CONTROL_SCHEMA,
         vol.Optional(CONF_TEMPLATE_PATH, default=TEMPLATE_DIR): cv.path,
         vol.Optional(CONF_MEDIA_PATH, default=MEDIA_DIR): cv.path,
         vol.Optional(CONF_MEDIA_URL_PREFIX, default="/supernotify/media"): cv.string,
@@ -552,6 +566,7 @@ CONFIG_ENTRY_SCHEMA = vol.Schema(
 # never-previously-validated raw config dict in one pass (e.g. hass_setup_lib.py's
 # TestingContext). Do NOT use this in __init__.py's _entry_full_config - see CONFIG_ENTRY_SCHEMA.
 FULL_CONFIG_SCHEMA = SUPERNOTIFY_YAML_SCHEMA.extend({
+    vol.Optional(CONF_DELIVERY_CONTROL, default=dict): DELIVERY_CONTROL_SCHEMA,
     vol.Optional(CONF_TEMPLATE_PATH, default=TEMPLATE_DIR): cv.path,
     vol.Optional(CONF_MEDIA_PATH, default=MEDIA_DIR): cv.path,
     vol.Optional(CONF_MEDIA_URL_PREFIX, default="/supernotify/media"): cv.string,

@@ -221,6 +221,7 @@ def mock_delivery_registry() -> DeliveryRegistry:
     registry = AsyncMock(spec=DeliveryRegistry)
     registry.deliveries = {}
     registry.transports = {}
+    registry.default_inclusion = None
     return registry
 
 

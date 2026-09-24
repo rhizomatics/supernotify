@@ -154,7 +154,7 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext, api_id: str) -
 def _prompt(engine: SupernotifyEngine) -> str:
     context = engine.context
     lines = ["Supernotify sends notifications to the household by phone, e-mail, speakers and other ways."]
-    if deliveries := [_labelled(name, d.alias) for name, d in context.delivery_registry.deliveries.items()]:
+    if deliveries := [_labelled(name, d.alias) for name, d in context.delivery_registry.choosable_deliveries.items()]:
         lines.append(f"Deliveries: {', '.join(deliveries)}.")
     if scenarios := [_labelled(name, s.alias) for name, s in context.scenario_registry.scenarios.items()]:
         lines.append(f"Scenarios: {', '.join(scenarios)}.")
@@ -198,7 +198,7 @@ def _notification_fields(engine: SupernotifyEngine, message_required: bool) -> d
         fields[vol.Optional("recipients", description="Who to notify. Leave out to use the usual recipients")] = [
             vol.In(recipients)
         ]
-    if deliveries := list(context.delivery_registry.deliveries):
+    if deliveries := list(context.delivery_registry.choosable_deliveries):
         fields[vol.Optional("deliveries", description="Use only these deliveries. Leave out to choose automatically")] = [
             vol.In(deliveries)
         ]

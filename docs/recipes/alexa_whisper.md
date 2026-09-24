@@ -18,7 +18,7 @@ Make all low priority Alexa announcements in a whisper.
 
 ## Implementation
 
-A scenario using Home Assistant conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_inform`.
+A scenario using Home Assistant conditions that applies a message template with Amazon SSML only to specific delivery config, in this case one called `alexa_devices_speak_all`.
 
 ## Example Configuration
 
@@ -29,9 +29,9 @@ scenarios:
       conditions: "{{notification_priority in ['low']}}"
 
       delivery:
-        plain_email:
+        email:
         mobile_push:
-        alexa_inform:
+        alexa_devices_speak_all:
           data:
             message_template: '<amazon:effect name="whispered">{{notification_message}}</amazon:effect>'
 ```

@@ -52,6 +52,8 @@ def _config(archive_path: Path | None = None) -> dict[str, Any]:
                 "priority": ["critical", "high"],
                 "inclusion": ["default"],
             },
+            "siren": {"transport": "generic", "action": "testing.mock_notification", "inclusion": ["scenario"]},
+            "backup": {"transport": "generic", "action": "testing.mock_notification", "inclusion": ["fallback"]},
         },
         "recipients": [{"person": "person.alice", "email": "alice@example.com"}, {"person": "person.bob"}],
         "scenarios": {"night": {"alias": "Night time"}},
@@ -163,6 +165,26 @@ async def test_notify_offers_only_configured_choices(hass: HomeAssistant) -> Non
         tool.parameters({"message": "hi", "recipients": ["mallory@example.com"]})
     with pytest.raises(vol.Invalid):
         tool.parameters({"message": "hi", "deliveries": ["not_configured"]})
+
+
+async def test_scenario_and_fallback_only_deliveries_not_offered(hass: HomeAssistant) -> None:
+    """Deliveries only a scenario, or a fallback, should use are left out of what the agent is told
+    about and can choose - but can still be snoozed"""
+    engine, _calls = await _setup(hass)
+    api = await _api(hass)
+    tools = {t.name: t for t in api.tools}
+
+    assert "siren" not in api.api_prompt
+    assert "backup" not in api.api_prompt
+    for tool in ("supernotify__notify", "supernotify__dry_run"):
+        for delivery in ("siren", "backup"):
+            with pytest.raises(vol.Invalid):
+                tools[tool].parameters({"message": "hi", "deliveries": [delivery]})
+    tools["supernotify__notify"].parameters({"message": "hi", "deliveries": ["chat", "urgent"]})
+
+    result = await _call(hass, "supernotify__snooze", {"action": "silence", "scope": "delivery", "name": "siren"})
+    assert result["success"] is True
+    assert [s.target for s in engine.context.snoozer.snoozes.values()] == ["siren"]
 
 
 async def test_notify_sends_to_named_recipient(hass: HomeAssistant) -> None:
@@ -311,7 +333,7 @@ async def test_dry_run_reports_snoozed_delivery(hass: HomeAssistant) -> None:
     result = await _call(hass, "supernotify__dry_run", {"deliveries": ["chat"]})
 
     assert result["result"]["deliveries"] == {"chat": {"skipped": "SNOOZED"}}
-    assert result["result"]["fallback"] == []
+    assert result["result"]["fallback"] == ["backup"]
 
 
 async def test_dry_run_reports_global_suppression(hass: HomeAssistant) -> None:

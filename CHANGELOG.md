@@ -1,17 +1,35 @@
 ## v2.10.0 - Assist Assist
 
 ### Action UI
-- Schemas and deliveries now get populated for easy picking
-  - The list is built when Supernotify starts up, and doesn't take into account subsequent enable/disable actions
-- Delivery config free-form text and Delivery Selection Basis moved to Advanced section
+- Scenarios and deliveries now get populated for easy picking
+  - The list is built when Supernotify starts up, is reloaded, or options saved - and after this doesn't take into account subsequent enable/disable actions
+  - Scenario only and fallback only deliveries won't be offered as choices
+- *Delivery Control* free-form text and *Delivery Selection* moved to Advanced section
+
+### Delivery Control Options from UI
+- Three new delivery options that further reduce need to create and edit YAML config
+  - Default Inclusion for Deliveries
+    - Unset by default
+    - Switch this to `explicit` or `scenario` to have NO deliveries fire by default, unless overridden by YAML delivery config or a scenario
+    - There will only be any notification if the action explicitly selects them or they're switched on by scenario
+    - This is a recommended option for full control, since it means every notification is scenario controlled and noisy notifications get filtered out easily
+  - Voice Occupancy Control - set a default for the `occupancy` setting for all deliveries using a SPOKEN transport, for example `TTS`, *Alexa Devices*, *Alexa Media Player*
+    - This means no Alexa notifications to an empty house, or whatever occupancy variation you like
+    - Can be overridden at delivery level, though for now that needs YAML setup
+  - MP4 Filtering for Apple Mobile Push
+    - A common Frigate blueprint problem is broken images on mobile push to Apple devices caused by Safari handling of MP4 video
+    - This will filter out any video URLs or attachments with MP4 extension from being pushed to known Apple devices
+    - Frigate notifications will fall back to the static thumbnail
+
 ### Home Assistant Assist
 - First beta of integrating with [Assist](https://www.home-assistant.io/voice_control/)
   - Works with voice or the chat icon built into the app
   - For built-in (non-AI) assist
-    - Send notifications
+    - Send notifications, including matching only on first name (if unique)
     - Snooze / unsnooze notifications
     - Get the last notification
-  - For AI backed agents
+    - English only
+  - For AI backed agents (Home Assistant 2026.3 or later)
     - Send notifications
       - Arbitrary addresses like emails and phones not accepted for safety (can be used via Recipients or Notify Entities)
       - Custom actions for mobile push also not supported for safety
@@ -20,14 +38,25 @@
     - Dry run a notification
     - Get help from the Supernotify documentation
 - All integration controlled via config UI, so can be fully or partially switched on or off
-- Functionality also available via Home Assistant's native MCP server
+- AI Tools functionality also available via Home Assistant's native MCP server
+
 ### Other
 - Action UI now has example values to help understand what fields do
-- Archive has new feature to return recent messages
-- Notifications collect unknown names
-- The `engine` has a new dry run function
-- Fix the web links for 'Learn More' links in Home Assistant
+- New `supernotify.enquire_archive` action, contributed by @lollox80
 - Improved Italian translations, provided by @lollox80
+- Inclusion now distinguishes `scenario` and `explicit`
+  - `explicit` can be chosen in an action or when enabled by a scenario
+  - `scenario` can only be selected by automated conditions, so won't appear as options on the Delivery choice in Actions UI
+
+### Internal
+- `llms-full.txt` for agent support now includes each page's URL for better help lookup
+- Unknown delivery or scenario names in a call are now logged along with the configured names, and kept as unknown_names in the archive
+- The `engine` has a new dry run function, available to users via the AI tooling
+- Repair issues now list what's configured, condition issues include the error, and diagnostics include open issues. The scenario action-group repair used the wrong message, now fixed.
+- Occupancy value in transport `delivery_defaults` now correctly respected when building deliveries
+- Fix the web links for 'Learn More' links in Home Assistant
+
+
 
 ## v2.9.1 - Snooze Fix
 

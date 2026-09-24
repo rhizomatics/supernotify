@@ -434,6 +434,7 @@
                     "archive": "Archiveinstellungen",
                     "dupe_check": "Duplikaterkennung",
                     "housekeeping": "Wartung",
+                    "delivery_control": "Zustellungssteuerung",
                     "llm_tools": "Assist und KI-Agenten"
                 },
                 "title": "Supernotify-Optionen"
@@ -525,6 +526,20 @@
                     "diagnostic_tools": "Letzte Benachrichtigungen erklären, testen, wen eine Benachrichtigung erreichen würde, Schlummerzeiten auflisten und online in der Supernotify-Dokumentation nachschlagen",
                     "sentence_commands": "Englische Sätze für den eingebauten Agenten, wie 'tell Alice that dinner is ready' oder 'snooze my notifications for 30 minutes'"
                 }
+            },
+            "delivery_control": {
+                "title": "Zustellungssteuerung",
+                "description": "Standardwerte für Zustellungen, die in YAML keine eigenen festlegen. Die delivery_defaults eines Transports in YAML haben weiterhin Vorrang.",
+                "data": {
+                    "default_inclusion": "Standard-Einbeziehung",
+                    "voice_occupancy": "Anwesenheit für gesprochene Zustellungen",
+                    "apple_drop_mp4": "Video bei Apple-Pushes weglassen"
+                },
+                "data_description": {
+                    "default_inclusion": "Wann eine Zustellung verwendet wird, sofern ihre eigene inclusion nichts anderes sagt. Auf dem Standard jedes Transports lassen, um das bisherige Verhalten beizubehalten.",
+                    "voice_occupancy": "Für wen gesprochene Zustellungen wie Alexa- und TTS-Ansagen gedacht sind, je nachdem, wer zu Hause ist – sofern eine Zustellung keine eigene occupancy festlegt.",
+                    "apple_drop_mp4": ".mp4-Videos, etwa einen Frigate-Clip, bei Push-Benachrichtigungen an Apple-Geräte weglassen, da diese sie nicht immer anzeigen können. Android-Geräte erhalten sie weiterhin."
+                }
             }
         }
     },
@@ -545,6 +560,27 @@
                 "error": "Fehler",
                 "dupe": "Duplikat",
                 "all": "Alle Ergebnisse"
+            }
+        },
+        "default_inclusion": {
+            "options": {
+                "transport": "Standard des jeweiligen Transports",
+                "default": "Standard – bei jeder Benachrichtigung verwendet",
+                "explicit": "Explizit – nur wenn für eine Benachrichtigung gewählt",
+                "scenario": "Szenario – nur wenn ein Szenario sie aktiviert"
+            }
+        },
+        "voice_occupancy": {
+            "options": {
+                "not_controlled": "Nicht gesteuert",
+                "all": "Alle, ob zu Hause oder nicht",
+                "all_in": "Alle, nur wenn alle zu Hause sind",
+                "all_out": "Alle, nur wenn alle unterwegs sind",
+                "any_in": "Alle, wenn jemand zu Hause ist",
+                "any_out": "Alle, wenn jemand unterwegs ist",
+                "only_in": "Nur Personen zu Hause",
+                "only_out": "Nur Personen unterwegs",
+                "none": "Niemand"
             }
         }
     }

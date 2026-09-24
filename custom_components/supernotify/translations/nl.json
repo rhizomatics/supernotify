@@ -434,6 +434,7 @@
                     "archive": "Archiefinstellingen",
                     "dupe_check": "Duplicaatdetectie",
                     "housekeeping": "Onderhoud",
+                    "delivery_control": "Bezorgingsbeheer",
                     "llm_tools": "Assist en AI-agenten (bèta)"
                 },
                 "title": "Supernotify-opties"
@@ -525,6 +526,20 @@
                     "diagnostic_tools": "Recente meldingen uitleggen, proefdraaien wie een melding zou bereiken, sluimeringen tonen en de Supernotify-documentatie online opzoeken",
                     "sentence_commands": "Engelse zinnen voor de ingebouwde agent, zoals 'tell Alice that dinner is ready' of 'snooze my notifications for 30 minutes'"
                 }
+            },
+            "delivery_control": {
+                "title": "Bezorgingsbeheer",
+                "description": "Standaardwaarden voor bezorgingen die in YAML geen eigen waarden instellen. De delivery_defaults van een transport in YAML gaan nog steeds voor.",
+                "data": {
+                    "default_inclusion": "Standaardopname",
+                    "voice_occupancy": "Aanwezigheid voor gesproken bezorgingen",
+                    "apple_drop_mp4": "Video weglaten bij Apple-pushmeldingen"
+                },
+                "data_description": {
+                    "default_inclusion": "Wanneer een bezorging wordt gebruikt, tenzij haar eigen inclusion anders zegt. Laat op de standaard van elk transport staan om het huidige gedrag te behouden.",
+                    "voice_occupancy": "Voor wie gesproken bezorgingen, zoals Alexa- en TTS-meldingen, bedoeld zijn, afhankelijk van wie er thuis is - tenzij een bezorging een eigen occupancy instelt.",
+                    "apple_drop_mp4": ".mp4-video, zoals een Frigate-clip, weglaten uit pushmeldingen naar Apple-apparaten, die deze niet altijd kunnen tonen. Android-apparaten krijgen de video nog wel."
+                }
             }
         }
     },
@@ -545,6 +560,27 @@
                 "error": "Fout",
                 "dupe": "Duplicaat",
                 "all": "Alle uitkomsten"
+            }
+        },
+        "default_inclusion": {
+            "options": {
+                "transport": "Eigen standaard van elk transport",
+                "default": "Standaard - gebruikt voor elke melding",
+                "explicit": "Expliciet - alleen als gekozen voor een melding",
+                "scenario": "Scenario - alleen als een scenario haar inschakelt"
+            }
+        },
+        "voice_occupancy": {
+            "options": {
+                "not_controlled": "Niet beheerd",
+                "all": "Iedereen, thuis of weg",
+                "all_in": "Iedereen, alleen als iedereen thuis is",
+                "all_out": "Iedereen, alleen als iedereen weg is",
+                "any_in": "Iedereen, als er iemand thuis is",
+                "any_out": "Iedereen, als er iemand weg is",
+                "only_in": "Alleen wie thuis is",
+                "only_out": "Alleen wie weg is",
+                "none": "Niemand"
             }
         }
     }

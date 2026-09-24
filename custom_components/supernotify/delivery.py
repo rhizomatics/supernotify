@@ -26,7 +26,10 @@ from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
     ATTR_TRANSPORT_ENABLED,
+    CONF_APPLE_DROP_MP4,
     CONF_DATA,
+    CONF_DEFAULT_INCLUSION,
+    CONF_DELIVERY_DEFAULTS,
     CONF_INCLUSION,
     CONF_LOAD,
     CONF_MESSAGE,
@@ -36,12 +39,15 @@ from .const import (
     CONF_TEMPLATE,
     CONF_TITLE,
     CONF_TRANSPORT,
+    CONF_VOICE_OCCUPANCY,
     INCLUSION_DEFAULT,
+    INCLUSION_EXPLICIT,
     INCLUSION_FALLBACK,
     INCLUSION_FALLBACK_ON_ERROR,
     RESERVED_DELIVERY_NAMES,
+    TRANSPORT_MOBILE_PUSH,
 )
-from .model import ConditionVariables, DeliveryConfig, SelectionRule
+from .model import ConditionVariables, DeliveryConfig, SelectionRule, TransportFeature
 from .options import (
     OPTION_DATA_KEYS_EXCLUDE_RE,
     OPTION_DATA_KEYS_INCLUDE_RE,
@@ -121,7 +127,11 @@ class Delivery(DeliveryConfig):
                 issue_map={"delivery": self.name},
                 learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
-        if CONF_INCLUSION not in self._raw_conf and INCLUSION_DEFAULT not in self.inclusion:
+        if (
+            CONF_INCLUSION not in self._raw_conf
+            and INCLUSION_DEFAULT not in self.inclusion
+            and context.delivery_registry.default_inclusion is None
+        ):
             _LOGGER.info(
                 "SUPERNOTIFY Delivery %s has no explicit inclusion, but transport %s no longer defaults to "
                 "'default' - it will not fire implicitly",
@@ -365,6 +375,7 @@ class DeliveryRegistry:
         transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
         # for unit tests only
         transport_instances: list[Transport] | None = None,
+        delivery_control: ConfigType | None = None,
     ) -> None:
         # raw configured deliveries
         self._config_deliveries: ConfigType = deliveries if isinstance(deliveries, dict) else {}
@@ -383,6 +394,11 @@ class DeliveryRegistry:
             self._transport_types = transport_types or {}
         # test harness support
         self._transport_instances: list[Transport] | None = transport_instances
+        # the Delivery Control options, each None when not set, leaving transports' own defaults
+        delivery_control = delivery_control or {}
+        self.default_inclusion: str | None = delivery_control.get(CONF_DEFAULT_INCLUSION)
+        self.voice_occupancy: str | None = delivery_control.get(CONF_VOICE_OCCUPANCY)
+        self.apple_drop_mp4: bool = bool(delivery_control.get(CONF_APPLE_DROP_MP4))
 
     async def initialize(self, context: Context) -> None:
         await self.initialize_transports(context)
@@ -456,9 +472,31 @@ class DeliveryRegistry:
         return [d for d in self._deliveries.values() if d.enabled and INCLUSION_FALLBACK_ON_ERROR in d.inclusion]
 
     @property
+    def choosable_deliveries(self) -> dict[str, Delivery]:
+        """Deliveries a notification can ask for - not ones only a scenario turns on, or only a fallback.
+        What the action editor's Delivery list and the LLM tools offer."""
+        return {
+            name: d for name, d in self._deliveries.items() if {INCLUSION_DEFAULT, INCLUSION_EXPLICIT}.intersection(d.inclusion)
+        }
+
+    @property
     def implicit_deliveries(self) -> list[Delivery]:
         """Deliveries switched on all the time via implicit inclusion"""
         return [d for d in self._deliveries.values() if d.enabled and INCLUSION_DEFAULT in d.inclusion]
+
+    def apply_delivery_control(self, transport: Transport, transport_config: ConfigType) -> None:
+        """Give a transport's deliveries the Delivery Control defaults, where the transport's own
+        YAML `delivery_defaults` doesn't set them. A delivery's own YAML still wins over both."""
+        from .transports.mobile_push import OPTION_APPLE_DROP_MP4
+
+        own: ConfigType = transport_config.get(CONF_DELIVERY_DEFAULTS) or {}
+        defaults: DeliveryConfig = transport.delivery_defaults
+        if self.default_inclusion and CONF_INCLUSION not in own:
+            defaults.inclusion = [self.default_inclusion]
+        if self.voice_occupancy and CONF_OCCUPANCY not in own and transport.supported_features & TransportFeature.SPOKEN:
+            defaults.occupancy = self.voice_occupancy
+        if self.apple_drop_mp4 and transport.name == TRANSPORT_MOBILE_PUSH:
+            defaults.options.setdefault(OPTION_APPLE_DROP_MP4, True)
 
     async def initialize_transports(self, context: Context) -> None:
         if self._transport_instances:
@@ -477,6 +515,7 @@ class DeliveryRegistry:
                     _LOGGER.debug("SUPERNOTIFY %s transport configured not to load", transport_class.name)
                     continue
                 transport = transport_class(context, transport_config, **kwargs)
+                self.apply_delivery_control(transport, transport_config)
                 if not transport.is_viable(context.hass_api):
                     _LOGGER.info("SUPERNOTIFY %s transport has no viable configuration, not loaded", transport_class.name)
                     continue
