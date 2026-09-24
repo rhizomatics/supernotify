@@ -49,7 +49,7 @@ Supernotify é um componente personalizado disponível através do [Home Assista
 
 ## Documentação
 
-Experimente o [Início Rápido](https://supernotify.rhizomatics.org.uk/getting_started/), a explicação dos [conceitos fundamentais](https://supernotify.rhizomatics.org.uk/concepts/) e os [adaptadores de transporte](https://supernotify.rhizomatics.org.uk/transports/) disponíveis. [Notificando](https://supernotify.rhizomatics.org.uk/usage/notifying/) mostra como chamar o Supernotify a partir de automações ou da página de ferramentas do desenvolvedor.
+Experimente o [Início Rápido](https://supernotify.rhizomatics.org.uk/getting_started/), a explicação dos [conceitos fundamentais](https://supernotify.rhizomatics.org.uk/pt/concepts/) e os [adaptadores de transporte](https://supernotify.rhizomatics.org.uk/transports/) disponíveis. [Notificando](https://supernotify.rhizomatics.org.uk/usage/notifying/) mostra como chamar o Supernotify a partir de automações ou da página de ferramentas do desenvolvedor.
 
 Há muitas [receitas](https://supernotify.rhizomatics.org.uk/recipes/) com exemplos de configuração, ou navegue por [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -101,7 +101,7 @@ Há muitas [receitas](https://supernotify.rhizomatics.org.uk/recipes/) com exemp
 
 Atualmente, o Supernotify suporta a configuração padrão pela interface do Home Assistant para a configuração básica, e [configuração YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) para recursos avançados. O YAML será mantido para facilitar o trabalho com bases de regras maiores.
 
-Muito pode ser feito com a simples configuração sem YAML, incluindo a automação da configuração de push móvel. Veja as [receitas](recipes/index.md) na documentação, e este exemplo de push móvel:
+Muito pode ser feito com a simples configuração sem YAML, incluindo a automação da configuração de push móvel. Veja as [receitas](https://supernotify.rhizomatics.org.uk/recipes/) na documentação, e este exemplo de push móvel:
 
 ```yaml title="Com zero YAML, tudo configurado pela interface"
   - action: supernotify.notify

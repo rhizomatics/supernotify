@@ -49,7 +49,7 @@ Supernotify is een aangepast component beschikbaar via de [Home Assistant Commun
 
 ## Documentatie
 
-Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
+Bekijk [Aan de slag](https://supernotify.rhizomatics.org.uk/getting_started/), de uitleg van [kernconcepten](https://supernotify.rhizomatics.org.uk/nl/concepts/) en de beschikbare [transportadapters](https://supernotify.rhizomatics.org.uk/transports/). [Meldingen versturen](https://supernotify.rhizomatics.org.uk/usage/notifying/) laat zien hoe u Supernotify aanroept vanuit automatiseringen of de ontwikkelaarstools.
 
 Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voorbeeldconfiguraties, of blader op [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -101,7 +101,7 @@ Er zijn veel [recepten](https://supernotify.rhizomatics.org.uk/recipes/) met voo
 
 Supernotify ondersteunt momenteel standaard Home Assistant UI-configuratie voor de basisinstelling, en [YAML-configuratie](https://supernotify.rhizomatics.org.uk/configuration/yaml/) voor geavanceerde functies. YAML blijft behouden om het werken met grotere regelsets te vergemakkelijken.
 
-Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief automatisering van de mobiele push-instelling. Zie de [recepten](recipes/index.md) in de documentatie, en dit mobiele push-voorbeeld:
+Met de eenvoudige niet-YAML-configuratie kan al veel worden bereikt, inclusief automatisering van de mobiele push-instelling. Zie de [recepten](https://supernotify.rhizomatics.org.uk/recipes/) in de documentatie, en dit mobiele push-voorbeeld:
 
 ```yaml title="Met nul YAML, alles via de UI geconfigureerd"
   - action: supernotify.notify

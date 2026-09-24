@@ -2,13 +2,13 @@
 tags:
   - developer
   - classes
-  description: Recipients and Scenario classes in Supernotify for Home Assistant
+description: Recipients and Scenario classes in Supernotify for Home Assistant
 ---
 # Recipients and Scenario Classes
 
 !!! info
 
-    See the [Class Diagram](../class_diagram.md) for how these relate to each other.
+    See the [Class Diagram](../../class_diagram.md) for how these relate to each other.
 
 
 ::: custom_components.supernotify.scenario.Scenario
@@ -31,10 +31,6 @@ tags:
     handler: python
     heading_level: 2
 
-::: custom_components.supernotify.people.PeopleRegistry
-    handler: python
-    heading_level: 2
-
-::: custom_components.supernotify.scenario.ScenarioRegistry
+::: custom_components.supernotify.hass_api.TrackedDeviceDetails
     handler: python
     heading_level: 2

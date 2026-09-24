@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+import voluptuous as vol
+
 from custom_components.supernotify.const import (
     ATTR_EMAIL,
     ATTR_MEDIA,
@@ -8,10 +11,12 @@ from custom_components.supernotify.const import (
     CONF_DATA,
     CONF_DELIVERY_DEFAULTS,
     CONF_OCCUPANCY,
+    CONF_PERSON,
     CONF_TEMPLATE,
+    CONF_USER_ID,
     OCCUPANCY_ALL_IN,
 )
-from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA, TARGET_SCHEMA, TRANSPORT_SCHEMA
+from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA, RECIPIENT_SCHEMA, TARGET_SCHEMA, TRANSPORT_SCHEMA
 
 
 def test_transport_delivery_defaults_accepts_delivery_only_fields() -> None:
@@ -55,3 +60,20 @@ def test_notify_action_schema_accepts_media_snapshot_image_path() -> None:
         ATTR_MEDIA: {ATTR_MEDIA_SNAPSHOT_PATH: "/config/media/supernotify/image/shot.jpg"},
     })
     assert validated[ATTR_MEDIA][ATTR_MEDIA_SNAPSHOT_PATH] == "/config/media/supernotify/image/shot.jpg"
+
+
+def test_recipient_schema_accepts_user_id_without_person() -> None:
+    """A household that only sets up HA Users (no Person records) can still be a recipient."""
+    validated = RECIPIENT_SCHEMA({CONF_USER_ID: "abc123"})
+    assert validated[CONF_USER_ID] == "abc123"
+    assert CONF_PERSON not in validated
+
+
+def test_recipient_schema_accepts_person_without_user_id() -> None:
+    validated = RECIPIENT_SCHEMA({CONF_PERSON: "person.alice"})
+    assert validated[CONF_PERSON] == "person.alice"
+
+
+def test_recipient_schema_rejects_recipient_with_neither_person_nor_user_id() -> None:
+    with pytest.raises(vol.Invalid):
+        RECIPIENT_SCHEMA({"alias": "Nobody"})

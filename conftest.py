@@ -75,6 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 # `--log-cli-level=DEBUG` surfaces supernotify's own logs instead of HA/asyncio internals.
 logging.getLogger("homeassistant.core").setLevel(logging.INFO)
 logging.getLogger("asyncio").setLevel(logging.INFO)
+logging.getLogger("PIL").setLevel(logging.INFO)
 
 IMAGE_PATH: Path = Path("tests") / "components" / "supernotify" / "fixtures" / "media"
 
@@ -179,6 +180,12 @@ def mock_hass(
     hass.config_entries.async_entries = lambda domain, **_kwargs: [Mock(data={})] if domain == "mobile_app" else []
     hass.loop_thread_id = "99999"
     hass.loop.time.return_value = 0.0  # timers (async_track_time_interval) do arithmetic on loop.time()
+    # unconfigured, auth.async_get_users() awaits to a bare Mock, which async_real_user_ids()
+    # (hass_api.py, feeding PeopleRegistry's User-only recipient auto-discovery) can't iterate -
+    # no real HA users in this mocked house by default, same "give it a sensible default" as the
+    # rest of this fixture, not the empty-Mock behavior Mock(spec=...) would otherwise leave in
+    hass.auth = AsyncMock()
+    hass.auth.async_get_users = AsyncMock(return_value=[])
     return hass
 
 
@@ -246,6 +253,7 @@ def mock_hass_api(mock_hass: HomeAssistant) -> HomeAssistantAPI:
     mocked._hass = mock_hass
     mocked._hass.get_state = Mock(return_value=Mock(spec=State))
     mocked.template = Mock(return_value=Mock(spec=Template))
+    mocked.group_members = Mock(return_value=None)
     mock_http_session: AsyncMock = AsyncMock(spec=aiohttp.ClientSession)
     mock_http_session.get = AsyncMock()
     mocked.http_session.return_value = mock_http_session
@@ -292,16 +300,19 @@ def mock_context(
     return context
 
 
-@pytest.fixture(scope="module", params=["jpeg", "png", "gif"])
+def test_image(format: str = "jpeg") -> TestImage:  # ruff: ignore[pytest-parameter-with-default-argument]
+    path = IMAGE_PATH / f"example_image.{format}"
+    return TestImage(io.FileIO(path, "rb").readall(), path, format, f"image/{format}")
+
+
+@pytest.fixture(scope="module", params=["jpeg", "png", "gif", "webp"])
 def sample_image(request) -> TestImage:
-    path = IMAGE_PATH / f"example_image.{request.param}"
-    return TestImage(io.FileIO(path, "rb").readall(), path, request.param, f"image/{request.param}")
+    return test_image(request.param)
 
 
 @pytest.fixture
 def sample_jpeg(request) -> TestImage:
-    path = IMAGE_PATH / "example_image.jpeg"
-    return TestImage(io.FileIO(path, "rb").readall(), path, "jpeg", "image/jpeg")
+    return test_image("jpeg")
 
 
 @pytest.fixture
@@ -352,7 +363,7 @@ def unmocked_hass_api(hass: HomeAssistant) -> HomeAssistantAPI:
 async def unmocked_config(uninitialized_unmocked_config: Context, mock_hass: HomeAssistant) -> Context:
     config = uninitialized_unmocked_config
     await config.initialize()
-    config.people_registry.initialize()
+    await config.people_registry.initialize()
     hass_api = HomeAssistantAPI(mock_hass)
     await config.delivery_registry.initialize(uninitialized_unmocked_config)
     await config.scenario_registry.initialize(config.delivery_registry, {}, hass_api)

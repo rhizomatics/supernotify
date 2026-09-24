@@ -122,16 +122,10 @@ Additionally, `target_required` defines if this delivery needs targets to work, 
 - `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
 - `optional` - Don't require targets but still compute them and make them available for the notification
 
-Home Assistant `area_id`, `floor_id` and `label_id` targets are handled according to the `target_selectors` option:
-
-- `auto` - the default, pass the selectors through untouched if the delivery's action declares that it accepts
-  targets ( as `notify.send_message` does ), otherwise resolve them within Supernotify
-- `native` - always pass the selectors through to the action, for example when the action is known to accept them but isn't described that way
-- `resolve` - always resolve the selectors to entities within Supernotify first, using the same core logic as
-  Home Assistant actions, so groups are expanded and entities inherit the area of their device, and then apply the
-  delivery's `target_categories` and `target_select` options to the result
-
-The `tts` and `chime` transports default to `resolve`, since their actions are targeted per entity rather than by the notification target.
+Home Assistant `area_id`, `floor_id` and `label_id` targets are resolved to the entities they reference before
+anything else looks at them, using the same core logic as a Home Assistant entity action, so groups are expanded
+and an entity inherits the area of its device. The delivery's `target_categories` and `target_select` options then
+apply to those entities, exactly as they would to an entity named in the notification.
 
 See [Targets](../usage/targets.md) for more info on how to use them.
 
@@ -187,7 +181,7 @@ transports:
 
 ## Extreme Example
 
-Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](../developer/schemas/Delivery_Definition.md) definition.
+Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](../developer/reference/schemas/Delivery_Definition.md) definition.
 
 ```yaml title="Complex Example"
 delivery:

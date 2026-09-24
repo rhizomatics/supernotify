@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Restablecer anulaciones"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Notificación {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Notificación entregada ({delivered_count} entrega(s) enviada(s)), pero {uncategorized_count} destino(s) no se pudieron asociar a ninguna entrega y fueron descartados: {uncategorized_targets} (entregas comprobadas: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "No hay ningún archivo configurado para esta instancia de Supernotify"
+        },
+        "no_media_storage_configured": {
+            "message": "No hay ningún almacenamiento de medios configurado para esta instancia de Supernotify"
         }
     },
     "options": {

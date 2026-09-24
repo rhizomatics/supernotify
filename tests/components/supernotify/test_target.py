@@ -259,6 +259,7 @@ def test_select_does_not_apply_target_selector_to_person_ids() -> None:
 def test_select_only_looks_up_entity_platform_when_a_platform_is_declared() -> None:
     hass_api = Mock()
     hass_api.platform_for_entity.side_effect = lambda entity_id: {"notify.echo": "alexa_devices"}.get(entity_id)
+    hass_api.group_members.return_value = None
     uut = Target(["notify.echo", "notify.other", "switch.lamp"])
 
     by_domain = uut.select([TargetEntityCategory(domain="notify")], ("n", "n"), hass_api)

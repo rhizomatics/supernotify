@@ -44,9 +44,7 @@ from custom_components.supernotify.options import (
     OPTION_DEVICE_DOMAIN,
     OPTION_DEVICE_MODEL_SELECT,
     OPTION_TARGET_SELECT,
-    OPTION_TARGET_SELECTORS,
     SELECT_EXCLUDE,
-    TARGET_SELECTORS_RESOLVE,
     DeliveryOption,
 )
 from custom_components.supernotify.schema import DATA_SCHEMA, TARGET_SCHEMA
@@ -160,7 +158,7 @@ class MiniChimeTransport:
     def build(
         self,
         target_config: ChimeTargetConfig,
-        action_data: dict[str, Any],
+        action_data: dict[str, Any] | None = None,
         entity_name: str | None = None,
         envelope: Envelope | None = None,
         **_kwargs: Any,
@@ -171,8 +169,13 @@ class MiniChimeTransport:
 class RestCommandChimeTransport(MiniChimeTransport):
     domain = "rest_command"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
-        self, target_config: ChimeTargetConfig, entity_name: str | None, **_kwargs: Any
+    def build(
+        self,
+        target_config: ChimeTargetConfig,
+        action_data: dict[str, Any] | None = None,
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
+        **_kwargs: Any,
     ) -> ActionCall | None:
         if entity_name is None:
             _LOGGER.warning("SUPERNOTIFY rest_command chime target requires entity")
@@ -184,8 +187,13 @@ class RestCommandChimeTransport(MiniChimeTransport):
 class SwitchChimeTransport(MiniChimeTransport):
     domain = "switch"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
-        self, target_config: ChimeTargetConfig, **_kwargs: Any
+    def build(
+        self,
+        target_config: ChimeTargetConfig,
+        action_data: dict[str, Any] | None = None,
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
+        **_kwargs: Any,
     ) -> ActionCall | None:
         return ActionCall(self.domain, "turn_on", target_data={ATTR_ENTITY_ID: target_config.entity_id})
 
@@ -193,8 +201,13 @@ class SwitchChimeTransport(MiniChimeTransport):
 class SirenChimeTransport(MiniChimeTransport):
     domain = "siren"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
-        self, target_config: ChimeTargetConfig, **_kwargs: Any
+    def build(
+        self,
+        target_config: ChimeTargetConfig,
+        action_data: dict[str, Any] | None = None,
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
+        **_kwargs: Any,
     ) -> ActionCall | None:
         output_data: dict[str, Any] = {ATTR_DATA: {}}
         if target_config.tune:
@@ -211,15 +224,19 @@ class SirenChimeTransport(MiniChimeTransport):
 class ScriptChimeTransport(MiniChimeTransport):
     domain = "script"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
+    def build(
         self,
         target_config: ChimeTargetConfig,
-        entity_name: str | None,
-        envelope: Envelope,
+        action_data: dict[str, Any] | None = None,
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
         **_kwargs: Any,
     ) -> ActionCall | None:
         if entity_name is None:
             _LOGGER.warning("SUPERNOTIFY Script chime target requires entity")
+            return None
+        if envelope is None:
+            _LOGGER.warning("SUPERNOTIFY Script chime target requires envelope")
             return None
         variables: dict[str, Any] = target_config.data or {}
         variables[ATTR_MESSAGE] = envelope.message
@@ -240,8 +257,13 @@ class ScriptChimeTransport(MiniChimeTransport):
 class AlexaDevicesChimeTransport(MiniChimeTransport):
     domain = "alexa_devices"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
-        self, target_config: ChimeTargetConfig, **_kwargs: Any
+    def build(
+        self,
+        target_config: ChimeTargetConfig,
+        action_data: dict[str, Any] | None = None,
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
+        **_kwargs: Any,
     ) -> ActionCall | None:
         output_data: dict[str, Any] = {
             "device_id": target_config.device_id,
@@ -253,8 +275,13 @@ class AlexaDevicesChimeTransport(MiniChimeTransport):
 class MediaPlayerChimeTransport(MiniChimeTransport):
     domain = "media_player"
 
-    def build(  # type: ignore[override]  # ty: ignore[invalid-method-override]
-        self, target_config: ChimeTargetConfig, action_data: dict[str, Any], **_kwargs: Any
+    def build(
+        self,
+        target_config: ChimeTargetConfig,
+        action_data: dict[str, Any] | None = None,
+        entity_name: str | None = None,
+        envelope: Envelope | None = None,
+        **_kwargs: Any,
     ) -> ActionCall | None:
         input_data = target_config.data or {}
         if action_data:
@@ -322,8 +349,6 @@ class ChimeTransport(Transport):
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
-            # chimes are actioned one entity at a time, so area/floor/label are resolved to entities here
-            OPTION_TARGET_SELECTORS: TARGET_SELECTORS_RESOLVE,
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
             OPTION_DEVICE_DOMAIN: DEVICE_DOMAINS,

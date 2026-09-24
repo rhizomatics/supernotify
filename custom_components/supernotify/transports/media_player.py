@@ -4,6 +4,9 @@ import logging
 import urllib.parse
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
@@ -81,9 +84,9 @@ class MediaPlayerTransport(Transport):
         _LOGGER.debug("SUPERNOTIFY notify_media: %s", envelope.data)
 
         data: dict[str, Any] = envelope.data or {}
-        target_data: dict[str, Any] = self.action_target(envelope, envelope.target.entity_ids or None)
+        media_players: list[str] = envelope.target.entity_ids or []
         media_type: str = data.get("media_content_type", "image")
-        if not self.has_action_target(target_data):
+        if not media_players:
             _LOGGER.debug("SUPERNOTIFY Skipping media show, no targets")
             return False
 
@@ -98,4 +101,4 @@ class MediaPlayerTransport(Transport):
         if data and data.get("enqueue"):
             action_data["enqueue"] = data.get("enqueue")
 
-        return await self.call_action(envelope, action_data=action_data, target_data=target_data)
+        return await self.call_action(envelope, action_data=action_data, target_data={ATTR_ENTITY_ID: media_players})

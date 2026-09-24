@@ -49,7 +49,7 @@ Supernotify est un composant personnalisé disponible via le [Home Assistant Com
 
 ## Documentation
 
-Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
+Essayez [Démarrage](https://supernotify.rhizomatics.org.uk/getting_started/), l'explication des [concepts fondamentaux](https://supernotify.rhizomatics.org.uk/fr/concepts/) et les [adaptateurs de transport](https://supernotify.rhizomatics.org.uk/transports/) disponibles. [Notification](https://supernotify.rhizomatics.org.uk/usage/notifying/) montre comment appeler Supernotify depuis des automatisations ou la page des outils de développement.
 
 Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) avec des exemples de configuration, ou parcourez par [tags](https://supernotify.rhizomatics.org.uk/tags/).
 
@@ -101,7 +101,7 @@ Il y a beaucoup de [recettes](https://supernotify.rhizomatics.org.uk/recipes/) a
 
 Supernotify prend actuellement en charge la configuration standard via l'interface Home Assistant pour la configuration de base, et la [configuration YAML](https://supernotify.rhizomatics.org.uk/configuration/yaml/) pour les fonctionnalités avancées. YAML sera conservé pour faciliter le travail avec des ensembles de règles plus importants.
 
-Beaucoup de choses peuvent être faites avec la configuration simple sans YAML, y compris l'automatisation de la configuration des notifications push mobiles. Consultez les [recettes](recipes/index.md) dans la documentation, ainsi que cet exemple de notification push mobile :
+Beaucoup de choses peuvent être faites avec la configuration simple sans YAML, y compris l'automatisation de la configuration des notifications push mobiles. Consultez les [recettes](https://supernotify.rhizomatics.org.uk/recipes/) dans la documentation, ainsi que cet exemple de notification push mobile :
 
 ```yaml title="Avec zéro YAML, tout configuré via l'interface"
   - action: supernotify.notify

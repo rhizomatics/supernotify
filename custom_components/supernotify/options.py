@@ -27,12 +27,6 @@ OPTION_MESSAGE_USAGE = "message_usage"
 OPTION_TARGET_CATEGORIES = "target_categories"
 OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_SELECT = "target_select"
-# how area_id/floor_id/label_id targets are handled for a delivery
-OPTION_TARGET_SELECTORS = "target_selectors"
-TARGET_SELECTORS_AUTO = "auto"  # discover from the action description whether selectors pass through
-TARGET_SELECTORS_NATIVE = "native"  # pass selectors through to the underlying action untouched
-TARGET_SELECTORS_RESOLVE = "resolve"  # resolve selectors to entity_ids within supernotify
-TARGET_SELECTORS_VALUES = [TARGET_SELECTORS_AUTO, TARGET_SELECTORS_NATIVE, TARGET_SELECTORS_RESOLVE]
 OPTION_DATA_KEYS_SELECT = "data_keys_select"
 OPTION_DEVICE_DOMAIN = "device_domain"
 OPTION_DEVICE_MODEL_SELECT = "device_model_select"
@@ -74,17 +68,8 @@ COMMON_OPTIONS: list[DeliveryOption] = [
     DeliveryOption(OPTION_MESSAGE_USAGE, "Combine message and title, default title", examples=["combine_title", "use_title"]),
     DeliveryOption(
         OPTION_TARGET_SELECT,
-        "Only use targets fully matching these regular expressions",
+        "Only use targets fully matching these regular expressions, group members expanded first",
         value_type=SelectionRule,
-    ),
-    DeliveryOption(
-        OPTION_TARGET_SELECTORS,
-        "How area, floor and label targets are handled",
-        value_type=vol.In({
-            TARGET_SELECTORS_AUTO: "Pass through if the action accepts a target selector, otherwise resolve",
-            TARGET_SELECTORS_NATIVE: "Always pass through to the action untouched",
-            TARGET_SELECTORS_RESOLVE: "Resolve to entity_ids within Supernotify",
-        }),
     ),
     DeliveryOption(
         OPTION_UNIQUE_TARGETS,

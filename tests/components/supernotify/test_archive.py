@@ -92,6 +92,45 @@ async def test_integration_archive(mock_hass: HomeAssistant, diagnostics: Outcom
             assert reobj["enabled_scenarios"]["alarming"]["enabled"]
 
 
+@pytest.mark.parametrize(argnames="debug", argvalues=[True, False], ids=["debug_call", "plain_call"])
+async def test_debug_call_archives_trace_whatever_diagnostics(
+    mock_hass: HomeAssistant, mock_hass_api: HomeAssistantAPI, debug: bool
+) -> None:
+    with tempfile.TemporaryDirectory() as archive:
+        uut = SupernotifyEngine(
+            mock_hass,
+            scenarios={"quiet": SCENARIO_SCHEMA({"delivery": {"chime": {"enabled": False}}})},
+            deliveries={"chime": {"transport": "chime"}},
+            recipients=[],
+            archive={
+                CONF_ENABLED: True,
+                CONF_ARCHIVE_PATH: archive,
+                CONF_ARCHIVE_DIAGNOSTICS: OutcomeSelection.ERROR,
+                CONF_ARCHIVE_EVENT_SELECTION: OutcomeSelection.NONE,
+            },
+        )
+        await uut.initialize()
+        await uut.async_send_message("just a test", data={"debug": debug, "apply_scenarios": ["quiet"]})
+
+        assert uut.last_notification is not None
+        assert uut.last_notification.outcome() != "error"
+        obj_path: anyio.Path = anyio.Path(archive) / f"{uut.last_notification.base_filename()}.json"
+        async with aiofiles.open(obj_path) as stream:
+            reobj = json.loads("".join(await stream.readlines()))
+        # provenance is archived for every notification, the rest of the trace only with debug
+        assert reobj["delivery_provenance"]["chime"]["disabled_by"] == ["scenario:quiet"]
+        if debug:
+            assert "resolved" in reobj["debug_trace"]
+        else:
+            assert "debug_trace" not in reobj
+
+        # debug only changes the content archived, not which outcomes generate events
+        events = NotificationArchive({CONF_ENABLED: True, CONF_ARCHIVE_EVENT_SELECTION: OutcomeSelection.ERROR}, mock_hass_api)
+        await events.initialize()
+        await events.archive(uut.last_notification)
+        mock_hass_api.fire_event.assert_not_called()  # type: ignore
+
+
 async def test_integration_archive_with_ha_context(mock_hass: HomeAssistant) -> None:
     """A real automation/script call passes a homeassistant.core.Context, which used to
     crash archiving since Context.as_dict() doesn't accept the occupancy_only kwarg

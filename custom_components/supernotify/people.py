@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.redact import partial_redact
+from homeassistant.util import slugify
 
 from .common import ensure_list
 from .const import (
@@ -39,6 +40,7 @@ from .const import (
     CONF_MOBILE_DISCOVERY,
     CONF_PERSON,
     CONF_PHONE_NUMBER,
+    CONF_USER_ID,
     OCCUPANCY_ALL,
     OCCUPANCY_ALL_IN,
     OCCUPANCY_ALL_OUT,
@@ -72,6 +74,7 @@ class RecipientNotifyEntity(NotifyEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_translation_key = "recipient"
 
     def __init__(
         self,
@@ -167,18 +170,30 @@ class Recipient:
 
     def __init__(self, config: dict[str, Any] | None, default_mobile_discovery: bool = True) -> None:
         config = config or {}
-        self.entity_id: str = config[CONF_PERSON]
+        self.alias: str | None = config.get(CONF_ALIAS)
+        self.email: str | None = config.get(CONF_EMAIL)
+        self.phone_number: str | None = config.get(CONF_PHONE_NUMBER)
+        self.user_id: str | None = config.get(CONF_USER_ID)
+        # A recipient normally is a native HA Person, but CONF_PERSON is optional - a household
+        # that only sets up Users (no Person records) still has a working, addressable recipient
+        # via CONF_USER_ID alone. entity_id is then a synthetic, never-registered id (`user.<name>`
+        # rather than `person.<name>` - both kinds of config are still "recipients", so that word
+        # alone wouldn't distinguish them), used purely as this recipient's internal key (person_id
+        # target category, notify/binary_sensor/switch entity naming, snooze/delivery-override
+        # lookups) - see also the "impossible for a real HA entity to exist" cases these lookups
+        # already handle gracefully, e.g. PeopleRegistry person_attributes()/
+        # _fetch_person_entity_state() returning None for an unknown entity_id.
+        self.entity_id: str = config.get(CONF_PERSON) or ""
+        if self.entity_id:
+            self.name: str = self.entity_id.replace("person.", "")
+        else:
+            self.name = slugify(self.alias or self.user_id or "")
+            self.entity_id = f"user.{self.name}"
         self.notify_entity_id: str | None = None
         # Set/cleared by RecipientNotifyEntity.async_added_to_hass()/async_will_remove_from_hass()
         # - the live entity object itself, so record_notification() can be called directly from
         # Notification.record_result() without a registry lookup by entity_id.
         self.notify_entity: RecipientNotifyEntity | None = None
-        self.name: str = self.entity_id.replace("person.", "")
-        self.alias: str | None = config.get(CONF_ALIAS)
-        self.email: str | None = config.get(CONF_EMAIL)
-        self.phone_number: str | None = config.get(CONF_PHONE_NUMBER)
-        # test support only
-        self.user_id: str | None = config.get(ATTR_USER_ID)
 
         self._target: Target = Target(config.get(CONF_TARGET, {}), target_data=config.get(CONF_DATA))
         self.delivery_overrides: dict[str, DeliveryCustomization] = {
@@ -202,7 +217,13 @@ class Recipient:
         if self.phone_number:
             self._target.extend(ATTR_PHONE, self.phone_number)
         if self.mobile_discovery:
-            discovered_devices: list[TrackedDeviceDetails] = people_registry.mobile_devices_for_person(self.entity_id)
+            # a known user_id (explicitly configured, or already backfilled below from a prior
+            # initialize()) resolves devices directly, without needing a Person entity at all
+            discovered_devices: list[TrackedDeviceDetails] = (
+                people_registry.mobile_devices_for_user(self.user_id)
+                if self.user_id
+                else people_registry.mobile_devices_for_person(self.entity_id)
+            )
             if discovered_devices:
                 new_ids = []
                 for d in discovered_devices:
@@ -331,24 +352,41 @@ class PeopleRegistry:
         # then, and in tests that build PeopleRegistry directly without a config entry.
         self._entities: dict[str, SupernotifyRecipientBinarySensor] = {}
 
-    def initialize(self) -> None:
+    async def initialize(self) -> None:
         recipients: dict[str, dict[str, Any]] = {}
         if self.discover:
             entity_ids = self.find_people()
+            person_user_ids: set[str] = set()
             if entity_ids:
                 recipients = {entity_id: {CONF_PERSON: entity_id} for entity_id in entity_ids}
+                for entity_id in entity_ids:
+                    attrs = self.person_attributes(entity_id)
+                    if attrs and isinstance(attrs.get(ATTR_USER_ID), str):
+                        person_user_ids.add(attrs[ATTR_USER_ID])
                 _LOGGER.info("SUPERNOTIFY Auto-discovered people: %s", entity_ids)
 
+            # Users are the essential HA concept - mobile_app itself only requires one, a Person
+            # is a separate, optional layer (see CONF_USER_ID in const.py) - so a real user with
+            # no matching Person here is still discoverable, just without Person's presence
+            # tracking/UI. A user already represented by a Person above is not duplicated.
+            real_user_ids = await self.hass_api.async_real_user_ids()
+            user_only_ids = {uid: name for uid, name in real_user_ids.items() if uid not in person_user_ids}
+            if user_only_ids:
+                recipients.update({uid: {CONF_USER_ID: uid, CONF_ALIAS: name} for uid, name in user_only_ids.items()})
+                _LOGGER.info("SUPERNOTIFY Auto-discovered user-only accounts: %s", list(user_only_ids.values()))
+
         for r in self._recipients:
-            if CONF_PERSON not in r or not r[CONF_PERSON]:
-                _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with no 'person' key:%s", r)
+            # merge/dedupe key only - the recipient's real identity (entity_id) is derived by
+            # Recipient itself, below, from whichever of these was given
+            key = r.get(CONF_PERSON) or r.get(CONF_USER_ID)
+            if not key:
+                _LOGGER.warning("SUPERNOTIFY Skipping invalid recipient with neither 'person' nor 'user_id' key:%s", r)
                 continue
-            person_id = r[CONF_PERSON]
-            if person_id in recipients:
-                _LOGGER.debug("SUPERNOTIFY Overriding %s entity defaults from recipient config", person_id)
-                recipients[person_id].update(r)
+            if key in recipients:
+                _LOGGER.debug("SUPERNOTIFY Overriding %s entity defaults from recipient config", key)
+                recipients[key].update(r)
             else:
-                recipients[person_id] = r
+                recipients[key] = r
 
         for r in recipients.values():
             recipient: Recipient = Recipient(r, default_mobile_discovery=self.mobile_discovery)
@@ -474,6 +512,10 @@ class PeopleRegistry:
         else:
             user_id = person_state.attributes.get(ATTR_USER_ID)
             if user_id:
-                return self.hass_api.mobile_app_by_user_id(user_id) or []
+                return self.mobile_devices_for_user(user_id)
             _LOGGER.debug("SUPERNOTIFY Unable to link %s to a user_id", person_entity_id)
         return []
+
+    def mobile_devices_for_user(self, user_id: str) -> list[TrackedDeviceDetails]:
+        """Auto detect mobile_app targets for a HA user, with no Person entity required."""
+        return self.hass_api.mobile_app_by_user_id(user_id) or []

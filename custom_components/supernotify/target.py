@@ -226,11 +226,14 @@ class Target:
 
     @classmethod
     def is_entity_id(cls, target: str) -> bool:
-        return valid_entity_id(target) and not target.startswith("person.")
+        return valid_entity_id(target) and not target.startswith(("person.", "user."))
 
     @classmethod
     def is_person_id(cls, target: str) -> bool:
-        return target.startswith("person.") and valid_entity_id(target)
+        """True for a real Person entity_id, or a Recipient's synthetic `user.<name>` id - used
+        to identify a recipient with no Person record (see people.Recipient.entity_id). Both are
+        `person_id`-category target values, resolved the same way downstream."""
+        return target.startswith(("person.", "user.")) and valid_entity_id(target)
 
     @classmethod
     def is_phone(cls, target: str) -> bool:
@@ -257,23 +260,8 @@ class Target:
     def has_targets(self) -> bool:
         return any(targets for targets in self.targets.values())
 
-    def has_resolved_target(self, include_selectors: bool = False) -> bool:
-        """True if any target remains after removing the indirect ones, optionally counting
-        area/floor/label selectors as resolved when they pass through to the action natively"""
-        return any(
-            targets
-            for category, targets in self.targets.items()
-            if category not in self.INDIRECT_CATEGORIES or (include_selectors and category in self.EXPLICIT_INDIRECT_CATEGORIES)
-        )
-
-    def has_selectors(self) -> bool:
-        return any(self.targets.get(category) for category in self.EXPLICIT_INDIRECT_CATEGORIES)
-
-    def selector_data(self) -> dict[str, list[str]]:
-        """area_id/floor_id/label_id targets in the shape of an HA action target block"""
-        return {
-            category: list(targets) for category in self.EXPLICIT_INDIRECT_CATEGORIES if (targets := self.targets.get(category))
-        }
+    def has_resolved_target(self) -> bool:
+        return any(targets for category, targets in self.targets.items() if category not in self.INDIRECT_CATEGORIES)
 
     def has_unknown_targets(self) -> bool:
         return len(self.targets.get(self.UNKNOWN_CUSTOM_CATEGORY, [])) > 0
@@ -299,18 +287,13 @@ class Target:
     def direct_categories(self) -> list[str]:
         return self.DIRECT_CATEGORIES + [cat for cat in self.targets if cat not in self.CATEGORIES]
 
-    def direct(self, keep_selectors: bool = False) -> Target:
-        """Narrow to the direct targets, optionally keeping area/floor/label selectors for actions
-        that resolve them natively"""
-        categories: list[str] = self.direct_categories
-        if keep_selectors:
-            categories = categories + self.EXPLICIT_INDIRECT_CATEGORIES
+    def direct(self) -> Target:
         t = Target(
-            {cat: targets for cat, targets in self.targets.items() if cat in categories},
+            {cat: targets for cat, targets in self.targets.items() if cat in self.direct_categories},
             target_data=self.target_data,
         )
         if self.target_specific_data:
-            t.target_specific_data = {k: v for k, v in self.target_specific_data.items() if k[0] in categories}
+            t.target_specific_data = {k: v for k, v in self.target_specific_data.items() if k[0] in self.direct_categories}
         return t
 
     def extend(self, category: str, targets: list[str] | str) -> None:
@@ -328,13 +311,60 @@ class Target:
         t.target_specific_data = dict(self.target_specific_data) if self.target_specific_data else None
         return t
 
+    def resolve_selectors(self, hass_api: HomeAssistantAPI) -> Target:
+        """Replace `area_id`/`floor_id`/`label_id` targets with the entities they reference
+
+        Resolution goes through the same core helper as a Home Assistant entity action, so
+        groups are expanded and an entity inherits the area of its device. An entity in more
+        than one of them - the kitchen, the first floor and the `voice` label - is kept once,
+        and data attached to a selector is inherited by each of its entities, the same way as
+        for a group member. Transports therefore never see a selector, and only the exception
+        of an action that genuinely knows about areas needs `extra_data`.
+
+        Returns this target untouched when there is no selector to resolve.
+        """
+        if not any(self.targets.get(category) for category in self.EXPLICIT_INDIRECT_CATEGORIES):
+            return self
+        kwarg: dict[str, str] = {ATTR_AREA_ID: "area_ids", ATTR_FLOOR_ID: "floor_ids", ATTR_LABEL_ID: "label_ids"}
+        targets: dict[str, list[str]] = {
+            category: list(values)
+            for category, values in self.targets.items()
+            if category not in self.EXPLICIT_INDIRECT_CATEGORIES
+        }
+        entity_ids: list[str] = targets.setdefault(ATTR_ENTITY_ID, [])
+        inherited: dict[tuple[str, str], dict[str, Any]] = {}
+        unknown: list[str] = []
+        for category in self.EXPLICIT_INDIRECT_CATEGORIES:
+            for value in self.targets.get(category, []):
+                # one selector at a time, so data attached to it follows its own entities
+                resolution = hass_api.resolve_target_selectors(**{kwarg[category]: [value]})
+                if resolution.has_missing():
+                    unknown.append(f"{category}:{value}")
+                data: dict[str, Any] | None = (self.target_specific_data or {}).get((category, value))
+                for entity_id in resolution.entity_ids:
+                    if entity_id not in entity_ids:
+                        entity_ids.append(entity_id)
+                    if data and (ATTR_ENTITY_ID, entity_id) not in inherited:
+                        inherited[(ATTR_ENTITY_ID, entity_id)] = data
+        if unknown:
+            # a typo in an area or label would otherwise silently resolve to nothing
+            _LOGGER.warning("SUPERNOTIFY Unknown target selectors %s", ", ".join(unknown))
+        resolved = Target(targets, target_data=self.target_data)
+        if inherited or self.target_specific_data:
+            # data attached to the entity itself wins over data inherited from a selector
+            resolved.target_specific_data = inherited | {
+                key: data
+                for key, data in (self.target_specific_data or {}).items()
+                if key[0] not in self.EXPLICIT_INDIRECT_CATEGORIES
+            }
+        return resolved
+
     def select(
         self,
         categories: Sequence[str | TargetEntityCategory],
         own_names: Collection[str],
         hass_api: HomeAssistantAPI,
         target_selector: SelectionRule | None = None,
-        passes_selectors: bool = False,
     ) -> Target:
         """Narrow this target to what a delivery can use, leaving this one untouched
 
@@ -353,42 +383,72 @@ class Target:
         `Notification.generate_targets()`, which narrows them to those actually in each
         envelope). They are kept out of the `target_selector` too, as it's for choosing
         between values a transport can address.
-
-        `area_id`/`floor_id`/`label_id` are either resolved to entity_ids before selection, or,
-        when `passes_selectors` says the delivery's action resolves them natively, passed
-        through untouched - never subject to the `target_selector`.
         """
+        if any(self.targets.get(category) for category in self.EXPLICIT_INDIRECT_CATEGORIES):
+            # area/floor/label always become entities first, so everything downstream - the
+            # category checks, `target_select`, the transports - only ever sees entity_ids
+            return self.resolve_selectors(hass_api).select(categories, own_names, hass_api, target_selector)
+
         plain_categories = {c for c in categories if isinstance(c, str)}
         entity_selectors = [c for c in categories if isinstance(c, TargetEntityCategory)]
+        # HA groups (`group.*` helpers and platform groups such as media player groups) are
+        # expanded into their members before the category and target_select checks, so a
+        # transport that can't address a group itself still reaches its members
+        expansions: dict[tuple[str, str], list[str]] = {}
+        groups: set[tuple[str, str]] = set()
+
+        def accepted(category: str, t: str, restricted: bool) -> bool:
+            if (
+                restricted
+                and entity_selectors
+                and category == ATTR_ENTITY_ID
+                and not any(sel.matches(t, hass_api) for sel in entity_selectors)
+            ):
+                return False
+            return target_selector is None or target_selector.match(t)
 
         def selected(category: str, targets: list[str]) -> list[str]:
             if category == ATTR_PERSON_ID:
                 return targets
-            if category in Target.EXPLICIT_INDIRECT_CATEGORIES:
-                return targets if passes_selectors else []
-            if category not in own_names:
-                if entity_selectors and category == ATTR_ENTITY_ID:
-                    targets = [t for t in targets if any(sel.matches(t, hass_api) for sel in entity_selectors)]
-                    if not targets:
-                        return []
-                elif plain_categories:
-                    # this delivery declares fixed categories (from its transport, its own
-                    # config, or both) - anything outside that set is rejected
-                    if category not in plain_categories:
-                        return []
-                # else: this delivery declares no categories at all (e.g. `generic` with no
-                # config) - nothing to restrict against
-            if target_selector:
-                targets = [t for t in targets if target_selector.match(t)]
-            return targets
+            restricted = category not in own_names
+            if (
+                restricted
+                and not (entity_selectors and category == ATTR_ENTITY_ID)
+                and plain_categories
+                and category not in plain_categories
+            ):
+                # this delivery declares fixed categories (from its transport, its own
+                # config, or both) - anything outside that set is rejected
+                return []
+            # else: this delivery declares no categories at all (e.g. `generic` with no
+            # config) - nothing to restrict against
+            chosen: list[str] = []
+            for t in targets:
+                members = hass_api.group_members(t) if category == ATTR_ENTITY_ID else None
+                if members is None:
+                    matched = [t] if accepted(category, t, restricted) else []
+                else:
+                    groups.add((category, t))
+                    matched = [m for m in members if accepted(category, m, restricted)]
+                    if not matched and accepted(category, t, restricted):
+                        # group members unusable but the group id itself accepted, e.g. alexa_devices
+                        matched = [t]
+                expansions[(category, t)] = matched
+                chosen.extend(m for m in matched if m not in chosen)
+            return chosen
 
         filtered_target = Target({k: selected(k, v) for k, v in self.targets.items()}, target_data=self.target_data)
         if self.target_specific_data:
-            filtered_target.target_specific_data = {
-                (c, t): data
-                for (c, t), data in self.target_specific_data.items()
-                if c in filtered_target.targets and t in filtered_target.targets[c]
-            }
+            # data inherited from a group first, so data explicitly attached to a member always wins
+            specific_data: dict[tuple[str, str], dict[str, Any]] = {}
+            for (c, t), data in self.target_specific_data.items():
+                if (c, t) in groups:
+                    for m in expansions.get((c, t), []):
+                        specific_data[(c, m)] = data
+            for (c, t), data in self.target_specific_data.items():
+                if (c, t) not in groups and c in filtered_target.targets and t in filtered_target.targets[c]:
+                    specific_data[(c, t)] = data
+            filtered_target.target_specific_data = specific_data
         return filtered_target
 
     def split_by_target_data(self) -> list[Target]:

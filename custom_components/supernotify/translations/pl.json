@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Zresetuj nadpisania"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Powiadomienie {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Powiadomienie dostarczone (wysłano {delivered_count} dostaw), ale {uncategorized_count} cel(e/ów) nie udało się przypisać do żadnej dostawy i zostały pominięte: {uncategorized_targets} (sprawdzone dostawy: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "Dla tej instancji Supernotify nie skonfigurowano archiwum"
+        },
+        "no_media_storage_configured": {
+            "message": "Dla tej instancji Supernotify nie skonfigurowano magazynu multimediów"
         }
     },
     "options": {

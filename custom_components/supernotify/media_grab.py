@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import datetime as dt
+import hashlib
 import io
+import json
 import logging
 from enum import StrEnum, auto
 from http import HTTPStatus
@@ -241,7 +243,18 @@ def camera_available(hass_api: HomeAssistantAPI, camera_config: dict[str, Any], 
         return False
 
 
-def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], camera_entity_id: str) -> str | None:
+def select_avail_camera(
+    hass_api: HomeAssistantAPI, cameras: dict[str, Any], camera_entity_id: str, exclude_primary: bool = False
+) -> str | None:
+    """exclude_primary skips re-offering camera_entity_id itself, for a *configured* camera
+    (one with a `cameras:` entry - an unconfigured entity has no alternative to weigh it
+    against, so it's unaffected). A configured camera's own availability check is state-based
+    (see camera_available()) and can't detect one that's live-disabled at the device without
+    that showing up as entity state - so a caller that already knows, from an actual failed
+    fetch rather than just this heuristic, that camera_entity_id isn't currently deliverable
+    (e.g. mobile_push falling back after grab_image() found nothing) should set this, or it'll
+    just be handed the same unusable camera again.
+    """
     avail_camera_entity_id: str | None = None
 
     preferred_cam = cameras.get(camera_entity_id)
@@ -254,7 +267,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
         if camera_available(hass_api, {CONF_CAMERA: camera_entity_id}, non_entity=True):
             return camera_entity_id
         return None
-    if camera_available(hass_api, preferred_cam):
+    if not exclude_primary and camera_available(hass_api, preferred_cam):
         return camera_entity_id
 
     alt_cams: list[dict[str, Any]] = [cameras[c] for c in preferred_cam.get(CONF_ALT_CAMERA, []) if c in cameras]
@@ -268,7 +281,7 @@ def select_avail_camera(hass_api: HomeAssistantAPI, cameras: dict[str, Any], cam
 
     if avail_camera_entity_id is None:
         _LOGGER.warning("SUPERNOTIFY %s not available, finding best alternative available", camera_entity_id)
-        if camera_available(hass_api, preferred_cam, non_entity=True):
+        if not exclude_primary and camera_available(hass_api, preferred_cam, non_entity=True):
             _LOGGER.info("SUPERNOTIFY Selecting camera %s with no known entity", camera_entity_id)
             return camera_entity_id
         for alt_cam in alt_cams:
@@ -423,13 +436,22 @@ async def grab_image(
         return raw_path
 
     raw_ext = raw_path.suffix.lstrip(".").lower()
-    relevant_opts: dict[str, Any] = jpeg_opts if raw_ext in ("jpg", "jpeg") else png_opts if raw_ext == "png" else {}
+    # `jpeg_opts`/`png_opts` are None when not configured, and the reprocessed image keeps the
+    # format of the original, since that is what `write_image_from_bitmap` saves
+    relevant_opts: dict[str, Any] = (
+        (jpeg_opts or {}) if raw_ext in ("jpg", "jpeg") else (png_opts or {}) if raw_ext == "png" else {}
+    )
+    processed_ext = raw_ext or "jpg"
     is_default = not relevant_opts and reprocess == ReprocessOption.ALWAYS
     if is_default:
-        processed_name = f"{notification.id}.jpg"
+        processed_name = f"{notification.id}.{processed_ext}"
     else:
-        key = hex(hash((reprocess_option, *tuple(relevant_opts.values()))))[-12:]
-        processed_name = f"{notification.id}_{key}.jpg"
+        # a stable digest, unlike hash(), which is salted per process and so never matched an
+        # image reprocessed before the last restart
+        key = hashlib.sha1(  # not security, just a cache key
+            json.dumps([reprocess_option, relevant_opts], sort_keys=True, default=str).encode(), usedforsecurity=False
+        ).hexdigest()[:12]
+        processed_name = f"{notification.id}_{key}.{processed_ext}"
     processed_path = Path(media_path) / "image" / processed_name
 
     if await processed_path.exists():
@@ -444,6 +466,43 @@ async def grab_image(
     return await write_image_from_bitmap(
         context.hass_api, bitmap, processed_path, reprocess=reprocess, jpeg_opts=jpeg_opts, png_opts=png_opts
     )
+
+
+def _reprocess_bitmap(
+    bitmap: bytes,
+    reprocess: ReprocessOption,
+    output_format: str | None = None,
+    jpeg_opts: dict[str, Any] | None = None,
+    png_opts: dict[str, Any] | None = None,
+) -> tuple[str, bytes]:
+    """Decode, optionally rewrite and re-encode a bitmap, returning its format and the bytes
+
+    Blocking from end to end, so it is run in an executor job rather than on the event loop.
+    """
+    image: Image.Image = Image.open(io.BytesIO(bitmap))
+    input_format: str = image.format.lower() if image.format else "img"
+    if reprocess == ReprocessOption.ALWAYS:
+        # rewrite to remove metadata, incl custom CCTV comments that confuse python MIMEImage
+        clean_image: Image.Image = Image.new(image.mode, image.size)
+        # Pillow API changed in 12.1.0 and the original call will be removed in 2027
+        # https://pillow.readthedocs.io/en/stable/releasenotes/12.1.0.html#image-getdata
+        if hasattr(image, "get_flattened_data"):
+            clean_image.putdata(image.get_flattened_data())  # added in jan 2026  # ty:ignore[call-non-callable]
+        else:
+            clean_image.putdata(image.getdata())  # being removed in 2027
+
+        image = clean_image
+
+    img_args: dict[str, Any] = {}
+    if reprocess in (ReprocessOption.ALWAYS, ReprocessOption.PRESERVE):
+        if input_format in ("jpg", "jpeg") and jpeg_opts:
+            img_args.update(jpeg_opts)
+        elif input_format == "png" and png_opts:
+            img_args.update(png_opts)
+
+    buffer = BytesIO()
+    image.save(buffer, output_format or input_format, **img_args)
+    return input_format, buffer.getvalue()
 
 
 async def write_image_from_bitmap(
@@ -463,30 +522,12 @@ async def write_image_from_bitmap(
     try:
         await output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        image = await hass_api.create_job(Image.open, io.BytesIO(bitmap))
-
-        input_format = image.format.lower() if image.format else "img"
-        if reprocess == ReprocessOption.ALWAYS:
-            # rewrite to remove metadata, incl custom CCTV comments that confuse python MIMEImage
-            clean_image: Image.Image = await hass_api.create_job(Image.new, image.mode, image.size)
-            # Pillow API changed in 12.1.0 and the original call will be removed in 2027
-            # https://pillow.readthedocs.io/en/stable/releasenotes/12.1.0.html#image-getdata
-            if hasattr(image, "get_flattened_data"):
-                clean_image.putdata(image.get_flattened_data())  # added in jan 2026
-            else:
-                clean_image.putdata(image.getdata())  # being removed in 2027
-
-            image = clean_image
-
-        buffer = BytesIO()
-        img_args: dict[str, Any] = {}
-        if reprocess in (ReprocessOption.ALWAYS, ReprocessOption.PRESERVE):
-            if input_format in ("jpg", "jpeg") and jpeg_opts:
-                img_args.update(jpeg_opts)
-            elif input_format == "png" and png_opts:
-                img_args.update(png_opts)
-
-        image.save(buffer, output_format or input_format, **img_args)
+        # every Pillow call in one job: decoding, copying the pixels and encoding are all
+        # blocking, and only `Image.open` and `Image.new` used to be kept off the event loop
+        input_format, encoded = await hass_api.create_job(
+            _reprocess_bitmap, bitmap, reprocess, output_format, jpeg_opts, png_opts
+        )
+        buffer = BytesIO(encoded)
 
         output_path = await output_path.resolve()
         async with aiofiles.open(output_path, "wb") as file:

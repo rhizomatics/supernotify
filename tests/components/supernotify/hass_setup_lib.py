@@ -16,7 +16,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.mqtt.client import MQTT
 from homeassistant.components.mqtt.models import DATA_MQTT, MqttData
 from homeassistant.config_entries import ConfigEntries, ConfigEntryItems
-from homeassistant.const import CONF_NAME, STATE_HOME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_HOME
 from homeassistant.core import (
     EventBus,
     HomeAssistant,
@@ -27,7 +27,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
@@ -138,6 +138,14 @@ def assert_clean_notification(
     assert notobj["suppressed"] == expected_suppressed
 
 
+class MockGroup:
+    """Minimal stand-in for a HA group state, exposing members in the entity_id attribute as a tuple, as HA does"""
+
+    def __init__(self, entities: list[str]) -> None:
+        self.state = "on"
+        self.attributes = {ATTR_ENTITY_ID: tuple(entities)}
+
+
 class MockableHomeAssistant(HomeAssistant):
     config: ConfigEntries = Mock(spec=ConfigEntries)  # type: ignore
     services: ServiceRegistry = AsyncMock(spec=ServiceRegistry)
@@ -245,6 +253,7 @@ class TestingContext(Context):
         viable_transport_types: list[type[Transport]] | dict[type[Transport], dict[str, Any]] | None = None,
         devices: list[tuple[str, str, bool]] | None = None,
         entities: dict[str, Any] | None = None,
+        entity_platforms: dict[str, str] | None = None,
         hass_external_url: str | None = None,
         archive_config: ConfigType | str | None = None,
         homeassistant: HomeAssistant | None = None,
@@ -261,6 +270,7 @@ class TestingContext(Context):
             for ddomain, did, discover in devices or []
         }
         self.entities = entities or {}
+        self.entity_platforms = entity_platforms or {}
         self.services: dict[str, Any] = {}
 
         raw_config: ConfigType = cast("ConfigType", load_config(yaml))
@@ -333,6 +343,9 @@ class TestingContext(Context):
             self.device_registry.async_get = lambda did, **_kwargs: self.devices.get(did)
             self.hass.data["device_registry"] = self.device_registry
             self.entity_registry = AsyncMock(spec=EntityRegistry)
+            self.entity_registry.async_get = lambda eid: (
+                Mock(spec=RegistryEntry, platform=self.entity_platforms[eid]) if eid in self.entity_platforms else None
+            )
             # a bare AsyncMock(spec=EntityRegistry).entities is an unconfigured Mock, not a
             # real (iterable) dict - entity_ids_for_platform() (alexa_devices, html5) would
             # crash on .entities.values() rather than just finding no match, without this
@@ -440,7 +453,7 @@ class TestingContext(Context):
         self.hass_api.initialize()
         if self.hass_external_url:
             self.hass_api.external_url = self.hass_external_url
-        self.people_registry.initialize()
+        await self.people_registry.initialize()
         await self.archive.initialize()
         await self.media_storage.initialize(self.hass_api)
         await self.delivery_registry.initialize(self)
@@ -500,7 +513,7 @@ def set_state(
 
 def register_mobile_app(
     hass_api: HomeAssistantAPI | None,
-    person: str = "person.test_user",
+    person: str | None = "person.test_user",
     manufacturer: str = "xUnit",
     model: str = "PyTest001",
     device_name: str = "phone01",
@@ -509,19 +522,23 @@ def register_mobile_app(
     os_name: str = "iOS",
     user_id: str | None = None,
 ) -> DeviceEntry | None:
-
+    """person=None registers the device against a bare user_id, with no Person entity at all -
+    as real HA mobile_app itself only requires a User (see CONF_USER_ID in const.py). A user_id
+    must then be supplied explicitly, since there's no person state to read or store it on."""
     if hass_api is None:
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking")
         return None
     # set_state(hass_api, person, "home")
-    existing: State | None = hass_api.get_state(person)
+    existing: State | None = hass_api.get_state(person) if person else None
     if existing and existing.attributes and ATTR_USER_ID in existing.attributes:
         user_id = existing.attributes[ATTR_USER_ID]
-    else:
+    elif person:
         user_id = user_id or str(uuid.uuid1())
         attrs = dict(existing.attributes) if existing and existing.attributes else {}
         attrs[ATTR_USER_ID] = user_id
         set_state(hass_api, person, "home", attributes=attrs)
+    else:
+        user_id = user_id or str(uuid.uuid1())
 
     config_entry = config_entries.ConfigEntry(
         domain=domain,
@@ -542,17 +559,18 @@ def register_mobile_app(
         _LOGGER.warning("Unable to mess with HASS config entries for mobile app faking: %s", e)
 
     device_slug: str = slugify(device_name)
-    if not existing or "device_trackers" not in existing.attributes:
-        set_state(
-            hass_api,
-            person,
-            "home",
-            attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]},
-        )
-    else:
-        trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
-        trackers.extend(existing.attributes.get("device_trackers", []))
-        set_state(hass_api, person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
+    if person:
+        if not existing or "device_trackers" not in existing.attributes:
+            set_state(
+                hass_api,
+                person,
+                "home",
+                attributes={"user_id": user_id, "device_trackers": [f"device_tracker.mobile_app_{device_slug}"]},
+            )
+        else:
+            trackers: list[str] = [f"device_tracker.mobile_app_{device_slug}"]
+            trackers.extend(existing.attributes.get("device_trackers", []))
+            set_state(hass_api, person, "home", attributes={"user_id": user_id, "device_trackers": trackers})
 
     device_registry = hass_api._device_registry()
     device_entry = None

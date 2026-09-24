@@ -111,7 +111,7 @@ Home Assistant default camera entities have built-in device tracking, so the ent
     * Note that ONVIF may have numeric reference for presets while Frigate uses text labels
     * The camera configuration, or a good ONVIF client like [IP Cams](https://ipcams.app), will show the preset number and description. Its good practice to make preset `1` your default.
     * This will automatically default if not provided based on the camera's platform
-* Configuration documentation for [Camera Schema](../developer/schemas/Camera_Definition.md).
+* Configuration documentation for [Camera Schema](../developer/reference/schemas/Camera_Definition.md).
 
 ```yaml title="Example Camera Enhanced Configuration"
  cameras:

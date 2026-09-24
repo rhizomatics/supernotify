@@ -1,4 +1,54 @@
-## v2.8.0
+## v2.9.1 - Snooze Fix
+
+### Snoozing
+- Fixed truncated entity and delivery names where they had underscores
+- Fixed `minutes to snooze` duration ignored
+- Fixed camera notifications snooze action not snoozing
+- Fixed 'everyone' snoozes not firing
+- Improved e2e testing around snoozes
+
+### Minor
+- JSON schema IDs corrected
+- Developer documentation restructured and concepts added with diagram
+
+## v2.9.0 - Target Selection
+
+This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
+
+### People
+- Mobile Discovery previously only automatically found mobile apps to push notifications to if the user also had a `Person` created in Home Assistant
+  - Mobile apps will now be found for discovery if there's no Person defined
+  - Recipient config now has `person_id` as optional, and takes a `user_id` (long UUID type number rather than an actual name in Home Assistant)
+  - Tying together all the automation for people still benefits from having Person records, since this drives device tracking, location and occupancy and `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector)
+
+### Areas, Floors and Labels
+- `area_id`, `floor_id` and `label_id` can be used as notification targets, the same way as in any other Home Assistant action.
+  - They are resolved to the entities they reference before anything else sees them, through the same core helper as an entity action, so groups are expanded and an entity inherits the area of its device.
+  - An entity in more than one of them - the kitchen, the ground floor and the `chime` label - is kept once, each delivery's `target_categories` and `target_select` then apply to those entities, and a transport never sees a selector. An unknown area, floor or label is logged rather than silently resolving to nothing.
+  - Fixes [#9](https://github.com/rhizomatics/supernotify/issues/9)
+
+### Targets
+- If Supernotify itself is added as a device to the target selector, this is interpreted to mean include all "out of the box" targets, that is the default targets that would be selected if the target list were otherwise empty
+
+### Groups
+- Home Assistant groups (`group.*` helpers and platform groups such as media player groups) are now expanded into their member entities for every transport before `target_select` is applied.
+  - Previously only Chime Transport expanded groups, so e.g. a `group.*` of media players was silently dropped by the Media Player, Alexa Media Player and Notify Entity transports.
+  - Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
+  - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
+
+### Internal
+- `reprocess: preserve` with no `jpeg_opts`/`png_opts` configured raised an `AttributeError` building the cache key, since those options are `None` rather than empty, so the image was never reprocessed
+- A reprocessed image keeps the format it is saved in: a PNG was written into a `.jpg` file, which misleads anything going by the extension, `MIMEImage` included
+- The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
+- All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
+- Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
+- Media handling now tested with `webp` images (in addition to existing `jpeg`,`png` and `gif`)
+- Test images now stamped with format so easier to see if correct image appearing
+- Fixed test cleanup so test images don't build up in local directory
+- New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
+
+
+## v2.8.0 - Proper Entities Part 2
 
 ### Delivery and Transport Switches
 
@@ -18,13 +68,19 @@
 - Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
 
 ### Debug Trace
-- The debug trace records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where `delivery_selection` only has the combined list for each stage, so a trace shows which scenario turned a channel off, not just that one did
+- Every archived notification records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where the debug trace's `delivery_selection` only has the combined list for each stage, so the archive shows which scenario turned a channel off, not just that one did. It is small, a few names per delivery, so unlike the rest of the debug trace it doesn't need `debug: true` and is kept in the minimal archive content too
+- A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
+- Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
+### Fixes
+- A notification where a recipient switches a delivery on or off for themselves could not be archived, full or minimal - `DeliveryTargetOverride.as_dict()` rejected the archive's keyword arguments
+
 ### Privacy
 - Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
 ### Internal
 - Cleaned up some spurious or noisy debug logging for test execution
 
-## 2.7.0
+## 2.7.0 - Proper Entities Part 1
 
 ### Native Entities
 
@@ -58,7 +114,7 @@
   - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
 
 
-## 2.6.0
+## 2.6.0 - Notification UI
 
 ### Action Data
 The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of handling `data` mappings than the original legacy Notify platform way.
@@ -79,11 +135,11 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Documentation
 - Fix automatically generated validation schema documentation
 - Added automated test for the YAML examples in docs
-- [Roadmap](developer/design/roadmap.md) of technial and features added
+- [Roadmap](developer/roadmap.md) of technial and features added
 ### Technical
 - `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 
-## 2.5.3
+## 2.5.3 - Voice Improvements
 
 ### Spoken Notifications
 
@@ -117,11 +173,11 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
   - This will be improved to support progress bars etc
 
 
-## 2.5.0
+## 2.5.0 - Delivery Overhaul
 
 ### Deliveries
 
-There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/design/roadmap/deliveries_and_transports.md).
+There's an explanation of the aims and design of deliveries, transports and targets in the Roadmap section at [Deliveries and Transports](developer/rfcs/deliveries_and_transports.md).
 
 - Every transport that is available to use is automatically available as a delivery with the same name.
   - Transports that don't have unambiguous targets are defined with `selection` as `explicit` so they won't be automatically used unless selected explicitly on a notification, or configuration overridden
@@ -378,7 +434,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 ### Technical Changes
 
-- Step 1 of the [roadmap](developer/design/roadmap/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
+- Step 1 of the [roadmap](developer/rfcs/configflow_approach.md) updated to minimize reuse of 'legacy' integration style, then extended further to retire that legacy style entirely for the notify-platform registration
 - Details
   - `config_flow.py` — zero-required-field user step (reproduces `minimal.yaml`), options flow with archive/dupe_check/housekeeping pages, single_config_entry enforced, plus a `name` field determining the registered action.
   - `__init__.py` — CONFIG_SCHEMA/async_setup for the top-level `supernotify:` key; `async_setup_entry` unconditionally owns `notify.supernotify`, computing the service name from `entry.data[name]`; an update listener reloads the entry so options/reconfigure changes apply immediately.

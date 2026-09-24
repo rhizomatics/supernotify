@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "Überschreibungen zurücksetzen"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "Benachrichtigung {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "Benachrichtigung zugestellt ({delivered_count} Zustellung(en) gesendet), aber {uncategorized_count} Ziel(e) konnten keiner Zustellung zugeordnet werden und wurden verworfen: {uncategorized_targets} (geprüfte Zustellungen: {deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "Für diese Supernotify-Instanz ist kein Archiv konfiguriert"
+        },
+        "no_media_storage_configured": {
+            "message": "Für diese Supernotify-Instanz ist kein Medienspeicher konfiguriert"
         }
     },
     "options": {

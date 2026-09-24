@@ -82,7 +82,7 @@ In this example, a 433Mhz doorbell will go 'ding dong' and Alexa will play a doo
 
 For *Alexa Devices*, there's an additional benefit of using the aliases - it will automatically select all the Alexa device IDs ( those ugly 32 character hexadecimal ones ) if device discovery is left on, as is default. For everything else, you need to pass the list of target entity IDs in the notification action call.
 
-The formal schema is published as [Chime Aliases Definition](../developer/schemas/Chime_Aliases_Definition.md).
+The formal schema is published as [Chime Aliases Definition](../developer/reference/schemas/Chime_Aliases_Definition.md).
 Validation of the config happens at start up by the chime transport, with errors sent to log with usually an explanation of which part of the config triggered the problem.
 
 ## Device Types

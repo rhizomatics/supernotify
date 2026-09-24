@@ -191,8 +191,8 @@ async def test_snap_image_entity(
 
 
 @pytest.mark.enable_socket
-async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+async def test_grab_image(hass: HomeAssistant, local_server, sample_image, tmp_aiopath: Path) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
@@ -210,9 +210,9 @@ async def test_grab_image(hass: HomeAssistant, local_server, sample_image) -> No
 
 
 @pytest.mark.enable_socket
-async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sample_image) -> None:
+async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sample_image, tmp_aiopath: Path) -> None:
     """grab_image must not raise if the raw snap has vanished by the time it's read back."""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
@@ -228,9 +228,9 @@ async def test_grab_image_raw_file_missing(hass: HomeAssistant, local_server, sa
 
 
 @pytest.mark.enable_socket
-async def test_grab_image_processed_file_cache(hass: HomeAssistant, local_server, sample_image) -> None:
+async def test_grab_image_processed_file_cache(hass: HomeAssistant, local_server, sample_image, tmp_aiopath: Path) -> None:
     """grab_image reuses the processed file for a second delivery with identical settings."""
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
 
     snapshot_url = local_server.url_for("/snapshot_image")
@@ -329,6 +329,38 @@ def test_select_untracked_primary_camera(mock_hass_api) -> None:
     assert (
         select_avail_camera(mock_hass_api, {"camera.untracked": {"alias": "Test Untracked"}}, "camera.untracked")
         == "camera.untracked"
+    )
+
+
+def test_select_excludes_primary_camera_even_when_its_state_says_available(mock_hass_api) -> None:
+    """Regression test: a camera disabled at the device (e.g. privacy/feed toggle) can keep
+    reporting a normal, non-unavailable entity state throughout - camera_available() has no way
+    to tell. A caller that already knows, from an actual failed fetch, that this camera isn't
+    currently deliverable must pass exclude_primary=True rather than get the same camera back."""
+    mock_states(mock_hass_api, home_entities=["camera.untracked"])
+
+    assert (
+        select_avail_camera(
+            mock_hass_api, {"camera.untracked": {"alias": "Test Untracked"}}, "camera.untracked", exclude_primary=True
+        )
+        is None
+    )
+
+
+def test_select_excludes_primary_camera_but_still_offers_an_available_alt(mock_hass_api) -> None:
+    mock_states(mock_hass_api, home_entities=["camera.untracked", "camera.alt1"])
+
+    assert (
+        select_avail_camera(
+            mock_hass_api,
+            {
+                "camera.untracked": {"camera": "camera.untracked", "alt_camera": ["camera.alt1"]},
+                "camera.alt1": {"camera": "camera.alt1"},
+            },
+            "camera.untracked",
+            exclude_primary=True,
+        )
+        == "camera.alt1"
     )
 
 
@@ -629,10 +661,11 @@ async def test_write_image_from_bitmap_falls_back_to_getdata_when_get_flattened_
     buf = BytesIO()
     image.save(buf, "jpeg")
     bitmap = buf.getvalue()
-    mock_hass_api.create_job.return_value = Image.open(BytesIO(bitmap))  # type: ignore
+    mock_hass_api.create_job.side_effect = lambda func, *args: func(*args)  # type: ignore[attr-defined] # ty:ignore[unresolved-attribute]
     output_path = tmp_aiopath / "image" / "out.jpg"
     result = await write_image_from_bitmap(mock_hass_api, bitmap, output_path, ReprocessOption.ALWAYS)
     assert result is not None
+    assert Image.open(BytesIO(await result.read_bytes())).format == "JPEG"
 
 
 async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistantAPI) -> None:
@@ -646,16 +679,16 @@ async def test_detect_image_ext_returns_img_on_error(mock_hass_api: HomeAssistan
 # --- grab_image ---
 
 
-async def test_grab_image_no_media_path(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+async def test_grab_image_no_media_path(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     ctx.media_storage.media_path = None
     notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://test"}})
     assert await grab_image(notification, ctx.delivery("mail"), ctx) is None
 
 
-async def test_grab_image_invalid_reprocess(hass: HomeAssistant) -> None:
-    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES)
+async def test_grab_image_invalid_reprocess(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
     await ctx.test_initialize()
     notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
     notification.media[MEDIA_OPTION_REPROCESS] = "bogus"  # inject directly — not in schema
@@ -663,6 +696,56 @@ async def test_grab_image_invalid_reprocess(hass: HomeAssistant) -> None:
     with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
         result = await grab_image(notification, ctx.delivery("mail"), ctx)
     assert result is not None
+
+
+async def test_grab_image_preserve_without_options(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """`reprocess: preserve` with no jpeg/png options: the options default to None, which used
+    to blow up building the cache key, so nothing was ever reprocessed"""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
+    await ctx.test_initialize()
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
+    notification.media[MEDIA_OPTION_REPROCESS] = "preserve"  # inject directly - not in schema
+    fixture_path = anyio.Path(IMAGE_PATH / "example_image.jpeg")
+    with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
+        result = await grab_image(notification, ctx.delivery("mail"), ctx)
+    assert result is not None
+    assert str(result).endswith(".jpeg")
+
+
+async def test_grab_image_keeps_png_format(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """A reprocessed PNG stays a PNG, since that is the format it is saved in - it used to be
+    written into a .jpg file, which confuses anything going by the extension"""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
+    await ctx.test_initialize()
+    notification = Notification(ctx, "Test", action_data={"media": {"snapshot_url": "http://x"}})
+    fixture_path = anyio.Path(IMAGE_PATH / "example_image.png")
+    with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
+        result = await grab_image(notification, ctx.delivery("mail"), ctx)
+    assert result is not None
+    assert str(result).endswith(".png")
+    assert Image.open(BytesIO(await result.read_bytes())).format == "PNG"
+
+
+async def test_grab_image_cache_key_stable_across_restarts(hass: HomeAssistant, tmp_aiopath: Path) -> None:
+    """The cache key of a reprocessed image is a digest, not hash(), which is salted per
+    process and so never matched a file written before the last restart"""
+    ctx = TestingContext(homeassistant=hass, deliveries=DELIVERIES, media_path=tmp_aiopath)
+    await ctx.test_initialize()
+    fixture_path = anyio.Path(IMAGE_PATH / "example_image.jpeg")
+    names: list[str] = []
+    for _ in range(2):
+        notification = Notification(
+            ctx,
+            "Test",
+            action_data={"media": {"snapshot_url": "http://x", "jpeg_opts": {"quality": 30}}},
+        )
+        notification.id = "fixed-id"
+        with patch("custom_components.supernotify.media_grab.snap_notification_image", return_value=fixture_path):
+            result = await grab_image(notification, ctx.delivery("mail"), ctx)
+        assert result is not None
+        names.append(anyio.Path(str(result)).name)
+    assert names[0] == names[1]
+    assert names[0].startswith("fixed-id_") and names[0].endswith(".jpeg")
 
 
 async def test_grab_image_with_existing_snapshot_path(hass: HomeAssistant, tmp_aiopath: Path) -> None:

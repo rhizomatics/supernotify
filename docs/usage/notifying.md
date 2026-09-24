@@ -116,12 +116,13 @@ and `label_id` keys as any other Home Assistant action:
               - chime
 ```
 
-For each delivery, Supernotify either passes the selectors straight through to the underlying action, where
-that action supports them (for example `notify.send_message` for notify entities), or resolves them to
-entities itself using the same core logic as Home Assistant actions, and then applies the delivery's usual
-target selection. This is decided automatically from the action definition, and can be forced with the
-`target_selectors` delivery option, see [Deliveries](../configuration/deliveries.md#controlling-targets).
+Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then
+applies each delivery's usual target selection to those entities. An entity in more than one of them - in the
+kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector.
 Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+
+An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id`
+in its own `extra_data` rather than as a target.
 
 ## Notification Priority
 
@@ -358,4 +359,4 @@ Supernotify also has compatibility with the original "legacy" notification platf
 
 ## References
 
-The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](../developer/schemas/Notify_Action_Data.md)
+The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](../developer/reference/schemas/Notify_Action_Data.md)

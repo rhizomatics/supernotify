@@ -145,6 +145,7 @@ from .const import (
     CONF_TRANSPORTS,
     CONF_TTL,
     CONF_URI,
+    CONF_USER_ID,
     DELIVERY_SELECTION_VALUES,
     INCLUSION_VALUES,
     OCCUPANCY_ALL,
@@ -391,18 +392,22 @@ TRANSPORT_SCHEMA = vol.All(
 # OPTION_OCCUPANCY_EXCLUDE="exclude"
 
 
-RECIPIENT_SCHEMA = vol.Schema({
-    vol.Required(CONF_PERSON): cv.entity_id,
-    vol.Optional(CONF_ALIAS): cv.string,
-    vol.Optional(CONF_EMAIL): cv.string,
-    vol.Optional(CONF_ENABLED, default=True): cv.boolean,
-    # vol.Optional(CONF_OCCUPANCY,default=OPTION_OCCUPANCY_DEFAULT):vol.In(OPTIONS_OCCUPANCY),
-    vol.Optional(CONF_TARGET): TARGET_SCHEMA,
-    vol.Optional(CONF_PHONE_NUMBER): cv.string,
-    vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
-    vol.Optional(CONF_MOBILE_DEVICES, default=list): vol.All(cv.ensure_list, [MOBILE_DEVICE_SCHEMA]),
-    vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_CUSTOMIZE_SCHEMA},
-})
+RECIPIENT_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Optional(CONF_PERSON): cv.entity_id,
+        vol.Optional(CONF_USER_ID): cv.string,
+        vol.Optional(CONF_ALIAS): cv.string,
+        vol.Optional(CONF_EMAIL): cv.string,
+        vol.Optional(CONF_ENABLED, default=True): cv.boolean,
+        # vol.Optional(CONF_OCCUPANCY,default=OPTION_OCCUPANCY_DEFAULT):vol.In(OPTIONS_OCCUPANCY),
+        vol.Optional(CONF_TARGET): TARGET_SCHEMA,
+        vol.Optional(CONF_PHONE_NUMBER): cv.string,
+        vol.Optional(CONF_MOBILE_DISCOVERY, default=True): cv.boolean,
+        vol.Optional(CONF_MOBILE_DEVICES, default=list): vol.All(cv.ensure_list, [MOBILE_DEVICE_SCHEMA]),
+        vol.Optional(CONF_DELIVERY, default=dict): {cv.string: DELIVERY_CUSTOMIZE_SCHEMA},
+    }),
+    cv.has_at_least_one_key(CONF_PERSON, CONF_USER_ID),
+)
 CAMERA_SCHEMA = vol.Schema({
     vol.Required(CONF_CAMERA): cv.entity_id,
     vol.Optional(CONF_ALT_CAMERA): vol.All(cv.ensure_list, [cv.entity_id]),

@@ -2,6 +2,10 @@
 
 (provisional name for implementation)
 
+## Feedback
+
+[Github Discussion #197](https://github.com/rhizomatics/supernotify/discussions/197)
+
 ## Problem
 
 Often SuperNotify is a small part of what's needed for example setting up notifications - Frigate involves understanding blueprints using live activities for a dishwasher requires setting up multiple automations and fine tuning mobile push the blocks. The real value from SuperNotify comes when a less technical user is able to immediately start getting notifications from things like their washing machine or dishwasher of Frigate with minimal technical understanding zero knowledge of YAML and minimal automation set up.
@@ -18,15 +22,19 @@ The "packages" could also be selected after the fact, either directly in the mai
 
 ## Implementation
 
-A new sub-package within Supernotify, with a module per package.
+A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again. Packages create their own HA Context, as an automation would do, for tying together downstream calls and state changes.
 
-At set-up or startup the modules are called to see if they are applicable. If use chooses to ignore them, this ignore state is persisted so not bothered again.
+Later, a thin custom component on HACS per package, purely for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It would only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
+
+See [Package Support](./package_support.md) for the changes needed in Supernotify first.
 
 ### Alternatives
 
-Separate custom component on HACS, per package, as Supernotify "plugins". Worth doing if there are heavy dependencies, otherwise extra complexity for users. May make it more noticeable, e.g. someone looking for help with Frigate more likely to pick a Frigate Auto Notify plugin from HACS than examine Supernotify and find the small print.
+A separate custom component on HACS per package, holding the package logic, as Supernotify "plugins". Rejected for now, since neither HACS nor Home Assistant will install Supernotify as its dependency.
 
-Config sub-entries?
+### Branding
+
+No user facing use of term 'packages'. These will be XXXX SuperNotifier components, explained as a pre-set bundle of notifications
 
 ## Examples
 
@@ -283,6 +291,8 @@ action:
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications) works well, however using Blueprints is still not very non-tech friendly, a lot of the blueprint logic is doing things in clumsy YAML that are already done in Supernotify, and there are some long standing bugs like mobile groups to work around.
 
 The Frigate `package` would pick up that there's a known MQTT topic or Frigate proxy, and set up an MQTT subscription for mobile push, email and voice announce by default. It would offer everything the blueprint has, address known bugs and workarounds like faking a `notify_device` and avoiding broken images.
+
+See [Frigate SuperNotifier](./frigate_supernotifier.md) for the design.
 
 
 ```yaml title="Current Supernotify usage of Frigate Blueprint"

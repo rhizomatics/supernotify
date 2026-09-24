@@ -72,6 +72,12 @@ dev=[
     "ha-ffmpeg",
     # home assistant mobile push testing, and ntfy, old ver for HA compat
     "PyTurboJPEG==1.8.3",
+    # integration testing
+    #"hassil",
+    #"gazetteer_matcher",
+    #"pymicro_vad",
+    #"pyspeex_noise",
+    # type checking
     "types-python-slugify>=8.0.2.20240310",
     "voluptuous-stubs>=0.1.1",
     "types-requests>=2.33.0.20260906,<3.0.0.0",

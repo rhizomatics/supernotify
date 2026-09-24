@@ -239,7 +239,10 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
         if not engine.context.archive.enabled:
-            raise ServiceValidationError("No archive configured")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_archive_configured",
+            )
         purged = await engine.context.archive.cleanup(days=days, force=True)
         arch_size = await engine.context.archive.size()
         return {
@@ -252,7 +255,10 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     async def supplemental_action_purge_media(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
         if not engine.context.media_storage.media_path:
-            raise ServiceValidationError("No media storage configured")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_media_storage_configured",
+            )
         purged = await engine.context.media_storage.cleanup(days=days, force=True)
         size = await engine.context.media_storage.size()
         return {

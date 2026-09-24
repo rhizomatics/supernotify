@@ -62,6 +62,7 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("fr", "entity.binary_sensor.transport.name"),  # "Transport" is also the French word for transport
     ("nl", "entity.binary_sensor.transport.name"),  # "Transport" is also the Dutch word for transport
     ("pl", "entity.binary_sensor.transport.name"),  # "Transport" is also the Polish word for transport
+    ("it", "entity.notify.recipient.name"),  # "recipient" stays English in Italian, see CLAUDE.md
 }
 
 

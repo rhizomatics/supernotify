@@ -44,6 +44,11 @@
             "reset_overrides": {
                 "name": "重置覆盖"
             }
+        },
+        "notify": {
+            "recipient": {
+                "name": "通知 {recipient}"
+            }
         }
     },
     "services": {
@@ -381,6 +386,12 @@
     "exceptions": {
         "uncategorized_target": {
             "message": "通知已送达(已发送 {delivered_count} 个投递),但有 {uncategorized_count} 个目标无法归类到任何投递,已被丢弃:{uncategorized_targets}(已检查的投递:{deliveries})"
+        },
+        "no_archive_configured": {
+            "message": "此 Supernotify 实例未配置存档"
+        },
+        "no_media_storage_configured": {
+            "message": "此 Supernotify 实例未配置媒体存储"
         }
     },
     "options": {

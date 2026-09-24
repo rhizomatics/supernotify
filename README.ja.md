@@ -49,7 +49,7 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
 
 ## ドキュメント
 
-[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
+[はじめに](https://supernotify.rhizomatics.org.uk/getting_started/)、[コアコンセプト](https://supernotify.rhizomatics.org.uk/ja/concepts/)の解説、利用可能な[トランスポートアダプター](https://supernotify.rhizomatics.org.uk/transports/)をご覧ください。[通知の送信](https://supernotify.rhizomatics.org.uk/usage/notifying/)では、オートメーションや開発者ツールからSupernotifyを呼び出す方法を説明しています。
 
 サンプル設定を含む多くの[レシピ](https://supernotify.rhizomatics.org.uk/recipes/)もあります。[タグ](https://supernotify.rhizomatics.org.uk/tags/)で絞り込むこともできます。
 
@@ -101,7 +101,7 @@ SupernotifyはHACS（[Home Assistant Community Shop](https://hacs.xyz)）経由�
 
 Supernotifyは現在、基本設定には標準のHome Assistant UI設定、高度な機能には[YAML設定](https://supernotify.rhizomatics.org.uk/configuration/yaml/)をサポートしています。大規模なルールベースを扱いやすくするため、YAMLは今後も維持されます。
 
-モバイルプッシュ設定の自動化を含め、シンプルな非YAML設定だけで多くのことができます。ドキュメント内の[レシピ](recipes/index.md)と、このモバイルプッシュの例をご覧ください：
+モバイルプッシュ設定の自動化を含め、シンプルな非YAML設定だけで多くのことができます。ドキュメント内の[レシピ](https://supernotify.rhizomatics.org.uk/recipes/)と、このモバイルプッシュの例をご覧ください：
 
 ```yaml title="YAMLゼロ、すべてUI設定"
   - action: supernotify.notify

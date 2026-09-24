@@ -38,7 +38,7 @@ Supernotify also adds more context variables to use in conditions, see the full 
 
 
 !!! tip
-    There's a [Scenario Schema](../developer/schemas/Scenario_Definition.md) defined for the configuration,
+    There's a [Scenario Schema](../developer/reference/schemas/Scenario_Definition.md) defined for the configuration,
     and [debugging hints](../configuration/conditions.md#debugging-conditions)
 
 
@@ -185,6 +185,7 @@ Delivery names can use regular expressions rather than literal names. For exampl
 ```yaml
 scenarios:
   red_alert:
+    delivery:
       .*:
        enabled: False
 ```
@@ -194,21 +195,21 @@ Any valid regular expression can be used, so for example if there are many "chim
 ```yaml
 scenarios:
   red_alert:
+    delivery:
       chime_.*:
        enabled: False
 ```
 
-Regular expressions can be mixed and matched with literal delivery names, where there is a clash the
-liternal name will work, where 2 regular expressions resolve to the same delivery, the last one to
-be applied is used.
+Regular expressions can be mixed and matched with literal delivery names, where there is a clash the literal name will work, where 2 regular expressions resolve to the same delivery, the last one to be applied is used.
 
-All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. The solution for this is to use an `enabled:` field, which won't force anything to be enabled.
+All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit  `enabled: true` to do this.
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 
 ```yaml
 scenarios:
   red_alert:
+    delivery:
       .*:
        enabled:
        data:

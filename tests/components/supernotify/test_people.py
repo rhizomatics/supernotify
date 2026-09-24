@@ -8,7 +8,7 @@ from homeassistant.components import person
 from homeassistant.core import Context, State
 from pytest_unordered import unordered
 
-from custom_components.supernotify.const import CONF_PERSON
+from custom_components.supernotify.const import CONF_PERSON, CONF_USER_ID
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry, Recipient, RecipientNotifyEntity
@@ -32,21 +32,21 @@ async def test_people_registry_finds_people(hass: HomeAssistant) -> None:
     assert uut.find_people() == ["person.joe_mctest", "person.mae_mctest"]
 
 
-def test_autoresolve_mobile_devices_for_no_devices(hass: HomeAssistant) -> None:
+async def test_autoresolve_mobile_devices_for_no_devices(hass: HomeAssistant) -> None:
     hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
     uut = PeopleRegistry([], hass_api)
-    uut.initialize()
+    await uut.initialize()
     assert uut.mobile_devices_for_person("person.test_user") == []
 
 
-def test_autoresolve_mobile_devices_for_devices(
+async def test_autoresolve_mobile_devices_for_devices(
     hass: HomeAssistant,
     device_registry: device_registry.DeviceRegistry,
     entity_registry: entity_registry.EntityRegistry,
 ) -> None:
     hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
     uut = PeopleRegistry([], hass_api)
-    uut.initialize()
+    await uut.initialize()
     device = register_mobile_app(hass_api, person="person.test_user", device_name="Bobs Phone")
     assert device is not None
     mobiles = uut.mobile_devices_for_person("person.test_user")
@@ -104,6 +104,50 @@ async def test_autoresolve_mobile_devices_blended_with_manual_registration(hass:
     )
 
 
+async def test_notification_delivers_to_recipient_with_only_a_user_id(hass: HomeAssistant) -> None:
+    """A recipient configured with just user_id (no person:) still receives deliveries -
+    mobile_app in real HA is owned by a User, a Person record is a separate, optional layer."""
+    ctx = TestingContext(
+        homeassistant=hass,
+        recipients="""
+    - user_id: known-user-id
+      alias: Casual User
+""",
+        transport_types=[MobilePushTransport],
+    )
+    register_mobile_app(ctx.hass_api, person="person.unrelated", device_name="Casual Phone", user_id="known-user-id")
+    await ctx.test_initialize()
+
+    casual_user: Recipient = ctx.people_registry.people["user.casual_user"]
+    assert list(casual_user.enabled_mobile_devices) == ["mobile_app_casual_phone"]
+
+    n: Notification = Notification(ctx, "testing 123")
+    await n.initialize()
+    await n.deliver()
+    assert n.delivered_envelopes[0].target.mobile_app_ids == ["mobile_app_casual_phone"]
+
+
+def test_recipient_without_person_gets_synthetic_entity_id() -> None:
+    """A recipient can be identified by user_id alone - HA's mobile_app integration itself
+    only requires a User, a Person record is a separate, optional layer. entity_id here is
+    never a real, registered HA entity - just this recipient's internal key."""
+    recipient = Recipient({CONF_USER_ID: "abc123", "alias": "Casual User"})
+    assert recipient.entity_id == "user.casual_user"
+    assert recipient.user_id == "abc123"
+    assert recipient.name == "casual_user"
+
+
+async def test_autoresolve_mobile_devices_for_user_id_without_person(hass: HomeAssistant) -> None:
+    hass_api: HomeAssistantAPI = HomeAssistantAPI(hass)
+    register_mobile_app(hass_api, person="person.test_user", device_name="Bobs Phone", user_id="known-user-id")
+
+    uut = PeopleRegistry([{CONF_USER_ID: "known-user-id", "alias": "Bob"}], hass_api)
+    await uut.initialize()
+
+    bob = uut.people["user.bob"]
+    assert list(bob.enabled_mobile_devices) == ["mobile_app_bobs_phone"]
+
+
 async def test_filter_recipients(hass: HomeAssistant) -> None:
     ctx = TestingContext(homeassistant=hass, components={"person": {}})
     await ctx.test_initialize()
@@ -113,7 +157,7 @@ async def test_filter_recipients(hass: HomeAssistant) -> None:
     hass.states.async_set("person.joe_mctest", "home")
     hass.states.async_set("person.mae_mctest", "not_home")
     uut = PeopleRegistry([], ctx.hass_api, discover=True)
-    uut.initialize()
+    await uut.initialize()
 
     assert len(uut.filter_recipients_by_occupancy("all_in")) == 0
     assert len(uut.filter_recipients_by_occupancy("all_out")) == 0

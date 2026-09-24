@@ -53,6 +53,7 @@ import logging
 import urllib.parse
 from typing import TYPE_CHECKING, Any, ClassVar
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
@@ -205,7 +206,7 @@ class KodiTransport(Transport):
 
         # Resolve and pre-validate media_player targets
         targets = envelope.target.entity_ids if envelope.target else []
-        if not targets and not self.has_action_target(self.action_target(envelope)):
+        if not targets:
             _LOGGER.warning("SUPERNOTIFY kodi: no valid media_player targets")
             self.record_error("no valid Kodi media_player targets", "deliver")
             return False
@@ -261,5 +262,5 @@ class KodiTransport(Transport):
         return await self.call_action(
             envelope,
             action_data=action_data,
-            target_data=self.action_target(envelope, targets),
+            target_data={ATTR_ENTITY_ID: targets},
         )

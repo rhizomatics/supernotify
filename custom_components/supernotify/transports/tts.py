@@ -30,9 +30,7 @@ from custom_components.supernotify.options import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_SELECT,
-    OPTION_TARGET_SELECTORS,
     SELECT_EXCLUDE,
-    TARGET_SELECTORS_RESOLVE,
     DeliveryOption,
 )
 from custom_components.supernotify.schema import SelectionRank
@@ -96,9 +94,6 @@ class TTSTransport(Transport):
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            # tts.speak targets the TTS engine entity, media players are action data, so area/floor/label
-            # must be resolved to media_player entities here rather than passed through
-            OPTION_TARGET_SELECTORS: TARGET_SELECTORS_RESOLVE,
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID, RE_MOBILE_APP],
             OPTION_TTS_ENTITY_ID: "tts.home_assistant_cloud",
             OPTION_DEVICE_DISCOVERY: False,

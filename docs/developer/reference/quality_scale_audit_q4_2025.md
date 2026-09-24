@@ -6,7 +6,7 @@
 
 ## NOTICE
 
-This is the last static audit, quality scale is now tracked at [quality_scale.yaml](../../custom_components/supernotify/quality_scale.yaml)
+This is the last static audit, quality scale is now tracked at [quality_scale.yaml](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/quality_scale.yaml)
 
 ---
 

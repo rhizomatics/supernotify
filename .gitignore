@@ -1,7 +1,9 @@
 
+.agents/
+
 config/
-!docs/developer/schemas/index.md
-docs/developer/schemas/
+!docs/developer/reference/schemas/index.md
+docs/developer/reference/schemas/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

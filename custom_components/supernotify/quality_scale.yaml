@@ -45,7 +45,7 @@ rules:
   config-flow:
     status: done
     comment: |
-      Immediate phase of docs/roadmap/configflow_approach.md implemented: config_flow.py's
+      Immediate phase of configflow_approach RFC implemented: config_flow.py's
       user step reproduces examples/minimal.yaml (all fields optional, everything else
       auto-discovered/auto-generated), with an options flow for archive/dupe_check/
       housekeeping. single_config_entry enforced via manifest.json. Deliveries, transports,
