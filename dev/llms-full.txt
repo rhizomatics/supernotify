@@ -8484,6 +8484,10 @@ First public release of productionized home code
 
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md) for what guides development.
 
+## Feedback
+
+[Github Discussion #202](https://github.com/rhizomatics/supernotify/discussions/202)
+
 ## Home Assistant Version Compatibility
 
 When the following versions fall out of the 6-month ago window for testing, here are the changes to make
@@ -8759,6 +8763,8 @@ ______________________________________________________________________
 
 # Requests for Comments
 
+Proposed designs for Supernotify, open for discussion before they're built.
+
 {{ pagetree(siblings) }}
 
 # ConfigFlow Implementation Approach
@@ -8858,6 +8864,10 @@ Breakdown:
 # Deliveries and Transports
 
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
+
+## Feedback
+
+[Github Discussion #190](https://github.com/rhizomatics/supernotify/discussions/190)
 
 ## Context
 
@@ -9206,6 +9216,10 @@ Packages bundled in Supernotify can't add `mqtt` or `frigate` to `dependencies`,
 # Packages
 
 (provisional name for implementation)
+
+## Feedback
+
+[Github Discussion #197](https://github.com/rhizomatics/supernotify/discussions/197)
 
 ## Problem
 

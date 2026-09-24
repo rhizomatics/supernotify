@@ -2,6 +2,10 @@
 
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
 
+## Feedback
+
+[Github Discussion #190](https://github.com/rhizomatics/supernotify/discussions/190)
+
 ## Context
 
 This is a typical trade-off between ease of use and flexibility.
