@@ -529,16 +529,15 @@
             },
             "delivery_control": {
                 "title": "推送控制",
-                "description": "为未在 YAML 中自行设置的推送提供默认值。YAML 中传输方式的 delivery_defaults 仍然优先。",
                 "data": {
-                    "default_inclusion": "默认包含方式",
+                    "default_inclusion": "推送包含方式",
                     "voice_occupancy": "语音推送的在家条件",
-                    "apple_drop_mp4": "Apple 推送中省略视频"
+                    "apple_drop_mp4": "从 Apple 推送中移除 MP4"
                 },
                 "data_description": {
-                    "default_inclusion": "推送何时被使用，除非推送自身的 inclusion 另有指定。保持各传输方式自己的默认值即可维持当前行为。",
-                    "voice_occupancy": "语音推送（如 Alexa 和 TTS 播报）面向谁，按谁在家决定——除非推送设置了自己的 occupancy。",
-                    "apple_drop_mp4": "在发往 Apple 设备的移动推送通知中省略 .mp4 视频（如 Frigate 片段），因为这些设备并不总能显示。Android 设备仍会收到。"
+                    "default_inclusion": "控制推送如何被考虑纳入通知",
+                    "voice_occupancy": "根据家中有人与否，限制 TTS 或 Alexa Devices 等语音推送何时被考虑用于通知",
+                    "apple_drop_mp4": "在发往 Apple 设备的移动推送通知中省略 .mp4 视频（如 Frigate 片段），因为这些设备收到 MP4 时常在推送通知中显示损坏图片的占位符。Frigate 蓝图的通知会改用其快照图片。Android 设备仍会收到视频。"
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "各传输方式自己的默认值",
-                "default": "默认——每条通知都使用",
-                "explicit": "明确——仅在为通知选择时",
-                "scenario": "场景——仅在场景启用时"
+                "transport": "自动",
+                "default": "每个推送都可用于通知",
+                "explicit": "推送必须在操作中或由场景选择",
+                "scenario": "推送必须由场景选择"
             }
         },
         "voice_occupancy": {

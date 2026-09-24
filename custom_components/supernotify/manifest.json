@@ -33,7 +33,7 @@
         "notify",
         "person"
     ],
-    "documentation": "https://supernotify.rhizomatics.org.uk",
+    "documentation": "https://supernotify.rhizomatics.org.uk/latest/configuration/",
     "integration_type": "service",
     "iot_class": "calculated",
     "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",

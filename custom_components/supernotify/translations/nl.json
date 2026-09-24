@@ -529,16 +529,15 @@
             },
             "delivery_control": {
                 "title": "Bezorgingsbeheer",
-                "description": "Standaardwaarden voor bezorgingen die in YAML geen eigen waarden instellen. De delivery_defaults van een transport in YAML gaan nog steeds voor.",
                 "data": {
-                    "default_inclusion": "Standaardopname",
+                    "default_inclusion": "Opname van bezorgingen",
                     "voice_occupancy": "Aanwezigheid voor gesproken bezorgingen",
-                    "apple_drop_mp4": "Video weglaten bij Apple-pushmeldingen"
+                    "apple_drop_mp4": "MP4 uit Apple-pushmeldingen halen"
                 },
                 "data_description": {
-                    "default_inclusion": "Wanneer een bezorging wordt gebruikt, tenzij haar eigen inclusion anders zegt. Laat op de standaard van elk transport staan om het huidige gedrag te behouden.",
-                    "voice_occupancy": "Voor wie gesproken bezorgingen, zoals Alexa- en TTS-meldingen, bedoeld zijn, afhankelijk van wie er thuis is - tenzij een bezorging een eigen occupancy instelt.",
-                    "apple_drop_mp4": ".mp4-video, zoals een Frigate-clip, weglaten uit pushmeldingen naar Apple-apparaten, die deze niet altijd kunnen tonen. Android-apparaten krijgen de video nog wel."
+                    "default_inclusion": "Bepaalt hoe bezorgingen in aanmerking komen voor opname in meldingen",
+                    "voice_occupancy": "Beperkt, op basis van wie er thuis is, wanneer gesproken bezorgingen, zoals TTS of Alexa Devices, in aanmerking komen voor meldingen",
+                    "apple_drop_mp4": ".mp4-video, zoals een Frigate-clip, weglaten uit pushmeldingen naar Apple-apparaten, die bij een MP4 vaak een tijdelijke afbeelding van een kapotte afbeelding tonen. Meldingen van de Frigate-blueprint gebruiken dan hun snapshot. Android-apparaten krijgen de video nog wel."
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "Eigen standaard van elk transport",
-                "default": "Standaard - gebruikt voor elke melding",
-                "explicit": "Expliciet - alleen als gekozen voor een melding",
-                "scenario": "Scenario - alleen als een scenario haar inschakelt"
+                "transport": "Automatisch",
+                "default": "Elke bezorging komt in aanmerking voor meldingen",
+                "explicit": "Bezorging moet in de actie of door een scenario gekozen worden",
+                "scenario": "Bezorging moet door een scenario gekozen worden"
             }
         },
         "voice_occupancy": {

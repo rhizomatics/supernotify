@@ -529,16 +529,15 @@
             },
             "delivery_control": {
                 "title": "配信コントロール",
-                "description": "YAML で独自の値を設定していない配信の既定値です。YAML でのトランスポートの delivery_defaults が引き続き優先されます。",
                 "data": {
-                    "default_inclusion": "既定の inclusion",
+                    "default_inclusion": "配信の対象",
                     "voice_occupancy": "音声配信の在宅条件",
-                    "apple_drop_mp4": "Apple へのプッシュで動画を省く"
+                    "apple_drop_mp4": "Apple へのプッシュから MP4 を除く"
                 },
                 "data_description": {
-                    "default_inclusion": "配信が使われるタイミング。配信自身の inclusion で別に指定されていない場合に適用されます。現在の動作を保つには、各トランスポートの既定値のままにしてください。",
-                    "voice_occupancy": "Alexa や TTS のアナウンスなどの音声配信を誰に向けるか、在宅状況で決めます。配信が独自の occupancy を設定している場合を除きます。",
-                    "apple_drop_mp4": "Frigate のクリップなどの .mp4 動画を、Apple デバイスへのモバイルプッシュ通知から省きます。Apple デバイスでは表示できないことがあるためです。Android デバイスには引き続き送られます。"
+                    "default_inclusion": "通知に含める配信をどう判断するかを制御します",
+                    "voice_occupancy": "在宅状況に応じて、TTS や Alexa Devices などの音声配信を通知の対象にするタイミングを制限します",
+                    "apple_drop_mp4": "Frigate のクリップなどの .mp4 動画を、Apple デバイスへのモバイルプッシュ通知から省きます。Apple デバイスは MP4 を受け取ると、プッシュ通知に壊れた画像のプレースホルダーを表示することがよくあります。Frigate ブループリントの通知は代わりにスナップショット画像を使います。Android デバイスには引き続き動画が送られます。"
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "各トランスポートの既定値",
-                "default": "既定 - すべての通知で使用",
-                "explicit": "明示 - 通知で選ばれたときのみ",
-                "scenario": "シナリオ - シナリオが有効にしたときのみ"
+                "transport": "自動",
+                "default": "すべての配信が通知の対象",
+                "explicit": "配信はアクションまたはシナリオで選ぶ必要あり",
+                "scenario": "配信はシナリオで選ぶ必要あり"
             }
         },
         "voice_occupancy": {

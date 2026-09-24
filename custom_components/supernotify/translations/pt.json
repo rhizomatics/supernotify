@@ -529,16 +529,15 @@
             },
             "delivery_control": {
                 "title": "Controlo de entregas",
-                "description": "Valores predefinidos para as entregas que não definem os seus próprios em YAML. Os delivery_defaults de um transporte em YAML continuam a ter prioridade.",
                 "data": {
-                    "default_inclusion": "Inclusão predefinida",
+                    "default_inclusion": "Inclusão de entregas",
                     "voice_occupancy": "Presença nas entregas faladas",
-                    "apple_drop_mp4": "Omitir vídeo nas notificações Apple"
+                    "apple_drop_mp4": "Remover MP4 das notificações Apple"
                 },
                 "data_description": {
-                    "default_inclusion": "Quando uma entrega é usada, salvo indicação em contrário na sua própria inclusion. Deixe o valor de cada transporte para manter o comportamento atual.",
-                    "voice_occupancy": "Para quem são as entregas faladas, como os anúncios Alexa e TTS, consoante quem está em casa - salvo se uma entrega definir a sua própria occupancy.",
-                    "apple_drop_mp4": "Omitir o vídeo .mp4, como um clip do Frigate, das notificações push para dispositivos Apple, que nem sempre o conseguem mostrar. Os dispositivos Android continuam a recebê-lo."
+                    "default_inclusion": "Controla como as entregas são consideradas para inclusão nas notificações",
+                    "voice_occupancy": "Limita quando as entregas faladas, como TTS ou Alexa Devices, são consideradas para notificações, consoante quem está em casa",
+                    "apple_drop_mp4": "Omitir o vídeo .mp4, como um clip do Frigate, das notificações push para dispositivos Apple, que muitas vezes mostram uma imagem partida quando recebem um MP4. As notificações do blueprint do Frigate usam antes a sua imagem instantânea. Os dispositivos Android continuam a receber o vídeo."
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "Valor próprio de cada transporte",
-                "default": "Predefinida - usada em todas as notificações",
-                "explicit": "Explícita - só quando escolhida para uma notificação",
-                "scenario": "Cenário - só quando um cenário a ativa"
+                "transport": "Automático",
+                "default": "Todas as entregas são elegíveis para notificações",
+                "explicit": "A entrega tem de ser escolhida na ação ou por um cenário",
+                "scenario": "A entrega tem de ser escolhida por um cenário"
             }
         },
         "voice_occupancy": {

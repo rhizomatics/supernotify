@@ -437,16 +437,15 @@
             },
             "delivery_control": {
                 "title": "Delivery Control",
-                "description": "Defaults for deliveries that don't set their own in YAML. A transport's delivery_defaults in YAML still override these.",
                 "data": {
-                    "default_inclusion": "Default inclusion",
+                    "default_inclusion": "Delivery Inclusion",
                     "voice_occupancy": "Spoken delivery occupancy",
-                    "apple_drop_mp4": "Leave video out of Apple pushes"
+                    "apple_drop_mp4": "Remove MP4 From Apple Push"
                 },
                 "data_description": {
-                    "default_inclusion": "When a delivery is used, unless its own inclusion says otherwise. Leave as each transport's own default to keep today's behaviour.",
-                    "voice_occupancy": "Who spoken deliveries, such as Alexa and TTS announcements, are for, by who is home - unless a delivery sets its own occupancy.",
-                    "apple_drop_mp4": "Leave .mp4 video, such as a Frigate clip, out of mobile push notifications to Apple devices, which can't always show it. Android devices still get it."
+                    "default_inclusion": "Control how Deliveries are considered for inclusion in notifications",
+                    "voice_occupancy": "Limit when spoken deliveries, such as TTS or Alexa Devices, are considered for notifications, based on home occupancy",
+                    "apple_drop_mp4": "Leave .mp4 video, such as a Frigate clip, out of mobile push notifications to Apple devices, which often show a broken image placeholder in push notifications when given an MP4. Frigate blueprint notifications fall back to their snapshot image instead. Android devices still get the video."
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "Each transport's own default",
-                "default": "Default - used for every notification",
-                "explicit": "Explicit - only when chosen for a notification",
-                "scenario": "Scenario - only when a scenario turns it on"
+                "transport": "Automatic",
+                "default": "Every Delivery Eligible for Notifications",
+                "explicit": "Delivery Must Be Selected in Action or by Scenario",
+                "scenario": "Delivery Must Be Selected by a Scenario"
             }
         },
         "voice_occupancy": {

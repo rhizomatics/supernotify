@@ -529,16 +529,15 @@
             },
             "delivery_control": {
                 "title": "Contrôle des livraisons",
-                "description": "Valeurs par défaut des livraisons qui ne définissent pas les leurs en YAML. Les delivery_defaults d'un transport en YAML restent prioritaires.",
                 "data": {
-                    "default_inclusion": "Inclusion par défaut",
+                    "default_inclusion": "Inclusion des livraisons",
                     "voice_occupancy": "Présence pour les livraisons vocales",
-                    "apple_drop_mp4": "Retirer la vidéo des notifications Apple"
+                    "apple_drop_mp4": "Retirer le MP4 des notifications Apple"
                 },
                 "data_description": {
-                    "default_inclusion": "Quand une livraison est utilisée, sauf si sa propre inclusion en décide autrement. Laisser la valeur propre à chaque transport pour garder le comportement actuel.",
-                    "voice_occupancy": "À qui s'adressent les livraisons vocales, comme les annonces Alexa et TTS, selon qui est à la maison - sauf si une livraison définit sa propre occupancy.",
-                    "apple_drop_mp4": "Retirer la vidéo .mp4, comme un clip Frigate, des notifications push vers les appareils Apple, qui ne peuvent pas toujours l'afficher. Les appareils Android la reçoivent toujours."
+                    "default_inclusion": "Contrôle la façon dont les livraisons sont prises en compte pour les notifications",
+                    "voice_occupancy": "Limite, selon la présence à la maison, quand les livraisons vocales, comme TTS ou Alexa Devices, sont prises en compte pour les notifications",
+                    "apple_drop_mp4": "Retirer la vidéo .mp4, comme un clip Frigate, des notifications push vers les appareils Apple, qui affichent souvent une image cassée quand ils reçoivent un MP4. Les notifications du blueprint Frigate utilisent alors leur image instantanée. Les appareils Android reçoivent toujours la vidéo."
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "Valeur propre à chaque transport",
-                "default": "Par défaut - utilisée pour chaque notification",
-                "explicit": "Explicite - seulement si choisie pour une notification",
-                "scenario": "Scénario - seulement quand un scénario l'active"
+                "transport": "Automatique",
+                "default": "Toutes les livraisons sont éligibles aux notifications",
+                "explicit": "La livraison doit être choisie dans l'action ou par un scénario",
+                "scenario": "La livraison doit être choisie par un scénario"
             }
         },
         "voice_occupancy": {

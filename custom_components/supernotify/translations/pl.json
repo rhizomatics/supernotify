@@ -529,16 +529,15 @@
             },
             "delivery_control": {
                 "title": "Sterowanie dostarczeniami",
-                "description": "Wartości domyślne dla dostarczeń, które nie ustawiają własnych w YAML. delivery_defaults transportu w YAML nadal mają pierwszeństwo.",
                 "data": {
-                    "default_inclusion": "Domyślne włączanie",
+                    "default_inclusion": "Włączanie dostarczeń",
                     "voice_occupancy": "Obecność dla dostarczeń głosowych",
-                    "apple_drop_mp4": "Pomijaj wideo w powiadomieniach Apple"
+                    "apple_drop_mp4": "Usuń MP4 z powiadomień Apple"
                 },
                 "data_description": {
-                    "default_inclusion": "Kiedy dostarczenie jest używane, chyba że jego własne inclusion mówi inaczej. Pozostaw domyślne ustawienie każdego transportu, aby zachować obecne działanie.",
-                    "voice_occupancy": "Dla kogo są dostarczenia głosowe, takie jak komunikaty Alexa i TTS, w zależności od tego, kto jest w domu - chyba że dostarczenie ustawia własne occupancy.",
-                    "apple_drop_mp4": "Pomijaj wideo .mp4, np. klip z Frigate, w powiadomieniach push na urządzenia Apple, które nie zawsze potrafią je wyświetlić. Urządzenia z Androidem nadal je otrzymują."
+                    "default_inclusion": "Określa, jak dostarczenia są brane pod uwagę przy włączaniu do powiadomień",
+                    "voice_occupancy": "Ogranicza, na podstawie obecności w domu, kiedy dostarczenia głosowe, takie jak TTS lub Alexa Devices, są brane pod uwagę w powiadomieniach",
+                    "apple_drop_mp4": "Pomijaj wideo .mp4, np. klip z Frigate, w powiadomieniach push na urządzenia Apple, które po otrzymaniu MP4 często pokazują w powiadomieniu symbol uszkodzonego obrazu. Powiadomienia z blueprintu Frigate używają wtedy swojego zdjęcia migawkowego. Urządzenia z Androidem nadal otrzymują wideo."
                 }
             }
         }
@@ -564,10 +563,10 @@
         },
         "default_inclusion": {
             "options": {
-                "transport": "Domyślne ustawienie każdego transportu",
-                "default": "Domyślne - używane przy każdym powiadomieniu",
-                "explicit": "Jawne - tylko gdy wybrane dla powiadomienia",
-                "scenario": "Scenariusz - tylko gdy włączy je scenariusz"
+                "transport": "Automatycznie",
+                "default": "Każde dostarczenie może być użyte w powiadomieniach",
+                "explicit": "Dostarczenie musi zostać wybrane w akcji lub przez scenariusz",
+                "scenario": "Dostarczenie musi zostać wybrane przez scenariusz"
             }
         },
         "voice_occupancy": {
