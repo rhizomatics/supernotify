@@ -1,0 +1,36 @@
+# Recipe - Content Escalation
+
+## Purpose
+
+Make a notification more impactful if the message or title has certain words in it.
+
+## Implementation
+
+Uses a **Scenario** and ability of standard templating to see and make logic checks on the notification message.
+
+In this case a Frigate notification is usually a medium priority, however if the phrase `person was detected` is in the message, and the alarm state indicates the house is empty, these are sent as text message, email and mobile push just to make sure it gets through.
+
+## Example Configuration
+
+```yaml
+  scenarios:
+    high_alert:
+        alias: make a fuss if alarm armed or high priority
+        conditions:
+          - "{{notification_priority in ['high'] and 'person was detected' in notification_message|lower }}"
+          - condition: state
+            entity_id: alarm_control_panel.home_alarm_control
+            state:
+              - armed_away
+              - armed_vacation
+        delivery:
+          .*:
+            enabled: true
+            data:
+              priority:critical
+```
+
+## Variations
+
+- Use `{{'LONE_HOME' in occupancy}}` to check if only one person is home
+- Use risk levels in the message, as set by GenAI in the [Voice Described CCTV Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)

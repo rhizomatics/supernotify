@@ -1,0 +1,115 @@
+# Home Assistant Supernotify
+
+> Advanced, concise, flexible notifications for Home Assistant
+
+Supernotify is a Home Assistant custom integration for unified notifications: send one notification and it is routed to many channels (deliveries) by transport, recipient and scenario, with configuration in YAML or the UI.
+JSON Schemas for validating configuration are published at https://supernotify.rhizomatics.org.uk/developer/schemas/json/Full_Configuration.schema.json (complete YAML configuration) and https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action.schema.json (the notify action call). Schemas for individual objects, such as Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition, sit alongside as <Name>.schema.json.
+
+## Start here
+
+- [Supernotify](https://supernotify.rhizomatics.org.uk/latest/index.md): Overview of what Supernotify does
+- [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md): Install, configure and send a first notification
+- [Core Concepts](https://supernotify.rhizomatics.org.uk/latest/concepts/index.md): Core concepts - transports, deliveries, scenarios, recipients and targets
+
+## Using Supernotify
+
+- [Usage](https://supernotify.rhizomatics.org.uk/latest/usage/index.md)
+- [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
+- [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md)
+- [Mobile Actions and Action Groups](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md)
+- [Notifying](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md)
+- [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
+- [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md)
+- [Voice](https://supernotify.rhizomatics.org.uk/latest/usage/voice/index.md)
+
+## Configuration
+
+- [Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/index.md)
+- [Notification Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md)
+- [Conditions](https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/index.md)
+- [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
+- [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md)
+- [Duplicate Detection](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md)
+- [e-Mail Notifications](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md)
+- [Configuration Levels](https://supernotify.rhizomatics.org.uk/latest/configuration/levels/index.md)
+- [Images, Streaming and Cameras](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/index.md)
+- [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)
+- [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)
+- [Selection Rules](https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/index.md)
+- [YAML](https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/index.md)
+- [HTML Email Template](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/html_email_template/index.md)
+- [Maximal Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/maximal/index.md)
+- [Minimal Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md)
+
+## Transports
+
+- [Transport Adaptors](https://supernotify.rhizomatics.org.uk/latest/transports/index.md)
+- [Alexa Devices Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)
+- [Alexa Media Player Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md)
+- [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)
+- [Discord Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)
+- [Email Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)
+- [Generic Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)
+- [Gotify Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)
+- [HTML5 Browser Push Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)
+- [Kodi Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)
+- [LaMetric TIME Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)
+- [Matrix Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)
+- [Media Player Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)
+- [Mobile Push Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)
+- [MQTT Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)
+- [Notify Entity Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)
+- [ntfy Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)
+- [Persistent Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)
+- [Pushover Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/pushover/index.md)
+- [SMS (Text Messaging) Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md)
+- [Telegram Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/telegram/index.md)
+- [TTS Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md)
+
+## Recipes
+
+- [Recipes for Home Assistant Notifications using Supernotify](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md)
+- [Backup Alexa Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/index.md)
+- [Alexa Whispering Low Priority Announcements](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
+- [All sirens go](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md)
+- [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md)
+- [Basic HTML Formatted Email Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md)
+- [Bedtime Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md)
+- [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md)
+- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md)
+- [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md)
+- [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md)
+- [Use Live Activities to Track Dishwasher Cycle](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md)
+- [CC All Emails](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md)
+- [Apply a Scenario Exception](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md)
+- [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md)
+- [Fixed Notification Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md)
+- [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md)
+- [General Tips for Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/index.md)
+- [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md)
+- [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md)
+- [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md)
+- [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md)
+- [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md)
+- [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
+- [Seasonal greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
+- [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md)
+- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)
+
+## Reference
+
+- [JSON Schema for Supernotify](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/index.md): JSON Schemas for configuration and the notify action data
+
+## Optional
+
+- [What's New](https://supernotify.rhizomatics.org.uk/latest/changelog/index.md): Release history
+- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md): Roadmap of planned features and improvements
+- [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md): Design principles
+- [Development Design RFCs](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/index.md)
+- [ConfigFlow Implementation Approach](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/index.md)
+- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/index.md)
+- [Frigate SuperNotifier](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md)
+- [Package Support](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/index.md)
+- [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md)
+- [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md): Table of notification transports and capabilities
+
