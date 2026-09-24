@@ -18,15 +18,18 @@ The "packages" could also be selected after the fact, either directly in the mai
 
 ## Implementation
 
-A new sub-package within Supernotify, with a module per package.
-
-At set-up or startup the modules are called to see if they are applicable. If use chooses to ignore them, this ignore state is persisted so not bothered again.
+Separate custom component on HACS, per package, as Supernotify "plugins".
+More noticeable, e.g. someone looking for help with Frigate more likely to pick a Frigate Supernotify plugin from HACS than examine Supernotify and find the small print.
 
 ### Alternatives
 
-Separate custom component on HACS, per package, as Supernotify "plugins". Worth doing if there are heavy dependencies, otherwise extra complexity for users. May make it more noticeable, e.g. someone looking for help with Frigate more likely to pick a Frigate Auto Notify plugin from HACS than examine Supernotify and find the small print.
+A new sub-package within Supernotify, with a module per package. At set-up or startup the modules are called to see if they are applicable. If use chooses to ignore them, this ignore state is persisted so not bothered again.
 
 Config sub-entries?
+
+### Branding
+
+No user facing use of term 'packages'. These will be XXXX SuperNotifier components, explained as a pre-set bundle of notifications
 
 ## Examples
 
