@@ -47,7 +47,7 @@
         },
         "notify": {
             "recipient": {
-                "name": "Notify {recipient}"
+                "name": "Notifica {recipient}"
             }
         }
     },
@@ -78,7 +78,7 @@
                 },
                 "priority": {
                     "name": "Priorità",
-                    "description": "Usata per abilitare/disabilitare consegne e scenari, e mappata sul proprio flag di priorità/urgenza del trasporto sottostante, se supportato (ad es. push mobile, SMTP, Telegram, Gotify, ntfy)."
+                    "description": "Usata per abilitare/disabilitare consegne e scenari, e mappata sul proprio flag di priorità/urgenza del transport sottostante, se supportato (ad es. push mobile, SMTP, Telegram, Gotify, ntfy)."
                 },
                 "delivery_selection": {
                     "name": "Selezione consegna",
@@ -169,19 +169,19 @@
             }
         },
         "enquire_configuration": {
-            "name": "Richiedi Configurazione",
+            "name": "Interroga configurazione",
             "description": "Strumento di debug per visualizzare la configurazione di SuperNotify attualmente caricata"
         },
         "enquire_deliveries_by_scenario": {
-            "name": "Richiedi Consegne per Scenario",
+            "name": "Interroga consegne per scenario",
             "description": "Strumento di debug per visualizzare la lista delle consegne per ogni scenario, incluso l'utilizzo predefinito."
         },
         "enquire_implicit_deliveries": {
-            "name": "Richiedi Consegne Implicite",
-            "description": "Strumento di debug per visualizzare le consegne utilizzate automaticamente per impostazione predefinita per ogni trasporto"
+            "name": "Interroga consegne implicite",
+            "description": "Strumento di debug per visualizzare le consegne utilizzate automaticamente per impostazione predefinita per ogni transport"
         },
         "enquire_last_notification": {
-            "name": "Richiedi Ultima Notifica",
+            "name": "Interroga ultima notifica",
             "description": "Strumento di debug per visualizzare il contenuto dell'ultima notifica inviata",
             "fields": {
                 "diagnostics": {
@@ -191,15 +191,15 @@
             }
         },
         "enquire_recipients": {
-            "name": "Richiedi Destinatari",
+            "name": "Interroga destinatari",
             "description": "Strumento di debug per visualizzare i destinatari attualmente configurati"
         },
         "enquire_scenarios": {
-            "name": "Richiedi Scenari",
+            "name": "Interroga scenari",
             "description": "Strumento di debug per visualizzare gli scenari attualmente configurati e i loro attributi"
         },
         "enquire_active_scenarios": {
-            "name": "Richiedi Scenari Attivi",
+            "name": "Interroga scenari attivi",
             "description": "Strumento di debug per visualizzare quali scenari sono attualmente attivi",
             "fields": {
                 "trace": {
@@ -209,19 +209,19 @@
             }
         },
         "enquire_occupancy": {
-            "name": "Richiedi Occupazione",
+            "name": "Interroga occupazione",
             "description": "Strumento di debug per visualizzare lo stato di occupazione attuale utilizzato per l'indirizzamento delle consegne"
         },
         "enquire_snoozes": {
-            "name": "Richiedi Snooze",
+            "name": "Interroga snooze",
             "description": "Strumento di debug per visualizzare gli snooze attualmente attivi"
         },
         "refresh_entities": {
-            "name": "Aggiorna Entità",
+            "name": "Aggiorna entità",
             "description": "Aggiorna tutte le entità esposte da SuperNotify per l'introspezione e il controllo"
         },
         "reset_overrides": {
-            "name": "Ripristina Override",
+            "name": "Ripristina override",
             "description": "Riporta allo stato configurato ogni scenario, recipient, delivery e transport attivato o disattivato durante l'esecuzione",
             "fields": {
                 "kind": {
@@ -231,11 +231,11 @@
             }
         },
         "clear_snoozes": {
-            "name": "Cancella Snooze",
+            "name": "Cancella snooze",
             "description": "Cancella tutti gli snooze attualmente attivi"
         },
         "purge_media": {
-            "name": "Elimina Media",
+            "name": "Elimina media",
             "description": "Elimina i file multimediali memorizzati più vecchi del numero di giorni configurato (o specificato)",
             "fields": {
                 "days": {
@@ -245,7 +245,7 @@
             }
         },
         "purge_archive": {
-            "name": "Elimina Archivio",
+            "name": "Elimina archivio",
             "description": "Elimina i record delle notifiche archiviate più vecchi del numero di giorni configurato (o specificato)",
             "fields": {
                 "days": {
@@ -307,40 +307,40 @@
     },
     "issues": {
         "scenario_delivery": {
-            "title": "Consegna Non Valida per Scenario",
+            "title": "Consegna non valida per scenario",
             "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {delivery} che non esiste nella configurazione di supernotify"
         },
         "scenario_action_group": {
-            "title": "Gruppo Azione Mobile Non Valido per Scenario",
+            "title": "Gruppo azione mobile non valido per scenario",
             "description": "La definizione dello scenario {scenario} fa riferimento a una consegna {action_group} che non esiste nella configurazione di supernotify"
         },
         "scenario_condition": {
-            "title": "Condizione Non Valida per Scenario",
+            "title": "Condizione non valida per scenario",
             "description": "La definizione dello scenario {scenario} contiene una condizione che non può essere valutata da Home Assistant"
         },
         "delivery_unknown_transport": {
-            "title": "Trasporto Sconosciuto per Consegna",
-            "description": "La configurazione della consegna {delivery} fa riferimento a un trasporto {transport} non fornito da SuperNotify"
+            "title": "Transport sconosciuto per delivery",
+            "description": "La configurazione della consegna {delivery} fa riferimento a un transport {transport} non fornito da SuperNotify"
         },
         "media_path": {
-            "title": "Percorso Media Non Utilizzabile",
+            "title": "Percorso media non utilizzabile",
             "description": "È stato fornito un percorso ({path}) per conservare media come snapshot della telecamera durante le notifiche, ma non è utilizzabile (errore: {error})"
         },
         "delivery_reserved_name": {
-            "title": "La Consegna Ha un Nome Riservato",
+            "title": "La consegna ha un nome riservato",
             "description": "Il nome della consegna {delivery} è riservato per uso di Supernotify"
         },
         "delivery_invalid_action": {
-            "title": "La Consegna Ha un'Azione Non Valida",
+            "title": "La consegna ha un'azione non valida",
             "description": "La consegna {delivery} ha un'azione non valida {action}"
         },
         "delivery_invalid_condition": {
-            "title": "La Consegna Ha una Condizione Non Valida",
+            "title": "La consegna ha una condizione non valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}"
         },
         "delivery_lost_implicit_inclusion": {
-            "title": "La Consegna Non È Più Inclusa Per Impostazione Predefinita",
-            "description": "La consegna {delivery} non imposta un proprio inclusion, e il trasporto {transport} non usa più 'default' come predefinito - questa consegna non verrà più attivata su ogni notifica. Aggiungi inclusion: [default] alla consegna se desideri mantenere questo comportamento."
+            "title": "La consegna non è più inclusa per impostazione predefinita",
+            "description": "La consegna {delivery} non imposta un proprio inclusion, e il transport {transport} non usa più 'default' come predefinito - questa consegna non verrà più attivata su ogni notifica. Aggiungi inclusion: [default] alla consegna se desideri mantenere questo comportamento."
         },
         "legacy_yaml_config": {
             "title": "La configurazione YAML di Supernotify deve essere spostata",
