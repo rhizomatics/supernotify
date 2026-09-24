@@ -74,6 +74,7 @@ class RecipientNotifyEntity(NotifyEntity):
     """
 
     _attr_has_entity_name = True
+    _attr_translation_key = "recipient"
 
     def __init__(
         self,
