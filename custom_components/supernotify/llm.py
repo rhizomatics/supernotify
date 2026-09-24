@@ -16,7 +16,7 @@ import datetime as dt
 from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
-from homeassistant.components.llm import LLMTools
+from homeassistant.components.llm import LLMTools  # type: ignore[import-not-found,unused-ignore]  # HA < 2026.x on py3.13
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
 from homeassistant.util import dt as dt_util

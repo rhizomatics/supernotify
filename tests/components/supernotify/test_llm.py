@@ -10,11 +10,13 @@ import voluptuous as vol
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
-from probatio import to_openapi
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_LLM_ACTION_TOOLS, CONF_LLM_DIAGNOSTIC_TOOLS, CONF_LLM_TOOLS
 from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
+
+# the llm platform and probatio are only in the newer Home Assistant installed for py3.14 - drop with py3.13
+pytest.importorskip("homeassistant.components.llm")
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -125,6 +127,8 @@ async def test_tool_parameters_serialize_for_llms(hass: HomeAssistant) -> None:
 
     for tool in api.tools:
         if tool.name.startswith("supernotify__"):
+            from probatio import to_openapi
+
             # how the MCP server, and conversation agents, describe a tool's parameters to the model
             to_openapi(tool.parameters, custom_serializer=api.custom_serializer)
 
