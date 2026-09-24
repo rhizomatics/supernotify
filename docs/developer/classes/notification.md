@@ -2,7 +2,7 @@
 tags:
   - developer
   - classes
-  description: Notification class descriptions in Supernotify for Home Assistant
+description: Notification class descriptions in Supernotify for Home Assistant
 ---
 # Notification Classes
 

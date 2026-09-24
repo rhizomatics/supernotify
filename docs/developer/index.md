@@ -12,7 +12,7 @@
 * [Transports](./transports.md)
     - Table of Transport Adaptor configuration options automatically generated from current Python code
 
-Code coverage and Home Assistant integration audit data can also be found here, and example renders of the provided default HTML eMail template, showing how it looks for different priority levels.
+Code coverage and Home Assistant integration audit data are in [Reference](reference/index.md), and there are example renders of the provided default HTML eMail template, showing how it looks for different priority levels.
 
 See also transport and options tables in the [Reference](../reference/index.md) section.
 
