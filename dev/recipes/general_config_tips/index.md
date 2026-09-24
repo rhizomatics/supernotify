@@ -1,5 +1,7 @@
 # General Notification Tips
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/
+
 Hints and suggestions for configuring non-SuperNotify notification in HomeAssistant.
 
 ## Self-hosted SMS

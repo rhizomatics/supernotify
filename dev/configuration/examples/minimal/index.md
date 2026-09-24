@@ -1,5 +1,7 @@
 # Minimal Configuration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/
+
 The smallest possible setup no longer needs any YAML at all: go to **Settings → Devices & Services → Add Integration**, search for **Supernotify**, and accept the defaults. Mobile push, an existing SMTP integration or notify entities, and recipients from Home Assistant persons are all discovered automatically - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md).
 
 ```yaml

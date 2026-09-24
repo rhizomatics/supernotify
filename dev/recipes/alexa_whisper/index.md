@@ -1,5 +1,7 @@
 # Recipe - Alexa Whispering
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/
+
 ## Purpose
 
 Make all low priority Alexa announcements in a whisper.

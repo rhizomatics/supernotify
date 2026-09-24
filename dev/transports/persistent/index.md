@@ -1,5 +1,7 @@
 # Persistent Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/persistent/
+
 | Transport ID | Source                                                                                                                         | Requirements                                                                                               | Optional |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | -------- |
 | `persistent` | [`persistent.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/persistent.py) | [Persistent Notification Integration](https://www.home-assistant.io/integrations/persistent_notification/) | -        |

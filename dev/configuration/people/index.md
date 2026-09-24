@@ -1,5 +1,7 @@
 # People
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/people/
+
 While Home Assistant has both a `Person` and `User`, neither are directly useful or extensible for notifications and occupancy checks.
 
 Supernotify adds a **People Registry** for notifications and occupancy, which builds on top of the Home Assistant entities ( and will be retired/adapted when Home Assistant does have this support). The term *Recipient* is used for what Supernotify manages, to distinguish from the Home Assistant terms.

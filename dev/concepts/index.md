@@ -1,5 +1,7 @@
 # Core Concepts
 
+Source: https://supernotify.rhizomatics.org.uk/latest/concepts/
+
 ## How It Fits Together
 
 One notification from an automation can turn into several different notifications, each one shaped for the way it's sent.

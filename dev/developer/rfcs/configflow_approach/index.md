@@ -1,5 +1,7 @@
 # ConfigFlow Implementation Approach
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/
+
 ## Goals
 
 - Make Supernotify more accessible to more users, including non-technical ones who will never use YAML. Supernotify should itself make HomeAssistant more accessible, for example by simplifying mobile push setup.

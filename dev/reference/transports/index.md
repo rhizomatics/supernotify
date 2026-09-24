@@ -1,5 +1,7 @@
 # Transport Configuration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/reference/transports/
+
 See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/reference/options/index.md) for a description of each option.
 
 ## Default Inclusion

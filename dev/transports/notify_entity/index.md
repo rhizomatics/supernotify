@@ -1,5 +1,7 @@
 # Notify Entity Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/
+
 | Transport ID    | Source                                                                                                                               | Requirements                                                                    | Optional |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------- |
 | `notify_entity` | [`notify_entity.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/notify_entity.py) | [Notify Entity Integration](https://www.home-assistant.io/integrations/notify/) | -        |

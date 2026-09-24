@@ -1,5 +1,7 @@
 # Configuration Levels
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/levels/
+
 ## Flexible Configuration
 
 Delivery configuration can be done in lots of different ways to suit different configurations and to keep those configuration as minimal as possible.

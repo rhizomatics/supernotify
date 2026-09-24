@@ -11,6 +11,8 @@ This page available in [English](https://supernotify.rhizomatics.org.uk/latest/i
 
 # Supernotify - Unified Notifications for Home Assistant
 
+Source: https://supernotify.rhizomatics.org.uk/latest/
+
 **Unified Notification for Home Assistant**
 
 ### v2 MAJOR CHANGE - Set up from Home Assistant UI
@@ -134,6 +136,8 @@ With zero YAML all UI config
 
 # Getting Started
 
+Source: https://supernotify.rhizomatics.org.uk/latest/getting_started/
+
 ## HACS
 
 Make sure you have **HACS** installed
@@ -184,6 +188,8 @@ From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
 Find lots of ideas with example configuration in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md).
 
 # Core Concepts
+
+Source: https://supernotify.rhizomatics.org.uk/latest/concepts/
 
 ## How It Fits Together
 
@@ -280,11 +286,15 @@ See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer
 
 # Usage
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/
+
 In addition to this reference documentation, see also the sample usage snippets in the [recipes](https://supernotify.rhizomatics.org.uk/recipes/).
 
 {{ pagetree(siblings) }}
 
 # Actions
+
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/actions/
 
 Note
 
@@ -316,22 +326,27 @@ The same reset as `reset_overrides` with no `kind` is also available as the **Re
 
 # Assist and AI Agents
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/assist/
+
 Beta
 
-This is a first beta, and feedback is very welcome on [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your conversation agent picks the right tool and fills it in.
+This is a first beta, limited to English. Feedback and help with other languages is very welcome on [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your conversation agent picks the right tool and fills it in.
 
-Supernotify can give tools to [Assist](https://www.home-assistant.io/voice_control/), so an AI conversation agent can send notifications, snooze them, and explain what happened to them. It works by voice or from the chat icon in the app.
+Supernotify can give tools to [Assist](https://www.home-assistant.io/voice_control/), so a conversation agent can send notifications, snooze them, and explain what happened to them. It works by voice or from the chat icon in the app.
 
 The same tools are offered to AI agents connected through Home Assistant's [Model Context Protocol Server](https://www.home-assistant.io/integrations/mcp_server/), as long as the server exposes the Assist API.
 
+A more limited set of interactions, without the flexibility of AI understanding, is available for the basic non-AI Assist agent, using a set of fixed sentence structures, see [Built-in Agent Sentences](#built-in-agent-sentences) for more info.
+
 ## Switching On
 
-Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** > **Configure**, choose **LLM Tools (beta)**. There are two switches:
+Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** > **Configure**, choose **Assist and AI agents (beta)**. There are three switches:
 
-| Switch           | Tools                                                                     |
-| ---------------- | ------------------------------------------------------------------------- |
-| Action tools     | Send notifications, and snooze or silence them                            |
-| Diagnostic tools | Recent notifications, dry runs, current snoozes, and documentation lookup |
+| Switch                   | What it gives                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| Action tools             | Send notifications, and snooze or silence them                                |
+| Diagnostic tools         | Recent notifications, dry runs, current snoozes, and documentation lookup     |
+| Built-in agent sentences | A few English [sentences](#built-in-agent-sentences) for the agent without AI |
 
 Needs an AI conversation agent
 
@@ -341,6 +356,8 @@ The tools are only used by a conversation agent that runs an AI model, such as O
 1. In **Settings** > **Voice assistants**, choose that conversation agent for the assistant you talk or chat to.
 
 The tools also need a recent Home Assistant. They don't appear on 2026.2 or earlier.
+
+Without an AI model, switch on **Built-in agent sentences** instead, see below.
 
 ## What You Can Ask
 
@@ -387,7 +404,27 @@ Turn on the file [archive](https://supernotify.rhizomatics.org.uk/latest/configu
 
 `supernotify__help` looks up this documentation site, including the recipes and configuration examples, and gives the agent the best matching pages to answer from, with links. It fetches the documentation from `supernotify.rhizomatics.org.uk` the first time it's used, then at most once a day. The documentation is for the latest release, and in English, though the agent can answer in your language.
 
+## Built-in Agent Sentences
+
+Home Assistant's built-in conversation agent doesn't use an AI model, so it can't use the tools above, but it can understand fixed sentences. Switch on **Built-in agent sentences** and it understands these, by voice or in the chat:
+
+| Say                                                 | Does                                      |
+| --------------------------------------------------- | ----------------------------------------- |
+| "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias    |
+| "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would |
+| "Snooze my notifications for *30* minutes"          | Snoozes everything                        |
+| "Mute all notifications for an hour"                | Snoozes everything for an hour            |
+| "Silence notifications"                             | Silences everything until turned back on  |
+| "Turn my notifications back on"                     | Undoes the snooze or silence              |
+| "What was the last notification"                    | Says what it was, and what sent it        |
+
+"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+
+The sentences are English only for now - if you'd like them in your language, please suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues).
+
 # Mobile Actions and Action Groups
+
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/
 
 Note
 
@@ -850,6 +887,8 @@ supernotify:
 
 # Alternate Notification Action
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/notifying/
+
 Supernotify also has compatibility with the original "legacy" notification platform, and the newer **Notify Entity** style - these are good for compatibility, but both are much more limited in the UI, and for entities, in what can be passed down to fine tune the notification. Use `notify.supernotify` for the legacy notification style, presuming you've named the platform that way when setting it up.
 
 Info
@@ -861,6 +900,8 @@ These examples assume you've named the Supernotify notifier as `supernotify` sin
 The full range of things that go into the second level `data:` section is documented at [Notify Action Data Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Notify_Action_Data/index.md)
 
 # Snoozing
+
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/
 
 Snoozing can be selected from a mobile action, and made for a set time, or notifications can be silenced until further notice. Snoozes are persisted to Home Assistant's integration storage, so will be reactivated after Home Assistant restarts, and included in backups.
 
@@ -896,6 +937,8 @@ The user is determined by matching the mobile device id in the event to the regi
 ```
 
 # Targets
+
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/targets/
 
 Home Assistant notifications use *target* for any address used in a notification - that could be an e-mail address, a phone number for SMS, a Slack/Discord/Telegram ID, a smart speaker or any of the new-style Notify Entities.
 
@@ -1056,6 +1099,8 @@ Also worth noting that some transports don't have targets at all, like the Persi
 
 # Voice
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/voice/
+
 Several voice assistants have specific support, in addition to what can be done for any Home Assistant Notify Entity.
 
 - [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)
@@ -1153,6 +1198,8 @@ While SSML can add a variety of sounds to voice assistants, the best way to use 
 
 # Configuration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/
+
 Start with the simplest possible setup, [added from the UI](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md) with no YAML at all - see the [minimal](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md) page. This will allow you to notify using *Notify Entities* and push mobile notifications to all the devices registered in Home Assistant, without specifying any targets, or any other config.
 
 This page onwards covers YAML configuration - still how [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md), transports, scenarios, recipients and cameras are set up, though archive, duplicate detection and housekeeping can also be configured from the UI.
@@ -1170,6 +1217,8 @@ If using email attachments, e.g. from camera snapshot or a `snapshot_url`, some 
 In addition to this reference documentation, see also the sample configuration snippets in the [recipes](https://supernotify.rhizomatics.org.uk/recipes/).
 
 # Notification Archiving
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/
 
 Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete with its debug trail, is archived.
 
@@ -1482,6 +1531,8 @@ See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipe
 
 # Conditions
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/
+
 The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md) recipe illustrates a simple use of conditions, based on time of day, and [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) shows a slightly more complex version with `or` logic for date ranges. These conditions are identical to what can be used in any Home Assistant automation.
 
 ## Condition Variables
@@ -1528,6 +1579,8 @@ The [Developer Tools Template Tab](https://www.home-assistant.io/docs/tools/dev-
 - [Home Assistant Template Extensions](https://www.home-assistant.io/docs/configuration/templating/#home-assistant-template-extensions)
 
 # Dashboard
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/
 
 Create a dashboard to use, configure and debug notifications using [Supernotify Cards](https://github.com/lollox80/supernotify-cards/blob/main/README.md).
 
@@ -1673,6 +1726,8 @@ views:
 ```
 
 # Deliveries
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/
 
 *Delivery* is a pre-set configuration for a specific *Transport* - it controls the configuration and can set values that would otherwise have to be repeated in every notification.
 
@@ -1919,6 +1974,8 @@ delivery:
 
 # Duplicate Detection
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/
+
 Three duplicate detection policies are available:
 
 1. `dupe_policy_message_title_same_or_lower_priority`
@@ -1944,6 +2001,8 @@ Set `force_resend: true` on the top level of the notification action data to ove
 The cache is implemented using [cachetools TTLCache](https://cachetools.readthedocs.io/en/stable/#cachetools.TTLCache)
 
 # e-Mail Notifications
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/email/
 
 ## Configuration
 
@@ -2074,6 +2133,8 @@ Add a [budget](https://blog.thecloudengineers.com/p/aws-budgets-for-beginners-ho
 
 # Configuration Levels
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/levels/
+
 ## Flexible Configuration
 
 Delivery configuration can be done in lots of different ways to suit different configurations and to keep those configuration as minimal as possible.
@@ -2112,6 +2173,8 @@ For example, if there's one specific automation you didn't want to have your `al
 1. Target notification action defaults, e.g. mail recipients ( this isn't applied inside Supernotify )
 
 # Images, Streaming and Cameras
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/
 
 ## Basic Configuration
 
@@ -2259,6 +2322,8 @@ data:
 `reprocess` defaults to `always`. It can also be set to `preserve` where the original image with any comments and other metadata is preserved, and then `jpeg_opts` or `png_opts` applied on top.
 
 # People
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/people/
 
 While Home Assistant has both a `Person` and `User`, neither are directly useful or extensible for notifications and occupancy checks.
 
@@ -2536,6 +2601,8 @@ Complicated Example
 
 # Scenarios
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/
+
 ## What and Why
 
 Scenarios can be defined both as a set of conditions which switch on the scenario and/or as a set of overrides to apply if the scenario is active.
@@ -2770,6 +2837,8 @@ Such a scenario still works normally for notifications; it simply has no `binary
 
 # Selection Rules
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/
+
 Several transport options use **Selection Rules** which allow a flexible set of inclusion or exclusion values, which can be plain text or regular expressions.
 
 ## Options Using Selection Rules
@@ -2844,6 +2913,8 @@ Both forms can be combined freely and nest to any depth.
 
 # YAML
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/
+
 By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md).
 
 ## Naming the Integration
@@ -2879,6 +2950,8 @@ That form is no longer read. If Home Assistant still finds one, a repair appears
 You can just as easily do this move by hand instead of using the repair - either way works. Either way, the old `notify:` block itself is left in place and simply ignored; delete it yourself once you're happy the new configuration works. The repair keeps reappearing (and the old block stays harmless either way) until you do - once it's gone, the repair clears itself automatically on the next restart.
 
 # HTML Email Template
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/html_email_template/
 
 Default HTML email template, with support for an image and action link. See the [Developer](https://supernotify.rhizomatics.org.uk/latest/developer/index.md) documentation for example renders of this for different message priorities.
 
@@ -3274,6 +3347,8 @@ Default HTML email template, with support for an image and action link. See the 
 ```
 
 # Maximal Configuration
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/maximal/
 
 More extensive example configuration, as used for testing Supernotify
 
@@ -3688,6 +3763,8 @@ supernotify:
 
 # Minimal Configuration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/
+
 The smallest possible setup no longer needs any YAML at all: go to **Settings → Devices & Services → Add Integration**, search for **Supernotify**, and accept the defaults. Mobile push, an existing SMTP integration or notify entities, and recipients from Home Assistant persons are all discovered automatically - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md).
 
 ```yaml
@@ -3699,6 +3776,8 @@ YAML is still how [Deliveries](https://supernotify.rhizomatics.org.uk/latest/con
 # Transports
 
 # Transport Adaptors
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/
 
 These are the notification transport adaptors built into Supernotify:
 
@@ -3739,6 +3818,8 @@ All of these are set by passing an `options` block in Delivery config or Transpo
 Options typed as [Selection Rules](https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/index.md) (e.g. `device_os_select`, `target_select`) share a common flexible syntax - see that page for the full set of forms.
 
 # Alexa Devices Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/
 
 | Transport ID    | Source                                                                                                                               | Requirements                                                                           | Optional |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------- |
@@ -3790,6 +3871,8 @@ Use `spoken_message` in the notification call to provide a different message for
 - [Speech Synthesis Markup Language (SSML) Reference](https://developer.amazon.com/en-US/docs/alexa/custom-skills/speech-synthesis-markup-language-ssml-reference.html)
 
 # Alexa Media Player Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/
 
 | Transport ID         | Source                                                                                                                                         | Requirements                                                                     | Optional |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------- |
@@ -3884,6 +3967,8 @@ If this only applies to some Alexa devices, then make two `Delivery` definitions
 - [alexapy](https://alexapy.readthedocs.io/en/latest/index.html)
 
 # Chime Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/chime/
 
 | Transport ID | Source                                                                                                               | Requirements | Optional                                                                                                                                                                                                                                                                                                          |
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -4140,6 +4225,8 @@ Chimes work well with scenarios, you can easily add a chime for all critical not
 
 # Discord Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/discord/
+
 ## Discovery
 
 **Delivery (explicit selection).** If the `discord` integration is already configured and no `discord` delivery is defined, a `discord` delivery is generated automatically (discovering whichever `notify.discord*` service slug your bot's config entry registered) — but since the channel/user ID has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [discord]}}` or a scenario), not by default.
@@ -4217,6 +4304,8 @@ data:
 - Unknown residual `data` keys are not forwarded to the service (they would be ignored downstream anyway); a debug log lists what was dropped.
 
 # Email Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/email/
 
 | Transport ID | Source                                                                                                               | Requirements | Optional                                                                                                                                                 |
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -4415,6 +4504,8 @@ It is anticipated that this will also open up more features, such as modern emai
 - [Jinja2 Template Designer Documentation](https://jinja.palletsprojects.com/en/stable/templates/)
 
 # Generic Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/generic/
 
 | Transport ID | Source                                                                                                                   | Requirements | Optional                                                    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------ | ----------------------------------------------------------- |
@@ -4636,6 +4727,8 @@ See the core [AWS Integration](https://www.home-assistant.io/integrations/aws/) 
 
 # Gotify Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/gotify/
+
 ## Discovery
 
 **Default delivery.** SuperNotify looks for a registered `notify.*` service backed by the `custom_components.gotify.notify` HACS platform module. If found and no `gotify` delivery is defined, a `gotify` delivery is generated automatically using that service and fires on every notification. Manually configuring your own `gotify` delivery with an explicit `action:` (see [Notes](#notes) below) still works and takes precedence.
@@ -4771,6 +4864,8 @@ ______________________________________________________________________
 
 # HTML5 Browser Push Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/html5/
+
 ## Discovery
 
 **Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {data: {delivery: [html5]}}` or a scenario), not by default.
@@ -4827,6 +4922,8 @@ delivery:
 
 # Kodi Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/kodi/
+
 ## Discovery
 
 **Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
@@ -4871,6 +4968,8 @@ The Home Assistant *Internal URL* should be a direct IP (e.g. `http://192.168.0.
 - Pure overlay: no action buttons and no user interaction.
 
 # LaMetric TIME Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/lametric/
 
 ## Discovery
 
@@ -4999,6 +5098,8 @@ And the resulting archived notification looks like:
 
 # Matrix Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/matrix/
+
 ## Discovery
 
 **Delivery (explicit selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically — but since a room ID/alias has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [matrix]}}` or a scenario), not by default.
@@ -5044,6 +5145,8 @@ For snapshots the integration checks local paths with `is_allowed_path`, so the 
 - With `format: html` the core sets both `formatted_body` and the plain `body` to the same string, so clients without HTML support show raw tags — this mirrors core behaviour.
 
 # Media Player Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
 
 | Transport ID | Source                                                                                                                             | Requirements | Optional                                                                                                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -5103,6 +5206,8 @@ There are a few limitations and considerations with this use:
 - [Available Media Player Integrations for Home Assistant](https://www.home-assistant.io/integrations/?cat=media-player)
 
 # Mobile Push Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/
 
 | Transport ID  | Source                                                                                                                           | Requirements                                                                                              | Optional |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------- |
@@ -5227,6 +5332,8 @@ You can also use the device `select` options if not using auto-discovery - this 
 
 # MQTT Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
+
 | Transport ID | Source                                                                                                             | Requirements                                                                       | Optional |
 | ------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- |
 | `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | -        |
@@ -5279,6 +5386,8 @@ Example Notification with topic as target
 
 # Notify Entity Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/
+
 | Transport ID    | Source                                                                                                                               | Requirements                                                                    | Optional |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------- |
 | `notify_entity` | [`notify_entity.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/notify_entity.py) | [Notify Entity Integration](https://www.home-assistant.io/integrations/notify/) | -        |
@@ -5314,6 +5423,8 @@ Example Notification
 ```
 
 # ntfy Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/
 
 ## Discovery
 
@@ -5453,6 +5564,8 @@ ______________________________________________________________________
 
 # Persistent Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/persistent/
+
 | Transport ID | Source                                                                                                                         | Requirements                                                                                               | Optional |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | -------- |
 | `persistent` | [`persistent.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/persistent.py) | [Persistent Notification Integration](https://www.home-assistant.io/integrations/persistent_notification/) | -        |
@@ -5484,6 +5597,8 @@ Persistent notification has a Delivery automatically discovered where the integr
   - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20persistent_notification%22%20state%3Aopen)
 
 # Pushover Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/pushover/
 
 ## Discovery
 
@@ -5622,6 +5737,8 @@ data:
 
 # SMS (Text Messaging) Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/sms/
+
 | Transport ID | Source                                                                                                           | Requirements | Optional                                                                                                                                                                          |
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sms`        | [`sms.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/sms.py) | -            | [SMS Notification Integrations](https://www.home-assistant.io/integrations/?search=sms&cat=notifications), [Mikrotik SMS Integration](https://github.com/jeyrb/hass_mikrotik_sms) |
@@ -5655,6 +5772,8 @@ Example Notification
 ```
 
 # Telegram Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/telegram/
 
 ## Discovery
 
@@ -5746,6 +5865,8 @@ Or use the `telegram_bot.send_message` service from HA Developer Tools to test w
 - HTML special characters in title and message are escaped via `html.escape()` when `parse_mode=HTML`, preventing accidental tag injection.
 
 # TTS Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
 
 | Transport ID | Source                                                                                                           | Requirements                                                       | Optional |
 | ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
@@ -5865,11 +5986,15 @@ ______________________________________________________________________
 
 # Recipe Index
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/
+
 Ideas for Home Assistant notifications using Supernotify, with example configurations.
 
 {{ pagetree(siblings) }}
 
 # Recipe - Alexa Alternative Integration
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/
 
 ## Purpose
 
@@ -5916,6 +6041,8 @@ scenarios:
 ```
 
 # Recipe - Alexa Whispering
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/
 
 ## Purpose
 
@@ -5965,6 +6092,8 @@ tags:
 ______________________________________________________________________
 
 # Recipe - All Sirens Go
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/
 
 ## Purpose
 
@@ -6022,6 +6151,8 @@ Use a scenario to automatically apply this delivery to any notification sent via
 
 # Recipe - AppDaemon Cameras
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/
+
 ## Purpose
 
 Call supernotify from *AppDaemon* python code, triggered by a driveway magnetic detector, and including an image from CCTV camera, and additional config for mobile actions.
@@ -6062,6 +6193,8 @@ The `hass` API in AppDaemon is used to call the Supernotify platform, first buil
 
 # Recipe - Simple HTML Email
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/
+
 ## Purpose
 
 Enrich email with a html message without impacting notifications sent via SMS, Alexa announcements etc
@@ -6086,6 +6219,8 @@ Example Action Call
 See [Home Assistant Restart Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) recipe for a simple application.
 
 # Recipe - Bedtime
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/
 
 ## Purpose
 
@@ -6124,6 +6259,8 @@ scenarios:
 
 # Recipe - Channel Specific Messages
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/
+
 ## Purpose
 
 Tune the notification for a specific channel, for example send shorter messages to SMS.
@@ -6156,6 +6293,8 @@ Example Action Call
 - Use `spoken_message` as a top level action attribute to provide an alternative for any Text to Speech announcements, like [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md),[Alexa Media Player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) or [TTS](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md) for Android.
 
 # Recipe - Content Escalation
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/
 
 ## Purpose
 
@@ -6193,6 +6332,8 @@ In this case a Frigate notification is usually a medium priority, however if the
 - Use risk levels in the message, as set by GenAI in the [Voice Described CCTV Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)
 
 # Recipe - Contextual Mobile Actions
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/
 
 ## Purpose
 
@@ -6272,6 +6413,8 @@ The occupancy and time of day could also be taken into account, so for example t
 
 # Recipe - Debug an Integration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/
+
 ## Purpose
 
 One of the notification integration transports isn't behaving as expected and you want more detailed information.
@@ -6342,6 +6485,8 @@ When browsing the exposed entities in Developer Tools, the alias value will show
 
 # Recipe - Live Activities to Track Dishwasher
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/
+
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 
 The automations are defined in YAML here but can be added easily via the Automations UI, or copy/pasted in.
@@ -6411,6 +6556,8 @@ Re-apply for washing machines, ovens or other smart appliances.
 
 # Recipe - Email CC
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/
+
 ## Purpose
 
 Copy in an e-mail address on all notifications, for example as a message archive.
@@ -6470,6 +6617,8 @@ Alternatively, set up a dedicated delivery like this, which will always send off
 
 # Recipe - Except Scenario
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/
+
 ## Purpose
 
 Skip notifications if its already being handled by a specific scenario
@@ -6490,6 +6639,8 @@ scenarios:
 ```
 
 # Recipe - Fix Apple Notifications from Frigate Blueprint
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/
 
 ## Purpose
 
@@ -6550,6 +6701,8 @@ deliveries:
 
 # Recipe - Fixed Targets
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/
+
 ## Purpose
 
 A delivery has its own special list of targets, which must not be overridden by anything else, including explicit targets set in a notification action call.
@@ -6579,6 +6732,8 @@ Define a target on the `delivery` configuration, and set the `target_usage` to `
 This will work identically for any transport, there's nothing generic specific in how it works
 
 # Recipe - Frigate Blueprint Emails
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/
 
 ## Purpose
 
@@ -6617,6 +6772,8 @@ automations:
 - See also the [Fix Frigate Apple Push](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) recipe.
 
 # General Notification Tips
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/
 
 Hints and suggestions for configuring non-SuperNotify notification in HomeAssistant.
 
@@ -6672,6 +6829,8 @@ See the `maximal.yaml` example configuration in the `examples` directory of this
 
 # Recipe - Home Alone
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/
+
 ## Purpose
 
 Vary how and which notifications are made if someone is home on their own.
@@ -6719,6 +6878,8 @@ scenarios:
   ```
 
 # Recipe - Move a Camera for Snapshot
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/
 
 ## Purpose
 
@@ -6780,6 +6941,8 @@ cameras:
 
 # Recipe - Notify to an MQTT Device
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/
+
 ## Purpose
 
 Notify by publishing to an MQTT topic, for example a siren that doesn't support the *Siren* integration.
@@ -6810,11 +6973,15 @@ delivery:
 
 # Recipe - Dashboard
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/
+
 ## Implementation
 
 See the example YAML and instructions at [Dashboard Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
 
 # Recipe - OTEL Event Generation
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/
 
 ## Purpose
 
@@ -6853,6 +7020,8 @@ Many other logging ingestors, transformers, databases and more are available, to
 - *Remote Logger* can also generate OTLP or Syslog events for any, or indeed all, Home Assistant events, so full log context available including service calls and even state changes.
 
 # Recipe - Home Assistant Restart
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/
 
 ## Purpose
 
@@ -6916,6 +7085,8 @@ tags:
 ______________________________________________________________________
 
 # Recipe - Seasonal Greetings
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/
 
 ## Purpose
 
@@ -7021,6 +7192,8 @@ scenarios:
 
 # Recipe - Simple Mobile Push Notifications
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/
+
 ## Purpose
 
 Send mobile push notifications without any configuration.
@@ -7041,6 +7214,8 @@ All you need is:
 See [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) for lots more options to add to the notification, such as camera snapshots, sounds, vibrations, links, grouping, priority, badges and more.
 
 # Recipe - Voice Described CCTV with GenAI
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/
 
 ## Purpose
 
@@ -7274,6 +7449,8 @@ silence_frigate:
 
 # JSON Schema for Supernotify
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/
+
 These are auto-generated from the Home Assistant [voluptuous](https://github.com/alecthomas/voluptuous) schema definitions for configuration and action `data` calls.
 
 ## JSON Schema Files
@@ -7292,18 +7469,26 @@ These are auto-generated from the Home Assistant [voluptuous](https://github.com
 | Chime Aliases Definition | [Chime_Aliases_Definition.json](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Chime_Aliases_Definition.schema.json) | [Schema Doc](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Chime_Aliases_Definition/index.md) |
 # Optional
 
+Source: https://supernotify.rhizomatics.org.uk/latest/changelog/
+
 ## v2.10.0 - Assist Assist
 
-### Home Assistant Assist Integration
+### Home Assistant Assist
 
 - First beta of integrating with [Assist](https://www.home-assistant.io/voice_control/)
 - Works with voice or the chat icon built into the app
-- Send notifications
+- For built-in (non-AI) assist
+  - Send notifications
+  - Snooze / unsnooze notifications
+  - Get the last notification
+- For AI backed agents
+  - Send notifications
   - Arbitrary addresses like emails and phones not accepted for safety (can be used via Recipients or Notify Entities)
   - Custom actions for mobile push also not supported for safety
-- Explain why a notification was delivered the way it was
-- Snooze or un-snooze notifications
-- Dry run a notification
+  - Explain why a notification was delivered the way it was
+  - Snooze or un-snooze notifications
+  - Dry run a notification
+  - Get help from the Supernotify documentation
 - All integration controlled via config UI, so can be fully or partially switched on or off
 - Functionality also available via Home Assistant's native MCP server
 
@@ -8579,6 +8764,8 @@ First public release of productionized home code
 
 # Roadmap
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/
+
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md) for what guides development.
 
 ## Feedback
@@ -8708,18 +8895,22 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
 
-v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md):
+v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md). It's all switched on in the options, on the **Assist and AI agents (beta)** page, and off by default.
 
-- `llm.py` gives Assist, and so HA's MCP server, tools to send, snooze, explain recent notifications, dry run, and list snoozes. They are switched on in the options, with action and diagnostic tools separate.
-- `supernotify.notify` fields have examples. The scenario fields are dropdowns of the configured scenarios, and the delivery field's example lists the configured deliveries.
-- Unknown delivery and scenario names in a call are logged with the configured names, and kept as `unknown_names` in the archive.
-- Repair issues for unknown deliveries, action groups and transports list what's configured, condition issues include the error, and diagnostics include open issues.
+- **LLM tools** (`llm.py`) for conversation agents that use an AI model, and so for HA's MCP server. Action tools send and snooze. Diagnostic tools explain recent notifications, dry run a notification, list snoozes, and look up the documentation site (`llms-full.txt`, fetched at most daily).
+- **Built-in agent sentences** (`sentences.py`) for the agent without AI, registered as conversation triggers: notify someone or everyone, snooze, silence, resume, and ask for the last notification.
+- **Notify action descriptions**: examples on the fields, the scenario fields as dropdowns of the configured scenarios, and the configured deliveries as the delivery field's example.
+- **Errors**: unknown delivery and scenario names in a call are logged with the configured names and kept as `unknown_names` in the archive. Repair issues list what's configured and include condition errors, and diagnostics include open issues.
 
 Still to do:
 
-- The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so the `hacs.json` minimum of 2025.12.2 installs fine but the tools don't appear. Pin down the release and say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
+- Gather beta feedback on how well agents choose and fill in the tools, and how often the sentences are understood, then decide what to keep and whether to leave beta.
+- The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so on older HA, still allowed by the `hacs.json` minimum of 2025.12.2, the tools just don't appear. Pin down the release and say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
+- Sentences in other languages, registered for the language being spoken. Each needs wording from a native speaker, and the replies translated too.
+- More sentences, if the feedback asks for them, such as snoozing one delivery or camera.
+- The help tool searches the latest documentation, which can differ from the installed release. mike already publishes each release's docs under `/vX.Y.Z/`, so the tool could try the installed version first, and fall back to the latest when that release has no docs of its own.
+- An agent can explain and test notifications, but not help set up Supernotify, since deliveries, scenarios and recipients are still YAML. A tool to check proposed YAML against the published JSON schemas would let an agent draft configuration safely. Packages with config flows reduce the need.
 - The delivery field stays a free-form object, since it also takes a mapping that tunes deliveries. A dropdown would push that form into YAML.
-- Gather beta feedback on how well agents choose and fill in the tools, then decide what to keep, and whether to leave beta.
 
 ## Internal Improvements
 
@@ -8795,6 +8986,8 @@ No existing standard Home Assistant integrations do this, so its an edge case th
 
 # Principles
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/principles/
+
 1. There is no configuration unless configuration is necessary.
 
    If configuration can be reliably inferred, borrowed or defaulted then it should do so.
@@ -8867,11 +9060,15 @@ ______________________________________________________________________
 
 # Requests for Comments
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/
+
 Proposed designs for Supernotify, open for discussion before they're built.
 
 {{ pagetree(siblings) }}
 
 # ConfigFlow Implementation Approach
+
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/
 
 ## Goals
 
@@ -8966,6 +9163,8 @@ Breakdown:
 - Complete implementation of Actions, Action Groups and Links
 
 # Deliveries and Transports
+
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/
 
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
 
@@ -9110,6 +9309,8 @@ target:
 
 # Frigate SuperNotifier
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/
+
 The first [Package](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md): a new module (with optional separate HACS custom component for visibility) that replaces the [Frigate Notifications blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications) (beta `0.14.0.3l`) for review events, sending everything through Supernotify.
 
 ## Goals
@@ -9203,6 +9404,8 @@ See [Package Support](https://supernotify.rhizomatics.org.uk/latest/developer/rf
 - Naming - see [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/#questions)
 
 # Package Support
+
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/
 
 Changes needed in Supernotify before any [Package](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md) is built, collected from the proposed packages: [Frigate](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md), appliance Live Activities (smart and power monitored), and motion sensors.
 
@@ -9364,6 +9567,8 @@ Packages bundled in Supernotify can't add `mqtt` or `frigate` to `dependencies`,
 1. **Package framework, stored action and `services.yaml`** (11-14), after the spikes, then the first package
 
 # Packages
+
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/
 
 (provisional name for implementation)
 
@@ -9726,6 +9931,8 @@ Live Activities would be a great fit for ongoing events in Frigate, where its po
 - Reuse "Recipe" - manual recipes in the docs, automatic recipes in the code. Though recipe sounds like a set of steps for doing things yourself, this is more like buying the cake already baked and iced.
 
 # Transport Configuration
+
+Source: https://supernotify.rhizomatics.org.uk/latest/reference/transports/
 
 See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/reference/options/index.md) for a description of each option.
 

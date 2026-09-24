@@ -1,5 +1,7 @@
 # Recipe - Contextual Mobile Actions
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/
+
 ## Purpose
 
 When mobile actions are included in an *Actionable Notification*, only include ones that are currently relevant. So if the Alarm Control Panel is disarmed, don't show the *Disarm* action, and likewise if the panel is armed.

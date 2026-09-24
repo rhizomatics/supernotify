@@ -1,5 +1,7 @@
 # Telegram Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/telegram/
+
 ## Discovery
 
 **Delivery (explicit selection).** If the `telegram_bot` integration is already configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [telegram]}}` or a scenario), not by default. You'll still need to supply `telegram_chat_id` yourself, per the examples below.

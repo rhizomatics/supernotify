@@ -1,5 +1,7 @@
 # Getting Started
 
+Source: https://supernotify.rhizomatics.org.uk/latest/getting_started/
+
 ## HACS
 
 Make sure you have **HACS** installed

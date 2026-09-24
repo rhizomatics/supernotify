@@ -1,5 +1,7 @@
 # Recipe - Home Assistant Restart
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/
+
 ## Purpose
 
 Send an email when Home Assistant restarts with some basic information about the installation.

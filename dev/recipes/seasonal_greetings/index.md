@@ -14,6 +14,8 @@ ______________________________________________________________________
 
 # Recipe - Seasonal Greetings
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/
+
 ## Purpose
 
 Add a Xmas, Halloween or whatever else flavour to messages;

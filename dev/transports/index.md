@@ -1,5 +1,7 @@
 # Transport Adaptors
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/
+
 These are the notification transport adaptors built into Supernotify:
 
 {{ pagetree(siblings) }}

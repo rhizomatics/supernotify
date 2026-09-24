@@ -1,5 +1,7 @@
 # Dashboard
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/
+
 Create a dashboard to use, configure and debug notifications using [Supernotify Cards](https://github.com/lollox80/supernotify-cards/blob/main/README.md).
 
 Use the instructions at [Adding YAML Dashboards](https://www.home-assistant.io/dashboards/dashboards/#adding-yaml-dashboards) to add to your own home instance.

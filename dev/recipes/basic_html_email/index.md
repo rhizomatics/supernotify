@@ -1,5 +1,7 @@
 # Recipe - Simple HTML Email
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/
+
 ## Purpose
 
 Enrich email with a html message without impacting notifications sent via SMS, Alexa announcements etc

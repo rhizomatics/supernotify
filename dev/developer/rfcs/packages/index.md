@@ -1,5 +1,7 @@
 # Packages
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/
+
 (provisional name for implementation)
 
 ## Feedback

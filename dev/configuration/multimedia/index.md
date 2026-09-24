@@ -1,5 +1,7 @@
 # Images, Streaming and Cameras
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/
+
 ## Basic Configuration
 
 In order to handle attachments, Supernotify needs to temporarily store images on the file system, so some extra configuration is needed. This includes camera snapshots, a `snapshot_url`, or any other image source.

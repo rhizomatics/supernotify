@@ -1,15 +1,23 @@
+Source: https://supernotify.rhizomatics.org.uk/latest/changelog/
+
 ## v2.10.0 - Assist Assist
 
-### Home Assistant Assist Integration
+### Home Assistant Assist
 
 - First beta of integrating with [Assist](https://www.home-assistant.io/voice_control/)
 - Works with voice or the chat icon built into the app
-- Send notifications
+- For built-in (non-AI) assist
+  - Send notifications
+  - Snooze / unsnooze notifications
+  - Get the last notification
+- For AI backed agents
+  - Send notifications
   - Arbitrary addresses like emails and phones not accepted for safety (can be used via Recipients or Notify Entities)
   - Custom actions for mobile push also not supported for safety
-- Explain why a notification was delivered the way it was
-- Snooze or un-snooze notifications
-- Dry run a notification
+  - Explain why a notification was delivered the way it was
+  - Snooze or un-snooze notifications
+  - Dry run a notification
+  - Get help from the Supernotify documentation
 - All integration controlled via config UI, so can be fully or partially switched on or off
 - Functionality also available via Home Assistant's native MCP server
 

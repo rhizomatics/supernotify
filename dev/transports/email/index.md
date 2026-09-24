@@ -1,5 +1,7 @@
 # Email Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/email/
+
 | Transport ID | Source                                                                                                               | Requirements | Optional                                                                                                                                                 |
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `email`      | [`email.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/email.py) | -            | [SMTP Integration](https://www.home-assistant.io/integrations/smtp/), [Google Mail Integration](https://www.home-assistant.io/integrations/google_mail/) |

@@ -1,5 +1,7 @@
 # Recipe - Bedtime
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/
+
 ## Purpose
 
 Regardless of where the sun is in the sky, my bed times stay much the same, so use this in working out how to make notifications, and don't disturb me!

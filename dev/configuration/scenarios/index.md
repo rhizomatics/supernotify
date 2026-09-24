@@ -1,5 +1,7 @@
 # Scenarios
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/
+
 ## What and Why
 
 Scenarios can be defined both as a set of conditions which switch on the scenario and/or as a set of overrides to apply if the scenario is active.

@@ -1,5 +1,7 @@
 # Recipe - Home Alone
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/
+
 ## Purpose
 
 Vary how and which notifications are made if someone is home on their own.

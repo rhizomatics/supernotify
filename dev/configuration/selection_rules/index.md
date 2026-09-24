@@ -1,5 +1,7 @@
 # Selection Rules
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/
+
 Several transport options use **Selection Rules** which allow a flexible set of inclusion or exclusion values, which can be plain text or regular expressions.
 
 ## Options Using Selection Rules

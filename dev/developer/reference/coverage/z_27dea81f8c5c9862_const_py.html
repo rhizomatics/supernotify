@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">219 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">219<span class="text"> run</span></button>
+            <span class="text">220 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">220<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_context_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-24 14:28 +0000
+            created at 2026-09-24 14:56 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -411,22 +411,24 @@
     <p class="run"><span class="n"><a id="t329" href="#t329">329</a></span><span class="t"><span class="nam">CONF_LLM_TOOLS</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;llm_tools&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t330" href="#t330">330</a></span><span class="t"><span class="nam">CONF_LLM_ACTION_TOOLS</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;action_tools&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t331" href="#t331">331</a></span><span class="t"><span class="nam">CONF_LLM_DIAGNOSTIC_TOOLS</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;diagnostic_tools&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t332" href="#t332">332</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t333" href="#t333">333</a></span><span class="t"><span class="com"># Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t334" href="#t334">334</a></span><span class="t"><span class="com"># May need condition, and also enabled if delivery disabled</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t335" href="#t335">335</a></span><span class="t"><span class="com"># CONF_OCCUPANCY=&quot;occupancy&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t336" href="#t336">336</a></span><span class="t"><span class="com"># OPTION_OCCUPANCY_DEFAULT=&quot;default&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t337" href="#t337">337</a></span><span class="t"><span class="com"># OPTIONS_OCCUPANCY=[OPTION_OCCUPANCY_DEFAULT,OPTION_OCCUPANCY_EXCLUDE]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t338" href="#t338">338</a></span><span class="t"><span class="com"># OPTION_OCCUPANCY_EXCLUDE=&quot;exclude&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t339" href="#t339">339</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t340" href="#t340">340</a></span><span class="t"><span class="nam">CONF_PHONE_NUMBER</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">&quot;phone_number&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t332" href="#t332">332</a></span><span class="t"><span class="com"># sentences for Home Assistant&#x27;s built-in conversation agent, which can&#x27;t use LLM tools, see sentences.py</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t333" href="#t333">333</a></span><span class="t"><span class="nam">CONF_SENTENCE_COMMANDS</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;sentence_commands&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t334" href="#t334">334</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t335" href="#t335">335</a></span><span class="t"><span class="com"># Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t336" href="#t336">336</a></span><span class="t"><span class="com"># May need condition, and also enabled if delivery disabled</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t337" href="#t337">337</a></span><span class="t"><span class="com"># CONF_OCCUPANCY=&quot;occupancy&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t338" href="#t338">338</a></span><span class="t"><span class="com"># OPTION_OCCUPANCY_DEFAULT=&quot;default&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t339" href="#t339">339</a></span><span class="t"><span class="com"># OPTIONS_OCCUPANCY=[OPTION_OCCUPANCY_DEFAULT,OPTION_OCCUPANCY_EXCLUDE]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t340" href="#t340">340</a></span><span class="t"><span class="com"># OPTION_OCCUPANCY_EXCLUDE=&quot;exclude&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t341" href="#t341">341</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t"><span class="nam">CONF_TUNE</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;tune&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t"><span class="nam">CONF_VOLUME</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;volume&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t"><span class="nam">CONF_DURATION</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;duration&quot;</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t"><span class="nam">OPTIONS_CHIME_DOMAINS</span> <span class="op">=</span> <span class="op">[</span><span class="str">&quot;media_player&quot;</span><span class="op">,</span> <span class="str">&quot;switch&quot;</span><span class="op">,</span> <span class="str">&quot;script&quot;</span><span class="op">,</span> <span class="str">&quot;rest_command&quot;</span><span class="op">,</span> <span class="str">&quot;siren&quot;</span><span class="op">,</span> <span class="str">&quot;alexa_devices&quot;</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t342" href="#t342">342</a></span><span class="t"><span class="nam">CONF_PHONE_NUMBER</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">&quot;phone_number&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t343" href="#t343">343</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t344" href="#t344">344</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t345" href="#t345">345</a></span><span class="t"><span class="nam">CONF_TUNE</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;tune&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t346" href="#t346">346</a></span><span class="t"><span class="nam">CONF_VOLUME</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;volume&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t347" href="#t347">347</a></span><span class="t"><span class="nam">CONF_DURATION</span><span class="op">:</span> <span class="nam">Final</span><span class="op">[</span><span class="nam">str</span><span class="op">]</span> <span class="op">=</span> <span class="str">&quot;duration&quot;</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t348" href="#t348">348</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t349" href="#t349">349</a></span><span class="t"><span class="nam">OPTIONS_CHIME_DOMAINS</span> <span class="op">=</span> <span class="op">[</span><span class="str">&quot;media_player&quot;</span><span class="op">,</span> <span class="str">&quot;switch&quot;</span><span class="op">,</span> <span class="str">&quot;script&quot;</span><span class="op">,</span> <span class="str">&quot;rest_command&quot;</span><span class="op">,</span> <span class="str">&quot;siren&quot;</span><span class="op">,</span> <span class="str">&quot;alexa_devices&quot;</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -436,7 +438,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_context_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-24 14:28 +0000
+            created at 2026-09-24 14:56 +0000
         </p>
     </div>
 </footer>

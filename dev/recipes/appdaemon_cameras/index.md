@@ -1,5 +1,7 @@
 # Recipe - AppDaemon Cameras
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/
+
 ## Purpose
 
 Call supernotify from *AppDaemon* python code, triggered by a driveway magnetic detector, and including an image from CCTV camera, and additional config for mobile actions.

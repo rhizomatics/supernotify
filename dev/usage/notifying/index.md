@@ -347,6 +347,8 @@ supernotify:
 
 # Alternate Notification Action
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/notifying/
+
 Supernotify also has compatibility with the original "legacy" notification platform, and the newer **Notify Entity** style - these are good for compatibility, but both are much more limited in the UI, and for entities, in what can be passed down to fine tune the notification. Use `notify.supernotify` for the legacy notification style, presuming you've named the platform that way when setting it up.
 
 Info

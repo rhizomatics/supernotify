@@ -1,5 +1,7 @@
 # MQTT Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
+
 | Transport ID | Source                                                                                                             | Requirements                                                                       | Optional |
 | ------------ | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------- |
 | `mqtt`       | [`mqtt.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mqtt.py) | [Notify MQTT Integration](https://www.home-assistant.io/integrations/notify.mqtt/) | -        |

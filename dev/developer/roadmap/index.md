@@ -1,5 +1,7 @@
 # Roadmap
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/
+
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md) for what guides development.
 
 ## Feedback
@@ -129,18 +131,22 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 Make it easier for people to use an AI Agent to setup, maintain or debug notifications.
 
-v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md):
+v2.10.0 shipped a first beta, see [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md). It's all switched on in the options, on the **Assist and AI agents (beta)** page, and off by default.
 
-- `llm.py` gives Assist, and so HA's MCP server, tools to send, snooze, explain recent notifications, dry run, and list snoozes. They are switched on in the options, with action and diagnostic tools separate.
-- `supernotify.notify` fields have examples. The scenario fields are dropdowns of the configured scenarios, and the delivery field's example lists the configured deliveries.
-- Unknown delivery and scenario names in a call are logged with the configured names, and kept as `unknown_names` in the archive.
-- Repair issues for unknown deliveries, action groups and transports list what's configured, condition issues include the error, and diagnostics include open issues.
+- **LLM tools** (`llm.py`) for conversation agents that use an AI model, and so for HA's MCP server. Action tools send and snooze. Diagnostic tools explain recent notifications, dry run a notification, list snoozes, and look up the documentation site (`llms-full.txt`, fetched at most daily).
+- **Built-in agent sentences** (`sentences.py`) for the agent without AI, registered as conversation triggers: notify someone or everyone, snooze, silence, resume, and ask for the last notification.
+- **Notify action descriptions**: examples on the fields, the scenario fields as dropdowns of the configured scenarios, and the configured deliveries as the delivery field's example.
+- **Errors**: unknown delivery and scenario names in a call are logged with the configured names and kept as `unknown_names` in the archive. Repair issues list what's configured and include condition errors, and diagnostics include open issues.
 
 Still to do:
 
-- The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so the `hacs.json` minimum of 2025.12.2 installs fine but the tools don't appear. Pin down the release and say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
+- Gather beta feedback on how well agents choose and fill in the tools, and how often the sentences are understood, then decide what to keep and whether to leave beta.
+- The `llm` platform arrived after HA 2026.2 (missing there, present in 2026.9), so on older HA, still allowed by the `hacs.json` minimum of 2025.12.2, the tools just don't appear. Pin down the release and say so in the docs. `test_llm.py` is skipped on the older HA used for py3.13, until py3.13 is dropped.
+- Sentences in other languages, registered for the language being spoken. Each needs wording from a native speaker, and the replies translated too.
+- More sentences, if the feedback asks for them, such as snoozing one delivery or camera.
+- The help tool searches the latest documentation, which can differ from the installed release. mike already publishes each release's docs under `/vX.Y.Z/`, so the tool could try the installed version first, and fall back to the latest when that release has no docs of its own.
+- An agent can explain and test notifications, but not help set up Supernotify, since deliveries, scenarios and recipients are still YAML. A tool to check proposed YAML against the published JSON schemas would let an agent draft configuration safely. Packages with config flows reduce the need.
 - The delivery field stays a free-form object, since it also takes a mapping that tunes deliveries. A dropdown would push that form into YAML.
-- Gather beta feedback on how well agents choose and fill in the tools, then decide what to keep, and whether to leave beta.
 
 ## Internal Improvements
 

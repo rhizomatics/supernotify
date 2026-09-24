@@ -1,5 +1,7 @@
 # Recipe - Live Activities to Track Dishwasher
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/
+
 In this example, there's a Bosch dishwasher using Home Direct, though it can be easily adapted for any appliance by changing the sensor name and possibly the operating state name.
 
 The automations are defined in YAML here but can be added easily via the Automations UI, or copy/pasted in.

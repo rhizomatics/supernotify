@@ -1,5 +1,7 @@
 # Media Player Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
+
 | Transport ID | Source                                                                                                                             | Requirements | Optional                                                                                                                                                                         |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `media`      | [`media_player.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/media_player.py) | -            | [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player), other [Media Player Integration](https://www.home-assistant.io/integrations/?cat=media-player) |

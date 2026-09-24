@@ -1,5 +1,7 @@
 # Mobile Actions and Action Groups
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/
+
 Note
 
 This page is about the buttons on an [Actionable Notification](https://companion.home-assistant.io/docs/notifications/actionable-notifications/) (referred to throughout as **Mobile Actions**), not Home Assistant *Actions* (previously known as 'services') such as `supernotify.notify` - those are documented at [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md).

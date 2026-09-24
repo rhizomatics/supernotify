@@ -1,5 +1,7 @@
 # Recipe - Simple Mobile Push Notifications
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/
+
 ## Purpose
 
 Send mobile push notifications without any configuration.

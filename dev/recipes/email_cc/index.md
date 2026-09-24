@@ -1,5 +1,7 @@
 # Recipe - Email CC
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/
+
 ## Purpose
 
 Copy in an e-mail address on all notifications, for example as a message archive.

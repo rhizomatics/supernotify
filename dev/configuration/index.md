@@ -1,5 +1,7 @@
 # Configuration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/
+
 Start with the simplest possible setup, [added from the UI](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md) with no YAML at all - see the [minimal](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md) page. This will allow you to notify using *Notify Entities* and push mobile notifications to all the devices registered in Home Assistant, without specifying any targets, or any other config.
 
 This page onwards covers YAML configuration - still how [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md), transports, scenarios, recipients and cameras are set up, though archive, duplicate detection and housekeeping can also be configured from the UI.

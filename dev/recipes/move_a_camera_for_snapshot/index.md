@@ -1,5 +1,7 @@
 # Recipe - Move a Camera for Snapshot
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/
+
 ## Purpose
 
 When an alert is generated from a location, for example a Frigate zone, or a motion PIR, make a CCTV camera move and/or zoom to that place, before taking a snapshot image and attaching it to an email or mobile push message.

@@ -19,6 +19,8 @@ ______________________________________________________________________
 
 # Recipe - All Sirens Go
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/
+
 ## Purpose
 
 Notify on a critical issue by having all the sirens in the house make as much noise as possible.

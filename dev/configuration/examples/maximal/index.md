@@ -1,5 +1,7 @@
 # Maximal Configuration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/maximal/
+
 More extensive example configuration, as used for testing Supernotify
 
 ```yaml

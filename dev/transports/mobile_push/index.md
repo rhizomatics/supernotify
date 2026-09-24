@@ -1,5 +1,7 @@
 # Mobile Push Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/
+
 | Transport ID  | Source                                                                                                                           | Requirements                                                                                              | Optional |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------- |
 | `mobile_push` | [`mobile_push.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/mobile_push.py) | [Companion App Notifications](https://companion.home-assistant.io/docs/notifications/notifications-basic) | -        |

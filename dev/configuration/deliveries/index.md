@@ -1,5 +1,7 @@
 # Deliveries
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/
+
 *Delivery* is a pre-set configuration for a specific *Transport* - it controls the configuration and can set values that would otherwise have to be repeated in every notification.
 
 The simplest case though is that you never know or worry about them - if you add an email address as a target for a notification, the email delivery is used, or a phone number for SMS, and if you add a big list of random targets, Supernotify will work out the right delivery for each. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information.

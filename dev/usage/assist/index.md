@@ -1,21 +1,26 @@
 # Assist and AI Agents
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/assist/
+
 Beta
 
-This is a first beta, and feedback is very welcome on [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your conversation agent picks the right tool and fills it in.
+This is a first beta, limited to English. Feedback and help with other languages is very welcome on [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your conversation agent picks the right tool and fills it in.
 
-Supernotify can give tools to [Assist](https://www.home-assistant.io/voice_control/), so an AI conversation agent can send notifications, snooze them, and explain what happened to them. It works by voice or from the chat icon in the app.
+Supernotify can give tools to [Assist](https://www.home-assistant.io/voice_control/), so a conversation agent can send notifications, snooze them, and explain what happened to them. It works by voice or from the chat icon in the app.
 
 The same tools are offered to AI agents connected through Home Assistant's [Model Context Protocol Server](https://www.home-assistant.io/integrations/mcp_server/), as long as the server exposes the Assist API.
 
+A more limited set of interactions, without the flexibility of AI understanding, is available for the basic non-AI Assist agent, using a set of fixed sentence structures, see [Built-in Agent Sentences](#built-in-agent-sentences) for more info.
+
 ## Switching On
 
-Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** > **Configure**, choose **LLM Tools (beta)**. There are two switches:
+Nothing is offered until you switch it on. In **Settings** > **Devices & services** > **Supernotify** > **Configure**, choose **Assist and AI agents (beta)**. There are three switches:
 
-| Switch           | Tools                                                                     |
-| ---------------- | ------------------------------------------------------------------------- |
-| Action tools     | Send notifications, and snooze or silence them                            |
-| Diagnostic tools | Recent notifications, dry runs, current snoozes, and documentation lookup |
+| Switch                   | What it gives                                                                 |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| Action tools             | Send notifications, and snooze or silence them                                |
+| Diagnostic tools         | Recent notifications, dry runs, current snoozes, and documentation lookup     |
+| Built-in agent sentences | A few English [sentences](#built-in-agent-sentences) for the agent without AI |
 
 Needs an AI conversation agent
 
@@ -25,6 +30,8 @@ The tools are only used by a conversation agent that runs an AI model, such as O
 1. In **Settings** > **Voice assistants**, choose that conversation agent for the assistant you talk or chat to.
 
 The tools also need a recent Home Assistant. They don't appear on 2026.2 or earlier.
+
+Without an AI model, switch on **Built-in agent sentences** instead, see below.
 
 ## What You Can Ask
 
@@ -70,3 +77,21 @@ Turn on the file [archive](https://supernotify.rhizomatics.org.uk/latest/configu
 ### Help from the Documentation
 
 `supernotify__help` looks up this documentation site, including the recipes and configuration examples, and gives the agent the best matching pages to answer from, with links. It fetches the documentation from `supernotify.rhizomatics.org.uk` the first time it's used, then at most once a day. The documentation is for the latest release, and in English, though the agent can answer in your language.
+
+## Built-in Agent Sentences
+
+Home Assistant's built-in conversation agent doesn't use an AI model, so it can't use the tools above, but it can understand fixed sentences. Switch on **Built-in agent sentences** and it understands these, by voice or in the chat:
+
+| Say                                                 | Does                                      |
+| --------------------------------------------------- | ----------------------------------------- |
+| "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias    |
+| "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would |
+| "Snooze my notifications for *30* minutes"          | Snoozes everything                        |
+| "Mute all notifications for an hour"                | Snoozes everything for an hour            |
+| "Silence notifications"                             | Silences everything until turned back on  |
+| "Turn my notifications back on"                     | Undoes the snooze or silence              |
+| "What was the last notification"                    | Says what it was, and what sent it        |
+
+"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+
+The sentences are English only for now - if you'd like them in your language, please suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues).

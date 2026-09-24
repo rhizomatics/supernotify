@@ -1,5 +1,7 @@
 # Recipe - Channel Specific Messages
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/
+
 ## Purpose
 
 Tune the notification for a specific channel, for example send shorter messages to SMS.

@@ -1,5 +1,7 @@
 # Recipe - Fixed Targets
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/
+
 ## Purpose
 
 A delivery has its own special list of targets, which must not be overridden by anything else, including explicit targets set in a notification action call.

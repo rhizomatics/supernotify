@@ -1,5 +1,7 @@
 # JSON Schema for Supernotify
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/
+
 These are auto-generated from the Home Assistant [voluptuous](https://github.com/alecthomas/voluptuous) schema definitions for configuration and action `data` calls.
 
 ## JSON Schema Files

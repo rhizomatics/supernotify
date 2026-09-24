@@ -1,5 +1,7 @@
 # Recipe - Alexa Alternative Integration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/
+
 ## Purpose
 
 When *Alexa Devices* integration stops working, have an alternative, here *Alexa Media Player* ready to be quickly enabled.

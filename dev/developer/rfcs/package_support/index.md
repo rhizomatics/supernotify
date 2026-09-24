@@ -1,5 +1,7 @@
 # Package Support
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/
+
 Changes needed in Supernotify before any [Package](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md) is built, collected from the proposed packages: [Frigate](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/index.md), appliance Live Activities (smart and power monitored), and motion sensors.
 
 Packages are built as modules inside Supernotify, set up as config subentries. A thin HACS repository per package, for example *Frigate SuperNotifier*, can come later purely so people searching HACS find it; it would only guide the user to install or enable Supernotify.

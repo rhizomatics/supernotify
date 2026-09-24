@@ -1,5 +1,7 @@
 # Chime Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/chime/
+
 | Transport ID | Source                                                                                                               | Requirements | Optional                                                                                                                                                                                                                                                                                                          |
 | ------------ | -------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `chime`      | [`chime.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/chime.py) | -            | [Alexa Devices Integration](https://www.home-assistant.io/integrations/alexa_devices/), [Alexa Media Player Integration](https://github.com/alandtse/alexa_media_player), [RFLink](https://www.home-assistant.io/integrations/rflink/), [MQTT Siren](https://www.home-assistant.io/integrations/siren.mqtt/) etc. |

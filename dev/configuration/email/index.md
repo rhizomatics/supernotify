@@ -1,5 +1,7 @@
 # e-Mail Notifications
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/email/
+
 ## Configuration
 
 If you have e-mail configured in Home Assistant, you can include it in Supernotify by setting up an e-mail delivery:

@@ -1,5 +1,7 @@
 # Duplicate Detection
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/
+
 Three duplicate detection policies are available:
 
 1. `dupe_policy_message_title_same_or_lower_priority`

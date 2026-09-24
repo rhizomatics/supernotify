@@ -1,5 +1,7 @@
 # Frigate SuperNotifier
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_supernotifier/
+
 The first [Package](https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/packages/index.md): a new module (with optional separate HACS custom component for visibility) that replaces the [Frigate Notifications blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications) (beta `0.14.0.3l`) for review events, sending everything through Supernotify.
 
 ## Goals

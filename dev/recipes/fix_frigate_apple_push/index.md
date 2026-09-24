@@ -1,5 +1,7 @@
 # Recipe - Fix Apple Notifications from Frigate Blueprint
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/
+
 ## Purpose
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded and links to the Frigate UI.

@@ -1,5 +1,7 @@
 # Recipe - Content Escalation
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/
+
 ## Purpose
 
 Make a notification more impactful if the message or title has certain words in it.

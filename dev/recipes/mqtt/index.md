@@ -1,5 +1,7 @@
 # Recipe - Notify to an MQTT Device
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/
+
 ## Purpose
 
 Notify by publishing to an MQTT topic, for example a siren that doesn't support the *Siren* integration.

@@ -1,5 +1,7 @@
 # Deliveries and Transports
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/
+
 See also [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
 
 ## Feedback

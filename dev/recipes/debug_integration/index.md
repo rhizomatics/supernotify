@@ -1,5 +1,7 @@
 # Recipe - Debug an Integration
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/
+
 ## Purpose
 
 One of the notification integration transports isn't behaving as expected and you want more detailed information.

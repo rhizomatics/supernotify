@@ -1,5 +1,7 @@
 # HTML Email Template
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/html_email_template/
+
 Default HTML email template, with support for an image and action link. See the [Developer](https://supernotify.rhizomatics.org.uk/latest/developer/index.md) documentation for example renders of this for different message priorities.
 
 ```html+jinja

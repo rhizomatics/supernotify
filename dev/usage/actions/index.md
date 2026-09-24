@@ -1,5 +1,7 @@
 # Actions
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/actions/
+
 Note
 
 Until 2025, *Actions* were known as **Services** in Home Assistant, and that is still commonly used. In this documentation, the new term 'Action' is always used. To avoid ambiguity, when the quite different actions in Actionable Notifications are referred to, it is always as "Mobile Actions"

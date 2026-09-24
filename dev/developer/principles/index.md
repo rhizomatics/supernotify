@@ -1,5 +1,7 @@
 # Principles
 
+Source: https://supernotify.rhizomatics.org.uk/latest/developer/principles/
+
 1. There is no configuration unless configuration is necessary.
 
    If configuration can be reliably inferred, borrowed or defaulted then it should do so.

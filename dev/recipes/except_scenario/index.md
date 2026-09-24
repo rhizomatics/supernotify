@@ -1,5 +1,7 @@
 # Recipe - Except Scenario
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/
+
 ## Purpose
 
 Skip notifications if its already being handled by a specific scenario

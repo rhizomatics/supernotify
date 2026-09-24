@@ -1,5 +1,7 @@
 # Conditions
 
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/conditions/
+
 The [Bedtime](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md) recipe illustrates a simple use of conditions, based on time of day, and [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) shows a slightly more complex version with `or` logic for date ranges. These conditions are identical to what can be used in any Home Assistant automation.
 
 ## Condition Variables

@@ -2,6 +2,8 @@ This page available in [English](https://supernotify.rhizomatics.org.uk/latest/i
 
 # Supernotify - Unified Notifications for Home Assistant
 
+Source: https://supernotify.rhizomatics.org.uk/latest/
+
 **Unified Notification for Home Assistant**
 
 ### v2 MAJOR CHANGE - Set up from Home Assistant UI

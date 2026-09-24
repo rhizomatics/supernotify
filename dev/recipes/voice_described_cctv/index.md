@@ -1,5 +1,7 @@
 # Recipe - Voice Described CCTV with GenAI
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/
+
 ## Purpose
 
 A voice assistant will announce a description of events discovered on CCTV camera, with an evaluation of risk.

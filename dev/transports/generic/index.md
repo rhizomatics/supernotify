@@ -1,5 +1,7 @@
 # Generic Transport Adaptor
 
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/generic/
+
 | Transport ID | Source                                                                                                                   | Requirements | Optional                                                    |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------ | ------------ | ----------------------------------------------------------- |
 | `generic`    | [`generic.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/generic.py) | -            | *Any Home Assistant action from core or custom integration* |

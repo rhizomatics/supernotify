@@ -1,5 +1,7 @@
 # Recipe - OTEL Event Generation
 
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/
+
 ## Purpose
 
 Debug issues with notifications by sending the archived notification details and traces to an OpenTelemetry logging (OTLP) aggregator.
