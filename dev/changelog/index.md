@@ -13,7 +13,7 @@ If an option or menu entry shows without a label after upgrading, the browser is
 
 ### Delivery Control Options from UI
 
-- Three new delivery options that further reduce need to create and edit YAML config
+- Two new delivery options that further reduce need to create and edit YAML config
 - Default Inclusion for Deliveries
   - Unset by default
   - Switch this to `explicit` or `scenario` to have NO deliveries fire by default, unless overridden by YAML delivery config or a scenario
@@ -22,10 +22,6 @@ If an option or menu entry shows without a label after upgrading, the browser is
 - Voice Occupancy Control - set a default for the `occupancy` setting for all deliveries using a SPOKEN transport, for example `TTS`, *Alexa Devices*, *Alexa Media Player*
   - This means no Alexa notifications to an empty house, or whatever occupancy variation you like
   - Can be overridden at delivery level, though for now that needs YAML setup
-- MP4 Filtering for Apple Mobile Push
-  - A common Frigate blueprint problem is broken images on mobile push to Apple devices caused by Safari handling of MP4 video
-  - This will filter out any video URLs or attachments with MP4 extension from being pushed to known Apple devices
-  - Frigate notifications will fall back to the static thumbnail
 
 ### Home Assistant Assist
 

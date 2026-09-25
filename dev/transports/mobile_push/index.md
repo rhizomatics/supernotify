@@ -43,19 +43,6 @@ Info
 
 This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
 
-## Video on Apple Devices
-
-Apple's mobile apps, on iPhone, iPad and Mac, can't always show an `.mp4` video attached to a push, such as the clip the Frigate blueprint adds. Set the `apple_drop_mp4` option to leave `.mp4` video out of pushes to Apple devices, both the `video` URL and an `attachment` pointing at an `.mp4`. Images are kept, and Android devices still get the video.
-
-```yaml
-delivery:
-  mobile_push:
-    options:
-      apple_drop_mp4: true
-```
-
-To switch it on for every mobile push delivery, turn on **Leave video out of Apple pushes** in **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control**.
-
 ## Notification Grouping
 
 Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device (iOS thread-id / Android notification group):

@@ -5292,19 +5292,6 @@ Info
 
 This has not been tested with Android, although both Apple and Android devices share same common core mobile push notifications. Pull Requests for adding Android functionality are welcome.
 
-## Video on Apple Devices
-
-Apple's mobile apps, on iPhone, iPad and Mac, can't always show an `.mp4` video attached to a push, such as the clip the Frigate blueprint adds. Set the `apple_drop_mp4` option to leave `.mp4` video out of pushes to Apple devices, both the `video` URL and an `attachment` pointing at an `.mp4`. Images are kept, and Android devices still get the video.
-
-```yaml
-delivery:
-  mobile_push:
-    options:
-      apple_drop_mp4: true
-```
-
-To switch it on for every mobile push delivery, turn on **Leave video out of Apple pushes** in **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control**.
-
 ## Notification Grouping
 
 Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device (iOS thread-id / Android notification group):
@@ -6700,15 +6687,17 @@ Source: https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_
 
 The [Frigate Blueprint](https://github.com/SgtBatten/HA_blueprints/tree/6cffba9676ccfe58c5686bd96bf15a8237e1a3f9/Frigate_Camera_Notifications) is used to create mobile push notifications, with the image embedded and links to the Frigate UI.
 
-The blueprint creates a `clip.mp4` link for iOS devices, however the [Frigate API Docs](https://docs.frigate.video/integrations/api/recording-clip-camera-name-start-start-ts-end-end-ts-clip-mp-4-get) recommended not doing this for iOS compatibility reasons, and using the `m8u` action link instead.
+The blueprint creates a `clip.mp4` link for iOS devices, however the [Frigate API Docs](https://docs.frigate.video/integrations/api/recording-clip-camera-name-start-start-ts-end-end-ts-clip-mp-4-get) recommended not doing this for iOS compatibility reasons, and using the `m3u8` action link instead, although some people find the `m3u8` videos have the same issue.
 
 This results in broken images for notifications, on iPhones, Macs or other Apple push notification targets.
 
 ## Implementation
 
-Simplest way to fix this is to remove the `data` section keys with the mp4, and while doing that, can also remove the Android specific keys that you won't need if only iOS devices to notify.
+Simplest way to fix this is to update the blueprint and change the video attachment options, to 'None' if needed.
 
-This uses the `data_keys_select` configuration, originally designed for the Generic Transport toolbox, and extended to Mobile Push in v1.16.0.
+If you have many automations, then its possible to use a scenario or delivery control to remove the `data` section keys with the video, and while doing that, you could also remove the Android specific keys that you won't need if only iOS devices to notify.
+
+This uses the `data_keys_select` configuration to delete data mapping keys:
 
 ## Example Configuration
 
@@ -6732,7 +6721,7 @@ delivery:
 
 ## Variations and Alternatives
 
-- Hack the blueprint instead, and re-edit it when updating it
+- Use a scenario that only applies to Frigate messages, based on pattern matching the message or title, or some other cunning way
 - Create separate deliveries for Android and Apple devices
 
 ### Apple/Android specific deliveries
@@ -7538,7 +7527,7 @@ If an option or menu entry shows without a label after upgrading, the browser is
 
 ### Delivery Control Options from UI
 
-- Three new delivery options that further reduce need to create and edit YAML config
+- Two new delivery options that further reduce need to create and edit YAML config
 - Default Inclusion for Deliveries
   - Unset by default
   - Switch this to `explicit` or `scenario` to have NO deliveries fire by default, unless overridden by YAML delivery config or a scenario
@@ -7547,10 +7536,6 @@ If an option or menu entry shows without a label after upgrading, the browser is
 - Voice Occupancy Control - set a default for the `occupancy` setting for all deliveries using a SPOKEN transport, for example `TTS`, *Alexa Devices*, *Alexa Media Player*
   - This means no Alexa notifications to an empty house, or whatever occupancy variation you like
   - Can be overridden at delivery level, though for now that needs YAML setup
-- MP4 Filtering for Apple Mobile Push
-  - A common Frigate blueprint problem is broken images on mobile push to Apple devices caused by Safari handling of MP4 video
-  - This will filter out any video URLs or attachments with MP4 extension from being pushed to known Apple devices
-  - Frigate notifications will fall back to the static thumbnail
 
 ### Home Assistant Assist
 
@@ -9607,7 +9592,7 @@ With both `camera_entity_id` and `snapshot_url`, the camera grab currently wins.
 
 ### 7. iOS video attachment
 
-`clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL (`application/vnd.apple.mpegurl` for `.m3u8`). An option to leave out `.mp4` clips for Apple devices builds in the [Frigate Apple fix](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md), so it no longer needs `data_keys_select`.
+`clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL (`application/vnd.apple.mpegurl` for `.m3u8`).
 
 ### 8. Tap URL
 

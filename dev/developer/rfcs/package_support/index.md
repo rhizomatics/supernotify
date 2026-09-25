@@ -113,7 +113,7 @@ With both `camera_entity_id` and `snapshot_url`, the camera grab currently wins.
 
 ### 7. iOS video attachment
 
-`clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL (`application/vnd.apple.mpegurl` for `.m3u8`). An option to leave out `.mp4` clips for Apple devices builds in the [Frigate Apple fix](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md), so it no longer needs `data_keys_select`.
+`clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL (`application/vnd.apple.mpegurl` for `.m3u8`).
 
 ### 8. Tap URL
 
