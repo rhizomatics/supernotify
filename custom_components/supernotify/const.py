@@ -338,7 +338,6 @@ CONF_SENTENCE_COMMANDS: Final[str] = "sentence_commands"
 CONF_DELIVERY_CONTROL: Final[str] = "delivery_control"
 CONF_DEFAULT_INCLUSION: Final[str] = "default_inclusion"
 CONF_VOICE_OCCUPANCY: Final[str] = "voice_occupancy"
-CONF_APPLE_DROP_MP4: Final[str] = "apple_drop_mp4"
 DEFAULT_INCLUSION_VALUES: Final[list[str]] = [INCLUSION_DEFAULT, INCLUSION_EXPLICIT, INCLUSION_BY_SCENARIO]
 
 # Idea - differentiate enabled as recipient vs as occupant, for ALL_IN etc check

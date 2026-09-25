@@ -533,13 +533,11 @@
                 "title": "Zustellungssteuerung",
                 "data": {
                     "default_inclusion": "Einbeziehung von Zustellungen",
-                    "voice_occupancy": "Anwesenheit für gesprochene Zustellungen",
-                    "apple_drop_mp4": "MP4 aus Apple-Pushes entfernen"
+                    "voice_occupancy": "Anwesenheit für gesprochene Zustellungen"
                 },
                 "data_description": {
                     "default_inclusion": "Steuert, wie Zustellungen für die Einbeziehung in Benachrichtigungen berücksichtigt werden",
-                    "voice_occupancy": "Begrenzt anhand der Anwesenheit zu Hause, wann gesprochene Zustellungen wie TTS oder Alexa Devices für Benachrichtigungen berücksichtigt werden",
-                    "apple_drop_mp4": ".mp4-Videos, etwa einen Frigate-Clip, bei Push-Benachrichtigungen an Apple-Geräte weglassen, die bei einem MP4 in Push-Benachrichtigungen oft einen Platzhalter für ein defektes Bild zeigen. Benachrichtigungen des Frigate-Blueprints verwenden stattdessen ihr Schnappschussbild. Android-Geräte erhalten das Video weiterhin."
+                    "voice_occupancy": "Begrenzt anhand der Anwesenheit zu Hause, wann gesprochene Zustellungen wie TTS oder Alexa Devices für Benachrichtigungen berücksichtigt werden"
                 }
             }
         }

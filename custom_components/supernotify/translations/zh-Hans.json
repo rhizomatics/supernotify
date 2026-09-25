@@ -533,13 +533,11 @@
                 "title": "推送控制",
                 "data": {
                     "default_inclusion": "推送包含方式",
-                    "voice_occupancy": "语音推送的在家条件",
-                    "apple_drop_mp4": "从 Apple 推送中移除 MP4"
+                    "voice_occupancy": "语音推送的在家条件"
                 },
                 "data_description": {
                     "default_inclusion": "控制推送如何被考虑纳入通知",
-                    "voice_occupancy": "根据家中有人与否，限制 TTS 或 Alexa Devices 等语音推送何时被考虑用于通知",
-                    "apple_drop_mp4": "在发往 Apple 设备的移动推送通知中省略 .mp4 视频（如 Frigate 片段），因为这些设备收到 MP4 时常在推送通知中显示损坏图片的占位符。Frigate 蓝图的通知会改用其快照图片。Android 设备仍会收到视频。"
+                    "voice_occupancy": "根据家中有人与否，限制 TTS 或 Alexa Devices 等语音推送何时被考虑用于通知"
                 }
             }
         }

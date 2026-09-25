@@ -441,13 +441,11 @@
                 "title": "Delivery Control",
                 "data": {
                     "default_inclusion": "Delivery Inclusion",
-                    "voice_occupancy": "Spoken delivery occupancy",
-                    "apple_drop_mp4": "Remove MP4 From Apple Push"
+                    "voice_occupancy": "Spoken delivery occupancy"
                 },
                 "data_description": {
                     "default_inclusion": "Control how Deliveries are considered for inclusion in notifications",
-                    "voice_occupancy": "Limit when spoken deliveries, such as TTS or Alexa Devices, are considered for notifications, based on home occupancy",
-                    "apple_drop_mp4": "Leave .mp4 video, such as a Frigate clip, out of mobile push notifications to Apple devices, which often show a broken image placeholder in push notifications when given an MP4. Frigate blueprint notifications fall back to their snapshot image instead. Android devices still get the video."
+                    "voice_occupancy": "Limit when spoken deliveries, such as TTS or Alexa Devices, are considered for notifications, based on home occupancy"
                 }
             }
         }

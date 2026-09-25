@@ -259,16 +259,12 @@ async def test_options_flow_delivery_control(hass: HomeAssistant) -> None:
         assert done["type"] == FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()
 
-    await configure({"default_inclusion": "explicit", "voice_occupancy": "only_in", "apple_drop_mp4": True})
-    assert entry.options["delivery_control"] == {
-        "default_inclusion": "explicit",
-        "voice_occupancy": "only_in",
-        "apple_drop_mp4": True,
-    }
+    await configure({"default_inclusion": "explicit", "voice_occupancy": "only_in"})
+    assert entry.options["delivery_control"] == {"default_inclusion": "explicit", "voice_occupancy": "only_in"}
     assert entry.runtime_data.context.delivery_registry.default_inclusion == "explicit"
 
-    await configure({"default_inclusion": "transport", "voice_occupancy": "not_controlled", "apple_drop_mp4": False})
-    assert entry.options["delivery_control"] == {"apple_drop_mp4": False}
+    await configure({"default_inclusion": "transport", "voice_occupancy": "not_controlled"})
+    assert entry.options["delivery_control"] == {}
     assert entry.runtime_data.context.delivery_registry.default_inclusion is None
 
 

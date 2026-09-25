@@ -26,7 +26,6 @@ from .const import (
     ATTR_ENABLED,
     ATTR_MOBILE_APP_ID,
     ATTR_TRANSPORT_ENABLED,
-    CONF_APPLE_DROP_MP4,
     CONF_DATA,
     CONF_DEFAULT_INCLUSION,
     CONF_DELIVERY_DEFAULTS,
@@ -45,7 +44,6 @@ from .const import (
     INCLUSION_FALLBACK,
     INCLUSION_FALLBACK_ON_ERROR,
     RESERVED_DELIVERY_NAMES,
-    TRANSPORT_MOBILE_PUSH,
 )
 from .model import ConditionVariables, DeliveryConfig, SelectionRule, TransportFeature
 from .options import (
@@ -398,7 +396,6 @@ class DeliveryRegistry:
         delivery_control = delivery_control or {}
         self.default_inclusion: str | None = delivery_control.get(CONF_DEFAULT_INCLUSION)
         self.voice_occupancy: str | None = delivery_control.get(CONF_VOICE_OCCUPANCY)
-        self.apple_drop_mp4: bool = bool(delivery_control.get(CONF_APPLE_DROP_MP4))
 
     async def initialize(self, context: Context) -> None:
         await self.initialize_transports(context)
@@ -487,16 +484,12 @@ class DeliveryRegistry:
     def apply_delivery_control(self, transport: Transport, transport_config: ConfigType) -> None:
         """Give a transport's deliveries the Delivery Control defaults, where the transport's own
         YAML `delivery_defaults` doesn't set them. A delivery's own YAML still wins over both."""
-        from .transports.mobile_push import OPTION_APPLE_DROP_MP4
-
         own: ConfigType = transport_config.get(CONF_DELIVERY_DEFAULTS) or {}
         defaults: DeliveryConfig = transport.delivery_defaults
         if self.default_inclusion and CONF_INCLUSION not in own:
             defaults.inclusion = [self.default_inclusion]
         if self.voice_occupancy and CONF_OCCUPANCY not in own and transport.supported_features & TransportFeature.SPOKEN:
             defaults.occupancy = self.voice_occupancy
-        if self.apple_drop_mp4 and transport.name == TRANSPORT_MOBILE_PUSH:
-            defaults.options.setdefault(OPTION_APPLE_DROP_MP4, True)
 
     async def initialize_transports(self, context: Context) -> None:
         if self._transport_instances:

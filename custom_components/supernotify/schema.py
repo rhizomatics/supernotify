@@ -74,7 +74,6 @@ from .const import (
     CONF_ACTION_GROUPS,
     CONF_ACTION_TEMPLATE,
     CONF_ALT_CAMERA,
-    CONF_APPLE_DROP_MP4,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
@@ -536,11 +535,14 @@ SUPERNOTIFY_YAML_SCHEMA: vol.Schema = vol.Schema(
 # SUPERNOTIFY_YAML_SCHEMA rather than folded into one combined schema: __init__.py's
 # Defaults for every delivery, from the Delivery Control options page - each left out when not set,
 # so deliveries keep their transport's own default
-DELIVERY_CONTROL_SCHEMA = vol.Schema({
-    vol.Optional(CONF_DEFAULT_INCLUSION): vol.In(DEFAULT_INCLUSION_VALUES),
-    vol.Optional(CONF_VOICE_OCCUPANCY): vol.In(OCCUPANCY_VALUES),
-    vol.Optional(CONF_APPLE_DROP_MP4, default=False): cv.boolean,
-})
+# REMOVE_EXTRA drops options no longer offered, such as the 2.10.0 beta's apple_drop_mp4
+DELIVERY_CONTROL_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEFAULT_INCLUSION): vol.In(DEFAULT_INCLUSION_VALUES),
+        vol.Optional(CONF_VOICE_OCCUPANCY): vol.In(OCCUPANCY_VALUES),
+    },
+    extra=vol.REMOVE_EXTRA,
+)
 
 # _entry_full_config validates entry.data/entry.options through this schema, then merges in the
 # top-level YAML section's already-validated dict as-is. Re-validating that already-validated

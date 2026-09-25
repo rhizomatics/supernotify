@@ -533,13 +533,11 @@
                 "title": "Sterowanie dostarczeniami",
                 "data": {
                     "default_inclusion": "Włączanie dostarczeń",
-                    "voice_occupancy": "Obecność dla dostarczeń głosowych",
-                    "apple_drop_mp4": "Usuń MP4 z powiadomień Apple"
+                    "voice_occupancy": "Obecność dla dostarczeń głosowych"
                 },
                 "data_description": {
                     "default_inclusion": "Określa, jak dostarczenia są brane pod uwagę przy włączaniu do powiadomień",
-                    "voice_occupancy": "Ogranicza, na podstawie obecności w domu, kiedy dostarczenia głosowe, takie jak TTS lub Alexa Devices, są brane pod uwagę w powiadomieniach",
-                    "apple_drop_mp4": "Pomijaj wideo .mp4, np. klip z Frigate, w powiadomieniach push na urządzenia Apple, które po otrzymaniu MP4 często pokazują w powiadomieniu symbol uszkodzonego obrazu. Powiadomienia z blueprintu Frigate używają wtedy swojego zdjęcia migawkowego. Urządzenia z Androidem nadal otrzymują wideo."
+                    "voice_occupancy": "Ogranicza, na podstawie obecności w domu, kiedy dostarczenia głosowe, takie jak TTS lub Alexa Devices, są brane pod uwagę w powiadomieniach"
                 }
             }
         }

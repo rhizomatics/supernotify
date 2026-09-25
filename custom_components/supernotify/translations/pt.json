@@ -533,13 +533,11 @@
                 "title": "Controlo de entregas",
                 "data": {
                     "default_inclusion": "Inclusão de entregas",
-                    "voice_occupancy": "Presença nas entregas faladas",
-                    "apple_drop_mp4": "Remover MP4 das notificações Apple"
+                    "voice_occupancy": "Presença nas entregas faladas"
                 },
                 "data_description": {
                     "default_inclusion": "Controla como as entregas são consideradas para inclusão nas notificações",
-                    "voice_occupancy": "Limita quando as entregas faladas, como TTS ou Alexa Devices, são consideradas para notificações, consoante quem está em casa",
-                    "apple_drop_mp4": "Omitir o vídeo .mp4, como um clip do Frigate, das notificações push para dispositivos Apple, que muitas vezes mostram uma imagem partida quando recebem um MP4. As notificações do blueprint do Frigate usam antes a sua imagem instantânea. Os dispositivos Android continuam a receber o vídeo."
+                    "voice_occupancy": "Limita quando as entregas faladas, como TTS ou Alexa Devices, são consideradas para notificações, consoante quem está em casa"
                 }
             }
         }

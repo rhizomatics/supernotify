@@ -45,12 +45,10 @@ import logging
 import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, ClassVar
-from urllib.parse import urlparse
 
 from aiohttp import ClientResponse, ClientSession, ClientTimeout
 from bs4 import BeautifulSoup
 from homeassistant.components.notify.const import ATTR_DATA
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify import const
@@ -114,24 +112,6 @@ IOS_INTERRUPTION_MAP: dict[str, str] = {
 ANDROID_CRITICAL_TTL = 0
 
 
-# Leave .mp4 video out of pushes to Apple devices - the iOS app can't always show one, e.g. a Frigate clip
-OPTION_APPLE_DROP_MP4 = "apple_drop_mp4"
-
-
-def drop_mp4(data: dict[str, Any]) -> None:
-    """Remove .mp4 video - the `video` URL, and any `attachment` pointing at an .mp4 - from push data"""
-    video = data.get(ATTR_VIDEO)
-    if isinstance(video, str) and _is_mp4(video):
-        del data[ATTR_VIDEO]
-    attachment = data.get("attachment")
-    if isinstance(attachment, dict) and _is_mp4(str(attachment.get("url") or "")):
-        del data["attachment"]
-
-
-def _is_mp4(url: str) -> bool:
-    return urlparse(url).path.lower().endswith(".mp4")
-
-
 class MobilePushTransport(Transport):
     name = TRANSPORT_MOBILE_PUSH
     declared_options: ClassVar[list[DeliveryOption]] = [
@@ -140,11 +120,6 @@ class MobilePushTransport(Transport):
             OPTION_DATA_KEYS_SELECT,
             "Prune the data block by including/excluding values or by regex pattern",
             value_type=SelectionRule,
-        ),
-        DeliveryOption(
-            OPTION_APPLE_DROP_MP4,
-            "Leave .mp4 video, such as a Frigate clip, out of pushes to Apple devices",
-            value_type=cv.boolean,
         ),
     ]
 
@@ -443,8 +418,6 @@ class MobilePushTransport(Transport):
                 target_data.update(android_data)
             else:
                 target_data.update(ios_data)
-                if envelope.delivery.options.get(OPTION_APPLE_DROP_MP4):
-                    drop_mp4(target_data)
 
             action_data = envelope.core_action_data()
             action_data[ATTR_DATA] = target_data

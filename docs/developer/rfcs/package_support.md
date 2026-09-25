@@ -146,8 +146,7 @@ and only grab from the camera without one.
 ### 7. iOS video attachment
 
 `clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL
-(`application/vnd.apple.mpegurl` for `.m3u8`). An option to leave out `.mp4` clips for Apple devices builds in the
-[Frigate Apple fix](../../recipes/fix_frigate_apple_push.md), so it no longer needs `data_keys_select`.
+(`application/vnd.apple.mpegurl` for `.m3u8`).
 
 ### 8. Tap URL
 

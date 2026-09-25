@@ -533,13 +533,11 @@
                 "title": "配信コントロール",
                 "data": {
                     "default_inclusion": "配信の対象",
-                    "voice_occupancy": "音声配信の在宅条件",
-                    "apple_drop_mp4": "Apple へのプッシュから MP4 を除く"
+                    "voice_occupancy": "音声配信の在宅条件"
                 },
                 "data_description": {
                     "default_inclusion": "通知に含める配信をどう判断するかを制御します",
-                    "voice_occupancy": "在宅状況に応じて、TTS や Alexa Devices などの音声配信を通知の対象にするタイミングを制限します",
-                    "apple_drop_mp4": "Frigate のクリップなどの .mp4 動画を、Apple デバイスへのモバイルプッシュ通知から省きます。Apple デバイスは MP4 を受け取ると、プッシュ通知に壊れた画像のプレースホルダーを表示することがよくあります。Frigate ブループリントの通知は代わりにスナップショット画像を使います。Android デバイスには引き続き動画が送られます。"
+                    "voice_occupancy": "在宅状況に応じて、TTS や Alexa Devices などの音声配信を通知の対象にするタイミングを制限します"
                 }
             }
         }

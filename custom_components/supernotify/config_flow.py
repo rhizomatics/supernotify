@@ -27,7 +27,6 @@ from .const import (
     ATTR_DUPE_POLICY_MT,
     ATTR_DUPE_POLICY_MTSLP,
     ATTR_DUPE_POLICY_NONE,
-    CONF_APPLE_DROP_MP4,
     CONF_ARCHIVE,
     CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_DIAGNOSTICS,
@@ -414,11 +413,11 @@ class SupernotifyOptionsFlow(OptionsFlow):
         return self.async_show_form(step_id="housekeeping", data_schema=schema)
 
     async def async_step_delivery_control(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Defaults for deliveries that don't set their own - inclusion, occupancy for spoken
-        deliveries, and dropping .mp4 video from pushes to Apple devices"""
+        """Defaults for deliveries that don't set their own - inclusion, and occupancy for spoken
+        deliveries"""
         current: dict[str, Any] = self.config_entry.options.get(CONF_DELIVERY_CONTROL, {})
         if user_input is not None:
-            control: dict[str, Any] = {CONF_APPLE_DROP_MP4: user_input[CONF_APPLE_DROP_MP4]}
+            control: dict[str, Any] = {}
             if user_input[CONF_DEFAULT_INCLUSION] != NOT_SET_INCLUSION:
                 control[CONF_DEFAULT_INCLUSION] = user_input[CONF_DEFAULT_INCLUSION]
             if user_input[CONF_VOICE_OCCUPANCY] != NOT_SET_OCCUPANCY:
@@ -435,7 +434,6 @@ class SupernotifyOptionsFlow(OptionsFlow):
             vol.Optional(CONF_VOICE_OCCUPANCY, default=current.get(CONF_VOICE_OCCUPANCY, NOT_SET_OCCUPANCY)): SelectSelector(
                 SelectSelectorConfig(options=[NOT_SET_OCCUPANCY, *OCCUPANCY_VALUES], translation_key=CONF_VOICE_OCCUPANCY)
             ),
-            vol.Optional(CONF_APPLE_DROP_MP4, default=current.get(CONF_APPLE_DROP_MP4, False)): cv.boolean,
         })
         return self.async_show_form(step_id="delivery_control", data_schema=schema)
 

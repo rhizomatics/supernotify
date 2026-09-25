@@ -533,13 +533,11 @@
                 "title": "Bezorgingsbeheer",
                 "data": {
                     "default_inclusion": "Opname van bezorgingen",
-                    "voice_occupancy": "Aanwezigheid voor gesproken bezorgingen",
-                    "apple_drop_mp4": "MP4 uit Apple-pushmeldingen halen"
+                    "voice_occupancy": "Aanwezigheid voor gesproken bezorgingen"
                 },
                 "data_description": {
                     "default_inclusion": "Bepaalt hoe bezorgingen in aanmerking komen voor opname in meldingen",
-                    "voice_occupancy": "Beperkt, op basis van wie er thuis is, wanneer gesproken bezorgingen, zoals TTS of Alexa Devices, in aanmerking komen voor meldingen",
-                    "apple_drop_mp4": ".mp4-video, zoals een Frigate-clip, weglaten uit pushmeldingen naar Apple-apparaten, die bij een MP4 vaak een tijdelijke afbeelding van een kapotte afbeelding tonen. Meldingen van de Frigate-blueprint gebruiken dan hun snapshot. Android-apparaten krijgen de video nog wel."
+                    "voice_occupancy": "Beperkt, op basis van wie er thuis is, wanneer gesproken bezorgingen, zoals TTS of Alexa Devices, in aanmerking komen voor meldingen"
                 }
             }
         }

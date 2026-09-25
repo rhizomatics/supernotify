@@ -21,7 +21,7 @@ from custom_components.supernotify.const import (
     TRANSPORT_TTS,
 )
 from custom_components.supernotify.transports.generic import GenericTransport
-from custom_components.supernotify.transports.mobile_push import OPTION_APPLE_DROP_MP4, MobilePushTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from custom_components.supernotify.transports.tts import TTSTransport
 from tests.components.supernotify.hass_setup_lib import TestingContext
 
@@ -52,7 +52,6 @@ async def test_unset_keeps_each_transports_own_defaults() -> None:
     assert deliveries["chat"].inclusion == [INCLUSION_EXPLICIT]
     assert deliveries["phone"].inclusion == [INCLUSION_DEFAULT]
     assert deliveries["speaker"].occupancy == OCCUPANCY_ALL
-    assert OPTION_APPLE_DROP_MP4 not in deliveries["phone"].options
 
 
 async def test_default_inclusion_applies_to_every_delivery() -> None:
@@ -103,16 +102,10 @@ async def test_voice_occupancy_for_spoken_deliveries_only() -> None:
     assert deliveries["phone"].occupancy == OCCUPANCY_ALL
 
 
-async def test_apple_drop_mp4_turns_on_mobile_push_option() -> None:
-    ctx = await _registry(
-        "delivery_control:\n  apple_drop_mp4: true\n",
-        deliveries={
-            **DELIVERIES,
-            "tablet": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH, "options": {OPTION_APPLE_DROP_MP4: False}},
-        },
-    )
-    deliveries = ctx.delivery_registry.deliveries
+def test_unknown_stored_option_is_dropped() -> None:
+    """A Delivery Control option no longer offered, stored by an earlier version, doesn't fail setup"""
+    from custom_components.supernotify.schema import CONFIG_ENTRY_SCHEMA
 
-    assert deliveries["phone"].options[OPTION_APPLE_DROP_MP4] is True
-    assert deliveries["tablet"].options[OPTION_APPLE_DROP_MP4] is False
-    assert OPTION_APPLE_DROP_MP4 not in deliveries["chat"].options
+    validated = CONFIG_ENTRY_SCHEMA({"delivery_control": {"default_inclusion": "explicit", "apple_drop_mp4": False}})
+
+    assert validated["delivery_control"] == {"default_inclusion": "explicit"}

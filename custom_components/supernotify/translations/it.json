@@ -533,13 +533,11 @@
                 "title": "Controllo delivery",
                 "data": {
                     "default_inclusion": "Inclusione delivery",
-                    "voice_occupancy": "Presenza per le delivery vocali",
-                    "apple_drop_mp4": "Rimuovi MP4 dalle notifiche Apple"
+                    "voice_occupancy": "Presenza per le delivery vocali"
                 },
                 "data_description": {
                     "default_inclusion": "Controlla come le delivery vengono considerate per l'inclusione nelle notifiche",
-                    "voice_occupancy": "Limita quando le delivery vocali, come TTS o Alexa Devices, vengono considerate per le notifiche, in base a chi è in casa",
-                    "apple_drop_mp4": "Ometti i video .mp4, come una clip di Frigate, dalle notifiche push ai dispositivi Apple, che spesso mostrano un segnaposto di immagine rotta quando ricevono un MP4. Le notifiche del blueprint di Frigate usano invece la loro immagine istantanea. I dispositivi Android ricevono comunque il video."
+                    "voice_occupancy": "Limita quando le delivery vocali, come TTS o Alexa Devices, vengono considerate per le notifiche, in base a chi è in casa"
                 }
             }
         }

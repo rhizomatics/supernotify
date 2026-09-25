@@ -533,13 +533,11 @@
                 "title": "Contrôle des livraisons",
                 "data": {
                     "default_inclusion": "Inclusion des livraisons",
-                    "voice_occupancy": "Présence pour les livraisons vocales",
-                    "apple_drop_mp4": "Retirer le MP4 des notifications Apple"
+                    "voice_occupancy": "Présence pour les livraisons vocales"
                 },
                 "data_description": {
                     "default_inclusion": "Contrôle la façon dont les livraisons sont prises en compte pour les notifications",
-                    "voice_occupancy": "Limite, selon la présence à la maison, quand les livraisons vocales, comme TTS ou Alexa Devices, sont prises en compte pour les notifications",
-                    "apple_drop_mp4": "Retirer la vidéo .mp4, comme un clip Frigate, des notifications push vers les appareils Apple, qui affichent souvent une image cassée quand ils reçoivent un MP4. Les notifications du blueprint Frigate utilisent alors leur image instantanée. Les appareils Android reçoivent toujours la vidéo."
+                    "voice_occupancy": "Limite, selon la présence à la maison, quand les livraisons vocales, comme TTS ou Alexa Devices, sont prises en compte pour les notifications"
                 }
             }
         }
