@@ -35,6 +35,17 @@ Data keys (all optional):
                                 When volume/music restore is active this wait
                                 happens implicitly; wait_for_tts=True only adds
                                 extra blocking in pure fire-and-forget deliveries.
+    audio_url       str         play an audio file (e.g. an mp3 chime) before the message,
+                                via an SSML <audio> tag. Relative URLs like
+                                /local/sounds/bell.mp3 are made absolute with the
+                                external URL. Amazon fetches the file from its own
+                                cloud, so it must be public https with a valid
+                                certificate, MP3 at 48kbps and 16000/22050/24000 Hz.
+                                Switches the default `type` to `tts`, and the message,
+                                if any, is spoken after the audio as plain text.
+    audio_duration  float s     length of the audio_url clip, added to the TTS wait
+                                so volume restore/music resume don't cut it short.
+                                Default 0 (the 5s base wait covers short chimes).
     tts_char_speed  float s/ch  seconds per character for TTS duration estimate.
                                 Default 0.06 (Italian/English calibration).
                                 Suggested values by language family:
@@ -59,8 +70,10 @@ References:
 from __future__ import annotations
 
 import asyncio
+import html
 import logging
 import re
+import urllib.parse
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from homeassistant.components.notify.const import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE
@@ -304,6 +317,17 @@ class AlexaMediaPlayerTransport(Transport):
                 )
             )
 
+    def _audio_ssml(self, audio_url: str, message: str | None) -> str:
+        """Wrap an audio clip, and the message spoken after it, in SSML for Alexa."""
+        url = urllib.parse.urljoin(self.hass_api.external_url or "", audio_url)
+        if not url.startswith("https://"):
+            _LOGGER.warning(
+                "SUPERNOTIFY alexa_media_player: audio_url %s is not https, Alexa will refuse to play it",
+                url,
+            )
+        spoken = html.escape(message, quote=False) if message else ""
+        return f'<speak><audio src="{html.escape(url, quote=True)}"/>{spoken}</speak>'
+
     async def deliver(
         self,
         envelope: Envelope,
@@ -326,6 +350,12 @@ class AlexaMediaPlayerTransport(Transport):
         volume_fallback: float = float(raw_data.pop("volume_fallback", 0.5))
         wait_for_tts: bool = boolify(raw_data.pop("wait_for_tts", False), default=False)
         tts_char_speed: float = float(raw_data.pop("tts_char_speed", _CHAR_WEIGHT))
+        audio_url: str | None = raw_data.pop("audio_url", None)
+        audio_duration: float = float(raw_data.pop("audio_duration", 0) or 0)
+
+        message: str | None = envelope.message
+        if audio_url:
+            message = self._audio_ssml(audio_url, message)
 
         auto_pause = envelope.delivery.option_bool(OPTION_MEDIA_AUTO_PAUSE, True)
 
@@ -377,9 +407,9 @@ class AlexaMediaPlayerTransport(Transport):
         needs_post_announce = needs_restore and bool(states)
 
         # Announce
-        call_type: str = raw_data.pop("type", "announce")
+        call_type: str = raw_data.pop("type", "tts" if audio_url else "announce")
         action_data: dict[str, Any] = {
-            "message": envelope.message,
+            "message": message,
             ATTR_DATA: {"type": call_type},
             ATTR_TARGET: media_players,
         }
@@ -396,13 +426,14 @@ class AlexaMediaPlayerTransport(Transport):
             # music. wait_for_tts additionally blocks even in pure fire-and-forget deliveries,
             # allowing automation sequences to run only after the announcement ends, and does
             # so regardless of auto_pause since it has nothing to do with restoring state.
-            if (needs_post_announce or wait_for_tts) and envelope.message:
-                tts_duration = _estimate_tts_duration(envelope.message, tts_char_speed)
+            if (needs_post_announce or wait_for_tts) and message:
+                tts_duration = _estimate_tts_duration(message, tts_char_speed) + audio_duration
                 _LOGGER.debug(
-                    "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch)",
+                    "SUPERNOTIFY alexa_media_player: waiting %.1f s for TTS (%d chars, %.3f s/ch, %.1f s audio)",
                     tts_duration,
-                    len(RE_SSML_TAG.sub("", envelope.message)),
+                    len(RE_SSML_TAG.sub("", message)),
                     tts_char_speed,
+                    audio_duration,
                 )
                 await asyncio.sleep(tts_duration)
         finally:
