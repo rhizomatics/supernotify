@@ -4,6 +4,7 @@
 - Built-in (non-AI) agent sentences in Italian as well as English, contributed by @lollox80
   - The answer comes back in the language of the sentence that matched, whatever the language of the assistant
   - Italian times use the 24 hour clock, so *fino alle 15* works as well as *fino alle 15:30*
+- More flexible time handling for English times, including use of `midnight` or `noon` or short forms like 'until 2' or 'until half past 3'. 12 hour time values will be assumed as am/pm based on the current time.
 
 ## v2.10.0 - Assist Assist
 

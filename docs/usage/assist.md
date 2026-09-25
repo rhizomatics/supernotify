@@ -133,12 +133,28 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | "Turn my notifications back on"                          | Undoes the snooze or silence                  |
 | "What was the last notification"                         | Says what it was, and what sent it            |
 
-Times can be 24 hour like *15:30*, or with am or pm like *3:30pm* or *3pm*.
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message.
 A recipient can be named by their full name, alias, or just their first name when no one else shares it -
 if two do, the agent asks which one you mean.
 Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to
 a recipient, otherwise for everyone.
+
+### Times
+
+A snooze lasts until the next time the clock shows the time asked for, today or tomorrow. Only these
+forms of time are understood:
+
+| Form                          | Examples                          | Means                                              |
+|-------------------------------|-----------------------------------|----------------------------------------------------|
+| am or pm                      | *3pm*, *3:30 pm*, *12 a.m.*       | Exactly that                                       |
+| 24 hour                       | *15:30*, *15.30*, *1530*, *03:30* | Exactly that - a leading zero is always the morning |
+| 12 hour without am or pm      | *3*, *3:30*, *330*                | Morning or afternoon, whichever comes next         |
+| Half past                     | *half past three*, *half past 3*  | Morning or afternoon, whichever comes next         |
+| Named                         | *noon*, *midnight*                | 12:00 or 00:00                                     |
+
+The reply says am or pm, so if the guess at morning or afternoon was wrong, ask again with am or pm.
+Anything else, like *quarter to four*, *half three* (which means 2:30 in some places) or *teatime*,
+isn't understood, and the agent asks for a time like *15:30* or *3:30pm* instead.
 
 ### Italian
 

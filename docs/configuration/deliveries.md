@@ -157,7 +157,8 @@ override it, as does a delivery's own `inclusion`.
 
 The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as
 Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same
-way, only for deliveries whose transport speaks. Left as *Not controlled*, and *Each transport's own
+way, only for deliveries whose transport speaks. Recipients without a Person are never in or out, so
+`only_in` and `only_out` always leave them out - see [Users without Person entries](people.md#users-without-person-entries). Left as *Not controlled*, and *Each transport's own
 default* for inclusion, nothing changes.
 
 !!! info

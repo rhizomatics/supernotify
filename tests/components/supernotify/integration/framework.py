@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import tempfile
 from contextlib import chdir
-from io import BytesIO
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import Mock
 
@@ -16,10 +15,8 @@ from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
-from PIL import Image, ImageDraw, ImageStat
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore[import-untyped]
 
-from conftest import test_image
 from custom_components.supernotify import DOMAIN as SUPERNOTIFY_DOMAIN
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from tests.components.supernotify.doubles_lib import MockCameraEntity
@@ -30,30 +27,6 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant, ServiceCall
     from homeassistant.helpers.area_registry import AreaEntry
     from homeassistant.helpers.floor_registry import FloorEntry
-
-# a small palette of maximally-distinct colors, one per camera, stamped as a solid block onto
-# that camera's still - see setup()/_camera_for_image(). Flat blocks survive the JPEG re-encode
-# in write_image_from_bitmap almost losslessly (unlike fine detail or text), so a plain nearest-
-# color match on the block's average is a cheap, reliable way to tell two cameras' images apart
-# after the full round trip through the delivery pipeline.
-_CAMERA_MARKER_COLORS: list[tuple[int, int, int]] = [
-    (220, 20, 60),  # crimson
-    (30, 144, 255),  # dodger blue
-    (50, 205, 50),  # lime green
-    (255, 165, 0),  # orange
-    (148, 0, 211),  # dark violet
-]
-_CAMERA_MARKER_BOX = (0, 0, 96, 96)  # top-left corner, clear of the format-label text in fixtures/media
-
-
-def _stamp_camera_image(color: tuple[int, int, int]) -> bytes:
-    """A copy of the shared example image with a solid marker block painted over one corner,
-    encoded fresh - so each camera's mock still is cheaply distinguishable from every other."""
-    image = Image.open(str(test_image().path)).convert("RGB")
-    ImageDraw.Draw(image).rectangle(_CAMERA_MARKER_BOX, fill=color)
-    buffer = BytesIO()
-    image.save(buffer, format="JPEG")
-    return buffer.getvalue()
 
 
 class House:
@@ -90,9 +63,9 @@ class House:
         # template paths, so they resolve under a throwaway directory rather than the real cwd -
         # see setup() and cleanup()
         self._media_root: tempfile.TemporaryDirectory[str] | None = None
-        # camera entity_id -> the marker color stamped onto that camera's mock still in setup(),
-        # used by _camera_for_image() to identify which camera a delivered image came from
-        self._camera_markers: dict[str, tuple[int, int, int]] = {}
+        # camera entity_id -> its mock, used by _camera_for_image() to identify which camera a
+        # delivered image came from
+        self._camera_entities: dict[str, MockCameraEntity] = {}
 
     async def setup(self, hass: HomeAssistant) -> None:
 
@@ -147,19 +120,13 @@ class House:
                 hass.states.async_set(person_id, existing.state if existing else "home", attributes)
 
         if self._cameras:
-            camera_entities: dict[str, MockCameraEntity] = {}
             for index, (name, camera_area) in enumerate(self._cameras.items()):
-                entry = entity_registry.async_get_or_create("camera", "generic", f"{name}_id", suggested_object_id=name)
-                if camera_area:
-                    entity_registry.async_update_entity(entry.entity_id, area_id=self.areas[camera_area].id)
-                hass.states.async_set(entry.entity_id, "idle")
-                color = _CAMERA_MARKER_COLORS[index % len(_CAMERA_MARKER_COLORS)]
-                self._camera_markers[entry.entity_id] = color
-                camera_entity = MockCameraEntity(test_image().path)
-                camera_entity.bytes = _stamp_camera_image(color)  # skip load(): pre-baked per-camera still
-                camera_entities[entry.entity_id] = camera_entity
+                area_id = self.areas[camera_area].id if camera_area else None
+                camera_entity = MockCameraEntity(name=name, area_id=area_id, index=index)
+                await camera_entity.load()
+                self._camera_entities[camera_entity.register(hass)] = camera_entity
             hass.data["camera"] = Mock(spec=EntityComponent)
-            hass.data["camera"].get_entity = Mock(side_effect=camera_entities.get)
+            hass.data["camera"].get_entity = Mock(side_effect=self._camera_entities.get)
 
         for name, pir_area in self.pirs.items():
             entry = entity_registry.async_get_or_create("binary_sensor", "generic", f"{name}_id", suggested_object_id=name)
@@ -283,13 +250,6 @@ class House:
             }
             assert expected_images == actual_cameras
 
-    def _camera_for_image(self, image_data: bytes) -> str:
-        """Identify which camera an image came from, by nearest match on the marker color
-        stamped onto that camera's still in setup()."""
-        region = Image.open(BytesIO(image_data)).convert("RGB").crop(_CAMERA_MARKER_BOX)
-        sample = tuple(ImageStat.Stat(region).mean)
-
-        def distance(color: tuple[int, int, int]) -> float:
-            return sum((a - b) ** 2 for a, b in zip(sample, color, strict=True))
-
-        return min(self._camera_markers, key=lambda entity_id: distance(self._camera_markers[entity_id]))
+    def _camera_for_image(self, image_data: bytes) -> str | None:
+        """Identify which camera an image came from, by the marker each camera stamps on its image"""
+        return next((entity_id for entity_id, cam in self._camera_entities.items() if cam.produced(image_data)), None)

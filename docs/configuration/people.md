@@ -62,6 +62,14 @@ Home Assistant optionally supports *Person* entries, useful for device tracking,
 
 From version `2.9.0`, Supernotify will also discover users and mobile app devices that only have user accounts, and generate recipients for them if auto discovery is on. Its still better to have Person records, to take advantage of occupancy and location tracking across multiple devices, plus `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector).
 
+!!! note "Occupancy only counts People"
+    Home Assistant uses the *Person* to say who is home or away, and Supernotify follows that. A recipient
+    without a Person, such as the account a wall tablet logs in with, still gets notified, but never counts
+    towards occupancy - it isn't home or away, so it can't make `ALL_AWAY` false, or make someone `LONE_HOME`.
+    Being neither *in* nor *out*, it's always left out of `only_in` and `only_out` deliveries, which pick
+    recipients by where they are. Deliveries whose occupancy is about everyone, like `all`, `any_in` or
+    `all_out`, still include it whenever the People's occupancy lets them through.
+
 
 ### Disabling Auto Discovered Devices
 

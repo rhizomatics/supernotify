@@ -4,12 +4,15 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock
 
 import homeassistant.util.dt as dt_util
+import pytest
 from homeassistant.components import person
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import Context, State
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import CONF_PERSON, CONF_USER_ID
 from custom_components.supernotify.hass_api import HomeAssistantAPI
+from custom_components.supernotify.model import ConditionVariables
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.people import PeopleRegistry, Recipient, RecipientNotifyEntity
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
@@ -168,6 +171,40 @@ async def test_filter_recipients(hass: HomeAssistant) -> None:
 
     assert {r.entity_id for r in uut.filter_recipients_by_occupancy("only_out")} == {"person.mae_mctest"}
     assert {r.entity_id for r in uut.filter_recipients_by_occupancy("only_in")} == {"person.joe_mctest"}
+
+
+@pytest.mark.parametrize(
+    ("joe_state", "occupancy", "any_in", "all_out", "only_in"),
+    [
+        ("home", ["ALL_HOME", "LONE_HOME", "SOME_HOME"], 2, 0, ["person.joe_mctest"]),
+        ("not_home", ["ALL_AWAY"], 0, 2, []),
+    ],
+)
+async def test_recipient_without_person_left_out_of_occupancy(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    joe_state: str,
+    occupancy: list[str],
+    any_in: int,
+    all_out: int,
+    only_in: list[str],
+) -> None:
+    """A user-only recipient, like a wall tablet's account, is neither home nor away - issue #221"""
+    hass.states.async_set("person.joe_mctest", joe_state)
+    uut = PeopleRegistry(
+        [{CONF_PERSON: "person.joe_mctest"}, {CONF_USER_ID: "tablet-user-id", "alias": "Tablet"}], HomeAssistantAPI(hass)
+    )
+    await uut.initialize()
+    assert uut.people["user.tablet"].enabled
+
+    occupiers = uut.determine_occupancy()
+
+    assert [r.entity_id for r in occupiers[STATE_HOME] + occupiers[STATE_NOT_HOME]] == ["person.joe_mctest"]
+    assert ConditionVariables(occupiers=occupiers).occupancy == occupancy
+    assert len(uut.filter_recipients_by_occupancy("any_in")) == any_in
+    assert len(uut.filter_recipients_by_occupancy("all_out")) == all_out
+    assert [r.entity_id for r in uut.filter_recipients_by_occupancy("only_in")] == only_in
+    assert "Unexpected state" not in caplog.text
 
 
 def test_recipient_notify_entity_record_notification(hass: HomeAssistant) -> None:

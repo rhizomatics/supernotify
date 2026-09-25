@@ -184,6 +184,8 @@ class Recipient:
         # already handle gracefully, e.g. PeopleRegistry person_attributes()/
         # _fetch_person_entity_state() returning None for an unknown entity_id.
         self.entity_id: str = config.get(CONF_PERSON) or ""
+        # Without a Person there's no presence, so the recipient is left out of occupancy
+        self.has_person: bool = bool(self.entity_id)
         if self.entity_id:
             self.name: str = self.entity_id.replace("person.", "")
         else:
@@ -498,7 +500,7 @@ class PeopleRegistry:
             tracker: State | None = self.hass_api.get_state(person_id)
             if tracker and isinstance(tracker.state, str):
                 return tracker.state
-            _LOGGER.warning("SUPERNOTIFY Unexpected state %s for %s", tracker, person_id)
+            _LOGGER.debug("SUPERNOTIFY Unexpected state %s for %s", tracker, person_id)
         except Exception as e:
             _LOGGER.warning("SUPERNOTIFY Unable to determine occupied status for %s: %s", person_id, e)
         return None
@@ -506,7 +508,7 @@ class PeopleRegistry:
     def determine_occupancy(self) -> dict[str, list[Recipient]]:
         results: dict[str, list[Recipient]] = {STATE_HOME: [], STATE_NOT_HOME: []}
         for person_id, person_config in self.people.items():
-            if person_config.enabled:
+            if person_config.enabled and person_config.has_person:
                 state: str | None = self._fetch_person_entity_state(person_id)
                 if state in (None, STATE_HOME):
                     # default to at home if unknown tracker

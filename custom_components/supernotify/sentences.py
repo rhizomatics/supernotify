@@ -29,10 +29,19 @@ _LOGGER = logging.getLogger(__name__)
 
 EVERYONE = ("everyone", "everybody", "all", "tutti", "tutte")
 DEFAULT_LANGUAGE = "en"
-# 15:30, 3:30pm, 3 pm - hours without minutes need am or pm, so a bare number isn't taken as a time
-CLOCK_TIME = re.compile(r"(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\.?|(\d{1,2}):(\d{2})", re.IGNORECASE)
-# Italian uses the 24 hour clock, so a bare hour is a time - 15, 15:30 or 15.30
-CLOCK_TIME_24H = re.compile(r"(\d{1,2})(?:[:.](\d{2}))?")
+# 3:30pm, 3 pm, 12 a.m.
+MERIDIEM_TIME = re.compile(r"(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\.?", re.IGNORECASE)
+# 15:30, 15.30, 1530, 3:30 or a bare hour like 3
+CLOCK_TIME = re.compile(r"(\d{1,2})(?:[:.]?(\d{2}))?")
+# "half three" isn't taken, since some places mean 2:30 by it
+HALF_PAST = re.compile(r"half past (\w+)", re.IGNORECASE)
+HOURS_SAID = {
+    word: hour
+    for hour, word in enumerate(
+        ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"], start=1
+    )
+} | {str(hour): hour for hour in range(1, 13)}
+NAMED_TIMES = {"midnight": 0, "noon": 12}
 # Optional words before the minutes, which the wildcard can take in with the number
 MINUTES_PREFIXES = ("the", "next", "i", "prossimi")
 
@@ -227,25 +236,37 @@ async def _notify(engine: SupernotifyEngine, name: str, message: str, context: H
 
 
 def _next_time(spoken: str, language: str = DEFAULT_LANGUAGE) -> dt.datetime | None:
-    """The next time the clock shows this time, today or tomorrow"""
-    match = CLOCK_TIME.fullmatch(spoken.strip())
-    if match is not None:
-        hour_12, minute_12, meridiem, hour_24, minute_24 = match.groups()
-        if meridiem:
-            hour = int(hour_12)
-            if not 1 <= hour <= 12:
-                return None
-            hour = hour % 12 + (12 if meridiem.lower() == "p" else 0)
-            minute = int(minute_12 or 0)
-        else:
-            hour, minute = int(hour_24), int(minute_24)
-    elif language == "it" and (match := CLOCK_TIME_24H.fullmatch(spoken.strip())) is not None:
+    """The next time the clock shows this time, today or tomorrow
+
+    In English, 3:30 without am or pm is whichever 3:30 comes next, while 03:30 is always the morning.
+    Italian uses the 24 hour clock, so 3:30 is always the morning there.
+    """
+    spoken = spoken.strip()
+    either_half_of_day = False
+    if (match := MERIDIEM_TIME.fullmatch(spoken)) is not None:
         hour, minute = int(match.group(1)), int(match.group(2) or 0)
+        if not 1 <= hour <= 12:
+            return None
+        hour = hour % 12 + (12 if match.group(3).lower() == "p" else 0)
+    elif (match := CLOCK_TIME.fullmatch(spoken)) is not None:
+        hour, minute = int(match.group(1)), int(match.group(2) or 0)
+        either_half_of_day = language != "it" and not match.group(1).startswith("0")
+    elif language != "it" and (match := HALF_PAST.fullmatch(spoken)) is not None:
+        if match.group(1).casefold() not in HOURS_SAID:
+            return None
+        hour, minute, either_half_of_day = HOURS_SAID[match.group(1).casefold()], 30, True
+    elif spoken.casefold() in NAMED_TIMES:
+        hour, minute = NAMED_TIMES[spoken.casefold()], 0
     else:
         return None
     if hour > 23 or minute > 59:
         return None
+    hours = [hour % 12, hour % 12 + 12] if either_half_of_day and 1 <= hour <= 12 else [hour]
     now = dt_util.as_local(dt_util.now())
+    return min(_next_occurrence(now, candidate, minute) for candidate in hours)
+
+
+def _next_occurrence(now: dt.datetime, hour: int, minute: int) -> dt.datetime:
     until = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
     return until if until > now else until + dt.timedelta(days=1)
 
@@ -265,7 +286,14 @@ def _snooze(
     if cmd == CommandType.SILENCE:
         return _say(language, f"silenced_{whose}")
     until = dt_util.as_local(dt_util.now() + (snooze_for or engine.context.snoozer.snooze_period))
-    return _say(language, f"snoozed_{whose}", until=until.strftime("%H:%M"))
+    return _say(language, f"snoozed_{whose}", until=_clock(until, language))
+
+
+def _clock(when: dt.datetime, language: str) -> str:
+    """A time to say back, with am or pm in English so a wrong guess at the half of the day can be put right"""
+    if language == "it":
+        return when.strftime("%H:%M")
+    return f"{when.hour % 12 or 12}:{when.minute:02d}{'am' if when.hour < 12 else 'pm'}"
 
 
 def _last(engine: SupernotifyEngine, language: str) -> str:

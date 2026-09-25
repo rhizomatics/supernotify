@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from io import BytesIO
 from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock, call
 
@@ -12,7 +13,9 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+from PIL import Image, ImageDraw, ImageStat
 
 from custom_components.supernotify.const import CONF_TRANSPORT
 from custom_components.supernotify.delivery import Delivery
@@ -31,6 +34,20 @@ if TYPE_CHECKING:
     from custom_components.supernotify.context import Context
     from custom_components.supernotify.envelope import Envelope
     from custom_components.supernotify.notification import DebugTrace
+
+# a small palette of maximally-distinct colors, one per camera, stamped as a solid block onto
+# that camera's still - see MockCameraEntity. Flat blocks survive the JPEG re-encode
+# in write_image_from_bitmap almost losslessly (unlike fine detail or text), so a plain nearest-
+# color match on the block's average is a cheap, reliable way to tell two cameras' images apart
+# after the full round trip through the delivery pipeline.
+_CAMERA_MARKER_COLORS: list[tuple[int, int, int]] = [
+    (220, 20, 60),  # crimson
+    (30, 144, 255),  # dodger blue
+    (50, 205, 50),  # lime green
+    (255, 165, 0),  # orange
+    (148, 0, 211),  # dark violet
+]
+_CAMERA_MARKER_BOX = (0, 0, 96, 96)  # top-left corner, clear of the format-label text in fixtures/media
 
 
 def service_call(
@@ -184,18 +201,71 @@ class MockImageEntity(image.ImageEntity):
 
 
 class MockCameraEntity(camera.Camera):
+    """A camera whose image is the file at filename, or without one, the example image with a
+    marker block in a color picked by index, so it can be told apart from other cameras' images
+    even after being resized or re-encoded on the way through the delivery pipeline"""
+
     _attr_name = "Test"
 
-    def __init__(self, filename: Path) -> None:
+    def __init__(self, filename: Path | None = None, name: str = "porch", area_id: str | None = None, index: int = 0) -> None:
         super().__init__()
         self.filename = filename
+        self.camera_name = name
+        self.area_id = area_id
+        self.marker_color: tuple[int, int, int] | None = (
+            None if filename else _CAMERA_MARKER_COLORS[index % len(_CAMERA_MARKER_COLORS)]
+        )
+        self.image_size: tuple[int, int] | None = None
+
+    def register(self, hass: HomeAssistant) -> str:
+        """Add the camera to the entity registry, in its area if it has one, returning its entity_id"""
+        entity_registry = er.async_get(hass)
+        entry = entity_registry.async_get_or_create(
+            "camera", "generic", f"{self.camera_name}_id", suggested_object_id=self.camera_name
+        )
+        if self.area_id:
+            entity_registry.async_update_entity(entry.entity_id, area_id=self.area_id)
+        hass.states.async_set(entry.entity_id, "idle")
+        return entry.entity_id
 
     async def load(self) -> None:
-        async with aiofiles.open(self.filename, "rb") as f:
-            self.bytes = await f.read()
+        if self.filename:
+            async with aiofiles.open(self.filename, "rb") as f:
+                self.bytes = await f.read()
+        elif self.marker_color:
+            # conftest imports this module, so it can only be imported from here
+            from conftest import test_image
+
+            image = Image.open(str(test_image().path)).convert("RGB")
+            ImageDraw.Draw(image).rectangle(_CAMERA_MARKER_BOX, fill=self.marker_color)
+            buffer = BytesIO()
+            image.save(buffer, format="JPEG")
+            self.bytes = buffer.getvalue()
+            self.image_size = image.size
 
     async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
         return self.bytes
+
+    def produced(self, image_data: bytes) -> bool:
+        """Whether an image came from this camera, by its marker color being the nearest in the palette"""
+        assert self.marker_color is not None and self.image_size is not None, "Only cameras without a file are marked"
+        image = Image.open(BytesIO(image_data)).convert("RGB")
+        # scale the marker box to the image, in case it was resized, and sample its middle away from JPEG edge bleed
+        x_scale, y_scale = image.width / self.image_size[0], image.height / self.image_size[1]
+        left, top, right, bottom = _CAMERA_MARKER_BOX
+        sample = ImageStat.Stat(
+            image.crop((
+                int((left + right) / 4 * x_scale),
+                int((top + bottom) / 4 * y_scale),
+                int((left + right) * 3 / 4 * x_scale),
+                int((top + bottom) * 3 / 4 * y_scale),
+            ))
+        ).mean
+
+        def distance(color: tuple[int, int, int]) -> float:
+            return sum((a - b) ** 2 for a, b in zip(sample, color, strict=True))
+
+        return min(_CAMERA_MARKER_COLORS, key=distance) == self.marker_color
 
 
 def build_delivery_from_config(conf: ConfigType, ctx: Context) -> dict[str, Delivery]:

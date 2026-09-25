@@ -163,28 +163,51 @@ async def test_snooze_minutes_must_be_a_number(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("spoken", "expected"),
+    ("asked_at", "spoken", "expected", "said_back"),
     [
-        ("15:30", "2026-09-24 15:30"),
-        ("3:30 pm", "2026-09-24 15:30"),
-        ("3pm", "2026-09-24 15:00"),
-        ("12 a.m.", "2026-09-25 00:00"),
-        ("09:15", "2026-09-25 09:15"),
+        ("10:00", "15:30", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "3:30 pm", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "3pm", "2026-09-24 15:00", "3:00pm"),
+        ("10:00", "12 a.m.", "2026-09-25 00:00", "12:00am"),
+        ("10:00", "09:15", "2026-09-25 09:15", "9:15am"),
+        ("10:00", "15.30", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "1530", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "3", "2026-09-24 15:00", "3:00pm"),
+        ("10:00", "9", "2026-09-24 21:00", "9:00pm"),
+        ("10:00", "11", "2026-09-24 11:00", "11:00am"),
+        ("10:00", "12", "2026-09-24 12:00", "12:00pm"),
+        ("10:00", "18", "2026-09-24 18:00", "6:00pm"),
+        ("10:00", "0", "2026-09-25 00:00", "12:00am"),
+        ("10:00", "midnight", "2026-09-25 00:00", "12:00am"),
+        ("10:00", "Noon", "2026-09-24 12:00", "12:00pm"),
+        ("10:00", "3:30", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "330", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "03:30", "2026-09-25 03:30", "3:30am"),
+        ("10:00", "half past three", "2026-09-24 15:30", "3:30pm"),
+        ("10:00", "Half past 11", "2026-09-24 11:30", "11:30am"),
+        ("02:30", "3:30", "2026-09-24 03:30", "3:30am"),
+        ("02:30", "half past three", "2026-09-24 03:30", "3:30am"),
+        ("14:30", "3:30", "2026-09-24 15:30", "3:30pm"),
+        ("14:30", "03:30", "2026-09-25 03:30", "3:30am"),
+        ("23:00", "3", "2026-09-25 03:00", "3:00am"),
     ],
 )
-async def test_snooze_until_time(hass: HomeAssistant, freezer: FrozenDateTimeFactory, spoken: str, expected: str) -> None:
-    freezer.move_to(dt_util.as_utc(dt.datetime(2026, 9, 24, 10, 0, tzinfo=dt_util.get_default_time_zone())))
+async def test_snooze_until_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, asked_at: str, spoken: str, expected: str, said_back: str
+) -> None:
+    hour, minute = (int(part) for part in asked_at.split(":"))
+    freezer.move_to(dt_util.as_utc(dt.datetime(2026, 9, 24, hour, minute, tzinfo=dt_util.get_default_time_zone())))
     engine, _calls = await _setup(hass)
 
     response = await async_respond(engine, "snooze_until", {"time": spoken}, Context())
 
-    assert response == f"Snoozed all notifications until {expected[-5:]}"
+    assert response == f"Snoozed all notifications until {said_back}"
     [snooze] = engine.context.snoozer.snoozes.values()
     assert snooze.snooze_until is not None
     assert dt_util.as_local(snooze.snooze_until).strftime("%Y-%m-%d %H:%M") == expected
 
 
-@pytest.mark.parametrize("spoken", ["30", "25:00", "13pm", "teatime"])
+@pytest.mark.parametrize("spoken", ["30", "25:00", "2500", "13pm", "teatime", "half three", "half past thirteen", "past three"])
 async def test_snooze_until_must_be_a_time(hass: HomeAssistant, spoken: str) -> None:
     engine, _calls = await _setup(hass)
 
