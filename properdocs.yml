@@ -93,19 +93,20 @@ plugins:
         Using Supernotify:
           - usage/*.md
         Configuration:
-          - configuration/*.md
+          # fnmatch's * also matches /, so these pick up configuration/ and examples/ but leave
+          # out examples/html_email_template.md, which is almost all HTML/CSS
+          - configuration/[!e]*.md
+          - configuration/e[!x]*.md
+          - configuration/examples/m*.md
         Transports:
           - transports/*.md
         Recipes:
           - recipes/*.md
         Reference:
           - developer/reference/schemas/index.md: JSON Schemas for configuration and the notify action data
-        Optional:
-          - changelog.md: Release history
-          - developer/roadmap.md: Roadmap of planned features and improvements
-          - developer/principles.md: Design principles
-          - developer/rfcs/*.md
           - reference/transports.md: Table of notification transports and capabilities
+        # changelog, roadmap, principles and RFCs left out - old or planned behaviour an agent would
+        # take as current, and the changelog mentions everything so wins the help tool's page search
 
   - social:
       enabled: !ENV [CI, false]
