@@ -1,4 +1,6 @@
 {
     "name": "Supernotify",
-    "homeassistant": "2025.12.2"
+    "homeassistant": "2025.12.2",
+    "zip_release": true,
+    "filename": "supernotify.zip"
 }
