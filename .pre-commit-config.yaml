@@ -73,4 +73,5 @@ ci:
     skip:
       - bandit
       - mypy
+      - ty
     submodules: false
