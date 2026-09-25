@@ -1,3 +1,11 @@
+## Unreleased
+
+### Alexa Media Player Transport
+- Play an audio file, like an mp3 doorbell chime, on Echo devices with the new `audio_url` data key, contributed by @lollox80
+  - Wrapped in an SSML `<audio>` tag, followed by the message if there is one, with the call type defaulting to `tts`
+  - Relative URLs are made absolute with the external URL. Amazon requires public `https` and 48kbps MP3, see the transport docs
+  - Optional `audio_duration` extends the wait before volume restore or music resume for longer clips
+
 ## v2.10.1
 
 ### Home Assistant Assist
