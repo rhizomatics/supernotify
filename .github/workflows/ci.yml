@@ -29,10 +29,11 @@ jobs:
         run: uv sync --python ${{ matrix.python-version }}
 
       - name: Ruff lint
-        run: uv run ruff check custom_components tests
-
+        uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89
       - name: Ruff format
-        run: uv run ruff format --check custom_components tests
+        uses: astral-sh/ruff-action@278981a28ce3188b1e39527901f38254bf3aac89
+        with:
+          args: "format --check --diff"
 
       - name: Codespell
         if: matrix.python-version == '3.14'

@@ -59,6 +59,7 @@ repos:
     rev: v0.0.84
     hooks:
       - id: ty
+        args: [--isolated, --no-python-downloads]
 
 ci:
     autofix_commit_msg: |
