@@ -6,6 +6,9 @@
   - Italian times use the 24 hour clock, so *fino alle 15* works as well as *fino alle 15:30*
 - More flexible time handling for English times, including use of `midnight` or `noon` or short forms like 'until 2' or 'until half past 3'. 12 hour time values will be assumed as am/pm based on the current time.
 
+### Fixes
+- `supernotify.enquire_archive` with an unknown `id` now names that id in its error, instead of showing `{notification_id}`
+
 ## v2.10.0 - Assist Assist
 
 This release introduces text and voice chat support using Home Assistant Conversation integration and Voice Assistants. Both AI and non-AI chats are supported. The Action UI is further improved with pickers for delivery and scenario.
