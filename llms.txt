@@ -15,6 +15,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 
 - [Usage](https://supernotify.rhizomatics.org.uk/latest/usage/index.md)
 - [Actions](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
+- [Assist and AI Agents](https://supernotify.rhizomatics.org.uk/latest/usage/assist/index.md)
 - [Mobile Actions and Action Groups](https://supernotify.rhizomatics.org.uk/latest/usage/mobile_actions/index.md)
 - [Notifying](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md)
 - [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
@@ -29,14 +30,13 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md)
 - [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md)
 - [Duplicate Detection](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md)
-- [e-Mail Notifications](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md)
 - [Configuration Levels](https://supernotify.rhizomatics.org.uk/latest/configuration/levels/index.md)
 - [Images, Streaming and Cameras](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/index.md)
 - [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)
 - [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)
 - [Selection Rules](https://supernotify.rhizomatics.org.uk/latest/configuration/selection_rules/index.md)
 - [YAML](https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/index.md)
-- [HTML Email Template](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/html_email_template/index.md)
+- [e-Mail Notifications](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md)
 - [Maximal Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/maximal/index.md)
 - [Minimal Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md)
 
@@ -97,16 +97,6 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 
 ## Reference
 
-- [JSON Schema for Supernotify](https://supernotify.rhizomatics.org.uk/latest/developer/schemas/index.md): JSON Schemas for configuration and the notify action data
-
-## Optional
-
-- [What's New](https://supernotify.rhizomatics.org.uk/latest/changelog/index.md): Release history
-- [Development Design Documents](https://supernotify.rhizomatics.org.uk/latest/developer/design/index.md)
-- [ConfigFlow Implementation Approach](https://supernotify.rhizomatics.org.uk/latest/developer/design/configflow_approach/index.md)
-- [Deliveries and Transports](https://supernotify.rhizomatics.org.uk/latest/developer/design/deliveries_and_transports/index.md)
-- [Packages](https://supernotify.rhizomatics.org.uk/latest/developer/design/packages/index.md)
-- [Principles](https://supernotify.rhizomatics.org.uk/latest/developer/design/principles/index.md)
-- [Roadmap](https://supernotify.rhizomatics.org.uk/latest/developer/design/roadmap/index.md)
+- [JSON Schema for Supernotify](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/index.md): JSON Schemas for configuration and the notify action data
 - [Transport Configuration](https://supernotify.rhizomatics.org.uk/latest/reference/transports/index.md): Table of notification transports and capabilities
 
