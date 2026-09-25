@@ -152,3 +152,5 @@ async def test_enquire_archive_id_not_found(hass: HomeAssistant, tmp_path: pathl
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(DOMAIN, "enquire_archive", {"id": "does-not-exist"}, blocking=True, return_response=True)
     assert exc_info.value.translation_key == "archive_entry_not_found"
+    assert exc_info.value.translation_placeholders == {"notification_id": "does-not-exist"}
+    assert "does-not-exist" in str(exc_info.value)
