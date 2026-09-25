@@ -6,6 +6,11 @@
   - Italian times use the 24 hour clock, so *fino alle 15* works as well as *fino alle 15:30*
 - More flexible time handling for English times, including use of `midnight` or `noon` or short forms like 'until 2' or 'until half past 3'. 12 hour time values will be assumed as am/pm based on the current time.
 
+### People
+- Removed users added without Person entities from all occupancy checks.
+  - They will also not be included for any deliveries sent to `only_in` or `only_out` devices since their presence is undefined, they will be included in the `all_xxx` deliveries
+  - Home Assistant uses `Person` entities to define device ownership and occupancy
+
 ### Fixes
 - `supernotify.enquire_archive` with an unknown `id` now names that id in its error, instead of showing `{notification_id}`
 
