@@ -425,7 +425,7 @@
             },
             "llm_tools": {
                 "title": "Assist and AI agents",
-                "description": "Beta: let Assist use Supernotify. The tools are for conversation agents that use an AI model, and AI agents connected through Home Assistant's MCP server, and only reach the recipients, deliveries and scenarios already configured. The built-in agent, which doesn't use AI, can't use them, but can understand a few English sentences instead.",
+                "description": "Beta: let Assist use Supernotify. The tools are for conversation agents that use an AI model, and AI agents connected through Home Assistant's MCP server, and only reach the recipients, deliveries and scenarios already configured. The built-in agent, which doesn't use AI, can't use them, but can understand a few English and Italian sentences instead.",
                 "data": {
                     "action_tools": "Action tools",
                     "diagnostic_tools": "Diagnostic tools",
@@ -434,7 +434,7 @@
                 "data_description": {
                     "action_tools": "Send notifications, and snooze or silence them",
                     "diagnostic_tools": "Explain recent notifications, dry-run who a notification would reach, list snoozes, and look up the Supernotify documentation online",
-                    "sentence_commands": "English sentences for the built-in agent, such as 'tell Alice that dinner is ready' or 'snooze my notifications for 30 minutes'"
+                    "sentence_commands": "English and Italian sentences for the built-in agent, such as 'tell Alice that dinner is ready' or 'snooze my notifications for 30 minutes'"
                 }
             },
             "delivery_control": {

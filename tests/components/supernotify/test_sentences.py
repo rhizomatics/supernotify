@@ -18,7 +18,7 @@ from homeassistant.util import dt as dt_util
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS
 from custom_components.supernotify.model import GlobalTargetType, RecipientType
-from custom_components.supernotify.sentences import SENTENCES, async_respond
+from custom_components.supernotify.sentences import RESPONSES, SENTENCES, async_respond
 
 if TYPE_CHECKING:
     from freezegun.api import FrozenDateTimeFactory
@@ -276,19 +276,33 @@ async def test_sentences_registered_and_answer(hass: HomeAssistant) -> None:
         _engine, calls = await _setup(hass, sentence_commands=True)
 
     configs: list[dict[str, Any]] = initialize.call_args.args[1]
-    assert {c["id"]: c["command"] for c in configs} == SENTENCES
+    assert {c["id"]: c["command"] for c in configs} == {
+        f"{language}.{command}": sentences
+        for language, commands in SENTENCES.items()
+        for command, sentences in commands.items()
+    }
     assert all(c["platform"] == "conversation" for c in configs)
 
     action = initialize.call_args.args[2]
     result = await action({
         "trigger": {
-            "id": "notify",
+            "id": "en.notify",
             "slots": {"name": "Bob", "message": "the post has come"},
             "user_input": {"context": {"id": "abc", "user_id": JEY_USER_ID}},
         }
     })
     assert result.conversation_response == "Sent to Bob"
     assert calls[0].context.user_id == JEY_USER_ID
+
+    result = await action({
+        "trigger": {
+            "id": "it.notify",
+            "slots": {"name": "Bob", "message": "è arrivata la posta"},
+            "user_input": {"context": {"id": "def", "user_id": JEY_USER_ID}},
+        }
+    })
+    assert result.conversation_response == "Inviata a Bob"
+    assert calls[1].data["message"] == "è arrivata la posta"
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -307,3 +321,132 @@ async def test_sentences_not_registered_when_conversation_unavailable(hass: Home
 
     initialize.assert_not_called()
     assert engine is not None
+
+
+def test_every_language_has_every_command_and_response() -> None:
+    for language, commands in SENTENCES.items():
+        assert commands.keys() == SENTENCES["en"].keys(), language
+        assert all(commands.values()), language
+    assert RESPONSES.keys() == SENTENCES.keys()
+    for language, responses in RESPONSES.items():
+        assert responses.keys() == RESPONSES["en"].keys(), language
+
+
+async def test_italian_notify_named_recipient(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    response = await async_respond(engine, "notify", {"name": "Jey Burrows", "message": "la cena è pronta"}, Context(), "it")
+
+    assert response == "Inviata a Jey Burrows"
+    assert [c.data["message"] for c in calls] == ["la cena è pronta"]
+    assert engine.last_notification is not None
+    assert engine.last_notification._target is not None
+    assert engine.last_notification._target.person_ids == ["person.jey_burrows"]
+
+
+async def test_italian_notify_everyone(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    response = await async_respond(engine, "notify", {"name": "tutti", "message": "esco adesso"}, Context(), "it")
+
+    assert response == "Inviata"
+    assert len(calls) == 1
+    assert engine.last_notification is not None
+    assert engine.last_notification._target is None
+
+
+async def test_italian_notify_unknown_recipient_lists_known(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass)
+
+    response = await async_respond(engine, "notify", {"name": "mallory", "message": "ciao"}, Context(), "it")
+
+    assert response.startswith("Non conosco nessuno che si chiama mallory. Posso avvisare ")
+    assert response.endswith(", oppure tutti")
+    assert calls == []
+
+
+async def test_italian_snooze_silence_resume(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+    asker = Context(user_id=JEY_USER_ID)
+
+    assert "con un numero" in await async_respond(engine, "snooze_minutes", {"minutes": "dieci"}, asker, "it")
+    assert engine.context.snoozer.snoozes == {}
+
+    response = await async_respond(engine, "snooze_minutes", {"minutes": "i prossimi 30"}, asker, "it")
+    assert response.startswith("Ho posticipato le tue notifiche fino alle ")
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.recipient == "person.jey_burrows"
+
+    assert await async_respond(engine, "resume", {}, asker, "it") == "Ho riattivato le tue notifiche"
+    assert engine.context.snoozer.snoozes == {}
+
+    response = await async_respond(engine, "snooze_hour", {}, Context(), "it")
+    assert response.startswith("Ho posticipato tutte le notifiche fino alle ")
+    assert await async_respond(engine, "silence", {}, Context(), "it") == (
+        "Ho silenziato tutte le notifiche finché non le riattivi"
+    )
+    response = await async_respond(engine, "notify", {"name": "tutti", "message": "ciao"}, Context(), "it")
+    assert response == "Mi dispiace, la notifica non è stata inviata"
+
+
+@pytest.mark.parametrize(
+    ("spoken", "expected"),
+    [
+        ("15:30", "2026-09-24 15:30"),
+        ("15.30", "2026-09-24 15:30"),
+        ("15", "2026-09-24 15:00"),
+        ("7", "2026-09-25 07:00"),
+    ],
+)
+async def test_italian_snooze_until_24_hour_clock(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, spoken: str, expected: str
+) -> None:
+    freezer.move_to(dt_util.as_utc(dt.datetime(2026, 9, 24, 10, 0, tzinfo=dt_util.get_default_time_zone())))
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"time": spoken}, Context(), "it")
+
+    assert response == f"Ho posticipato tutte le notifiche fino alle {expected[-5:]}"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.snooze_until is not None
+    assert dt_util.as_local(snooze.snooze_until).strftime("%Y-%m-%d %H:%M") == expected
+
+
+@pytest.mark.parametrize("spoken", ["25", "15:75", "pranzo"])
+async def test_italian_snooze_until_must_be_a_time(hass: HomeAssistant, spoken: str) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"time": spoken}, Context(), "it")
+
+    assert response.startswith("Dimmi un orario come 15 o 15:30")
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_italian_last_notification(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    assert await async_respond(engine, "last", {}, Context(), "it") == (
+        "Non ci sono state notifiche da quando Home Assistant si è avviato"
+    )
+    await engine.async_send_message("lavatrice finita")
+
+    response = await async_respond(engine, "last", {}, Context(), "it")
+
+    assert response.startswith("Alle ")
+    assert response.endswith(": lavatrice finita. Inviata da chat")
+
+
+async def test_unknown_language_answers_in_english(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    assert await async_respond(engine, "resume", {}, Context(), "xx") == "Turned all notifications back on"
+    assert "non conosce" in await async_respond(engine, "dance", {}, Context(), "it")
+
+
+async def test_italian_notify_asks_which_when_first_name_shared(hass: HomeAssistant) -> None:
+    engine, calls = await _setup(hass, extra_people={"person.jey_smith": "Jey Smith"})
+
+    response = await async_respond(engine, "notify", {"name": "Jey", "message": "ciao"}, Context(), "it")
+
+    assert response == "Quale Jey intendi: Jey Burrows o Jey Smith?"
+    assert calls == []
