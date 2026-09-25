@@ -517,7 +517,7 @@
             },
             "llm_tools": {
                 "title": "Assist e agenti IA",
-                "description": "Beta: consente ad Assist di usare Supernotify. Gli strumenti sono per gli agenti di conversazione che usano un modello IA e per gli agenti IA collegati tramite il server MCP di Home Assistant, e raggiungono solo i recipient, le delivery e gli scenario già configurati. L'agente integrato, che non usa l'IA, non può usarli, ma capisce invece alcune frasi in inglese.",
+                "description": "Beta: consente ad Assist di usare Supernotify. Gli strumenti sono per gli agenti di conversazione che usano un modello IA e per gli agenti IA collegati tramite il server MCP di Home Assistant, e raggiungono solo i recipient, le delivery e gli scenario già configurati. L'agente integrato, che non usa l'IA, non può usarli, ma capisce invece alcune frasi in inglese e in italiano.",
                 "data": {
                     "action_tools": "Strumenti di azione",
                     "diagnostic_tools": "Strumenti di diagnostica",
@@ -526,7 +526,7 @@
                 "data_description": {
                     "action_tools": "Inviare notifiche, posticiparle o silenziarle",
                     "diagnostic_tools": "Spiegare le notifiche recenti, simulare chi raggiungerebbe una notifica, elencare i posticipi e consultare online la documentazione di Supernotify",
-                    "sentence_commands": "Frasi in inglese per l'agente integrato, come 'tell Alice that dinner is ready' o 'snooze my notifications for 30 minutes'"
+                    "sentence_commands": "Frasi in inglese e in italiano per l'agente integrato, come 'avvisa Alice che la cena è pronta' o 'posticipa le mie notifiche per 30 minuti'"
                 }
             },
             "delivery_control": {

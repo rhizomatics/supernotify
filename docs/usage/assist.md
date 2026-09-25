@@ -16,7 +16,7 @@ description: Let Home Assistant Assist, and AI agents connected through its MCP 
 # Assist and AI Agents
 
 !!! warning "Early Access"
-    This is an initial implementation, limited to English. Feedback and help with other languages is very welcome on
+    This is an initial implementation. The built-in agent sentences are in English and Italian. Feedback and help with other languages is very welcome on
     [GitHub issues](https://github.com/rhizomatics/supernotify/issues), especially on how well your
     conversation agent picks the right tool and fills it in.
 
@@ -38,7 +38,7 @@ Nothing is offered until you switch it on. In **Settings** > **Devices & service
 |--------------------------|---------------------------------------------------------------------------|
 | Action tools             | Send notifications, and snooze or silence them                            |
 | Diagnostic tools         | Recent notifications, dry runs, current snoozes, and documentation lookup |
-| Built-in agent sentences | A few English [sentences](#built-in-agent-sentences) for the agent without AI |
+| Built-in agent sentences | A few English and Italian [sentences](#built-in-agent-sentences) for the agent without AI |
 
 !!! note "Needs an AI conversation agent"
     The tools are only used by a conversation agent that runs an AI model, such as OpenAI, Anthropic,
@@ -140,8 +140,31 @@ if two do, the agent asks which one you mean.
 Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to
 a recipient, otherwise for everyone.
 
-The sentences are English only for now - if you'd like them in your language, please suggest
-wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues).
+### Italian
+
+The same commands can be given in Italian, whatever the language of the assistant, and the answer
+comes back in Italian:
+
+| Say                                                           | Does                                          |
+|---------------------------------------------------------------|-----------------------------------------------|
+| "Avvisa *Alice* che *la cena è pronta*"                       | Notifies a recipient, by name or alias        |
+| "Manda un messaggio a *tutti* che dice *esco adesso*"         | Notifies everyone, as an automation would     |
+| "Posticipa le mie notifiche per *30* minuti"                  | Snoozes everything                            |
+| "Metti in pausa tutte le notifiche per un'ora"                | Snoozes everything for an hour                |
+| "Posticipa le notifiche fino alle *15:30*"                    | Snoozes everything until then, today or tomorrow |
+| "Silenzia le notifiche"                                       | Silences everything until turned back on      |
+| "Riattiva le mie notifiche"                                   | Undoes the snooze or silence                  |
+| "Qual è stata l'ultima notifica"                              | Says what it was, and what sent it            |
+
+Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and
+"scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for
+snoozing.
+
+### Other Languages
+
+The sentences are in English and Italian for now - if you'd like them in your language, please
+suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/issues). They live in
+`SENTENCES` and `RESPONSES` in `sentences.py`, one entry per language.
 
 This functionality is also available to scripts and automations from the `conversation.process` action.
 

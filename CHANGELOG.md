@@ -1,3 +1,10 @@
+## v2.10.1
+
+### Home Assistant Assist
+- Built-in (non-AI) agent sentences in Italian as well as English, contributed by @lollox80
+  - The answer comes back in the language of the sentence that matched, whatever the language of the assistant
+  - Italian times use the 24 hour clock, so *fino alle 15* works as well as *fino alle 15:30*
+
 ## v2.10.0 - Assist Assist
 
 This release introduces text and voice chat support using Home Assistant Conversation integration and Voice Assistants. Both AI and non-AI chats are supported. The Action UI is further improved with pickers for delivery and scenario.
