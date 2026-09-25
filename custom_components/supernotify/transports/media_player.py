@@ -85,17 +85,28 @@ class MediaPlayerTransport(Transport):
 
         data: dict[str, Any] = envelope.data or {}
         media_players: list[str] = envelope.target.entity_ids or []
-        media_type: str = data.get("media_content_type", "image")
         if not media_players:
             _LOGGER.debug("SUPERNOTIFY Skipping media show, no targets")
             return False
 
-        snapshot_url = await self._resolve_snapshot_url(envelope, data)
-        if snapshot_url is None:
-            _LOGGER.debug("SUPERNOTIFY Skipping media player, no snapshot url")
+        content_id: str | None
+        media_type: str
+        explicit_content_id: str | None = data.get("media_content_id")
+        if explicit_content_id:
+            # Generic content (audio clip, video, stream, media-source:// id) - passed through
+            # as-is, apart from relative URLs like /local/sounds/bell.mp3 which are absolutised
+            # so remote players (Cast, Sonos etc) can fetch them. Defaults to `music` since
+            # that is what most media players expect for an audio file.
+            content_id = urllib.parse.urljoin(self.hass_api.external_url, explicit_content_id)
+            media_type = data.get("media_content_type", "music")
+        else:
+            content_id = await self._resolve_snapshot_url(envelope, data)
+            media_type = data.get("media_content_type", "image")
+        if content_id is None:
+            _LOGGER.debug("SUPERNOTIFY Skipping media player, no media_content_id or snapshot url")
             return False
 
-        action_data: dict[str, Any] = {"media": {"media_content_id": snapshot_url, "media_content_type": media_type}}
+        action_data: dict[str, Any] = {"media": {"media_content_id": content_id, "media_content_type": media_type}}
         if data and data.get("announce"):
             action_data["announce"] = data.get("announce")
         if data and data.get("enqueue"):

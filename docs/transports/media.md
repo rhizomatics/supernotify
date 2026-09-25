@@ -17,7 +17,7 @@ no `media` delivery is defined, a `media` delivery is generated automatically â€
 `media_player` targets vary too much between devices to safely assume a default, it only fires
 when selected explicitly (`data: {data: {delivery: [media]}}` or a scenario), not by default.
 
-Show an image or other content on a media player, e.g. for an example an Amazon Echo Show device.
+Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
 Pass the content link in using the `snapshot_url` value in the notification `data` section. Message and title fields will be ignored. Override the `image` value by also setting `media_content_type` in `data`.
 
@@ -45,7 +45,32 @@ data:
   entity_id: media_player.kitchen_alexa
 ```
 
-If you want to send a sound to the media player, try the much more functional [Chime Transport Adaptor](chime.md).
+## Playing audio or other content
+
+Set `media_content_id` in the delivery `data` to play anything the media player accepts, rather than an image - for example an mp3 alert sound on a Google Cast or Sonos speaker, a video clip or a `media-source://` item.
+
+- A relative URL like `/local/sounds/alarm.mp3` (a file in `config/www/sounds`) is made absolute using the Home Assistant external URL, so that the speaker can fetch it
+- Absolute URLs and `media-source://` ids are passed through unchanged
+- `media_content_type` defaults to `music` when `media_content_id` is given, override it if the player needs something else, e.g. `audio/mpeg`
+- `media_content_id` takes priority over any `snapshot_url` or camera image, and no image is grabbed
+- `announce` and `enqueue` are passed through as for images
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: ""
+    delivery:
+      media:
+        target:
+            - media_player.kitchen_speaker
+        data:
+            media_content_id: /local/sounds/alarm.mp3
+            announce: true
+```
+
+The speaker has to be able to reach the URL, so it must be on the local network or publicly available, and some devices, like Google Cast, reject self-signed certificates.
+
+Amazon Echo devices can't play arbitrary audio files this way. For those, use the built-in sounds via the [Chime Transport Adaptor](chime.md), which is also the better fit for short tunes mapped to named aliases across different kinds of device.
 
 ## Alexa Media Player
 

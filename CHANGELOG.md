@@ -1,3 +1,10 @@
+## Unreleased
+
+### Media Player Transport
+- Can now play audio files, like an mp3 alert, or any other media, as well as showing images, contributed by @lollox80
+  - Set `media_content_id` in the delivery `data`, relative URLs such as `/local/sounds/alarm.mp3` are made absolute with the external URL
+  - `media_content_type` defaults to `music` for this, and can be overridden as before
+
 ## v2.10.1
 
 ### Home Assistant Assist
