@@ -41,8 +41,9 @@ Data keys (all optional):
                                 external URL. Amazon fetches the file from its own
                                 cloud, so it must be public https with a valid
                                 certificate, MP3 at 48kbps and 16000/22050/24000 Hz.
-                                Switches the default `type` to `tts`, and the message,
-                                if any, is spoken after the audio as plain text.
+                                Forces `type` to `tts` (Alexa is silent for SSML audio
+                                in announce mode), and the message, if any, is spoken
+                                after the audio as plain text.
     audio_duration  float s     length of the audio_url clip, added to the TTS wait
                                 so volume restore/music resume don't cut it short.
                                 Default 0 (the 5s base wait covers short chimes).
@@ -407,7 +408,12 @@ class AlexaMediaPlayerTransport(Transport):
         needs_post_announce = needs_restore and bool(states)
 
         # Announce
-        call_type: str = raw_data.pop("type", "tts" if audio_url else "announce")
+        call_type: str = raw_data.pop("type", "announce")
+        if audio_url and call_type != "tts":
+            # Alexa stays silent for SSML <audio> in announce mode (checked on a real Echo),
+            # so a delivery-level `type: announce` default must not win here
+            _LOGGER.debug("SUPERNOTIFY alexa_media_player: audio_url forces type tts, was %s", call_type)
+            call_type = "tts"
         action_data: dict[str, Any] = {
             "message": message,
             ATTR_DATA: {"type": call_type},

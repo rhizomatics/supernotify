@@ -677,12 +677,13 @@ class TestAudioUrl:
             '<speak><audio src="https://cdn.example.com/bell.mp3?a=1&amp;b=2"/>Tom &amp; Jerry &lt;at the door&gt;</speak>'
         )
 
-    async def test_explicit_type_kept(self):
+    async def test_announce_type_forced_to_tts(self):
+        """A delivery default of type: announce would leave the Echo silent for SSML audio."""
         t = self._transport()
         envelope = _make_envelope("", data={"audio_url": "/local/bell.mp3", "type": "announce", "pause_music": False})
         with patch(self.SLEEP, new_callable=AsyncMock):
             await t.deliver(envelope)
-        assert t.call_action.call_args.kwargs["action_data"]["data"] == {"type": "announce"}
+        assert t.call_action.call_args.kwargs["action_data"]["data"] == {"type": "tts"}
 
     async def test_no_audio_url_unchanged(self):
         t = self._transport()
