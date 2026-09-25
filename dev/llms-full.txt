@@ -428,7 +428,21 @@ Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrati
 | "Turn my notifications back on"                     | Undoes the snooze or silence                     |
 | "What was the last notification"                    | Says what it was, and what sent it               |
 
-Times can be 24 hour like *15:30*, or with am or pm like *3:30pm* or *3pm*. "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+"Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+
+### Times
+
+A snooze lasts until the next time the clock shows the time asked for, today or tomorrow. Only these forms of time are understood:
+
+| Form                     | Examples                          | Means                                               |
+| ------------------------ | --------------------------------- | --------------------------------------------------- |
+| am or pm                 | *3pm*, *3:30 pm*, *12 a.m.*       | Exactly that                                        |
+| 24 hour                  | *15:30*, *15.30*, *1530*, *03:30* | Exactly that - a leading zero is always the morning |
+| 12 hour without am or pm | *3*, *3:30*, *330*                | Morning or afternoon, whichever comes next          |
+| Half past                | *half past three*, *half past 3*  | Morning or afternoon, whichever comes next          |
+| Named                    | *noon*, *midnight*                | 12:00 or 00:00                                      |
+
+The reply says am or pm, so if the guess at morning or afternoon was wrong, ask again with am or pm. Anything else, like *quarter to four*, *half three* (which means 2:30 in some places) or *teatime*, isn't understood, and the agent asks for a time like *15:30* or *3:30pm* instead.
 
 ### Italian
 
@@ -1932,7 +1946,7 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 
 A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices and HTML5, and `explicit` for the rest. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
 
-The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Recipients without a Person are never in or out, so `only_in` and `only_out` always leave them out - see [Users without Person entries](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#users-without-person-entries). Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
 
 Info
 
@@ -2316,6 +2330,10 @@ If you want to do the device registration manually, see [Manual Device Registrat
 Home Assistant optionally supports *Person* entries, useful for device tracking, but these are not mandatory.
 
 From version `2.9.0`, Supernotify will also discover users and mobile app devices that only have user accounts, and generate recipients for them if auto discovery is on. Its still better to have Person records, to take advantage of occupancy and location tracking across multiple devices, plus `person` entities can be selected from the [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector).
+
+Occupancy only counts People
+
+Home Assistant uses the *Person* to say who is home or away, and Supernotify follows that. A recipient without a Person, such as the account a wall tablet logs in with, still gets notified, but never counts towards occupancy - it isn't home or away, so it can't make `ALL_AWAY` false, or make someone `LONE_HOME`. Being neither *in* nor *out*, it's always left out of `only_in` and `only_out` deliveries, which pick recipients by where they are. Deliveries whose occupancy is about everyone, like `all`, `any_in` or `all_out`, still include it whenever the People's occupancy lets them through.
 
 ### Disabling Auto Discovered Devices
 

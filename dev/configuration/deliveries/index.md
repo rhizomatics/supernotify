@@ -144,7 +144,7 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 
 A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices and HTML5, and `explicit` for the rest. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
 
-The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Recipients without a Person are never in or out, so `only_in` and `only_out` always leave them out - see [Users without Person entries](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#users-without-person-entries). Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
 
 Info
 

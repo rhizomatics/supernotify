@@ -55,8 +55,8 @@
         </aside>
         <h2>
             <span class="text">354 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">347<span class="text"> run</span></button>
-            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">7<span class="text"> missing</span></button>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">348<span class="text"> run</span></button>
+            <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">6<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">3<span class="text"> excluded</span></button>
         </h2>
         <p class="text">
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_notification_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-25 13:27 +0000
+            created at 2026-09-25 14:23 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -485,7 +485,7 @@
     <p class="run"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">        <span class="key">if</span> <span class="key">not</span> <span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_NOT_HOME</span><span class="op">)</span> <span class="key">and</span> <span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_HOME</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">occupancy</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">&quot;ALL_HOME&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t405" href="#t405">405</a></span><span class="t">        <span class="key">elif</span> <span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_NOT_HOME</span><span class="op">)</span> <span class="key">and</span> <span class="key">not</span> <span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_HOME</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">occupancy</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">&quot;ALL_AWAY&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t406" href="#t406">406</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">occupancy</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="str">&quot;ALL_AWAY&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t407" href="#t407">407</a></span><span class="t">        <span class="key">if</span> <span class="nam">len</span><span class="op">(</span><span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_HOME</span><span class="op">,</span> <span class="op">[</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">==</span> <span class="num">1</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t408" href="#t408">408</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">occupancy</span><span class="op">.</span><span class="nam">extend</span><span class="op">(</span><span class="op">[</span><span class="str">&quot;LONE_HOME&quot;</span><span class="op">,</span> <span class="str">&quot;SOME_HOME&quot;</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t">        <span class="key">elif</span> <span class="nam">len</span><span class="op">(</span><span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_HOME</span><span class="op">,</span> <span class="op">[</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="num">1</span> <span class="key">and</span> <span class="nam">occupiers</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">STATE_NOT_HOME</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -690,7 +690,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_notification_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-25 13:27 +0000
+            created at 2026-09-25 14:23 +0000
         </p>
     </div>
 </footer>
