@@ -184,6 +184,35 @@ suggest wording on [GitHub issues](https://github.com/rhizomatics/supernotify/is
 
 This functionality is also available to scripts and automations from the `conversation.process` action.
 
+## FAQ
+
+### Can I ask Alexa about notifications?
+
+Not directly. Home Assistant's Alexa integrations let Alexa control devices, or let Home Assistant
+speak through an Echo, but neither passes what you say to Assist. There are two ways round it:
+
+- **A custom Alexa skill that hands speech to Assist**, such as
+  [HomeAssistantAssist](https://github.com/fabianosan/HomeAssistantAssist). Everything said after the
+  skill's name goes to Home Assistant's conversation API, so all the sentences above work, and Alexa
+  reads back the answer - "Alexa, ask smart home to snooze my notifications until 3". It needs an Alexa
+  developer account, and Home Assistant reachable from outside, for example with Nabu Casa. The skill
+  calls Home Assistant with one long-lived token, so "my notifications" means that token's user - snoozes
+  are for everyone unless that user is also a recipient.
+- **An Alexa Routine that runs a script**. Make a script for each fixed command, which passes one of the
+  sentences above to the `conversation.process` action, and expose it to Alexa, where it shows up as a
+  scene a Routine can run. There's no skill to build, but only fixed phrases work - no times, names or
+  messages - and Alexa just says "OK" rather than Supernotify's answer. The snooze is for everyone, since
+  the script isn't run as anyone who is a recipient.
+
+```yaml title="Script for an Alexa Routine"
+alias: Snooze notifications for an hour
+sequence:
+  - action: conversation.process
+    data:
+      agent_id: conversation.home_assistant
+      text: Snooze notifications for an hour
+```
+
 ## Further Reading
 
 - [AI Agents for the Smart Home](https://www.home-assistant.io/blog/2024/06/07/ai-agents-for-the-smart-home/) - 2024 vision paper from Home Assistant team
