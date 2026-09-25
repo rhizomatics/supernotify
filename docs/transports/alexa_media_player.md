@@ -109,7 +109,7 @@ Echo devices can't play an arbitrary mp3 via `media_player.play_media`, but Alex
 
 - The clip plays first, then the message is spoken. Set `message: ""` in the delivery `data` for the sound only
 - A relative URL is made absolute with the Home Assistant external URL
-- `type` defaults to `tts` when `audio_url` is set, as `announce` is less reliable with SSML audio. It can still be overridden
+- `type` is always `tts` when `audio_url` is set, overriding any `type: announce` in the delivery config, since Alexa plays nothing for SSML audio in announce mode
 - The message is treated as plain text and escaped, so don't combine `audio_url` with your own SSML in the message
 - For clips longer than a few seconds, set `audio_duration` (seconds) so that volume restore and music resume wait for the clip to finish
 
