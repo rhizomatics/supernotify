@@ -291,6 +291,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="archive_entry_not_found",
+                    translation_placeholders={"notification_id": notification_id},
                 )
             return entry
         limit: int = int(call.data.get("limit", 20))
