@@ -641,3 +641,74 @@ class TestDeliver:
         levels = [c.kwargs["service_data"]["volume_level"] for c in vol_calls]
         assert pytest.approx(0.9) in levels
         assert pytest.approx(0.5) in levels
+
+
+class TestAudioUrl:
+    """audio_url wraps a clip in an SSML <audio> tag, since Alexa can't play_media arbitrary files."""
+
+    SLEEP = "custom_components.supernotify.transports.alexa_media_player.asyncio.sleep"
+
+    def _transport(self, external_url: str = "https://example.ui.nabu.casa"):
+        t = _make_transport({"media_player.ufficio": {"state": "idle", "volume_level": 0.1}})
+        t.hass_api.external_url = external_url
+        return t
+
+    async def test_relative_url_absolutised_type_tts_audio_only(self):
+        t = self._transport()
+        envelope = _make_envelope("", data={"audio_url": "/local/sounds/campanello.mp3", "pause_music": False})
+        with patch(self.SLEEP, new_callable=AsyncMock):
+            assert await t.deliver(envelope) is True
+        action_data = t.call_action.call_args.kwargs["action_data"]
+        assert action_data["message"] == (
+            '<speak><audio src="https://example.ui.nabu.casa/local/sounds/campanello.mp3"/></speak>'
+        )
+        assert action_data["data"] == {"type": "tts"}
+        assert action_data["target"] == ["media_player.ufficio"]
+
+    async def test_message_spoken_after_audio_and_escaped(self):
+        t = self._transport()
+        envelope = _make_envelope(
+            "Tom & Jerry <at the door>",
+            data={"audio_url": "https://cdn.example.com/bell.mp3?a=1&b=2", "pause_music": False},
+        )
+        with patch(self.SLEEP, new_callable=AsyncMock):
+            await t.deliver(envelope)
+        assert t.call_action.call_args.kwargs["action_data"]["message"] == (
+            '<speak><audio src="https://cdn.example.com/bell.mp3?a=1&amp;b=2"/>Tom &amp; Jerry &lt;at the door&gt;</speak>'
+        )
+
+    async def test_announce_type_forced_to_tts(self):
+        """A delivery default of type: announce would leave the Echo silent for SSML audio."""
+        t = self._transport()
+        envelope = _make_envelope("", data={"audio_url": "/local/bell.mp3", "type": "announce", "pause_music": False})
+        with patch(self.SLEEP, new_callable=AsyncMock):
+            await t.deliver(envelope)
+        assert t.call_action.call_args.kwargs["action_data"]["data"] == {"type": "tts"}
+
+    async def test_no_audio_url_unchanged(self):
+        t = self._transport()
+        envelope = _make_envelope("Ciao", data={"pause_music": False})
+        await t.deliver(envelope)
+        action_data = t.call_action.call_args.kwargs["action_data"]
+        assert action_data["message"] == "Ciao"
+        assert action_data["data"] == {"type": "announce"}
+
+    async def test_audio_duration_extends_wait_before_restore(self):
+        t = self._transport()
+        envelope = _make_envelope(
+            "", data={"audio_url": "/local/sounds/long.mp3", "audio_duration": 12, "volume": 0.5, "pause_music": False}
+        )
+        with patch(self.SLEEP, new_callable=AsyncMock) as mock_sleep:
+            await t.deliver(envelope)
+        waits = [c.args[0] for c in mock_sleep.call_args_list]
+        assert any(w == pytest.approx(_BASE_DURATION + 12) for w in waits)
+        # volume restored after the wait
+        assert _service_names(t).count("volume_set") == 2
+
+    async def test_http_url_warns(self, caplog: pytest.LogCaptureFixture):
+        t = self._transport(external_url="http://192.168.0.10:8123")
+        envelope = _make_envelope("", data={"audio_url": "/local/bell.mp3", "pause_music": False})
+        with patch(self.SLEEP, new_callable=AsyncMock):
+            await t.deliver(envelope)
+        assert "not https" in caplog.text
+        assert 'src="http://192.168.0.10:8123/local/bell.mp3"' in t.call_action.call_args.kwargs["action_data"]["message"]
