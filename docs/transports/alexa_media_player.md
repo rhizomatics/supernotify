@@ -59,6 +59,8 @@ All of `data` keys below are optional:
 | `pause_music` | bool | `true` | Pause (rather than stop) music if playing. |
 | `volume_fallback` | float 0-1 | `0.5` | Used when a device's current volume can't be read. |
 | `wait_for_tts` | bool | `false` | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
+| `audio_url` | str | - | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file). |
+| `audio_duration` | float s | `0` | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music. |
 | `tts_char_speed` | float s/ch | `0.06` | Seconds per character for the TTS duration estimate; calibrate per language (see below). |
 
 ### Reducing cloud API calls and Notification delay
@@ -89,6 +91,38 @@ If this only applies to some Alexa devices, then make two `Delivery` definitions
 | Russian / Polish | 0.062 |
 | Japanese / Chinese / Korean | 0.180 |
 | Arabic | 0.075 |
+
+## Playing an audio file
+
+Echo devices can't play an arbitrary mp3 via `media_player.play_media`, but Alexa will play one inside an SSML `<audio>` tag. Set `audio_url` in the delivery `data` and the transport builds the SSML for you:
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Someone at the front door"
+    delivery:
+      alexa_media_player:
+        data:
+          audio_url: /local/sounds/doorbell.mp3
+          volume: 0.4
+```
+
+- The clip plays first, then the message is spoken. Set `message: ""` in the delivery `data` for the sound only
+- A relative URL is made absolute with the Home Assistant external URL
+- `type` is always `tts` when `audio_url` is set, overriding any `type: announce` in the delivery config, since Alexa plays nothing for SSML audio in announce mode
+- The message is treated as plain text and escaped, so don't combine `audio_url` with your own SSML in the message
+- For clips longer than a few seconds, set `audio_duration` (seconds) so that volume restore and music resume wait for the clip to finish
+
+Amazon's servers, not the Echo, fetch the file, so it has strict requirements:
+
+- Public `https` URL with a valid, trusted certificate, e.g. via Nabu Casa or a Let's Encrypt domain. A LAN address or a self-signed certificate won't play
+- MP3, 48 kbps, sample rate 16000, 22050 or 24000 Hz, at most 240 seconds
+
+Convert an existing file with:
+
+```bash
+ffmpeg -i original.mp3 -ac 2 -codec:a libmp3lame -b:a 48k -ar 24000 doorbell.mp3
+```
 
 ## References
 
