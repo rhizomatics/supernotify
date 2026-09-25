@@ -1,6 +1,6 @@
 ## v2.10.0 - Assist Assist
 
-If an option or menu entry shows without a label after upgrading, the browser is showing its cached copy of the old text - hard-refresh the page, or in the companion app use *Settings* > *Companion app* > *Debugging* > *Reset frontend cache*.
+This release introduces text and voice chat support using Home Assistant Conversation integration and Voice Assistants. Both AI and non-AI chats are supported. The Action UI is further improved with pickers for delivery and scenario.
 
 ### Action UI
 - Scenarios and deliveries now get populated for easy picking
@@ -54,6 +54,9 @@ If an option or menu entry shows without a label after upgrading, the browser is
 - Occupancy value in transport `delivery_defaults` now correctly respected when building deliveries
 - Fix the web links for 'Learn More' links in Home Assistant
 
+### Note
+
+If an option or menu entry shows without a label after upgrading, the browser is showing its cached copy of the old text - hard-refresh the page, or in the companion app use *Settings* > *Companion app* > *Debugging* > *Reset frontend cache*.
 
 
 ## v2.9.1 - Snooze Fix
