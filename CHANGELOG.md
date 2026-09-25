@@ -1,5 +1,9 @@
 ## Unreleased
 
+### Media Player Transport
+- Can now play audio files, like an mp3 alert, or any other media, as well as showing images, contributed by @lollox80
+  - Set `media_content_id` in the delivery `data`, relative URLs such as `/local/sounds/alarm.mp3` are made absolute with the external URL
+  - `media_content_type` defaults to `music` for this, and can be overridden as before
 ### Alexa Media Player Transport
 - Play an audio file, like an mp3 doorbell chime, on Echo devices with the new `audio_url` data key, contributed by @lollox80
   - Wrapped in an SSML `<audio>` tag, followed by the message if there is one, always sent with call type `tts` as Alexa is silent for SSML audio in `announce` mode

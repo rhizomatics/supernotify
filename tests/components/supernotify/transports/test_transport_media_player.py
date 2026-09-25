@@ -202,3 +202,67 @@ async def test_notify_media_image_with_announce_and_enqueue() -> None:
         context=None,
         return_response=False,
     )
+
+
+async def _deliver_with_data(delivery_data: dict, target: list[str] | None = None) -> tuple[TestingContext, bool]:
+    context = TestingContext(
+        deliveries={"speaker": {CONF_TRANSPORT: TRANSPORT_MEDIA}},
+        hass_external_url="https://myserver",
+    )
+    uut = MediaPlayerTransport(context)
+    await context.test_initialize(transport_instances=[uut])
+    await uut.initialize()
+    envelope = Envelope(
+        Delivery("speaker", context.delivery_config("speaker"), uut),
+        Notification(context, "hello there", action_data={ATTR_DELIVERY: {"speaker": {CONF_DATA: delivery_data}}}),
+        target=Target(target or ["media_player.kitchen_cast"]),
+    )
+    with patch.object(envelope, "grab_image", AsyncMock()) as grab_image_mock:
+        result = await uut.deliver(envelope)
+    grab_image_mock.assert_not_awaited()
+    return context, result
+
+
+async def test_notify_media_generic_audio_relative_url_defaults_to_music() -> None:
+    """A media_content_id plays arbitrary content (e.g. an mp3), relative URLs absolutised,
+    content type defaulting to `music`, and no image grab attempted."""
+    context, result = await _deliver_with_data({"media_content_id": "/local/sounds/bell.mp3", "announce": True})
+    assert result is True
+    context.hass.services.async_call.assert_called_with(  # type: ignore
+        "media_player",
+        "play_media",
+        service_data={
+            "media": {"media_content_id": "https://myserver/local/sounds/bell.mp3", "media_content_type": "music"},
+            "announce": True,
+        },
+        target={"entity_id": ["media_player.kitchen_cast"]},
+        blocking=False,
+        context=None,
+        return_response=False,
+    )
+
+
+async def test_notify_media_generic_content_passthrough_with_type_override() -> None:
+    """Absolute URLs and media-source ids are passed through untouched, type can be overridden."""
+    for content_id in ("http://192.168.1.10:8123/local/alarm.mp3", "media-source://media_source/local/alarm.mp3"):
+        context, result = await _deliver_with_data({"media_content_id": content_id, "media_content_type": "audio/mpeg"})
+        assert result is True
+        context.hass.services.async_call.assert_called_with(  # type: ignore
+            "media_player",
+            "play_media",
+            service_data={"media": {"media_content_id": content_id, "media_content_type": "audio/mpeg"}},
+            target={"entity_id": ["media_player.kitchen_cast"]},
+            blocking=False,
+            context=None,
+            return_response=False,
+        )
+
+
+async def test_notify_media_generic_content_takes_priority_over_snapshot() -> None:
+    context, result = await _deliver_with_data({
+        "media_content_id": "/local/sounds/bell.mp3",
+        ATTR_MEDIA: {ATTR_MEDIA_SNAPSHOT_URL: "/ftp/pic.jpeg"},
+    })
+    assert result is True
+    call = context.hass.services.async_call.call_args  # type: ignore
+    assert call.kwargs["service_data"]["media"]["media_content_id"] == "https://myserver/local/sounds/bell.mp3"
