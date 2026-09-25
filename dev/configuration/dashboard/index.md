@@ -136,9 +136,9 @@ views:
         cards:
           - type: markdown
             content: >-
-              Requires a sensor to be set up first to index the archived
-              notifications, see [Supernotify Archive
-              Card](https://github.com/lollox80/supernotify-cards/blob/main/README.md#supernotify-archive-card)
+              Archiving must be switched on to disk for this to work. See the
+              [Supernotify Integration
+              settings](/config/integrations/integration/supernotify)
           - type: custom:supernotify-archive-card
             entity: sensor.supernotify_archivio
     icon: mdi:cog-stop-outline
