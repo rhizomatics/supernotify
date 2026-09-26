@@ -309,9 +309,14 @@ class HomeAssistantAPI:
     def save_storage(self, key: str, data: Any, version: int = 1) -> None:  # ruff: ignore[any-type]
         """Persist integration state to Home Assistant's .storage/ area, via HA's own Store
         helper. Fire-and-forget: the write happens in a tracked background task rather than
-        blocking the caller, since this is called from both sync and async contexts."""
+        blocking the caller, since this is called from both sync and async contexts.
+        Sync callers include actions without @callback (e.g. clear_snoozes), which Home Assistant
+        runs in its executor, so off the event loop the thread-safe hass.create_task is used."""
         store: Store[Any] = Store(self._hass, version, key)
-        self._hass.async_create_task(store.async_save(data), f"supernotify_save_{key}")
+        if self.in_hass_loop():
+            self._hass.async_create_task(store.async_save(data), f"supernotify_save_{key}")
+        else:
+            self._hass.create_task(store.async_save(data), f"supernotify_save_{key}")
 
     def create_job(self, func: Callable, *args: Any) -> asyncio.Future[Any]:
         """Wrap a blocking function call in a HomeAssistant awaitable job"""
