@@ -84,7 +84,7 @@ description: Home Assistant के लिए Supernotify की मुख्य 
    - Supernotify का अपना ई-मेल इंटीग्रेशन है, जो प्राथमिकता को ऐसे रूप में बदलता है जिसे Outlook, Apple Mail आदि समझ सकें
 
 !!! info
-    तकनीकी रुचि रखने वालों के लिए, इन अवधारणाओं से जुड़ी मुख्य classes का एक [Class Diagram](../developer/class_diagram.md) उपलब्ध है।
+    तकनीकी रुचि रखने वालों के लिए, इन अवधारणाओं से जुड़ी मुख्य classes का एक [Class Diagram](../developer/diagrams/class_diagram.md) उपलब्ध है।
 
 # मुख्य सिद्धांत { #core-principles }
 

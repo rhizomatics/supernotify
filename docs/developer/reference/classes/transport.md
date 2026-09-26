@@ -8,7 +8,7 @@ description: Core class descriptions for the core classes of Supernotify for Hom
 
 !!! info
 
-    See the [Class Diagram](../../class_diagram.md) for how these relate to each other.
+    See the [Class Diagram](../../diagrams/class_diagram.md) for how these relate to each other.
 
 ::: custom_components.supernotify.transport.Transport
     handler: python

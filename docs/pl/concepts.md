@@ -84,7 +84,7 @@ do sposobu, w jaki jest wysyłane.
    - Supernotify ma własną integrację e-mail, która przekłada priorytet na format zrozumiały dla Outlooka, Apple Mail itp.
 
 !!! info
-    Dla zainteresowanych technicznie jest [Diagram klas](../developer/class_diagram.md) klas podstawowych odpowiadających tym koncepcjom.
+    Dla zainteresowanych technicznie jest [Diagram klas](../developer/diagrams/class_diagram.md) klas podstawowych odpowiadających tym koncepcjom.
 
 # Podstawowe zasady { #core-principles }
 

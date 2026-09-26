@@ -84,7 +84,7 @@ Uma única notificação de uma automação pode se transformar em várias notif
    - O Supernotify tem sua própria integração de e-mail, que traduz a prioridade para um formato que o Outlook, o Apple Mail etc. entendem
 
 !!! info
-    Para os mais técnicos, há um [Diagrama de classes](../developer/class_diagram.md) das classes principais correspondentes a esses conceitos.
+    Para os mais técnicos, há um [Diagrama de classes](../developer/diagrams/class_diagram.md) das classes principais correspondentes a esses conceitos.
 
 # Princípios fundamentais { #core-principles }
 

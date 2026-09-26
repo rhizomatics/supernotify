@@ -84,7 +84,7 @@ de manier waarop ze wordt verstuurd.
    - Supernotify heeft een eigen e-mailintegratie, die prioriteit vertaalt naar iets wat Outlook, Apple Mail enz. begrijpen
 
 !!! info
-    Voor de technisch geïnteresseerden is er een [Klassendiagram](../developer/class_diagram.md) van de kernklassen bij deze concepten.
+    Voor de technisch geïnteresseerden is er een [Klassendiagram](../developer/diagrams/class_diagram.md) van de kernklassen bij deze concepten.
 
 # Kernprincipes { #core-principles }
 

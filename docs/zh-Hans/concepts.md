@@ -83,7 +83,7 @@ description: Home Assistant 的 Supernotify 核心概念，包括 Transport、De
    - Supernotify 有自己的电子邮件集成，会把优先级转换为 Outlook、Apple Mail 等能理解的形式
 
 !!! info
-    对技术细节感兴趣的读者，可以查看与这些概念对应的核心类的[类图](../developer/class_diagram.md)。
+    对技术细节感兴趣的读者，可以查看与这些概念对应的核心类的[类图](../developer/diagrams/class_diagram.md)。
 
 # 核心原则 { #core-principles }
 

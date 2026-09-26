@@ -84,7 +84,7 @@ a la forma en que se envía.
    - Supernotify tiene su propia integración de correo, que traduce la prioridad a un formato que entienden Outlook, Apple Mail, etc.
 
 !!! info
-    Para los más técnicos, hay un [Diagrama de clases](../developer/class_diagram.md) de las clases principales correspondientes a estos conceptos.
+    Para los más técnicos, hay un [Diagrama de clases](../developer/diagrams/class_diagram.md) de las clases principales correspondientes a estos conceptos.
 
 # Principios fundamentales { #core-principles }
 

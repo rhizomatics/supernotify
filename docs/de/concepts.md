@@ -84,7 +84,7 @@ jede passend zu dem Weg, auf dem sie verschickt wird.
    - Supernotify hat eine eigene E-Mail-Integration, die die Priorität so übersetzt, dass Outlook, Apple Mail usw. sie verstehen
 
 !!! info
-    Für technisch Interessierte gibt es ein [Klassendiagramm](../developer/class_diagram.md) der Kernklassen zu diesen Konzepten.
+    Für technisch Interessierte gibt es ein [Klassendiagramm](../developer/diagrams/class_diagram.md) der Kernklassen zu diesen Konzepten.
 
 # Grundprinzipien { #core-principles }
 

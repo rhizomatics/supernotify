@@ -14,7 +14,11 @@ SITE_DIR = Path(__file__).parent.parent / "site"
 
 
 def preprocess(soup: BeautifulSoup, output: str) -> None:
-    page = Path(output).resolve().relative_to(SITE_DIR.resolve()).as_posix()
+    output_path = Path(output).resolve()
+    if not output_path.is_relative_to(SITE_DIR.resolve()):
+        # properdocs serve builds into a temp dir, and its llms-full.txt is never published
+        return
+    page = output_path.relative_to(SITE_DIR.resolve()).as_posix()
     url = BASE_URL + page.removesuffix("index.md")
     source = soup.new_tag("p")
     source.string = f"Source: {url}"

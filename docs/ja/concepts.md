@@ -83,7 +83,7 @@ description: Home Assistant用Supernotifyのコアコンセプト（Transport、
    - Supernotifyには独自のメールインテグレーションがあり、優先度をOutlookやApple Mailなどが理解できる形に変換します
 
 !!! info
-    技術的な詳細に興味がある方向けに、これらのコンセプトに対応するコアクラスの[クラス図](../developer/class_diagram.md)があります。
+    技術的な詳細に興味がある方向けに、これらのコンセプトに対応するコアクラスの[クラス図](../developer/diagrams/class_diagram.md)があります。
 
 # 基本原則 { #core-principles }
 

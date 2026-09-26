@@ -84,7 +84,7 @@ way it's sent.
    - Supernotify has its own e-mail integration, which will translate priority into a way Outlook, Apple Mail etc can understand
 
 !!! info
-    For the technically minded, there's a [Class Diagram](developer/class_diagram.md) of the core classes matching these concepts.
+    For the technically minded, there's a [Class Diagram](developer/diagrams/class_diagram.md) of the core classes matching these concepts.
 
 # Core Principles
 

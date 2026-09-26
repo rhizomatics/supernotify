@@ -1,14 +1,13 @@
 # Developer Documentation
 
 * [Concepts](concepts.md) - How a notification flows through scenarios, deliveries, targets, envelopes and transports
-* [Roadmap](roadmap.md), feature and architecture [RFCs](rfcs/index.md) and [Design Principles](principles.md)
-* [Schemas](reference/schemas/index.md)
+* [Roadmap](roadmap.md), feature and architecture [RFCs](./rfcs/index.md) and [Design Principles](principles.md)
+* [Diagrams](./diagrams/index.md) - technical diagrams for data flow and architecture
+* [JSON Schemas](reference/schemas/index.md)
     - Automatically generated from Home Assistant `voluptuous` Python schemas, covering both configuration and *Action* `data`
     - Also available as plain JSON Schema documents, for example [Full_Configuration.schema.json](./schemas/json/Full_Configuration.schema.json)
 * [Classes](./reference/classes/index.md)
     - Most important classes used inside Supernotify
-* [Class Diagram](./class_diagram.md)
-    - Mermaid diagram of Core Concepts
 * [Transports](../reference/transports.md)
     - Table of Transport Adaptor configuration options automatically generated from current Python code
 
