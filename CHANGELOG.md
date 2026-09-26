@@ -1,4 +1,4 @@
-## Unreleased
+## v2.10.2
 
 ### Media Player Transport
 - Can now play audio files, like an mp3 alert, or any other media, as well as showing images, contributed by @lollox80
@@ -9,6 +9,7 @@
   - Wrapped in an SSML `<audio>` tag, followed by the message if there is one, always sent with call type `tts` as Alexa is silent for SSML audio in `announce` mode
   - Relative URLs are made absolute with the external URL. Amazon requires public `https` and 48kbps MP3, see the transport docs
   - Optional `audio_duration` extends the wait before volume restore or music resume for longer clips
+  - See also the [Chime Transport](./transports/chime.md) for another way to use Alexa Media Player for sounds, and as part of mixed set of chiming devices.
 
 ## v2.10.1
 
