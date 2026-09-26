@@ -93,10 +93,6 @@
          <lastmod>2026-09-26</lastmod>
     </url>
     <url>
-         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/class_diagram/</loc>
-         <lastmod>2026-09-26</lastmod>
-    </url>
-    <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/concepts/</loc>
          <lastmod>2026-09-26</lastmod>
     </url>
@@ -106,6 +102,22 @@
     </url>
     <url>
          <loc>https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/</loc>
+         <lastmod>2026-09-26</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/</loc>
+         <lastmod>2026-09-26</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/architecture/</loc>
+         <lastmod>2026-09-26</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/class_diagram/</loc>
+         <lastmod>2026-09-26</lastmod>
+    </url>
+    <url>
+         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/notification_flow/</loc>
          <lastmod>2026-09-26</lastmod>
     </url>
     <url>

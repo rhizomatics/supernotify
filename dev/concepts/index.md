@@ -77,7 +77,7 @@ One notification from an automation can turn into several different notification
 
 Info
 
-For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/latest/developer/class_diagram/index.md) of the core classes matching these concepts.
+For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/class_diagram/index.md) of the core classes matching these concepts.
 
 # Core Principles
 
