@@ -319,3 +319,30 @@ async def test_snoozer_purge_snoozes_persists_after_removal(
     uut.purge_snoozes()
     await hass.async_block_till_done()
     assert hass_storage[STORAGE_KEY]["data"] == []
+
+
+async def test_snoozer_clear_persists_from_executor_thread(
+    hass: HomeAssistant, unmocked_hass_api: HomeAssistantAPI, hass_storage: dict
+) -> None:
+    # Actions without @callback (clear_snoozes) run in HA's executor, off the event loop
+    uut = Snoozer()
+    await uut.initialize(unmocked_hass_api)
+    uut.register_snooze(CommandType.SNOOZE, GlobalTargetType.EVERYTHING, None, RecipientType.EVERYONE, None, None)
+    await hass.async_block_till_done()
+    assert hass_storage[STORAGE_KEY]["data"]
+
+    assert await hass.async_add_executor_job(uut.clear) == 1
+    await hass.async_block_till_done()
+    assert hass_storage[STORAGE_KEY]["data"] == []
+
+
+def test_snoozer_export_skips_expired_snoozes() -> None:
+    uut = Snoozer()
+    uut.register_snooze(
+        CommandType.SNOOZE, GlobalTargetType.EVERYTHING, None, RecipientType.EVERYONE, None, timedelta(seconds=-1)
+    )
+    uut.register_snooze(CommandType.SNOOZE, QualifiedTargetType.TRANSPORT, "email", RecipientType.EVERYONE, None, None)
+    assert len(uut.snoozes) == 2
+    exported = uut.export()
+    assert len(exported) == 1
+    assert exported[0]["target"] == "email"

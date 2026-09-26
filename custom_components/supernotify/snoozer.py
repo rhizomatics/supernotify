@@ -289,7 +289,9 @@ class Snoozer:
         return cleared
 
     def export(self) -> list[dict[str, Any]]:
-        return [s.export() for s in self.snoozes.values()]
+        """Active snoozes only: expired ones stay in memory until the nightly purge, and their
+        time-only snooze_until would otherwise read as a snooze still to come."""
+        return [s.export() for s in self.snoozes.values() if s.active()]
 
     def current_snoozes(self, priority: str, delivery: Delivery) -> list[Snooze]:
         inscope_snoozes: list[Snooze] = []
