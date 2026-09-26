@@ -47,6 +47,7 @@ from .const import (
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
+    EVENT_NOTIFICATION,
     OVERRIDE_KIND_DELIVERY,
     OVERRIDE_KIND_RECIPIENT,
     OVERRIDE_KIND_SCENARIO,
@@ -249,6 +250,16 @@ class SupernotifyEngine:
         else:
             self.last_notification = notification
             await self.context.archive.archive(notification)
+            self.context.hass_api.fire_event(
+                EVENT_NOTIFICATION,
+                {
+                    "notification_id": notification.id,
+                    "summary": (notification._title or notification.message or "")[:100],
+                    "outcome": str(notification.outcome()),
+                    "deliveries": sorted({e.delivery.name for e in notification.delivered_envelopes}),
+                },
+                context=context,
+            )
             _LOGGER.debug(
                 "SUPERNOTIFY %s deliveries, %s failed, %s skipped, %s suppressed",
                 notification.delivered,

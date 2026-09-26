@@ -209,7 +209,9 @@ class SupernotifyScenarioManualBinarySensor(SupernotifyScenarioBinarySensor, Res
         if active != self._scenario.manual_active:
             _LOGGER.info("SUPERNOTIFY Scenario %s manually set %s", self._scenario.name, new_state.state)
             self._scenario.manual_active = active
-            # put back the entity's own attributes, which a plain state write would have replaced
+            # put back the entity's own attributes, which a plain state write would have replaced,
+            # attributed to whatever wrote the state
+            self.async_set_context(event.context)
             self.async_write_ha_state()
 
 

@@ -2,6 +2,8 @@
 
 ### Home Assistant Change Tracking
 - Improved the use of Contexts to explain why changes happened, including to scenario state, use of switch entities, and the `reset_overrides` action
+- Each notification shows in the logbook, from a new `supernotify_notification` event, with what was sent and via which deliveries, linked back to the automation, script, action call or voice command that caused it
+- A manual scenario's binary sensor, when set by a script or automation, is attributed to it in the logbook and history
 ## v2.10.2
 
 ### Media Player Transport

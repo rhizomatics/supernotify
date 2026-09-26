@@ -31,6 +31,7 @@ from custom_components.supernotify.const import (
     CONF_TARGET_REQUIRED,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
+    EVENT_NOTIFICATION,
     INCLUSION_BY_SCENARIO,
     INCLUSION_DEFAULT,
     INCLUSION_FALLBACK,
@@ -173,6 +174,27 @@ async def test_send_message_propagates_ha_context_to_service_calls(mock_hass: Mo
         context=caller_context,
         target=None,
         return_response=False,
+    )
+
+
+async def test_send_message_fires_logbook_event_on_callers_context(mock_hass: Mock) -> None:
+    uut = SupernotifyEngine(
+        mock_hass,
+        deliveries=DELIVERY,
+        recipients=RECIPIENTS,
+        transport_configs=TRANSPORT_DEFAULTS,
+        dupe_check={CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE},
+    )
+    await uut.initialize()
+    caller_context = Context()
+    notification = await uut.async_send_message(
+        title="Door open", message="testing 123", data={"delivery": "sms"}, context=caller_context
+    )
+    assert notification is not None
+    mock_hass.bus.async_fire.assert_any_call(
+        EVENT_NOTIFICATION,
+        {"notification_id": notification.id, "summary": "Door open", "outcome": "success", "deliveries": ["sms"]},
+        context=caller_context,
     )
 
 

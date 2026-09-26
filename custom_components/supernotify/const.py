@@ -10,6 +10,9 @@ from homeassistant.const import (
     CONF_TARGET,
 )
 
+# fired on the notification's context once it has been sent, so the logbook shows it against what caused it
+EVENT_NOTIFICATION: Final[str] = "supernotify_notification"
+
 CONF_ACTIONS: Final[str] = "actions"  # not fully implemented
 CONF_TITLE: Final[str] = "title"
 CONF_URI: Final[str] = "uri"

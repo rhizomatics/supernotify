@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import State
+from homeassistant.core import Context, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -151,6 +151,18 @@ async def test_manual_scenario_is_controlled_by_its_binary_sensor(hass: HomeAssi
     await hass.async_block_till_done()
     assert scenario.manual_active is False
     assert scenario.evaluate(MagicMock()) is False
+
+
+async def test_manual_scenario_attribute_rewrite_keeps_the_writers_context(hass: HomeAssistant) -> None:
+    await _setup_supernotify(hass, _scenarios_with_and_without_state())
+    writer = Context(user_id="abc123")
+
+    hass.states.async_set("binary_sensor.supernotify_scenario_manual", STATE_ON, context=writer)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.supernotify_scenario_manual")
+    assert state.attributes["name"] == "manual"  # type: ignore[union-attr]
+    assert state.context.id == writer.id  # type: ignore[union-attr]
 
 
 async def test_manual_scenario_ignores_unusable_states_and_disabled_scenarios(hass: HomeAssistant) -> None:
