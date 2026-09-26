@@ -10,6 +10,9 @@
   - Relative URLs are made absolute with the external URL. Amazon requires public `https` and 48kbps MP3, see the transport docs
   - Optional `audio_duration` extends the wait before volume restore or music resume for longer clips
   - See also the [Chime Transport](./transports/chime.md) for another way to use Alexa Media Player for sounds, and as part of mixed set of chiming devices.
+## Snoozing
+- Fix error handling Clear Snoozes action
+- Fix Enquire Snoozes listing expired snoozes
 
 ## v2.10.1
 

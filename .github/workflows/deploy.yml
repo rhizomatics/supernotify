@@ -23,8 +23,9 @@ on:
         default: false
 
 concurrency:
-  group: gh-pages-deploy
-  cancel-in-progress: false
+  # PRs don't publish, so they get a per-PR group and a newer push supersedes an older run
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'gh-pages-deploy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -105,7 +106,8 @@ jobs:
         else
           echo "No changes to badges"
         fi
-      if: ${{ always() }}
+      # PRs from forks get a read-only token, and PR results shouldn't overwrite main's badges
+      if: ${{ always() && github.event_name != 'pull_request' }}
     - name: Deploy docs
       # run in the build workflow since schemagen has homeassistant dependency
       run: |
@@ -142,7 +144,10 @@ jobs:
           echo "Deploying development docs"
           uv run mike deploy --update-aliases dev
         fi
-        git push origin gh-pages --force-with-lease
+        # PRs only verify the docs build; forks get a read-only token and shouldn't publish dev docs
+        if [ "${{ github.event_name }}" != "pull_request" ]; then
+          git push origin gh-pages --force-with-lease
+        fi
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
