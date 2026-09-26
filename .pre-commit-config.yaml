@@ -21,7 +21,7 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
-        exclude: ^(README\.[a-z]{2}(-[A-Za-z]+)?\.md|docs/[a-z]{2}(-[A-Za-z]+)?/.+\.md)$
+        exclude: ^(docs/developer/diagrams/.*|README\.[a-z]{2}(-[A-Za-z]+)?\.md|docs/[a-z]{2}(-[A-Za-z]+)?/.+\.md)$
         exclude_types: [csv, json]
   - repo: https://github.com/PyCQA/bandit
     rev: '1.9.4'
