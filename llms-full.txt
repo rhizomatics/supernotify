@@ -467,6 +467,26 @@ The sentences are in English and Italian for now - if you'd like them in your la
 
 This functionality is also available to scripts and automations from the `conversation.process` action.
 
+## FAQ
+
+### Can I ask Alexa about notifications?
+
+Not directly. Home Assistant's Alexa integrations let Alexa control devices, or let Home Assistant speak through an Echo, but neither passes what you say to Assist. There are two ways round it:
+
+- **A custom Alexa skill that hands speech to Assist**, such as [HomeAssistantAssist](https://github.com/fabianosan/HomeAssistantAssist). Everything said after the skill's name goes to Home Assistant's conversation API, so all the sentences above work, and Alexa reads back the answer - "Alexa, ask smart home to snooze my notifications until 3". It needs an Alexa developer account, and Home Assistant reachable from outside, for example with Nabu Casa. The skill calls Home Assistant with one long-lived token, so "my notifications" means that token's user - snoozes are for everyone unless that user is also a recipient.
+- **An Alexa Routine that runs a script**. Make a script for each fixed command, which passes one of the sentences above to the `conversation.process` action, and expose it to Alexa, where it shows up as a scene a Routine can run. There's no skill to build, but only fixed phrases work - no times, names or messages - and Alexa just says "OK" rather than Supernotify's answer. The snooze is for everyone, since the script isn't run as anyone who is a recipient.
+
+Script for an Alexa Routine
+
+```yaml
+alias: Snooze notifications for an hour
+sequence:
+  - action: conversation.process
+    data:
+      agent_id: conversation.home_assistant
+      text: Snooze notifications for an hour
+```
+
 ## Further Reading
 
 - [AI Agents for the Smart Home](https://www.home-assistant.io/blog/2024/06/07/ai-agents-for-the-smart-home/) - 2024 vision paper from Home Assistant team
@@ -1791,9 +1811,9 @@ views:
         cards:
           - type: markdown
             content: >-
-              Requires a sensor to be set up first to index the archived
-              notifications, see [Supernotify Archive
-              Card](https://github.com/lollox80/supernotify-cards/blob/main/README.md#supernotify-archive-card)
+              Archiving must be switched on to disk for this to work. See the
+              [Supernotify Integration
+              settings](/config/integrations/integration/supernotify)
           - type: custom:supernotify-archive-card
             entity: sensor.supernotify_archivio
     icon: mdi:cog-stop-outline
@@ -3607,6 +3627,8 @@ All of `data` keys below are optional:
 | `pause_music`     | bool       | `true`  | Pause (rather than stop) music if playing.                                                                                                                                 |
 | `volume_fallback` | float 0-1  | `0.5`   | Used when a device's current volume can't be read.                                                                                                                         |
 | `wait_for_tts`    | bool       | `false` | Block delivery until the TTS estimate elapses, even when no volume/music restore is needed — useful to sequence automation steps after the announcement finishes speaking. |
+| `audio_url`       | str        | -       | Play an audio file before the message, see [Playing an audio file](#playing-an-audio-file).                                                                                |
+| `audio_duration`  | float s    | `0`     | Length of the `audio_url` clip, added to the TTS wait before restoring volume or resuming music.                                                                           |
 | `tts_char_speed`  | float s/ch | `0.06`  | Seconds per character for the TTS duration estimate; calibrate per language (see below).                                                                                   |
 
 ### Reducing cloud API calls and Notification delay
@@ -3637,6 +3659,40 @@ If this only applies to some Alexa devices, then make two `Delivery` definitions
 | Russian / Polish            | 0.062 |
 | Japanese / Chinese / Korean | 0.180 |
 | Arabic                      | 0.075 |
+
+## Playing an audio file
+
+Echo devices can't play an arbitrary mp3 via `media_player.play_media`, but Alexa will play one inside an SSML `<audio>` tag. Set `audio_url` in the delivery `data` and the transport builds the SSML for you:
+
+Example Notification
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Someone at the front door"
+    delivery:
+      alexa_media_player:
+        data:
+          audio_url: /local/sounds/doorbell.mp3
+          volume: 0.4
+```
+
+- The clip plays first, then the message is spoken. Set `message: ""` in the delivery `data` for the sound only
+- A relative URL is made absolute with the Home Assistant external URL
+- `type` is always `tts` when `audio_url` is set, overriding any `type: announce` in the delivery config, since Alexa plays nothing for SSML audio in announce mode
+- The message is treated as plain text and escaped, so don't combine `audio_url` with your own SSML in the message
+- For clips longer than a few seconds, set `audio_duration` (seconds) so that volume restore and music resume wait for the clip to finish
+
+Amazon's servers, not the Echo, fetch the file, so it has strict requirements:
+
+- Public `https` URL with a valid, trusted certificate, e.g. via Nabu Casa or a Let's Encrypt domain. A LAN address or a self-signed certificate won't play
+- MP3, 48 kbps, sample rate 16000, 22050 or 24000 Hz, at most 240 seconds
+
+Convert an existing file with:
+
+```bash
+ffmpeg -i original.mp3 -ac 2 -codec:a libmp3lame -b:a 48k -ar 24000 doorbell.mp3
+```
 
 ## References
 
@@ -4838,7 +4894,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/media/
 
 **Delivery (explicit selection).** If at least one `media_player` entity exists in the house and no `media` delivery is defined, a `media` delivery is generated automatically — but since `media_player` targets vary too much between devices to safely assume a default, it only fires when selected explicitly (`data: {data: {delivery: [media]}}` or a scenario), not by default.
 
-Show an image or other content on a media player, e.g. for an example an Amazon Echo Show device.
+Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
 Pass the content link in using the `snapshot_url` value in the notification `data` section. Message and title fields will be ignored. Override the `image` value by also setting `media_content_type` in `data`.
 
@@ -4868,7 +4924,34 @@ data:
   entity_id: media_player.kitchen_alexa
 ```
 
-If you want to send a sound to the media player, try the much more functional [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md).
+## Playing audio or other content
+
+Set `media_content_id` in the delivery `data` to play anything the media player accepts, rather than an image - for example an mp3 alert sound on a Google Cast or Sonos speaker, a video clip or a `media-source://` item.
+
+- A relative URL like `/local/sounds/alarm.mp3` (a file in `config/www/sounds`) is made absolute using the Home Assistant external URL, so that the speaker can fetch it
+- Absolute URLs and `media-source://` ids are passed through unchanged
+- `media_content_type` defaults to `music` when `media_content_id` is given, override it if the player needs something else, e.g. `audio/mpeg`
+- `media_content_id` takes priority over any `snapshot_url` or camera image, and no image is grabbed
+- `announce` and `enqueue` are passed through as for images
+
+Example Notification
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: ""
+    delivery:
+      media:
+        target:
+            - media_player.kitchen_speaker
+        data:
+            media_content_id: /local/sounds/alarm.mp3
+            announce: true
+```
+
+The speaker has to be able to reach the URL, so it must be on the local network or publicly available, and some devices, like Google Cast, reject self-signed certificates.
+
+Amazon Echo devices can't play arbitrary audio files this way. For those, use the built-in sounds via the [Chime Transport Adaptor](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md), which is also the better fit for short tunes mapped to named aliases across different kinds of device.
 
 ## Alexa Media Player
 
