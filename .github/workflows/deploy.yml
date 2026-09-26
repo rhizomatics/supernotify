@@ -22,14 +22,30 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  # PRs don't publish, so they get a per-PR group and a newer push supersedes an older run
-  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'gh-pages-deploy' }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
+  release-zip:
+    # separate from build, and outside its concurrency group, so HACS can download the zip as soon as possible
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - name: Package release zip
+      run: |
+        cd custom_components/supernotify
+        zip -r "${{ github.workspace }}/supernotify.zip" . -x "__pycache__/*" "*/__pycache__/*"
+    - name: Upload release zip asset
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: gh release upload "${{ github.event.release.tag_name }}" supernotify.zip --clobber
+
   build:
     runs-on: ubuntu-latest
+    concurrency:
+      # PRs don't publish, so they get a per-PR group and a newer push supersedes an older run
+      group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'gh-pages-deploy' }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
     permissions:
       contents: write
       pull-requests: read
@@ -46,16 +62,6 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.ref }}
-    - name: Package release zip
-      if: github.event_name == 'release'
-      run: |
-        cd custom_components/supernotify
-        zip -r "${{ github.workspace }}/supernotify.zip" . -x "__pycache__/*" "*/__pycache__/*"
-    - name: Upload release zip asset
-      if: github.event_name == 'release'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload "${{ github.event.release.tag_name }}" supernotify.zip --clobber
     - name: HACS Action
       uses: "hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa"
       with:
@@ -166,6 +172,9 @@ jobs:
     needs: build
     if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages-publish
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
