@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_27dea81f8c5c9862_archive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-26 16:35 +0000
+            created at 2026-09-26 19:50 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -325,7 +325,7 @@
     <p class="run"><span class="n"><a id="t243" href="#t243">243</a></span><span class="t">    <span class="key">def</span> <span class="nam">supplemental_action_reset_overrides</span><span class="op">(</span><span class="nam">call</span><span class="op">:</span> <span class="nam">ServiceCall</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t244" href="#t244">244</a></span><span class="t">        <span class="com"># a callback, so run in the event loop - it writes entity state</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t245" href="#t245">245</a></span><span class="t">        <span class="nam">kind</span><span class="op">:</span> <span class="nam">str</span> <span class="op">|</span> <span class="key">None</span> <span class="op">=</span> <span class="nam">call</span><span class="op">.</span><span class="nam">data</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="nam">ATTR_KIND</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="str">&quot;reset&quot;</span><span class="op">:</span> <span class="nam">engine</span><span class="op">.</span><span class="nam">reset_overrides</span><span class="op">(</span><span class="op">(</span><span class="nam">kind</span><span class="op">,</span><span class="op">)</span> <span class="key">if</span> <span class="nam">kind</span> <span class="key">else</span> <span class="nam">OVERRIDE_KINDS</span><span class="op">)</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t246" href="#t246">246</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span><span class="str">&quot;reset&quot;</span><span class="op">:</span> <span class="nam">engine</span><span class="op">.</span><span class="nam">reset_overrides</span><span class="op">(</span><span class="op">(</span><span class="nam">kind</span><span class="op">,</span><span class="op">)</span> <span class="key">if</span> <span class="nam">kind</span> <span class="key">else</span> <span class="nam">OVERRIDE_KINDS</span><span class="op">,</span> <span class="nam">call</span><span class="op">.</span><span class="nam">context</span><span class="op">)</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t247" href="#t247">247</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t248" href="#t248">248</a></span><span class="t">    <span class="key">def</span> <span class="nam">supplemental_action_enquire_implicit_deliveries</span><span class="op">(</span><span class="nam">_call</span><span class="op">:</span> <span class="nam">ServiceCall</span><span class="op">)</span> <span class="op">-&gt;</span> <span class="nam">dict</span><span class="op">[</span><span class="nam">str</span><span class="op">,</span> <span class="nam">Any</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t249" href="#t249">249</a></span><span class="t">        <span class="key">return</span> <span class="nam">engine</span><span class="op">.</span><span class="nam">enquire_implicit_deliveries</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -558,7 +558,7 @@
             <a class="nav" href="z_27dea81f8c5c9862_archive_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
-            created at 2026-09-26 16:35 +0000
+            created at 2026-09-26 19:50 +0000
         </p>
     </div>
 </footer>
