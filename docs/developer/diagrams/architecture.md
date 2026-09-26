@@ -7,6 +7,6 @@ description: Interactive architecture diagram of Supernotify's main components, 
 ---
 # Architecture Diagram
 
-[![Architecture diagram](architecture.png "Zoom in for interactive diagram")](architecture.html){target=_blank}
+[![Architecture diagram](architecture.png "Click to zoom in for interactive diagram")](architecture.html){target=_blank}
 
 Click the diagram to open the interactive version, with zoom, search and relationship tracing.
