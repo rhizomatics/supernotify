@@ -26,7 +26,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util import slugify
 
@@ -169,10 +169,15 @@ class SupernotifyOverridableSwitch(SwitchEntity, RestoreEntity):
         self.async_set_enabled(False)
 
     @callback
-    def async_set_enabled(self, enabled: bool) -> bool:
-        """Change the flag and publish it, returning whether anything changed."""
+    def async_set_enabled(self, enabled: bool, context: Context | None = None) -> bool:
+        """Change the flag and publish it, returning whether anything changed.
+
+        `context` is the action call that asked for the change, when that isn't this switch's own
+        turn_on/turn_off, for which Home Assistant has already set it."""
         if enabled == self._target.enabled:
             return False
+        if context is not None:
+            self.async_set_context(context)
         self._apply_enabled(enabled)
         self.async_write_ha_state()
         return True
@@ -215,7 +220,7 @@ class SupernotifyScenarioSwitch(SupernotifyOverridableSwitch):
 
     def _refresh_related(self) -> None:
         # the condition state of a disabled scenario is always off, so that changes with this
-        self._registry.async_refresh_entity(self._scenario.name)
+        self._registry.async_refresh_entity(self._scenario.name, self._context)
 
 
 class SupernotifyRecipientSwitch(SupernotifyOverridableSwitch):
@@ -314,5 +319,7 @@ class SupernotifyTransportSwitch(SupernotifyOverridableSwitch):
             key = f"{OVERRIDE_KIND_DELIVERY}_{delivery.name}"
             switch = self._switches.get(key)
             if switch is not None:
+                if self._context is not None:
+                    switch.async_set_context(self._context)
                 switch.async_write_ha_state()
             self._registry.async_refresh_entity(key)

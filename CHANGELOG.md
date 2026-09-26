@@ -1,3 +1,7 @@
+## Unreleased
+
+### Home Assistant Change Tracking
+- Improved the use of Contexts to explain why changes happened, including to scenario state, use of switch entities, and the `reset_overrides` action
 ## v2.10.2
 
 ### Media Player Transport

@@ -303,9 +303,10 @@ class SupernotifyEngine:
         return overridables[kind]
 
     @callback
-    def reset_overrides(self, kinds: Iterable[str] = OVERRIDE_KINDS) -> dict[str, list[str]]:
+    def reset_overrides(self, kinds: Iterable[str] = OVERRIDE_KINDS, context: HAContext | None = None) -> dict[str, list[str]]:
         """Put everything switched on or off at runtime back to its configured enabled state,
-        returning the names reset for each kind.
+        returning the names reset for each kind. The state changes are attributed to `context`,
+        the action call or button press asking for the reset, if given.
 
         Walks the scenarios, recipients, deliveries and transports themselves rather than their
         switches, so one whose switch is disabled in the entity registry is reset too.
@@ -318,19 +319,19 @@ class SupernotifyEngine:
                     continue
                 switch = self.override_switches.get(f"{kind}_{item.name}")
                 if switch is not None:
-                    switch.async_set_enabled(item.config_enabled)
+                    switch.async_set_enabled(item.config_enabled, context)
                 else:
                     item.enabled = item.config_enabled
-                    self._async_refresh_related(kind, item.name)
+                    self._async_refresh_related(kind, item.name, context)
                 names.append(item.name)
         return reset
 
     @callback
-    def _async_refresh_related(self, kind: str, name: str) -> None:
+    def _async_refresh_related(self, kind: str, name: str, context: HAContext | None = None) -> None:
         """Re-publish the binary_sensor following the enabled flag of something with no switch
         to do it - the same as that switch's own _refresh_related()."""
         if kind == OVERRIDE_KIND_SCENARIO:
-            self.context.scenario_registry.async_refresh_entity(name)
+            self.context.scenario_registry.async_refresh_entity(name, context)
         elif kind == OVERRIDE_KIND_RECIPIENT:
             self.context.people_registry.async_refresh_entity(name)
         else:

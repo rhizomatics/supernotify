@@ -12,6 +12,10 @@ updates:
     schedule:
       interval: daily
       time: "13:00"
+    # Transitive deps (zeroconf, aiohttp, ...) are pinned by homeassistant and
+    # differ per Python fork in uv.lock; Dependabot can't bump them per fork.
+    allow:
+      - dependency-type: "direct"
     groups:
       python-packages:
         patterns:

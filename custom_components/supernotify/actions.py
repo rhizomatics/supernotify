@@ -243,7 +243,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     def supplemental_action_reset_overrides(call: ServiceCall) -> dict[str, Any]:
         # a callback, so run in the event loop - it writes entity state
         kind: str | None = call.data.get(ATTR_KIND)
-        return {"reset": engine.reset_overrides((kind,) if kind else OVERRIDE_KINDS)}
+        return {"reset": engine.reset_overrides((kind,) if kind else OVERRIDE_KINDS, call.context)}
 
     def supplemental_action_enquire_implicit_deliveries(_call: ServiceCall) -> dict[str, Any]:
         return engine.enquire_implicit_deliveries()

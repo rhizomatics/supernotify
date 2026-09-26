@@ -45,4 +45,4 @@ class SupernotifyResetOverridesButton(ButtonEntity):
         self._attr_device_info = ha_device_info(entry_id)
 
     async def async_press(self) -> None:
-        self._engine.reset_overrides()
+        self._engine.reset_overrides(context=self._context)

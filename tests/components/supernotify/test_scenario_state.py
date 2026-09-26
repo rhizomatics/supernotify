@@ -212,3 +212,22 @@ def test_scenario_opted_out_of_state_stays_unknown() -> None:
     scenario.evaluate.return_value = True
     scenario.expose_state = False
     assert ScenarioRegistry._scenario_state(me, scenario) == STATE_UNKNOWN
+
+
+async def test_condition_entity_change_is_the_cause_of_scenario_state_change(hass: HomeAssistant) -> None:
+    """A scenario turning on or off is attributed, in the logbook and history, to whatever
+    changed the entity its conditions depend on."""
+    from homeassistant.core import Context
+
+    from .test_switch import _config, _setup
+
+    await _setup(hass, {**_config(), "scenario_control": {"refresh": True}})
+    cause = Context()
+
+    hass.states.async_set("binary_sensor.dnd_test", "off", context=cause)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.supernotify_scenario_sera")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.context.id == cause.id

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_ENABLED, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import (
+    Context,
     HomeAssistant,
     callback,
 )
@@ -42,7 +43,6 @@ import voluptuous as vol
 from homeassistant.components.trace import async_store_trace
 from homeassistant.components.trace.models import ActionTrace
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_NAME, CONF_ALIAS, CONF_CONDITIONS
-from homeassistant.core import Context
 
 from .const import ATTR_ENABLED, CONF_ACTION_GROUP_NAMES, CONF_DELIVERY, CONF_MEDIA
 from .model import ConditionVariables
@@ -110,10 +110,13 @@ class ScenarioRegistry:
         self._entities.pop(name, None)
 
     @callback
-    def async_refresh_entity(self, name: str) -> None:
-        """Re-publish one scenario's binary_sensor now, whether or not periodic refresh is on"""
+    def async_refresh_entity(self, name: str, context: Context | None = None) -> None:
+        """Re-publish one scenario's binary_sensor now, whether or not periodic refresh is on,
+        attributing any change of state to `context` if given"""
         entity = self._entities.get(name)
         if entity is not None:
+            if context is not None:
+                entity.async_set_context(context)
             entity.async_write_ha_state()
 
     def scenario_has_state(self, scenario: Scenario) -> bool:
@@ -213,6 +216,7 @@ class ScenarioRegistry:
         if not self.scenario_state_enabled:
             return
         names: set[str] | None = None
+        context: Context | None = None
         if args:
             event = args[0]
             entity_id = getattr(event, "data", {}).get("entity_id") if hasattr(event, "data") else None
@@ -220,6 +224,9 @@ class ScenarioRegistry:
                 names = self._scenario_by_entity.get(entity_id, set())
                 if not names:
                     return
+                # so a scenario turning on or off is attributed, in the logbook and history, to
+                # whatever changed the condition entity - the periodic sweep has no such cause
+                context = getattr(event, "context", None)
 
         # Computed once for the whole batch (see _batch_cvars/scenario_is_on) rather than once
         # per scenario below - determine_occupancy() is only dict lookups, not real I/O, but
@@ -231,6 +238,8 @@ class ScenarioRegistry:
             for name in self.scenarios if names is None else names:
                 entity = self._entities.get(name)
                 if entity is not None:
+                    if context is not None:
+                        entity.async_set_context(context)
                     entity.async_write_ha_state()
         finally:
             self._batch_cvars = None

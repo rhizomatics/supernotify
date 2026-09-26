@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import voluptuous as vol
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import Context
 from homeassistant.helpers import entity_registry as er
 
 from custom_components.supernotify import DOMAIN
@@ -18,8 +19,10 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
-async def _reset(hass: HomeAssistant, data: dict[str, Any] | None = None) -> dict[str, Any]:
-    response = await hass.services.async_call(DOMAIN, "reset_overrides", data, blocking=True, return_response=True)
+async def _reset(hass: HomeAssistant, data: dict[str, Any] | None = None, context: Context | None = None) -> dict[str, Any]:
+    response = await hass.services.async_call(
+        DOMAIN, "reset_overrides", data, blocking=True, return_response=True, context=context
+    )
     await hass.async_block_till_done()
     assert response is not None
     return dict(response)
@@ -90,6 +93,45 @@ async def test_reset_refreshes_related_binary_sensors(hass: HomeAssistant) -> No
     assert _state(hass, "binary_sensor.supernotify_scenario_sera") == STATE_ON
     assert _state(hass, "binary_sensor.supernotify_recipient_joe") == STATE_ON
     assert _state(hass, "binary_sensor.supernotify_delivery_testing") == STATE_ON
+
+
+async def test_reset_attributes_state_changes_to_caller(hass: HomeAssistant) -> None:
+    """Switches, the delivery switch showing its transport, and the scenario's condition state
+    are all attributed to the reset_overrides call, not to whatever last switched them."""
+    await _setup(hass, _config())
+    for entity_id in SWITCHES.values():
+        await _turn(hass, entity_id, on=False)
+    caller = Context()
+
+    await _reset(hass, context=caller)
+
+    for entity_id in (*SWITCHES.values(), "binary_sensor.supernotify_scenario_sera"):
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_ON
+        assert state.context.id == caller.id, entity_id
+
+
+async def test_reset_of_scenario_without_switch_attributes_binary_sensor_to_caller(hass: HomeAssistant) -> None:
+    er.async_get(hass).async_get_or_create(
+        "switch",
+        DOMAIN,
+        "scenario_sera",
+        suggested_object_id="supernotify_scenario_sera",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    engine = await _setup(hass, _config())
+    _model(engine, "scenario").enabled = False
+    engine.context.scenario_registry.async_refresh_entity("sera")
+    assert _state(hass, "binary_sensor.supernotify_scenario_sera") == STATE_OFF
+    caller = Context()
+
+    await _reset(hass, {"kind": "scenario"}, context=caller)
+
+    state = hass.states.get("binary_sensor.supernotify_scenario_sera")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.context.id == caller.id
 
 
 @pytest.mark.parametrize("kind", list(SWITCHES))
@@ -165,6 +207,22 @@ async def test_button_resets_all_kinds(hass: HomeAssistant) -> None:
     for kind, entity_id in SWITCHES.items():
         assert _model(engine, kind).enabled is True
         assert _state(hass, entity_id) == STATE_ON
+
+
+async def test_button_attributes_reset_to_the_press(hass: HomeAssistant) -> None:
+    await _setup(hass, _config())
+    await _turn(hass, SWITCHES["delivery"], on=False)
+    caller = Context()
+
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.supernotify_reset_overrides"}, blocking=True, context=caller
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCHES["delivery"])
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.context.id == caller.id
 
 
 async def test_button_is_on_the_supernotify_device(hass: HomeAssistant) -> None:

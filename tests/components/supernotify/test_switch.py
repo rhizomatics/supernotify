@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import State
+from homeassistant.core import Context, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -236,6 +236,20 @@ async def test_noop_toggle_writes_nothing(hass: HomeAssistant, kind: str) -> Non
     assert _state(hass, SWITCHES[kind]) == STATE_OFF
 
 
+async def test_scenario_toggle_attributes_scenario_binary_sensor_to_caller(hass: HomeAssistant) -> None:
+    """The scenario's condition state changing with its switch is attributed to whoever switched it."""
+    await _setup(hass, _config())
+    caller = Context()
+
+    await hass.services.async_call("switch", "turn_off", {"entity_id": SWITCHES["scenario"]}, blocking=True, context=caller)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.supernotify_scenario_sera")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.context.id == caller.id
+
+
 # --- Delivery and transport switches ----------------------------------------------------------
 
 
@@ -367,6 +381,19 @@ async def test_transport_toggle_refreshes_delivery_transport_enabled(hass: HomeA
     assert _state(hass, "switch.supernotify_delivery_testing") == STATE_ON
     await _turn(hass, "switch.supernotify_transport_generic", on=True)
     assert transport_enabled("switch.supernotify_delivery_testing") is True
+
+
+async def test_transport_toggle_attributes_delivery_switches_to_caller(hass: HomeAssistant) -> None:
+    await _setup(hass, _config())
+    caller = Context()
+
+    await hass.services.async_call("switch", "turn_off", {"entity_id": SWITCHES["transport"]}, blocking=True, context=caller)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SWITCHES["delivery"])
+    assert state is not None
+    assert state.attributes["transport_enabled"] is False
+    assert state.context.id == caller.id
 
 
 async def test_restored_transport_shows_on_its_deliveries(hass: HomeAssistant) -> None:
