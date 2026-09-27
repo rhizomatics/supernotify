@@ -14,4 +14,19 @@ For documentation build:
 
 ## Updating Dependencies
 
-Run `refresh-deps.sh`
+```bash
+./refresh-deps.sh
+```
+
+## Refreshing Diagram Thumbnails
+
+The `diagram-thumbnails` pre-commit hook refreshes the PNG thumbnail of any diagram HTML being
+committed, when the thumbnail is older than the diagram. To regenerate them all, run `node docgen/diagram_thumbnails.mjs`. Both need Google Chrome and the archify skill under `.agents/`.
+
+## Skills
+
+### Archify
+
+```bash
+npx -y skills add tt-a1i/archify --skill archify --agent codex --copy --yes
+```

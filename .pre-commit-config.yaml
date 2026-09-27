@@ -55,6 +55,14 @@ repos:
           - pytest_unordered
           - pytest_mock
           - pytest_httpserver
+  - repo: local
+    hooks:
+      - id: diagram-thumbnails
+        name: diagram thumbnails
+        # needs Chrome and the archify skill under .agents/, as for editing the diagrams
+        entry: node docgen/diagram_thumbnails.mjs
+        language: system
+        files: ^docs/developer/diagrams/.+\.html$
   - repo: https://github.com/astral-sh/ty-pre-commit
     rev: v0.0.84
     hooks:
@@ -71,6 +79,7 @@ ci:
     autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
     autoupdate_schedule: weekly
     skip:
+      - diagram-thumbnails
       - bandit
       - mypy
       - ty
