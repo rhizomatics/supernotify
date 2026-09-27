@@ -1,0 +1,92 @@
+# Telegram Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/telegram/
+
+## Discovery
+
+**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [telegram]}}` or a scenario), not by default. You'll still need to supply `telegram_chat_id` yourself, per the examples below.
+
+## Motivation
+
+Use the latest [Telegram Bot](https://www.home-assistant.io/integrations/telegram_bot) integration in Home Assistant for richer telegram notifications, adapting core Supernotify data like title and image, and exposing telegram specific tuning.
+
+## Testing
+
+Tested on Home Assistant 2026.3.4 with `telegram_bot` platform: polling
+
+## Example configuration
+
+Basic Configuration
+
+```yaml
+delivery:
+  telegram_home:
+    transport: telegram
+    inclusion: default
+    data:
+      telegram_chat_id: 123456789
+```
+
+security channel with camera snapshot
+
+```yaml
+delivery:
+  telegram_security:
+    transport: telegram
+    inclusion: default
+    data:
+      telegram_chat_id: 123456789
+      telegram_attach_image: true
+      telegram_parse_mode: "HTML"
+```
+
+Alarm channel with inline buttons
+
+```yaml
+delivery:
+  telegram_alarms:
+    transport: telegram
+    inclusion: scenario
+    data:
+      telegram_chat_id: 123456789
+      telegram_attach_image: true
+      telegram_inline_keyboard:
+        - - text: "✅ Acknowledge"
+            callback_data: "ack_alarm"
+          - text: "🔇 Snooze"
+            callback_data: "snooze_alarm"
+```
+
+## Example call
+
+action: supernotify.notify
+
+```yaml
+data:
+  message: "Motion detected at front door"
+  title: "📷 Front Camera"
+  data:
+    media:
+      camera_entity_id: camera.ezviz_ingresso
+```
+
+### Expected behavior
+
+- Telegram receives photo with bold title as caption
+- Low-priority notifications arrive silently \<\* Critical notifications bypass Do Not Disturb
+
+## How to get the chat_id
+
+1. Start a chat with your bot on Telegram (send /start)
+1. Visit: https://api.telegram.org/bot\<YOUR_TOKEN>/getUpdates
+1. Find "chat" → "id" in the response
+
+Or use the `telegram_bot.send_message` service from HA Developer Tools to test with your chat_id before committing it to your delivery configuration
+
+## Notes
+
+- `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target` or from the `telegram_chat_id` data key.
+- Direct `hass_api.call_service()` is used instead of `call_action()` because the service name switches dynamically between `send_message`, `send_photo`, and `send_document` depending on whether a snapshot is attached.
+- `grab_image()` (not `snap_notification_image()`) handles reprocessing: resize, JPEG/PNG optimisation, metadata removal, and per-filename caching for multiple deliveries with the same settings.
+- `TransportFeature.SNAPSHOT_IMAGE` is declared so the SuperNotify scheduler waits for PTZ cameras to complete their rotation before dispatching (v1.14.0+).
+- HTML special characters in title and message are escaped via `html.escape()` when `parse_mode=HTML`, preventing accidental tag injection.

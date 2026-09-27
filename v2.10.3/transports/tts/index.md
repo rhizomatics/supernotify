@@ -1,0 +1,116 @@
+# TTS Transport Adaptor
+
+Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
+
+| Transport ID | Source                                                                                                           | Requirements                                                       | Optional |
+| ------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
+| `tts`        | [`tts.py`](https://github.com/rhizomatics/supernotify/blob/main/custom_components/supernotify/transports/tts.py) | [TTS Integration](https://www.home-assistant.io/integrations/tts/) | -        |
+
+## Discovery
+
+**Delivery (explicit selection).** If the `tts.speak` service is available and at least one `media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is generated automatically — but since a `media_player` target has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {data: {delivery: [tts]}}` or a scenario), not by default.
+
+Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+
+## Text-to-Speech Integration
+
+This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, such as `cache`, `language` and `options`.
+
+The action can be overridden if desired to the older `tts.say`
+
+The `message_usage` option can be set to `combine_title` or `use_title` to override the default behaviour of speaking the `standard`.
+
+### Choosing the TTS Provider
+
+```yaml
+delivery:
+  speak_it_out:
+    transport: tts
+    options:
+      - tts_entity_id: tts.google_ai_tts
+```
+
+### Changing the Action
+
+```yaml
+delivery:
+  speak_it_out:
+    transport: tts
+    action: tts.speak_cloud
+    options:
+      - tts_entity_id: tts.google_ai_tts
+```
+
+### Under the Hood
+
+The Home Assistant [TTS Integration](https://www.home-assistant.io/integrations/tts/) calls the `tts_entity_id` to generate an audio file from the text, and then uses the `media_player` virtual integration to play this audio file. The Entity Platform (see [Entity Architecture](https://developers.home-assistant.io/docs/architecture/devices-and-services)) creates jobs per entity for this - not per platform, so there can be a delay between each device making its announcement. It does however try to preserve the order in which the `media_player` entities were listed.
+
+## Android Companion App
+
+If a `mobile_app_XXXX` target is passed to this transport, it will check if its an Android ( or more precisely not an Apple) mobile app, and generate an action call like:
+
+Android TTS
+
+```yaml
+action: notify.mobile_app_my_pixel
+  data:
+    message: "TTS"
+    data:
+      tts_text: "This is the notification message"
+```
+
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](https://supernotify.rhizomatics.org.uk/latest/transports/#table-of-options) for the list of options and the include/exclude syntax).
+
+Configuration Snippet
+
+```yaml
+transports:
+  tts:
+    delivery_defaults:
+      options:
+        device_discovery: true
+```
+
+Media Player and Android targets can be combined in one call - the `tts` transport will work out which calls to make.
+
+## Being Pickier
+
+Use the device `select` controls to narrow down the targets ( you can also select by manufacturer, operating system, label, area or a combination):
+
+```yaml
+deliveries:
+  pixel_push:
+    transport: tts
+    options:
+      device_model_select: .*Pixel.*
+```
+
+```yaml
+deliveries:
+  pixel_push:
+    transport: tts
+    options:
+      device_label_select:
+        - parents
+        - IoT
+```
+
+## Voice specific message
+
+Use `spoken_message` in the notification call to provide a different message for a voice notification than used for other transports like email or mobile push.
+
+## Alternatives
+
+For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md) and [Alexa Media Player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) transport adaptors.
+
+To get canned sounds rather than speech, use the [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md) transport adaptor.
+
+## References
+
+### Home Assistant
+
+- [TTS Integration](https://www.home-assistant.io/integrations/tts/)
+  - [Open Issues](https://github.com/home-assistant/core/issues?q=is%3Aissue%20label%3A%22integration%3A%20tts%22%20state%3Aopen)
+- [TTS Integrations](https://www.home-assistant.io/integrations/#text-to-speech)
+  - [Nabu Casa TTS](https://support.nabucasa.com/hc/en-us/articles/25619386304541-Text-to-speech-TTS)
+- [Android Companion App TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)

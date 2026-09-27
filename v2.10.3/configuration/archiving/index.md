@@ -1,0 +1,312 @@
+# Notification Archiving
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/
+
+Debugging notification rules, scenarios etc is much easier when the `Notification` object, complete with its debug trail, is archived.
+
+This preserves not just the notification data, but also key context like occupancy, and the decisions made during the process on which scenarios, deliveries etc to select.
+
+Key fields to check if something doesn't seem right:
+
+- `selected_deliveries` - What was selected by the action, scenarios or delivery configuration
+- `delivery_provenance` - which source switched each delivery on or off: `default`, `call`, `scenario:<name>` or `recipient:<name>`, under `enabled_by` / `disabled_by`
+- `deliveries` - what happened to each delivery, `delivered_envelopes`,`undelivered_envelopes` or `no_envelopes`
+
+A housekeeping job will run automatically each night to prune notifications older than your configured sell-by date.
+
+Tip
+
+Use the [Studio Code Server](https://github.com/hassio-addons/addon-vscode) Home Assistant app to search and browse the archived notifications.
+
+The notification archive record can be a record of all the key details, or optionally have maximal diagnostic content. Use `diagnostics` to automatically switch between these depending on the notification outcome. The configuration for this is the same as for selecting [Event Generation](#event-generation). A notification sent with `debug: true` in its `data` always gets the full diagnostic content, including its `debug_trace`, whatever `diagnostics` is set to - it doesn't change which outcomes generate events.
+
+## Example Configuration
+
+This example switches on both file system and MQTT topic archiving. Additional options (`mqtt_qos`, `mqtt_retain`) are available if needed to fine tune the MQTT publication.
+
+## Event Generation
+
+HomeAssistant [events](https://www.home-assistant.io/docs/configuration/events/) can be generated for notifications, with the option of full debug tracing. These can be consumed by other HomeAssistant integrations and automations, including by [Remote Logger](https://remote-logger.rhizomatics.org.uk) which can be used to send them off to an OpenTelemetry or Syslog service.
+
+Event generation is switched on by setting `event_selection` to the combination of notification outcomes desired, otherwise it will default to `NONE`
+
+The options for event policy selection are:
+
+| Policy Flag       | Usage                                                               |
+| ----------------- | ------------------------------------------------------------------- |
+| NONE              | Default, send no events. All other flags ignored if set             |
+| ALL               | Default, send all events. All other flags ignored if set            |
+| SUCCESS           | Successful delivery with no errors, skips or suppressions           |
+| NO_DELIVERY       | No deliveries made, with no errors                                  |
+| PARTIAL_DELIVERY  | Some deliveries made, others suppressed or skipped                  |
+| FALLBACK_DELIVERY | Fallback delivery made due to error or no other delivery applicable |
+| ERROR             | Notifications with at least one delivery error                      |
+| DUPE              | Notifications suppressed as duplicates                              |
+
+(These are the same options used for `diagnostics`)
+
+See the [Otel Event Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) for more.
+
+## Example Notification
+
+```yaml
+{
+  "created": "2025-11-04T15:09:21.375872+00:00",
+  "debug_trace": [
+    "A Car was detected on the Driveway camera.",
+    null,
+    {
+      "tag": "1762268908.791668-ksvmf7",
+      "group": "driveway-frigate-notification",
+      "color": "#03a9f4",
+      "subject": "",
+      "image": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
+      "video": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
+      "clickAction": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
+      "ttl": 0,
+      "priority": "high",
+      "alert_once": false,
+      "notification_icon": "mdi:homeassistant",
+      "sticky": false,
+      "channel": "alarm_stream",
+      "car_ui": false,
+      "fontsize": "large",
+      "position": "center",
+      "duration": 10,
+      "transparency": "0%",
+      "interrupt": false,
+      "subtitle": "",
+      "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
+      "attachment": {
+        "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
+        "content-type": "application/vnd.apple.mpegurl"
+      },
+      "push": {
+        "sound": {
+          "name": "default",
+          "volume": 1.0
+        },
+        "interruption-level": 1
+      },
+      "entity_id": "camera.driveway",
+      "actions": [
+        {
+          "action": "URI",
+          "title": "View Clip",
+          "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
+          "icon": "",
+          "destructive": false
+        },
+        {
+          "action": "URI",
+          "title": "View Snapshot",
+          "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/snapshot.jpg",
+          "icon": "",
+          "destructive": false
+        },
+        {
+          "action": "silence-automation.generate_apple_event_for_frigate_driveway",
+          "title": "Silence New Notifications",
+          "uri": "silence-automation.generate_apple_event_for_frigate_driveway",
+          "icon": "",
+          "destructive": true
+        }
+      ]
+    },
+    null,
+    {},
+    {
+      "override_disable_deliveries": [],
+      "override_enable_deliveries": [],
+      "scenario_enable_deliveries": [
+        "email",
+        "alexa_announce",
+        "mobile_push",
+        "high_chime_alert"
+      ],
+      "default_enable_deliveries": [],
+      "scenario_disable_deliveries": [
+        "html_email",
+        "alexa_inform",
+        "chime_person",
+        "chime_dog",
+        "chime_doorbell",
+        "chime_unknown_vehicle",
+        "chime_known_vehicle",
+        "chime_red_alert",
+        "upstairs_siren",
+        "downstairs_siren"
+      ]
+    }
+  ],
+  "_message": "A Car was detected on the Driveway camera.",
+  "target": [],
+  "_title": null,
+  "id": "3deb818c-b990-11f0-a89d-000c29e67c70",
+  "snapshot_image_path": null,
+  "delivered": 0,
+  "errored": 0,
+  "skipped": 0,
+  "delivery_error": null,
+  "data": {
+    "tag": "1762268908.791668-ksvmf7",
+    "group": "driveway-frigate-notification",
+    "color": "#03a9f4",
+    "subject": "",
+    "image": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
+    "video": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
+    "clickAction": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
+    "ttl": 0,
+    "alert_once": false,
+    "notification_icon": "mdi:homeassistant",
+    "sticky": false,
+    "channel": "alarm_stream",
+    "car_ui": false,
+    "fontsize": "large",
+    "position": "center",
+    "duration": 10,
+    "transparency": "0%",
+    "interrupt": false,
+    "subtitle": "",
+    "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
+    "attachment": {
+      "url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8",
+      "content-type": "application/vnd.apple.mpegurl"
+    },
+    "push": {
+      "sound": {
+        "name": "default",
+        "volume": 1.0
+      },
+      "interruption-level": 1
+    },
+    "entity_id": "camera.driveway"
+  },
+  "priority": "high",
+  "message_html": null,
+  "required_scenario_names": [],
+  "applied_scenario_names": [],
+  "constrain_scenario_names": [],
+  "delivery_selection": "implicit",
+  "delivery_overrides_type": "NoneType",
+  "delivery_overrides": {},
+  "action_groups": [
+    "alarm_panel",
+    "lights"
+  ],
+  "media": {
+    "snapshot_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/thumbnail.jpg",
+    "clip_url": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/master.m3u8"
+  },
+  "debug": false,
+  "actions": [
+    {
+      "action": "URI",
+      "title": "View Clip",
+      "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/driveway/clip.mp4",
+      "icon": "",
+      "destructive": false
+    },
+    {
+      "action": "URI",
+      "title": "View Snapshot",
+      "uri": "https://home.43acaciaave.org/api/frigate/notifications/1762268908.791668-ksvmf7/snapshot.jpg",
+      "icon": "",
+      "destructive": false
+    },
+    {
+      "action": "silence-automation.generate_apple_event_for_frigate_driveway",
+      "title": "Silence New Notifications",
+      "uri": "silence-automation.generate_apple_event_for_frigate_driveway",
+      "icon": "",
+      "destructive": true
+    }
+  ],
+  "delivery_results": {},
+  "delivery_errors": {},
+  "selected_delivery_names": [
+    "high_chime_alert",
+    "mobile_push",
+    "alexa_devices_announce_all",
+    "email"
+  ],
+  "enabled_scenarios": {
+    "high_alert": {
+      "name": "high_alert",
+      "enabled": true,
+      "alias": "make a fuss if alarm armed or high priority",
+      "media": null,
+      "delivery_selection": "implicit",
+      "action_groups": [
+        "alarm_panel",
+        "lights"
+      ],
+      "delivery": {
+        "email": null,
+        "alexa_devices_announce_all": null,
+        "mobile_push": null,
+        "high_chime_alert": null
+      },
+      "default": false
+    }
+  },
+  "selected_scenario_names": [
+    "high_alert"
+  ],
+  "people_by_occupancy": [],
+  "suppressed": "DUPE",
+  "occupancy": {
+    "home": [
+      {
+        "person": "person.joe_mctoe",
+        "email": "joe@mctoefamily.net",
+        "phone_number": "+4377332010983",
+        "delivery": {},
+        "mobile_devices": [
+          {
+            "manufacturer": "Apple",
+            "model": "iPhone15,2",
+            "mobile_app_id": "mobile_app_joephonepro",
+            "device_tracker": "device_tracker.joephonepro",
+            "device_id": "a0591c4af99b6a4037f7346f390e9918",
+            "device_name": "jPhonePro"
+          }
+        ],
+        "mobile_discovery": true,
+        "user_id": "cbed93ea6eac7d575710dc519e5e3dc1",
+        "state": "home"
+      },
+      {
+        "person": "person.jane_mctoe",
+        "email": "jane@mctoefamily.org",
+        "delivery": {},
+        "mobile_devices": [
+          {
+            "manufacturer": "Apple",
+            "model": "iPhone13,2",
+            "mobile_app_id": "mobile_app_jane_s_iphone_13",
+            "device_tracker": "device_tracker.jane_s_iphone_13",
+            "device_id": "71ba297a58a3b601e1646c54d0e23dbf",
+            "device_name": "Jane's iPhone 13"
+          }
+        ],
+        "mobile_discovery": true,
+        "user_id": "1cba227f2c0cb65cfd3cafde6ce0c4d8",
+        "state": "home"
+      }
+    ],
+    "not_home": []
+  },
+  "condition_variables": {
+    "occupancy": [
+      "ALL_HOME"
+    ],
+    "applied_scenarios": [],
+    "required_scenarios": [],
+    "constrain_scenarios": [],
+    "notification_priority": "high",
+    "notification_message": "A Car was detected on the Driveway camera.",
+    "notification_title": ""
+  }
+}
+```
