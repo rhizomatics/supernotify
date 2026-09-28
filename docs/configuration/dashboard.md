@@ -146,10 +146,8 @@ views:
               [Supernotify Integration
               settings](/config/integrations/integration/supernotify)
           - type: custom:supernotify-archive-card
-            entity: sensor.supernotify_archivio
     icon: mdi:cog-stop-outline
     show_icon_and_title: true
-
 
 
 ```
