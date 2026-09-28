@@ -101,6 +101,10 @@ Chime has a related problem one level down: it currently matches `switch`/`media
 
 Consider also typed dict, or classes, for the deliveries mapping carried around inside Notification so easier to verify by type the interactions across functions.
 
+### Delivery Sequence
+
+Might be scope for having 'real time' deliveries sequenced ahead of async ones, albeit email is as fast as mobile push for people and notifies similarly, and delivery times only really impacted by camera snapshots (although lacking metrics for some of the more obscure integrations).
+
 ## Setup and Configuration
 
 ### Extended UI Configuration

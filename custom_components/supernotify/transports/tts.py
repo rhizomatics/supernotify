@@ -32,7 +32,6 @@ from custom_components.supernotify.options import (
     SELECT_EXCLUDE,
     DeliveryOption,
 )
-from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
@@ -86,10 +85,7 @@ class TTSTransport(Transport):
     def default_config(self) -> TransportConfig:
         config = super().default_config
         config.delivery_defaults.action = "tts.speak"
-        # pre-existing quirk, kept explicit: FIRST despite no unique category - tts stays
-        # explicit-only (no unique/fallback categories), so this only affects ordering among
-        # other explicitly-selected deliveries, not auto-selection
-        config.delivery_defaults.selection_rank = SelectionRank.FIRST
+        # v1.8.1 added a FIRST selection rank here, remove for v2.11 since it seemed obsolete
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
