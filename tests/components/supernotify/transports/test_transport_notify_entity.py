@@ -81,8 +81,9 @@ async def test_deliver_no_targets(mock_hass, unmocked_config) -> None:  # type: 
 
 
 async def test_selects_group_targets() -> None:
+    # mass-market case: no delivery configured at all, just the auto-standard "notify_entity"
+    # delivery every install gets for free once it has any notify.* entity
     context = TestingContext(
-        deliveries={"phones": {CONF_TRANSPORT: TRANSPORT_NOTIFY_ENTITY}},
         transport_types=[NotifyEntityTransport],
         entities={"group.phones": MockGroup(["notify.phone_1", "switch.not_a_notifier", "notify.phone_2"])},
     )
@@ -127,11 +128,10 @@ async def test_doesnt_double_deliver() -> None:
     )
     await notification.initialize()
     await notification.deliver()
-    assert list(notification.selected_deliveries) == unordered("custom", "mobile_push", "notify_entity")
+    # mobile_push isn't selected at all - the target has no mobile_app_id for it to claim
+    assert list(notification.selected_deliveries) == unordered("custom", "notify_entity")
 
-    assert notification.deliveries.keys() == unordered("custom", "notify_entity", "mobile_push")
-
-    assert EnvelopeOutcome.SUCCESS not in notification.deliveries["mobile_push"]
+    assert notification.deliveries.keys() == unordered("custom", "notify_entity")
 
     custom_envelope = notification.deliveries["custom"][EnvelopeOutcome.SUCCESS][0]  # type: ignore
     assert custom_envelope.delivery_name == "custom"  # type: ignore

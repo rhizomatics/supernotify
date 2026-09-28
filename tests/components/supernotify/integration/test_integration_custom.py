@@ -92,7 +92,11 @@ async def test_context_propagates_to_camera_ptz_and_mobile_push(
     hass.services.async_register("notify", "mobile_app_test_iphone", fake_push)
 
     config = {
-        "delivery": {"push": {"transport": "mobile_push"}},
+        # named "mobile_push" (the transport's own standard delivery name), not something
+        # else - both mobile_push and the standard delivery it'd otherwise sit alongside are
+        # a unique-category transport, so unlike a fallback-category one, two differently-named
+        # deliveries of it are never deduped and would each independently double-deliver
+        "delivery": {"mobile_push": {"transport": "mobile_push"}},
         "recipients": [{"person": "person.test_user"}],
         CONF_MEDIA_PATH: str(tmp_path),
     }

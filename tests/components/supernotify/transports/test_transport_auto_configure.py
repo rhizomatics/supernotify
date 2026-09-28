@@ -3,24 +3,33 @@ from an existing Home Assistant config entry (telegram, ntfy, kodi, lametric,
 alexa_devices), a dynamically-named notify service (discord, pushover, sms), or
 unconditionally (persistent).
 
-Transports whose target is positively identifiable (an HA entity_id, a
-recipient's email/phone, or a value qualified with a category no other
-transport uses, like `discord_channel`/`matrix_room`/`topic`) generate a
-delivery, named plainly after the transport, that fires on every
-notification. mqtt's `topic` can equally be a `data:` keyword instead of a
-target (`target_required` is `optional`, so plain NO_TARGET can't
-short-circuit it) - Notification._target_required() is what actually keeps
-its standard delivery from firing unprompted, by treating it as if
-target_required were `always` whenever it's both implicit (never named by
-a call, scenario or recipient) and auto-generated (not a user's own CONFIG
-delivery, which may deliberately rely on a fixed `data:` topic).
+`Transport.inclusion_mode` no longer exists as a per-transport property - instead
+`Transport.default_config` (transport.py) infers `inclusion` from whether the
+transport declares `unique_target_categories`/`fallback_target_categories` at all
+(`default_inclusion()`, transport.py): `default` if it does, `explicit` if it
+doesn't, since a transport that can never definitively claim anything has no way to
+prove a given notification is relevant to it. `Notification.select_deliveries()`
+then still matches those categories against the notification's target/recipients at
+selection time (see notification.py's `_category_satisfied()`) - `default` alone
+isn't enough for a standard delivery to actually get auto-selected. Transports whose
+target is positively identifiable (an HA entity_id, a recipient's email/phone, or a
+value qualified with a category no other transport uses, like `discord_channel`/
+`matrix_room`/`topic`/`telegram_chat_id`) declare one of those lists, so a qualified
+value is unambiguous. mqtt's `topic` can equally be a `data:` keyword instead of a
+target (`target_required` is `optional`, so plain NO_TARGET can't short-circuit it)
+- Notification._target_required() is what actually keeps its standard delivery from
+firing unprompted, by treating it as if target_required were `always` whenever it's
+both implicit (never named by a call, scenario or recipient) and auto-generated
+(not a user's own CONFIG delivery, which may deliberately rely on a fixed `data:`
+topic).
 
-Transports whose target category is itself ambiguous (kodi, tts, and the
-generic `media` transport all match a bare `media_player` entity, so
-there's no reliable way to tell which one a given entity was meant for) -
-or where firing unprompted would simply be unwelcome (persistent) -
-generate the same plainly-named delivery, but explicit-selection-only
-instead.
+Transports whose target category is itself ambiguous (kodi, tts, and the generic
+`media` transport all match a bare `media_player` entity, so there's no reliable
+way to tell which one a given entity was meant for), that declare no target
+category at all (ntfy, lametric, pushover, gotify), or where firing unprompted
+would simply be unwelcome (persistent) - declare no unique/fallback categories, so
+`default_inclusion()` infers `explicit` for them, same as before this mechanism
+existed, without needing to say so per-transport any more.
 
 Path in upstream repo:
     tests/components/supernotify/transports/test_transport_auto_configure.py
@@ -71,8 +80,9 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 # transport name -> HA config entry domain it should discover, shared by the viability
-# test below and (bar mqtt, now `default` - see test_mqtt_auto_configure_with_config_entry_is_default)
-# by test_auto_configure_with_config_entry_is_explicit. alexa_devices and html5 are
+# test below and (bar mqtt/telegram, both `default` - see test_mqtt_auto_configure_with_
+# config_entry_is_default/test_telegram_auto_configure_with_config_entry_is_default) by
+# test_auto_configure_with_config_entry_never_matches. alexa_devices and html5 are
 # tested separately (test_transport_alexa_devices.py / test_transport_html5.py) - both
 # also require an actual registered notify entity with a matching platform, not just
 # the config entry, to auto-configure as `default`.
@@ -94,9 +104,10 @@ async def test_auto_configure_no_config_entry(hass: HomeAssistant, transport_nam
 
 
 @pytest.mark.parametrize(
-    ("transport_name", "domain"), {k: v for k, v in CONFIG_ENTRY_EXPLICIT.items() if k != TRANSPORT_MQTT}.items()
+    ("transport_name", "domain"),
+    {k: v for k, v in CONFIG_ENTRY_EXPLICIT.items() if k not in (TRANSPORT_MQTT, TRANSPORT_TELEGRAM)}.items(),
 )
-async def test_auto_configure_with_config_entry_is_explicit(hass: HomeAssistant, transport_name: str, domain: str) -> None:
+async def test_auto_configure_with_config_entry_never_matches(hass: HomeAssistant, transport_name: str, domain: str) -> None:
     entry = MockConfigEntry(domain=domain, data={})
     entry.add_to_hass(hass)
 
@@ -107,7 +118,24 @@ async def test_auto_configure_with_config_entry_is_explicit(hass: HomeAssistant,
     result = uut.build_standard_deliveries(ctx.hass_api)
     assert transport_name in result
     dc = DeliveryConfig(result[transport_name], uut.delivery_defaults)
+    # declaring no unique/fallback categories means default_inclusion() infers explicit
     assert dc.inclusion == [INCLUSION_EXPLICIT]
+
+
+async def test_telegram_auto_configure_with_config_entry_is_default(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain="telegram_bot", data={})
+    entry.add_to_hass(hass)
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_TELEGRAM)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_TELEGRAM in result
+    # a telegram_chat_id isn't positively identifiable by shape, but it's a dedicated
+    # category no other transport uses, so a qualified value is unambiguous
+    dc = DeliveryConfig(result[TRANSPORT_TELEGRAM], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_DEFAULT]
 
 
 async def test_mqtt_auto_configure_with_config_entry_is_default(hass: HomeAssistant) -> None:
@@ -178,7 +206,8 @@ async def test_pushover_auto_configure_discovers_service(hass: HomeAssistant) ->
     assert TRANSPORT_PUSHOVER in result
     dc = DeliveryConfig(result["pushover"], uut.delivery_defaults)
     assert dc.action == "notify.pushover_home"
-    # a pushover device/group isn't positively identifiable, so explicit-only
+    # a pushover device/group isn't positively identifiable, so no unique/fallback
+    # categories are declared and default_inclusion() infers explicit
     assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
@@ -256,7 +285,8 @@ async def test_persistent_auto_configure_always_available_but_explicit(hass: Hom
     result = uut.build_standard_deliveries(ctx.hass_api)
     assert TRANSPORT_PERSISTENT in result
     # persistent_notification is always available in HA core, no integration to discover,
-    # but a UI popup on every notification would be intrusive, so it's explicit-only
+    # and declares no unique/fallback categories, so default_inclusion() infers explicit -
+    # a UI popup on every notification would be intrusive anyway
     dc = DeliveryConfig(result["persistent"], uut.delivery_defaults)
     assert dc.inclusion == [INCLUSION_EXPLICIT]
 
@@ -296,7 +326,9 @@ async def test_tts_auto_configure_service_and_media_player_is_explicit(hass: Hom
 
     result = uut.build_standard_deliveries(ctx.hass_api)
     assert TRANSPORT_TTS in result
-    # a media_player target is required per notification, so explicit-only
+    # media_player is only an other_target_category for tts (kodi/media share the same
+    # ambiguous domain), which never drives auto-selection, so default_inclusion() infers
+    # explicit
     dc = DeliveryConfig(result["tts"], uut.delivery_defaults)
     assert dc.inclusion == [INCLUSION_EXPLICIT]
 
@@ -317,7 +349,9 @@ async def test_media_player_auto_configure_with_media_player_is_explicit(hass: H
 
     result = uut.build_standard_deliveries(ctx.hass_api)
     assert TRANSPORT_MEDIA in result
-    # a media_player target is required per notification, so explicit-only
+    # media_player is only an other_target_category here (kodi/tts share the same
+    # ambiguous domain), which never drives auto-selection, so default_inclusion() infers
+    # explicit
     dc = DeliveryConfig(result["media"], uut.delivery_defaults)
     assert dc.inclusion == [INCLUSION_EXPLICIT]
 
@@ -344,7 +378,8 @@ async def test_alexa_media_player_auto_configure_discovers_service(hass: HomeAss
     assert TRANSPORT_ALEXA_MEDIA_PLAYER in result
     dc = DeliveryConfig(result["alexa_media_player"], uut.delivery_defaults)
     assert dc.action == "notify.alexa_media"
-    # a channel/device ID isn't positively identifiable, so explicit-only
+    # media_player is only an other_target_category here (shared, ambiguous with kodi/
+    # tts/media), which never drives auto-selection, so default_inclusion() infers explicit
     assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 
@@ -525,6 +560,7 @@ async def test_gotify_auto_configure_discovers_service(hass: HomeAssistant) -> N
     assert TRANSPORT_GOTIFY in result
     dc = DeliveryConfig(result["gotify"], uut.delivery_defaults)
     assert dc.action == "notify.gotify"
+    # gotify declares no unique/fallback categories, so default_inclusion() infers explicit
     assert dc.inclusion == [INCLUSION_EXPLICIT]
 
 

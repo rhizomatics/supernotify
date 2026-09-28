@@ -63,14 +63,15 @@ from .model import (
     TargetRequired,
     TransportFeature,
 )
-from .options import OPTION_UNIQUE_TARGETS
 from .schema import ACTION_DATA_SCHEMA, STRICT_ACTION_DATA_SCHEMA, DeliveryOutcome, EnvelopeOutcome, OutcomeSelection
+from .target import TargetEntityCategory
 
 if TYPE_CHECKING:
     from homeassistant.core import Context as HAContext
 
     from .context import Context
     from .delivery import Delivery, DeliveryRegistry
+    from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry, Recipient
     from .scenario import Scenario
     from .transport import (
@@ -466,10 +467,37 @@ class Notification(ArchivableObject):
                     recipients_disable_deliveries.append(name)
                     trace.record_delivery_provenance(name, "disabled_by", f"recipient:{recipient.name}")
             if self.delivery_selection == DELIVERY_SELECTION_IMPLICIT:
-                # all deliveries with INCLUSION_DEFAULT in CONF_INCLUSION
-                default_enable_deliveries = [d.name for d in self.context.delivery_registry.implicit_deliveries]
-                for d in default_enable_deliveries:
-                    trace.record_delivery_provenance(d, "enabled_by", "default")
+                # implicit_deliveries is already narrowed to transports declaring real
+                # unique/fallback categories (or a delivery with explicit_inclusion, exempt from
+                # the check - see implicit_deliveries) - here that's checked against what this
+                # specific notification, the candidate delivery's own configured target, and its
+                # recipients can actually offer, a cheap presence check, not full target
+                # resolution (see _category_satisfied())
+                notify_entity_ids: list[str] = list(self.people_registry.notify_entities())
+                # targeting this integration's own device (see __init__/_apply_delivery_defaults)
+                # is a request to also apply every default delivery's own recipients, same as an
+                # empty target - all_recipients() alone wouldn't see that, since the call's own
+                # target has no person_ids for it to match against
+                pool_recipients: list[Recipient] = (
+                    self.people_registry.enabled_recipients() if self._apply_delivery_defaults else all_recipients
+                )
+                for candidate in self.context.delivery_registry.implicit_deliveries:
+                    if candidate.explicit_inclusion:
+                        default_enable_deliveries.append(candidate.name)
+                        trace.record_delivery_provenance(candidate.name, "enabled_by", "default")
+                        continue
+                    pool: Target = self._target.safe_copy() if self._target else Target()
+                    if candidate.target:
+                        pool += candidate.target
+                    for recipient in pool_recipients:
+                        pool += recipient.target(candidate.name)
+                    if notify_entity_ids:
+                        pool.extend(ATTR_ENTITY_ID, notify_entity_ids)
+                    if self._category_satisfied(candidate.transport.unique_target_categories, pool) or self._category_satisfied(
+                        candidate.transport.fallback_target_categories, pool
+                    ):
+                        default_enable_deliveries.append(candidate.name)
+                        trace.record_delivery_provenance(candidate.name, "enabled_by", "default")
 
         trace.record_delivery_selection("scenario_enable_deliveries", scenario_enable_deliveries)
         trace.record_delivery_selection("scenario_disable_deliveries", scenario_disable_deliveries)
@@ -538,19 +566,18 @@ class Notification(ArchivableObject):
             d.name for d in unsorted_objs if d.name in default_enable_deliveries and d.name not in explicitly_enabled
         }
 
-        first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
-        anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
-        config_last: list[str] = [
-            d.name
-            for d in unsorted_objs
-            if d.selection_rank == SelectionRank.LAST and d.provenance == DeliveryProvenance.CONFIG
-        ]
-        auto_last: list[str] = [
-            d.name
-            for d in unsorted_objs
-            if d.selection_rank == SelectionRank.LAST and d.provenance != DeliveryProvenance.CONFIG
-        ]
-        selected: list[str] = first + anywhere + config_last + auto_last
+        def tie_break(d: Delivery) -> tuple[bool, bool]:
+            # within a rank, a fallback-category delivery sorts after its bucket-mates even
+            # under an explicit rank override ("last of the first") - it should win ties among
+            # equally-ranked peers, not jump ahead of a delivery that's unique by construction.
+            # A user's own CONFIG-provenance delivery also sorts before an auto-generated
+            # standard one at the same rank - a deliberate choice beats an auto-inferred default.
+            return (self._is_fallback_only(d), d.provenance != DeliveryProvenance.CONFIG)
+
+        first: list[str] = [d.name for d in sorted(unsorted_objs, key=tie_break) if d.selection_rank == SelectionRank.FIRST]
+        anywhere: list[str] = [d.name for d in sorted(unsorted_objs, key=tie_break) if d.selection_rank == SelectionRank.ANY]
+        last: list[str] = [d.name for d in sorted(unsorted_objs, key=tie_break) if d.selection_rank == SelectionRank.LAST]
+        selected: list[str] = first + anywhere + last
         trace.record_delivery_selection("ranked", selected)
 
         selected_deliveries: dict[str, DeliveryTargetOverride | None] = dict.fromkeys(selected)
@@ -681,6 +708,34 @@ class Notification(ArchivableObject):
             if not self.people_registry.occupancy_permits_delivery(delivery.occupancy, self.occupancy):
                 return SuppressionReason.OCCUPANCY
         return None
+
+    def _is_fallback_only(self, delivery: Delivery) -> bool:
+        """A delivery whose transport only ever claims things as a last resort (e.g.
+        notify_entity's bare `notify.*` catch-all), rather than because a value/entity is
+        provably exclusive to it. Unlike a unique-category delivery, such a delivery's
+        categories don't prove exclusivity on their own, so - unlike before OPTION_UNIQUE_
+        TARGETS was removed - it must never re-claim something an earlier-processed delivery
+        (of any transport) already took; see generate_targets()'s use of this."""
+        return not delivery.transport.unique_target_categories and bool(delivery.transport.fallback_target_categories)
+
+    def _category_satisfied(self, categories: list[str | TargetEntityCategory], pool: Target) -> bool:
+        """Whether the match pool has something for any of these categories - a cheap presence
+        check for implicit selection, not the real target resolution `Target.select()` does
+        later, so this can be generous (a plain-string category needs a non-empty value list; a
+        `TargetEntityCategory` needs any pool entity_id whose domain/platform matches, group
+        entities expanded first since a bare `group.*` id's own domain never matches anything -
+        it's the members' domain that counts)."""
+        if not categories:
+            return False
+        hass_api: HomeAssistantAPI = self.context.hass_api
+        entity_ids: list[str] = hass_api.expand_group(pool.entity_ids) if pool.entity_ids else []
+        for category in categories:
+            if isinstance(category, TargetEntityCategory):
+                if any(category.matches(entity_id, hass_api) for entity_id in entity_ids):
+                    return True
+            elif pool.for_category(category):
+                return True
+        return False
 
     def _target_required(self, delivery: Delivery) -> TargetRequired:
         """delivery.target_required, except an auto-generated standard delivery (never a
@@ -1131,9 +1186,9 @@ class Notification(ArchivableObject):
         direct_targets: list[Target] = [t.direct() for t in split_targets]
         self.debug_trace.record_target(delivery.name, "620_narrow_to_direct", direct_targets)
 
-        if delivery.options.get(OPTION_UNIQUE_TARGETS, False):
+        if self._is_fallback_only(delivery):
             direct_targets = [t - self._already_selected for t in direct_targets]
-            self.debug_trace.record_target(delivery.name, "630_make_unique_across_deliveries", direct_targets)
+            self.debug_trace.record_target(delivery.name, "630_fallback_excludes_already_selected", direct_targets)
         for direct_target in direct_targets:
             self._already_selected += direct_target
         # after the uniqueness bookkeeping above, so that only ever deals in what's delivered to

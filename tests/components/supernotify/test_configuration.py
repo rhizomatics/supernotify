@@ -5,6 +5,7 @@ from homeassistant.const import CONF_TARGET
 from custom_components.supernotify.const import (
     ATTR_RECIPIENTS,
     CONF_DELIVERY_DEFAULTS,
+    CONF_INCLUSION,
     CONF_MOBILE_DISCOVERY,
     CONF_PERSON,
     CONF_TRANSPORT,
@@ -22,7 +23,7 @@ async def test_default_recipients() -> None:
             {CONF_PERSON: "person.old_home_owner", CONF_TARGET: "dummy.2"},
             {CONF_PERSON: "person.bidey_in"},
         ],
-        deliveries={"testing": {CONF_TRANSPORT: "dummy"}},
+        deliveries={"testing": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"}},
         transport_types=[DummyTransport],
     )
     await context.test_initialize()
@@ -41,7 +42,7 @@ async def test_default_recipients_with_override() -> None:
             {CONF_PERSON: "person.old_home_owner", CONF_TARGET: "dummy.2", CONF_MOBILE_DISCOVERY: False},
             {CONF_PERSON: "person.bidey_in", CONF_MOBILE_DISCOVERY: False},
         ],
-        deliveries={"testing": {CONF_TRANSPORT: "dummy"}},
+        deliveries={"testing": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"}},
         transport_types=[DummyTransport],
     )
     await context.test_initialize()

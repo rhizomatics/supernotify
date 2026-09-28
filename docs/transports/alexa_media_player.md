@@ -15,8 +15,7 @@ tags:
 **Delivery (explicit selection).** If the `alexa_media` HACS integration's `notify.alexa_media*`
 service is registered and no `alexa_media_player` delivery is defined, an `alexa_media_player`
 delivery is generated automatically — but since a target has no automatic mapping to a
-recipient or entity, it only fires when selected explicitly (`data: {data: {delivery:
-[alexa_media_player]}}` or a scenario), not by default.
+recipient or entity, it only fires when selected explicitly (`data: {delivery:[alexa_media_player]}` or a scenario), not by default.
 
 ## Example
 

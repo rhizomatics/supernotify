@@ -120,7 +120,10 @@ async def test_notify_targets_floor_and_area_with_default_deliveries_via_own_dev
                     device_id:
                       - {town_house.supernotify_device_id()}
             """,
-        expected_calls={"notify": ["send_message", "mobile_app_alice_phone", "mobile_app_bob_phone"]},
+        # mobile_push (a unique-category delivery, selection_rank FIRST) dispatches before
+        # notify_entity (a fallback-category delivery, selection_rank LAST) - see
+        # Notification.select_deliveries()'s ordering
+        expected_calls={"notify": ["mobile_app_alice_phone", "mobile_app_bob_phone", "send_message"]},
         expected_entities={
             "notify": [
                 "notify.kitchen",

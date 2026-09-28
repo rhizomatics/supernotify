@@ -256,8 +256,8 @@ async def test_scenario_constraint(hass: HomeAssistant) -> None:
             },
         },
         deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
-            "mobile": {CONF_TRANSPORT: "dummy"},
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
             "siren": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
             "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
         },
@@ -360,10 +360,10 @@ async def test_scenario_selectively_disable_delivery(hass: HomeAssistant) -> Non
     ctx = TestingContext(
         homeassistant=hass,
         deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
-            "mobile": {CONF_TRANSPORT: "dummy"},
-            "siren": {CONF_TRANSPORT: "dummy"},
-            "chime": {CONF_TRANSPORT: "dummy"},
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "siren": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
         },
         transport_types=[DummyTransport],
         scenarios={"No_Mobile": {CONF_DELIVERY: {"mobile": {"enabled": False}}}},
@@ -386,7 +386,10 @@ async def test_scenario_selectively_override_delivery(hass: HomeAssistant) -> No
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"plain_email": {CONF_TRANSPORT: "dummy"}, "sms": {CONF_TRANSPORT: "dummy"}},
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "sms": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+        },
         transport_types=[DummyTransport],
         scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"data": {"priority": "low"}}}}},
     )
@@ -414,7 +417,10 @@ async def test_scenario_override_only_preselected_delivery(hass: HomeAssistant) 
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "explicit"}, "text": {CONF_TRANSPORT: "dummy"}},
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "explicit"},
+            "text": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+        },
         transport_types=[DummyTransport],
         scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"enabled": None, "data": {"priority": "low"}}}}},
     )
@@ -438,7 +444,10 @@ async def test_scenario_supplied_target(hass: HomeAssistant) -> None:
 
     ctx = TestingContext(
         homeassistant=hass,
-        deliveries={"plain_email": {CONF_TRANSPORT: "dummy"}, "sms": {CONF_TRANSPORT: "dummy"}},
+        deliveries={
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "sms": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+        },
         transport_types=[DummyTransport],
         scenarios={"Spammy": {CONF_DELIVERY: {"plain_email": {"target": ["spambox@myhome.org"]}}}},
     )
@@ -611,10 +620,10 @@ async def test_scenario_wildcard_disables_deliveries(hass: HomeAssistant) -> Non
             },
         },
         deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
-            "mobile": {CONF_TRANSPORT: "dummy"},
-            "siren": {CONF_TRANSPORT: "dummy"},
-            "chime": {CONF_TRANSPORT: "dummy"},
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "siren": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
+            "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
         },
         transport_types=[DummyTransport],
     )
@@ -642,10 +651,10 @@ async def test_scenario_wildcard_overrides_deliveries(hass: HomeAssistant) -> No
             },
         },
         deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
             "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
             "siren": {CONF_TRANSPORT: "dummy", CONF_ENABLED: False},
-            "chime": {CONF_TRANSPORT: "dummy"},
+            "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
         },
         transport_types={DummyTransport: {"target_required": TargetRequired.OPTIONAL}},
     )
@@ -684,10 +693,10 @@ async def test_scenario_wildcard_does_not_force_enable_scenario_selected_deliver
             },
         },
         deliveries={
-            "plain_email": {CONF_TRANSPORT: "dummy"},
+            "plain_email": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
             "mobile": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "scenario"},
             "siren": {CONF_TRANSPORT: "dummy", CONF_ENABLED: False},
-            "chime": {CONF_TRANSPORT: "dummy"},
+            "chime": {CONF_TRANSPORT: "dummy", CONF_INCLUSION: "default"},
         },
         transport_types={DummyTransport: {"target_required": TargetRequired.OPTIONAL}},
     )

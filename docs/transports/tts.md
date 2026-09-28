@@ -17,18 +17,44 @@ tags:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `tts.speak` service is available and at least one
-`media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is
-generated automatically — but since a `media_player` target has no automatic mapping to a
-recipient, it only fires when selected explicitly (`data: {data: {delivery: [tts]}}` or a
-scenario), not by default.
+**Delivery (explicit selection).** If the `tts.speak` service is available and at least one `media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is
+generated automatically — but since a `media_player` target has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [tts]}` or a scenario), not by default.
 
 Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 
+## Example
+
+Since `tts` never auto-selects (see [Discovery](#discovery) above), name the `tts` delivery explicitly and give it one or more `media_player` targets:
+
+```yaml title="Example Notification"
+- action: supernotify.notify
+  data:
+    message: "Someone is at the front door"
+    delivery:
+      tts:
+        target:
+          - media_player.kitchen_speaker
+          - media_player.living_room_speaker
+```
+
+The resulting action call from the adaptor looks like:
+
+```yaml
+service: tts.speak
+target:
+  entity_id: tts.home_assistant_cloud
+data:
+  media_player_entity_id:
+    - media_player.kitchen_speaker
+    - media_player.living_room_speaker
+  message: "Someone is at the front door"
+```
+
+A scenario can select `tts` the same way, instead of naming it on every call - see [Scenarios](../configuration/scenarios.md).
+
 ## Text-to-Speech Integration
 
-This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values,
-such as `cache`, `language` and `options`.
+This integration automatically sets the action to `tts.speak` and limits the `data` section to the supported values, such as `cache`, `language` and `options`.
 
 The action can be overridden if desired to the older `tts.say`
 
@@ -57,15 +83,12 @@ delivery:
 
 ### Under the Hood
 
-The Home Assistant [TTS Integration](https://www.home-assistant.io/integrations/tts/) calls
-the `tts_entity_id` to generate an audio file from the text, and then uses the `media_player`
-virtual integration to play this audio file. The Entity Platform (see [Entity Architecture](https://developers.home-assistant.io/docs/architecture/devices-and-services)) creates jobs per entity for this - not
+The Home Assistant [TTS Integration](https://www.home-assistant.io/integrations/tts/) calls the `tts_entity_id` to generate an audio file from the text, and then uses the `media_player` virtual integration to play this audio file. The Entity Platform (see [Entity Architecture](https://developers.home-assistant.io/docs/architecture/devices-and-services)) creates jobs per entity for this - not
 per platform, so there can be a delay between each device making its announcement. It does however try to preserve the order in which the `media_player` entities were listed.
 
 ## Android Companion App
 
-If a `mobile_app_XXXX` target is passed to this transport, it will check if its an Android ( or more precisely
-not an Apple) mobile app, and generate an action call like:
+If a `mobile_app_XXXX` target is passed to this transport, it will check if its an Android ( or more precisely not an Apple) mobile app, and generate an action call like:
 
 ```yaml title="Android TTS"
 action: notify.mobile_app_my_pixel
@@ -75,8 +98,7 @@ action: notify.mobile_app_my_pixel
       tts_text: "This is the notification message"
 ```
 
-The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts`
-adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](./index.md#table-of-options) for the list of options and the include/exclude syntax).
+The targets can be skipped if device discovery is switched on in the delivery configuration, in which case every notification will be announced on every Android companion app unless overridden. This example uses the `delivery_defaults` at the Transport level, which changes the defaults for all Deliveries. The `tts` adaptor always filters out Apple devices, and further filtering can be made in the `options` for model, manufacturer, label and area (see [Table of Options](./index.md#table-of-options) for the list of options and the include/exclude syntax).
 
 ```yaml title="Configuration Snippet"
 transports:
@@ -116,8 +138,7 @@ Use `spoken_message` in the notification call to provide a different message for
 
 ## Alternatives
 
-For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](./alexa_devices.md) and
-[Alexa Media Player](./alexa_media_player.md) transport adaptors.
+For Amazon Echo devices, text-to-speech is also available via the [Alexa Devices](./alexa_devices.md) and [Alexa Media Player](./alexa_media_player.md) transport adaptors.
 
 To get canned sounds rather than speech, use the [Chime](./chime.md) transport adaptor.
 

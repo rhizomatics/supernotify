@@ -84,9 +84,15 @@ MOCK_SERVICES: dict[str, list[str] | list[dict[str, Any]]] = {
 
 async def test_simple_create() -> None:
     ctx = TestingContext(
-        viable_transport_types=[MobilePushTransport, EmailTransport, NotifyEntityTransport], services=MOCK_SERVICES
+        recipients=RECIPIENTS,
+        viable_transport_types=[MobilePushTransport, EmailTransport, NotifyEntityTransport],
+        services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
+    # a recipient's own notify.* entity isn't set up by TestingContext (that's only wired up
+    # by the real notify platform) - fake one on so notify_entity's fallback category has
+    # something to match too, alongside joe_mcphee's email/phone/mobile_app_id
+    ctx.people_registry.people["person.joe_mcphee"].notify_entity_id = "notify.joe_mcphee"
 
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
@@ -113,7 +119,11 @@ async def test_legacy_default_prefixed_delivery_name_resolves_to_current() -> No
 
 async def test_explicit_delivery() -> None:
     ctx = TestingContext(
-        deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES, services=MOCK_SERVICES
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        recipients=RECIPIENTS,
+        transport_types=ALL_TRANSPORT_TYPES,
+        services=MOCK_SERVICES,
     )
     await ctx.test_initialize()
 
@@ -261,6 +271,7 @@ async def test_scenario_delivery_no_change() -> None:
     ctx = TestingContext(
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
+        recipients=RECIPIENTS,
         scenarios={"mockery": {}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
@@ -276,6 +287,7 @@ async def test_scenario_delivery_disable() -> None:
     ctx = TestingContext(
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
+        recipients=RECIPIENTS,
         scenarios={"mockery": {"delivery": {"chime": {"enabled": False}}}},
         services=MOCK_SERVICES,
     )
@@ -290,6 +302,7 @@ async def test_scenario_delivery_enable() -> None:
     ctx = TestingContext(
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
+        recipients=RECIPIENTS,
         scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
@@ -520,6 +533,7 @@ async def test_action_data_disable_delivery() -> None:
     ctx = TestingContext(
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
+        recipients=RECIPIENTS,
         scenarios={"mockery": {}},
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
@@ -668,6 +682,7 @@ async def test_dict_of_delivery_tuning_does_not_restrict_deliveries() -> None:
     ctx = TestingContext(
         deliveries=DELIVERIES,
         transports=TRANSPORTS,
+        recipients=RECIPIENTS,
         transport_types=ALL_TRANSPORT_TYPES,
         services=MOCK_SERVICES,
     )
@@ -766,6 +781,7 @@ async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(
         services=MOCK_SERVICES,
+        recipients=RECIPIENTS,
         transports={"mqtt": {CONF_ENABLED: False}, "matrix": {CONF_ENABLED: False}},
         deliveries={
             "fallback": {
@@ -800,6 +816,9 @@ async def test_delivery_selection_order() -> None:
         },
     )
     await ctx.test_initialize()
+    # a recipient's own notify.* entity isn't set up by TestingContext - fake one on so the
+    # auto-standard notify_entity delivery's fallback category has something to match too
+    ctx.people_registry.people["person.joe_mcphee"].notify_entity_id = "notify.joe_mcphee"
     uut = Notification(ctx, "testing 123")
     await uut.initialize()
 
@@ -893,9 +912,11 @@ async def test_envelope_person_ids_are_only_recipients_the_envelope_reaches() ->
     assert targets[0].person_ids == ["person.alice", "person.carol"]
 
 
-async def test_envelope_person_ids_exclude_recipient_whose_address_went_in_earlier_envelope() -> None:
-    """With unique_targets, an address already sent to by an earlier delivery is dropped, and so
-    is the recipient it belonged to - they were reached by that earlier envelope instead."""
+async def test_two_deliveries_of_a_unique_category_transport_each_independently_resolve() -> None:
+    """Cross-delivery target dedup (once OPTION_UNIQUE_TARGETS) only ever applies to a
+    fallback-category delivery now (see Notification._is_fallback_only()) - two deliveries of a
+    unique-category transport like sms each independently resolve the same recipient's phone
+    number, since a unique category already proves no other transport could have claimed it."""
     ctx = TestingContext(
         deliveries={
             "sms": {CONF_TRANSPORT: TRANSPORT_SMS, CONF_ACTION: "notify.smsify"},
@@ -913,8 +934,8 @@ async def test_envelope_person_ids_exclude_recipient_whose_address_went_in_earli
     second = uut.generate_targets(ctx.delivery("sms2"))
 
     assert first[0].person_ids == ["person.alice"]
-    assert second[0].phone == []
-    assert second[0].person_ids == []
+    assert second[0].phone == ["+339875000123"]
+    assert second[0].person_ids == ["person.alice"]
 
 
 async def test_recipient_with_no_resolvable_target_does_not_block_delivery_target_fallback() -> None:
@@ -1101,7 +1122,9 @@ async def test_delivery_provenance_records_each_source() -> None:
     assert archived["selected_deliveries"]["chatty"] == {"fixed": ["person.joe"], "include": [], "exclude": []}
     provenance = archived["delivery_provenance"]
     assert provenance["chime"] == {"enabled_by": ["scenario:loud", "default"], "disabled_by": ["scenario:night"]}
-    assert provenance["mobile_push"] == {"enabled_by": ["scenario:night", "default"]}
+    # joe has no mobile_app_id, so mobile_push isn't implicitly default-enabled - only the
+    # scenario explicitly asked for it
+    assert provenance["mobile_push"] == {"enabled_by": ["scenario:night"]}
     assert provenance["email"] == {"enabled_by": ["default"], "disabled_by": ["call"]}
     assert provenance["chatty"] == {"enabled_by": ["recipient:joe"]}
     # the combined lists are unchanged

@@ -25,7 +25,6 @@ OPTION_SIMPLIFY_TEXT = "simplify_text"
 OPTION_STRIP_URLS = "strip_urls"
 OPTION_MESSAGE_USAGE = "message_usage"
 OPTION_TARGET_CATEGORIES = "target_categories"
-OPTION_UNIQUE_TARGETS = "unique_targets"
 OPTION_TARGET_SELECT = "target_select"
 OPTION_DATA_KEYS_SELECT = "data_keys_select"
 OPTION_DEVICE_DOMAIN = "device_domain"
@@ -70,11 +69,6 @@ COMMON_OPTIONS: list[DeliveryOption] = [
         OPTION_TARGET_SELECT,
         "Only use targets fully matching these regular expressions, group members expanded first",
         value_type=SelectionRule,
-    ),
-    DeliveryOption(
-        OPTION_UNIQUE_TARGETS,
-        "Don't pass targets already used in this notification",
-        value_type=cv.boolean,
     ),
     DeliveryOption(
         OPTION_TARGET_CATEGORIES,

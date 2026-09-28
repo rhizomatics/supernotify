@@ -32,6 +32,8 @@ from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
+    INCLUSION_DEFAULT,
+    INCLUSION_EXPLICIT,
 )
 from .model import DeliveryConfig, SuppressionReason
 from .options import DeliveryOption
@@ -57,6 +59,14 @@ def default_selection_rank(
     if fallback:
         return SelectionRank.LAST
     return SelectionRank.ANY
+
+
+def default_inclusion(unique: list[str | TargetEntityCategory], fallback: list[str | TargetEntityCategory]) -> list[str]:
+    """A transport that can never definitively claim anything (no unique/fallback category)
+    has no way to prove a given notification is relevant to it, so it stays explicit-only
+    by default - the same effect `Transport.inclusion_mode` used to declare per-transport,
+    now inferred instead of hand-maintained on every transport that doesn't need `default`."""
+    return [INCLUSION_DEFAULT] if (unique or fallback) else [INCLUSION_EXPLICIT]
 
 
 if TYPE_CHECKING:
@@ -196,6 +206,7 @@ class Transport:
         config.delivery_defaults.selection_rank = default_selection_rank(
             self.unique_target_categories, self.fallback_target_categories
         )
+        config.delivery_defaults.inclusion = default_inclusion(self.unique_target_categories, self.fallback_target_categories)
         return config
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:

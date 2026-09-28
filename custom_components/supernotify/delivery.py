@@ -93,6 +93,13 @@ class Delivery(DeliveryConfig):
         self.provenance: DeliveryProvenance = provenance
         self.transport: Transport = transport
         self._raw_conf: ConfigType = conf
+        # whether this delivery's own config explicitly declared `inclusion:` (or its
+        # deprecated `selection:` alias, already normalised to `inclusion` by schema.py's
+        # cv.deprecated() before this runs) - as opposed to merely inheriting the transport's
+        # own bare default. A deliberate `inclusion: default` on a delivery someone configured
+        # themselves is trusted at face value for implicit selection (see
+        # DeliveryRegistry.implicit_deliveries), unlike a standard delivery's inherited default.
+        self.explicit_inclusion: bool = CONF_INCLUSION in conf
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
         super().__init__(conf, delivery_defaults=transport_defaults)
         if isinstance(self.target, Target):
@@ -478,20 +485,32 @@ class DeliveryRegistry:
 
     @property
     def implicit_deliveries(self) -> list[Delivery]:
-        """Deliveries actually capable of implicit inclusion - `default` inclusion alone
-        isn't enough any more, its transport also has to declare a `unique_target_categories`
-        or `fallback_target_categories` for `Notification.select_deliveries()` to ever
-        actually match against; without one, a nominally `default` delivery (most transports
-        that don't say otherwise) structurally can never be auto-selected, the same as an
-        explicit-only one. This is the single source of truth for that - both the actual
-        selection logic and this reporting property (the action editor's implied default
-        list, `enquire_implicit_deliveries`, diagnostics) read it."""
+        """Deliveries actually capable of implicit inclusion - for an auto-generated standard
+        delivery, `default` inclusion alone isn't enough any more, its transport also has to
+        declare a `unique_target_categories` or `fallback_target_categories` for
+        `Notification.select_deliveries()` to ever actually match against; without one, a
+        nominally `default` standard delivery (most transports that don't say otherwise)
+        structurally can never be auto-selected, the same as an explicit-only one. A delivery
+        whose own config explicitly declared `inclusion: default` (`Delivery.explicit_
+        inclusion`) is exempt from that check - that's already a deliberate, explicit choice,
+        not something merely inherited from the transport's now-universal bare `default`
+        (`TransportConfig()`'s own constructor, `model.py` - `Transport.inclusion_mode` used to
+        override this down to `explicit` for most transports; now that it's gone, every
+        transport that doesn't declare categories or set its own `delivery_defaults.inclusion`
+        nominally inherits `default` too, without it being a deliberate choice by anyone), so
+        it's trusted at face value exactly as before this mechanism existed (e.g. a fixed-action
+        `generic` delivery with no target concept at all, meant to fire on every notification).
+        A delivery that leaves `inclusion:` unset entirely still goes through the category
+        check, even though it inherits the same nominal `default` value - inheriting isn't
+        choosing. This is the single source of truth for "implicit-capable" - both the actual
+        selection logic and this reporting property (the action editor's implied default list,
+        `enquire_implicit_deliveries`, diagnostics) read it."""
         return [
             d
             for d in self._deliveries.values()
             if d.enabled
             and INCLUSION_DEFAULT in d.inclusion
-            and (d.transport.unique_target_categories or d.transport.fallback_target_categories)
+            and (d.explicit_inclusion or d.transport.unique_target_categories or d.transport.fallback_target_categories)
         ]
 
     def apply_delivery_control(self, transport: Transport, transport_config: ConfigType) -> None:

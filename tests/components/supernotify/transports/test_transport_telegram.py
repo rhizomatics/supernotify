@@ -102,6 +102,54 @@ def test_default_config() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Implicit selection off a telegram_chat_id target (target-driven implicit selection)
+# ---------------------------------------------------------------------------
+
+
+async def test_implicit_standard_delivery_skipped_without_chat_id_target() -> None:
+    """The auto-generated standard `telegram` delivery is `default` inclusion, but without
+    an explicit call/scenario/recipient ask and no `telegram_chat_id:` target, it's a
+    routine non-event, not an attempt."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    n = Notification(ctx, message="no chat id here")
+    await n.initialize()
+    await n.deliver()
+
+    assert n.delivered == 0
+    assert n.missed == 0
+    ctx.hass.services.async_call.assert_not_called()  # type: ignore
+
+
+async def test_implicit_standard_delivery_fires_with_dict_chat_id_target() -> None:
+    """The same standard delivery fires once a `telegram_chat_id:` target makes it relevant -
+    dict shape."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    n = Notification(ctx, message="hello", target={"telegram_chat_id": "215678938"})
+    await n.initialize()
+    await n.deliver()
+
+    assert n.delivered == 1
+    service_data = ctx.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
+    assert service_data["target"] == [215678938]
+
+
+async def test_implicit_standard_delivery_fires_with_flat_list_prefixed_target() -> None:
+    """The primary, documented way to trigger this: a flat target list with a
+    `telegram_chat_id:` prefix, no other config or action data needed - see CHANGELOG."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    n = Notification(ctx, message="hello", target=["telegram_chat_id:215678938"])
+    await n.initialize()
+    await n.deliver()
+
+    assert n.delivered == 1
+    service_data = ctx.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
+    assert service_data["target"] == [215678938]
+
+
+# ---------------------------------------------------------------------------
 # Happy path delivery
 # ---------------------------------------------------------------------------
 

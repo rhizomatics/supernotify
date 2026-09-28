@@ -5,7 +5,6 @@ from unittest.mock import Mock
 import mkdocs_gen_files
 
 from custom_components.supernotify.engine import TRANSPORTS
-from custom_components.supernotify.options import OPTION_UNIQUE_TARGETS
 from custom_components.supernotify.target import Target, TargetEntityCategory
 
 
@@ -55,25 +54,29 @@ def transport_doc() -> None:
             df.write(f"|[{transport.name}](../transports/{transport.name}.md)")
             df.write(f"|{transport.default_config.delivery_defaults.selection_rank}")
             df.write(f"|{transport.default_config.delivery_defaults.target_required}")
-            df.write(f"|{', '.join(transport.inclusion_mode)}")
+            df.write(f"|{', '.join(transport.default_config.delivery_defaults.inclusion)}")
             df.write(f"|{', '.join(features)}|\n")
 
         df.write("\n")
         df.write("## Target Categories\n")
         df.write(
             "Which target categories each transport accepts - see [Targets](../usage/targets.md) for how to "
-            "qualify a target with one. A transport with none listed relies entirely on its own name, its "
+            "qualify a target with one. **Unique** and **Fallback** categories also drive implicit selection "
+            "(a `default`-inclusion delivery auto-fires once one of these is found in the notification's target "
+            "or an available recipient's own capabilities) - **Other** categories are understood well enough to "
+            "build a full envelope from once a delivery is selected by any other means, but are too ambiguous to "
+            "drive selection on their own. A transport with none listed relies entirely on its own name, its "
             "deliveries' names, or a delivery's `target_categories` option (e.g. `generic`).\n\n"
         )
 
-        df.write("|Transport|Target Categories|Unique Targets|\n")
-        df.write("|---------|------------------|--------------|\n")
+        df.write("|Transport|Unique|Fallback|Other|\n")
+        df.write("|---------|------|--------|-----|\n")
         for transport_class in sorted(TRANSPORTS, key=lambda t: t.name):
             transport = transport_class(mock_context)
-            categories = ", ".join(format_category(c) for c in transport.target_categories) or "-"
-            df.write(
-                f"|[{transport.name}](../transports/{transport.name}.md)|{categories}|{transport.default_config.delivery_defaults.options.get(OPTION_UNIQUE_TARGETS, False)}|\n"
-            )
+            unique = ", ".join(format_category(c) for c in transport.unique_target_categories) or "-"
+            fallback = ", ".join(format_category(c) for c in transport.fallback_target_categories) or "-"
+            other = ", ".join(format_category(c) for c in transport.other_target_categories) or "-"
+            df.write(f"|[{transport.name}](../transports/{transport.name}.md)|{unique}|{fallback}|{other}|\n")
 
         df.write("\n")
         df.write("## Default Options\n")

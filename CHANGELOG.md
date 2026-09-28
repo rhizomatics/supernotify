@@ -1,12 +1,15 @@
 ## v2.11.0
 
 ### Deliveries
-- Archived deliveries now track `missed` as well as `skipped` deliveries - *skipped* where some rules fired to stop it happening, like occupancy or scenarios, and *missed* where for some other reason an envelope couldn't successfully be built or delivered for a requested delivery
+- Archived deliveries now track `missed` as well as `skipped` deliveries
+  - *Skipped* where some rules fired to stop it happening, like occupancy or scenarios
+  - *Missed* where for some other reason an envelope couldn't successfully be built or delivered for a requested delivery
 - Transports that have definitive links to targets all marked as default
-  - Now also `discord`, `matrix` and `mqtt`
-  - Fixes issue where adding `discord_channel:xyz` in list of targets didn't automatically get picked up by discord
+  - Now also `discord`, `matrix`, `mqtt` and `telegram`
+  - Fixes issue where adding `discord_channel:xyz` or `topic:xyz` in list of targets didn't automatically get picked up by discord
   - Transports using `media_player` continue to need explicit selection since so many different ways of interacting with them
-- Partial Delivery - now only set for missed not skipped deliveries
+- Partial Delivery
+  - Now only set for missed not skipped deliveries
   - That is if an explicitly selected (by action, recipient or scenario) delivery couldn't be made. In effect you asked for 4 deliveries, only 3 could be made.
   -  Implicit deliveries that need targets (like Email or Notify Entity) and have no targets are suppressed without warnings
     - Though are accounted for in the 'delivery provenance' section of the archived notification
@@ -14,6 +17,9 @@
   - Fixes [#232](https://github.com/rhizomatics/supernotify/issues/232)
 - Voice Occupancy (and delivery occupancy in general) only affected recipient selection, and didn't impact the delivery itself. That's fixed now, so `any_in` for Voice means the Alexa or TTS deliveries will only be selected if somebody is home
   - Fixes [[#231](https://github.com/rhizomatics/supernotify/issues/231)]
+
+### Telegram
+- Delivery can now be triggered automatically by using a target in style `telegram_chat_id:215678938` without any other config or action data needed
 
 ## v2.10.3
 

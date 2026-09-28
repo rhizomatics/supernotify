@@ -83,6 +83,7 @@ async def test_content_escalation_by_priority(hass: HomeAssistant):
          plain_email:
           transport: dummy
           target: joey@mctest.com
+          inclusion: default
         """,
         scenarios="""
           high_risk:

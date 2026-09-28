@@ -88,6 +88,7 @@ async def test_explicit_delivery_no_mobile(support_case_fixture, hass: HomeAssis
     await uut.initialize()
     await uut.deliver()
 
-    assert list(uut.deliveries.keys()) == unordered("signal", "mobile_push")
+    # person.bar has no mobile device, so mobile_push isn't even selected any more (target-
+    # driven implicit selection - previously it was selected regardless, then produced nothing)
+    assert list(uut.deliveries.keys()) == ["signal"]
     assert len(uut.deliveries["signal"][EnvelopeOutcome.SUCCESS]) == 1
-    assert len(uut.deliveries["mobile_push"].get(EnvelopeOutcome.SUCCESS, [])) == 0

@@ -168,7 +168,7 @@ class DummyTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.target_required = self.target_required
         return config
 

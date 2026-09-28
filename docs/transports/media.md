@@ -15,7 +15,7 @@ tags:
 **Delivery (explicit selection).** If at least one `media_player` entity exists in the house and
 no `media` delivery is defined, a `media` delivery is generated automatically — but since
 `media_player` targets vary too much between devices to safely assume a default, it only fires
-when selected explicitly (`data: {data: {delivery: [media]}}` or a scenario), not by default.
+when selected explicitly (`data: {delivery: [media]}` or a scenario), not by default.
 
 Show an image on a media player, for example an Amazon Echo Show device, or play an audio file or other content on any media player.
 
