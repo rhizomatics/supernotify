@@ -1,27 +1,43 @@
 # Dependency updates. Shape shared across rhizomatics repos: see templates/README.md in rhizomatics/.github.
+# Version updates run on the 1st and 15th; security updates are raised as soon as an alert opens.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 6 1,15 * *"
     cooldown:
       default-days: 7
     groups:
-      github-actions:
+      # Trusted: auto-merged by admin-dependabot-automerge.yml once checks pass.
+      astral:
+        patterns: ["astral-sh/*"]
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      actions-security:
+        applies-to: security-updates
         patterns: ["*"]
 
   - package-ecosystem: pip
     directory: /
     schedule:
-      interval: daily
-      time: "13:00"
+      interval: cron
+      cronjob: "0 6 1,15 * *"
+    cooldown:
+      default-days: 7
     # Transitive deps (zeroconf, aiohttp, ...) are pinned by homeassistant and
     # differ per Python fork in uv.lock; Dependabot can't bump them per fork.
     allow:
       - dependency-type: direct
     groups:
-      python-packages:
+      # Trusted: auto-merged by admin-dependabot-automerge.yml once checks pass.
+      astral:
+        patterns: ["uv", "ruff", "ty"]
+      pip:
         patterns: ["*"]
-    cooldown:
-      default-days: 5
+        update-types: [minor, patch]
+      pip-security:
+        applies-to: security-updates
+        patterns: ["*"]
