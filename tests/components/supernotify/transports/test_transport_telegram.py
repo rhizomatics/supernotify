@@ -135,18 +135,28 @@ async def test_implicit_standard_delivery_fires_with_dict_chat_id_target() -> No
     assert service_data["target"] == [215678938]
 
 
-async def test_implicit_standard_delivery_fires_with_flat_list_prefixed_target() -> None:
+@pytest.mark.parametrize(
+    ("chat_id", "expected"),
+    [
+        pytest.param("215678938", 215678938, id="private_chat_positive_id"),
+        pytest.param("-987654321", -987654321, id="group_chat_negative_id"),
+    ],
+)
+async def test_implicit_standard_delivery_fires_with_flat_list_prefixed_target(chat_id: str, expected: int) -> None:
     """The primary, documented way to trigger this: a flat target list with a
-    `telegram_chat_id:` prefix, no other config or action data needed - see CHANGELOG."""
+    `telegram_chat_id:` prefix, no other config or action data needed - see CHANGELOG.
+    Telegram group/channel chat_ids are negative integers, unlike private chat ids - both
+    must survive the `category:value` prefix parsing (`Target.__init__`'s flat-list branch)
+    and the transport's own `int(raw_target)` conversion unmangled."""
     ctx = TestingContext()
     await ctx.test_initialize()
-    n = Notification(ctx, message="hello", target=["telegram_chat_id:215678938"])
+    n = Notification(ctx, message="hello", target=[f"telegram_chat_id:{chat_id}"])
     await n.initialize()
     await n.deliver()
 
     assert n.delivered == 1
     service_data = ctx.hass.services.async_call.call_args.kwargs["service_data"]  # type: ignore
-    assert service_data["target"] == [215678938]
+    assert service_data["target"] == [expected]
 
 
 # ---------------------------------------------------------------------------

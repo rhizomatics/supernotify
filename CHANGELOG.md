@@ -1,5 +1,27 @@
 ## v2.11.0
 
+The way that integration transports are defined and selected for automatic eligibility in delivering notifications has been overhauled, and several older flags replaced by a more logical way based on how well a transport can definitively identify its own target addresses, as `email` can do with an email address, or discord with a `discord_channel:xxx` address.
+
+Aside from making the code simpler, the main impact of this is that the ability to create a big flat list of targets and have them handled correctly is extended to all possible deliveries.
+
+Here's the extreme example from the automated tests, which sends notifications off via email, SMS, mobile push, Discord, Matrix, MQTT, Telegram, HTMT5 Push and vanilla Notify Entity:
+
+```yaml title="Extreme Notification"
+action: supernotify.notify
+data:
+  message: hello
+  target:
+    unique.recipient@example.test
+    +15551234567
+    mobile_app_unique_test_phone
+    discord_channel:434343434
+    matrix_room:!uniqueroom:example.org
+    topic:home/alerts/non-critical
+    telegram_chat_id:215678938
+    notify.unique_html5_browser
+    notify.unique_alexa_kitchen
+```
+
 ### Deliveries
 - Archived deliveries now track `missed` as well as `skipped` deliveries
   - *Skipped* where some rules fired to stop it happening, like occupancy or scenarios
@@ -17,6 +39,15 @@
   - Fixes [#232](https://github.com/rhizomatics/supernotify/issues/232)
 - Voice Occupancy (and delivery occupancy in general) only affected recipient selection, and didn't impact the delivery itself. That's fixed now, so `any_in` for Voice means the Alexa or TTS deliveries will only be selected if somebody is home
   - Fixes [[#231](https://github.com/rhizomatics/supernotify/issues/231)]
+
+### Discord
+- Delivery can now be triggered automatically by using a target in style `discord_channel:434343434` without any other config or action data needed
+
+### Matrix
+- Delivery can now be triggered automatically by using a target in style `matrix_room:!uniqueroom:example.org` without any other config or action data needed
+
+### MQTT
+- Delivery can now be triggered automatically by using a target in style `topic:queue/name` without any other config or action data needed
 
 ### Telegram
 - Delivery can now be triggered automatically by using a target in style `telegram_chat_id:215678938` without any other config or action data needed
