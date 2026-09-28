@@ -1,3 +1,5 @@
+## v2.10.4
+
 ## v2.10.3
 
 ### Home Assistant Change Tracking
