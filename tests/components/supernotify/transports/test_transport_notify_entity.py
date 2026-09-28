@@ -17,6 +17,8 @@ from custom_components.supernotify.model import Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES, OPTION_TARGET_SELECT
 from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.transports.generic import GenericTransport
+from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from tests.components.supernotify.doubles_lib import service_call
 from tests.components.supernotify.hass_setup_lib import MockGroup, TestingContext
@@ -105,6 +107,7 @@ async def test_selects_group_targets() -> None:
 
 async def test_doesnt_double_deliver() -> None:
     context = TestingContext(
+        viable_transport_types=[GenericTransport, MobilePushTransport, NotifyEntityTransport],
         deliveries={
             "custom": {
                 CONF_TRANSPORT: TRANSPORT_GENERIC,

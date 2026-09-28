@@ -143,23 +143,20 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 | `fallback`          | N       | Use this delivery only if no other delivery was selected                                     |
 | `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors    |
 
-`explicit` and `scenario` work the same way when a notification is sent. The difference is in the
-`supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries,
-but not ones only a scenario, or a fallback, should use.
+`explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
+
+### Implicit Deliveries
+
+The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery
+is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
+
 
 ### Delivery Control
 
-A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push,
-notify entities, Alexa Devices and HTML5, and `explicit` for the rest. To give every delivery the same
-default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** >
-**Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still
-override it, as does a delivery's own `inclusion`.
+A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices, HTML5, Discord and Matrix, and `explicit` for the rest. Discord/Matrix are `default` despite their targets (a channel/user ID, a room ID/alias) being opaque values, because each has its own dedicated target category (`discord_channel`/`matrix_room`) no other transport uses - a target explicitly qualified with one reaches its delivery automatically, and the delivery is simply skipped otherwise. MQTT stays `explicit` even though `topic` is just as dedicated a category, because a topic can equally be given as a `data:` keyword instead of a target, so (unlike Discord/Matrix) there's no way to tell up front whether a given notification is even relevant to it; see [Suppression Reasons](../developer/concepts.md#suppression-reasons) and the [Target-Driven Implicit Selection roadmap item](../developer/roadmap.md) for the fuller picture. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** >
+**Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
 
-The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as
-Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same
-way, only for deliveries whose transport speaks. Recipients without a Person are never in or out, so
-`only_in` and `only_out` always leave them out - see [Users without Person entries](people.md#users-without-person-entries). Left as *Not controlled*, and *Each transport's own
-default* for inclusion, nothing changes.
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` so a spoken delivery only happens when someone's home. For a delivery with its own fixed target - the Alexa Devices `_announce_all`/`_speak_all` deliveries, for example - `occupancy` decides whether the whole delivery fires at all, since there's no per-recipient list for it to narrow; for a delivery that resolves its targets from recipients, it also narrows which recipients it reaches, same as for any other delivery. Recipients without a Person are never in or out, so `only_in` and `only_out` always leave them out - see [Users without Person entries](people.md#users-without-person-entries). Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
 
 !!! info
     `inclusion` replaces the deprecated `selection` key (same values, same meaning) -

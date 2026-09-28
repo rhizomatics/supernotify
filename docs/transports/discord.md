@@ -7,11 +7,15 @@ tags:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `discord` integration is already configured and no
+**Delivery (default selection).** If the `discord` integration is already configured and no
 `discord` delivery is defined, a `discord` delivery is generated automatically (discovering
-whichever `notify.discord*` service slug your bot's config entry registered) — but since the
-channel/user ID has no automatic mapping to a recipient or entity, it only fires when selected
-explicitly (`data: {data: {delivery: [discord]}}` or a scenario), not by default.
+whichever `notify.discord*` service slug your bot's config entry registered). The channel/user
+ID itself can't be auto-detected from a bare, unqualified value, but `discord_channel` is a
+dedicated target category no other transport uses, so a target explicitly qualified with it
+(`target: {discord_channel: "123456789012345678"}`) reaches this delivery automatically, the
+same way an email address reaches the `email` delivery — no need to name `discord` in
+`delivery:` or a scenario. With nothing qualified as `discord_channel` given, the delivery is
+simply skipped.
 
 ## Motivation
 

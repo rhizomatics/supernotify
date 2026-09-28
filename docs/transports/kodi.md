@@ -7,9 +7,7 @@ tags:
 
 ## Discovery
 
-**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is
-defined, a `kodi` delivery is generated automatically and fires on every notification,
-targeting any matching `media_player.kodi_*` entities present.
+**Default delivery.** If the Kodi integration is already configured and no `kodi` delivery is defined, a `kodi` delivery is generated automatically and fires on every notification, targeting any matching `media_player.kodi_*` entities present.
 
 ## Motivation
 

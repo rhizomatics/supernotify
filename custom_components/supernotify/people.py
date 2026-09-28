@@ -467,6 +467,29 @@ class PeopleRegistry:
     def enabled_recipients(self) -> list[Recipient]:
         return [p for p in self.people.values() if p.enabled]
 
+    def occupancy_permits_delivery(self, delivery_occupancy: str, occupancy: dict[str, list[Recipient]]) -> bool:
+        """Whether a delivery should be attempted at all under the given occupancy, as opposed
+        to filter_recipients_by_occupancy() below, which narrows *which* recipients within an
+        already-selected delivery get targeted. `only_in`/`only_out` collapse to `any_in`/
+        `any_out` here: they narrow which recipients to target, but don't change whether the
+        delivery itself is relevant, which is all a gate can meaningfully decide."""
+        if delivery_occupancy == OCCUPANCY_NONE:
+            return False
+        if delivery_occupancy == OCCUPANCY_ALL:
+            return True
+        away = len(occupancy[STATE_NOT_HOME])
+        at_home = len(occupancy[STATE_HOME])
+        if delivery_occupancy == OCCUPANCY_ALL_IN:
+            return away == 0
+        if delivery_occupancy == OCCUPANCY_ALL_OUT:
+            return at_home == 0
+        if delivery_occupancy in (OCCUPANCY_ANY_IN, OCCUPANCY_ONLY_IN):
+            return at_home > 0
+        if delivery_occupancy in (OCCUPANCY_ANY_OUT, OCCUPANCY_ONLY_OUT):
+            return away > 0
+        _LOGGER.warning("SUPERNOTIFY Unknown occupancy tested: %s", delivery_occupancy)
+        return True
+
     def filter_recipients_by_occupancy(self, delivery_occupancy: str) -> list[Recipient]:
         if delivery_occupancy == OCCUPANCY_NONE:
             return []

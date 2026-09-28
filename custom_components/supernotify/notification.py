@@ -153,6 +153,7 @@ class Notification(ArchivableObject):
         self.delivered: int = 0
         self.error_count: int = 0
         self.skipped: int = 0
+        self.missed: int = 0
         self.failed: int = 0
         self.suppressed: int = 0
         self.fallback: int = 0
@@ -213,6 +214,7 @@ class Notification(ArchivableObject):
         self.actions: list[dict[str, Any]] = ensure_list(action_data.get(ATTR_ACTIONS))
 
         self.selected_deliveries: dict[str, DeliveryTargetOverride | None] = {}
+        self.implicit_only_deliveries: set[str] = set()
         self.enabled_scenarios: dict[str, Scenario] = {}
         self.selected_scenario_names: list[str] = []
         self._suppression_reason: SuppressionReason | None = None
@@ -357,7 +359,7 @@ class Notification(ArchivableObject):
             return DeliveryOutcome.NO_DELIVERY
         if self.fallback:
             return DeliveryOutcome.FALLBACK_DELIVERY
-        if self.skipped:
+        if self.missed:
             return DeliveryOutcome.PARTIAL_DELIVERY
         return DeliveryOutcome.SUCCESS
 
@@ -509,9 +511,33 @@ class Notification(ArchivableObject):
         unsorted_maybe_objs: list[Delivery | None] = [
             self.delivery_registry.deliveries.get(d) for d in all_enabled if d not in all_disabled
         ]
-        unsorted_objs: list[Delivery] = [
-            d for d in unsorted_maybe_objs if d is not None and (d.enabled or d.name in override_enabled)
-        ]
+        unsorted_objs: list[Delivery] = []
+        for maybe_obj in unsorted_maybe_objs:
+            if maybe_obj is None:
+                continue
+            if not maybe_obj.transport.enabled:
+                # a scenario can override a delivery's own enabled flag, but never its transport's -
+                # a disabled transport is excluded outright, before any envelope is built
+                trace.record_delivery_provenance(maybe_obj.name, "disabled_by", f"transport:{maybe_obj.transport.name}")
+                continue
+            if maybe_obj.enabled or maybe_obj.name in override_enabled:
+                unsorted_objs.append(maybe_obj)
+
+        explicitly_enabled: set[str] = {
+            *scenario_enable_deliveries,
+            *override_enable_deliveries,
+            *recipients_enable_deliveries,
+        }
+        # a delivery only ever included by default (never asked for by call, scenario or
+        # recipient) that turns out to have nothing to target is a routine non-event, not a
+        # miss - see delivery_skip_reason()/record_result(). Unlike transport/enabled above,
+        # this can't be excluded from selection itself: whether a target actually resolves is
+        # call-specific runtime data (who's a recipient, who's home), not a standing rule, and
+        # plenty of tests/behaviour deliberately rely on selection being independent of that.
+        self.implicit_only_deliveries = {
+            d.name for d in unsorted_objs if d.name in default_enable_deliveries and d.name not in explicitly_enabled
+        }
+
         first: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.FIRST]
         anywhere: list[str] = [d.name for d in unsorted_objs if d.selection_rank == SelectionRank.ANY]
         config_last: list[str] = [
@@ -561,9 +587,6 @@ class Notification(ArchivableObject):
             self.id,
             self.selected_deliveries,
         )
-
-        for delivery_name in self.selected_deliveries:
-            self.deliveries[delivery_name] = {}
 
         if self._suppression_reason is not None:
             _LOGGER.info("SUPERNOTIFY Suppressing globally silenced/snoozed notification (%s)", self.id)
@@ -655,6 +678,8 @@ class Notification(ArchivableObject):
                 return SuppressionReason.PRIORITY
             if not delivery.evaluate_conditions(self.condition_variables):
                 return SuppressionReason.DELIVERY_CONDITION
+            if not self.people_registry.occupancy_permits_delivery(delivery.occupancy, self.occupancy):
+                return SuppressionReason.OCCUPANCY
         return None
 
     def plan(self) -> dict[str, Any]:
@@ -788,6 +813,16 @@ class Notification(ArchivableObject):
                 skip_summary["targets"] = targets
             self.deliveries[delivery_name][EnvelopeOutcome.SKIPPED] = skip_summary
             self.skipped += 1
+            implicit_no_target = suppression_reason == SuppressionReason.NO_TARGET and delivery_name in (
+                self.implicit_only_deliveries
+            )
+            if not implicit_no_target and not (suppression_reason and suppression_reason.is_rule):
+                # a rule-based skip (occupancy, priority, a delivery condition, snoozed, a
+                # disabled transport) is exactly what was configured to happen, and a
+                # never-explicitly-asked-for delivery with nothing to target is a routine
+                # non-event - neither counts as a miss. Only something that should have gone
+                # out but couldn't - because it was actually requested - does.
+                self.missed += 1
             if suppression_reason == SuppressionReason.ERROR:
                 self.error_count += 1
                 self.failed += 1
@@ -822,6 +857,7 @@ class Notification(ArchivableObject):
             "failed",
             "suppressed",
             "skipped",
+            "missed",
             "fallback",
             "error_count",
             "dupe",

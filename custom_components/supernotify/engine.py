@@ -261,10 +261,11 @@ class SupernotifyEngine:
                 context=context,
             )
             _LOGGER.debug(
-                "SUPERNOTIFY %s deliveries, %s failed, %s skipped, %s suppressed",
+                "SUPERNOTIFY %s deliveries, %s failed, %s skipped, %s missed, %s suppressed",
                 notification.delivered,
                 notification.failed,
                 notification.skipped,
+                notification.missed,
                 notification.suppressed,
             )
             if notification.uncategorized_targets:

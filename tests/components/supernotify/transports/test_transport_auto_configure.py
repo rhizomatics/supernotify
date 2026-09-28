@@ -3,13 +3,17 @@ from an existing Home Assistant config entry (telegram, ntfy, kodi, lametric,
 alexa_devices), a dynamically-named notify service (discord, pushover, sms), or
 unconditionally (persistent).
 
-Transports whose target is positively identifiable (an HA entity_id, or a
-recipient's email/phone) generate a delivery, named plainly after the
-transport, that fires on every notification. Transports that need an opaque
-per-delivery identifier the notification author must still supply (chat_id,
-channel/user ID, device_id) - or where firing unprompted would simply be
-unwelcome (persistent) - generate the same plainly-named delivery, but
-explicit-selection-only instead.
+Transports whose target is positively identifiable (an HA entity_id, a
+recipient's email/phone, or a value qualified with a category no other
+transport uses, like `discord_channel`/`matrix_room`) generate a delivery,
+named plainly after the transport, that fires on every notification.
+Transports whose target category is itself ambiguous (kodi, tts, and the
+generic `media` transport all match a bare `media_player` entity, so
+there's no reliable way to tell which one a given entity was meant for),
+whose target can equally be a `data:` keyword instead (mqtt's `topic` -
+`target_required` is `optional`, so NO_TARGET can't short-circuit it) - or
+where firing unprompted would simply be unwelcome (persistent) - generate
+the same plainly-named delivery, but explicit-selection-only instead.
 
 Path in upstream repo:
     tests/components/supernotify/transports/test_transport_auto_configure.py
@@ -118,8 +122,10 @@ async def test_discord_auto_configure_discovers_service(hass: HomeAssistant) -> 
     assert TRANSPORT_DISCORD in result
     dc = DeliveryConfig(result["discord"], uut.delivery_defaults)
     assert dc.action == "notify.discord_2"
-    # a discord channel/user ID isn't positively identifiable, so explicit-only
-    assert dc.inclusion == [INCLUSION_EXPLICIT]
+    # a discord channel/user ID isn't positively identifiable by shape, but
+    # discord_channel is a dedicated category no other transport uses, so a qualified
+    # value is unambiguous
+    assert dc.inclusion == [INCLUSION_DEFAULT]
 
 
 async def test_pushover_auto_configure_no_service(hass: HomeAssistant) -> None:
@@ -501,7 +507,7 @@ async def test_matrix_auto_configure_no_service(hass: HomeAssistant) -> None:
     assert not uut.is_viable(ctx.hass_api)
 
 
-async def test_matrix_auto_configure_service_registered_is_explicit(hass: HomeAssistant) -> None:
+async def test_matrix_auto_configure_service_registered_is_default(hass: HomeAssistant) -> None:
     hass.services.async_register("matrix", "send_message", lambda call: None)
 
     ctx = TestingContext(homeassistant=hass)
@@ -510,9 +516,10 @@ async def test_matrix_auto_configure_service_registered_is_explicit(hass: HomeAs
 
     result = uut.build_standard_deliveries(ctx.hass_api)
     assert TRANSPORT_MATRIX in result
-    # a room ID/alias isn't positively identifiable, so explicit-only
+    # a room ID/alias isn't positively identifiable by shape, but matrix_room is a
+    # dedicated category no other transport uses, so a qualified value is unambiguous
     dc = DeliveryConfig(result, uut.delivery_defaults)
-    assert dc.inclusion == [INCLUSION_EXPLICIT]
+    assert dc.inclusion == [INCLUSION_DEFAULT]
 
 
 async def test_mobile_push_auto_configure_no_config_entry(hass: HomeAssistant) -> None:

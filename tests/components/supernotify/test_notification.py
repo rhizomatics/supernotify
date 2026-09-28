@@ -12,6 +12,7 @@ from pytest_asyncio import fixture
 from pytest_unordered import unordered
 
 from custom_components.supernotify.const import (
+    ATTR_DELIVERY_SELECTION,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_PRIORITY,
@@ -22,13 +23,16 @@ from custom_components.supernotify.const import (
     CONF_MEDIA,
     CONF_MOBILE_APP_ID,
     CONF_MOBILE_DEVICES,
+    CONF_OCCUPANCY,
     CONF_OPTIONS,
     CONF_PERSON,
     CONF_PHONE_NUMBER,
     CONF_SELECTION_RANK,
+    CONF_TARGET_REQUIRED,
     CONF_TARGET_USAGE,
     CONF_TRANSPORT,
     DELIVERY_SELECTION_EXPLICIT,
+    DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
     INCLUSION_DEFAULT,
     TRANSPORT_GENERIC,
@@ -38,12 +42,13 @@ from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.engine import TRANSPORTS as ALL_TRANSPORT_TYPES
 from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.media_grab import snap_notification_image
-from custom_components.supernotify.model import Target
+from custom_components.supernotify.model import SuppressionReason, Target
 from custom_components.supernotify.notification import Notification
 from custom_components.supernotify.options import OPTION_TARGET_CATEGORIES
 from custom_components.supernotify.people import RecipientNotifyEntity
-from custom_components.supernotify.schema import DeliveryOutcome, SelectionRank
+from custom_components.supernotify.schema import DeliveryOutcome, EnvelopeOutcome, SelectionRank
 from custom_components.supernotify.transports.email import EmailTransport
+from custom_components.supernotify.transports.generic import GenericTransport
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from custom_components.supernotify.transports.notify_entity import NotifyEntityTransport
 from custom_components.supernotify.transports.sms import SMSTransport
@@ -57,6 +62,8 @@ chime:
 """
 TRANSPORTS = """
 notify_entity:
+    enabled: false
+matrix:
     enabled: false
 """
 RECIPIENTS = """
@@ -291,6 +298,212 @@ async def test_scenario_delivery_enable() -> None:
     uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
     await uut.initialize()
     assert list(uut.selected_deliveries) == unordered("email", "mobile_push", "chime")
+
+
+async def test_scenario_cannot_enable_delivery_with_disabled_transport() -> None:
+    """A scenario can re-enable a delivery that's disabled at the delivery level (see
+    test_scenario_delivery_enable above), but it must not be able to bring back a delivery
+    whose entire transport is disabled - that's excluded before any envelope is built, rather
+    than being selected and only skipped once delivery is attempted."""
+    ctx = TestingContext(
+        deliveries=DELIVERIES,
+        transports=TRANSPORTS,
+        recipients=RECIPIENTS,
+        scenarios={"mockery": {"delivery": {"chime": {"enabled": True}}}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        services=MOCK_SERVICES,
+    )
+    await ctx.test_initialize()
+    ctx.delivery_registry.transports["chime"].enabled = False
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == unordered("email", "mobile_push")
+    assert uut.debug_trace.delivery_provenance["chime"]["disabled_by"] == ["transport:chime"]
+
+    await uut.deliver()
+    assert uut.delivered > 0
+    assert uut.missed == 0
+    assert uut.outcome() == DeliveryOutcome.SUCCESS
+
+
+async def test_implicit_delivery_with_no_target_is_not_partial() -> None:
+    """An implicit (auto-included, never explicitly asked for by call/scenario/recipient)
+    delivery that ends up with nothing to target shouldn't drag the notification's outcome
+    down to partial_delivery - it was never actually asked for."""
+    ctx = TestingContext(
+        services={"custom": ["tweak"]},
+        viable_transport_types=[GenericTransport],
+        deliveries={
+            "reachable": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light"],
+                CONF_TRANSPORT: "generic",
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            },
+            "unreachable": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TRANSPORT: "generic",
+                CONF_TARGET_REQUIRED: "always",
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            },
+        },
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123")
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == unordered("reachable", "unreachable")
+
+    await uut.deliver()
+    assert uut.delivered == 1
+    assert uut.skipped == 1
+    assert uut.missed == 0
+    assert uut.outcome() == DeliveryOutcome.SUCCESS
+
+
+async def test_explicit_delivery_with_no_target_is_still_partial() -> None:
+    """Unlike an implicit delivery (see test_implicit_delivery_with_no_target_is_not_partial
+    above), one explicitly asked for by a scenario that then has nothing to target is a real
+    partial failure, and should still count as skipped."""
+    ctx = TestingContext(
+        services={"custom": ["tweak"]},
+        viable_transport_types=[GenericTransport],
+        deliveries={
+            "reachable": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.light"],
+                CONF_TRANSPORT: "generic",
+                CONF_INCLUSION: [INCLUSION_DEFAULT],
+            },
+            "unreachable": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TRANSPORT: "generic",
+                CONF_TARGET_REQUIRED: "always",
+            },
+        },
+        scenarios={"mockery": {"delivery": {"unreachable": {}}}},
+    )
+    await ctx.test_initialize()
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: "mockery"})
+    await uut.initialize()
+    assert list(uut.selected_deliveries) == unordered("reachable", "unreachable")
+
+    await uut.deliver()
+    assert uut.delivered == 1
+    assert uut.skipped == 1
+    assert uut.missed == 1
+    assert uut.outcome() == DeliveryOutcome.PARTIAL_DELIVERY
+
+
+async def test_occupancy_gates_delivery_with_fixed_target(hass: HomeAssistant) -> None:
+    """A delivery with its own fixed target (e.g. a list of Alexa entity IDs, like `announce`
+    here) has no recipients for occupancy to narrow - occupancy_permits_delivery(), wired into
+    delivery_skip_reason(), is what actually decides whether it goes out at all. A rule-based
+    skip like this is never a "miss", explicitly selected or not."""
+    from homeassistant.components import person
+
+    ctx = TestingContext(
+        homeassistant=hass,
+        components={"person": {}},
+        services={"custom": ["tweak"]},
+        viable_transport_types=[GenericTransport],
+        deliveries={
+            "announce": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.speaker"],
+                CONF_TRANSPORT: "generic",
+                CONF_OCCUPANCY: "any_in",
+            }
+        },
+        recipients=[{CONF_PERSON: "person.joe_mctest"}],
+    )
+    await ctx.test_initialize()
+    await person.async_create_person(hass, "Joe McTest")
+    await hass.async_block_till_done()
+    hass.states.async_set("person.joe_mctest", "not_home")
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "announce"})
+    await uut.initialize()
+    await uut.deliver()
+
+    assert uut.delivered == 0
+    assert uut.missed == 0
+    assert uut.deliveries["announce"][EnvelopeOutcome.SKIPPED]["suppression_reason"] == str(SuppressionReason.OCCUPANCY)  # type: ignore
+
+    hass.states.async_set("person.joe_mctest", "home")
+    uut2 = Notification(ctx, "testing 123 again", action_data={CONF_DELIVERY: "announce"})
+    await uut2.initialize()
+    await uut2.deliver()
+
+    assert uut2.delivered == 1
+
+
+async def test_occupancy_only_in_behaves_like_any_in_for_delivery_gate(hass: HomeAssistant) -> None:
+    """only_in narrows *which* recipients within a delivery, but a fixed-target delivery has
+    none to narrow - so as a gate for whether the delivery fires at all, only_in and any_in
+    are the same test (see test_occupancy_permits_delivery in test_people.py)."""
+    from homeassistant.components import person
+
+    ctx = TestingContext(
+        homeassistant=hass,
+        components={"person": {}},
+        services={"custom": ["tweak"]},
+        viable_transport_types=[GenericTransport],
+        deliveries={
+            "announce": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.speaker"],
+                CONF_TRANSPORT: "generic",
+                CONF_OCCUPANCY: "only_in",
+            }
+        },
+        recipients=[{CONF_PERSON: "person.joe_mctest"}],
+    )
+    await ctx.test_initialize()
+    await person.async_create_person(hass, "Joe McTest")
+    await hass.async_block_till_done()
+    hass.states.async_set("person.joe_mctest", "not_home")
+
+    uut = Notification(ctx, "testing 123", action_data={CONF_DELIVERY: "announce"})
+    await uut.initialize()
+    await uut.deliver()
+
+    assert uut.delivered == 0
+    assert uut.deliveries["announce"][EnvelopeOutcome.SKIPPED]["suppression_reason"] == str(SuppressionReason.OCCUPANCY)  # type: ignore
+
+
+async def test_fixed_delivery_selection_bypasses_occupancy_gate(hass: HomeAssistant) -> None:
+    """delivery_selection: fixed is an explicit, no-rules-applied request for exactly this
+    delivery - the same bypass priority/delivery_condition already get."""
+    from homeassistant.components import person
+
+    ctx = TestingContext(
+        homeassistant=hass,
+        components={"person": {}},
+        services={"custom": ["tweak"]},
+        viable_transport_types=[GenericTransport],
+        deliveries={
+            "announce": {
+                CONF_ACTION: "custom.tweak",
+                CONF_TARGET: ["custom.speaker"],
+                CONF_TRANSPORT: "generic",
+                CONF_OCCUPANCY: "any_in",
+            }
+        },
+        recipients=[{CONF_PERSON: "person.joe_mctest"}],
+    )
+    await ctx.test_initialize()
+    await person.async_create_person(hass, "Joe McTest")
+    await hass.async_block_till_done()
+    hass.states.async_set("person.joe_mctest", "not_home")
+
+    uut = Notification(
+        ctx, "testing 123", action_data={CONF_DELIVERY: "announce", ATTR_DELIVERY_SELECTION: DELIVERY_SELECTION_FIXED}
+    )
+    await uut.initialize()
+    await uut.deliver()
+
+    assert uut.delivered == 1
 
 
 async def test_explicit_list_of_deliveries() -> None:
@@ -551,6 +764,7 @@ async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(
         services=MOCK_SERVICES,
+        transports={"matrix": {CONF_ENABLED: False}},
         deliveries={
             "fallback": {
                 CONF_ACTION: "custom.tweak",

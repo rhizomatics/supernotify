@@ -173,6 +173,38 @@ async def test_filter_recipients(hass: HomeAssistant) -> None:
     assert {r.entity_id for r in uut.filter_recipients_by_occupancy("only_in")} == {"person.joe_mctest"}
 
 
+async def test_occupancy_permits_delivery(hass: HomeAssistant) -> None:
+    """Unlike filter_recipients_by_occupancy() (which narrows which recipients a delivery
+    reaches), occupancy_permits_delivery() decides whether the delivery is relevant at all -
+    the check a delivery with its own fixed target (no recipients to filter) needs. only_in/
+    only_out collapse to any_in/any_out here: they only make sense as a recipient filter."""
+    ctx = TestingContext(homeassistant=hass, components={"person": {}})
+    await ctx.test_initialize()
+    await person.async_create_person(hass, "Joe McTest")
+    await person.async_create_person(hass, "Mae McTest")
+    await hass.async_block_till_done()
+    hass.states.async_set("person.joe_mctest", "home")
+    hass.states.async_set("person.mae_mctest", "not_home")
+    uut = PeopleRegistry([], ctx.hass_api, discover=True)
+    await uut.initialize()
+    occupancy = uut.determine_occupancy()
+
+    assert uut.occupancy_permits_delivery("all", occupancy) is True
+    assert uut.occupancy_permits_delivery("none", occupancy) is False
+    assert uut.occupancy_permits_delivery("all_in", occupancy) is False  # Mae is away
+    assert uut.occupancy_permits_delivery("all_out", occupancy) is False  # Joe is home
+    assert uut.occupancy_permits_delivery("any_in", occupancy) is True
+    assert uut.occupancy_permits_delivery("any_out", occupancy) is True
+    assert uut.occupancy_permits_delivery("only_in", occupancy) is True
+    assert uut.occupancy_permits_delivery("only_out", occupancy) is True
+
+    hass.states.async_set("person.joe_mctest", "not_home")
+    occupancy = uut.determine_occupancy()
+    assert uut.occupancy_permits_delivery("any_in", occupancy) is False
+    assert uut.occupancy_permits_delivery("only_in", occupancy) is False
+    assert uut.occupancy_permits_delivery("all_out", occupancy) is True
+
+
 @pytest.mark.parametrize(
     ("joe_state", "occupancy", "any_in", "all_out", "only_in"),
     [

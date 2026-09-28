@@ -55,17 +55,22 @@ Randomization for greetings and sounds. Sleigh bells are nice on first notificat
   - Switching a whole transport off.
     - Today this means a delivery pattern with enabled: false, which fails the same way as in point 1. The alternative is the transport's own switch, but that's global, not per scenario.
 
-## Email
+## Transports
 
-### HTML Email
+### Alexa Media Player
+
+- Support notify entities directly, so they get similar benefit of spoken notification tweaks. This would mean the transport is partly implicit, and partly explicit (media_player)
+
+### Chime
+
+- Chime Aliases should be targets in their own right, so a target list could call chime:doorbells.
+  - Possibly chime aliases should be able to have labels, areas etc and probably they are really Notify Entities and wouldn't suffer from the paucity of functionality offered by those
+
+### Email
+
+#### HTML Email
 
 Revisit the HTML template, review if more than 1 needed, and ways to make it more useful in bringing HA context into a notification
-
-### Links and Actions
-
-- Configurable links for email
-- Actions for email
-- Option to add notification details and link to archive object onto e-mail footer
 
 ## Delivery and Target Selection
 
@@ -76,6 +81,23 @@ default everything. This works well to minimize noise. However it means every de
 
 Sort out explicit/implicit/scenario. Two of these mean the same thing. There's a useful delivery mode which is effectively target driven - only consider the transport if there's a target that needs it. On other hand deliveries like Persistence that only make sense if explicit.
 
+### Target-Driven Implicit Selection
+
+Today, whether a delivery is an implicit selection candidate (`select_deliveries()`) is decided purely by its static `inclusion: default` config, independent of what target was actually given in the call. `email`/`mobile_push`/`notify_entity`/`html5`/`alexa_devices` happen to be `default`, so giving a bare email address or a `notify.*` entity in `target:` "just works" without naming a delivery - but that's really an accident of those specific transports also being default-inclusion, not a real target-matching mechanism. A transport like Discord is `explicit`-only, so even a fully-qualified `target: {discord_channel: "x"}` (which by itself unambiguously identifies the category - see `Transport.target_categories`) goes nowhere unless the call *also* names the delivery explicitly. The value doesn't error - it just sits unclaimed, visible only via `unassigned_targets` in the archive.
+
+The real fix: drive implicit selection directly off target generation - any delivery whose `target_categories` can definitively (unambiguously, by shape) match something in the given target should be an implicit candidate, unless otherwise disabled, regardless of its static `inclusion` setting. This makes email and Discord symmetric, and gives `default`/`explicit` its narrower, original meaning back (should this fire when nothing in the target specifically calls for it).
+
+This has a real circular-dependency complication to solve: a delivery with its own **fixed** target - e.g. a permanent archive/BCC email address configured directly on the delivery, not derived from any recipient or call-supplied target - has no target to match *until* it's already selected, and under a pure target-driven model there'd be nothing to trigger its selection in the first place. Whatever design replaces today's static `inclusion` flag needs an explicit carve-out for this case (a delivery can declare itself a candidate independent of the notification's target, the way `inclusion: default` does today) - it can't be *purely* target-driven.
+
+Implemented as a stopgap in the meantime: `discord` and `matrix` are now `inclusion: default` too. Their values (a channel ID, a room alias) can't be auto-detected from a bare, untyped string - that's a different concern, about shape-matching an unqualified value - but once explicitly qualified with their own dedicated category key (`discord_channel:`, `matrix_room:`, none shared with any other transport), there's no ambiguity about which delivery a value belongs to, so they're exactly as safe as email/mobile_push already are.
+
+`mqtt` was reverted back to `explicit` after initially being included in this stopgap: `topic` is just as dedicated a category as `discord_channel`/`matrix_room`, but `target_required` is `optional`, not `always`, because a topic can legitimately be given as a `data:` keyword instead of a target (a delivery with a fixed topic baked into its own config, needing no target at all). That means `NO_TARGET` never short-circuits it the way it does for Discord/Matrix, so there's no cheap way to tell up front whether a given notification is even relevant - defaulting it would mean a `deliver()` attempt, and its "No topic for publication" warning, on every single notification regardless of relevance. Fixing this properly needs the same target-driven design as the ambiguous transports below, not just a flip to `default`.
+
+`kodi`, the generic `media` transport, `tts` and `alexa_media_player` are deliberately left out of this stopgap too. Their shared category is a bare `media_player` domain (`alexa_media_player`'s is platform-restricted, but still just "a media_player entity"), which is ambiguous in a different way to Discord/Matrix: even with only one transport claiming it, a `media_player.x` entity alone doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback - there's no reliable way to pick the right operation from the entity alone, regardless of cross-delivery collision (`OPTION_UNIQUE_TARGETS`, off by default - `selection_rank` alone only orders processing, it doesn't stop a later delivery claiming a value an earlier one already took). That needs the fuller target-driven design above, not just a flip to `default`. `alexa_media_player` also doesn't yet handle the `notify.*`-entity form Alexa Media Player can expose, alongside its `media_player.*` one.
+
+Chime has a related problem one level down: it currently matches `switch`/`media_player`/`siren`/`script`/`rest_command` entities directly, borrowing other domains' shapes, rather than through its own named chime aliases. A further step is to make chime aliases into targets in their own right, so a chime delivery can be matched unambiguously by alias name instead.
+
+Consider also typed dict, or classes, for the deliveries mapping carried around inside Notification so easier to verify by type the interactions across functions.
 
 ## Setup and Configuration
 

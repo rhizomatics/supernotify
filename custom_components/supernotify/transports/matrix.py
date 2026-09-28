@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, ATTR_MATRIX_ROOM, TRANSPORT_MATRIX
+from custom_components.supernotify.const import ATTR_DATA, ATTR_MATRIX_ROOM, INCLUSION_DEFAULT, TRANSPORT_MATRIX
 from custom_components.supernotify.model import (
     DebugTrace,
     TargetRequired,
@@ -108,6 +108,13 @@ class MatrixTransport(Transport):
         # this transport's/a delivery's own name) - select_rooms() below still validates
         # the shape itself once it arrives
         return [ATTR_MATRIX_ROOM]
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # the room ID/alias itself is opaque, but matrix_room is a dedicated category name
+        # no other transport uses, so a value explicitly qualified with it is unambiguously
+        # this transport's - safe to fire on every notification by default
+        return [INCLUSION_DEFAULT]
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the matrix send_message service."""

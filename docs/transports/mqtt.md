@@ -11,8 +11,15 @@ tags:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically — but since a topic has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data:
-{data: {delivery: [mqtt]}}` or a scenario), not by default. MQTT devices that already expose themselves as notify entities are covered automatically by the
+**Delivery (explicit selection).** If the MQTT integration's config entry exists and no `mqtt`
+delivery is defined, an `mqtt` delivery is generated automatically — but it only fires when
+selected explicitly (`data: {data: {delivery: [mqtt]}}` or a scenario), not by default. `topic`
+is a dedicated target category no other transport uses, so it isn't ambiguous the way an opaque
+channel/room ID could be, but a topic can equally be given as a `data:` keyword instead of a
+target (`target_required` is `optional`, not `always`), so there's no way to tell up front
+whether a given notification is even relevant to this delivery — defaulting it would mean an
+attempt, and its "No topic for publication" warning, on every single notification. MQTT devices
+that already expose themselves as notify entities are covered automatically by the
 [`notify_entity`](notify_entity.md) transport's own default delivery instead.
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, the specific MQTT integration can be easier to use.
@@ -28,7 +35,7 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
     message: ""
     delivery:
         mqtt:
-            target: notify/queue/1
+            target: topic:notify/queue/1
             data:
                 payload:
                   warning:
@@ -37,10 +44,7 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
                     level: low
 ```
 
-The topic can also be supplied as a `target` instead of `data.topic` - useful for
-selecting the topic per scenario or recipient rather than hard-coding it into the
-delivery. If both are given, `target` takes precedence. Multiple targets publish the
-same payload to each topic in turn.
+The topic should supplied as a `target` instead of `data.topic` which is only supported for backward compatibility.. If both are given, `target` takes precedence. Multiple targets publish the same payload to each topic in turn.
 
 ```yaml title="Example Notification with topic as target"
 - action: supernotify.notify

@@ -439,8 +439,24 @@ class SuppressionReason(StrEnum):
     TRANSPORT_DISABLED = "TRANSPORT_DISABLED"
     PRIORITY = "PRIORITY"
     DELIVERY_CONDITION = "DELIVERY_CONDITION"
+    OCCUPANCY = "OCCUPANCY"
     UNKNOWN = "UNKNOWN"
     ERROR = "ERROR"
+
+    @property
+    def is_rule(self) -> bool:
+        """Whether this reason reflects a configured rule (occupancy, priority, condition,
+        snooze, a disabled transport, an inactive required scenario) rather than an unexpected
+        failure. A rule-based skip is exactly what was configured to happen, so it shouldn't
+        count toward a notification's outcome the way a genuine miss does."""
+        return self in {
+            SuppressionReason.SNOOZED,
+            SuppressionReason.NO_SCENARIO,
+            SuppressionReason.TRANSPORT_DISABLED,
+            SuppressionReason.PRIORITY,
+            SuppressionReason.DELIVERY_CONDITION,
+            SuppressionReason.OCCUPANCY,
+        }
 
 
 class TargetRequired(StrEnum):

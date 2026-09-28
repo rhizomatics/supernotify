@@ -137,21 +137,36 @@ Duplicate checking is done per envelope by `DupeChecker`, using a hash of the me
 
 ## Suppression Reasons
 
-When a delivery doesn't go out, the reason is recorded as a `SuppressionReason`:
+When a delivery doesn't go out, the reason is recorded as a `SuppressionReason`. Each one is
+either a *rule* - a configured condition that decided the delivery didn't apply right now, which
+is exactly what was asked for and so is tracked as `skipped` only - or a genuine *miss*, where a
+delivery that should have gone out couldn't, which also counts toward `missed` and can turn a
+notification's outcome to `PARTIAL_DELIVERY`. `SuppressionReason.is_rule` is the source of truth
+for which is which.
 
-| Reason                | Cause                                                          |
-| --------------------- | -------------------------------------------------------------- |
-| `SNOOZED`             | Snoozed or silenced                                            |
-| `DUPE`                | Duplicate of a recent notification                             |
-| `NO_SCENARIO`         | `require_scenarios` set, but none active                       |
-| `NO_ACTION`           | No action to call                                              |
-| `NO_TARGET`           | Transport requires a target, and none were resolved            |
-| `INVALID_ACTION_DATA` | Action call `data` failed validation                           |
-| `TRANSPORT_DISABLED`  | The delivery's transport is switched off                       |
-| `PRIORITY`            | Notification priority not in the delivery's `priority` list    |
-| `DELIVERY_CONDITION`  | The delivery's `conditions` didn't match                       |
-| `ERROR`               | Unexpected exception                                           |
-| `UNKNOWN`             | The transport declined without a specific reason               |
+| Reason                | Cause                                                          | Rule or miss? |
+| --------------------- | -------------------------------------------------------------- | -------------- |
+| `SNOOZED`             | Snoozed or silenced                                            | Rule           |
+| `DUPE`                | Duplicate of a recent notification                             | (own tracking) |
+| `NO_SCENARIO`         | `require_scenarios` set, but none active                       | Rule           |
+| `NO_ACTION`           | No action to call                                              | Miss           |
+| `NO_TARGET`           | Transport requires a target, and none were resolved            | Miss - unless the delivery was only implicitly included (never asked for by call, scenario or recipient), in which case it's a routine non-event |
+| `INVALID_ACTION_DATA` | Action call `data` failed validation                           | Miss           |
+| `TRANSPORT_DISABLED`  | The delivery's transport is switched off                       | Rule           |
+| `PRIORITY`            | Notification priority not in the delivery's `priority` list    | Rule           |
+| `DELIVERY_CONDITION`  | The delivery's `conditions` didn't match                       | Rule           |
+| `OCCUPANCY`           | The delivery's `occupancy` condition wasn't met                | Rule           |
+| `ERROR`               | Unexpected exception                                           | Miss           |
+| `UNKNOWN`             | The transport declined without a specific reason               | Miss           |
+
+`PRIORITY`, `DELIVERY_CONDITION` and `OCCUPANCY` are skipped entirely - not even checked - when
+the action call set `delivery_selection: fixed`, since that's an explicit, no-rules-applied
+request for exactly that delivery.
+
+A delivery whose own `enabled` is `false`, or whose transport is switched off, never reaches
+`SuppressionReason` at all - it's excluded before selection, the same as a delivery no rule
+enabled, and never appears in the archived `deliveries` list. `delivery_provenance` is the place
+to look for why a delivery wasn't even selected, as opposed to why a selected one didn't go out.
 
 ## Debug Trace
 

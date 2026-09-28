@@ -59,7 +59,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
+from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, INCLUSION_DEFAULT, TRANSPORT_DISCORD
 from custom_components.supernotify.model import (
     DebugTrace,
     TargetRequired,
@@ -116,6 +116,13 @@ class DiscordTransport(Transport):
         # mapping, or this transport's/a delivery's own name) - select_channels() below
         # still validates the shape itself once it arrives
         return [ATTR_DISCORD_CHANNEL]
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # the channel/user ID itself is opaque, but discord_channel is a dedicated category
+        # name no other transport uses, so a value explicitly qualified with it is
+        # unambiguously this transport's - safe to fire on every notification by default
+        return [INCLUSION_DEFAULT]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # like validate_action() below, an explicit delivery can supply its own notify.*

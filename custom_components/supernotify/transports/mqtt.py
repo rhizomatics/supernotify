@@ -50,6 +50,12 @@ class MQTTTransport(Transport):
         # via this list, but because it's the sole plain-string entry `Delivery.
         # reclassify_unqualified_target()` falls back to for a delivery-scoped value with no
         # shape a validator recognises.
+        #
+        # Unlike discord_channel/matrix_room, `topic` being an unambiguous category doesn't
+        # make this transport safe to default: a topic can equally be a `data:` keyword
+        # instead of a target (target_required is `optional`, not `always`), so NO_TARGET
+        # never short-circuits it - defaulting would mean a deliver() attempt, and its "No
+        # topic for publication" warning, on every single notification.
         return [ATTR_TOPIC]
 
     def validate_action(self, action: str | None) -> bool:

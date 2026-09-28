@@ -394,7 +394,10 @@ async def test_exposed_transport_events(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert_clean_notification(notification, expected_deliveries={"chime_person": 1}, expected_skipped=1)
+    # "testing" is explicitly requested here, but its transport is switched off - excluded
+    # before selection entirely (see delivery_skip_reason()/select_deliveries()), not counted
+    # as skipped
+    assert_clean_notification(notification, expected_deliveries={"chime_person": 1}, expected_skipped=0)
     assert notification is not None
 
     await hass.services.async_call("switch", "turn_on", {"entity_id": "switch.supernotify_transport_generic"}, blocking=True)
