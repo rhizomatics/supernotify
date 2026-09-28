@@ -71,7 +71,7 @@ dev=[
     "mutagen",
     "ha-ffmpeg",
     # home assistant mobile push testing, and ntfy, old ver for HA compat
-    "PyTurboJPEG==1.8.3",
+    "PyTurboJPEG==2.5.0",
     # integration testing
     #"hassil",
     #"gazetteer_matcher",
