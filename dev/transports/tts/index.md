@@ -8,9 +8,41 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/tts/
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `tts.speak` service is available and at least one `media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is generated automatically — but since a `media_player` target has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {data: {delivery: [tts]}}` or a scenario), not by default.
+**Delivery (explicit selection).** If the `tts.speak` service is available and at least one `media_player` entity exists in the house, and no `tts` delivery is defined, a `tts` delivery is generated automatically — but since a `media_player` target has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [tts]}` or a scenario), not by default.
 
 Announce, or speak, a notification using one of Home Assistant's built-in [*Text-to-Speech* integrations](https://www.home-assistant.io/integrations/#text-to-speech). By default, it uses the `tts.home_assistant_cloud` by Nabu Casa, thougn any supported tts can be used. It also supports the Android Companion App [TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
+
+## Example
+
+Since `tts` never auto-selects (see [Discovery](#discovery) above), name the `tts` delivery explicitly and give it one or more `media_player` targets:
+
+Example Notification
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "Someone is at the front door"
+    delivery:
+      tts:
+        target:
+          - media_player.kitchen_speaker
+          - media_player.living_room_speaker
+```
+
+The resulting action call from the adaptor looks like:
+
+```yaml
+service: tts.speak
+target:
+  entity_id: tts.home_assistant_cloud
+data:
+  media_player_entity_id:
+    - media_player.kitchen_speaker
+    - media_player.living_room_speaker
+  message: "Someone is at the front door"
+```
+
+A scenario can select `tts` the same way, instead of naming it on every call - see [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md).
 
 ## Text-to-Speech Integration
 

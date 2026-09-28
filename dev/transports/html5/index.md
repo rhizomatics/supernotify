@@ -4,7 +4,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/html5/
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {data: {delivery: [html5]}}` or a scenario), not by default.
+**Delivery (explicit selection).** If the `html5` integration's config entry exists and no `html5` delivery is defined, an `html5` delivery is generated automatically — but since a browser's `notify.*` entity has no automatic mapping to a recipient, it only fires when selected explicitly (`data: {delivery: [html5]}` or a scenario), not by default.
 
 ## Motivation
 
