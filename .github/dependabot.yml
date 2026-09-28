@@ -1,24 +1,27 @@
+# Dependency updates. Shape shared across rhizomatics repos: see templates/README.md in rhizomatics/.github.
 version: 2
 updates:
-
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      # Check for updates to GitHub Actions every week
-      interval: "weekly"
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]
 
   - package-ecosystem: pip
-    directory: "/"
+    directory: /
     schedule:
       interval: daily
       time: "13:00"
     # Transitive deps (zeroconf, aiohttp, ...) are pinned by homeassistant and
     # differ per Python fork in uv.lock; Dependabot can't bump them per fork.
     allow:
-      - dependency-type: "direct"
+      - dependency-type: direct
     groups:
       python-packages:
-        patterns:
-          - "*"
+        patterns: ["*"]
     cooldown:
       default-days: 5
