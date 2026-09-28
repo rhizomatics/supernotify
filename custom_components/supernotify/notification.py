@@ -682,6 +682,29 @@ class Notification(ArchivableObject):
                 return SuppressionReason.OCCUPANCY
         return None
 
+    def _target_required(self, delivery: Delivery) -> TargetRequired:
+        """delivery.target_required, except an auto-generated standard delivery (never a
+        user's own CONFIG-provenance one) that's both OPTIONAL and implicit-only for this
+        call (never asked for by call, scenario or recipient) is treated as ALWAYS, if it
+        actually declares target_categories. Such a delivery (e.g. mqtt's standard delivery)
+        has no other chance to prove itself irrelevant to this notification.
+
+        Left alone (still OPTIONAL) in two legitimate cases: a delivery with no
+        target_categories at all (a fixed-action, fire-and-forget `generic` delivery with
+        nothing to target in the first place); and a delivery someone actually configured or
+        asked for - a user's own mqtt delivery with a fixed topic baked into its `data:`
+        (CONFIG provenance), or a call that explicitly names the standard delivery with a
+        `data:`-only target - both legitimately mean to fire with nothing resolved.
+        """
+        if (
+            delivery.target_required == TargetRequired.OPTIONAL
+            and delivery.provenance != DeliveryProvenance.CONFIG
+            and delivery.name in self.implicit_only_deliveries
+            and delivery.target_categories
+        ):
+            return TargetRequired.ALWAYS
+        return delivery.target_required
+
     def plan(self) -> dict[str, Any]:
         """Work out which deliveries would send, and to whom, without sending anything.
 
@@ -698,7 +721,7 @@ class Notification(ArchivableObject):
                 targets: list[Target] = [] if reason else self.generate_targets(delivery, target_override)
                 # the same test generate_envelopes() makes, without building the envelopes
                 if not reason and not any(
-                    t.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS for t in targets
+                    t.has_resolved_target() or self._target_required(delivery) != TargetRequired.ALWAYS for t in targets
                 ):
                     reason = SuppressionReason.NO_TARGET
                 if reason:
@@ -733,7 +756,7 @@ class Notification(ArchivableObject):
             targets: list[Target] = self.generate_targets(delivery, target_override)
             envelopes: list[Envelope] = self.generate_envelopes(delivery, targets)
             if not envelopes:
-                if delivery.target_required == TargetRequired.ALWAYS and (
+                if self._target_required(delivery) == TargetRequired.ALWAYS and (
                     not targets or not any(t.has_resolved_target() for t in targets)
                 ):
                     reason: SuppressionReason = SuppressionReason.NO_TARGET
@@ -1221,9 +1244,10 @@ class Notification(ArchivableObject):
         # now the list of recipients determined, resolve this to target addresses or entities
 
         envelopes: list[Envelope] = []
+        target_required = self._target_required(delivery)
         for target in targets:
             # a target is always generated, even if there are no recipients
-            if target.has_resolved_target() or delivery.target_required != TargetRequired.ALWAYS:
+            if target.has_resolved_target() or target_required != TargetRequired.ALWAYS:
                 envelope_data = {}
 
                 # least priority - delivery derived data

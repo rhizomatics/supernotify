@@ -5,15 +5,22 @@ unconditionally (persistent).
 
 Transports whose target is positively identifiable (an HA entity_id, a
 recipient's email/phone, or a value qualified with a category no other
-transport uses, like `discord_channel`/`matrix_room`) generate a delivery,
-named plainly after the transport, that fires on every notification.
+transport uses, like `discord_channel`/`matrix_room`/`topic`) generate a
+delivery, named plainly after the transport, that fires on every
+notification. mqtt's `topic` can equally be a `data:` keyword instead of a
+target (`target_required` is `optional`, so plain NO_TARGET can't
+short-circuit it) - Notification._target_required() is what actually keeps
+its standard delivery from firing unprompted, by treating it as if
+target_required were `always` whenever it's both implicit (never named by
+a call, scenario or recipient) and auto-generated (not a user's own CONFIG
+delivery, which may deliberately rely on a fixed `data:` topic).
+
 Transports whose target category is itself ambiguous (kodi, tts, and the
 generic `media` transport all match a bare `media_player` entity, so
-there's no reliable way to tell which one a given entity was meant for),
-whose target can equally be a `data:` keyword instead (mqtt's `topic` -
-`target_required` is `optional`, so NO_TARGET can't short-circuit it) - or
-where firing unprompted would simply be unwelcome (persistent) - generate
-the same plainly-named delivery, but explicit-selection-only instead.
+there's no reliable way to tell which one a given entity was meant for) -
+or where firing unprompted would simply be unwelcome (persistent) -
+generate the same plainly-named delivery, but explicit-selection-only
+instead.
 
 Path in upstream repo:
     tests/components/supernotify/transports/test_transport_auto_configure.py
@@ -63,11 +70,12 @@ from tests.components.supernotify.hass_setup_lib import TestingContext
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-# transport name -> HA config entry domain it should discover, for transports that
-# need an opaque per-delivery identifier (chat_id/device_id) and so stay explicit-only.
-# alexa_devices and html5 are tested separately (test_transport_alexa_devices.py /
-# test_transport_html5.py) - both also require an actual registered notify entity with
-# a matching platform, not just the config entry, to auto-configure as `default`.
+# transport name -> HA config entry domain it should discover, shared by the viability
+# test below and (bar mqtt, now `default` - see test_mqtt_auto_configure_with_config_entry_is_default)
+# by test_auto_configure_with_config_entry_is_explicit. alexa_devices and html5 are
+# tested separately (test_transport_alexa_devices.py / test_transport_html5.py) - both
+# also require an actual registered notify entity with a matching platform, not just
+# the config entry, to auto-configure as `default`.
 CONFIG_ENTRY_EXPLICIT = {
     TRANSPORT_KODI: "kodi",
     TRANSPORT_TELEGRAM: "telegram_bot",
@@ -85,7 +93,9 @@ async def test_auto_configure_no_config_entry(hass: HomeAssistant, transport_nam
     assert not uut.is_viable(ctx.hass_api)
 
 
-@pytest.mark.parametrize(("transport_name", "domain"), CONFIG_ENTRY_EXPLICIT.items())
+@pytest.mark.parametrize(
+    ("transport_name", "domain"), {k: v for k, v in CONFIG_ENTRY_EXPLICIT.items() if k != TRANSPORT_MQTT}.items()
+)
 async def test_auto_configure_with_config_entry_is_explicit(hass: HomeAssistant, transport_name: str, domain: str) -> None:
     entry = MockConfigEntry(domain=domain, data={})
     entry.add_to_hass(hass)
@@ -98,6 +108,24 @@ async def test_auto_configure_with_config_entry_is_explicit(hass: HomeAssistant,
     assert transport_name in result
     dc = DeliveryConfig(result[transport_name], uut.delivery_defaults)
     assert dc.inclusion == [INCLUSION_EXPLICIT]
+
+
+async def test_mqtt_auto_configure_with_config_entry_is_default(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain="mqtt", data={})
+    entry.add_to_hass(hass)
+
+    ctx = TestingContext(homeassistant=hass)
+    await ctx.test_initialize()
+    uut = ctx.transport(TRANSPORT_MQTT)
+
+    result = uut.build_standard_deliveries(ctx.hass_api)
+    assert TRANSPORT_MQTT in result
+    # a topic string isn't positively identifiable by shape, but `topic` is a dedicated
+    # category no other transport uses, so a qualified value is unambiguous. Being implicit
+    # and OPTIONAL is safe here because Notification._target_required() treats an
+    # implicit-only, auto-generated OPTIONAL delivery with target_categories as ALWAYS.
+    dc = DeliveryConfig(result[TRANSPORT_MQTT], uut.delivery_defaults)
+    assert dc.inclusion == [INCLUSION_DEFAULT]
 
 
 async def test_discord_auto_configure_no_service(hass: HomeAssistant) -> None:

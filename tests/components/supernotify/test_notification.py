@@ -63,6 +63,8 @@ chime:
 TRANSPORTS = """
 notify_entity:
     enabled: false
+mqtt:
+    enabled: false
 matrix:
     enabled: false
 """
@@ -764,7 +766,7 @@ async def test_deliver_grabs_image_when_a_delivery_uses_camera() -> None:
 async def test_delivery_selection_order() -> None:
     ctx = TestingContext(
         services=MOCK_SERVICES,
-        transports={"matrix": {CONF_ENABLED: False}},
+        transports={"mqtt": {CONF_ENABLED: False}, "matrix": {CONF_ENABLED: False}},
         deliveries={
             "fallback": {
                 CONF_ACTION: "custom.tweak",

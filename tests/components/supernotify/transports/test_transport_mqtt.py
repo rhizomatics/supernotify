@@ -1,4 +1,5 @@
 from homeassistant.const import (
+    CONF_ENABLED,
     CONF_NAME,
 )
 
@@ -151,7 +152,10 @@ async def test_deliver_ignores_other_transport_targets_in_blended_list() -> None
             "broker": {
                 CONF_TRANSPORT: TRANSPORT_MQTT,
                 CONF_INCLUSION: [INCLUSION_DEFAULT],
-            }
+            },
+            # mqtt is itself `default` inclusion now (see MQTTTransport.inclusion_mode) - name
+            # this override "mqtt" to replace the auto-standard delivery, not duplicate it
+            TRANSPORT_MQTT: {CONF_TRANSPORT: TRANSPORT_MQTT, CONF_ENABLED: False},
         }
     )
     await ctx.test_initialize()
@@ -218,7 +222,10 @@ async def test_deliver_topic_category_mapping() -> None:
             "broker": {
                 CONF_TRANSPORT: TRANSPORT_MQTT,
                 CONF_INCLUSION: [INCLUSION_DEFAULT],
-            }
+            },
+            # mqtt is itself `default` inclusion now (see MQTTTransport.inclusion_mode) - name
+            # this override "mqtt" to replace the auto-standard delivery, not duplicate it
+            TRANSPORT_MQTT: {CONF_TRANSPORT: TRANSPORT_MQTT, CONF_ENABLED: False},
         }
     )
     await ctx.test_initialize()
@@ -264,6 +271,63 @@ async def test_deliver_action_level_delivery_override_bare_target() -> None:
         "mqtt",
         "publish",
         service_data={"payload": "hello", "topic": "notify/queue/1"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )
+
+
+async def test_implicit_standard_delivery_skipped_without_topic_target() -> None:
+    """The auto-generated standard `mqtt` delivery is `default` inclusion, but without an
+    explicit call/scenario/recipient ask and no `topic:` target, it's a routine non-event,
+    not an attempt - see Notification._target_required()."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    n = Notification(ctx, message="no topic here")
+    await n.initialize()
+    await n.deliver()
+
+    assert n.delivered == 0
+    assert n.missed == 0
+    ctx.hass.services.async_call.assert_not_called()  # type: ignore
+
+
+async def test_implicit_standard_delivery_fires_with_topic_target() -> None:
+    """The same standard delivery fires normally once a `topic:` target makes it relevant."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    n = Notification(ctx, message="hello", target={"topic": "auto/routed"})
+    await n.initialize()
+    await n.deliver()
+
+    assert n.delivered == 1
+    ctx.hass.services.async_call.assert_called_once_with(  # type:ignore
+        "mqtt",
+        "publish",
+        service_data={"payload": "hello", "topic": "auto/routed"},
+        blocking=False,
+        context=None,
+        target=None,
+        return_response=False,
+    )
+
+
+async def test_explicit_call_to_standard_delivery_keeps_data_only_topic_fallback() -> None:
+    """Naming the standard `mqtt` delivery explicitly still works with a `data:`-only topic
+    and no target, for backward compatibility - it was actually asked for, unlike the
+    implicit sweep-in case above."""
+    ctx = TestingContext()
+    await ctx.test_initialize()
+    n = Notification(ctx, message="hello", action_data={"delivery": {"mqtt": {"data": {"topic": "legacy/topic"}}}})
+    await n.initialize()
+    await n.deliver()
+
+    assert n.delivered == 1
+    ctx.hass.services.async_call.assert_called_once_with(  # type:ignore
+        "mqtt",
+        "publish",
+        service_data={"payload": "hello", "topic": "legacy/topic"},
         blocking=False,
         context=None,
         target=None,

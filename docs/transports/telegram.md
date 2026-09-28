@@ -7,10 +7,7 @@ tags:
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and
-no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since
-the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected
-explicitly (`data: {data: {delivery: [telegram]}}` or a scenario), not by default. You'll still
+**Delivery (explicit selection).** If the `telegram_bot` integration is already configured and no `telegram` delivery is defined, a `telegram` delivery is generated automatically — but since the `chat_id` has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [telegram]}}` or a scenario), not by default. You'll still
 need to supply `telegram_chat_id` yourself, per the examples below.
 
 ## Motivation
@@ -87,8 +84,7 @@ with your chat_id before committing it to your delivery configuration
 
 ## Notes
 
-* `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target`
-or from the `telegram_chat_id` data key.
+* `TargetRequired.ALWAYS`: `chat_id` is always required — either from `delivery.target` or from the `telegram_chat_id` data key.
 * Direct `hass_api.call_service()` is used instead of `call_action()` because the
 service name switches dynamically between `send_message`, `send_photo`, and
 `send_document` depending on whether a snapshot is attached.

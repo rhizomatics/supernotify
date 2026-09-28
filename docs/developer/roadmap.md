@@ -72,6 +72,10 @@ Randomization for greetings and sounds. Sleigh bells are nice on first notificat
 
 Revisit the HTML template, review if more than 1 needed, and ways to make it more useful in bringing HA context into a notification
 
+### Telegram
+
+Add a target category to allow auto inclusion
+
 ## Delivery and Target Selection
 
 ### Inclusion Default
@@ -91,11 +95,13 @@ This has a real circular-dependency complication to solve: a delivery with its o
 
 Implemented as a stopgap in the meantime: `discord` and `matrix` are now `inclusion: default` too. Their values (a channel ID, a room alias) can't be auto-detected from a bare, untyped string - that's a different concern, about shape-matching an unqualified value - but once explicitly qualified with their own dedicated category key (`discord_channel:`, `matrix_room:`, none shared with any other transport), there's no ambiguity about which delivery a value belongs to, so they're exactly as safe as email/mobile_push already are.
 
-`mqtt` was reverted back to `explicit` after initially being included in this stopgap: `topic` is just as dedicated a category as `discord_channel`/`matrix_room`, but `target_required` is `optional`, not `always`, because a topic can legitimately be given as a `data:` keyword instead of a target (a delivery with a fixed topic baked into its own config, needing no target at all). That means `NO_TARGET` never short-circuits it the way it does for Discord/Matrix, so there's no cheap way to tell up front whether a given notification is even relevant - defaulting it would mean a `deliver()` attempt, and its "No topic for publication" warning, on every single notification regardless of relevance. Fixing this properly needs the same target-driven design as the ambiguous transports below, not just a flip to `default`.
+`mqtt` needed one more piece to join this stopgap: `topic` is just as dedicated a category as `discord_channel`/`matrix_room`, but `target_required` is `optional`, not `always`, because a topic can legitimately be given as a `data:` keyword instead of a target (a delivery with a fixed topic baked into its own config, needing no target at all). That means plain `NO_TARGET` never short-circuits it the way it does for Discord/Matrix - a `default`-inclusion mqtt delivery would build an envelope and attempt `deliver()` (and its "No topic for publication" warning) on every single notification, whether or not it was relevant. `Notification._target_required()` closes that gap with a narrow, call-scoped rule: an auto-generated standard delivery (never a user's own `CONFIG`-provenance one) that's `optional` and was swept in only by implicit/default inclusion for *this* call - never asked for by the call, a scenario or a recipient - is treated as if it required a target after all, provided it actually declares `target_categories` to match against. A `generic` delivery with no target concept at all is untouched (nothing to match regardless), and a call that names `mqtt` explicitly (even with a `data:`-only topic) is untouched too, since being named *is* being asked for.
 
 `kodi`, the generic `media` transport, `tts` and `alexa_media_player` are deliberately left out of this stopgap too. Their shared category is a bare `media_player` domain (`alexa_media_player`'s is platform-restricted, but still just "a media_player entity"), which is ambiguous in a different way to Discord/Matrix: even with only one transport claiming it, a `media_player.x` entity alone doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback - there's no reliable way to pick the right operation from the entity alone, regardless of cross-delivery collision (`OPTION_UNIQUE_TARGETS`, off by default - `selection_rank` alone only orders processing, it doesn't stop a later delivery claiming a value an earlier one already took). That needs the fuller target-driven design above, not just a flip to `default`. `alexa_media_player` also doesn't yet handle the `notify.*`-entity form Alexa Media Player can expose, alongside its `media_player.*` one.
 
 Chime has a related problem one level down: it currently matches `switch`/`media_player`/`siren`/`script`/`rest_command` entities directly, borrowing other domains' shapes, rather than through its own named chime aliases. A further step is to make chime aliases into targets in their own right, so a chime delivery can be matched unambiguously by alias name instead.
+
+`_target_required()` (and the `implicit_only_deliveries` tracking it and the `missed`/`skipped` split both lean on) is scaffolding for this stopgap, not the destination - once selection is genuinely target-driven, "was this delivery only implicitly swept in" stops being a meaningful question, since a delivery is only ever a candidate *because* something in the target called for it. That whole distinction, and the special-casing it requires today, should fall away.
 
 Consider also typed dict, or classes, for the deliveries mapping carried around inside Notification so easier to verify by type the interactions across functions.
 

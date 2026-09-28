@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
+from custom_components.supernotify.const import ATTR_TOPIC, INCLUSION_DEFAULT, TRANSPORT_MQTT
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import (
@@ -50,13 +50,19 @@ class MQTTTransport(Transport):
         # via this list, but because it's the sole plain-string entry `Delivery.
         # reclassify_unqualified_target()` falls back to for a delivery-scoped value with no
         # shape a validator recognises.
-        #
-        # Unlike discord_channel/matrix_room, `topic` being an unambiguous category doesn't
-        # make this transport safe to default: a topic can equally be a `data:` keyword
-        # instead of a target (target_required is `optional`, not `always`), so NO_TARGET
-        # never short-circuits it - defaulting would mean a deliver() attempt, and its "No
-        # topic for publication" warning, on every single notification.
         return [ATTR_TOPIC]
+
+    @property
+    def inclusion_mode(self) -> list[str]:
+        # `topic` is a dedicated category name no other transport uses, so a value
+        # explicitly qualified with it is unambiguously this transport's - safe to fire on
+        # every notification by default. Its topic can otherwise come from a `data:` keyword
+        # instead of a target, which would normally make `default` unsafe (an implicit
+        # candidate with nothing to target would still attempt delivery and warn every time)
+        # - Notification._target_required() closes that gap by treating an implicit-only
+        # OPTIONAL delivery as if it required a target, same as an explicitly-requested one
+        # can still rely on data-only.
+        return [INCLUSION_DEFAULT]
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

@@ -3,7 +3,7 @@
 ### Fixes and Minor Improvements
 - Archived deliveries now track `missed` as well as `skipped` deliveries - *skipped* where some rules fired to stop it happening, like occupancy or scenarios, and *missed* where for some other reason an envelope couldn't successfully be built or delivered for a requested delivery
 - Transports that have definitive links to targets all marked as default
-  - Now also `discord` and `matrix`
+  - Now also `discord`, `matrix` and `mqtt`
   - Fixes issue where adding `discord_channel:xyz` in list of targets didn't automatically get picked up by discord
   - Transports using `media_player` continue to need explicit selection since so many different ways of interacting with them
 - Partial Delivery - now only set for missed not skipped deliveries

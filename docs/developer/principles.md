@@ -3,6 +3,7 @@
 1. There is no configuration unless configuration is necessary.
 
     If configuration can be reliably inferred, borrowed or defaulted then it should do so.
+    Derive configuration from clear facts and rules wherever possible. This includes within the code, for example inclusion eligibility for transports based on their ability to define unique targets.
 
 2. A do-nothing UI only configured integration should do something.
 
