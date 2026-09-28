@@ -9,7 +9,7 @@ from custom_components.supernotify.const import (
     ATTR_NOTIFICATION_ID,
     TRANSPORT_PERSISTENT,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -31,10 +31,8 @@ class PersistentTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "persistent_notification.create"
-        config.delivery_defaults.target_required = TargetRequired.NEVER
-        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:

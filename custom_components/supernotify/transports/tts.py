@@ -18,7 +18,6 @@ from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
     SelectionRule,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
@@ -85,11 +84,12 @@ class TTSTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "tts.speak"
-        config.delivery_defaults.target_required = TargetRequired.ALWAYS
+        # pre-existing quirk, kept explicit: FIRST despite no unique category - tts stays
+        # explicit-only (no unique/fallback categories), so this only affects ordering among
+        # other explicitly-selected deliveries, not auto-selection
         config.delivery_defaults.selection_rank = SelectionRank.FIRST
-        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
@@ -103,7 +103,10 @@ class TTSTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def other_target_categories(self) -> list[str | TargetEntityCategory]:
+        # media_player is ambiguous the same way as kodi/media/alexa_media_player's; mobile_app_id
+        # is already mobile_push's unique category, but tts using it too (to speak via the app's
+        # own TTS bridge, not to push-notify) doesn't drive auto-selection from `other`
         return [TargetEntityCategory(domain="media_player"), ATTR_MOBILE_APP_ID]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

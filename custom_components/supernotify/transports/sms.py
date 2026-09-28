@@ -8,7 +8,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     ATTR_PHONE,
-    INCLUSION_DEFAULT,
     TRANSPORT_SMS,
 )
 from custom_components.supernotify.model import (
@@ -21,7 +20,6 @@ from custom_components.supernotify.options import (
     OPTION_MESSAGE_USAGE,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_UNIQUE_TARGETS,
 )
 from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import (
@@ -49,19 +47,11 @@ class SMSTransport(Transport):
         return TransportFeature.MESSAGE | TransportFeature.TITLE
 
     @property
-    def inclusion_mode(self) -> list[str]:
-        # a phone number maps cleanly to a recipient, so it's reasonable to fire on
-        # every notification by default
-        return [INCLUSION_DEFAULT]
-
-    @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
-        config.delivery_defaults.inclusion = self.inclusion_mode
+        config = super().default_config
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: False,
-            OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same number
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.COMBINE_TITLE,
         }
         for module in (
@@ -76,7 +66,7 @@ class SMSTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         return [ATTR_PHONE]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:

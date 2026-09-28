@@ -62,7 +62,6 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_PUSHOVER
 from custom_components.supernotify.model import (
     DebugTrace,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
@@ -106,9 +105,7 @@ class PushoverTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
-        config.delivery_defaults.target_required = TargetRequired.NEVER
-        config.delivery_defaults.inclusion = self.inclusion_mode
+        config = super().default_config
         config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.pushover.notify")
         return config
 

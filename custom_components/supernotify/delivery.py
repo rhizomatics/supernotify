@@ -478,8 +478,21 @@ class DeliveryRegistry:
 
     @property
     def implicit_deliveries(self) -> list[Delivery]:
-        """Deliveries switched on all the time via implicit inclusion"""
-        return [d for d in self._deliveries.values() if d.enabled and INCLUSION_DEFAULT in d.inclusion]
+        """Deliveries actually capable of implicit inclusion - `default` inclusion alone
+        isn't enough any more, its transport also has to declare a `unique_target_categories`
+        or `fallback_target_categories` for `Notification.select_deliveries()` to ever
+        actually match against; without one, a nominally `default` delivery (most transports
+        that don't say otherwise) structurally can never be auto-selected, the same as an
+        explicit-only one. This is the single source of truth for that - both the actual
+        selection logic and this reporting property (the action editor's implied default
+        list, `enquire_implicit_deliveries`, diagnostics) read it."""
+        return [
+            d
+            for d in self._deliveries.values()
+            if d.enabled
+            and INCLUSION_DEFAULT in d.inclusion
+            and (d.transport.unique_target_categories or d.transport.fallback_target_categories)
+        ]
 
     def apply_delivery_control(self, transport: Transport, transport_config: ConfigType) -> None:
         """Give a transport's deliveries the Delivery Control defaults, where the transport's own

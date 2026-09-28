@@ -66,7 +66,6 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import TRANSPORT_LAMETRIC
 from custom_components.supernotify.model import (
     DebugTrace,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
@@ -145,10 +144,7 @@ class LaMetricTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
-        config.delivery_defaults.target_required = TargetRequired.NEVER
-        config.delivery_defaults.inclusion = self.inclusion_mode
-        return config
+        return super().default_config
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_LAMETRIC_DOMAIN) is not None

@@ -7,7 +7,6 @@ from homeassistant.const import ATTR_ENTITY_ID  # ATTR_VARIABLES from script.con
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
-    INCLUSION_DEFAULT,
     RE_NOTIFY_ENTITY_ID,
     TRANSPORT_NOTIFY_ENTITY,
 )
@@ -22,9 +21,7 @@ from custom_components.supernotify.options import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
 )
-from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import (
     Transport,
@@ -54,31 +51,23 @@ class NotifyEntityTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = FIXED_ACTION
-        config.delivery_defaults.selection_rank = SelectionRank.LAST
-        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_UNIQUE_TARGETS: True,
             OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY_ID],
         }
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def fallback_target_categories(self) -> list[str | TargetEntityCategory]:
         # no platform restriction - the generic catch-all for any notify.* entity not
-        # claimed by a more specific transport (html5, alexa_devices); selection_rank=LAST
-        # ensures those get first refusal
+        # claimed by a more specific transport (html5, alexa_devices) - being `fallback`
+        # rather than `unique` is what gives those first refusal, both for selection
+        # (Notification.select_deliveries()) and ranking (default_selection_rank())
         return [TargetEntityCategory(domain="notify")]
-
-    @property
-    def inclusion_mode(self) -> list[str]:
-        # a notify.* entity maps cleanly to a recipient, so it's reasonable to fire on
-        # every notification by default
-        return [INCLUSION_DEFAULT]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return bool(hass_api.entity_ids_for_domain("notify"))

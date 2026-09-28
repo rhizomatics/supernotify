@@ -41,7 +41,7 @@ from custom_components.supernotify.const import (
     ATTR_MEDIA_SNAPSHOT_URL,
     TRANSPORT_NTFY,
 )
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
 from custom_components.supernotify.transport import Transport
 
@@ -123,10 +123,8 @@ class NtfyTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "ntfy.publish"
-        config.delivery_defaults.inclusion = self.inclusion_mode
-        config.delivery_defaults.target_required = TargetRequired.NEVER
         return config
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:

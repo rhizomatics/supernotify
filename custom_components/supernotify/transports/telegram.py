@@ -34,9 +34,10 @@ import logging
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import TRANSPORT_TELEGRAM
-from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
+from custom_components.supernotify.const import ATTR_TELEGRAM_CHAT_ID, TRANSPORT_TELEGRAM
+from custom_components.supernotify.model import DebugTrace, TransportConfig, TransportFeature
 from custom_components.supernotify.options import MEDIA_OPTIONS, DeliveryOption
+from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
 if TYPE_CHECKING:
@@ -168,11 +169,17 @@ class TelegramTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "telegram_bot.send_message"
-        config.delivery_defaults.target_required = TargetRequired.ALWAYS
-        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
+
+    @property
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
+        # a numeric chat ID has no shape distinct enough for automatic matching (see
+        # deliver()'s own numeric-ness check below), so it's only ever reachable here via
+        # explicit qualification - telegram_chat_id is nonetheless a dedicated category name
+        # no other transport uses, so a value explicitly qualified with it is unambiguous
+        return [ATTR_TELEGRAM_CHAT_ID]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         return hass_api.find_config_entry_data(HA_TELEGRAM_BOT_DOMAIN) is not None
@@ -209,21 +216,24 @@ class TelegramTransport(Transport):
         image_as_document = boolify(raw_data.pop("telegram_image_as_document", False), default=False)
 
         # Resolve target chat_id.
-        # `envelope.delivery.target` is a SuperNotify `Target` object with a
-        # `.targets` attribute (dict[category, list[id]]), where category is
-        # ATTR_PHONE, ATTR_EMAIL, ATTR_MOBILE_APP_ID, etc. For Telegram we
-        # prefer `phone` (Telegram chat IDs are stored there by convention).
-        # Also accept legacy raw shapes: dict, list, or scalar string/int.
+        # Both `envelope.target` (this envelope's resolved, category-selected `Target` - a
+        # `target: {telegram_chat_id: ...}` reaches here) and `envelope.delivery.target`
+        # (the delivery's own static config - the pre-`unique_target_categories` path, kept
+        # for backward compatibility) are a SuperNotify `Target` object with a `.targets`
+        # attribute (dict[category, list[id]]). Also accept legacy raw shapes: dict, list,
+        # or scalar string/int.
         raw_target: Any = chat_id_override
+        if not raw_target and envelope.target and envelope.target.targets:
+            raw_target = envelope.target
         if not raw_target and envelope.delivery:
-            # TODO: this should probably be envelope.target like all the other transports
             raw_target = envelope.delivery.target
 
         # Target object: extract first id from preferred categories
         if hasattr(raw_target, "targets") and isinstance(raw_target.targets, dict):
             categorised = raw_target.targets
-            # Prefer phone (Telegram convention), then any non-empty list
-            preferred = ("phone", "chat_id")
+            # Prefer the dedicated category, then phone (Telegram's older convention), then
+            # any non-empty list
+            preferred = (ATTR_TELEGRAM_CHAT_ID, "phone", "chat_id")
             picked = None
             for cat in preferred:
                 if categorised.get(cat):

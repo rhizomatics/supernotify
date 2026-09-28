@@ -48,7 +48,6 @@ from custom_components.supernotify.const import (
     CONF_ENCRYPTION,
     CONF_OPTIONS,
     CONF_TEMPLATE,
-    INCLUSION_DEFAULT,
     TRANSPORT_EMAIL,
 )
 from custom_components.supernotify.model import (
@@ -65,7 +64,6 @@ from custom_components.supernotify.options import (
     OPTION_PNG,
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
-    OPTION_UNIQUE_TARGETS,
     DeliveryOption,
 )
 from custom_components.supernotify.target import TargetEntityCategory
@@ -278,12 +276,6 @@ class EmailTransport(Transport):
         return {}
 
     @property
-    def inclusion_mode(self) -> list[str]:
-        # email addresses map cleanly to recipients, so it's reasonable to fire on
-        # every notification by default
-        return [INCLUSION_DEFAULT]
-
-    @property
     def supported_features(self) -> TransportFeature:
         return (
             TransportFeature.MESSAGE
@@ -303,8 +295,7 @@ class EmailTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
-        config.delivery_defaults.inclusion = self.inclusion_mode
+        config = super().default_config
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,
@@ -316,7 +307,6 @@ class EmailTransport(Transport):
             OPTION_PREHEADER_BLANK: "&#847;&zwnj;&nbsp;",
             OPTION_PREHEADER_LENGTH: 100,
             OPTION_MODE: EMAIL_OPTION_MODE_DIRECT,  # default to avoiding the e-mail integration, since it will get locked down to notify entities
-            OPTION_UNIQUE_TARGETS: True,  # disable if people get multiple deliveries on same address
             # only used for deliveries with OPTION_MODE set to 'direct'
             OPTION_SENDER_NAME: "Home Assistant",
             OPTION_DEFAULT_TITLE: "Home Assistant Notification",
@@ -324,7 +314,7 @@ class EmailTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         return [ATTR_EMAIL]
 
     async def deliver(self, envelope: Envelope, debug_trace: DebugTrace | None = None) -> bool:

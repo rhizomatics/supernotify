@@ -10,7 +10,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.const import (
     CONF_INCLUSION,
-    INCLUSION_DEFAULT,
     INCLUSION_EXPLICIT,
     RE_NOTIFY_ENTITY_ID,
     TRANSPORT_ALEXA,
@@ -18,7 +17,6 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
@@ -27,10 +25,8 @@ from custom_components.supernotify.options import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
     SELECT_EXCLUDE,
 )
-from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
@@ -72,22 +68,13 @@ class AlexaDevicesTransport(Transport):
         return TransportFeature.MESSAGE | TransportFeature.SPOKEN
 
     @property
-    def inclusion_mode(self) -> list[str]:
-        # Notify Entity based
-        return [INCLUSION_DEFAULT]
-
-    @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "notify.send_message"
-        config.delivery_defaults.target_required = TargetRequired.ALWAYS
-        config.delivery_defaults.selection_rank = SelectionRank.FIRST
-        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_UNIQUE_TARGETS: True,
             # an HA group (not owned by any platform) or one of this integration's own
             # notify entities (identified by platform, not just its entity_id shape)
             OPTION_TARGET_SELECT: [r"group\.[a-z0-9_]+", RE_NOTIFY_ENTITY_ID],
@@ -95,7 +82,7 @@ class AlexaDevicesTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         return [
             TargetEntityCategory(domain="notify", platform=HA_ALEXA_DEVICES_PLATFORM),
             # an HA group isn't owned by any platform - membership/expansion isn't handled

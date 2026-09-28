@@ -40,16 +40,18 @@ class MediaPlayerTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "media_player.play_media"
         config.delivery_defaults.options = {
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
         }
-        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def other_target_categories(self) -> list[str | TargetEntityCategory]:
+        # a bare media_player entity is too ambiguous to auto-select on - kodi, tts, this
+        # transport and alexa_media_player all match the same domain, with no way to tell
+        # from the entity alone which operation (playback, TTS, a chime) was meant
         return [TargetEntityCategory(domain="media_player")]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:

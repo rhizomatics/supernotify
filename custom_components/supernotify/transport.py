@@ -25,16 +25,39 @@ from custom_components.supernotify.model import (
     TransportConfig,
     TransportFeature,
 )
+from custom_components.supernotify.schema import SelectionRank
 from custom_components.supernotify.target import Target, TargetEntityCategory
 
 from .common import CallRecord
 from .const import (
     ATTR_ENABLED,
     CONF_DELIVERY_DEFAULTS,
-    INCLUSION_EXPLICIT,
 )
 from .model import DeliveryConfig, SuppressionReason
 from .options import DeliveryOption
+
+
+def default_target_required(
+    unique: list[str | TargetEntityCategory],
+    fallback: list[str | TargetEntityCategory],
+    other: list[str | TargetEntityCategory],
+) -> TargetRequired:
+    """A transport that declares no target categories at all never has anything to resolve
+    a target from, so it can't need one; a transport that declares any does, by default."""
+    return TargetRequired.NEVER if not (unique or fallback or other) else TargetRequired.ALWAYS
+
+
+def default_selection_rank(
+    unique: list[str | TargetEntityCategory], fallback: list[str | TargetEntityCategory]
+) -> SelectionRank:
+    """A transport that can definitively claim a category should be tried before a vaguer
+    one; one that only catches what nothing more specific claimed should be tried last."""
+    if unique:
+        return SelectionRank.FIRST
+    if fallback:
+        return SelectionRank.LAST
+    return SelectionRank.ANY
+
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
@@ -120,38 +143,60 @@ class Transport:
         return self.delivery_defaults.target if self.delivery_defaults.target is not None else Target()
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
-        """The target categories this transport understands, independent of any delivery.
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
+        """Target categories nothing else could claim - a value shape/prefix unique to this
+        transport (e.g. `ATTR_EMAIL`), or an entity domain+platform combination unique to it.
 
-        A plain string names a category directly (e.g. `ATTR_EMAIL`); an `TargetEntityCategory`
-        declares that the `entity_id` category is accepted, but only for entities matching
-        its domain/platform constraints. Empty by default - a transport that doesn't declare
-        anything here relies entirely on `Delivery.select_targets()`'s other qualification
-        paths (its own name, its transport's name, or a delivery's own `OPTION_TARGET_CATEGORIES`
-        override), which is the deliberate design for `generic`, a bring-your-own-categories
-        transport. Queried via `Delivery.target_categories`, not directly - a `Transport`
-        never needs to know about delivery-level config, only the reverse.
+        This is what drives implicit selection (`Notification.select_deliveries()`): a
+        delivery whose transport declares one of these, and whose category is actually
+        present in the notification's target or an available recipient's own capabilities,
+        becomes an auto-selection candidate - the same way giving an email address has always
+        implied the `email` delivery. Empty by default; a transport with nothing here is
+        never implicitly selected on its own, only by an explicit call/scenario/recipient ask.
         """
         return []
 
     @property
-    def default_config(self) -> TransportConfig:
-        return TransportConfig()
+    def fallback_target_categories(self) -> list[str | TargetEntityCategory]:
+        """Target categories this transport will claim once nothing more specific did -
+        e.g. `notify_entity`'s bare `notify.*` domain match, after html5/alexa_devices' own
+        platform-scoped (and therefore `unique`) matches on the same domain get first refusal.
+
+        Also drives implicit selection, like `unique_target_categories`, but ranked to lose
+        selection-order ties to a delivery selected via a `unique` match (see
+        `default_selection_rank()`).
+        """
+        return []
 
     @property
-    def inclusion_mode(self) -> list[str]:
-        """The `inclusion` an auto-configured delivery for this transport should use.
-
-        Explicit-only by default: most transports need a chat_id/channel/device_id the
-        notification author must supply, have targets too opaque or ambiguous to map to
-        a recipient/entity, or a channel too intrusive to fire on every notification.
-        Override to return `[INCLUSION_DEFAULT]` for the few transports that can
-        reasonably fire on every notification out of the box (e.g. email, mobile_push).
-
-        Pulled out as a separate property so can be reported in the Transport Configuration
-        section of the Developer documentation
+    def other_target_categories(self) -> list[str | TargetEntityCategory]:
+        """Target categories this transport understands well enough to build a full envelope
+        from, but that are too ambiguous to drive auto-selection on their own - several
+        transports competing for the same bare entity domain (`media_player`, matched by
+        kodi/tts/the `media` transport/alexa_media_player/chime), where an entity alone
+        doesn't say which one of them was actually meant.
         """
-        return [INCLUSION_EXPLICIT]
+        return []
+
+    @property
+    def target_categories(self) -> list[str | TargetEntityCategory]:
+        """The target categories this transport understands, independent of any delivery -
+        the union of `unique_target_categories`, `fallback_target_categories` and
+        `other_target_categories`, for envelope-building (`Delivery.target_categories`/
+        `Delivery.select_targets()`). Selection itself only ever looks at the first two.
+        """
+        return [*self.unique_target_categories, *self.fallback_target_categories, *self.other_target_categories]
+
+    @property
+    def default_config(self) -> TransportConfig:
+        config = TransportConfig()
+        config.delivery_defaults.target_required = default_target_required(
+            self.unique_target_categories, self.fallback_target_categories, self.other_target_categories
+        )
+        config.delivery_defaults.selection_rank = default_selection_rank(
+            self.unique_target_categories, self.fallback_target_categories
+        )
+        return config
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         """Whether this transport currently has what it needs to auto-configure a delivery.

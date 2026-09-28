@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.typing import ConfigType
 
-from custom_components.supernotify.const import ATTR_TOPIC, INCLUSION_DEFAULT, TRANSPORT_MQTT
+from custom_components.supernotify.const import ATTR_TOPIC, TRANSPORT_MQTT
 from custom_components.supernotify.model import DebugTrace, TargetRequired, TransportConfig, TransportFeature
 from custom_components.supernotify.target import Target, TargetEntityCategory
 from custom_components.supernotify.transport import (
@@ -34,15 +34,18 @@ class MQTTTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "mqtt.publish"
+        # a topic can come from a `data:` keyword instead of a target (see deliver()
+        # below), so this can't be inferred ALWAYS like most transports with a
+        # unique_target_categories entry - Notification._target_required() covers the gap
+        # this leaves for an implicit-only, category-less-at-a-glance selection
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
         config.delivery_defaults.options = {}
-        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         # `topic` is a clean, dedicated category name for the mapping form (`target: {topic:
         # ...}`), distinct from overloading the transport's own name (`target: {mqtt: ...}`,
         # still handled separately by Delivery.select_targets()). A bare, unqualified
@@ -51,18 +54,6 @@ class MQTTTransport(Transport):
         # reclassify_unqualified_target()` falls back to for a delivery-scoped value with no
         # shape a validator recognises.
         return [ATTR_TOPIC]
-
-    @property
-    def inclusion_mode(self) -> list[str]:
-        # `topic` is a dedicated category name no other transport uses, so a value
-        # explicitly qualified with it is unambiguously this transport's - safe to fire on
-        # every notification by default. Its topic can otherwise come from a `data:` keyword
-        # instead of a target, which would normally make `default` unsafe (an implicit
-        # candidate with nothing to target would still attempt delivery and warn every time)
-        # - Notification._target_required() closes that gap by treating an implicit-only
-        # OPTIONAL delivery as if it required a target, same as an explicitly-requested one
-        # can still rely on data-only.
-        return [INCLUSION_DEFAULT]
 
     def validate_action(self, action: str | None) -> bool:
         """Override in subclass if transport has fixed action or doesn't require one"""

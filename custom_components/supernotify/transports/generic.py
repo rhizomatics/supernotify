@@ -83,9 +83,11 @@ class GenericTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
+        # bring-your-own-categories: a delivery's own OPTION_TARGET_CATEGORIES is what it
+        # actually targets, invisible at the transport level, so this can't be inferred -
+        # one of the few transports where this needs to stay an explicit override
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
-        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: False,
             OPTION_STRIP_URLS: False,

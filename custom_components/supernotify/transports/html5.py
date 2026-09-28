@@ -82,18 +82,15 @@ from custom_components.supernotify.common import boolify
 from custom_components.supernotify.const import (
     ATTR_DATA,
     ATTR_MEDIA_SNAPSHOT_URL,
-    INCLUSION_DEFAULT,
     RE_NOTIFY_ENTITY_ID,
     TRANSPORT_HTML5,
 )
 from custom_components.supernotify.model import (
     DebugTrace,
-    SelectionRank,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
-from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, OPTION_UNIQUE_TARGETS, DeliveryOption
+from custom_components.supernotify.options import MEDIA_OPTIONS, OPTION_TARGET_SELECT, DeliveryOption
 from custom_components.supernotify.target import TargetEntityCategory
 from custom_components.supernotify.transport import Transport
 
@@ -141,28 +138,18 @@ class HTML5Transport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = "html5.send_message"
-        config.delivery_defaults.inclusion = self.inclusion_mode
-        config.delivery_defaults.target_required = TargetRequired.ALWAYS
-        config.delivery_defaults.selection_rank = SelectionRank.FIRST
         config.delivery_defaults.options = {
-            OPTION_UNIQUE_TARGETS: True,  # stop Notify Entity also trying to handle these
             OPTION_TARGET_SELECT: [RE_NOTIFY_ENTITY_ID],
         }
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         # a notify.* entity's registered platform identifies it as this integration's own,
         # unlike the generic notify_entity transport which has no such distinction
         return [TargetEntityCategory(domain="notify", platform=HA_HTML5_DOMAIN)]
-
-    @property
-    def inclusion_mode(self) -> list[str]:
-        # a browser's notify.* entity is unambiguously this integration's own (matched by
-        # platform, not just a loose notify.* shape), so it's reasonable to fire by default
-        return [INCLUSION_DEFAULT]
 
     def validate_action(self, action: str | None) -> bool:
         """Validate that action is the html5 send_message service."""

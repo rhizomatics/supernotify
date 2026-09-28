@@ -345,9 +345,11 @@ class ChimeTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
+        # usually has its own fixed default target configured (chime_aliases), so doesn't
+        # need one resolved from the call - one of the few transports where this needs to
+        # stay an explicit override rather than the inferred default
         config.delivery_defaults.target_required = TargetRequired.OPTIONAL
-        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_TARGET_SELECT: [RE_VALID_CHIME, RE_DEVICE_ID],
             OPTION_DEVICE_DISCOVERY: True,
@@ -357,7 +359,9 @@ class ChimeTransport(Transport):
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def other_target_categories(self) -> list[str | TargetEntityCategory]:
+        # borrows several other domains' shapes directly rather than a category of its own -
+        # see the roadmap note on making chime aliases into targets in their own right
         return [TargetEntityCategory(domain=CHIME_ENTITY_DOMAINS), ATTR_DEVICE_ID]
 
     def validate_action(self, action: str | None) -> bool:

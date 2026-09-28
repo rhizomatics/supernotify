@@ -1,6 +1,6 @@
-## v2.10.4
+## v2.11.0
 
-### Fixes and Minor Improvements
+### Deliveries
 - Archived deliveries now track `missed` as well as `skipped` deliveries - *skipped* where some rules fired to stop it happening, like occupancy or scenarios, and *missed* where for some other reason an envelope couldn't successfully be built or delivered for a requested delivery
 - Transports that have definitive links to targets all marked as default
   - Now also `discord`, `matrix` and `mqtt`

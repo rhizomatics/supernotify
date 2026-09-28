@@ -59,10 +59,9 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from homeassistant.helpers.typing import ConfigType
 
 from custom_components.supernotify.common import boolify
-from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, INCLUSION_DEFAULT, TRANSPORT_DISCORD
+from custom_components.supernotify.const import ATTR_DATA, ATTR_DISCORD_CHANNEL, TRANSPORT_DISCORD
 from custom_components.supernotify.model import (
     DebugTrace,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
@@ -103,26 +102,19 @@ class DiscordTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = self.hass_api.find_service("notify", "homeassistant.components.discord.notify")
-        config.delivery_defaults.target_required = TargetRequired.ALWAYS
-        config.delivery_defaults.inclusion = self.inclusion_mode
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def unique_target_categories(self) -> list[str | TargetEntityCategory]:
         # a numeric channel/user snowflake ID has no shape distinct enough for automatic
         # matching, so it's only ever reachable here via explicit qualification (prefix,
         # mapping, or this transport's/a delivery's own name) - select_channels() below
-        # still validates the shape itself once it arrives
+        # still validates the shape itself once it arrives. discord_channel is nonetheless a
+        # dedicated category name no other transport uses, so a value explicitly qualified
+        # with it is unambiguous - safe to auto-select on
         return [ATTR_DISCORD_CHANNEL]
-
-    @property
-    def inclusion_mode(self) -> list[str]:
-        # the channel/user ID itself is opaque, but discord_channel is a dedicated category
-        # name no other transport uses, so a value explicitly qualified with it is
-        # unambiguously this transport's - safe to fire on every notification by default
-        return [INCLUSION_DEFAULT]
 
     def is_viable(self, hass_api: HomeAssistantAPI) -> bool:
         # like validate_action() below, an explicit delivery can supply its own notify.*

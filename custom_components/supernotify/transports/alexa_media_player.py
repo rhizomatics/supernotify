@@ -92,7 +92,6 @@ from custom_components.supernotify.const import (
 from custom_components.supernotify.model import (
     DebugTrace,
     MessageOnlyPolicy,
-    TargetRequired,
     TransportConfig,
     TransportFeature,
 )
@@ -101,7 +100,6 @@ from custom_components.supernotify.options import (
     OPTION_SIMPLIFY_TEXT,
     OPTION_STRIP_URLS,
     OPTION_TARGET_SELECT,
-    OPTION_UNIQUE_TARGETS,
     DeliveryOption,
 )
 from custom_components.supernotify.target import TargetEntityCategory
@@ -180,22 +178,22 @@ class AlexaMediaPlayerTransport(Transport):
 
     @property
     def default_config(self) -> TransportConfig:
-        config = TransportConfig()
+        config = super().default_config
         config.delivery_defaults.action = self.hass_api.find_service("notify", HA_ALEXA_MEDIA_PLAYER_MODULE)
-        config.delivery_defaults.target_required = TargetRequired.ALWAYS
-        config.delivery_defaults.inclusion = self.inclusion_mode
         config.delivery_defaults.options = {
             OPTION_SIMPLIFY_TEXT: True,
             OPTION_STRIP_URLS: True,
             OPTION_MESSAGE_USAGE: MessageOnlyPolicy.STANDARD,
-            OPTION_UNIQUE_TARGETS: True,
             OPTION_TARGET_SELECT: [RE_MEDIA_PLAYER_ENTITY_ID],
             OPTION_MEDIA_AUTO_PAUSE: True,
         }
         return config
 
     @property
-    def target_categories(self) -> list[str | TargetEntityCategory]:
+    def other_target_categories(self) -> list[str | TargetEntityCategory]:
+        # platform-scoped, but still just "a media_player entity" - doesn't say whether the
+        # intent was audio/TTS/a chime, so this stays `other`, not `unique`, like the rest of
+        # the media_player-domain transports (kodi/tts/the `media` transport)
         return [TargetEntityCategory(domain="media_player", platform=HA_ALEXA_MEDIA_PLAYER_PLATFORM)]
 
     def validate_action(self, action: str | None) -> bool:
