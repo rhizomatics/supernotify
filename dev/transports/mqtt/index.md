@@ -8,7 +8,9 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
 
 ## Discovery
 
-**Delivery (explicit selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically — but since a topic has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [mqtt]}}` or a scenario), not by default. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
+**Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
+
+A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, the specific MQTT integration can be easier to use.
 
@@ -16,6 +18,21 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
 
 ## Example
+
+The topic should be supplied as a `target`, not `data.topic`, which is only supported for backward compatibility - see below. If both are given, `target` takes precedence. Multiple targets publish the same payload to each topic in turn.
+
+Giving a `topic:`-qualified target is enough on its own - the `mqtt` delivery doesn't need to be named:
+
+Example Notification with topic as target
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "this will be the MQTT payload"
+    target: topic:notify/queue/1
+```
+
+Naming `mqtt` explicitly still works the same way, and is needed to attach delivery-specific `data:` like a structured payload:
 
 Example Notification
 
@@ -25,7 +42,7 @@ Example Notification
     message: ""
     delivery:
         mqtt:
-            target: notify/queue/1
+            target: topic:notify/queue/1
             data:
                 payload:
                   warning:
@@ -34,15 +51,23 @@ Example Notification
                     level: low
 ```
 
-The topic can also be supplied as a `target` instead of `data.topic` - useful for selecting the topic per scenario or recipient rather than hard-coding it into the delivery. If both are given, `target` takes precedence. Multiple targets publish the same payload to each topic in turn.
+A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}}`) still works, predating the `target:` form:
 
-Example Notification with topic as target
+Example Notification with legacy data.topic
 
 ```yaml
 - action: supernotify.notify
   data:
-    message: "this will be the MQTT payload"
-    target: topic:notify/queue/1
+    message: ""
+    delivery:
+        mqtt:
+            data:
+                topic: notify/queue/1
+                payload:
+                  warning:
+                    duration: 30
+                    mode: emergency
+                    level: low
 ```
 
 ## Reference

@@ -1349,9 +1349,9 @@ The options for event policy selection are:
 | ----------------- | ------------------------------------------------------------------- |
 | NONE              | Default, send no events. All other flags ignored if set             |
 | ALL               | Default, send all events. All other flags ignored if set            |
-| SUCCESS           | Successful delivery with no errors, skips or suppressions           |
+| SUCCESS           | Successful delivery with no errors, misses or suppressions          |
 | NO_DELIVERY       | No deliveries made, with no errors                                  |
-| PARTIAL_DELIVERY  | Some deliveries made, others suppressed or skipped                  |
+| PARTIAL_DELIVERY  | Some deliveries made, others missed                                 |
 | FALLBACK_DELIVERY | Fallback delivery made due to error or no other delivery applicable |
 | ERROR             | Notifications with at least one delivery error                      |
 | DUPE              | Notifications suppressed as duplicates                              |
@@ -1962,11 +1962,15 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 
 `explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
 
+### Implicit Deliveries
+
+The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
+
 ### Delivery Control
 
-A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices and HTML5, and `explicit` for the rest. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
+A delivery without its own `inclusion` takes its transport's, which is `default` for email, mobile push, notify entities, Alexa Devices, HTML5, Discord, Matrix and MQTT, and `explicit` for the rest. These are `default` despite some of their targets (a channel/user ID, a room ID/alias, a topic) being opaque values, because each has its own dedicated target category (`discord_channel`/`matrix_room`/`topic`) no other transport uses - a target explicitly qualified with one reaches its delivery automatically, and the delivery is simply skipped otherwise. MQTT's topic can also come from a `data:` keyword instead of a target - unlike Discord/Matrix, that alone wouldn't tell it whether a given notification is even relevant - so its standard delivery only counts as truly asked-for, and allowed to rely on a `data:`-only topic, when the call names `mqtt` explicitly; swept in implicitly with no `topic:` target, it's simply skipped instead of attempting every notification. See [Suppression Reasons](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/#suppression-reasons) and the [Target-Driven Implicit Selection roadmap item](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md) for the fuller picture. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
 
-The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` to speak only to people at home. It works the same way, only for deliveries whose transport speaks. Recipients without a Person are never in or out, so `only_in` and `only_out` always leave them out - see [Users without Person entries](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#users-without-person-entries). Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` so a spoken delivery only happens when someone's home. For a delivery with its own fixed target - the Alexa Devices `_announce_all`/`_speak_all` deliveries, for example - `occupancy` decides whether the whole delivery fires at all, since there's no per-recipient list for it to narrow; for a delivery that resolves its targets from recipients, it also narrows which recipients it reaches, same as for any other delivery. Recipients without a Person are never in or out, so `only_in` and `only_out` always leave them out - see [Users without Person entries](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#users-without-person-entries). Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
 
 Info
 
@@ -2771,7 +2775,7 @@ scenarios:
 
 Regular expressions can be mixed and matched with literal delivery names, where there is a clash the literal name will work, where 2 regular expressions resolve to the same delivery, the last one to be applied is used.
 
-All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit `enabled: true` to do this.
+All deliveries are enabled by default (unless overridden in the **Delivery Control** integration settings ) - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit `enabled: true` to do this, and note that only the delivery `enabled` flag can be overridden, not the underlying transport (if transport is switched off, its completely off).
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 
@@ -3967,7 +3971,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/discord/
 
 ## Discovery
 
-**Delivery (explicit selection).** If the `discord` integration is already configured and no `discord` delivery is defined, a `discord` delivery is generated automatically (discovering whichever `notify.discord*` service slug your bot's config entry registered) — but since the channel/user ID has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [discord]}}` or a scenario), not by default.
+**Delivery (default selection).** If the `discord` integration is already configured and no `discord` delivery is defined, a `discord` delivery is generated automatically (discovering whichever `notify.discord*` service slug your bot's config entry registered). The channel/user ID itself can't be auto-detected from a bare, unqualified value, but `discord_channel` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {discord_channel: "123456789012345678"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `discord` in `delivery:` or a scenario. With nothing qualified as `discord_channel` given, the delivery is simply skipped.
 
 ## Motivation
 
@@ -4840,7 +4844,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/matrix/
 
 ## Discovery
 
-**Delivery (explicit selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically — but since a room ID/alias has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [matrix]}}` or a scenario), not by default.
+**Delivery (default selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically. A room ID/alias itself can't be auto-detected from a bare, unqualified value, but `matrix_room` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {matrix_room: "!room:server"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `matrix` in `delivery:` or a scenario. With nothing qualified as `matrix_room` given, the delivery is simply skipped.
 
 ## Motivation
 
@@ -5105,7 +5109,9 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/
 
 ## Discovery
 
-**Delivery (explicit selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically — but since a topic has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [mqtt]}}` or a scenario), not by default. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
+**Delivery (default selection).** If the MQTT integration's config entry exists and no `mqtt` delivery is defined, an `mqtt` delivery is generated automatically, and reaches it automatically too - no need to name `mqtt` in `delivery:` or a scenario - whenever the notification's target includes a value qualified with the dedicated `topic` category (`target: {topic: "..."}`), the same way an email address reaches the `email` delivery. Without a `topic:` target and without being named explicitly, the delivery is simply skipped, not attempted - it doesn't spam a "No topic for publication" warning on every unrelated notification.
+
+A topic can also still be given as a `data:` keyword instead of a target, for backward compatibility, but only when the call actually asks for `mqtt` by name - naming it explicitly (`delivery: {mqtt: {data: {topic: "..."}}}}`) is what makes a `data:`-only topic count as something genuinely being asked for, rather than the auto-generated delivery blindly attempting every notification regardless of relevance. MQTT devices that already expose themselves as notify entities are covered automatically by the [`notify_entity`](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md) transport's own default delivery instead.
 
 Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.mqtt/) can be used for many cases, and the Supernotify `generic` can be used to send a payload to `mqtt.publish`, the specific MQTT integration can be easier to use.
 
@@ -5113,6 +5119,21 @@ Whilst [MQTT Notify Entities](https://www.home-assistant.io/integrations/notify.
 - The action doesn't need to be specified, and the config will validate that a `topic` has been provided.
 
 ## Example
+
+The topic should be supplied as a `target`, not `data.topic`, which is only supported for backward compatibility - see below. If both are given, `target` takes precedence. Multiple targets publish the same payload to each topic in turn.
+
+Giving a `topic:`-qualified target is enough on its own - the `mqtt` delivery doesn't need to be named:
+
+Example Notification with topic as target
+
+```yaml
+- action: supernotify.notify
+  data:
+    message: "this will be the MQTT payload"
+    target: topic:notify/queue/1
+```
+
+Naming `mqtt` explicitly still works the same way, and is needed to attach delivery-specific `data:` like a structured payload:
 
 Example Notification
 
@@ -5122,7 +5143,7 @@ Example Notification
     message: ""
     delivery:
         mqtt:
-            target: notify/queue/1
+            target: topic:notify/queue/1
             data:
                 payload:
                   warning:
@@ -5131,15 +5152,23 @@ Example Notification
                     level: low
 ```
 
-The topic can also be supplied as a `target` instead of `data.topic` - useful for selecting the topic per scenario or recipient rather than hard-coding it into the delivery. If both are given, `target` takes precedence. Multiple targets publish the same payload to each topic in turn.
+A topic given as `data.topic` instead of a target only takes effect when `mqtt` is named explicitly like this - it's how a fixed-topic MQTT delivery configured directly in YAML (`delivery: {mqtt: {data: {topic: ...}}}}`) still works, predating the `target:` form:
 
-Example Notification with topic as target
+Example Notification with legacy data.topic
 
 ```yaml
 - action: supernotify.notify
   data:
-    message: "this will be the MQTT payload"
-    target: topic:notify/queue/1
+    message: ""
+    delivery:
+        mqtt:
+            data:
+                topic: notify/queue/1
+                payload:
+                  warning:
+                    duration: 30
+                    mode: emergency
+                    level: low
 ```
 
 ## Reference
@@ -7247,17 +7276,17 @@ See the [Options Reference](https://supernotify.rhizomatics.org.uk/latest/refere
 | [alexa_devices](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)           | FIRST | always          | default   | MESSAGE, SPOKEN                                                |
 | [alexa_media_player](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_media_player/index.md) | ANY   | always          | explicit  | MESSAGE, SPOKEN                                                |
 | [chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/index.md)                           | ANY   | optional        | explicit  | SOUND                                                          |
-| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | ANY   | always          | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
+| [discord](https://supernotify.rhizomatics.org.uk/latest/transports/discord/index.md)                       | ANY   | always          | default   | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [email](https://supernotify.rhizomatics.org.uk/latest/transports/email/index.md)                           | ANY   | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, TEMPLATE_FILE, SNAPSHOT_IMAGE |
 | [generic](https://supernotify.rhizomatics.org.uk/latest/transports/generic/index.md)                       | ANY   | optional        | explicit  | MESSAGE, TITLE                                                 |
 | [gotify](https://supernotify.rhizomatics.org.uk/latest/transports/gotify/index.md)                         | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [html5](https://supernotify.rhizomatics.org.uk/latest/transports/html5/index.md)                           | FIRST | always          | default   | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [kodi](https://supernotify.rhizomatics.org.uk/latest/transports/kodi/index.md)                             | ANY   | always          | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [lametric](https://supernotify.rhizomatics.org.uk/latest/transports/lametric/index.md)                     | ANY   | never           | explicit  | MESSAGE, TITLE                                                 |
-| [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | ANY   | always          | explicit  | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
+| [matrix](https://supernotify.rhizomatics.org.uk/latest/transports/matrix/index.md)                         | ANY   | always          | default   | MESSAGE, TITLE, IMAGES, SNAPSHOT_IMAGE                         |
 | [media](https://supernotify.rhizomatics.org.uk/latest/transports/media/index.md)                           | ANY   | always          | explicit  | IMAGES, VIDEO, SNAPSHOT_IMAGE, SOUND                           |
 | [mobile_push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)               | ANY   | always          | default   | MESSAGE, TITLE, IMAGES, VIDEO, ACTIONS, SNAPSHOT_IMAGE         |
-| [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | ANY   | optional        | explicit  | MESSAGE                                                        |
+| [mqtt](https://supernotify.rhizomatics.org.uk/latest/transports/mqtt/index.md)                             | ANY   | optional        | default   | MESSAGE                                                        |
 | [notify_entity](https://supernotify.rhizomatics.org.uk/latest/transports/notify_entity/index.md)           | LAST  | always          | default   | MESSAGE, TITLE                                                 |
 | [ntfy](https://supernotify.rhizomatics.org.uk/latest/transports/ntfy/index.md)                             | ANY   | never           | explicit  | MESSAGE, TITLE, IMAGES, ACTIONS, SNAPSHOT_IMAGE                |
 | [persistent](https://supernotify.rhizomatics.org.uk/latest/transports/persistent/index.md)                 | ANY   | never           | explicit  | MESSAGE, TITLE                                                 |

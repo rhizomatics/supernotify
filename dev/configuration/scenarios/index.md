@@ -192,7 +192,7 @@ scenarios:
 
 Regular expressions can be mixed and matched with literal delivery names, where there is a clash the literal name will work, where 2 regular expressions resolve to the same delivery, the last one to be applied is used.
 
-All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit `enabled: true` to do this.
+All deliveries are enabled by default (unless overridden in the **Delivery Control** integration settings ) - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit `enabled: true` to do this, and note that only the delivery `enabled` flag can be overridden, not the underlying transport (if transport is switched off, its completely off).
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 

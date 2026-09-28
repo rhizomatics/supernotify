@@ -4,7 +4,7 @@ Source: https://supernotify.rhizomatics.org.uk/latest/transports/matrix/
 
 ## Discovery
 
-**Delivery (explicit selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically — but since a room ID/alias has no automatic mapping to a recipient or entity, it only fires when selected explicitly (`data: {data: {delivery: [matrix]}}` or a scenario), not by default.
+**Delivery (default selection).** The HA `matrix` integration has no config flow (YAML-only setup), so SuperNotify can't detect it via a config entry — instead it checks directly whether the `matrix.send_message` service is registered (which only happens once the bot has connected). If found and no `matrix` delivery is defined, a `matrix` delivery is generated automatically. A room ID/alias itself can't be auto-detected from a bare, unqualified value, but `matrix_room` is a dedicated target category no other transport uses, so a target explicitly qualified with it (`target: {matrix_room: "!room:server"}`) reaches this delivery automatically, the same way an email address reaches the `email` delivery — no need to name `matrix` in `delivery:` or a scenario. With nothing qualified as `matrix_room` given, the delivery is simply skipped.
 
 ## Motivation
 
