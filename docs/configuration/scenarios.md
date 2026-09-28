@@ -105,15 +105,11 @@ Each delivery section within scenario has an `enabled` value, which defaults to 
 * `false` - This delivery will be disabled, whether it is an implicit one, or selected by another scenario
 * *Empty* - The delivery configuration will only be used to override the definition of a delivery that has already been selected, and if not, will be ignored when the scenario applied. Especially useful with [Wildcard Deliveries].
 
-If two active scenarios disagree on the same delivery, `false` always wins over any number of
-scenarios saying `true` - see [When Scenarios Disagree](../usage/notifying.md#when-scenarios-disagree)
-for the full explanation and the one way to override it.
+If two active scenarios disagree on the same delivery, `false` always wins over any number of scenarios saying `true` - see [When Scenarios Disagree](../usage/notifying.md#when-scenarios-disagree) for the full explanation and the one way to override it.
 
-See the [Seasonal Greetings Recipe](../recipes/seasonal_greetings.md) for an example where the null value of `enabled`
-is useful.
+See the [Seasonal Greetings Recipe](../recipes/seasonal_greetings.md) for an example where the null value of `enabled` is useful.
 
-Lists and single values can also be used, if the only need is to switch on deliveries. These all do the same, so it is
-kinder on everyone who sometimes gets their YAML styles mixed up.
+Lists and single values can also be used, if the only need is to switch on deliveries. These all do the same, so it is kinder on everyone who sometimes gets their YAML styles mixed up.
 
 ```yaml title="Alternate Delivery Definition Styles"
 scenarios:
@@ -134,8 +130,7 @@ scenarios:
 
 Conditions aren't essential for scenarios, since they can also be switched on by a notification.
 
-For example in this case, where the `home_security` and `garden` scenarios are explicitly
-triggered by using `apply_scenarios`, and so any overrides declared in those scenarios will be applied. Other scenarios may also select themselves based on condition logic.
+For example in this case, where the `home_security` and `garden` scenarios are explicitly triggered by using `apply_scenarios`, and so any overrides declared in those scenarios will be applied. Other scenarios may also select themselves based on condition logic.
 
 The `constrain_scenarios` prevents any scenario other than `unoccupied` or the ones explicitly applied here ( to switch off all other scenarios, use `NO_SCENARIO`). Constraining a scenario doesn't actually select it, only permits it if otherwise selected by a condition, and it doesn't affect scenarios explicitly switched on in the same data block by `apply_scenarios`.
 
@@ -211,7 +206,7 @@ scenarios:
 
 Regular expressions can be mixed and matched with literal delivery names, where there is a clash the literal name will work, where 2 regular expressions resolve to the same delivery, the last one to be applied is used.
 
-All deliveries are enabled by default - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit  `enabled: true` to do this.
+All deliveries are enabled by default (unless overridden in the **Delivery Control** integration settings ) - which makes regular scenarios easier to use - though can mean that a wildcard switches on more deliveries than might be the intention. A wildcard pattern on its own does not mean deliveries are selected, use an explicit  `enabled: true` to do this.
 
 For example, to override the priority for deliveries, without affecting deliveries that would otherwise not be selected.
 
