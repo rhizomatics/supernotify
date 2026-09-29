@@ -790,3 +790,40 @@ def test_force_strict_template_mode_undo_restores_original_template(hass: HomeAs
     force_strict_template_mode([cond], undo=True)
 
     assert cond["value_template"] is tmpl
+
+
+async def test_disconnect_debug_log_does_not_render_unsubscribe_callables(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """disconnect() must not str() the unsubscribe callables when debug logging is on.
+
+    A state tracker's unsubscribe is a partial over HA's dict of every state listener in the
+    instance; rendering it blocked the event loop for minutes on a large instance during
+    supernotify.reload.
+    """
+    from homeassistant.core import Event
+    from homeassistant.helpers.event import async_track_state_change_event
+
+    rendered: list[str] = []
+
+    class Expensive:
+        def __repr__(self) -> str:
+            rendered.append("repr")
+            return "expensive"
+
+        def handle(self, event: Event) -> None:
+            pass
+
+    # a listener owned by some other integration, sharing HA's state-listener dict
+    async_track_state_change_event(hass, "sensor.other", Expensive().handle)
+
+    hass_api = HomeAssistantAPI(hass)
+    hass_api.subscribe_state("sensor.watched", lambda event: None)
+    hass_api.subscribe_event("wonders_of_core", lambda event: None)
+    with caplog.at_level(logging.DEBUG, logger="custom_components.supernotify"):
+        hass_api.disconnect()
+
+    assert not hass_api.unsubscribes
+    assert rendered == []
+    assert "SUPERNOTIFY Unsubscribing: _remove_listener" in caplog.text
+    assert "SUPERNOTIFY Unsubscribing: EventBus._async_remove_listener" in caplog.text

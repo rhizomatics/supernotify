@@ -146,6 +146,18 @@ def ha_device_info(entry_id: str) -> dr.DeviceInfo:
     return dr.DeviceInfo(identifiers={(DOMAIN, entry_id)}, name="SuperNotify", manufacturer="SuperNotify")
 
 
+def _describe_unsubscribe(unsub: Callable[[], Any]) -> str:
+    """A short, cheap label for an unsubscribe callable, for logging.
+
+    Never str() the callable itself: the one returned by async_track_state_change_event is a
+    partial over Home Assistant's shared dict of every state-change listener in the instance,
+    so rendering it formats all of them on the event loop (megabytes on a large instance),
+    and `%.100s` only truncates after the whole string has been built.
+    """
+    target = getattr(unsub, "func", unsub)  # functools.partial -> the wrapped function
+    return str(getattr(target, "__qualname__", type(target).__name__))
+
+
 class HomeAssistantAPI:
     def __init__(self, hass: HomeAssistant) -> None:
         self._hass: HomeAssistant = hass
@@ -192,7 +204,7 @@ class HomeAssistantAPI:
         while self.unsubscribes:
             unsub = self.unsubscribes.pop()
             try:
-                _LOGGER.debug("SUPERNOTIFY Unsubscribing: %.100s", unsub)
+                _LOGGER.debug("SUPERNOTIFY Unsubscribing: %s", _describe_unsubscribe(unsub))
                 unsub()
             except Exception as e:
                 _LOGGER.error("SUPERNOTIFY Failed to unsubscribe: %s", e)
