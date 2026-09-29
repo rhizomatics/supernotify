@@ -118,10 +118,12 @@ async def test_debug_call_archives_trace_whatever_diagnostics(
         async with aiofiles.open(obj_path) as stream:
             reobj = json.loads("".join(await stream.readlines()))
         # provenance is archived for every notification, the rest of the trace only with debug
-        assert reobj["delivery_provenance"]["chime"]["disabled_by"] == ["scenario:quiet"]
         if debug:
+            # debug records every scenario disable, even of a delivery that wouldn't have been selected
+            assert reobj["delivery_provenance"]["chime"]["disabled_by"] == ["scenario:quiet"]
             assert "resolved" in reobj["debug_trace"]
         else:
+            assert "chime" not in reobj.get("delivery_provenance", {})
             assert "debug_trace" not in reobj
 
         # debug only changes the content archived, not which outcomes generate events

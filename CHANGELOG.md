@@ -35,6 +35,7 @@ data:
   - That is if an explicitly selected (by action, recipient or scenario) delivery couldn't be made. In effect you asked for 4 deliveries, only 3 could be made.
   -  Implicit deliveries that need targets (like Email or Notify Entity) and have no targets are suppressed without warnings
     - Though are accounted for in the 'delivery provenance' section of the archived notification
+  - Delivery provenance only records a scenario as disabling a delivery if that delivery would otherwise have been selected, so a wildcard disable no longer lists every delivery it matched. With `debug: true` the full list is still recorded
   -  Deliveries where the transport has been disabled are likewise suppressed without warnings (disabled deliveries were already excluded).
   - Fixes [#232](https://github.com/rhizomatics/supernotify/issues/232)
 - Voice Occupancy (and delivery occupancy in general) only affected recipient selection, and didn't impact the delivery itself. That's fixed now, so `any_in` for Voice means the Alexa or TTS deliveries will only be selected if somebody is home

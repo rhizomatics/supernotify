@@ -449,9 +449,7 @@ class Notification(ArchivableObject):
                     trace.record_delivery_provenance(name, "enabled_by", f"scenario:{scenario.name}")
             for scenario in self.enabled_scenarios.values():
                 for d in scenario.disabling_deliveries():
-                    name = resolve_name(d)
-                    scenario_disable_deliveries.append(name)
-                    trace.record_delivery_provenance(name, "disabled_by", f"scenario:{scenario.name}")
+                    scenario_disable_deliveries.append(resolve_name(d))
 
             scenario_enable_deliveries = list(dict.fromkeys(scenario_enable_deliveries))
             scenario_disable_deliveries = list(dict.fromkeys(scenario_disable_deliveries))
@@ -527,6 +525,13 @@ class Notification(ArchivableObject):
             dict.fromkeys(scenario_enable_deliveries + default_enable_deliveries + override_enable_deliveries)
         )
         all_enabled: list[str] = all_global_enabled + recipients_enable_deliveries
+        # outside debug, only trace a scenario disable that actually switched something off - a
+        # wildcard disable otherwise names every delivery it matched, selected or not
+        for scenario in self.enabled_scenarios.values():
+            for d in scenario.disabling_deliveries():
+                name = resolve_name(d)
+                if name in scenario_disable_deliveries and (self.debug or name in all_enabled):
+                    trace.record_delivery_provenance(name, "disabled_by", f"scenario:{scenario.name}")
         # override_enable_deliveries takes precedence: if the action call explicitly
         # re-enables a delivery that a scenario disabled, remove it from all_disabled.
         all_disabled: list[str] = [

@@ -1133,6 +1133,35 @@ async def test_delivery_provenance_records_each_source() -> None:
     assert "email" not in uut.selected_deliveries
 
 
+async def test_delivery_provenance_skips_scenario_disable_of_unselected_delivery() -> None:
+    """A wildcard scenario disable only records provenance for deliveries it actually switched off,
+    not every delivery it matched that was never going to be selected anyway"""
+    ctx = TestingContext(
+        deliveries={
+            "chime": {CONF_TRANSPORT: "chime", CONF_INCLUSION: ["default"]},
+            "chatty": {CONF_TRANSPORT: "email", CONF_ACTION: "notify.smtp", CONF_INCLUSION: ["explicit"]},
+        },
+        transports=TRANSPORTS,
+        scenarios={"quiet": {"delivery": {".*": {"enabled": False}}}},
+        transport_types=ALL_TRANSPORT_TYPES,
+        services={"notify": [*MOCK_SERVICES["notify"], {"action": "smtp"}]},  # type: ignore[list-item] # ty: ignore[invalid-argument-type]
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["quiet"]})
+    await uut.initialize()
+
+    provenance = uut.debug_trace.delivery_provenance
+    assert provenance["chime"] == {"enabled_by": ["default"], "disabled_by": ["scenario:quiet"]}
+    assert "chatty" not in provenance
+    assert "chime" not in uut.selected_deliveries
+
+    # debug keeps the full list
+    uut = Notification(ctx, "testing 123", action_data={ATTR_SCENARIOS_APPLY: ["quiet"], "debug": True})
+    await uut.initialize()
+    assert uut.debug_trace.delivery_provenance["chatty"] == {"disabled_by": ["scenario:quiet"]}
+
+
 async def test_delivery_provenance_recorded_without_debug() -> None:
     ctx = TestingContext(deliveries=DELIVERIES, transports=TRANSPORTS, transport_types=ALL_TRANSPORT_TYPES)
     await ctx.test_initialize()
