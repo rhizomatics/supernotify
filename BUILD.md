@@ -18,6 +18,15 @@ For documentation build:
 ./refresh-deps.sh
 ```
 
+## Editing Releases
+
+GitHub CLI can move a published release back to draft:
+
+`gh release edit v2.11.0-beta2 --draft=true`
+`gh release edit v2.11.0-beta2 --draft=false --prerelease`
+
+The second command publishes it again, which fires published and starts the workflow.
+
 ## Refreshing Diagram Thumbnails
 
 The `diagram-thumbnails` pre-commit hook refreshes the PNG thumbnail of any diagram HTML being
