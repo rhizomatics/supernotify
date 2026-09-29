@@ -62,9 +62,39 @@ Its also possible to put the e-mail, mobile action, notify entity or similar dir
 
 Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram or similar.
 
-## Complex Targets
+## Quick Targets
 
-This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever is most convenient
+A big mixed list of targets can be given that Supernotify will sort out with the right
+notification mechanism. This is based on the target address either being inherently *obvious*,
+like an email address or phone number, or being prefixed with a *target category* tag:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target:
+            - john@mcdoe.co.bn
+            - +4398708123987
+            - discord_channel:9585
+            - matrix_room:!uniqueroom:example.org
+            - topic:home/unique/topic
+            - telegram_chat_id:215678938
+            - notify.unique_html5_browser
+            - topic:security/basement/alert
+```
+
+See [Targets](./targets.md) for the full list of target categories.
+
+Quick targets are easy but have two limitations:
+
+* Not all delivery transports have easily recognized addresses, or need more detailed config
+* Even for the delivery transports that can take quick targets, you may want to provide extra options to tune the delivery.
+
+See [Customizing Messages Per Channel](#customizing-message-per-channel) for more.
+
+#### Alternative to Quick Targets
+
+Its also possible to organize targets in a map, keyed on the transport, with each one having either a single address, or a list of as many as are needed.
 
 ```yaml
 - action: supernotify.notify
@@ -79,31 +109,9 @@ This is what a complicated target looks like - any of the separate address types
             - mobile_app.john_ipad
 ```
 
-## Category-Prefixed Targets
-
-For a target with no address type Supernotify can auto-detect (e.g. an MQTT topic or a
-Discord channel ID), a plain flat list of targets can tag an entry with its *category* name
-and a colon, instead of switching to the dictionary form above:
-
-```yaml
-  - action: supernotify.notify
-    data:
-        message: Something went off in the basement
-        target:
-            - john@mcdoe.co.bn
-            - +4398708123987
-            - discord_channel:9585
-            - topic:security/basement/alert
-```
-
-See [Targets](./targets.md) for the full list of category names and the other ways to
-qualify a target (a mapping, or setting it directly on a delivery).
-
 ## Area, Floor and Label Targets
 
-Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification
-can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id`
-and `label_id` keys as any other Home Assistant action:
+Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
 
 ```yaml
   - action: supernotify.notify
@@ -116,13 +124,9 @@ and `label_id` keys as any other Home Assistant action:
               - chime
 ```
 
-Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then
-applies each delivery's usual target selection to those entities. An entity in more than one of them - in the
-kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector.
-Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
 
-An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id`
-in its own `extra_data` rather than as a target.
+An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
 
 ## Notification Priority
 
