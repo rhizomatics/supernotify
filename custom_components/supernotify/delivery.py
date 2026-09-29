@@ -269,7 +269,9 @@ class Delivery(DeliveryConfig):
                             _LOGGER.debug(f"SUPERNOTIFY Skipped mobile without notify entity {d.device_name}, id {d.device_id}")
                     else:
                         if d.device_id not in self.target.device_ids:
-                            _LOGGER.debug(f"SUPERNOTIFY Found {d.model} device {d.device_name} for {domain}, id {d.device_id}")
+                            _LOGGER.debug(
+                                "SUPERNOTIFY Found %s device %s for %s, id %s", d.model, d.device_name, domain, d.device_id
+                            )
                             self.target.extend(ATTR_DEVICE_ID, d.device_id)
                             added += 1
 

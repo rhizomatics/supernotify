@@ -805,7 +805,7 @@ class Notification(ArchivableObject):
             skip_reason: SuppressionReason | None = self.delivery_skip_reason(delivery)
             if skip_reason is not None:
                 self.record_result(delivery, suppression_reason=skip_reason)
-                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s, %s", delivery, skip_reason)
+                _LOGGER.debug("SUPERNOTIFY Skipping delivery %s, %s", delivery.name, skip_reason)
                 return
 
             targets: list[Target] = self.generate_targets(delivery, target_override)
