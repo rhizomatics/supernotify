@@ -102,6 +102,8 @@ class Delivery(DeliveryConfig):
         self.explicit_inclusion: bool = CONF_INCLUSION in conf
         transport_defaults: DeliveryConfig = self.transport.delivery_defaults
         super().__init__(conf, delivery_defaults=transport_defaults)
+        # deprecated option aliases must be rewritten before anything below reads self.options
+        self.migrate_config()
         if isinstance(self.target, Target):
             # a value set directly on this delivery's own `target:` is exclusively scoped to
             # it - unlike a blended notification-level target list - so it's safe to claim an
@@ -118,22 +120,51 @@ class Delivery(DeliveryConfig):
             self.target_selector: SelectionRule | None = SelectionRule(self.options.get(OPTION_TARGET_SELECT))
         else:
             self.target_selector = None
-        self.upgrade_deprecations(conf)
 
     async def initialize(self, context: Context) -> bool:
-        errors = 0
-        if self.name in TRANSPORT_NAMES and self.transport.name != self.name:
-            _LOGGER.warning(
-                "SUPERNOTIFY Delivery %s is a reserved name for the standard delivery of %s transport", self.name, self.name
-            )
-            context.hass_api.raise_issue(
-                f"delivery_{self.name}_reserved_name",
-                issue_key="delivery_reserved_name",
-                issue_map={"delivery": self.name},
-                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
-            )
+        self.check_lost_implicit_inclusion(context)
+        errors = await self.validate_config(context)
+        self.discover_devices(context)
+        self.transport_data = self.transport.setup_delivery_options(self.options, self.name)
+        return errors == 0
+
+    def migrate_config(self) -> None:
+        """Rewrite deprecated option aliases in place. Called from `__init__`, before
+
+        anything else reads `self.options` - unlike the checks in `validate_config()` and
+        `check_lost_implicit_inclusion()`, this never needs `Context`, so there's no reason
+        to defer it to `initialize()` and risk a constructed-but-not-initialized `Delivery`
+        (as in many unit tests) seeing the pre-migration option name.
+        """
+        # v1.9.0
         if (
-            CONF_INCLUSION not in self._raw_conf
+            OPTION_DATA_KEYS_INCLUDE_RE in self.options or OPTION_DATA_KEYS_EXCLUDE_RE in self.options
+        ) and not self.options.get(OPTION_DATA_KEYS_SELECT):
+            _LOGGER.warning(
+                "SUPERNOTIFY Deprecated use of data_keys_include_re/data_keys_exclude_re options - use data_keys_select"
+            )
+            self.options[OPTION_DATA_KEYS_SELECT] = {
+                SELECT_INCLUDE: self.options.get(OPTION_DATA_KEYS_INCLUDE_RE),
+                SELECT_EXCLUDE: self.options.get(OPTION_DATA_KEYS_EXCLUDE_RE),
+            }
+        # v1.9.0
+        if OPTION_TARGET_INCLUDE_RE in self.options and not self.options.get(OPTION_TARGET_SELECT):
+            _LOGGER.warning("SUPERNOTIFY Deprecated use of target_include_re option - use target_select")
+            self.options[OPTION_TARGET_SELECT] = {SELECT_INCLUDE: self.options.get(OPTION_TARGET_INCLUDE_RE)}
+
+    def check_lost_implicit_inclusion(self, context: Context) -> None:
+        """v2.11.0: flag a behaviour change that can't be silently auto-upgraded, unlike
+
+        `migrate_config()`'s option aliases - we can't know what inclusion the user actually
+        wants, so this only raises a repair issue for them to act on. Needs `Context`
+        (`delivery_registry.default_inclusion`, `hass_api.raise_issue`), so - like
+        `validate_config()` - it's deferred to `initialize()` rather than run from `__init__`,
+        to avoid raising issues for a `Delivery` that's constructed but never initialized (as
+        in many unit tests).
+        """
+        if (
+            self.provenance == DeliveryProvenance.CONFIG
+            and CONF_INCLUSION not in self._raw_conf
             and INCLUSION_DEFAULT not in self.inclusion
             and context.delivery_registry.default_inclusion is None
         ):
@@ -147,6 +178,25 @@ class Delivery(DeliveryConfig):
                 f"delivery_{self.name}_lost_implicit_inclusion",
                 issue_key="delivery_lost_implicit_inclusion",
                 issue_map={"delivery": self.name, "transport": self.transport.name},
+                learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
+            )
+
+    async def validate_config(self, context: Context) -> int:
+        """Genuine per-delivery validation - as opposed to the version-history migration
+
+        concerns in `migrate_config()` and `check_lost_implicit_inclusion()`. Each failure is
+        raised as a repair issue and counted, so `DeliveryRegistry` can drop this delivery
+        rather than run it in a state nobody asked for.
+        """
+        errors = 0
+        if self.name in TRANSPORT_NAMES and self.transport.name != self.name:
+            _LOGGER.warning(
+                "SUPERNOTIFY Delivery %s is a reserved name for the standard delivery of %s transport", self.name, self.name
+            )
+            context.hass_api.raise_issue(
+                f"delivery_{self.name}_reserved_name",
+                issue_key="delivery_reserved_name",
+                issue_map={"delivery": self.name},
                 learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
             )
         if self.name in RESERVED_DELIVERY_NAMES:
@@ -187,27 +237,7 @@ class Delivery(DeliveryConfig):
                     learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/deliveries/",
                 )
                 errors += 1
-
-        self.discover_devices(context)
-        self.transport_data = self.transport.setup_delivery_options(self.options, self.name)
-        return errors == 0
-
-    def upgrade_deprecations(self, conf: ConfigType) -> None:
-        # v1.9.0
-        if (
-            OPTION_DATA_KEYS_INCLUDE_RE in self.options or OPTION_DATA_KEYS_EXCLUDE_RE in self.options
-        ) and not self.options.get(OPTION_DATA_KEYS_SELECT):
-            _LOGGER.warning(
-                "SUPERNOTIFY Deprecated use of data_keys_include_re/data_keys_exclude_re options - use data_keys_select"
-            )
-            self.options[OPTION_DATA_KEYS_SELECT] = {
-                SELECT_INCLUDE: self.options.get(OPTION_DATA_KEYS_INCLUDE_RE),
-                SELECT_EXCLUDE: self.options.get(OPTION_DATA_KEYS_EXCLUDE_RE),
-            }
-        # v1.9.0
-        if OPTION_TARGET_INCLUDE_RE in self.options and not self.options.get(OPTION_TARGET_SELECT):
-            _LOGGER.warning("SUPERNOTIFY Deprecated use of target_include_re option - use target_select")
-            self.options[OPTION_TARGET_SELECT] = {SELECT_INCLUDE: self.options.get(OPTION_TARGET_INCLUDE_RE)}
+        return errors
 
     def discover_devices(self, context: Context) -> None:
         if self.options.get(OPTION_DEVICE_DISCOVERY, False):

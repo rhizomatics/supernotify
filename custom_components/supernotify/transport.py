@@ -52,8 +52,9 @@ def default_target_required(
 def default_selection_rank(
     unique: list[str | TargetEntityCategory], fallback: list[str | TargetEntityCategory]
 ) -> SelectionRank:
-    """A transport that can definitively claim a category should be tried before a vaguer
-    one; one that only catches what nothing more specific claimed should be tried last."""
+    """A transport that can definitively claim a unique target category should be tried before
+    a fallback one; which is presumed to be either more broadly defined in terms of platforms
+    supported, or not as capable as the unique handler. Designed for Notify Entity."""
     if unique:
         return SelectionRank.FIRST
     if fallback:
@@ -63,9 +64,8 @@ def default_selection_rank(
 
 def default_inclusion(unique: list[str | TargetEntityCategory], fallback: list[str | TargetEntityCategory]) -> list[str]:
     """A transport that can never definitively claim anything (no unique/fallback category)
-    has no way to prove a given notification is relevant to it, so it stays explicit-only
-    by default - the same effect `Transport.inclusion_mode` used to declare per-transport,
-    now inferred instead of hand-maintained on every transport that doesn't need `default`."""
+    has no way to prove a given notification is relevant to it, so it requires explicit
+    enablement by config / scenario / action to be considered for delivery"""
     return [INCLUSION_DEFAULT] if (unique or fallback) else [INCLUSION_EXPLICIT]
 
 

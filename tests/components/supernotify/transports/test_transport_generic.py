@@ -208,7 +208,6 @@ def test_prune_fields():
     sample = {"foo": 123, "bar": 789, "enabled": True}
     conf = {CONF_OPTIONS: {OPTION_DATA_KEYS_INCLUDE_RE: ["f.*"], OPTION_DATA_KEYS_EXCLUDE_RE: ["enabled", ".*oo"]}}
     delivery = Delivery("", conf, uut)
-    delivery.upgrade_deprecations(conf)
     rules = delivery.options.get(OPTION_DATA_KEYS_SELECT)
 
     def f(data, config):

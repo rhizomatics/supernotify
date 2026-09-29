@@ -39,6 +39,7 @@ data:
   - Fixes [#232](https://github.com/rhizomatics/supernotify/issues/232)
 - Voice Occupancy (and delivery occupancy in general) only affected recipient selection, and didn't impact the delivery itself. That's fixed now, so `any_in` for Voice means the Alexa or TTS deliveries will only be selected if somebody is home
   - Fixes [[#231](https://github.com/rhizomatics/supernotify/issues/231)]
+- Fixed migration of old `target_include_re` and `data_keys_include_re` to newer style config
 
 ### Discord
 - Delivery can now be triggered automatically by using a target in style `discord_channel:434343434` without any other config or action data needed
