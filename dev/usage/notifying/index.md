@@ -60,9 +60,37 @@ Example Email Message
 
 Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram or similar.
 
-## Complex Targets
+## Quick Targets
 
-This is what a complicated target looks like - any of the separate address types can be a string or a list, whatever is most convenient
+A big mixed list of targets can be given that Supernotify will sort out with the right notification mechanism. This is based on the target address either being inherently *obvious*, like an email address or phone number, or being prefixed with a *target category* tag:
+
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target:
+            - john@mcdoe.co.bn
+            - +4398708123987
+            - discord_channel:9585
+            - matrix_room:!uniqueroom:example.org
+            - topic:home/unique/topic
+            - telegram_chat_id:215678938
+            - notify.unique_html5_browser
+            - topic:security/basement/alert
+```
+
+See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of target categories.
+
+Quick targets are easy but have two limitations:
+
+- Not all delivery transports have easily recognized addresses, or need more detailed config
+- Even for the delivery transports that can take quick targets, you may want to provide extra options to tune the delivery.
+
+See [Customizing Messages Per Channel](#customizing-message-per-channel) for more.
+
+#### Alternative to Quick Targets
+
+Its also possible to organize targets in a map, keyed on the transport, with each one having either a single address, or a list of as many as are needed.
 
 ```yaml
 - action: supernotify.notify
@@ -76,23 +104,6 @@ This is what a complicated target looks like - any of the separate address types
             - mobile_app.john_phone
             - mobile_app.john_ipad
 ```
-
-## Category-Prefixed Targets
-
-For a target with no address type Supernotify can auto-detect (e.g. an MQTT topic or a Discord channel ID), a plain flat list of targets can tag an entry with its *category* name and a colon, instead of switching to the dictionary form above:
-
-```yaml
-  - action: supernotify.notify
-    data:
-        message: Something went off in the basement
-        target:
-            - john@mcdoe.co.bn
-            - +4398708123987
-            - discord_channel:9585
-            - topic:security/basement/alert
-```
-
-See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of category names and the other ways to qualify a target (a mapping, or setting it directly on a delivery).
 
 ## Area, Floor and Label Targets
 
