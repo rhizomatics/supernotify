@@ -83,6 +83,8 @@ like an email address or phone number, or being prefixed with a *target category
             - topic:security/basement/alert
 ```
 
+In the Home Assistant Actions UI, the **Custom Targets** section can be used to add in anything you like. This is in addition to the regular targets, so for things like `notify` entities, its easier using that selector, or choosing them by area, floor or label.
+
 ![Custom Targets](../assets/images/custom_targets_ui.png)
 
 See [Targets](./targets.md) for the full list of target categories.
