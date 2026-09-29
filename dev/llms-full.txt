@@ -689,6 +689,8 @@ A big mixed list of targets can be given that Supernotify will sort out with the
             - topic:security/basement/alert
 ```
 
+In the Home Assistant Actions UI, the **Custom Targets** section can be used to add in anything you like. This is in addition to the regular targets, so for things like `notify` entities, its easier using that selector, or choosing them by area, floor or label.
+
 See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of target categories.
 
 #### Quick Targets Limitations
