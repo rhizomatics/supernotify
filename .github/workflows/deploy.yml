@@ -25,12 +25,16 @@ on:
 jobs:
   release-zip:
     # separate from build, and outside its concurrency group, so HACS can download the zip as soon as possible
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag_name || github.event.release.tag_name }}
     steps:
     - uses: actions/checkout@v7.0.1
+      with:
+        ref: ${{ env.TAG }}
     - name: Package release zip
       run: |
         cd custom_components/supernotify
@@ -38,7 +42,7 @@ jobs:
     - name: Upload release zip asset
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload "${{ github.event.release.tag_name }}" supernotify.zip --clobber
+      run: gh release upload "$TAG" supernotify.zip --clobber
 
   build:
     runs-on: ubuntu-latest
@@ -119,6 +123,9 @@ jobs:
       run: |
         sudo apt-get install pngquant
         uv sync --group docs
+        # mike commits to gh-pages, and the badges step that also sets this is skipped for PRs
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
         git config push.autoSetupRemote true
         git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         git fetch origin gh-pages

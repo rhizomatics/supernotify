@@ -53,6 +53,9 @@ data:
 ### Telegram
 - Delivery can now be triggered automatically by using a target in style `telegram_chat_id:215678938` without any other config or action data needed
 
+### Fixes
+- Simplified debug logging for Home Assistant subscriptions that could cause huge log lines and delayed close
+
 ## v2.10.3
 
 ### Home Assistant Change Tracking

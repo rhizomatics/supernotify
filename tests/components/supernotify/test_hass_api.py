@@ -801,7 +801,7 @@ async def test_disconnect_debug_log_does_not_render_unsubscribe_callables(
     instance; rendering it blocked the event loop for minutes on a large instance during
     supernotify.reload.
     """
-    from homeassistant.core import Event
+    from homeassistant.core import Event, EventStateChangedData
     from homeassistant.helpers.event import async_track_state_change_event
 
     rendered: list[str] = []
@@ -811,7 +811,7 @@ async def test_disconnect_debug_log_does_not_render_unsubscribe_callables(
             rendered.append("repr")
             return "expensive"
 
-        def handle(self, event: Event) -> None:
+        def handle(self, event: Event[EventStateChangedData]) -> None:
             pass
 
     # a listener owned by some other integration, sharing HA's state-listener dict
