@@ -77,13 +77,17 @@ like an email address or phone number, or being prefixed with a *target category
             - +4398708123987
             - discord_channel:9585
             - matrix_room:!uniqueroom:example.org
-            - topic:home/unique/topic
+            - notify.kitchen_alexa
             - telegram_chat_id:215678938
             - notify.unique_html5_browser
             - topic:security/basement/alert
 ```
 
+![Custom Targets](../assets/images/custom_targets_ui.png)
+
 See [Targets](./targets.md) for the full list of target categories.
+
+#### Quick Targets Limitations
 
 Quick targets are easy but have two limitations:
 
