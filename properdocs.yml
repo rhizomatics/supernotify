@@ -7,7 +7,7 @@ repo_url: https://github.com/rhizomatics/supernotify
 edit_uri: edit/main/docs/
 
 theme:
-  name: material
+  name: materialx
   custom_dir: docs/overrides
   highlightjs: true
   language: en
