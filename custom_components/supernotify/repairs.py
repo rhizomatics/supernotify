@@ -7,6 +7,10 @@ CONFIG_SCHEMA/async_setup in __init__.py). A leftover legacy block is inert (not
 async_get_service shim registers nothing from it) but still raises this fixable repair, which
 automates moving that config into `supernotify.yaml` plus a `supernotify: !include
 supernotify.yaml` line in configuration.yaml.
+
+These repairs access HomeAssistant APIs directly without going via HomeAssistantAPI
+module, since they are triggered by ConfigFlow prior to there being a Supernotify service.
+Other repairs that happen post YAML load are called via HomeAssistantAPI from their own class
 """
 
 from __future__ import annotations

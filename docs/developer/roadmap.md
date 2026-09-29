@@ -20,6 +20,24 @@ Pillow >=12.1 - switch to get_flattened_data
 
 Switch from `voluptuous` to `probatio`
 
+## Other Migration Cleanup
+
+### v1.9.0
+
+- Delivery
+  - `target_include_re`
+  - `data_keys_include_re`
+  - `data_keys_exclude_re`
+- Transport
+  - `device_discovery`
+  - `device_domain"
+  - `device_model_include`
+  - `device_model_exclude`
+
+### v2.5.0
+- Delivery
+  - `selection`
+
 ## Notification Features
 
 ### Rate Limiting
