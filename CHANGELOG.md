@@ -1,4 +1,6 @@
-## v2.11.0
+# v2.11.0 - 30/09/2026
+
+## ✨ Enhancements
 
 The way that integration transports are defined and selected for automatic eligibility in delivering notifications has been overhauled, and several older flags replaced by a more logical way based on how well a transport can definitively identify its own target addresses, as `email` can do with an email address, or discord with a `discord_channel:xxx` address.
 
@@ -38,9 +40,7 @@ data:
   - Delivery provenance only records a scenario as disabling a delivery if that delivery would otherwise have been selected, so a wildcard disable no longer lists every delivery it matched. With `debug: true` the full list is still recorded
   -  Deliveries where the transport has been disabled are likewise suppressed without warnings (disabled deliveries were already excluded).
   - Fixes [#232](https://github.com/rhizomatics/supernotify/issues/232)
-- Voice Occupancy (and delivery occupancy in general) only affected recipient selection, and didn't impact the delivery itself. That's fixed now, so `any_in` for Voice means the Alexa or TTS deliveries will only be selected if somebody is home
-  - Fixes [[#231](https://github.com/rhizomatics/supernotify/issues/231)]
-- Fixed migration of old `target_include_re` and `data_keys_include_re` to newer style config
+
 
 ### Discord
 - Delivery can now be triggered automatically by using a target in style `discord_channel:434343434` without any other config or action data needed
@@ -54,19 +54,30 @@ data:
 ### Telegram
 - Delivery can now be triggered automatically by using a target in style `telegram_chat_id:215678938` without any other config or action data needed
 
-### Fixes
+## 🐛 Bug fixes
 - Simplified debug logging for Home Assistant subscriptions that could cause huge log lines and delayed close
+- Voice Occupancy (and delivery occupancy in general) only affected recipient selection, and didn't impact the delivery itself. That's fixed now, so `any_in` for Voice means the Alexa or TTS deliveries will only be selected if somebody is home
+  - Fixes [[#231](https://github.com/rhizomatics/supernotify/issues/231)]
+- Fixed migration of old `target_include_re` and `data_keys_include_re` to newer style config
 
-## v2.10.3
+## 📝 Other changes
 
-### Home Assistant Change Tracking
+# v2.10.3
+
+## ✨ Enhancements
+
+### Home Assistant Change Tracking
 - Improved the use of Contexts to explain why changes happened, including to scenario state, use of switch entities, and the `reset_overrides` action
 - Each notification shows in the logbook, from a new `supernotify_notification` event, with what was sent and via which deliveries, linked back to the automation, script, action call or voice command that caused it
 - A manual scenario's binary sensor, when set by a script or automation, is attributed to it in the logbook and history
+
+## 📚 Documentation
 ### Developer
 - Diagrams added for architecture, primary classes and primary flow
 
-## v2.10.2
+# v2.10.2
+
+## ✨ Enhancements
 
 ### Media Player Transport
 - Can now play audio files, like an mp3 alert, or any other media, as well as showing images, contributed by @lollox80
@@ -78,12 +89,14 @@ data:
   - Relative URLs are made absolute with the external URL. Amazon requires public `https` and 48kbps MP3, see the transport docs
   - Optional `audio_duration` extends the wait before volume restore or music resume for longer clips
   - See also the [Chime Transport](./transports/chime.md) for another way to use Alexa Media Player for sounds, and as part of mixed set of chiming devices.
-## Snoozing
+## 🐛 Bug fixes
+### Snoozing
 - Fix error handling Clear Snoozes action
 - Fix Enquire Snoozes listing expired snoozes
 
-## v2.10.1
+# v2.10.1
 
+## ✨ Enhancements
 ### Home Assistant Assist
 - Built-in (non-AI) agent sentences in Italian as well as English, contributed by @lollox80
   - The answer comes back in the language of the sentence that matched, whatever the language of the assistant
@@ -95,12 +108,14 @@ data:
   - They will also not be included for any deliveries sent to `only_in` or `only_out` devices since their presence is undefined, they will be included in the `all_xxx` deliveries
   - Home Assistant uses `Person` entities to define device ownership and occupancy
 
-### Fixes
+## 🐛 Bug fixes
 - `supernotify.enquire_archive` with an unknown `id` now names that id in its error, instead of showing `{notification_id}`
 
-## v2.10.0 - Assist Assist
+# v2.10.0 - Assist Assist
 
 This release introduces text and voice chat support using Home Assistant Conversation integration and Voice Assistants. Both AI and non-AI chats are supported. The Action UI is further improved with pickers for delivery and scenario.
+
+## ✨ Enhancements
 
 ### Action UI
 - Scenarios and deliveries now get populated for easy picking
@@ -138,20 +153,19 @@ This release introduces text and voice chat support using Home Assistant Convers
 - All integration controlled via config UI, so can be fully or partially switched on or off
 - AI Tools functionality also available via Home Assistant's native MCP server
 
-### Other
+## 📝 Other changes
 - Action UI now has example values to help understand what fields do
 - New `supernotify.enquire_archive` action, contributed by @lollox80
-- Improved Italian translations, provided by @lollox80
 - Inclusion now distinguishes `scenario` and `explicit`
   - `explicit` can be chosen in an action or when enabled by a scenario
   - `scenario` can only be selected by automated conditions, so won't appear as options on the Delivery choice in Actions UI
-
-### Internal
-- `llms-full.txt` for agent support now includes each page's URL for better help lookup
 - Unknown delivery or scenario names in a call are now logged along with the configured names, and kept as unknown_names in the archive
 - The `engine` has a new dry run function, available to users via the AI tooling
 - Repair issues now list what's configured, condition issues include the error, and diagnostics include open issues. The scenario action-group repair used the wrong message, now fixed.
 - Occupancy value in transport `delivery_defaults` now correctly respected when building deliveries
+## 📚 Documentation
+- Improved Italian translations, provided by @lollox80
+- `llms-full.txt` for agent support now includes each page's URL for better help lookup
 - Fix the web links for 'Learn More' links in Home Assistant
 
 ### Note
@@ -159,7 +173,9 @@ This release introduces text and voice chat support using Home Assistant Convers
 If an option or menu entry shows without a label after upgrading, the browser is showing its cached copy of the old text - hard-refresh the page, or in the companion app use *Settings* > *Companion app* > *Debugging* > *Reset frontend cache*.
 
 
-## v2.9.1 - Snooze Fix
+# v2.9.1 - Snooze Fix
+
+## 🐛 Bug fixes
 
 ### Snoozing
 - Fixed truncated entity and delivery names where they had underscores
@@ -168,13 +184,15 @@ If an option or menu entry shows without a label after upgrading, the browser is
 - Fixed 'everyone' snoozes not firing
 - Improved e2e testing around snoozes
 
-### Minor
+## 📚 Documentation
 - JSON schema IDs corrected
 - Developer documentation restructured and concepts added with diagram
 
-## v2.9.0 - Target Selection
+# v2.9.0 - Target Selection
 
 This version brings target selection up to date with all the latest Home Assistant features, so for example you can choose to send notifications to only the first floor Alexa devices simply by choosing that floor.
+
+## ✨ Enhancements
 
 ### People
 - Mobile Discovery previously only automatically found mobile apps to push notifications to if the user also had a `Person` created in Home Assistant
@@ -197,25 +215,29 @@ This version brings target selection up to date with all the latest Home Assista
   - Fixes [#10](https://github.com/rhizomatics/supernotify/issues/10)
   - Note that with `unique_targets` enabled, a group in one delivery now dedupes at member level against the same members explicitly targeted in a later delivery, e.g. `chime` to `group.speakers` followed by `alexa_media_player` to `media_player.a` will skip the latter as a duplicate.
 
-### Internal
-- `reprocess: preserve` with no `jpeg_opts`/`png_opts` configured raised an `AttributeError` building the cache key, since those options are `None` rather than empty, so the image was never reprocessed
+
+## 🐛 Bug fixes
+- Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
+- `reprocess: preserve` with no `jpeg_opts`/`png_opts` configured previously raised an `AttributeError` building the cache key, since those options are `None` rather than empty, so the image was never reprocessed
 - A reprocessed image keeps the format it is saved in: a PNG was written into a `.jpg` file, which misleads anything going by the extension, `MIMEImage` included
+## 📝 Other changes
+### Developer
 - The cache key of a reprocessed image is a stable digest rather than `hash()`, which is salted per process, so a file reprocessed before the last restart is found again instead of being rewritten every time
 - All the Pillow work for an image - decoding, copying the pixels and re-encoding - now happens in one executor job: only `Image.open` and `Image.new` were kept off the event loop, while `getdata()`/`putdata()` and `save()` ran on it
-- Cameras that were switched off could appear to be `idle` rather than `unavailable` defeating the alternate camera choice or cause broken image placeholders in mobile push notifications
 - Media handling now tested with `webp` images (in addition to existing `jpeg`,`png` and `gif`)
 - Test images now stamped with format so easier to see if correct image appearing
 - Fixed test cleanup so test images don't build up in local directory
 - New integration test framework, focusing at first on basic expectations for minimal, default, zero YAML installs
 
 
-## v2.8.0 - Proper Entities Part 2
+# v2.8.0 - Proper Entities Part 2
+
+## ✨ Enhancements
 
 ### Delivery and Transport Switches
 
 - Each loaded delivery and transport now has a switch, `switch.supernotify_delivery_<name>` or `switch.supernotify_transport_<name>`, named `Delivery <name> Enabled` and `Transport <name> Enabled`, on the SuperNotify device. Switching a transport off suppresses all of its deliveries, without changing their own switches
-- Delivery and transport `binary_sensor`s behave the same way as the recipients since v2.7.0
- - Only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+
 - Delivery switches and `binary_sensor`s have a `transport_enabled` attribute, updated as the transport is switched on or off, since a delivery is only used while its transport is enabled too
 
 ### Persistent Overrides
@@ -224,24 +246,30 @@ This version brings target selection up to date with all the latest Home Assista
 - New `supernotify.reset_overrides` action puts everything switched on or off back to its configured state, for every kind or only for one `kind`, optionally returning the names reset
 - New **Reset overrides** button, `button.supernotify_reset_overrides`, on the SuperNotify device - the same as calling `supernotify.reset_overrides` for every kind
 
-### Breaking
-
-- Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
-
 ### Debug Trace
 - Every archived notification records which source switched each delivery on or off, as `delivery_provenance` - `default`, `call`, `scenario:<name>` or `recipient:<name>` under `enabled_by` / `disabled_by` - where the debug trace's `delivery_selection` only has the combined list for each stage, so the archive shows which scenario turned a channel off, not just that one did. It is small, a few names per delivery, so unlike the rest of the debug trace it doesn't need `debug: true` and is kept in the minimal archive content too
 - A notification sent with `debug: true` is archived with its full diagnostic content, `debug_trace` included, whatever outcomes the archive `diagnostics` option selects. Before, the trace was only kept for the selected outcomes, `ERROR` by default, so a successful `debug: true` notification lost it
-- Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
 
-### Fixes
+## 🚨 Breaking changes
+- Delivery and transport `binary_sensor`s behave the same way as the recipients since v2.7.0
+ - Only mirror the new switches, so are deprecated and will be removed in a future version. They are read-only real entities on the SuperNotify device, only kept for an install that already has them, for a delivery or transport that is loaded. A repair is raised once if you have one enabled
+- Writing the state of a delivery or transport `binary_sensor` no longer enables or disables it, use its switch instead
+
+
+## 🐛 Bug fixes
 - A notification where a recipient switches a delivery on or off for themselves could not be archived, full or minimal - `DeliveryTargetOverride.as_dict()` rejected the archive's keyword arguments
 
+## 📝 Other changes
+- Cleaned up some spurious or noisy debug logging for test execution
 ### Privacy
 - Email and phone numbers redacted where identified in Diagnostics bundle, and when debug logging recipients
-### Internal
-- Cleaned up some spurious or noisy debug logging for test execution
 
-## 2.7.0 - Proper Entities Part 1
+## 📚 Documentation
+- Debug recipe corrected - it is `debug: true` on the notification, not on the delivery, that records the trace
+
+## ⚠️ Deprecated
+
+# 2.7.0 - Proper Entities Part 1
 
 ### Native Entities
 
@@ -264,7 +292,8 @@ This version brings target selection up to date with all the latest Home Assista
 - **Breaking:** writing the state of a scenario or recipient `binary_sensor` no longer enables or disables it, use the switch instead. The scenario `binary_sensor` now only reports whether the scenario's conditions hold, and the recipient one mirrors the recipient's `enabled` flag
 - Scenario and recipient entity names are translated, and put the type first so each sorts together in the entity list: `Scenario <name>` and `Recipient <name>` for the `binary_sensor`s, and `Scenario <name> Enabled` and `Recipient <name> Enabled` for the switches
 
-### Other
+
+### 📝 Other changes
 - HomeAssistant compatibility moved to 2026.9.3
 - Fix handling of target specific data, that could lead to targets showing up in other envelopes
 - If a camera or other image source not available, the mobile push is text only rather than showing with a broken image
@@ -275,7 +304,7 @@ This version brings target selection up to date with all the latest Home Assista
   - `EnityCategory` renamed to `TargetEntityCategory` to avoid naming clash with Home Assistant term
 
 
-## 2.6.0 - Notification UI
+# 2.6.0 - Notification UI
 
 ### Action Data
 The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of handling `data` mappings than the original legacy Notify platform way.
@@ -300,7 +329,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 ### Technical
 - `message_html`,`timestamp` and `priority` managed only within envelope and not passed down further to transports in the catch-all `data` section
 
-## 2.5.3 - Voice Improvements
+# 2.5.3 - Voice Improvements
 
 ### Spoken Notifications
 
@@ -316,14 +345,14 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
 - New [voice](usage/voice.md) documentation page added
 
 
-## 2.5.2
+# 2.5.2
 
 ### Alexa Media Player
 
 - Fix for auto discovery on Alexa Media Player, where every action registered by the integration hits the same function
   - Service lookup ignores target-specific instances of an action to find the target neutral one
 
-## 2.5.1
+# 2.5.1
 
 ### Alexa Devices
 - Automatic deliveries, `alexa_devices_announce_all` and `alexa_devices_speak_all` now only select devices and ignore speaker groups so not double notifying
@@ -334,7 +363,7 @@ The new `supernotify.notify` action introduced in v2.0.0 has a simpler way of ha
   - This will be improved to support progress bars etc
 
 
-## 2.5.0 - Delivery Overhaul
+# 2.5.0 - Delivery Overhaul
 
 ### Deliveries
 
@@ -417,13 +446,13 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Developer automated documentation for Transports expose the new target configurations they have
 - Manifest updated so Supernotify will wait for all its dependent integrations before starting up
 
-## 2.4.2
+# 2.4.2
 
 ### Fixes
 - Automation editor could leave `data` fields at `null`, for example `constrain_scenarios` which got rejected by schema validator. Null values now explicitly allowed, and handled as unset for optional values.
 - Fixed an obscure set amalgamation bug in `notification.py` `select_deliveries()` that could cause different results for multiple deliveries
 
-## 2.4.1
+# 2.4.1
 
 ## Data Templates
 - Templated `data` sections now rendered prior to downstream transport being called, e.g. if Alexa volume computed. Provided by [@lollox80](https://github.com/lollox80)
@@ -434,7 +463,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 ### Testing
 - Automated testing of 6 month prior Home Assistant release added, and versions will be rolled to maintain compatibility check.
 
-## 2.4.0
+# 2.4.0
 
 ### Live Scenarios
 - Scenarios can now expose their state as `binary_sensor`, and compute that state both reactively as underlying entities change state, or optionally with a periodic re-compute
@@ -465,7 +494,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - `notify.py` slimmed down by moving main engine to `engine.py`, delivery/transport/people/scenario functionality out to registries, actions out to `actions.py` leaving only the Notify Entity / legacy Notification platform shims out to `notify_compatibility.py`
 
 
-## 2.3.1
+# 2.3.1
 
 ### Occupancy
 - If no occupants defined, then occupancy will be explicitly `UNDEFINED_OCCUPANTS` rather than left ambiguous
@@ -475,7 +504,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Image grab task now cleaned up if delivery times out
 
 
-## 2.3.0
+# 2.3.0
 
 ### Dedicated Notify Action
 - The existing `notify` action is offered via the HA `notify` platform, so Supernotify acts as a 'sub-platform'. This has several consequences:
@@ -502,7 +531,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - `ty` type checker reinstalled, and several type usages tightened up
 - Avoided the mkdocsalypse by switching docs generation to `properdocs`
 
-## 2.2.3
+# 2.2.3
 
 - `enquire_last_notification` now has option to return the full notification with diagnostic info
 - Alexa Media Player fixes
@@ -513,14 +542,14 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Cameras
   - Fixed default PTZ delay
 
-## 2.2.2
+# 2.2.2
 
 - Explicit `camera_delay` in notification respected even if there's no PTZ requested
 - Improved logging for camera PTZ and snapping
 - `enquire_recipients` now exposed as a Home Assistant action
 - Alexa Media Player transport has fix for [#176](https://github.com/rhizomatics/supernotify/issues/176) error when volume set
 
-## 2.2.1
+# 2.2.1
 
 ### Alexa Media Player
 - Capture of pre-announcement state to minimize impact on audio already playing now more efficient with async rather than loop per Alexa device
@@ -533,7 +562,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
 - Fixed deprecation version comment [[#174](https://github.com/rhizomatics/supernotify/issues/174)]
 - Fixed `ptz_delay` applied when no PTZ preset [[#172](https://github.com/rhizomatics/supernotify/issues/172)]
 
-## 2.2.0
+# 2.2.0
 
 * Recipients and Notify Entities
   * Recipients are now **Notify Entities**, so can be called with `send_message` directly from automations, and also support being member of a **Notify Entity Group**
@@ -547,7 +576,7 @@ There has a wide overhaul of how targets are categorized and tied back to transp
   * Strict template mode undo
   * Better tests
 
-## 2.1.0
+# 2.1.0
 
 Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new transport integrations
 
@@ -567,7 +596,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 
 - New native `html5` browser push transport using the modern `html5.send_message` entity service: priority-mapped urgency, tag/renotify, action buttons, snapshot image URL, `silent`/`vibrate` exclusivity guard. See `docs/transports/html5.md`.
 
-## 2.0.0
+# 2.0.0
 
 ### Scenario state entities
 
@@ -634,7 +663,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
   - `default_title` option for emails without titles set in notification
 - `delivery_selection` of `fixed` overrides priority and condition filtering at delivery level, if selection is fixed, only `enabled` at transport or delivery level will override your command.
 
-## 1.16.6
+# 1.16.6
 - Upgrade dependencies and tests for HA 2026.8.0
 - Support for changes to Device Manager in HA 2026.8 and later
  - Details at https://developers.home-assistant.io/blog/2026/07/21/device-registry-single-config-entry
@@ -642,28 +671,28 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
  - Quality Scale re-audited
  - Roadmap added for migration to ConfigFlow and improved HA quality scale level
  - Removal and clean up instructions added to 'Getting Started' guide
-## 1.16.5
+# 1.16.5
 - Fix wildcard scenarios selecting other scenarios that wouldn't otherwise be matched
 - Test fixes by pinning `pytest-homeassistant-custom-component`
 
-## 1.16.4
+# 1.16.4
 - Upgraded to Ruff 0.16.0 and enabled full rule set, fixed resulting lint errors
 - Added `EnvelopeOutcome` enum to replace previous `KEY_` constants
 - Archived notification now has a single `outcome` value for overall delivery result
 - Archived notifications have separate `delivery_exceptions` field for transport errors
-## 1.16.3
+# 1.16.3
 - Dependencies update, incl HA compatibility linked to 2026.7.x ( maintaining 2026.2.x for py3.13 testing )
 - Test fixes for recent HA changes
-## 1.16.2
+# 1.16.2
 - Dependencies update, incl HA compatibility linked to 2026.6.x ( maintaining 2026.2.x for py3.13 testing )
-## 1.16.1
+# 1.16.1
 ### Mobile Push
 - Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time, so the global discovery by person doesn't have to be switch off to create a phone model specific delivery
 ### Chime
 - Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time
 ### TTS
 - Device selection (by model,manufacturer etc) now applies at delivery time not just discovery time
-## 1.16.0
+# 1.16.0
 ### Mobile Push
 - Data sections can now be filtered in/out to any level of nesting
   - Common use case - trimming out values from Frigate blueprint like `attachment` or `video` that can result in broken thumbnails for Apple notifications
@@ -672,7 +701,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 - The nested support for `data` filtering introduced for Mobile Push introduced also for Generic transport
 ## Other
 - Version of Supernotify added to archived notification
-## 1.15.0
+# 1.15.0
 ### New transports
 - Pushover, Telegram and LaMetric, contributed by [@lollox80](https://github.com/lollox80)
 ### Multimedia
@@ -684,10 +713,10 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 - Better Android integration
 - Multiple new tuning keys for `data` section to use Android or iOS features
 - Where they can be positively identified, iOS and Android devices are only sent `data` fields they support
-## 1.14.1
+# 1.14.1
 ### PTZ
 - Mobile Push deliveries will defer until a PTZ operation complete
-## 1.14.0
+# 1.14.0
 ### Delivery Sequencing
 - Delivieries now use asyncio.gather to maximize parallelism
 - Deliveries needing snapshot images sequence after simple service calls
@@ -700,7 +729,7 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 - GitHub actions now runs tests and lints for both py3.13 and py3.14
 ### Diagnostics
 - Call record now has a timestamp for service call
-## 1.13.0
+# 1.13.0
 ### Transport Generic
 - Replaced hard-coded allow-list of fields per underlying service with dynamic validation using the service's action schema to prune out unsupported fields or make type conversions.
   - Generic can also now support a much wider set of Home Assistant built-in and custom integrations reliably, pruning out data wherever a schema is provided
@@ -708,13 +737,13 @@ Gratitude to [@lollox80](https://github.com/lollox80) for contributing 4 new tra
 - Corrected `ntfy` integration handling of images and actions
 ### Archiving
 - Use local timezone for archive notification file path
-## 1.12.2
+# 1.12.2
 - Prioritize data from action call over scenario or target derived data
 - Minor test and lint fixes for 3.14, and improved test coverage
-## 1.12.1
+# 1.12.1
 - Translations for Dutch, French, German, Hindi, Italian, Japanese, Polish, Portuguese, Simplified Chinese and Spanish
 - Vertalingen voor Nederlands, Traductions en français, Übersetzungen auf Deutsch, हिंदी में अनुवाद, Traduzioni in italiano, 日本語の翻訳, Tłumaczenia po polsku, Traduções em português, 简体中文翻译 en traducciones al español
-## 1.12.0
+# 1.12.0
 ### Alexa Media Player
 Includes major fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 - Alexa Media Player volume control now works, along with ability to pause and restart any music previously playing
@@ -726,7 +755,7 @@ Includes major fixes and improvements contributed by [@lollox80](https://github.
 - Delivery overrides that have indirect targets like `person` now correctly resolved to email / sms / slack / mobile etc
 - Explicitly enabled deliveries in action call not overridden by scenarios
 
-## 1.11.1
+# 1.11.1
 Includes fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 -  Icon fixes
 - `notification_id` suppressed in persistent notification if null
@@ -735,15 +764,15 @@ Includes fixes and improvements contributed by [@lollox80](https://github.com/lo
 - Suppress repeating `condition_variables` from archived envelopes
 - Expand templated values in `data` for archiving
 - Migrate old `condition` to `conditions`
-## 1.11.0
+# 1.11.0
 ### Dupe Checking
 - `force_resend` can be set in `data` section to override dupe handling ( contribution by [@lollox80](https://github.com/lollox80))
 - `dupe_policy_message_title_same` duplicate detection policy added
 ### Internal
 - Added more tests, focusing on transports and media_grab
-## 1.10.1
+# 1.10.1
 - Lint and type fixes
-## 1.10.0
+# 1.10.0
 Includes Italian translations, fixes and improvements contributed by [@lollox80](https://github.com/lollox80)
 ### Configuration
 - New `snooze` config, with configurable default snooze time to replace hard coded 1 hour
@@ -759,13 +788,13 @@ depending on notification outcome, using same policy as event selection
 - Sanitizing messages for voice assistants now strips emojis and other weird unicode
 - Archive writing now async
 - Corrected MDI icons for developer tools view
-## 1.9.4
+# 1.9.4
 ### Internal
 - `__init__.py` refactored into `schema.py` and `const.py`
 - Python default now 3.14, in line with Home Assistant
 - Added translations for Italian, French, German and Spanish
 - Primary target Home Assistant version now 2026.3
-## 1.9.3
+# 1.9.3
 ### Dependencies
 - Primary target Home Assistant version now 2026.1
 ### Scenario names
@@ -774,14 +803,14 @@ a None value
 - Scenario names now validated at startup
 ### Action Data Validation
 - Improved handling of failures in humanize library to handle validation
-## 1.9.2
+# 1.9.2
 ### Fixes
 - `snapshot_image_path` now always a string rather than path object when added back to `data`
 - Prevent a dict or list value for `priority` raising unexpected error
-## 1.9.1
+# 1.9.1
 ### Cameras
 - Allow a separate entity id for PTZ movements, `ptz_camera`
-## 1.9.0
+# 1.9.0
 ### Device Discovery
 - Now configured via `options` and can be used for mobile_app_ids or device_ids
 - Mobile app discovery improved, no longer needs mobile app device trackers to be configured in Home Assistant Person screen
@@ -812,7 +841,7 @@ All deprecations will be automatically handled in config as if newer config used
 - `device_model_include` - Use `device_model_select` in `options:`
 - `device_model_exclude` - Use `device_model_select` in `options:`
 
-## 1.8.2
+# 1.8.2
 ### Debugging
 - Debug trace now holds exception traces for email templates and chime action building
 - Transport Adaptor entities now expose more transport specific attributes
@@ -822,14 +851,14 @@ All deprecations will be automatically handled in config as if newer config used
 - Now the default template always available, though overridable
 - Colours now set by priority, `message_html` used if set, and general cleanup
 - Example renders now on docs page
-## 1.8.1
+# 1.8.1
 ### Generic Transport
 - Can now adapt a message for the *ntfy* Home Assistant integration
 - Entity selection is now specific to the domain, e.g. `switch`,`input_text`,`notify`
 ### Priority
 - Custom priorities now supported ( default continues to be `medium` )
 - New standard priority `minimum` and mapping of all priorities to the common `1..5` range with 5 as `critical`
-## 1.8.0
+# 1.8.0
 ### TTS Transport
 - New transport for TTS integration, hiding its complicated double entity_id call
 ### Generic Transport
@@ -854,7 +883,7 @@ All deprecations will be automatically handled in config as if newer config used
 ### Media Player Transport
 - Corrected `snapshot_url` to be taken from `media` section as other transports
 
-## 1.7.0
+# 1.7.0
 ### Scenario
 - Scenarios can now use regular expressions for the delivery configuration, for example `.*` to apply to all
 - `enquire_deliveries_by_scenario` action now lists which deliveries are enabled by the scenario, disabled by it, and all the scenarios to which it applies overrides
@@ -878,7 +907,7 @@ All deprecations will be automatically handled in config as if newer config used
 - Standard Home Assistant templates used for full range of variables and filters
 
 
-## 1.6.0
+# 1.6.0
 ### Fixes
 - Image attachments from mobile push style notifications not being picked up by e-mail
    - This affected use of the Frigate Blueprint to generate both e-mail and mobile push with image attachment
@@ -913,7 +942,7 @@ All deprecations will be automatically handled in config as if newer config used
   - Removed lots of pointless checks on HA presence in `hass_api`
 - Recipient
   - Removed shadow state, now goes straight to Person
-## 1.5.3
+# 1.5.3
 ### Chime Transport
 - Chime alias error handling improved
   - Humanize validation errors
@@ -933,10 +962,10 @@ All deprecations will be automatically handled in config as if newer config used
 - More logging for device inclusion/exclusion during discovery
 - Test Context can now take yaml rather than just dicts for config snippets
 
-## 1.5.2
+# 1.5.2
 ### Fixes
 - Better error handling for broken scenario conditions
-## 1.5.1
+# 1.5.1
 ### Features
 - Generic Transport
    - Now has direct support for `input_text.set_value`,`script`,`rest_command`,`light`,`siren`,`mqtt` and `switch`
@@ -948,7 +977,7 @@ All deprecations will be automatically handled in config as if newer config used
   - Undelivered envelopes now have a `skip_reason` of `NO_ACTION` or `NO_TARGET` if action call
 to Home Assistant skipped because of mandatory missing items
 
-## 1.5.0
+# 1.5.0
 ### Features
 - Mobile Push
     - Mobile discovery now on by default
@@ -991,18 +1020,18 @@ only prepare data and targets
 - Test suite for the seasonal scenarios
 - Correct debug handling for archival, and inclusion of debug_trace
 
-## 1.4.0
+# 1.4.0
 ### Features
 - Now supports the full `conditions` Home Assistant schema, `condition` is now deprecated though still supported
   - This allows simple lists of shortcut templates, for common `AND` type usage
 ### Internal
 - Test config now consistently applies schema validation/enhancement
-## 1.3.5
+# 1.3.5
 ### Fixes
 - Condition variables could be rejected in validation of Delivery conditions
 ### Internal
 - More extensive condition testing, condition variables now always applied
-## 1.3.4
+# 1.3.4
 ### Features
 - Improved documentation content and navigation
 - Media Player transport allows `media_content_type` to be overridden in `data` for non-image use
@@ -1015,12 +1044,12 @@ only prepare data and targets
 - `archive` module refactored into an `ArchiveDirectory` with all file system logic
 - New envelope specific tests
 - Improved tests by using deeper dummy/broken delivery which call through to HA API
-## 1.3.3
+# 1.3.3
 ### Features
 - Added more direct documentation links for repairs
 ### Bug Fixes
 - Corrected obsolete github pages docs link
-## 1.3.2
+# 1.3.2
 ### Features
 - Exposed entities now use the alias as the 'friendly name', so shows up better in Developer Tools and entity view
 - Add debug mode for deliveries, configurable at `transport` or `delivery` level
@@ -1032,11 +1061,11 @@ only prepare data and targets
 - Transport now has an `override_enabled` for run time control of all deliveries using the transport via HA entities UI
 - Bug fixes for null values in snoozer, and fix backward boolean compatibility for target_required
 
-## 1.3.1
+# 1.3.1
 ### Internal
 - Update of 1.3.0 from beta 6 to beta 8
 
-## 1.3.0
+# 1.3.0
 ### Features
 - *Notify Entity* transport now only selects unique targets, so if a Notify Entity has been delivered
 in the same notification call, for example by *Alexa Devices*, it won't be called again for a duplicate
@@ -1067,7 +1096,7 @@ is archived for debug purposes ( and supports the new unique target value functi
 - *Snoozer* now uses `timedelta` rather than integer seconds to measure snooze length
 - More tests for `common`
 
-## 1.2.3
+# 1.2.3
 - `Delivery` now responsible to select targets, delegating to `Transport` where overridden
   - This means target category selection for generic deliveries is configured per delivery, e.g. telegram and discord
 - `Target` overhauled to simplify repetitive logic, minimize getattr use, and allow custom domains
@@ -1076,7 +1105,7 @@ is archived for debug purposes ( and supports the new unique target value functi
 - All personal target resolution now done at start up, and a `Target` object added to people registry entries
   - Easier to debug target selection now, and the email/sms/mobile_push transports are simpler
 
-## 1.2.2
+# 1.2.2
 - Consolidated all transport defaults in a single method
 - Simplified handling of transport and delivery config defaults
 - Moved `target_required` from transport to delivery config, since could vary per delivery for generic transport
@@ -1086,7 +1115,7 @@ is archived for debug purposes ( and supports the new unique target value functi
 - `NotifyEntity` now always auto-generates a default Delivery unless the transport is explicitly disabled
 - HomeAssistant target version now 2025.11
 
-## 1.2.1
+# 1.2.1
 - HACS Hassfest validator added
 - A delivery for `NotifyEntity` is now auto-generated for an empty platform config
   - If any deliveries are configured, then `NotifyEntity` must be included if needed, since won't be auto-generated
@@ -1098,7 +1127,7 @@ is archived for debug purposes ( and supports the new unique target value functi
 - Added new `enquire_implicit_deliveries` Action
 - Added more tests for `hass_api`
 
-## 1.2.0
+# 1.2.0
 - `DeliveryRegistry` now has the delivery functionality from `Context` and `Transport`
 - `DeliveryMethod` is now `Transport`
 - Tests simplified with a new configurable `TestingContext`
@@ -1106,64 +1135,64 @@ is archived for debug purposes ( and supports the new unique target value functi
 - `NotificationArchive` now owns its own Config interpretation and is built from notify
 - Context is now a passive ref container plus a little FS path manipulation
 
-## 1.1.6
+# 1.1.6
 - HomeAssistant logic moved from `Context` to `HomeAssistantAPI`
 - Initialization logic moved from `Context` to `SuperNotificationService`
 - References to `SuperNotificationService` now consistent rather than `SuperNotificationAction`
 - Move camera PTZ and image handling from `Notification` to `media_grab.py`
 
-## 1.1.5
+# 1.1.5
 - New tests for mqtt and notify entity handling and media grabbing
 - ScenarioRegistry added to move scenario logic out of `Context`
 
-## 1.1.4
+# 1.1.4
 - Explicit delivery selection in action overrides scenario disablement
 - Extended and reorganized documentation
 - Suppressed notifications now have a reason recorded, DUPE, SNOOZED, NO_SCENARIO
 
-## 1.1.3
+# 1.1.3
 - Move out all people functionality from Context to new PeopleRegistry
 - Move runtime model classes out of `__init__.py`
 - Add new Target class that holds and filters recipients
 - Simplify logic for generating recipients and envelopes
 - Experimental new MQTTTransport
 
-## 1.1.2
+# 1.1.2
 
 - Remove transport options where not relevant - chime, media_image
 
-## 1.1.1
+# 1.1.1
 
 - Options defaulting for transports improved
 - Archive checks for MQTT client first, and all file IO aio based
 
-## 1.1.0
+# 1.1.0
 
 - Refactored internal use of dictionaries for delivery config, transport defaults and targets to typed classes for easier debugging and testing
 - Dupe suppression now alphaizes hashes to avoid notification storms where a counter or timestamp defeats the dupe check
 - Actions now separate out target data for service call wherever supported
 - MQTT topic archive now works if file archive also switched on
 
-## 1.0.4
+# 1.0.4
 
 - Test fixes, archive logging, and archive publish error handling
 - Scenarios, transports and deliveries can be switched on or off via their exposed entities in Home Assistant UI or API
 - `NotifyEntityTransport` added as pre-production
 
-## 1.0.3
+# 1.0.3
 
 - Improve mqtt notification archiving by generating unique qualified topic per item
 - Simplify archive config to be clear what applies to file and what to mqtt
 
-## 1.0.2
+# 1.0.2
 
 - Validate mis-spelled variables in Scenario Condition templates and generate repairs
 
-## 1.0.1
+# 1.0.1
 
 - Added repairs for configuration issues
 - GitHub actions and pre-commit improvements
 
-## 1.0.0
+# 1.0.0
 
 First public release of productionized home code
