@@ -371,10 +371,10 @@ class Target:
         `categories` are the delivery's declared target categories, and `own_names` its own
         name and its transport's. A target category named after either is always destined
         for that delivery. The two serve different purposes and both stay available:
-         - the TRANSPORT name (`sms:value`) reaches every delivery of that transport, so
+         - the TRANSPORT name (`{sms: value}`) reaches every delivery of that transport, so
            scenario/time/occupancy selection logic can still decide which one actually
            fires - the same as it would for a plain, auto-matched value
-         - a specific DELIVERY name (`shortcode_sms:value`) pins the target to just that
+         - a specific DELIVERY name (`{shortcode_sms: value}`) pins the target to just that
            one delivery, for when two deliveries of the same transport must stay distinct
            (e.g. `email` vs `html_email`)
 

@@ -1,3 +1,14 @@
+# Unreleased
+## 📚 Documentation
+- Overhauled the **Usage** documents for **Notifying** and **Targets**
+  - Better explanations of simple and precise targeting
+  - More consistent examples, and better organization of content between the 2 pages
+  - Several mistakes and unclear things remediated
+## 🐛 Bug fixes
+## 📚 Documentation
+### Developer
+- Docstring fix for `Target.select`
+
 # v2.11.0 - 30/09/2026
 
 ## ✨ Enhancements

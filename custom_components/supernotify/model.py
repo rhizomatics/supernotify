@@ -126,7 +126,6 @@ class DeliveryCustomization:
         # just to carry other data (e.g. a priority override).
         self.enabled: bool | None = config.get(CONF_ENABLED, default_enabled)
         self.data: dict[str, Any] | None = config.get(CONF_DATA)
-        # TODO: only works for scenario or recipient, not action call
         self.target: Target | None
 
         if config.get(CONF_TARGET):

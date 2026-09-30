@@ -10,9 +10,9 @@ description: How to send notifications using Supernotify from automations or the
 
 ## Sending Notifications
 
-Use the `supernotify.notify` action for the easiest way to send notifications, with guidance for each main part of the `data` section and selectors.
+Use the `supernotify.notify` action to send notifications. In the Actions and Automations UI, it gives guidance and selectors for each main part of the `data` section.
 
-```yaml title="Same Example, via supernotify.notify"
+```yaml title="Basic Example"
   - action: supernotify.notify
     data:
         message: Garden sensor triggered
@@ -22,8 +22,6 @@ Use the `supernotify.notify` action for the easiest way to send notifications, w
 
 `supernotify.notify` also retains the original context of the action, and propagates that down to any actions it calls, such as for underlying notification transports or moving a PTZ camera. (See the [original Home Assistant blog post](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on tracing context.)
 
-All of the examples below will work equally with `supernotify.notify` (easier to use when using in the Actions or Automations UI) or the `notify` platform compatible `notify.supernotify` style action.
-
 There are lots more examples in the [Recipes](../recipes/index.md), including how to make it work well with Frigate, AppDaemon and Alexa.
 
 ## Simplest Example
@@ -32,7 +30,7 @@ In this example, there's no configuration, target or anything more than the stan
 
 This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry in Home Assistant.
 
-```yaml title="Example Message to All Devices"
+```yaml title="Message to All Devices"
   - action: supernotify.notify
     data:
         message: Something went off in the basement
@@ -40,99 +38,38 @@ This notification will go out to all the implicit deliveries. If there's no conf
 
 ## Adding Targets
 
-Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](../configuration/email.md) for more on configuring e-mail notifications, and [Targets](../usage/targets.md) for more in general about how to use them.
+Targets can be direct addresses, like an email address, phone number or notify entity, or something indirect like a person, area or label.
 
-```yaml title="Example Message to All Devices"
+```yaml title="Message to One Person"
   - action: supernotify.notify
     data:
         message: Something went off in the basement
         target: person.john_mcdoe
 ```
 
-In this case, the notification will go only to John, to any mobile devices he's running Home Assistant on, and to any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
+In this case, the notification will go only to John: to any mobile devices he's running Home Assistant on, and to any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
 
-Its also possible to put the e-mail, mobile action, notify entity or similar directly into the target:
+### Simple Targeting
 
-```yaml title="Example Email Message"
-  - action: supernotify.notify
-    data:
-        message: Something went off in the basement
-        target: john@mcdoe.co.bn
-```
+`target` can take a single value, or a big mixed list, and Supernotify works out which notification transport each one belongs to. Targets with an obvious format, like an e-mail address, phone number or entity ID, are recognized automatically. Anything else gets a *target category* prefix, such as `topic:` for MQTT or `discord_channel:` for Discord.
 
-Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram or similar.
-
-## Quick Targets
-
-A big mixed list of targets can be given that Supernotify will sort out with the right
-notification mechanism. This is based on the target address either being inherently *obvious*,
-like an email address or phone number, or being prefixed with a *target category* tag:
-
-```yaml
+```yaml title="Mixed Targets"
   - action: supernotify.notify
     data:
         message: Something went off in the basement
         target:
-            - john@mcdoe.co.bn
+            - person.john_mcdoe
+            - jane@mcdoe.co.bn
             - +4398708123987
-            - discord_channel:9585
-            - matrix_room:!uniqueroom:example.org
             - notify.kitchen_alexa
-            - telegram_chat_id:215678938
-            - notify.unique_html5_browser
+            - discord_channel:9585
             - topic:security/basement/alert
 ```
 
-In the Home Assistant Actions UI, the **Custom Targets** section can be used to add in anything you like. This is in addition to the regular targets, so for things like `notify` entities, its easier using that selector, or choosing them by area, floor or label.
+Home Assistant's `area_id`, `floor_id` and `label_id` targets work too, so a notification can go to "whatever is in the kitchen".
 
-![Custom Targets](../assets/images/custom_targets_ui.png)
+Simple targeting covers most notifications. When you need more precise control, such as giving two e-mail deliveries different addresses, see [Precise Targeting](targets.md#precise-targeting). [Targets](targets.md) also lists all the target categories.
 
-See [Targets](./targets.md) for the full list of target categories.
-
-#### Quick Targets Limitations
-
-Quick targets are easy but have two limitations:
-
-* Not all delivery transports have easily recognized addresses, or need more detailed config
-* Even for the delivery transports that can take quick targets, you may want to provide extra options to tune the delivery.
-
-See [Customizing Messages Per Channel](#customizing-message-per-channel) for more.
-
-#### Alternative to Quick Targets
-
-Its also possible to organize targets in a map, keyed on the transport, with each one having either a single address, or a list of as many as are needed.
-
-```yaml
-- action: supernotify.notify
-  data:
-      message: Something went off in the basement
-      target:
-          email: john@mcdoe.co.bn
-          phone_number: +4398708123987
-          telegram: "@bill"
-          mobile_app_id:
-            - mobile_app.john_phone
-            - mobile_app.john_ipad
-```
-
-## Area, Floor and Label Targets
-
-Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
-
-```yaml
-  - action: supernotify.notify
-    data:
-        message: Dinner is ready
-        target:
-            area_id: kitchen
-            floor_id: ground_floor
-            label_id:
-              - chime
-```
-
-Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
-
-An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
 
 ## Notification Priority
 
@@ -145,6 +82,7 @@ Valid Priorities:
 - critical
 - high
 - medium
+- low
 - minimum
 
 Example Message
@@ -188,17 +126,17 @@ Delivery selection can be passed in the `data` of an action call using the `deli
 An explicit `delivery_selection` always wins over whatever the shape of `delivery:` would otherwise imply - it's a default, not an override. If in doubt, add the `delivery_selection` to make it clear.
 
 ```yaml title="Implicit (default) - implied by a mapping"
-- action: supernotify.notify
-  data:
-      message: Garden sensor triggered
-      delivery:
-          mobile_push: # tunes an existing (default or scenario) delivery
-            data:
-              clickAction: https://my.home.net/dashboard
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            mobile_push: # tunes an existing (default or scenario) delivery
+                data:
+                    clickAction: https://my.home.net/dashboard
 ```
 
-In this example, `mobile_push` and `email` are selected as deliveries, even if they are not default ones. In addition
-any deliveries selected by conditions or scenarios will be added to the list.
+In this example, `mobile_push` is tuned but not selected - the default deliveries, and any switched on by a
+scenario, go out as normal.
 
 ```yaml title="Explicit - implied by a list"
   - action: supernotify.notify
@@ -209,7 +147,7 @@ any deliveries selected by conditions or scenarios will be added to the list.
             - email
 ```
 
-In this case `email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
+In this case only `mobile_push` and `email` are selected, even if they're `explicit` or `scenario` inclusion only, plus any deliveries switched on by a scenario. Each delivery's own `condition` and `priority` still apply.
 
 ```yaml title="Fixed - always set explicitly"
   - action: supernotify.notify
@@ -219,6 +157,8 @@ In this case `email` will be chosen even if the delivery `condition` or `priorit
         delivery:
             - email
 ```
+
+Here `email` is chosen even if its `condition` or `priority` is not met, and every other delivery is switched off. You get just the fixed list you asked for.
 
 ### Delivery and Delivery Control
 
@@ -250,7 +190,7 @@ selection is `explicit`. **Delivery Selection** (`delivery_selection`), also und
 that. Left out entirely, delivery selection stays `implicit`, as before.
 
 `delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a
-list or a mapping directly, as in the examples above, in both `supernotify.notify` and `notify.supernotify`.
+list or a mapping directly, as in the examples above.
 
 !!! info Delivery *Selection* vs *Inclusion*
     `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](../configuration/deliveries.md#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` works the same as `inclusion: scenario` when sending, except that explicit deliveries are offered in the action editor's Delivery list, and scenario-only ones aren't.
@@ -266,7 +206,7 @@ call itself to explicitly re-enable that delivery in its own `delivery:` data. T
 
 ## Using from an Automation
 
-In this example, when an Actionable Notification is sent with action `Red Alert`, a notification is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`
+In this example, when an Actionable Notification is sent with action `Red Alert`, a notification is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`.
 
 ```yaml
 - id: action_red_alert
@@ -277,8 +217,8 @@ In this example, when an Actionable Notification is sent with action `Red Alert`
     event_type: ios.action_fired
     event_data:
       actionName: Red Alert
-  action:
-  - action: notify.supernotify
+  actions:
+  - action: supernotify.notify
     data:
       apply_scenario: red_alert
 ```
@@ -301,11 +241,12 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
       message: Dishwasher is finished
       delivery:
         email:
-          enabled:
+          enabled: false
 ```
+
 ### Automation and Templates
 
-Templates can be used freely, as in other `notify` integrations
+Templates can be used freely, as in other `notify` integrations.
 
 ```yaml
 - id: ups-overloaded
@@ -320,11 +261,11 @@ Templates can be used freely, as in other `notify` integrations
       minutes: 0
       seconds: 30
   actions:
-  - data:
+  - action: supernotify.notify
+    data:
       title: 'ALERT: UPS Overloaded'
       message: UPS is overloaded, output voltage {{states('sensor.cyberpower_output_voltage')}}
-      data:
-        priority: high
+      priority: high
 ```
 
 ## Adding a Link to Mobile Push Notification
@@ -353,13 +294,13 @@ it is also possible to simply define everything at the top level `extra_data` se
         message: Garden sensor triggered
         title: Something has happened
         delivery:
-            email: # only effects the delivery called `email`
-              data:
-                message: Garden sensor was triggered
-            sms: # refers to a transport, so effects all deliveries based on SMS transport
+            email: # only affects the delivery called `email`
                 data:
-                  message: Garden Activity
-                  title: HASS
+                    message: Garden sensor was triggered
+            sms: # refers to a transport, so affects all deliveries based on SMS transport
+                data:
+                    message: Garden Activity
+                    title: HASS
 ```
 
 ## Extra Data
@@ -391,12 +332,21 @@ supernotify:
         chime_tune: christmas_05
 ```
 
-# Alternate Notification Action
+## Compatibility with Notify Platform Actions
 
-Supernotify also has compatibility with the original "legacy" notification platform, and the newer **Notify Entity** style - these are good for compatibility, but both are much more limited in the UI, and for entities, in what can be passed down to fine tune the notification. Use `notify.supernotify` for the legacy notification style, presuming you've named the platform that way when setting it up.
+For compatibility, Supernotify also works as an original "legacy" `notify` platform, and as a newer **Notify Entity**. Both are much more limited in the UI, and a Notify Entity is also limited in what can be passed down to fine tune the notification, so use `supernotify.notify` wherever you can.
 
-!!! info
-    These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though you are free to name it however you like.
+The legacy action is `notify.supernotify`, assuming you've named the platform `supernotify` when setting it up. It only takes `message`, `title` and `target` at the top level, so everything else from the examples on this page goes in a nested `data:` section:
+
+```yaml title="Legacy notify.supernotify"
+  - action: notify.supernotify
+    data:
+        message: Garden sensor triggered
+        target: person.john_mcdoe
+        data:
+            priority: high
+            delivery: mobile_push
+```
 
 ## References
 
