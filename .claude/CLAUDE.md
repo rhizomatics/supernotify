@@ -66,7 +66,7 @@ The project uses Ruff for formatting and linting, uv amnd mise for dependency ma
 mypy for type checking (with experimental use of ty), pytest for unit and integration testing, and codespell for spell checking.
 
 Documentation uses properdocs with the Material theme, and is published using Github Pages with a
-custom domain of supernotify.rhizomatics.org.
+custom domain of supernotify.rhizomatics.org.uk.
 
 While this is a HACS component, it should be built wherever possible to adhere to the [Home Assistant Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at the highest level. This also means all dependencies must be
 consistent with the set of Home Assistant production dependencies, and test coverage
