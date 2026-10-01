@@ -1,6 +1,7 @@
 import datetime as dt
 from unittest.mock import Mock
 
+from cachetools import TTLCache
 from pytest import fixture
 
 from custom_components.supernotify.common import (
@@ -158,6 +159,19 @@ def test_dupe_check_allows_different_clip_url_same_message(delivery: Delivery) -
         delivery, Notification(Mock(), "message here", "title here", action_data={"media": {"clip_url": "http://cam/2.mp4"}})
     )
     assert uut.check(e2) is False
+
+
+def test_dupe_check_suppressed_dupes_do_not_extend_ttl(delivery: Delivery) -> None:
+    """Repeated triggers inside the TTL must not keep the original alive indefinitely"""
+    now = [0.0]
+    uut = DupeChecker({})
+    uut.cache = TTLCache(maxsize=100, ttl=120, timer=lambda: now[0])
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    for t in (60, 110):
+        now[0] = t
+        assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is True
+    now[0] = 130
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
 
 
 def test_dupe_policy_none_never_suppresses(delivery: Delivery) -> None:

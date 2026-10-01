@@ -161,7 +161,9 @@ class DupeChecker:
             dupe = False
         if dupe:
             _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
-        self.cache[hashed, ranked_priority] = dupe_candidate.id
+        else:
+            # only cache what was delivered, so suppressed dupes don't keep resetting the TTL
+            self.cache[hashed, ranked_priority] = dupe_candidate.id
         return dupe
 
 

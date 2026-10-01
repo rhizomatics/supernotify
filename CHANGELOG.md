@@ -1,11 +1,11 @@
-# Unreleased
+# v2.11.1
+## 🐛 Bug fixes
+  - Dupe detection now measures the ttl from the first delivered notification, rather than resetting it on every suppressed dupe, so a frequently repeating alert (e.g. a camera trigger every minute) is no longer suppressed indefinitely.
 ## 📚 Documentation
 - Overhauled the **Usage** documents for **Notifying** and **Targets**
   - Better explanations of simple and precise targeting
   - More consistent examples, and better organization of content between the 2 pages
   - Several mistakes and unclear things remediated
-## 🐛 Bug fixes
-## 📚 Documentation
 ### Developer
 - Docstring fix for `Target.select`
 
