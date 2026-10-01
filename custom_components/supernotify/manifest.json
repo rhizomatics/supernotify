@@ -39,11 +39,9 @@
     "issue_tracker": "https://github.com/rhizomatics/supernotify/issues",
     "quality_scale": "silver",
     "requirements": [
-        "Pillow",
         "bs4",
         "aiofiles",
-        "cachetools",
-        "httpx"
+        "cachetools"
     ],
     "single_config_entry": true,
     "version":"2.11.1"
