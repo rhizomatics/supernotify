@@ -391,7 +391,7 @@ Some fields of `supernotify.notify` are not offered, so an agent can only reach 
 
 ### Snoozing
 
-The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery, transport, priority or camera.
+The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery, transport, priority, camera or [tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag).
 
 If the agent doesn't name who the snooze is for, it applies to the person asking, if Supernotify can match their Home Assistant user to a recipient. Otherwise it applies to everyone. See [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md) for how snoozes work.
 
@@ -417,18 +417,24 @@ Additional prompts to use before conversations can be set in the *Voice Assistan
 
 Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrations/conversation) agent doesn't use an AI model, so it can't use the tools above, but it can understand fixed sentences. Switch on **Built-in agent sentences** and it understands these, by voice or in the chat:
 
-| Say                                                 | Does                                             |
-| --------------------------------------------------- | ------------------------------------------------ |
-| "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias           |
-| "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would        |
-| "Snooze my notifications for *30* minutes"          | Snoozes everything                               |
-| "Mute all notifications for an hour"                | Snoozes everything for an hour                   |
-| "Snooze notifications until *15:30*"                | Snoozes everything until then, today or tomorrow |
-| "Silence notifications"                             | Silences everything until turned back on         |
-| "Turn my notifications back on"                     | Undoes the snooze or silence                     |
-| "What was the last notification"                    | Says what it was, and what sent it               |
+| Say                                                 | Does                                                                                                                          |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias                                                                                        |
+| "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would                                                                                     |
+| "Snooze my notifications for *30* minutes"          | Snoozes everything                                                                                                            |
+| "Mute all notifications for an hour"                | Snoozes everything for an hour                                                                                                |
+| "Snooze notifications until *15:30*"                | Snoozes everything until then, today or tomorrow                                                                              |
+| "Snooze notifications for *driveway* until *6am*"   | Snoozes only notifications [tagged](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) *driveway* |
+| "Silence notifications"                             | Silences everything until turned back on                                                                                      |
+| "Turn my notifications back on"                     | Undoes the snooze or silence                                                                                                  |
+| "Resume notifications for *driveway*"               | Undoes the snooze or silence for *driveway*                                                                                   |
+| "What was the last notification"                    | Says what it was, and what sent it                                                                                            |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+
+"For *driveway*" works with any of the snooze sentences, for minutes, an hour, until a time, or until I say. The reply lists the scenarios and entities *driveway* matches now. If it matches nothing, the agent says so and nothing is snoozed. See [Snoozing by Tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) for what it matches.
+
+"For *driveway camera*" snoozes that one camera instead, when *driveway* or *driveway camera* names a `camera` entity. If it names several, the agent asks which. In Italian, say *telecamera vialetto*.
 
 ### Times
 
@@ -448,16 +454,18 @@ The reply says am or pm, so if the guess at morning or afternoon was wrong, ask 
 
 The same commands can be given in Italian, whatever the language of the assistant, and the answer comes back in Italian:
 
-| Say                                                   | Does                                             |
-| ----------------------------------------------------- | ------------------------------------------------ |
-| "Avvisa *Alice* che *la cena è pronta*"               | Notifies a recipient, by name or alias           |
-| "Manda un messaggio a *tutti* che dice *esco adesso*" | Notifies everyone, as an automation would        |
-| "Posticipa le mie notifiche per *30* minuti"          | Snoozes everything                               |
-| "Metti in pausa tutte le notifiche per un'ora"        | Snoozes everything for an hour                   |
-| "Posticipa le notifiche fino alle *15:30*"            | Snoozes everything until then, today or tomorrow |
-| "Silenzia le notifiche"                               | Silences everything until turned back on         |
-| "Riattiva le mie notifiche"                           | Undoes the snooze or silence                     |
-| "Qual è stata l'ultima notifica"                      | Says what it was, and what sent it               |
+| Say                                                   | Does                                                                                                                          |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| "Avvisa *Alice* che *la cena è pronta*"               | Notifies a recipient, by name or alias                                                                                        |
+| "Manda un messaggio a *tutti* che dice *esco adesso*" | Notifies everyone, as an automation would                                                                                     |
+| "Posticipa le mie notifiche per *30* minuti"          | Snoozes everything                                                                                                            |
+| "Metti in pausa tutte le notifiche per un'ora"        | Snoozes everything for an hour                                                                                                |
+| "Posticipa le notifiche fino alle *15:30*"            | Snoozes everything until then, today or tomorrow                                                                              |
+| "Posticipa le notifiche del *vialetto* fino alle *6*" | Snoozes only notifications [tagged](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) *vialetto* |
+| "Silenzia le notifiche"                               | Silences everything until turned back on                                                                                      |
+| "Riattiva le mie notifiche"                           | Undoes the snooze or silence                                                                                                  |
+| "Riattiva le notifiche del *vialetto*"                | Undoes the snooze or silence for *vialetto*                                                                                   |
+| "Qual è stata l'ultima notifica"                      | Says what it was, and what sent it                                                                                            |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for snoozing.
 
@@ -608,11 +616,13 @@ If an action (ad-hoc or from a group) has `action_url` set but no `action_url_ti
 - [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md)
 - [Actions (services)](https://supernotify.rhizomatics.org.uk/latest/usage/actions/index.md)
 
+Source: https://supernotify.rhizomatics.org.uk/latest/usage/notifying/
+
 ## Sending Notifications
 
-Use the `supernotify.notify` action for the easiest way to send notifications, with guidance for each main part of the `data` section and selectors.
+Use the `supernotify.notify` action to send notifications. In the Actions and Automations UI, it gives guidance and selectors for each main part of the `data` section.
 
-Same Example, via supernotify.notify
+Basic Example
 
 ```yaml
   - action: supernotify.notify
@@ -624,8 +634,6 @@ Same Example, via supernotify.notify
 
 `supernotify.notify` also retains the original context of the action, and propagates that down to any actions it calls, such as for underlying notification transports or moving a PTZ camera. (See the [original Home Assistant blog post](https://www.home-assistant.io/blog/2026/09/02/release-20269/#from-what-changed-to-why-it-changed) for more on tracing context.)
 
-All of the examples below will work equally with `supernotify.notify` (easier to use when using in the Actions or Automations UI) or the `notify` platform compatible `notify.supernotify` style action.
-
 There are lots more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including how to make it work well with Frigate, AppDaemon and Alexa.
 
 ## Simplest Example
@@ -634,7 +642,7 @@ In this example, there's no configuration, target or anything more than the stan
 
 This notification will go out to all the implicit deliveries. If there's no configuration for Supernotify, then the default behaviour is to send a mobile push notification to all the devices for everyone with a `Person` entry in Home Assistant.
 
-Example Message to All Devices
+Message to All Devices
 
 ```yaml
   - action: supernotify.notify
@@ -644,9 +652,9 @@ Example Message to All Devices
 
 ## Adding Targets
 
-Targets can be direct addresses, like an email address, telegram account or similar, or something indirect like a person. See [e-Mail](https://supernotify.rhizomatics.org.uk/latest/configuration/email/index.md) for more on configuring e-mail notifications, and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more in general about how to use them.
+Targets can be direct addresses, like an email address, phone number or notify entity, or something indirect like a person, area or label.
 
-Example Message to All Devices
+Message to One Person
 
 ```yaml
   - action: supernotify.notify
@@ -655,88 +663,30 @@ Example Message to All Devices
         target: person.john_mcdoe
 ```
 
-In this case, the notification will go only to John, to any mobile devices he's running Home Assistant on, and to any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
+In this case, the notification will go only to John: to any mobile devices he's running Home Assistant on, and to any e-mail addresses that have been configured for him in Supernotify's `recipients` configuration.
 
-Its also possible to put the e-mail, mobile action, notify entity or similar directly into the target:
+### Simple Targeting
 
-Example Email Message
+`target` can take a single value, or a big mixed list, and Supernotify works out which notification transport each one belongs to. Targets with an obvious format, like an e-mail address, phone number or entity ID, are recognized automatically. Anything else gets a *target category* prefix, such as `topic:` for MQTT or `discord_channel:` for Discord.
 
-```yaml
-  - action: supernotify.notify
-    data:
-        message: Something went off in the basement
-        target: john@mcdoe.co.bn
-```
-
-Both these examples had a single target. The `target` field will work with a single value, a list of values, or a defined dictionary of values. Generally the dictionary isn't needed since Supernotify can take a big list and work out what belongs to which notification transport, though you may need it if doing custom notifications to Discord, Telegram or similar.
-
-## Quick Targets
-
-A big mixed list of targets can be given that Supernotify will sort out with the right notification mechanism. This is based on the target address either being inherently *obvious*, like an email address or phone number, or being prefixed with a *target category* tag:
+Mixed Targets
 
 ```yaml
   - action: supernotify.notify
     data:
         message: Something went off in the basement
         target:
-            - john@mcdoe.co.bn
+            - person.john_mcdoe
+            - jane@mcdoe.co.bn
             - +4398708123987
-            - discord_channel:9585
-            - matrix_room:!uniqueroom:example.org
             - notify.kitchen_alexa
-            - telegram_chat_id:215678938
-            - notify.unique_html5_browser
+            - discord_channel:9585
             - topic:security/basement/alert
 ```
 
-In the Home Assistant Actions UI, the **Custom Targets** section can be used to add in anything you like. This is in addition to the regular targets, so for things like `notify` entities, its easier using that selector, or choosing them by area, floor or label.
+Home Assistant's `area_id`, `floor_id` and `label_id` targets work too, so a notification can go to "whatever is in the kitchen".
 
-See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for the full list of target categories.
-
-#### Quick Targets Limitations
-
-Quick targets are easy but have two limitations:
-
-- Not all delivery transports have easily recognized addresses, or need more detailed config
-- Even for the delivery transports that can take quick targets, you may want to provide extra options to tune the delivery.
-
-See [Customizing Messages Per Channel](#customizing-message-per-channel) for more.
-
-#### Alternative to Quick Targets
-
-Its also possible to organize targets in a map, keyed on the transport, with each one having either a single address, or a list of as many as are needed.
-
-```yaml
-- action: supernotify.notify
-  data:
-      message: Something went off in the basement
-      target:
-          email: john@mcdoe.co.bn
-          phone_number: +4398708123987
-          telegram: "@bill"
-          mobile_app_id:
-            - mobile_app.john_phone
-            - mobile_app.john_ipad
-```
-
-## Area, Floor and Label Targets
-
-Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
-
-```yaml
-  - action: supernotify.notify
-    data:
-        message: Dinner is ready
-        target:
-            area_id: kitchen
-            floor_id: ground_floor
-            label_id:
-              - chime
-```
-
-Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
-
-An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
+Simple targeting covers most notifications. When you need more precise control, such as giving two e-mail deliveries different addresses, see [Precise Targeting](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#precise-targeting). [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) also lists all the target categories.
 
 ## Notification Priority
 
@@ -749,6 +699,7 @@ Valid Priorities:
 - critical
 - high
 - medium
+- low
 - minimum
 
 Example Message
@@ -793,16 +744,16 @@ An explicit `delivery_selection` always wins over whatever the shape of `deliver
 Implicit (default) - implied by a mapping
 
 ```yaml
-- action: supernotify.notify
-  data:
-      message: Garden sensor triggered
-      delivery:
-          mobile_push: # tunes an existing (default or scenario) delivery
-            data:
-              clickAction: https://my.home.net/dashboard
+  - action: supernotify.notify
+    data:
+        message: Garden sensor triggered
+        delivery:
+            mobile_push: # tunes an existing (default or scenario) delivery
+                data:
+                    clickAction: https://my.home.net/dashboard
 ```
 
-In this example, `mobile_push` and `email` are selected as deliveries, even if they are not default ones. In addition any deliveries selected by conditions or scenarios will be added to the list.
+In this example, `mobile_push` is tuned but not selected - the default deliveries, and any switched on by a scenario, go out as normal.
 
 Explicit - implied by a list
 
@@ -815,7 +766,7 @@ Explicit - implied by a list
             - email
 ```
 
-In this case `email` will be chosen even if the delivery `condition` or `priority` is not met, or the delivery is explicit or scenario only, and other deliveries will be switched off. You get just the fixed list you asked for:
+In this case only `mobile_push` and `email` are selected, even if they're `explicit` or `scenario` inclusion only, plus any deliveries switched on by a scenario. Each delivery's own `condition` and `priority` still apply.
 
 Fixed - always set explicitly
 
@@ -827,6 +778,8 @@ Fixed - always set explicitly
         delivery:
             - email
 ```
+
+Here `email` is chosen even if its `condition` or `priority` is not met, and every other delivery is switched off. You get just the fixed list you asked for.
 
 ### Delivery and Delivery Control
 
@@ -851,7 +804,7 @@ Delivery picked, and tuned in Delivery Control
 
 Names picked in the dropdown mean "only these", so when Delivery Control holds a mapping, the merged selection is `explicit`. **Delivery Selection** (`delivery_selection`), also under Advanced, changes that. Left out entirely, delivery selection stays `implicit`, as before.
 
-`delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a list or a mapping directly, as in the examples above, in both `supernotify.notify` and `notify.supernotify`.
+`delivery_control` is only for the `supernotify.notify` action editor. `delivery:` still takes a name, a list or a mapping directly, as in the examples above.
 
 !!! info Delivery *Selection* vs *Inclusion* `delivery_selection` here is a per-*action-call* choice of how deliveries get resolved for this one notification. It's a different mechanism from a delivery's own config-time `inclusion` list (`default` / `scenario` / `explicit` / `fallback` / `fallback_on_error` - see [Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion)), which decides whether that delivery is a candidate for implicit selection at all. The two happen to share the word "explicit" for unrelated things - `delivery_selection: explicit` is about the action call; a delivery with `inclusion: explicit` is excluded from implicit selection, as does any other value other than `default` (or left unstated, which is equivalent to `default`). `inclusion: explicit` works the same as `inclusion: scenario` when sending, except that explicit deliveries are offered in the action editor's Delivery list, and scenario-only ones aren't.
 
@@ -865,7 +818,7 @@ The only way to override a scenario's `false` is for the action call itself to e
 
 ## Using from an Automation
 
-In this example, when an Actionable Notification is sent with action `Red Alert`, a notification is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`
+In this example, when an Actionable Notification is sent with action `Red Alert`, a notification is triggered in Supernotify using the `red_alert` scenario. In this case, the scenario uses sirens, chimes and Alexa noises to raise a ruckus so there's no need for `message` or `title`.
 
 ```yaml
 - id: action_red_alert
@@ -876,8 +829,8 @@ In this example, when an Actionable Notification is sent with action `Red Alert`
     event_type: ios.action_fired
     event_data:
       actionName: Red Alert
-  action:
-  - action: notify.supernotify
+  actions:
+  - action: supernotify.notify
     data:
       apply_scenario: red_alert
 ```
@@ -900,12 +853,12 @@ In this example, a mobile notification goes out to notify of the dishwasher fini
       message: Dishwasher is finished
       delivery:
         email:
-          enabled:
+          enabled: false
 ```
 
 ### Automation and Templates
 
-Templates can be used freely, as in other `notify` integrations
+Templates can be used freely, as in other `notify` integrations.
 
 ```yaml
 - id: ups-overloaded
@@ -920,11 +873,11 @@ Templates can be used freely, as in other `notify` integrations
       minutes: 0
       seconds: 30
   actions:
-  - data:
+  - action: supernotify.notify
+    data:
       title: 'ALERT: UPS Overloaded'
       message: UPS is overloaded, output voltage {{states('sensor.cyberpower_output_voltage')}}
-      data:
-        priority: high
+      priority: high
 ```
 
 ## Adding a Link to Mobile Push Notification
@@ -954,13 +907,13 @@ Channel Specific Messages
         message: Garden sensor triggered
         title: Something has happened
         delivery:
-            email: # only effects the delivery called `email`
-              data:
-                message: Garden sensor was triggered
-            sms: # refers to a transport, so effects all deliveries based on SMS transport
+            email: # only affects the delivery called `email`
                 data:
-                  message: Garden Activity
-                  title: HASS
+                    message: Garden sensor was triggered
+            sms: # refers to a transport, so affects all deliveries based on SMS transport
+                data:
+                    message: Garden Activity
+                    title: HASS
 ```
 
 ## Extra Data
@@ -995,15 +948,23 @@ supernotify:
         chime_tune: christmas_05
 ```
 
-# Alternate Notification Action
+## Compatibility with Notify Platform Actions
 
-Source: https://supernotify.rhizomatics.org.uk/latest/usage/notifying/
+For compatibility, Supernotify also works as an original "legacy" `notify` platform, and as a newer **Notify Entity**. Both are much more limited in the UI, and a Notify Entity is also limited in what can be passed down to fine tune the notification, so use `supernotify.notify` wherever you can.
 
-Supernotify also has compatibility with the original "legacy" notification platform, and the newer **Notify Entity** style - these are good for compatibility, but both are much more limited in the UI, and for entities, in what can be passed down to fine tune the notification. Use `notify.supernotify` for the legacy notification style, presuming you've named the platform that way when setting it up.
+The legacy action is `notify.supernotify`, assuming you've named the platform `supernotify` when setting it up. It only takes `message`, `title` and `target` at the top level, so everything else from the examples on this page goes in a nested `data:` section:
 
-Info
+Legacy notify.supernotify
 
-These examples assume you've named the Supernotify notifier as `supernotify` since that's simple and obvious, though you are free to name it however you like.
+```yaml
+  - action: notify.supernotify
+    data:
+        message: Garden sensor triggered
+        target: person.john_mcdoe
+        data:
+            priority: high
+            delivery: mobile_push
+```
 
 ## References
 
@@ -1022,9 +983,21 @@ Two HomeAssistant actions ( previously known as "services") are available to man
 
 Snooze context is also logged in the debug trace, which can be archived to the file system or MQTT topic.
 
+### Snoozing by Tag
+
+A `TAG` snooze covers every notification that a word or name like *driveway* applies to. It matches if the tag is:
+
+- the name of one of the notification's scenarios, whether applied by the automation or selected by its conditions
+- the `entity_id`, object_id, friendly name or an alias of the entity in the notification's `entity_id` data, as the Frigate blueprint sends, or of its `media` camera
+- the object_id then the domain, so *driveway camera* matches `camera.driveway`
+
+Case, underscores and extra spaces are ignored, so *unknown vehicle* matches the `unknown_vehicle` scenario. The tag is matched as each notification is sent, so if a scenario and a camera are both called *driveway*, both are covered.
+
+Tag snoozes can be made by voice, see [Built-in Agent Sentences](https://supernotify.rhizomatics.org.uk/latest/usage/assist/#built-in-agent-sentences), by an AI agent, or with a mobile action like `SUPERNOTIFY_SNOOZE_USER_TAG_driveway`.
+
 ### Mobile Actions for Snoozing
 
-Mobile actions will be handled according to scheme, where the command is one of `SNOOZE`,`SILENCE` or `NORMAL`, recipient type is one of `USER`,`EVERYONE`, and target type is one of `NONCRITICAL`,`EVERYTHING`,`TRANSPORT`,`DELIVERY`,`CAMERA`,`PRIORITY` or `MOBILE`.
+Mobile actions will be handled according to scheme, where the command is one of `SNOOZE`,`SILENCE` or `NORMAL`, recipient type is one of `USER`,`EVERYONE`, and target type is one of `NONCRITICAL`,`EVERYTHING`,`TRANSPORT`,`DELIVERY`,`CAMERA`,`PRIORITY`,`MOBILE` or `TAG`.
 
 The user is determined by matching the mobile device id in the event to the registry of mobile devices per person in Supernotify, either manually configured or automatically discovered.
 
@@ -1056,61 +1029,64 @@ Supernotify has the ability to take a big, mixed bag of targets and send off the
 
 ## Default Targets
 
-If no `targets` are specified on the action call, a default list will be used based on all the recipients configured or auto-discovered. This usually means everyone with a Home Assistant app on their phone or other device gets a mobile push notification.
+If no `target` is specified on the action call, a default list will be used based on all the recipients configured or auto-discovered. This usually means everyone with a Home Assistant app on their phone or other device gets a mobile push notification.
 
 Choosing any explicit targets switches this defaulting off. Targets can be re-added manually where needed, and there's a shortcut in the Home Assistant target UI where you choose the Supernotify **Device** and this will be read as switching back on those "out of the box" targets.
 
 ## Target Categories
 
-A **Target Category** is used to identify what kind of target it is, and how to use it. Some categories are used by multiple transports, Entity ID for Notify Entity or Media Players, and others are unique to some transports, like `discord_channel`, `matrix_room` or `topic`.
+A **Target Category** identifies what kind of target it is, and how to use it. Some categories are used by multiple transports, like `entity_id` for Notify Entities or Media Players, and others are unique to one transport, like `discord_channel`, `matrix_room` or `topic`.
 
-Targets will be auto-categorized wherever possible, and can also be explicitly categorized.
+Categories marked *Auto* are recognized from the format of the target itself. The others need to be qualified with a [prefix](#category-prefixes) or given in a [mapping](#category-mapping).
 
-## Categorizing Targets
+| Category                          | Auto | Used By                                                                                 |
+| --------------------------------- | ---- | --------------------------------------------------------------------------------------- |
+| `entity_id`                       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, Media Player, Notify Entity, TTS |
+| `device_id`                       | Y    | Chime                                                                                   |
+| `email`                           | Y    | Email                                                                                   |
+| `mobile_app_id`                   | Y    | Mobile Push, TTS                                                                        |
+| `phone`                           | Y    | SMS                                                                                     |
+| `person_id`                       | Y    | Expanded to that person's targets, from their *Recipient* config                        |
+| `area_id`, `floor_id`, `label_id` | N    | Expanded to the entities in them                                                        |
+| `topic`                           | N    | MQTT                                                                                    |
+| `discord_channel`                 | N    | Discord                                                                                 |
+| `matrix_room`                     | N    | Matrix                                                                                  |
+| `telegram_chat_id`                | N    | Telegram                                                                                |
 
-There are two ways Supernotify identifies targets, whether in a notification call, or pre-set in the configuration:
+### Notify Entity
 
-- **Automatically Matched** - it does this where there's a clear and obvious format for a target, such as a phone number, e-mail address or Home Assistant entity ID.
-- **Qualified Targets** - this works for any target, including those that can be automatically matched. Targets either have a *prefix* or are defined in a mapping.
-
-## Available Categories
-
-Only the ones marked `N` for *Auto* ever needed a prefix, since the others will be automatically detected.
-
-| Category          | Auto | Transports                                                                              |
-| ----------------- | ---- | --------------------------------------------------------------------------------------- |
-| `entity_id`       | Y    | Alexa Devices, Alexa Media Player, Chime, HTML5, Kodi, Media Player, Notify Entity, TTS |
-| `device_id`       | Y    | Chime                                                                                   |
-| `email`           | Y    | Email                                                                                   |
-| `mobile_app_id`   | Y    | Mobile Push, TTS                                                                        |
-| `phone`           | Y    | SMS                                                                                     |
-| `topic`           | N    | MQTT                                                                                    |
-| `discord_channel` | N    | Discord                                                                                 |
-| `matrix_room`     | N    | Matrix                                                                                  |
-
-### Automatic Matches
-
-The following categories can be automatically detected:
-
-- Email
-- Phone
-- Home Assistant Device
-- Home Assistant Entity
-- Home Assistant Mobile App
-
-#### Notify Entity
-
-*Notify Entities* are the newer way of integrating notifications into Home Assistant. A Notify Entity could be one of many things - an e-mail, an MQTT topic, a file on the disk, a HTML5 browser, an Alexa device, or a group of notify entiries.
+*Notify Entities* are the newer way of integrating notifications into Home Assistant. A Notify Entity could be one of many things - an e-mail, an MQTT topic, a file on the disk, a HTML5 browser, an Alexa device, or a group of notify entities.
 
 All of these can be handled by the `notify_entity` integration. However, the `send_message` action for Notify Entity is **very** limited, so often there's a second action offered by the platform itself to offer the full range of options. For example, `html5.send_message` or `ntfy.publish`. The `alexa_devices` integration does use the standard `send_message` call, however since it knows about Alexa, it can craft that message by for example simplifying the text and stripping out URLs so announcements don't come out weird.
 
 Supernotify uses the `domain` of each Notify Entity to work out if it can be better handled by a dedicated transport, and then if not, falls back to the plain vanilla `notify_entity`. You don't need to do anything special for target selection for this, though if you don't like it, it can be tuned or switched off.
 
-### Qualified Targets
+### Area, Floor and Label Targets
 
-There are 3 ways to do this, to suit different styles of use.
+Home Assistant's standard target selectors can be used as well as addresses and entities, so a notification can go to "whatever is in the kitchen" or "everything labelled `chime`", using the same `area_id`, `floor_id` and `label_id` keys as any other Home Assistant action:
 
-#### Category Prefixes
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Dinner is ready
+        target:
+            area_id: kitchen
+            floor_id: ground_floor
+            label_id:
+              - chime
+```
+
+Supernotify resolves them to entities itself, using the same core logic as Home Assistant actions, and then applies each delivery's usual target selection to those entities. An entity in more than one of them - in the kitchen, on the ground floor and labelled `chime` - is kept just once, and a transport never sees a selector. Unknown areas, floors or labels are logged as a warning rather than silently resolving to nothing.
+
+An action that genuinely knows about areas itself, rather than about the entities in them, takes the `area_id` in its own `extra_data` rather than as a target.
+
+## Simple Targeting
+
+Simple targeting is a single value, or a big mixed list, that Supernotify sorts out itself. Anything in an *Auto* category is recognized from its format, and everything else gets a category prefix.
+
+It's quick, and fine for most notifications, but Supernotify is making the decisions. A target goes to every delivery that can use it, and a value with no recognizable format and no prefix is ignored. When that isn't what you want, use [Precise Targeting](#precise-targeting).
+
+### Category Prefixes
 
 A *Target Category* name is prefixed onto the target, for example `topic:my_topic_name` or `discord_channel:@userid`. This can be used anywhere a target is requested and wouldn't get auto-detected:
 
@@ -1130,15 +1106,25 @@ mix of targets
     data:
         message: Something went off in the basement
         target:
-         - discord_channel:0987654321
-         - jjh@34acacia.avenue.com
-         - topic:devices/sirens
-         - notify.alexa_kitchen_announce
+            - discord_channel:0987654321
+            - jjh@34acacia.avenue.com
+            - topic:devices/sirens
+            - matrix_room:!uniqueroom:example.org
+            - telegram_chat_id:215678938
+            - notify.alexa_kitchen_announce
 ```
 
-#### Category Mapping for Target
+Only target categories work as prefixes. Transport and delivery names only work as [mapping](#category-mapping) keys.
 
-This is a more precise way of specifying targets, in that it doesn't try to look for prefixes or otherwise mess with the target value.
+In the Home Assistant Actions UI, the **Custom Targets** section can be used to add in anything you like. This is in addition to the regular targets, so for things like `notify` entities, it's easier using that selector, or choosing them by area, floor or label.
+
+## Precise Targeting
+
+Precise targeting says exactly what each target is, or exactly which delivery it's for, so nothing is left to guesswork.
+
+### Category Mapping
+
+This is a more precise way of specifying targets, since the values are used exactly as given, with no prefix parsing. It's useful if an address happens to start with something like `topic:`.
 
 mix of targets
 
@@ -1149,40 +1135,58 @@ mix of targets
         target:
             discord_channel: 0987654321
             email:
-             - jjh@34acacia.avenue.com
-             - bigdave@34acacia.avenue.com
+              - jjh@34acacia.avenue.com
+              - bigdave@34acacia.avenue.com
             entity_id: notify.alexa_kitchen_announce
             topic: devices/switches/sirens
 ```
 
-This style is also useful if for some reason the category prefixes cause problems, for example if the real address begins with something like `topic:`, since in this case the target address is exactly what's specified.
+A key doesn't have to be a target category. It can also be:
 
-#### Target Defined within Delivery
+- a **transport name**, such as `sms`, which reaches every delivery using that transport
+- a **delivery name**, such as `html_email`, which reaches only that delivery
 
-This is a much wordier style if using only for targets, but becomes more practical if target is one of several things being configured for deliveries.
+an extra address for one delivery
 
-It's also useful if you want to micro-manage which targets of the same category go to different deliveries, in this example some emails going as plain and others as HTML templated email.
+```yaml
+  - action: supernotify.notify
+    data:
+        message: Something went off in the basement
+        target:
+            email: jjh@34acacia.avenue.com
+            html_email: bigdave@34acacia.avenue.com
+```
 
-mix of targets
+Here `jjh` gets both the plain and the HTML email, and `bigdave` gets only the HTML one. `email` is a category here, so it reaches every delivery that takes email addresses, `html_email` included.
+
+Yes, this is a bit of a mixed bag
+
+Mapping keys can be target categories, transport names or delivery names, and some names, like `email`, are more than one of these at once. It isn't the tidiest design. It was a deliberate trade-off to make `target` as flexible and quick to write as possible, but it can make it hard to see at a glance where a target will end up. If you want to be sure, use the more formal structure in the [next section](#target-defined-within-delivery), which always works.
+
+### Target Defined within Delivery
+
+Targets set inside a delivery in the `delivery` section go only to that delivery, and replace anything else it would have picked up. This is the way to give deliveries of the same kind completely separate addresses:
+
+separate addresses per delivery
 
 ```yaml
   - action: supernotify.notify
     data:
         message: Something went off in the basement
         delivery:
-            discord:
-                target: 0987654321
             email:
                 target: jjh@34acacia.avenue.com
             html_email:
                 target: bigdave@34acacia.avenue.com
+            discord:
+                target: 0987654321
             alexa_devices:
                 target: notify.alexa_kitchen_announce
 ```
 
-This style is also more likely to make sense when used for configuration, rather than have all that detail in multiple automation actions. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) for more on how to use these pre-canned bits of config.
+It's wordier than a plain `target`, but it's the same structure used to tune everything else about a delivery, so it's worth using when you're setting more than just the target. It also tends to fit better in configuration than in automation actions. See [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) for how to use these pre-set bits of config.
 
-mix of targets
+targets in a scenario
 
 ```yaml
 scenarios:

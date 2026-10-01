@@ -595,9 +595,6 @@
       "type": "string"
     }
   },
-  "required": [
-    "message"
-  ],
   "additionalProperties": true,
   "title": "Notify Action",
   "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action.schema.json",

@@ -64,7 +64,7 @@ Some fields of `supernotify.notify` are not offered, so an agent can only reach 
 
 ### Snoozing
 
-The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery, transport, priority or camera.
+The agent can `snooze` for a number of minutes, `silence` until undone, `unsnooze` one snooze, or `clear_all` snoozes. A snooze can cover everything, non-critical notifications only, or one delivery, transport, priority, camera or [tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag).
 
 If the agent doesn't name who the snooze is for, it applies to the person asking, if Supernotify can match their Home Assistant user to a recipient. Otherwise it applies to everyone. See [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/index.md) for how snoozes work.
 
@@ -90,18 +90,24 @@ Additional prompts to use before conversations can be set in the *Voice Assistan
 
 Home Assistant's built-in [Conversation](https://www.home-assistant.io/integrations/conversation) agent doesn't use an AI model, so it can't use the tools above, but it can understand fixed sentences. Switch on **Built-in agent sentences** and it understands these, by voice or in the chat:
 
-| Say                                                 | Does                                             |
-| --------------------------------------------------- | ------------------------------------------------ |
-| "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias           |
-| "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would        |
-| "Snooze my notifications for *30* minutes"          | Snoozes everything                               |
-| "Mute all notifications for an hour"                | Snoozes everything for an hour                   |
-| "Snooze notifications until *15:30*"                | Snoozes everything until then, today or tomorrow |
-| "Silence notifications"                             | Silences everything until turned back on         |
-| "Turn my notifications back on"                     | Undoes the snooze or silence                     |
-| "What was the last notification"                    | Says what it was, and what sent it               |
+| Say                                                 | Does                                                                                                                          |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| "Tell *Alice* that *dinner is ready*"               | Notifies a recipient, by name or alias                                                                                        |
+| "Send a message to *everyone* saying *leaving now*" | Notifies everyone, as an automation would                                                                                     |
+| "Snooze my notifications for *30* minutes"          | Snoozes everything                                                                                                            |
+| "Mute all notifications for an hour"                | Snoozes everything for an hour                                                                                                |
+| "Snooze notifications until *15:30*"                | Snoozes everything until then, today or tomorrow                                                                              |
+| "Snooze notifications for *driveway* until *6am*"   | Snoozes only notifications [tagged](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) *driveway* |
+| "Silence notifications"                             | Silences everything until turned back on                                                                                      |
+| "Turn my notifications back on"                     | Undoes the snooze or silence                                                                                                  |
+| "Resume notifications for *driveway*"               | Undoes the snooze or silence for *driveway*                                                                                   |
+| "What was the last notification"                    | Says what it was, and what sent it                                                                                            |
 
 "Tell", "notify" and "message" all work for notifying, as do "that" and "saying" before the message. A recipient can be named by their full name, alias, or just their first name when no one else shares it - if two do, the agent asks which one you mean. Snoozes and silences are for the person asking, when Supernotify can match their Home Assistant user to a recipient, otherwise for everyone.
+
+"For *driveway*" works with any of the snooze sentences, for minutes, an hour, until a time, or until I say. The reply lists the scenarios and entities *driveway* matches now. If it matches nothing, the agent says so and nothing is snoozed. See [Snoozing by Tag](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) for what it matches.
+
+"For *driveway camera*" snoozes that one camera instead, when *driveway* or *driveway camera* names a `camera` entity. If it names several, the agent asks which. In Italian, say *telecamera vialetto*.
 
 ### Times
 
@@ -121,16 +127,18 @@ The reply says am or pm, so if the guess at morning or afternoon was wrong, ask 
 
 The same commands can be given in Italian, whatever the language of the assistant, and the answer comes back in Italian:
 
-| Say                                                   | Does                                             |
-| ----------------------------------------------------- | ------------------------------------------------ |
-| "Avvisa *Alice* che *la cena è pronta*"               | Notifies a recipient, by name or alias           |
-| "Manda un messaggio a *tutti* che dice *esco adesso*" | Notifies everyone, as an automation would        |
-| "Posticipa le mie notifiche per *30* minuti"          | Snoozes everything                               |
-| "Metti in pausa tutte le notifiche per un'ora"        | Snoozes everything for an hour                   |
-| "Posticipa le notifiche fino alle *15:30*"            | Snoozes everything until then, today or tomorrow |
-| "Silenzia le notifiche"                               | Silences everything until turned back on         |
-| "Riattiva le mie notifiche"                           | Undoes the snooze or silence                     |
-| "Qual è stata l'ultima notifica"                      | Says what it was, and what sent it               |
+| Say                                                   | Does                                                                                                                          |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| "Avvisa *Alice* che *la cena è pronta*"               | Notifies a recipient, by name or alias                                                                                        |
+| "Manda un messaggio a *tutti* che dice *esco adesso*" | Notifies everyone, as an automation would                                                                                     |
+| "Posticipa le mie notifiche per *30* minuti"          | Snoozes everything                                                                                                            |
+| "Metti in pausa tutte le notifiche per un'ora"        | Snoozes everything for an hour                                                                                                |
+| "Posticipa le notifiche fino alle *15:30*"            | Snoozes everything until then, today or tomorrow                                                                              |
+| "Posticipa le notifiche del *vialetto* fino alle *6*" | Snoozes only notifications [tagged](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-by-tag) *vialetto* |
+| "Silenzia le notifiche"                               | Silences everything until turned back on                                                                                      |
+| "Riattiva le mie notifiche"                           | Undoes the snooze or silence                                                                                                  |
+| "Riattiva le notifiche del *vialetto*"                | Undoes the snooze or silence for *vialetto*                                                                                   |
+| "Qual è stata l'ultima notifica"                      | Says what it was, and what sent it                                                                                            |
 
 Times use the 24 hour clock, as *15*, *15:30* or *15.30*. "Avvisa", "avverti", "informa", "dì a" and "scrivi a" all work for notifying, and "posticipa", "sospendi", "silenzia" or "metti in pausa" for snoozing.
 
