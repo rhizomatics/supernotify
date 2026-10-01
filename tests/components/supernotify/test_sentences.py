@@ -12,12 +12,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from homeassistant.core import Context, HomeAssistant, ServiceCall
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.const import CONF_LLM_TOOLS, CONF_SENTENCE_COMMANDS
-from custom_components.supernotify.model import GlobalTargetType, RecipientType
+from custom_components.supernotify.model import GlobalTargetType, QualifiedTargetType, RecipientType
 from custom_components.supernotify.sentences import RESPONSES, SENTENCES, async_respond
 
 if TYPE_CHECKING:
@@ -29,7 +30,10 @@ JEY_USER_ID = "jey-user-id"
 
 
 async def _setup(
-    hass: HomeAssistant, sentence_commands: bool = False, extra_people: dict[str, str] | None = None
+    hass: HomeAssistant,
+    sentence_commands: bool = False,
+    extra_people: dict[str, str] | None = None,
+    scenarios: dict[str, Any] | None = None,
 ) -> tuple[SupernotifyEngine, list[ServiceCall]]:
     calls: list[ServiceCall] = []
 
@@ -59,6 +63,7 @@ async def _setup(
                     {"person": "person.bob"},
                     *({"person": entity_id} for entity_id in extra_people or {}),
                 ],
+                "scenarios": scenarios or {},
             }
         },
     )
@@ -215,6 +220,146 @@ async def test_snooze_until_must_be_a_time(hass: HomeAssistant, spoken: str) -> 
 
     assert "Say a time like 15:30" in response
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_until_time_for_tag(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    freezer.move_to(dt_util.as_utc(dt.datetime(2026, 9, 24, 22, 0, tzinfo=dt_util.get_default_time_zone())))
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway mainStream"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"tag": "the Driveway", "time": "6am"}, Context(user_id=JEY_USER_ID))
+
+    assert response == "Snoozed your notifications for Driveway (camera.driveway) until 6:00am"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == QualifiedTargetType.TAG
+    assert snooze.target == "driveway"
+    assert snooze.recipient == "person.jey_burrows"
+    assert snooze.snooze_until is not None
+    assert dt_util.as_local(snooze.snooze_until).strftime("%Y-%m-%d %H:%M") == "2026-09-25 06:00"
+
+
+@pytest.mark.parametrize("tag", ["driveway camera", "camera.driveway", "Driveway mainStream", "driveway_mainstream"])
+async def test_snooze_tag_names_entity(hass: HomeAssistant, tag: str) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway mainStream"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_hour", {"tag": tag}, Context())
+
+    assert response.startswith(f"Snoozed all notifications for {tag} (camera.driveway) until ")
+
+
+@pytest.mark.parametrize("tag", ["driveway camera", "the driveway camera", "Driveway mainStream camera"])
+async def test_snooze_tag_ending_camera_snoozes_that_camera(hass: HomeAssistant, tag: str) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway mainStream"})
+    hass.states.async_set("binary_sensor.driveway", "off", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"tag": tag, "time": "6am"}, Context())
+
+    assert response.startswith("Snoozed all notifications for ")
+    assert response.endswith(" camera (camera.driveway) until 6:00am")
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == QualifiedTargetType.CAMERA
+    assert snooze.target == "camera.driveway"
+
+    assert await async_respond(engine, "resume", {"tag": tag}, Context()) == (
+        f"Turned all notifications for {tag.removeprefix('the ')} (camera.driveway) back on"
+    )
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_tag_naming_several_cameras_asks_which(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway"})
+    hass.states.async_set("camera.driveway_frigate", "idle", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_hour", {"tag": "driveway camera"}, Context())
+
+    assert response == "driveway camera could be camera.driveway or camera.driveway_frigate. Say which one"
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_tag_ending_camera_without_one_is_a_tag(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass, scenarios={"doorbell_camera": {}})
+
+    await async_respond(engine, "snooze_hour", {"tag": "doorbell camera"}, Context())
+
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == QualifiedTargetType.TAG
+    assert snooze.target == "doorbell camera"
+
+
+async def test_italian_snooze_telecamera(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.vialetto", "idle", {"friendly_name": "Vialetto"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_hour", {"tag": "telecamera vialetto"}, Context(), "it")
+
+    assert response.startswith("Ho posticipato tutte le notifiche di telecamera vialetto (camera.vialetto) fino alle ")
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == QualifiedTargetType.CAMERA
+
+
+async def test_snooze_tag_names_entity_by_alias(hass: HomeAssistant) -> None:
+    entity_registry = er.async_get(hass)
+    entity_registry.async_get_or_create("binary_sensor", "test", "probe", suggested_object_id="driveway_probe_water_leak")
+    entity_registry.async_update_entity("binary_sensor.driveway_probe_water_leak", aliases=["Probe"])
+    hass.states.async_set("binary_sensor.driveway_probe_water_leak", "off", {"friendly_name": "Moisture"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_minutes", {"tag": "probe", "minutes": "20"}, Context())
+
+    assert response.startswith("Snoozed all notifications for probe (binary_sensor.driveway_probe_water_leak) until ")
+
+
+async def test_snooze_tag_covers_everything_named(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway"})
+    hass.states.async_set("light.driveway", "off", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass, scenarios={"driveway": {}})
+
+    response = await async_respond(engine, "snooze_hour", {"tag": "driveway"}, Context())
+
+    assert response.startswith("Snoozed all notifications for driveway (driveway, camera.driveway, light.driveway) until ")
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target == "driveway"
+
+
+async def test_snooze_tag_unknown_snoozes_nothing(hass: HomeAssistant) -> None:
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"tag": "spider", "time": "6am"}, Context())
+
+    assert response == "I can't find a scenario or entity called spider, so nothing was changed"
+    assert engine.context.snoozer.snoozes == {}
+
+
+async def test_snooze_tag_then_resume(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass)
+    asker = Context(user_id=JEY_USER_ID)
+
+    await async_respond(engine, "snooze_hour", {}, asker)
+    await async_respond(engine, "snooze_hour", {"tag": "driveway"}, asker)
+    assert len(engine.context.snoozer.snoozes) == 2
+    hass.states.async_remove("camera.driveway")
+
+    response = await async_respond(engine, "resume", {"tag": "Driveway"}, asker)
+
+    assert response == "Turned your notifications for Driveway back on"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target_type == GlobalTargetType.EVERYTHING
+
+
+async def test_mute_tag_until_i_say_silences_it(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_until", {"tag": "driveway", "time": "I say"}, Context())
+
+    assert response == "Silenced all notifications for driveway (camera.driveway) until you turn them back on"
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target == "driveway"
+    assert snooze.snooze_until is None
 
 
 async def test_mute_until_i_say_silences(hass: HomeAssistant) -> None:
@@ -443,6 +588,17 @@ async def test_italian_snooze_until_must_be_a_time(hass: HomeAssistant, spoken: 
 
     assert response.startswith("Dimmi un orario come 15 o 15:30")
     assert engine.context.snoozer.snoozes == {}
+
+
+async def test_italian_snooze_tag(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.vialetto", "idle", {"friendly_name": "Vialetto"})
+    engine, _calls = await _setup(hass)
+
+    response = await async_respond(engine, "snooze_hour", {"tag": "vialetto"}, Context(), "it")
+    assert response.startswith("Ho posticipato tutte le notifiche di vialetto (camera.vialetto) fino alle ")
+
+    response = await async_respond(engine, "snooze_hour", {"tag": "ragno"}, Context(), "it")
+    assert response.startswith("Non trovo nessuno scenario o entità chiamato ragno")
 
 
 async def test_italian_last_notification(hass: HomeAssistant) -> None:

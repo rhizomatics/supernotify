@@ -3,7 +3,7 @@ notify:
   fields:
     message:
       example: "The front door has been opened"
-      required: true
+      required: false
       selector:
         text:
           multiline: true

@@ -23,7 +23,7 @@ from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.typing import ConfigType
 
 from .archive import NotificationArchive
-from .common import DupeChecker
+from .common import DupeChecker, spoken_name
 from .const import (
     ATTR_ACTION,
     ATTR_DATA,
@@ -403,6 +403,12 @@ class SupernotifyEngine:
 
     def clear_snoozes(self) -> int:
         return self.context.snoozer.clear()
+
+    def tag_matches(self, tag: str) -> list[str]:
+        """The scenarios and entities a tag snooze would cover now, as scenario names and entity_ids"""
+        wanted: str = spoken_name(tag)
+        scenarios: list[str] = [s for s in self.context.scenario_registry.scenarios if spoken_name(s) == wanted]
+        return scenarios + self.context.hass_api.entity_ids_named(tag)
 
     def enquire_recipients(self) -> list[dict[str, Any]]:
         return [p.as_dict() for p in self.context.people_registry.people.values()]

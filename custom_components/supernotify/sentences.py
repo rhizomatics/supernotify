@@ -10,7 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.core import Context as HAContext
@@ -19,13 +19,22 @@ from homeassistant.helpers.trigger import async_initialize_triggers, async_valid
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
-from .model import CommandType, GlobalTargetType, RecipientType
+from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, TargetType
 from .schema import EnvelopeOutcome
 
 if TYPE_CHECKING:
     from .engine import SupernotifyEngine
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class Subject(NamedTuple):
+    """The camera or tag a voice snooze is for, and how it was said"""
+
+    target_type: QualifiedTargetType
+    target: str
+    spoken: str
+
 
 EVERYONE = ("everyone", "everybody", "all", "tutti", "tutte")
 DEFAULT_LANGUAGE = "en"
@@ -44,6 +53,8 @@ HOURS_SAID = {
 NAMED_TIMES = {"midnight": 0, "noon": 12}
 # Optional words before the minutes, which the wildcard can take in with the number
 MINUTES_PREFIXES = ("the", "next", "i", "prossimi")
+# A tag starting or ending with this names a camera, as "driveway camera" or "telecamera vialetto"
+CAMERA_WORDS = {"en": "camera", "it": "telecamera"}
 
 # hassil sentence templates by language - (a|b) is a choice, [a] is optional and {slot} is a wildcard.
 # A wildcard needs fixed words between it and the next one, so the message is always introduced.
@@ -55,14 +66,27 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
             "(tell|notify|message) {name} (that|saying) {message}",
             "send [a] (message|notification) to {name} (that|saying) {message}",
         ],
-        "snooze_minutes": ["(snooze|mute|pause) [all] [my] notifications for [the] [next] {minutes} minutes"],
-        "snooze_until": ["(snooze|mute|pause) [all] [my] notifications until {time}"],
-        "snooze_hour": ["(snooze|mute|pause) [all] [my] notifications for [an|one] hour"],
+        # the tag sentence comes first, since the agent takes the first that matches, and the minutes
+        # wildcard in the other would otherwise take in "driveway for 20"
+        "snooze_minutes": [
+            "(snooze|mute|pause) [all] [my] notifications for {tag} for [the] [next] {minutes} minutes",
+            "(snooze|mute|pause) [all] [my] notifications for [the] [next] {minutes} minutes",
+        ],
+        "snooze_until": [
+            "(snooze|mute|pause) [all] [my] notifications until {time}",
+            "(snooze|mute|pause) [all] [my] notifications for {tag} until {time}",
+        ],
+        "snooze_hour": [
+            "(snooze|mute|pause) [all] [my] notifications for [an|one] hour",
+            "(snooze|mute|pause) [all] [my] notifications for {tag} for [an|one] hour",
+        ],
         # "mute ... until I say" is left to snooze_until, so it doesn't match both
         "silence": ["(silence|mute) [all] [my] notifications", "silence [all] [my] notifications until I say"],
         "resume": [
             "(unsnooze|unmute|resume) [all] [my] notifications",
             "turn [all] [my] notifications back on",
+            "(unsnooze|unmute|resume) [all] [my] notifications for {tag}",
+            "turn [all] [my] notifications for {tag} back on",
         ],
         "last": ["what was the last notification", "what notification was sent last"],
     },
@@ -73,16 +97,31 @@ SENTENCES: dict[str, dict[str, list[str]]] = {
             "(manda|invia) (un messaggio|una notifica) a {name} (che dice|dicendo|con scritto|che) {message}",
         ],
         "snooze_minutes": [
-            "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche per [i] [prossimi] {minutes} minuti"
+            "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche per [i] [prossimi] {minutes} minuti",
+            (
+                "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche "
+                "(di|del|della|dello|dei|delle) {tag} per [i] [prossimi] {minutes} minuti"
+            ),
         ],
-        "snooze_until": ["(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche fino alle {time}"],
+        "snooze_until": [
+            "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche fino alle {time}",
+            (
+                "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche "
+                "(di|del|della|dello|dei|delle) {tag} fino alle {time}"
+            ),
+        ],
         "snooze_hour": [
-            "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche per (un'ora|un ora|una ora)"
+            "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche per (un'ora|un ora|una ora)",
+            (
+                "(posticipa|sospendi|silenzia|metti in pausa) [tutte] [le] [mie] notifiche "
+                "(di|del|della|dello|dei|delle) {tag} per (un'ora|un ora|una ora)"
+            ),
         ],
         "silence": ["(silenzia|zittisci|disattiva) [tutte] [le] [mie] notifiche [finché non lo dico|fino a nuovo ordine]"],
         "resume": [
             "(riattiva|ripristina|riprendi) [tutte] [le] [mie] notifiche",
             "(riaccendi|rimetti) [tutte] [le] [mie] notifiche",
+            "(riattiva|ripristina|riprendi) [tutte] [le] [mie] notifiche (di|del|della|dello|dei|delle) {tag}",
         ],
         "last": [
             "(qual è|qual era|quale è|quale era) [stata] (l'ultima|l ultima) notifica",
@@ -103,12 +142,15 @@ RESPONSES: dict[str, dict[str, str]] = {
         "nobody_yet": "nobody yet",
         "minutes_as_number": "Say how many minutes as a number, for example snooze notifications for 30 minutes",
         "time_as_clock": "Say a time like 15:30 or 3:30pm, for example snooze notifications until 15:30",
-        "resumed_yours": "Turned your notifications back on",
-        "resumed_all": "Turned all notifications back on",
-        "silenced_yours": "Silenced your notifications until you turn them back on",
-        "silenced_all": "Silenced all notifications until you turn them back on",
-        "snoozed_yours": "Snoozed your notifications until {until}",
-        "snoozed_all": "Snoozed all notifications until {until}",
+        "resumed_yours": "Turned your notifications{about} back on",
+        "resumed_all": "Turned all notifications{about} back on",
+        "silenced_yours": "Silenced your notifications{about} until you turn them back on",
+        "silenced_all": "Silenced all notifications{about} until you turn them back on",
+        "snoozed_yours": "Snoozed your notifications{about} until {until}",
+        "snoozed_all": "Snoozed all notifications{about} until {until}",
+        "about": " for {tag}",
+        "unknown_tag": "I can't find a scenario or entity called {tag}, so nothing was changed",
+        "which_camera": "{tag} could be {cameras}. Say which one",
         "no_last": "There haven't been any notifications since Home Assistant started",
         "last_sent": "At {when}: {message}. Sent by {sent}",
         "last_not_sent": "At {when}: {message}. It wasn't sent by anything",
@@ -124,12 +166,15 @@ RESPONSES: dict[str, dict[str, str]] = {
         "nobody_yet": "ancora nessuno",
         "minutes_as_number": "Dimmi i minuti con un numero, per esempio posticipa le notifiche per 30 minuti",
         "time_as_clock": "Dimmi un orario come 15 o 15:30, per esempio posticipa le notifiche fino alle 15:30",
-        "resumed_yours": "Ho riattivato le tue notifiche",
-        "resumed_all": "Ho riattivato tutte le notifiche",
-        "silenced_yours": "Ho silenziato le tue notifiche finché non le riattivi",
-        "silenced_all": "Ho silenziato tutte le notifiche finché non le riattivi",
-        "snoozed_yours": "Ho posticipato le tue notifiche fino alle {until}",
-        "snoozed_all": "Ho posticipato tutte le notifiche fino alle {until}",
+        "resumed_yours": "Ho riattivato le tue notifiche{about}",
+        "resumed_all": "Ho riattivato tutte le notifiche{about}",
+        "silenced_yours": "Ho silenziato le tue notifiche{about} finché non le riattivi",
+        "silenced_all": "Ho silenziato tutte le notifiche{about} finché non le riattivi",
+        "snoozed_yours": "Ho posticipato le tue notifiche{about} fino alle {until}",
+        "snoozed_all": "Ho posticipato tutte le notifiche{about} fino alle {until}",
+        "about": " di {tag}",
+        "unknown_tag": "Non trovo nessuno scenario o entità chiamato {tag}, quindi non ho cambiato niente",
+        "which_camera": "{tag} può essere {cameras}. Dimmi quale",
         "no_last": "Non ci sono state notifiche da quando Home Assistant si è avviato",
         "last_sent": "Alle {when}: {message}. Inviata da {sent}",
         "last_not_sent": "Alle {when}: {message}. Non è stata inviata da nessun canale",
@@ -187,26 +232,61 @@ async def async_respond(
         return await _notify(engine, str(slots.get("name", "")), str(slots.get("message", "")), context, language)
     if command == "last":
         return _last(engine, language)
+    tag: str | None = _tag(str(slots["tag"])) if slots.get("tag") else None
+    subject: Subject | None = None
+    if tag is not None:
+        subject_or_reply: Subject | str = _subject(engine, tag, command, language)
+        if isinstance(subject_or_reply, str):
+            return subject_or_reply
+        subject = subject_or_reply
     if command == "snooze_minutes":
         minutes = _minutes(str(slots.get("minutes", "")))
         if not minutes.isdigit() or int(minutes) < 1:
             return _say(language, "minutes_as_number")
-        return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(minutes=int(minutes)))
+        return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(minutes=int(minutes)), subject)
     if command == "snooze_until":
         spoken = str(slots.get("time", ""))
         if spoken.strip().casefold() == "i say":
-            return _snooze(engine, CommandType.SILENCE, context, language)
+            return _snooze(engine, CommandType.SILENCE, context, language, subject=subject)
         until = _next_time(spoken, language)
         if until is None:
             return _say(language, "time_as_clock")
-        return _snooze(engine, CommandType.SNOOZE, context, language, until - dt_util.now())
+        return _snooze(engine, CommandType.SNOOZE, context, language, until - dt_util.now(), subject)
     if command == "snooze_hour":
-        return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(hours=1))
+        return _snooze(engine, CommandType.SNOOZE, context, language, dt.timedelta(hours=1), subject)
     if command == "silence":
         return _snooze(engine, CommandType.SILENCE, context, language)
     if command == "resume":
-        return _snooze(engine, CommandType.NORMAL, context, language)
+        return _snooze(engine, CommandType.NORMAL, context, language, subject=subject)
     return _say(language, "unknown_command", command=command)
+
+
+def _subject(engine: SupernotifyEngine, tag: str, command: str, language: str) -> Subject | str:
+    """A camera snooze when the tag names one camera, otherwise a tag snooze - or what to say back
+    when it names several cameras, or nothing at all"""
+    words: list[str] = tag.split()
+    camera_word: str = CAMERA_WORDS.get(language, CAMERA_WORDS[DEFAULT_LANGUAGE])
+    if len(words) > 1 and camera_word in (words[0].casefold(), words[-1].casefold()):
+        name: str = " ".join(words[1:] if words[0].casefold() == camera_word else words[:-1])
+        hass_api = engine.context.hass_api
+        cameras: list[str] = sorted({
+            e for e in hass_api.entity_ids_named(name) + hass_api.entity_ids_named(tag) if e.startswith("camera.")
+        })
+        if len(cameras) > 1:
+            return _say(language, "which_camera", tag=tag, cameras=_say(language, "or").join(cameras))
+        if cameras:
+            return Subject(QualifiedTargetType.CAMERA, cameras[0], tag)
+    if command != "resume" and not engine.tag_matches(tag):
+        return _say(language, "unknown_tag", tag=tag)
+    return Subject(QualifiedTargetType.TAG, tag, tag)
+
+
+def _tag(spoken: str) -> str:
+    """The tag, without a leading 'the' the wildcard took in"""
+    words: list[str] = spoken.split()
+    if len(words) > 1 and words[0].casefold() == "the":
+        words.pop(0)
+    return " ".join(words)
 
 
 def _minutes(spoken: str) -> str:
@@ -272,21 +352,34 @@ def _next_occurrence(now: dt.datetime, hour: int, minute: int) -> dt.datetime:
 
 
 def _snooze(
-    engine: SupernotifyEngine, cmd: CommandType, context: HAContext, language: str, snooze_for: dt.timedelta | None = None
+    engine: SupernotifyEngine,
+    cmd: CommandType,
+    context: HAContext,
+    language: str,
+    snooze_for: dt.timedelta | None = None,
+    subject: Subject | None = None,
 ) -> str:
-    """Snooze, silence or resume everything for the person asking, or for everyone if they aren't known"""
+    """Snooze, silence or resume everything, or a camera or tag, for the person asking, or for everyone
+    if they aren't known"""
     person_id: str | None = engine.context.people_registry.person_id_for_user_id(context.user_id)
     recipient_type = RecipientType.USER if person_id else RecipientType.EVERYONE
+    target_type: TargetType = subject.target_type if subject else GlobalTargetType.EVERYTHING
     engine.context.snoozer.register_snooze(
-        cmd, GlobalTargetType.EVERYTHING, None, recipient_type, person_id, snooze_for, reason="Voice command"
+        cmd, target_type, subject.target if subject else None, recipient_type, person_id, snooze_for, reason="Voice command"
     )
     whose = "yours" if person_id else "all"
+    about: str = ""
+    if subject:
+        matches: list[str] = (
+            [subject.target] if subject.target_type == QualifiedTargetType.CAMERA else engine.tag_matches(subject.target)
+        )
+        about = _say(language, "about", tag=subject.spoken) + (f" ({', '.join(matches)})" if matches else "")
     if cmd == CommandType.NORMAL:
-        return _say(language, f"resumed_{whose}")
+        return _say(language, f"resumed_{whose}", about=about)
     if cmd == CommandType.SILENCE:
-        return _say(language, f"silenced_{whose}")
+        return _say(language, f"silenced_{whose}", about=about)
     until = dt_util.as_local(dt_util.now() + (snooze_for or engine.context.snoozer.snooze_period))
-    return _say(language, f"snoozed_{whose}", until=_clock(until, language))
+    return _say(language, f"snoozed_{whose}", about=about, until=_clock(until, language))
 
 
 def _clock(when: dt.datetime, language: str) -> str:

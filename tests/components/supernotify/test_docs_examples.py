@@ -107,15 +107,12 @@ def test_docs_examples_were_found() -> None:
 
 
 def _checkable(payload: dict[str, Any]) -> dict[str, Any]:
-    """Payload minus values only resolved at call time, but always with a message, which the schema requires"""
-    pruned = cast("dict[str, Any]", _prune_runtime_values(payload))
-    pruned.setdefault("message", "placeholder")
-    return pruned
+    """Payload minus values only resolved at call time"""
+    return cast("dict[str, Any]", _prune_runtime_values(payload))
 
 
 @pytest.mark.parametrize("payload", EXAMPLES)
 def test_docs_example_is_valid_action_call(payload: dict[str, Any]) -> None:
-    assert "message" in payload, "supernotify.notify requires a message"
     try:
         NOTIFY_ACTION_SCHEMA(_checkable(payload))
     except vol.Invalid as e:

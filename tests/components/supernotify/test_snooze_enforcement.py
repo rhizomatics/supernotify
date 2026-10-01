@@ -58,6 +58,74 @@ async def test_everyone_camera_snooze_only_suppresses_that_camera(hass: HomeAssi
     assert _delivered(await _send(ctx, "No camera involved"))
 
 
+async def test_everyone_tag_snooze_matches_data_entity_id_or_camera(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway mainStream"})
+    ctx = TestingContext(homeassistant=hass, yaml=YAML, services={"notify": ["smtp"]})
+    await ctx.test_initialize()
+    ctx.snoozer.handle_command_event(Event("mobile_action", data={ATTR_ACTION: "SUPERNOTIFY_SNOOZE_EVERYONE_TAG_driveway"}))
+
+    frigate = Notification(ctx, message="Car on the driveway", action_data={"data": {"entity_id": "camera.driveway"}})
+    await frigate.initialize()
+    await frigate.deliver()
+    assert not _delivered(frigate)
+    assert not _delivered(await _send(ctx, "Car on the driveway", camera_entity_id="camera.driveway"))
+    assert _delivered(await _send(ctx, "Person on the porch", camera_entity_id="camera.porch"))
+    assert _delivered(await _send(ctx, "No entity involved"))
+
+
+async def test_tag_snooze_matches_friendly_name_and_scenario(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.front", "idle", {"friendly_name": "Driveway Probe"})
+    ctx = TestingContext(
+        homeassistant=hass,
+        yaml=YAML
+        + """
+  scenarios:
+    driveway_probe: {}
+""",
+        services={"notify": ["smtp"]},
+    )
+    await ctx.test_initialize()
+    ctx.snoozer.register_snooze(
+        CommandType.SNOOZE, QualifiedTargetType.TAG, "Driveway_Probe", RecipientType.EVERYONE, None, timedelta(hours=1)
+    )
+
+    by_scenario = Notification(ctx, message="Vehicle at the gate", action_data={"apply_scenarios": "driveway_probe"})
+    await by_scenario.initialize()
+    await by_scenario.deliver()
+    assert not _delivered(by_scenario)
+    assert not _delivered(await _send(ctx, "Vehicle at the gate", camera_entity_id="camera.front"))
+    assert _delivered(await _send(ctx, "Something else"))
+
+
+async def test_user_tag_snooze_only_silences_that_user(hass: HomeAssistant) -> None:
+    ctx = TestingContext(
+        homeassistant=hass,
+        yaml="""
+  name: Supernotify
+  platform: supernotify
+  recipients:
+    - person: person.bob_mctest
+      email: bob@mctest.com
+    - person: person.jane_macunit
+      email: jane@macunit.org
+  delivery:
+    email:
+      transport: email
+      action: notify.smtp
+""",
+        services={"notify": ["smtp"]},
+    )
+    await ctx.test_initialize()
+    ctx.snoozer.register_snooze(
+        CommandType.SNOOZE, QualifiedTargetType.TAG, "driveway camera", RecipientType.USER, "person.bob_mctest", None
+    )
+
+    uut = Notification(ctx, message="Car on the driveway", action_data={"data": {"entity_id": ["camera.driveway"]}})
+    await uut.initialize()
+    await uut.deliver()
+    assert uut.deliveries["email"][EnvelopeOutcome.SUCCESS][0].target.email == ["jane@macunit.org"]  # type: ignore
+
+
 async def test_user_snooze_everything_only_silences_that_user(hass: HomeAssistant) -> None:
     ctx = TestingContext(
         homeassistant=hass,

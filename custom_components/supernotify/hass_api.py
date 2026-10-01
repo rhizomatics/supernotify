@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from dataclasses import dataclass, field
 from functools import partial
 from typing import TYPE_CHECKING, Any
@@ -25,7 +25,7 @@ from homeassistant.util import slugify
 
 if TYPE_CHECKING:
     import asyncio
-    from collections.abc import Callable, Iterable, Iterator
+    from collections.abc import Callable, Iterable
 
     import aiohttp
     from anyio import Path
@@ -64,6 +64,7 @@ from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .common import spoken_name
 from .const import CONF_DEVICE_LABELS, CONF_DEVICE_TRACKER, CONF_MOBILE_APP_ID
 from .model import ConditionVariables, SelectionRule
 
@@ -262,6 +263,25 @@ class HomeAssistantAPI:
             if reg_entry:
                 return reg_entry.platform
         return None
+
+    def entity_spoken_names(self, entity_id: str) -> set[str]:
+        """What an entity can be called, by entity_id, object_id, friendly name or alias - and by
+        object_id then domain, so 'driveway camera' is camera.driveway - as spoken_name() has them"""
+        domain, _, object_id = entity_id.partition(".")
+        names: list[str] = [entity_id, object_id, f"{object_id} {domain}"]
+        state: State | None = self._hass.states.get(entity_id)
+        if state:
+            names.append(state.name)
+        entity_registry: EntityRegistry | None = self._entity_registry()
+        reg_entry: RegistryEntry | None = entity_registry.async_get(entity_id) if entity_registry else None
+        if reg_entry:
+            names.extend(a for a in reg_entry.aliases if isinstance(a, str))
+        return {spoken_name(n) for n in names}
+
+    def entity_ids_named(self, name: str) -> list[str]:
+        """Entities that can be called this, see entity_spoken_names()"""
+        wanted: str = spoken_name(name)
+        return [s.entity_id for s in self._hass.states.async_all() if wanted in self.entity_spoken_names(s.entity_id)]
 
     def entity_ids_for_platform(
         self, domain: str, platform: str, device_model_select: str | list[str] | dict | SelectionRule | None = None
@@ -977,7 +997,7 @@ def trace_action(
     config: dict[str, Any] | None = None,
     context: HomeAssistantContext | None = None,
     stored_traces: int = 5,
-) -> Iterator[ActionTrace]:
+) -> Generator[ActionTrace]:
     """Trace execution of a condition"""
     trace = ActionTrace(item_id, config, None, context or HomeAssistantContext())
     async_store_trace(hass, trace, stored_traces)

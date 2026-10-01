@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.util import dt as dt_util
 
 from . import DOMAIN
+from .common import spoken_name
 from .const import (
     ATTR_ACTION,
     ATTR_MOBILE_APP_ID,
@@ -250,6 +251,9 @@ class Snoozer:
         snooze_for: timedelta | None,
         reason: str = "User command",
     ) -> None:
+        if target_type == QualifiedTargetType.TAG and target:
+            # so the same tag however it was said or typed is one snooze, and can be resumed
+            target = spoken_name(target)
         if cmd == CommandType.SNOOZE:
             snooze = Snooze(target_type, recipient_type, target, recipient, snooze_for, reason=reason)
             self.snoozes[snooze.short_key()] = snooze
@@ -315,7 +319,7 @@ class Snoozer:
                     case QualifiedTargetType.TRANSPORT:
                         if snooze.target == delivery.transport.name:
                             inscope_snoozes.append(snooze)
-                    case QualifiedTargetType.CAMERA:
+                    case QualifiedTargetType.CAMERA | QualifiedTargetType.TAG:
                         inscope_snoozes.append(snooze)
                     case _:
                         _LOGGER.warning("SUPERNOTIFY Unhandled target type %s", snooze.target_type)
@@ -334,8 +338,14 @@ class Snoozer:
 
         return False
 
-    def is_delivery_snoozed(self, priority: str, delivery: Delivery, camera_entity_id: str | None = None) -> bool:
-        """Everyone-scoped delivery, transport, priority or camera snoozes stop the whole delivery"""
+    def is_delivery_snoozed(
+        self,
+        priority: str,
+        delivery: Delivery,
+        camera_entity_id: str | None = None,
+        tags: set[str] | None = None,
+    ) -> bool:
+        """Everyone-scoped delivery, transport, priority, camera or tag snoozes stop the whole delivery"""
         for snooze in self.current_snoozes(priority, delivery):
             if snooze.recipient_type != RecipientType.EVERYONE:
                 continue
@@ -345,12 +355,17 @@ class Snoozer:
                 QualifiedTargetType.PRIORITY,
             ):
                 return True
-            if snooze.target_type == QualifiedTargetType.CAMERA and camera_entity_id and snooze.target == camera_entity_id:
+            if _snoozes_subject(snooze, camera_entity_id, tags):
                 return True
         return False
 
     def filter_recipients(
-        self, recipients: Target, priority: str, delivery: Delivery, camera_entity_id: str | None = None
+        self,
+        recipients: Target,
+        priority: str,
+        delivery: Delivery,
+        camera_entity_id: str | None = None,
+        tags: set[str] | None = None,
     ) -> Target:
         inscope_snoozes: list[Snooze] = self.current_snoozes(priority, delivery)
         for snooze in inscope_snoozes:
@@ -362,11 +377,7 @@ class Snoozer:
                     snooze.target_type == QualifiedTargetType.PRIORITY
                     and (snooze.target == priority or (isinstance(snooze.target, list) and priority in snooze.target))
                 )
-                or (
-                    snooze.target_type == QualifiedTargetType.CAMERA
-                    and camera_entity_id is not None
-                    and snooze.target == camera_entity_id
-                )
+                or _snoozes_subject(snooze, camera_entity_id, tags)
                 or snooze.target_type == GlobalTargetType.EVERYTHING
                 or (snooze.target_type == GlobalTargetType.NONCRITICAL and priority != PRIORITY_CRITICAL)
             ):
@@ -387,3 +398,13 @@ class Snoozer:
                 if to_remove:
                     recipients.remove(ATTR_MOBILE_APP_ID, to_remove)
         return recipients
+
+
+def _snoozes_subject(snooze: Snooze, camera_entity_id: str | None, tags: set[str] | None) -> bool:
+    """Whether a camera or tag snooze is about this notification - tags are as spoken_name() has them"""
+    match snooze.target_type:
+        case QualifiedTargetType.CAMERA:
+            return camera_entity_id is not None and snooze.target == camera_entity_id
+        case QualifiedTargetType.TAG:
+            return isinstance(snooze.target, str) and spoken_name(snooze.target) in (tags or set())
+    return False

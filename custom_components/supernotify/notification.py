@@ -18,7 +18,7 @@ from custom_components.supernotify.delivery import DeliveryProvenance
 from custom_components.supernotify.schema import SelectionRank
 
 from .archive import ArchivableObject
-from .common import ensure_list, nullable_ensure_list, sanitize
+from .common import ensure_list, nullable_ensure_list, sanitize, spoken_name
 from .const import (
     ATTR_ACTION_GROUPS,
     ATTR_ACTIONS,
@@ -698,11 +698,27 @@ class Notification(ArchivableObject):
                 if isinstance(result, BaseException):
                     _LOGGER.error("SUPERNOTIFY Unexpected error in parallel delivery: %s", result)
 
+    def snooze_tags(self) -> set[str]:
+        """What a tag snooze can name this notification by - its scenarios, and what the entities it's
+        about are called, from `entity_id` in its data or its camera"""
+        tags: set[str] = {spoken_name(s) for s in self.enabled_scenarios}
+        entity_ids: list[str] = [str(e) for e in ensure_list(self.extra_data.get(ATTR_ENTITY_ID))]
+        if self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID):
+            entity_ids.append(self.media[ATTR_MEDIA_CAMERA_ENTITY_ID])
+        for entity_id in entity_ids:
+            tags.update(self.context.hass_api.entity_spoken_names(entity_id))
+        return tags
+
     def delivery_skip_reason(self, delivery: Delivery) -> SuppressionReason | None:
         """Why a selected delivery won't be attempted at all, checked before any targets are worked out"""
         if not delivery.transport.enabled:
             return SuppressionReason.TRANSPORT_DISABLED
-        if self.context.snoozer.is_delivery_snoozed(self.priority, delivery, self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)):
+        if self.context.snoozer.is_delivery_snoozed(
+            self.priority,
+            delivery,
+            self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID),
+            tags=self.snooze_tags(),
+        ):
             return SuppressionReason.SNOOZED
         if self.delivery_selection != DELIVERY_SELECTION_FIXED:
             delivery_priorities: list[str] = delivery.priority
@@ -1075,7 +1091,11 @@ class Notification(ArchivableObject):
     ) -> Target:
         """Snooze-filter, resolve indirect/scenario targets, then apply delivery target selection."""
         computed_target = self.context.snoozer.filter_recipients(
-            computed_target, self.priority, delivery, self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
+            computed_target,
+            self.priority,
+            delivery,
+            self.media.get(ATTR_MEDIA_CAMERA_ENTITY_ID),
+            tags=self.snooze_tags(),
         )
         self.debug_trace.record_target(delivery.name, stages[0], computed_target)
         for indirect_target in self.resolve_indirect_targets(computed_target, delivery):

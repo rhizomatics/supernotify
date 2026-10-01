@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import CONF_ENABLED, STATE_OFF, STATE_ON, STATE_UNKNOWN
@@ -26,8 +27,6 @@ from .const import (
 from .model import DeliveryCustomization
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
     from homeassistant.helpers.typing import ConfigType
 
     from .binary_sensor import SupernotifyScenarioBinarySensor
@@ -479,7 +478,7 @@ def trace_action(
     config: dict[str, Any],
     context: Context | None = None,
     stored_traces: int = 5,
-) -> Iterator[ActionTrace]:
+) -> Generator[ActionTrace]:
     """Trace execution of a scenario."""
     trace = ActionTrace(item_id, config, None, context or Context())
     async_store_trace(hass, trace, stored_traces)

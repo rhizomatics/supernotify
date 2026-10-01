@@ -278,6 +278,7 @@ async def test_unsnooze_and_clear_all(hass: HomeAssistant) -> None:
         ({"scope": "delivery", "name": "fax"}, "Unknown delivery 'fax'"),
         ({"scope": "priority", "name": "whenever"}, "Unknown priority 'whenever'"),
         ({"scope": "camera", "name": "front door"}, "entity_id"),
+        ({"scope": "tag", "name": "spider"}, "No scenario or entity is called 'spider'"),
     ],
 )
 async def test_snooze_rejects_unknown_names(hass: HomeAssistant, args: dict[str, Any], error: str) -> None:
@@ -492,3 +493,26 @@ async def test_help_site_unreachable(hass: HomeAssistant, aioclient_mock: Aiohtt
 
     assert result["success"] is False
     assert "could not be reached" in result["error"]
+
+
+async def test_snooze_tag(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass)
+
+    result = await _call(hass, "supernotify__snooze", {"action": "snooze", "scope": "tag", "name": "Driveway", "minutes": 30})
+
+    assert result["success"] is True
+    [snooze] = engine.context.snoozer.snoozes.values()
+    assert snooze.target == "driveway"
+
+
+async def test_unsnooze_tag_that_no_longer_matches(hass: HomeAssistant) -> None:
+    hass.states.async_set("camera.driveway", "idle", {"friendly_name": "Driveway"})
+    engine, _calls = await _setup(hass)
+    await _call(hass, "supernotify__snooze", {"action": "silence", "scope": "tag", "name": "driveway"})
+    hass.states.async_remove("camera.driveway")
+
+    result = await _call(hass, "supernotify__snooze", {"action": "unsnooze", "scope": "tag", "name": "driveway"})
+
+    assert result["success"] is True
+    assert engine.context.snoozer.snoozes == {}

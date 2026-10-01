@@ -1,4 +1,16 @@
 # v2.11.1
+
+## ✨ Enhancements
+  - Snoozing with assist more flexible, even with non-AI version
+    - "snooze notifications for porch camera until 6am" will look for entities or scenarios matching "porch" and apply snoozes only to them
+    - The response lists what the term matches now, or says so if it matches nothing, in which case no snooze is made
+    - The term is matched as each notification is sent, against its scenarios and the entity_id, name or aliases of its `entity_id` data or camera, so consistently named scenarios and cameras are all covered
+    - Also available as a `TAG` mobile action snooze, and a `tag` scope for the AI snooze tool
+    - "for driveway camera" snoozes just that camera, as a camera snooze, and asks which if several cameras match
+    - Ideal if there's a spider on the camera waking you up in the middle of the night
+  - `message` is now optional for the `supernotify.notify` action
+    - Could be a scenario, delivery or template supplies a pre-set message, or for a media-only notification that only shows image or plays chime
+    - It's still required for `notify.supernotify`, whose schema is owned by Home Assistant as part of `notify` platform
 ## 🐛 Bug fixes
   - Dupe detection now measures the ttl from the first delivered notification, rather than resetting it on every suppressed dupe, so a frequently repeating alert (e.g. a camera trigger every minute) is no longer suppressed indefinitely.
 ## 📚 Documentation

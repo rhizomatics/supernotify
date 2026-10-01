@@ -493,6 +493,7 @@ class QualifiedTargetType(TargetType):
     CAMERA = "CAMERA"
     PRIORITY = "PRIORITY"
     MOBILE = "MOBILE"
+    TAG = "TAG"
 
 
 class CommandType(StrEnum):

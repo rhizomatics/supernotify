@@ -56,6 +56,11 @@ def nullable_ensure_list(v: Any) -> list[Any] | None:  # ruff: ignore[any-type]
     return ensure_list(v)
 
 
+def spoken_name(name: str) -> str:
+    """A name as it would be said, ignoring case, underscores and extra spaces, for matching spoken tags"""
+    return " ".join(name.replace("_", " ").casefold().split())
+
+
 def ensure_list(v: Any) -> list[Any]:  # ruff: ignore[any-type]
     if v is None:
         return []

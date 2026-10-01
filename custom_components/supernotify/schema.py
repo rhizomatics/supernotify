@@ -624,7 +624,7 @@ STRICT_ACTION_DATA_SCHEMA = vol.All(
 NOTIFY_ACTION_SCHEMA = vol.All(
     cv.deprecated(key=ATTR_RECIPIENTS),  # deprecated v2.2.0
     _ACTION_DATA_FIELDS_SCHEMA.extend({
-        vol.Required(CONF_MESSAGE): cv.string,
+        vol.Optional(CONF_MESSAGE): cv.string,
         vol.Optional(CONF_TITLE): cv.string,
         vol.Optional(CONF_TARGET): TARGET_SCHEMA,
         # pass-through data exempt from the legacy nested-data migration - see actions.py

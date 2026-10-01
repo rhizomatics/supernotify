@@ -208,6 +208,22 @@ async def test_setup_entry_registers_notify_action(hass: HomeAssistant) -> None:
     assert entry.runtime_data.last_notification.priority == "high"
 
 
+async def test_notify_action_without_message(hass: HomeAssistant) -> None:
+    """Unlike notify.supernotify, message is optional on supernotify.notify, since a scenario,
+    delivery or template can supply it, or the notification may be media only."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "notify", {"title": "testing"}, blocking=True)
+    await hass.async_block_till_done()
+
+    assert entry.runtime_data.failures == 0
+    assert entry.runtime_data.last_notification is not None
+    assert not entry.runtime_data.last_notification.message
+
+
 async def test_notify_action_rejects_invalid_field() -> None:
     """A rich, schema-checked field (priority) should reject values outside the known set,
     same as it would nested under notify.supernotify's `data:` blob."""
@@ -623,7 +639,7 @@ async def test_notify_description_offers_configured_names(hass: HomeAssistant) -
         assert fields["scenarios"]["fields"][field]["selector"] == {
             "select": {"options": ["night", "away"], "multiple": True, "custom_value": True}
         }
-    assert fields["message"]["required"] is True
+    assert fields["message"]["required"] is False
 
 
 @pytest.mark.parametrize(

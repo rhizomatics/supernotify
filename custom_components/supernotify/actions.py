@@ -185,7 +185,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         # extra_data is what Notification knows as `data`, and wins over any same-named key in a legacy `data`
         if extra_data := data.pop(ATTR_EXTRA_DATA, None):
             data[ATTR_DATA] = {**(data.get(ATTR_DATA) or {}), **extra_data}
-        message = data.pop(CONF_MESSAGE)
+        message = data.pop(CONF_MESSAGE, "")
         title = data.pop(CONF_TITLE, None)
         target = data.pop(CONF_TARGET, None)
         # custom_target holds identifiers the target selector can't produce (e-mail addresses,

@@ -127,6 +127,7 @@ SNOOZE_SCOPES: dict[str, TargetType] = {
     "transport": QualifiedTargetType.TRANSPORT,
     "priority": QualifiedTargetType.PRIORITY,
     "camera": QualifiedTargetType.CAMERA,
+    "tag": QualifiedTargetType.TAG,
 }
 
 
@@ -329,7 +330,8 @@ class SnoozeTool(SupernotifyTool):
             ),
             vol.Optional(
                 "name",
-                description="The delivery, transport, priority or camera entity_id to snooze, when scope is one of those",
+                description="The delivery, transport, priority or camera entity_id to snooze, when scope is one of "
+                "those, or for 'tag' a scenario name, or an entity_id, name or alias of the entity a notification is about",
             ): str,
             vol.Optional(
                 "recipient",
@@ -351,7 +353,7 @@ class SnoozeTool(SupernotifyTool):
         scope: TargetType = SNOOZE_SCOPES[args["scope"]]
         name: str | None = args.get("name")
         if isinstance(scope, QualifiedTargetType):
-            if error := self._check_name(scope, name):
+            if error := self._check_name(scope, name, cmd):
                 return {"success": False, "error": error}
         else:
             name = None
@@ -370,7 +372,7 @@ class SnoozeTool(SupernotifyTool):
         snoozes: dict[str, Any] = {"snoozes": self.engine.enquire_snoozes()}
         return {"success": True, "result": snoozes}
 
-    def _check_name(self, scope: QualifiedTargetType, name: str | None) -> str | None:
+    def _check_name(self, scope: QualifiedTargetType, name: str | None, cmd: CommandType) -> str | None:
         registry = self.engine.context.delivery_registry
         valid: list[str] | None = {
             QualifiedTargetType.DELIVERY: list(registry.deliveries),
@@ -383,6 +385,9 @@ class SnoozeTool(SupernotifyTool):
             return f"Unknown {scope.lower()} '{name}', choose from: {', '.join(valid)}"
         if scope == QualifiedTargetType.CAMERA and not name.startswith("camera."):
             return "A camera must be given as its entity_id, e.g. camera.front_door"
+        # a tag snooze can still be undone when what it named has gone
+        if scope == QualifiedTargetType.TAG and cmd != CommandType.NORMAL and not self.engine.tag_matches(name):
+            return f"No scenario or entity is called '{name}'"
         return None
 
     def _requesting_person(self, llm_context: LLMContext) -> str | None:
