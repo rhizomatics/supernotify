@@ -12,8 +12,30 @@ from .framework import House
 
 
 @pytest.fixture
-async def town_house(hass: HomeAssistant) -> AsyncGenerator[House]:
+async def starter_flat(hass: HomeAssistant) -> AsyncGenerator[House]:
     """This house has a minimal Home Assistant setup, with no technical
+    users, and a completely default Supernotify installation with zero YAML.
+
+        - One floor, but not defined in HA, no areas, no labels
+        - No Person entries, only 1 User accounts
+        - One mobile app
+
+    """
+
+    house = House(
+        users={"jo": "jo"},
+        apple_apps={"jo_phone": "jo"},
+    )
+    await house.setup(hass)
+    try:
+        yield house
+    finally:
+        house.cleanup()
+
+
+@pytest.fixture
+async def town_house(hass: HomeAssistant) -> AsyncGenerator[House]:
+    """This house has a slightly richer Home Assistant setup, with no technical
     users, and a completely default Supernotify installation with zero YAML.
 
         - 2 floors, with 5 rooms defined
@@ -37,7 +59,8 @@ async def town_house(hass: HomeAssistant) -> AsyncGenerator[House]:
         floors=["ground", "first"],
         areas=areas,
         users={"alice": "alice", "bob": "bob"},
-        mobile_apps={"alice_phone": "alice", "bob_phone": "bob"},
+        android_apps={"bob_phone": "bob"},
+        apple_apps={"alice_phone": "alice"},
         cameras={"front_door": "garage", "back_garden": None},
         pirs={"hall_pir": "lounge", "garden_pir": None},
     )

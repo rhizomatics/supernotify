@@ -37,7 +37,8 @@ class House:
         floors: list[str] | None = None,
         areas: dict[str, str | None] | None = None,
         users: dict[str, str | None] | None = None,
-        mobile_apps: dict[str, str] | None = None,
+        android_apps: dict[str, str] | None = None,
+        apple_apps: dict[str, str] | None = None,
         cameras: dict[str, str | None] | None = None,
         pirs: dict[str, str | None] | None = None,
     ) -> None:
@@ -54,7 +55,8 @@ class House:
         # account name (the `users` key)
         self.user_ids: dict[str, str] = {}
         # mobile_apps: device name -> owning account name from `users`
-        self.mobile_apps: dict[str, str] = mobile_apps or {}
+        self.apple_apps: dict[str, str] = apple_apps or {}
+        self.android_apps: dict[str, str] = android_apps or {}
         # cameras/pirs: entity name -> optional area slug from `areas`
         self._cameras: dict[str, str | None] = cameras or {}
         self.pirs: dict[str, str | None] = pirs or {}
@@ -100,13 +102,27 @@ class House:
             if person_slug is not None:
                 hass.states.async_set(f"person.{person_slug}", "home", attributes={"user_id": user.id})
 
-        if self.mobile_apps:
+        if self.android_apps:
             hass_api = HomeAssistantAPI(hass)
-            for device_name, owner in self.mobile_apps.items():
+            for device_name, owner in self.android_apps.items():
+                person_slug = self.users[owner]
+                person_id = f"person.{person_slug}" if person_slug is not None else None
+                register_mobile_app(
+                    hass_api,
+                    person=person_id,
+                    manufacturer="Cheapo",  # mobile push cares about manufacturer not being Apple
+                    os_name="Android",
+                    device_name=device_name,
+                    user_id=self.user_ids[owner],
+                )
+            await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
+
+        if self.apple_apps:
+            hass_api = HomeAssistantAPI(hass)
+            for device_name, owner in self.apple_apps.items():
                 person_slug = self.users[owner]
                 person_id = f"person.{person_slug}" if person_slug is not None else None
                 register_mobile_app(hass_api, person=person_id, device_name=device_name, user_id=self.user_ids[owner])
-            await async_setup_component(hass, "mobile_app", {"mobile_app": {}})
 
         for account_name, person_slug in self.users.items():
             # registering a mobile app above may have overwritten this person's attributes
@@ -154,7 +170,11 @@ class House:
         hass.services.async_remove("notify", "send_message")
         hass.services.async_register("notify", "send_message", fake_call_service)
 
-        for device_name in self.mobile_apps:
+        for device_name in self.android_apps:
+            service_name = slugify(f"mobile_app_{device_name}")
+            hass.services.async_remove("notify", service_name)
+            hass.services.async_register("notify", service_name, fake_call_service)
+        for device_name in self.apple_apps:
             service_name = slugify(f"mobile_app_{device_name}")
             hass.services.async_remove("notify", service_name)
             hass.services.async_register("notify", service_name, fake_call_service)

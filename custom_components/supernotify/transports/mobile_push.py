@@ -402,7 +402,7 @@ class MobilePushTransport(Transport):
             if mobile_info is None:
                 target_data.update(android_data)
                 target_data.update(ios_data)
-            elif mobile_info.manufacturer != MANUFACTURER_APPLE:
+            elif mobile_info.manufacturer != MANUFACTURER_APPLE:  # TODO Make this os_name based
                 target_data.update(android_data)
             else:
                 target_data.update(ios_data)

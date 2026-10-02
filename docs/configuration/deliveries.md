@@ -142,6 +142,19 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 
 `explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
 
+!!! warning "`fallback` is not a per-scenario 'last resort'"
+    `fallback`/`fallback_on_error` only control whether a delivery gets pulled in by the
+    separate mechanism that runs after every other delivery has been attempted, if *nothing at
+    all* delivered for the notification (or, for `fallback_on_error`, if at least one attempt
+    errored). That mechanism skips a delivery that's already been selected some other way - but
+    it doesn't retroactively gate one. If a scenario's own `delivery:` map names a `fallback`
+    delivery directly, that selects it immediately, the same as naming any other delivery - the
+    `fallback` flag adds no condition of its own, so with no `occupancy` or `conditions` set, it
+    fires every time the scenario does, not just when everything else failed. Give it its own
+    `occupancy` (`all_out` for "nobody home", for example) or `conditions` if you want it to stay
+    conditional while still being scenario-specific - or leave it out of the scenario's
+    `delivery:` map entirely and let the automatic mechanism add it only when needed.
+
 ### Implicit Deliveries
 
 The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery

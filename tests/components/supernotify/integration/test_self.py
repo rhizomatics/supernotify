@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 
-async def test_town_house_floors_and_areas(hass: HomeAssistant, town_house: House) -> None:
+async def test_a_house_floors_and_areas(hass: HomeAssistant, town_house: House) -> None:
     assert set(town_house.floors) == {"ground", "first"}
     assert town_house.floors["ground"].name == "ground"
     assert town_house.floors["first"].name == "first"
@@ -23,7 +23,7 @@ async def test_town_house_floors_and_areas(hass: HomeAssistant, town_house: Hous
     assert town_house.areas["garden"].floor_id is None
 
 
-async def test_town_house_alexa_notify_devices(hass: HomeAssistant, town_house: House) -> None:
+async def test_a_house_alexa_notify_devices(hass: HomeAssistant, town_house: House) -> None:
     entity_registry = er.async_get(hass)
     for area in ("kitchen", "lounge", "garage", "bedroom", "office", "garden"):
         entry = entity_registry.async_get(f"notify.{area}")
@@ -32,7 +32,7 @@ async def test_town_house_alexa_notify_devices(hass: HomeAssistant, town_house: 
         assert hass.states.get(f"notify.{area}").state == "unknown"
 
 
-async def test_town_house_users_and_persons(hass: HomeAssistant, town_house: House) -> None:
+async def test_a_house_users_and_persons(hass: HomeAssistant, town_house: House) -> None:
     ha_users = {u.name: u for u in await hass.auth.async_get_users()}
     for account in ("alice", "bob"):
         assert account in ha_users
@@ -44,7 +44,7 @@ async def test_town_house_users_and_persons(hass: HomeAssistant, town_house: Hou
         assert person_state.attributes["user_id"] == town_house.user_ids[account]
 
 
-async def test_town_house_mobile_apps(hass: HomeAssistant, town_house: House) -> None:
+async def test_a_house_mobile_apps(hass: HomeAssistant, town_house: House) -> None:
     assert hass.services.has_service("notify", "mobile_app_alice_phone")
     assert hass.services.has_service("notify", "mobile_app_bob_phone")
 
@@ -56,7 +56,7 @@ async def test_town_house_mobile_apps(hass: HomeAssistant, town_house: House) ->
     assert len(town_house.service_calls["notify"]) == 1
 
 
-async def test_town_house_cameras_and_pirs(hass: HomeAssistant, town_house: House) -> None:
+async def test_a_house_cameras_and_pirs(hass: HomeAssistant, town_house: House) -> None:
     entity_registry = er.async_get(hass)
 
     front_door = entity_registry.async_get("camera.front_door")
@@ -80,7 +80,7 @@ async def test_town_house_cameras_and_pirs(hass: HomeAssistant, town_house: Hous
     assert garden_pir.area_id is None
 
 
-async def test_house_user_with_no_person_record(hass: HomeAssistant) -> None:
+async def test_user_with_no_person_record(hass: HomeAssistant) -> None:
     """A User-only account (no Person) still gets a real HA user - see the CONF_USER_ID
     recipient support in const.py/people.py, which is what this exercises at the fixture level."""
     house = House(users={"joe": "joe_mctest", "jean": None})

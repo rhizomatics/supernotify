@@ -167,8 +167,12 @@ jobs:
     - name: Export docs site for Pages artifact
       if: ${{ github.event_name != 'pull_request' }}
       run: |
-        mkdir site-export
-        git archive gh-pages | tar -x -C site-export
+        mkdir -p site-export
+        if git rev-parse origin/gh-pages >/dev/null 2>&1; then
+          git archive origin/gh-pages | tar -x -C site-export
+        else
+          echo "gh-pages branch not found, creating empty site export"
+        fi
     - name: Upload Pages artifact
       if: ${{ github.event_name != 'pull_request' }}
       uses: actions/upload-pages-artifact@v5
