@@ -115,6 +115,23 @@ transports:
 
 You can also use the device `select` options if not using auto-discovery - this will then limit that delivery to matching devices when they have been auto-discovered at start-up for all deliveries, or have been manually defined for recipients.
 
+### Explicit Targets
+
+To pin a delivery to one specific device, give its `mobile_app_id` as a bare value - the same form used for a device under `recipients` (see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)) - not the dotted `notify.mobile_app_<device>` service-call form:
+
+Fixed target on a delivery
+
+```yaml
+delivery:
+  alert_phone:
+    transport: mobile_push
+    target_usage: fixed
+    target:
+      - mobile_app_my_phone
+```
+
+`notify.mobile_app_my_phone` is the Notify Entity action-call form (an `entity_id` target, used by transports like `notify_entity` and `tts`), not a `mobile_app_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#target-categories)).
+
 ## References
 
 ### Home Assistant Core
