@@ -501,6 +501,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/</loc>
+        <lastmod>2026-10-02</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/</loc>
         <lastmod>2026-10-02</lastmod>
         <changefreq>daily</changefreq>
