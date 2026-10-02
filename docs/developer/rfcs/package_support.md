@@ -59,9 +59,7 @@ match can use any subset of them:
 | `subject`  | The Home Assistant entity it's about            | `camera.driveway`             | `sensor.dishwasher_operation_state` | the trigger entity |
 | `instance` | Which configured instance produced it           | the package subentry          | the package subentry       | `automation.driveway_alert` |
 
-Because `subject` is a real entity, matching can also use its area, floor or label, so a driveway PIR, a gate sensor
-and the Frigate camera can all count as "driveway" without listing them - reusing the area, floor and label resolution
-added in v2.9.0.
+Because `subject` is a real entity, matching can also use its area, floor or label, so a driveway PIR, a gate sensor and the Frigate camera can all count as "driveway" without listing them - reusing the area, floor and label resolution added in v2.9.0.
 
 Event detail is kept separate from the source, in an `event` block: object labels and sub-labels, zones, severity,
 plate, threat level, progress. These change per event, so scenarios test them in conditions rather than group by them.
