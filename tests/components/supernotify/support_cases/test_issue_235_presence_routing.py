@@ -143,7 +143,6 @@ CORRECTED_YAML = """
         transport: mobile_push
         inclusion:
           - scenario
-          - fallback
         target_usage: fixed
         occupancy: all_out
         target:
@@ -179,7 +178,6 @@ SIMPLIFIED_YAML = """
         transport: mobile_push
         inclusion:
           - scenario
-          - fallback
         occupancy: all_out
     scenarios:
       presence_dependent:
