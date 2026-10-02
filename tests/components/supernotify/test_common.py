@@ -161,6 +161,21 @@ def test_dupe_check_allows_different_clip_url_same_message(delivery: Delivery) -
     assert uut.check(e2) is False
 
 
+def test_dupe_check_suppresses_different_snapshot_url_same_message(delivery: Delivery) -> None:
+    """Frigate mints a unique thumbnail per detection, so it must not defeat dupe detection"""
+    uut = DupeChecker({})
+    e1 = Envelope(
+        delivery,
+        Notification(Mock(), "message here", "title here", action_data={"media": {"snapshot_url": "http://cam/1.jpg"}}),
+    )
+    assert uut.check(e1) is False
+    e2 = Envelope(
+        delivery,
+        Notification(Mock(), "message here", "title here", action_data={"media": {"snapshot_url": "http://cam/2.jpg"}}),
+    )
+    assert uut.check(e2) is True
+
+
 def test_dupe_check_suppressed_dupes_do_not_extend_ttl(delivery: Delivery) -> None:
     """Repeated triggers inside the TTL must not keep the original alive indefinitely"""
     now = [0.0]

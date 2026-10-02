@@ -21,7 +21,6 @@ from .const import (
     ATTR_MEDIA,
     ATTR_MEDIA_CAMERA_ENTITY_ID,
     ATTR_MEDIA_CLIP_URL,
-    ATTR_MEDIA_SNAPSHOT_URL,
     ATTR_MESSAGE_HTML,
     ATTR_PRIORITY,
     ATTR_SPOKEN_MESSAGE,
@@ -361,7 +360,9 @@ class Envelope(DupeCheckable):
             message = self._message
         media = self.media or {}
         camera_entity_id = media.get(ATTR_MEDIA_CAMERA_ENTITY_ID)
-        media_url = media.get(ATTR_MEDIA_CLIP_URL) or media.get(ATTR_MEDIA_SNAPSHOT_URL)
+        # snapshot_url is excluded: Frigate mints a unique thumbnail per detection even for
+        # the same ongoing scene, so including it defeats dupe detection for snapshot-only alerts
+        media_url = media.get(ATTR_MEDIA_CLIP_URL)
         return hash((
             alphaize(message),
             alphaize(self.delivery.name),

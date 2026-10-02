@@ -1,3 +1,8 @@
+# v2.11.2
+
+## 🐛 Bug fixes
+  - Dupe detection no longer considers a snapshot image URL when comparing notifications, since Frigate mints a unique thumbnail per detection even for the same ongoing scene, which was defeating dupe suppression for any snapshot-only alert (e.g. a camera triggering repeatedly over a short period)
+
 # v2.11.1
 
 ## ✨ Enhancements
