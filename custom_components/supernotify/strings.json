@@ -140,6 +140,10 @@
                     "name": "Force Resend",
                     "description": "Send even if duplicate-detection would otherwise suppress this notification."
                 },
+                "dry_run": {
+                    "name": "Dry Run",
+                    "description": "Simulate works out which deliveries would be used and who they would reach, without actually sending anything."
+                },
                 "data": {
                     "name": "Data (legacy)",
                     "description": "Older name for Extra Data, kept so existing automations still show in the visual editor. Use Extra Data for new automations."

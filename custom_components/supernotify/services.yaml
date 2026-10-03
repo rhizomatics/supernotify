@@ -125,6 +125,16 @@ notify:
         force_resend:
           selector:
             boolean:
+        dry_run:
+          required: false
+          default: live
+          selector:
+            select:
+              options:
+                - value: live
+                  label: Live
+                - value: simulate
+                  label: Simulate
         data:
           selector:
             object:

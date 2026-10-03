@@ -140,6 +140,10 @@
                     "name": "Forcer le renvoi",
                     "description": "Envoyer même si la détection des doublons supprimerait autrement cette notification."
                 },
+                "dry_run": {
+                    "name": "Simulation",
+                    "description": "Simuler détermine quelles livraisons seraient utilisées et qui elles atteindraient, sans réellement rien envoyer."
+                },
                 "data": {
                     "name": "Données (ancien)",
                     "description": "Ancien nom de Données supplémentaires, conservé pour que les automatisations existantes s'affichent toujours dans l'éditeur visuel. Utilisez Données supplémentaires pour les nouvelles automatisations."

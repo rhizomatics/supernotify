@@ -140,6 +140,10 @@
                     "name": "Erneutes Senden erzwingen",
                     "description": "Auch senden, wenn die Duplikaterkennung diese Benachrichtigung sonst unterdrücken würde."
                 },
+                "dry_run": {
+                    "name": "Testlauf",
+                    "description": "Simulieren ermittelt, welche Zustellungen verwendet würden und wen sie erreichen würden, ohne tatsächlich etwas zu senden."
+                },
                 "data": {
                     "name": "Daten (veraltet)",
                     "description": "Älterer Name für Zusätzliche Daten, beibehalten, damit bestehende Automatisierungen im visuellen Editor weiterhin angezeigt werden. Für neue Automatisierungen „Zusätzliche Daten“ verwenden."

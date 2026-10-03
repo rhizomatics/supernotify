@@ -15,7 +15,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry  # type
 
 from custom_components.supernotify import DOMAIN
 from custom_components.supernotify.actions import lift_legacy_nested_data
-from custom_components.supernotify.const import CONF_MEDIA_PATH
+from custom_components.supernotify.const import CONF_MEDIA_PATH, EVENT_NOTIFICATION
 from custom_components.supernotify.model import Target
 from custom_components.supernotify.schema import NOTIFY_ACTION_SCHEMA
 
@@ -246,6 +246,48 @@ async def test_notify_action_propagates_calling_context(hass: HomeAssistant) -> 
 
     assert entry.runtime_data.last_notification is not None
     assert entry.runtime_data.last_notification.ha_context is call_context
+
+
+async def test_notify_action_dry_run_sends_nothing(hass: HomeAssistant) -> None:
+    """`dry_run: simulate` is a standard action-data field - Notification.call_transport() is what
+    skips the real transport call, so this goes through the exact same flow as a live send, just
+    without ever reaching the mock transport, or leaving a trace as last_notification, an event,
+    or a sensor count (see engine.py's DRY_RUN_LIVE guards)."""
+    from homeassistant.setup import async_setup_component
+
+    calls: list[ServiceCall] = []
+    events: list[dict] = []
+
+    async def _mock_notification(call: ServiceCall) -> None:
+        calls.append(call)
+
+    hass.services.async_register("testing", "mock_notification", _mock_notification)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "delivery": {"chat": {"transport": "generic", "action": "testing.mock_notification", "inclusion": ["default"]}}
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    engine = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+    hass.bus.async_listen(EVENT_NOTIFICATION, lambda event: events.append(event.data))
+
+    result = await hass.services.async_call(
+        DOMAIN, "notify", {"message": "hello there", "dry_run": "simulate"}, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+
+    assert calls == []
+    assert events == []
+    assert engine.last_notification is None
+    assert engine.sent == 0
+    assert result is not None
+    assert result["outcome"] == "success"
+    assert len(result["deliveries"]["chat"]["success"]) == 1
+    assert result["deliveries"]["chat"]["success"][0]["delivered"] == 1
 
 
 async def test_notify_action_promotes_media_fields_into_media_block(hass: HomeAssistant) -> None:

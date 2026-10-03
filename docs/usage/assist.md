@@ -105,9 +105,9 @@ recent notification since Home Assistant started is known.
 ### Dry Run
 
 `supernotify__dry_run` works out which deliveries a notification would use right now, and who it
-would reach, without sending anything. It makes the same checks as a real notification, including
-snoozes, priorities, conditions and who is home, except the duplicate check. E-mail addresses and
-phone numbers are partly masked.
+would reach, without sending anything. It goes through exactly the same checks as a real
+notification - snoozes, priorities, conditions, who is home, and the duplicate check - so running
+it twice with the same message reports a duplicate on the second, just as sending it twice would.
 
 ### Help from the Documentation
 

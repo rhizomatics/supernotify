@@ -140,6 +140,10 @@
                     "name": "Forza reinvio",
                     "description": "Invia anche se il rilevamento dei duplicati sopprimerebbe altrimenti questa notifica."
                 },
+                "dry_run": {
+                    "name": "Simulazione",
+                    "description": "Simula calcola quali consegne verrebbero usate e chi raggiungerebbero, senza inviare realmente nulla."
+                },
                 "data": {
                     "name": "Dati (legacy)",
                     "description": "Vecchio nome di Dati aggiuntivi, mantenuto perché le automazioni esistenti continuino a comparire nell'editor visuale. Per le nuove automazioni usa Dati aggiuntivi."

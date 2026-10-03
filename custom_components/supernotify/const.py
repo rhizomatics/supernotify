@@ -103,6 +103,14 @@ ATTR_REPLY_TEXT = "reply_text"
 ATTR_SCENARIOS_REQUIRE = "require_scenarios"
 ATTR_SCENARIOS_APPLY = "apply_scenarios"
 ATTR_FORCE_RESEND: Final[str] = "force_resend"
+# a standard action-data field, same as force_resend/debug - Notification.call_transport() is what
+# actually skips sending for SIMULATE, so nothing else needs to special-case it. An enum, not a
+# boolean, so a future mode (e.g. SIMULATE_PLUS_MEDIA, also simulating the camera/media grab) can
+# be added as a new value rather than forcing a second flag or a breaking type change later
+ATTR_DRY_RUN: Final[str] = "dry_run"
+DRY_RUN_LIVE = "live"
+DRY_RUN_SIMULATE = "simulate"
+DRY_RUN_VALUES = [DRY_RUN_LIVE, DRY_RUN_SIMULATE]
 ATTR_SCENARIOS_CONSTRAIN = "constrain_scenarios"
 ATTR_DELIVERY = "delivery"
 ATTR_DEFAULT = "default"

@@ -140,6 +140,10 @@
                     "name": "Forzar reenvío",
                     "description": "Envía incluso si la detección de duplicados suprimiría esta notificación."
                 },
+                "dry_run": {
+                    "name": "Simulación",
+                    "description": "Simular calcula qué entregas se usarían y a quién alcanzarían, sin enviar realmente nada."
+                },
                 "data": {
                     "name": "Datos (heredado)",
                     "description": "Nombre anterior de Datos adicionales, conservado para que las automatizaciones existentes se sigan mostrando en el editor visual. Usa Datos adicionales en las nuevas automatizaciones."

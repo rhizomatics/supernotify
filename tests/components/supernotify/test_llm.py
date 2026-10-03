@@ -302,30 +302,38 @@ async def test_snoozes_lists_current(hass: HomeAssistant) -> None:
 
 
 async def test_dry_run_sends_nothing(hass: HomeAssistant) -> None:
+    """A dry run goes through the standard send flow (see call_transport()'s dry_run check) - it's
+    just the one real transport call that's skipped, so the result is the usual archive-style
+    summary (see summarize_notification()), not a bespoke plan shape."""
     _engine, calls = await _setup(hass)
 
     result = await _call(hass, "supernotify__dry_run", {"message": "Alarm", "recipients": ["Alice"]})
 
     plan = result["result"]
     assert calls == []
-    assert plan["deliveries"]["chat"]["recipients"] == ["Alice"]
-    assert plan["deliveries"]["chat"]["targets"] == [{"email": ["al***m"]}]
+    assert plan["deliveries"]["chat"] == {"success": 1, "recipients": ["Alice"]}
     assert plan["deliveries"]["urgent"] == {"skipped": "PRIORITY"}
     assert plan["occupancy"] == {"home": ["Alice"], "not_home": ["Bob"]}
     assert plan["delivery_provenance"]["chat"] == {"enabled_by": ["default"]}
 
 
-async def test_dry_run_leaves_dupe_check_alone(hass: HomeAssistant) -> None:
+async def test_dry_run_dupe_check_applies_like_a_live_send(hass: HomeAssistant) -> None:
+    """No special case for the dupe check either - two identical dry runs report DUPE on the
+    second, exactly as two live sends would, so a dry run tells you exactly what a live run
+    would've done (see call_transport())."""
     _engine, calls = await _setup(hass)
 
     await _call(hass, "supernotify__dry_run", {"message": "Alarm", "deliveries": ["chat"]})
-    result = await _call(hass, "supernotify__notify", {"message": "Alarm", "deliveries": ["chat"]})
+    result = await _call(hass, "supernotify__dry_run", {"message": "Alarm", "deliveries": ["chat"]})
 
-    assert result["success"] is True
-    assert len(calls) == 1
+    assert calls == []
+    assert result["result"]["deliveries"]["chat"].get("suppressed") == 1
+    assert result["result"]["deliveries"]["chat"].get("reasons") == ["DUPE"]
 
 
 async def test_dry_run_reports_snoozed_delivery(hass: HomeAssistant) -> None:
+    """A snoozed delivery is skipped exactly as a live send would skip it, and the fallback a live
+    send would then actually invoke is itself simulated too (no special-cased plan for it)."""
     await _setup(hass)
     await _call(
         hass, "supernotify__snooze", {"action": "silence", "scope": "delivery", "name": "chat", "recipient": "everyone"}
@@ -333,18 +341,20 @@ async def test_dry_run_reports_snoozed_delivery(hass: HomeAssistant) -> None:
 
     result = await _call(hass, "supernotify__dry_run", {"deliveries": ["chat"]})
 
-    assert result["result"]["deliveries"] == {"chat": {"skipped": "SNOOZED"}}
-    assert result["result"]["fallback"] == ["backup"]
+    assert result["result"]["deliveries"]["chat"] == {"skipped": "SNOOZED"}
+    assert "backup" in result["result"]["deliveries"]
 
 
 async def test_dry_run_reports_global_suppression(hass: HomeAssistant) -> None:
+    """A globally snoozed notification still reports each delivery it would have tried, each
+    skipped SNOOZED - exactly what a live send's contents() would show too."""
     await _setup(hass)
     await _call(hass, "supernotify__snooze", {"action": "silence", "recipient": "everyone"})
 
     result = await _call(hass, "supernotify__dry_run", {})
 
     assert result["result"]["suppressed"] == "SNOOZED"
-    assert result["result"]["deliveries"] == {}
+    assert all(d == {"skipped": "SNOOZED"} for d in result["result"]["deliveries"].values())
 
 
 async def test_recent_notifications_without_archive(hass: HomeAssistant) -> None:

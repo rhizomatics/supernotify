@@ -140,6 +140,10 @@
                     "name": "Wymuś ponowne wysłanie",
                     "description": "Wyślij nawet, jeśli wykrywanie duplikatów w innym przypadku wstrzymałoby to powiadomienie."
                 },
+                "dry_run": {
+                    "name": "Próba",
+                    "description": "Symulacja określa, które dostawy zostałyby użyte i kogo by osiągnęły, bez faktycznego wysyłania czegokolwiek."
+                },
                 "data": {
                     "name": "Dane (przestarzałe)",
                     "description": "Starsza nazwa pola Dodatkowe dane, zachowana, aby istniejące automatyzacje nadal były widoczne w edytorze wizualnym. W nowych automatyzacjach używaj pola Dodatkowe dane."

@@ -25,6 +25,7 @@ from .const import (
     ATTR_DEBUG,
     ATTR_DELIVERY,
     ATTR_DELIVERY_SELECTION,
+    ATTR_DRY_RUN,
     ATTR_FORCE_RESEND,
     ATTR_IMAGE,
     ATTR_MEDIA,
@@ -43,6 +44,8 @@ from .const import (
     DELIVERY_SELECTION_EXPLICIT,
     DELIVERY_SELECTION_FIXED,
     DELIVERY_SELECTION_IMPLICIT,
+    DRY_RUN_LIVE,
+    DRY_RUN_SIMULATE,
     INCLUSION_DEFAULT,
     PRIORITY_MEDIUM,
     PRIORITY_VALUES,
@@ -177,6 +180,7 @@ class Notification(ArchivableObject):
         self.message_html: str | None = action_data.get(ATTR_MESSAGE_HTML)
         self.spoken_message: str | None = action_data.get(ATTR_SPOKEN_MESSAGE)
         self.force_resend: bool = action_data.get(ATTR_FORCE_RESEND, False)
+        self.dry_run: str = action_data.get(ATTR_DRY_RUN, DRY_RUN_LIVE)
         self.required_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_REQUIRE))
         self.applied_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_APPLY))
         self.constrain_scenario_names: list[str] = ensure_list(action_data.get(ATTR_SCENARIOS_CONSTRAIN))
@@ -781,45 +785,6 @@ class Notification(ArchivableObject):
             return TargetRequired.ALWAYS
         return delivery.target_required
 
-    def plan(self) -> dict[str, Any]:
-        """Work out which deliveries would send, and to whom, without sending anything.
-
-        Makes the same checks as deliver(), except the dupe check, since the dupe checker
-        remembers what it's asked about.
-        """
-        deliveries: dict[str, dict[str, Any]] = {}
-        if self._suppression_reason is None:
-            for delivery_name, target_override in self.selected_deliveries.items():
-                delivery: Delivery | None = self.context.delivery_registry.deliveries.get(delivery_name)
-                if delivery is None:
-                    continue
-                reason: SuppressionReason | None = self.delivery_skip_reason(delivery)
-                targets: list[Target] = [] if reason else self.generate_targets(delivery, target_override)
-                # the same test generate_envelopes() makes, without building the envelopes
-                if not reason and not any(
-                    t.has_resolved_target() or self._target_required(delivery) != TargetRequired.ALWAYS for t in targets
-                ):
-                    reason = SuppressionReason.NO_TARGET
-                if reason:
-                    deliveries[delivery_name] = {"skipped": str(reason)}
-                else:
-                    deliveries[delivery_name] = {
-                        "recipients": sorted({p for t in targets for p in t.person_ids}),
-                        "targets": [t.direct().as_dict(redact=True) for t in targets if t.has_resolved_target()],
-                    }
-        result: dict[str, Any] = {
-            "priority": self.priority,
-            "scenarios": list(self.enabled_scenarios),
-            "occupancy": {state: [r.entity_id for r in people] for state, people in self.occupancy.items()},
-            "deliveries": deliveries,
-            "delivery_provenance": self.debug_trace.delivery_provenance,
-        }
-        if self._suppression_reason is not None:
-            result["suppressed"] = str(self._suppression_reason)
-        elif not any("skipped" not in d for d in deliveries.values()):
-            result["fallback"] = [d.name for d in self.context.delivery_registry.fallback_by_default_deliveries]
-        return result
-
     async def call_transport(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> None:
         try:
             transport: Transport = delivery.transport
@@ -847,7 +812,17 @@ class Notification(ArchivableObject):
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
                 try:
-                    if await transport.deliver(envelope, debug_trace=self.debug_trace):
+                    if self.dry_run == DRY_RUN_SIMULATE:
+                        _LOGGER.info(
+                            "SUPERNOTIFY ********** SIMULATE - %s via %s not actually sent **********",
+                            delivery.name,
+                            type(transport).__name__,
+                        )
+                        envelope.delivered = 1
+                        delivered = True
+                    else:
+                        delivered = await transport.deliver(envelope, debug_trace=self.debug_trace)
+                    if delivered:
                         self.record_result(delivery, envelope)
                     else:
                         _LOGGER.info("SUPERNOTIFY No delivery for %s (id: %s)", delivery.name, envelope.notification_id)

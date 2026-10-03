@@ -66,6 +66,7 @@ from .target import Target
 
 if TYPE_CHECKING:
     from homeassistant.helpers.typing import ConfigType
+    from homeassistant.util.json import JsonObjectType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,12 +175,17 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
     if hass.services.has_service(DOMAIN, "enquire_configuration"):
         return
 
-    async def action_notify(call: ServiceCall) -> None:
+    async def action_notify(call: ServiceCall) -> JsonObjectType | None:
         """supernotify.notify - an alternative to notify.supernotify with each option that would
         otherwise be buried in the generic `data:` field promoted to its own schema-checked,
         selector-driven field (see NOTIFY_ACTION_SCHEMA/services.yaml). Also propagates the
         calling action's Context through to deliveries, same as the SuperNotificationService override
         of _async_notify_message_service does for notify.supernotify/notify.<target>.
+
+        `dry_run` is a standard action-data field like priority/force_resend (see ATTR_DRY_RUN) -
+        Notification.call_transport() is what actually skips sending, so there's no special case
+        for it here. Requesting a response (supports_response=OPTIONAL) returns the notification's
+        contents either way.
         """
         data = merge_delivery_fields(lift_legacy_nested_data(dict(call.data)))
         # extra_data is what Notification knows as `data`, and wins over any same-named key in a legacy `data`
@@ -211,7 +217,8 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             media = dict(data.get(ATTR_MEDIA) or {})
             media.update(promoted_media)
             data[ATTR_MEDIA] = media
-        await engine.async_send_message(message, title=title, target=target, data=data, context=call.context)
+        notification = await engine.async_send_message(message, title=title, target=target, data=data, context=call.context)
+        return notification.contents() if notification else None
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
         return {
@@ -340,6 +347,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         "notify",
         action_notify,
         schema=NOTIFY_ACTION_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,

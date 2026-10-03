@@ -1,4 +1,21 @@
-# v2.11.2
+# v2.12.0
+
+## ✨ Enhancements
+  - **Dry Run** functionality was added recently or LLM chat and MCP support, and now is generally available.
+    - Use it to work out what deliveries would be made for a notification, taking into account scenarios, snoozes etc.
+    - Simply add `dry_run: simulate` to any notification `data` section
+      - Option in *Advanced* section of the action screen
+    - Dry Run does everything the normal notification would do, *except*
+      - Call the actual notification integrations or send its own email
+      - Move/zoom PTZ cameras or take snapshots
+      - Publish Home Assistant notification events
+      - Update sensor counts and `last notification` value
+      - Archive the notification to disk
+    Dry Run *will*
+      - Apply the same snooze and dupe detection logic as a real message
+        - `force_resend` available if you want to override the dupe check
+    - Closes [#218](https://github.com/rhizomatics/supernotify/issues/218)
+
 
 ## 🐛 Bug fixes
   - Dupe detection no longer considers a snapshot image URL when comparing notifications, since Frigate mints a unique thumbnail per detection even for the same ongoing scene, which was defeating dupe suppression for any snapshot-only alert (e.g. a camera triggering repeatedly over a short period)

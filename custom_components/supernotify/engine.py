@@ -47,6 +47,7 @@ from .const import (
     CONF_SNOOZE,
     CONF_TEMPLATE_PATH,
     CONF_TRANSPORTS,
+    DRY_RUN_LIVE,
     EVENT_NOTIFICATION,
     OVERRIDE_KIND_DELIVERY,
     OVERRIDE_KIND_RECIPIENT,
@@ -221,8 +222,10 @@ class SupernotifyEngine:
         try:
             notification = Notification(self.context, message, title, target, action_data=data, ha_context=context)
             await notification.initialize()
-            if await notification.deliver():
-                self.notifications_sensor.increment()
+            delivered = await notification.deliver()
+            if delivered:
+                if notification.dry_run == DRY_RUN_LIVE:
+                    self.notifications_sensor.increment()
             elif notification.failed:
                 _LOGGER.error("SUPERNOTIFY Failed to deliver %s, error count %s", notification.id, notification.error_count)
             else:
@@ -248,18 +251,19 @@ class SupernotifyEngine:
         if notification is None:
             _LOGGER.warning("SUPERNOTIFY NULL Notification, %s", message)
         else:
-            self.last_notification = notification
-            await self.context.archive.archive(notification)
-            self.context.hass_api.fire_event(
-                EVENT_NOTIFICATION,
-                {
-                    "notification_id": notification.id,
-                    "summary": (notification._title or notification.message or "")[:100],
-                    "outcome": str(notification.outcome()),
-                    "deliveries": sorted({e.delivery.name for e in notification.delivered_envelopes}),
-                },
-                context=context,
-            )
+            if notification.dry_run == DRY_RUN_LIVE:
+                self.last_notification = notification
+                await self.context.archive.archive(notification)
+                self.context.hass_api.fire_event(
+                    EVENT_NOTIFICATION,
+                    {
+                        "notification_id": notification.id,
+                        "summary": (notification._title or notification.message or "")[:100],
+                        "outcome": str(notification.outcome()),
+                        "deliveries": sorted({e.delivery.name for e in notification.delivered_envelopes}),
+                    },
+                    context=context,
+                )
             _LOGGER.debug(
                 "SUPERNOTIFY %s deliveries, %s failed, %s skipped, %s missed, %s suppressed",
                 notification.delivered,
@@ -274,18 +278,6 @@ class SupernotifyEngine:
                 # of the rest of the notification going out
                 raise UncategorizedTargetError(notification.delivered, notification.uncategorized_targets)
         return notification
-
-    async def async_dry_run(
-        self,
-        message: str = "",
-        title: str | None = None,
-        target: list[str] | str | dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Which deliveries a notification would use right now, and who it would reach, without sending it"""
-        notification = Notification(self.context, message, title, target, action_data=data)
-        await notification.initialize()
-        return notification.plan()
 
     @callback
     def refresh_entities(self) -> None:

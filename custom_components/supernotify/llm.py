@@ -30,11 +30,13 @@ from homeassistant.util.hass_dict import HassKey
 from . import DOMAIN
 from .const import (
     ATTR_DELIVERY,
+    ATTR_DRY_RUN,
     ATTR_PRIORITY,
     ATTR_SCENARIOS_APPLY,
     CONF_LLM_ACTION_TOOLS,
     CONF_LLM_DIAGNOSTIC_TOOLS,
     CONF_LLM_TOOLS,
+    DRY_RUN_SIMULATE,
     PRIORITY_VALUES,
 )
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, TargetType
@@ -444,7 +446,7 @@ class DryRunTool(SupernotifyTool):
     description = (
         "Work out who a notification would reach right now, and by which deliveries, without sending it. "
         "Use this for questions like 'if the alarm goes off, who gets told and how?'. 'occupancy' shows who is "
-        "home, which decides some deliveries. The duplicate check is not made."
+        "home, which decides some deliveries."
     )
 
     def __init__(self, engine: SupernotifyEngine) -> None:
@@ -457,12 +459,13 @@ class DryRunTool(SupernotifyTool):
         target, data, unknown = _notification_call(self.engine, args)
         if unknown:
             return {"success": False, "error": f"Unknown recipients: {', '.join(unknown)}"}
-        plan = await self.engine.async_dry_run(args.get("message", ""), title=args.get("title"), target=target, data=data)
-        plan["occupancy"] = {state: _names_for(self.engine, people) for state, people in plan["occupancy"].items()}
-        for delivery in plan["deliveries"].values():
-            if "recipients" in delivery:
-                delivery["recipients"] = _names_for(self.engine, delivery["recipients"])
-        return {"success": True, "result": plan}
+        data[ATTR_DRY_RUN] = DRY_RUN_SIMULATE
+        notification = await self.engine.async_send_message(
+            args.get("message", ""), title=args.get("title"), target=target, data=data, context=llm_context.context
+        )
+        if notification is None:
+            return {"success": False, "error": "The notification could not be created"}
+        return {"success": True, "result": summarize_notification(self.engine, notification.contents())}
 
 
 class SnoozesTool(SupernotifyTool):
