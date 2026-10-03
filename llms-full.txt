@@ -127,12 +127,13 @@ With zero YAML all UI config
 
 ### HACS
 
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - OpenTelemetry (OTLP) and Syslog event capture for Home Assistant
 
 ### Python / Docker
 
 - [Anpr2MQTT](https://anpr2mqtt.rhizomatics.org.uk) - Integrate with ANPR/ALPR licence plate cameras via file system (NAS/FTP) to MQTT with optional image analysis and UK DVLA integration.
+- [Dev Shell](https://devshell.rhizomatics.org.uk) - Python REPL for Home Assistant development and data exploration.
 - [Updates2MQTT](https://updates2mqtt.rhizomatics.org.uk) - Automatically notify via MQTT on Docker image updates, with advanced handling to extract versions and release notes from images, and option to remotely pull and restart containers from Home Assistant. Also available on [PyPI](https://pypi.org/project/updates2mqtt/)
 
 # Getting Started
@@ -403,7 +404,7 @@ Turn on the file [archive](https://supernotify.rhizomatics.org.uk/latest/configu
 
 ### Dry Run
 
-`supernotify__dry_run` works out which deliveries a notification would use right now, and who it would reach, without sending anything. It makes the same checks as a real notification, including snoozes, priorities, conditions and who is home, except the duplicate check. E-mail addresses and phone numbers are partly masked.
+`supernotify__dry_run` works out which deliveries a notification would use right now, and who it would reach, without sending anything. It goes through exactly the same checks as a real notification - snoozes, priorities, conditions, who is home, and the duplicate check - so running it twice with the same message reports a duplicate on the second, just as sending it twice would.
 
 ### Help from the Documentation
 
@@ -1977,6 +1978,10 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 | `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors |
 
 `explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
+
+`fallback` is not a per-scenario 'last resort'
+
+`fallback`/`fallback_on_error` only control whether a delivery gets pulled in by the separate mechanism that runs after every other delivery has been attempted, if *nothing at all* delivered for the notification (or, for `fallback_on_error`, if at least one attempt errored). That mechanism skips a delivery that's already been selected some other way - but it doesn't retroactively enable one. If a scenario's own `delivery:` map names a `fallback` delivery directly, that selects it immediately, the same as naming any other delivery - the `fallback` flag adds no condition of its own, so with no `occupancy` or `conditions` set, it fires every time the scenario does, not just when everything else failed. Give it its own `occupancy` (`all_out` for "nobody home", for example) or `conditions` if you want it to stay conditional while still being scenario-specific - or leave it out of the scenario's `delivery:` map entirely and let the automatic mechanism add it only when needed.
 
 ### Implicit Deliveries
 
@@ -5107,6 +5112,23 @@ transports:
 
 You can also use the device `select` options if not using auto-discovery - this will then limit that delivery to matching devices when they have been auto-discovered at start-up for all deliveries, or have been manually defined for recipients.
 
+### Explicit Targets
+
+To pin a delivery to one specific device, give its `mobile_app_id` as a bare value - the same form used for a device under `recipients` (see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)) - not the dotted `notify.mobile_app_<device>` service-call form:
+
+Fixed target on a delivery
+
+```yaml
+delivery:
+  alert_phone:
+    transport: mobile_push
+    target_usage: fixed
+    target:
+      - mobile_app_my_phone
+```
+
+`notify.mobile_app_my_phone` is the Notify Entity action-call form (an `entity_id` target, used by transports like `notify_entity` and `tts`), not a `mobile_app_id` - mobile_push doesn't consume `entity_id` targets at all, so a dotted target here resolves to nothing, and the delivery silently falls back to its normal recipient-based target instead of the one device you named. `target_usage: fixed` is also needed if you don't want that recipient-based fallback - without it, the configured `target:` is *added to* the recipient-resolved targets rather than replacing them (see [Controlling Targets](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#controlling-targets) and [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/#target-categories)).
+
 ## References
 
 ### Home Assistant Core
@@ -6861,6 +6883,80 @@ Many other logging ingestors, transformers, databases and more are available, to
 
 - *Remote Logger* makes it easy to also send off Syslog messages, if an OTLP aggregator not available.
 - *Remote Logger* can also generate OTLP or Syslog events for any, or indeed all, Home Assistant events, so full log context available including service calls and even state changes.
+
+# Recipe - Notify Whoever's Home, Fall Back to Everyone
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/
+
+## Purpose
+
+Send a notification only to the people currently home, each on their own device(s) - and if nobody's home, send it to everyone instead, so it still reaches someone. Make the config as easy as possible, don't make list everybody and their devices every time.
+
+## Implementation
+
+Two Deliveries, both automatically getting their lists of targets the normal way from known recipients (either automatically discovered from Home Assistant and/or manually defined). This means not needing to either name a person or a device, so this scales to any number of recipients with no further config:
+
+- `occupancy: only_in`
+- narrows the recipient list down to just whoever's home. Unlike `any_in` (which is true if anyone's home, but still resolves to everyone), `only_in` genuinely narrows *which* recipients the delivery reaches - see [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion).
+- `occupancy: all_out`
+- Does the same the other way round - it resolves to everyone, but only when every recipient is away.
+
+Note that `inclusion: fallback` plays no part in this - see the warning below.
+
+## Example Configuration
+
+```yaml
+supernotify:
+  recipients:
+    - person: person.alex
+    - person: person.sam
+  delivery:
+    notify_home:
+      transport: mobile_push
+      inclusion:
+        - scenario
+      occupancy: only_in
+    notify_everyone:
+      transport: mobile_push
+      inclusion:
+        - scenario
+      occupancy: all_out
+  scenarios:
+    presence_routed:
+      alias: "Notify whoever's home"
+      delivery:
+        notify_home:
+        notify_everyone:
+```
+
+Add a third recipient and both deliveries pick it up automatically - nothing else changes.
+
+## Variations
+
+### One specific device per person, not all of them
+
+`occupancy: only_in` narrows *which recipients* a delivery reaches, not which of a person's own registered devices get notified - if someone has two phones, both get the notification. To pin a delivery to one named device per person instead, drop the shared `notify_home` delivery and give each person their own, with `target_usage: fixed` and a bare `mobile_app_id` target (see [Explicit Targets](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/#explicit-targets)):
+
+```yaml
+  delivery:
+    notify_alex:
+      transport: mobile_push
+      inclusion:
+        - scenario
+      target_usage: fixed
+      target:
+        - mobile_app_alex_primary
+      conditions:
+        condition: state
+        entity_id: person.alex
+        state: home
+```
+
+This doesn't scale the way the `occupancy`-only version does - a new recipient needs their own delivery block - but it's the only way to express "this one device, not that one".
+
+`inclusion: fallback` would do nothing here - don't add it
+
+It's tempting to also add `fallback` to `notify_everyone`'s `inclusion`, since that's its role. Don't - it would be dead weight. `fallback` only wires a delivery into a separate mechanism that fires when *nothing at all* delivered for the whole notification, and only adds a delivery that isn't *already* selected some other way. `notify_everyone` is already named directly in the scenario's own `delivery:` map, so it's always selected via plain `scenario` inclusion - the `fallback` mechanism never gets a chance to act, since there's nothing left for it to add. All the actual gating here is `occupancy: all_out`; strip that out while keeping `inclusion: fallback` and the delivery would fire on *every* notification, not just when nobody's home - naming a delivery directly always selects it, regardless of any `fallback` flag. See [Delivery Inclusion](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-inclusion) for the full explanation.
 
 # Recipe - Home Assistant Restart
 
