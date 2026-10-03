@@ -189,6 +189,35 @@ def test_dupe_check_suppressed_dupes_do_not_extend_ttl(delivery: Delivery) -> No
     assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
 
 
+def test_dupe_check_dry_run_does_not_suppress_live(delivery: Delivery) -> None:
+    uut = DupeChecker({})
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is False
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert len(uut.cache) == 1
+    assert len(uut.dry_run_cache) == 1
+
+
+def test_dupe_check_dry_run_sees_live_cache(delivery: Delivery) -> None:
+    uut = DupeChecker({})
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is True
+    assert len(uut.dry_run_cache) == 0
+
+
+def test_dupe_check_dry_run_sees_dry_run_cache(delivery: Delivery) -> None:
+    uut = DupeChecker({})
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is False
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here")), dry_run=True) is True
+    assert len(uut.cache) == 0
+
+
+def test_dupe_check_dry_run_respects_priority_policy(delivery: Delivery) -> None:
+    uut = DupeChecker({})
+    assert uut.check(Envelope(delivery, Notification(Mock(), "message here", "title here"))) is False
+    e2 = Envelope(delivery, Notification(Mock(), "message here", "title here"), data={"priority": "high"})
+    assert uut.check(e2, dry_run=True) is False
+
+
 def test_dupe_policy_none_never_suppresses(delivery: Delivery) -> None:
     uut = DupeChecker({CONF_DUPE_POLICY: ATTR_DUPE_POLICY_NONE})
     e1 = Envelope(delivery, Notification(Mock(), "message here", "title here"))
