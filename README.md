@@ -134,7 +134,8 @@ A lot can be done with the simple non-YAML configuration, including automation o
 ##  Rhizomatics Open Source for Home Assistant
 
 ### HACS
-- [AutoArm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more
+- [Auto Arm](https://autoarm.rhizomatics.org.uk) - Automatically arm and disarm Home Assistant alarm control panels using physical buttons, presence, calendars, sun and more
+- [Dev Shell](https://dev_shell.rhizomatics.org.uk) - Python REPL for Home Assistant development and data exploration
 - [Remote Logger](https://remote-logger.rhizomatics.org.uk) - OpenTelemetry (OTLP) and Syslog event capture for Home Assistant
 
 
