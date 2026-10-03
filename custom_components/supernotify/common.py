@@ -148,28 +148,38 @@ class DupeChecker:
 
     def __init__(self, dupe_check_config: ConfigType) -> None:
         self.policy = dupe_check_config.get(CONF_DUPE_POLICY, ATTR_DUPE_POLICY_MTSLP)
-        # dupe check cache, key is (priority, message hash)
-        self.cache: TTLCache[tuple[int, int], str] = TTLCache(
-            maxsize=dupe_check_config.get(CONF_SIZE, 100), ttl=dupe_check_config.get(CONF_TTL, 120)
-        )
+        size: int = dupe_check_config.get(CONF_SIZE, 100)
+        ttl: int = dupe_check_config.get(CONF_TTL, 120)
+        # dupe check cache for live sends, key is (priority, message hash)
+        self.cache: TTLCache[tuple[int, int], str] = TTLCache(maxsize=size, ttl=ttl)
+        # separate cache for dry runs, so a dry run never suppresses the live send that follows it
+        self.dry_run_cache: TTLCache[tuple[int, int], str] = TTLCache(maxsize=size, ttl=ttl)
 
-    def check(self, dupe_candidate: DupeCheckable) -> bool:
+    def check(self, dupe_candidate: DupeCheckable, dry_run: bool = False) -> bool:
+        """Return True if the candidate is a dupe, otherwise record it.
+
+        A live send checks and records only in the live cache. A dry run checks both caches,
+        so it reports a dupe a live send would suppress, but records only in the dry run cache.
+        """
         if self.policy == ATTR_DUPE_POLICY_NONE:
             return False
         hashed: int = dupe_candidate.hash()
         ranked_priority: int = PRIORITY_VALUES.get(dupe_candidate.priority, 3)
-        if self.policy == ATTR_DUPE_POLICY_MTSLP:
-            dupe: bool = any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in self.cache)
-        elif self.policy == ATTR_DUPE_POLICY_MT:
-            dupe = any(prev_hash == hashed for prev_hash, _prev_prior in self.cache)
-        else:
-            dupe = False
+        caches = (self.cache, self.dry_run_cache) if dry_run else (self.cache,)
+        dupe: bool = any(self._matches(cache, hashed, ranked_priority) for cache in caches)
         if dupe:
             _LOGGER.debug("SUPERNOTIFY Detected dupe: %s", dupe_candidate.id)
         else:
             # only cache what was delivered, so suppressed dupes don't keep resetting the TTL
-            self.cache[hashed, ranked_priority] = dupe_candidate.id
+            (self.dry_run_cache if dry_run else self.cache)[hashed, ranked_priority] = dupe_candidate.id
         return dupe
+
+    def _matches(self, cache: TTLCache[tuple[int, int], str], hashed: int, ranked_priority: int) -> bool:
+        if self.policy == ATTR_DUPE_POLICY_MTSLP:
+            return any(prev_hash == hashed and prev_prior >= ranked_priority for prev_hash, prev_prior in cache)
+        if self.policy == ATTR_DUPE_POLICY_MT:
+            return any(prev_hash == hashed for prev_hash, _prev_prior in cache)
+        return False
 
 
 def boolify(value: Any, default: bool) -> bool:  # ruff: ignore[any-type]

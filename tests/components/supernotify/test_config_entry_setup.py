@@ -290,6 +290,68 @@ async def test_notify_action_dry_run_sends_nothing(hass: HomeAssistant) -> None:
     assert result["deliveries"]["chat"]["success"][0]["delivered"] == 1
 
 
+async def _dupe_setup(hass: HomeAssistant) -> list[ServiceCall]:
+    from homeassistant.setup import async_setup_component
+
+    calls: list[ServiceCall] = []
+
+    async def _mock_notification(call: ServiceCall) -> None:
+        calls.append(call)
+
+    hass.services.async_register("testing", "mock_notification", _mock_notification)
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "delivery": {"chat": {"transport": "generic", "action": "testing.mock_notification", "inclusion": ["default"]}}
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    return calls
+
+
+async def _notify(hass: HomeAssistant, dry_run: str) -> dict:
+    result = await hass.services.async_call(
+        DOMAIN, "notify", {"message": "hello there", "dry_run": dry_run}, blocking=True, return_response=True
+    )
+    await hass.async_block_till_done()
+    assert result is not None
+    return dict(result)
+
+
+def _was_dupe(result: dict) -> bool:
+    return "success" not in result["deliveries"]["chat"]
+
+
+async def test_dry_run_does_not_suppress_following_live_send(hass: HomeAssistant) -> None:
+    """Trying a notification out first must not make the real send disappear as a dupe"""
+    calls = await _dupe_setup(hass)
+
+    assert not _was_dupe(await _notify(hass, "simulate"))
+    assert not _was_dupe(await _notify(hass, "live"))
+    assert len(calls) == 1
+
+
+async def test_dry_run_reports_dupe_of_recent_live_send(hass: HomeAssistant) -> None:
+    """A dry run checks the live cache too, so it reports what a live send would really do"""
+    calls = await _dupe_setup(hass)
+
+    assert not _was_dupe(await _notify(hass, "live"))
+    assert _was_dupe(await _notify(hass, "simulate"))
+    assert len(calls) == 1
+
+
+async def test_dry_run_reports_dupe_of_previous_dry_run(hass: HomeAssistant) -> None:
+    """Dupe handling can still be tried out with dry runs alone"""
+    calls = await _dupe_setup(hass)
+
+    assert not _was_dupe(await _notify(hass, "simulate"))
+    assert _was_dupe(await _notify(hass, "simulate"))
+    assert calls == []
+
+
 async def test_notify_action_promotes_media_fields_into_media_block(hass: HomeAssistant) -> None:
     """camera_entity_id/snapshot_url/clip_url are top-level fields only on supernotify.notify
     (for their own selectors in the action UI), but Notification only understands them nested
