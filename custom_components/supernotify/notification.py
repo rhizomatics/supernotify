@@ -807,7 +807,9 @@ class Notification(ArchivableObject):
                 return
 
             for envelope in envelopes:
-                if not envelope.force_resend and self.context.dupe_checker.check(envelope):
+                if not envelope.force_resend and self.context.dupe_checker.check(
+                    envelope, dry_run=self.dry_run == DRY_RUN_SIMULATE
+                ):
                     _LOGGER.debug("SUPERNOTIFY Suppressing dupe envelope, %s", self.message)
                     self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
                     continue
