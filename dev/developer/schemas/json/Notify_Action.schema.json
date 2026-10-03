@@ -278,6 +278,14 @@
       "type": "boolean",
       "default": false
     },
+    "dry_run": {
+      "type": "string",
+      "enum": [
+        "live",
+        "simulate"
+      ],
+      "default": "live"
+    },
     "data": {
       "type": "object",
       "additionalProperties": {
