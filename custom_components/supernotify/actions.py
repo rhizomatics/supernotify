@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import sys
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
@@ -24,7 +25,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import DOMAIN
-from .archive import ARCHIVE_PURGE_MIN_INTERVAL, summarize_notification
+from .archive import ARCHIVE_PURGE_MIN_INTERVAL, summarize_by_day, summarize_notification
 from .common import ensure_list
 from .const import (
     ATTR_CUSTOM_TARGET,
@@ -138,6 +139,8 @@ def merge_delivery_fields(data: dict[str, Any]) -> dict[str, Any]:
 VERBOSITY_SUMMARY: Final[str] = "summary"
 VERBOSITY_STANDARD: Final[str] = "standard"
 VERBOSITY_FULL: Final[str] = "full"
+# counts per local day instead of the notifications themselves, and so without a default limit
+VERBOSITY_DAILY: Final[str] = "daily"
 
 # time periods ending now, as offered by the Home Assistant Activity view
 ARCHIVE_PERIODS: Final[dict[str, dt.timedelta]] = {
@@ -152,7 +155,7 @@ ARCHIVE_PERIODS: Final[dict[str, dt.timedelta]] = {
 ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
     {
         vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
-        vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL)),
+        vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL, VERBOSITY_DAILY)),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -345,8 +348,9 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
                     translation_key="archive_entry_not_found",
                     translation_placeholders={"notification_id": notification_id},
                 )
-            return at_verbosity(entry)
-        limit: int = int(call.data.get("limit", 20))
+            return summarize_by_day([entry]) if verbosity == VERBOSITY_DAILY else at_verbosity(entry)
+        daily: bool = verbosity == VERBOSITY_DAILY
+        limit: int = int(call.data["limit"]) if "limit" in call.data else (sys.maxsize if daily else 20)
         after_raw: str | None = call.data.get("after")
         before_raw: str | None = call.data.get("before")
         outcome: str | None = call.data.get("outcome")
@@ -357,6 +361,8 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         if after is None and period:
             after = dt_util.now() - ARCHIVE_PERIODS[period]
         entries = await archive.archive_directory.list_entries(limit=limit, after=after, before=before, outcome=outcome)
+        if daily:
+            return summarize_by_day(entries)
         return {"notifications": [at_verbosity(entry) for entry in entries], "count": len(entries)}
 
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:

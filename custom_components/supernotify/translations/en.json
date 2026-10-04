@@ -292,7 +292,7 @@
                 },
                 "verbosity": {
                     "name": "Verbosity",
-                    "description": "How much of each notification to return: a short summary of what happened, the standard archived record without the debug trace, or everything stored. Defaults to standard for a list and full for a single 'id'."
+                    "description": "How much of each notification to return: a short summary of what happened, the standard archived record without the debug trace, or everything stored. Defaults to standard for a list and full for a single 'id'. 'Counts per day' returns totals for each local day instead, with no limit unless one is given."
                 }
             }
         }
@@ -607,7 +607,8 @@
             "options": {
                 "summary": "Summary",
                 "standard": "Standard",
-                "full": "Full"
+                "full": "Full",
+                "daily": "Counts per day"
             }
         }
     }

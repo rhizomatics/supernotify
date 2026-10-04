@@ -292,7 +292,7 @@
                 },
                 "verbosity": {
                     "name": "Nível de detalhe",
-                    "description": "Quanto devolver de cada notificação: um breve resumo do que aconteceu, o registo arquivado padrão sem o rastreio de depuração, ou tudo o que está armazenado. Por omissão padrão para uma lista e completo para um único 'id'."
+                    "description": "Quanto devolver de cada notificação: um breve resumo do que aconteceu, o registo arquivado padrão sem o rastreio de depuração, ou tudo o que está armazenado. Por omissão padrão para uma lista e completo para um único 'id'. 'Contagens por dia' devolve em vez disso os totais de cada dia local, sem limite a menos que seja indicado um."
                 }
             }
         }
@@ -607,7 +607,8 @@
             "options": {
                 "summary": "Resumo",
                 "standard": "Padrão",
-                "full": "Completo"
+                "full": "Completo",
+                "daily": "Contagens por dia"
             }
         }
     }

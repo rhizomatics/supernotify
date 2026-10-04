@@ -203,6 +203,7 @@ enquire_archive:
             - summary
             - standard
             - full
+            - daily
 enquire_last_notification:
   fields:
     diagnostics:

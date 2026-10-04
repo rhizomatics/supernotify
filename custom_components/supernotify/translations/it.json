@@ -292,7 +292,7 @@
                 },
                 "verbosity": {
                     "name": "Livello di dettaglio",
-                    "description": "Quanto restituire di ogni notifica: un breve riepilogo di cosa è successo, il record archiviato standard senza la traccia di debug, oppure tutto ciò che è memorizzato. Predefinito standard per una lista e completo per un singolo 'id'."
+                    "description": "Quanto restituire di ogni notifica: un breve riepilogo di cosa è successo, il record archiviato standard senza la traccia di debug, oppure tutto ciò che è memorizzato. Predefinito standard per una lista e completo per un singolo 'id'. 'Conteggi per giorno' restituisce invece i totali di ogni giorno locale, senza limite se non ne viene indicato uno."
                 }
             }
         }
@@ -607,7 +607,8 @@
             "options": {
                 "summary": "Riepilogo",
                 "standard": "Standard",
-                "full": "Completo"
+                "full": "Completo",
+                "daily": "Conteggi per giorno"
             }
         }
     }
