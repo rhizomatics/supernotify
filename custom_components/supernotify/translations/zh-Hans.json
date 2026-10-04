@@ -242,6 +242,36 @@
             "name": "清除打盹",
             "description": "清除所有当前处于活动状态的打盹"
         },
+        "snooze": {
+            "name": "暂停",
+            "description": "暂停、静音或恢复通知 - 针对所有人或某个人，全部或仅部分投递、传输方式、优先级、摄像头或标签",
+            "fields": {
+                "command": {
+                    "name": "命令",
+                    "description": "暂停几分钟、静音直到恢复，或恢复"
+                },
+                "scope": {
+                    "name": "范围",
+                    "description": "要暂停的内容 - 未指定则为全部"
+                },
+                "name": {
+                    "name": "名称",
+                    "description": "这些范围对应的投递、传输方式、优先级或摄像头的 entity_id，或标签"
+                },
+                "person": {
+                    "name": "人员",
+                    "description": "仅此人的通知 - 未指定则为所有人"
+                },
+                "minutes": {
+                    "name": "分钟",
+                    "description": "暂停持续多久 - 未指定则为配置的时间"
+                },
+                "reason": {
+                    "name": "原因",
+                    "description": "由 enquire_snoozes 随暂停一起显示"
+                }
+            }
+        },
         "purge_media": {
             "name": "清理媒体",
             "description": "删除早于配置(或指定)天数的已存储媒体文件",
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "未找到 ID 为 {notification_id} 的已归档通知"
+        },
+        "invalid_snooze": {
+            "message": "无法暂停：{error}"
         }
     },
     "options": {
@@ -608,6 +641,24 @@
                 "summary": "摘要",
                 "standard": "标准",
                 "full": "完整"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "暂停",
+                "silence": "静音",
+                "resume": "恢复"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "全部",
+                "noncritical": "除紧急外全部",
+                "delivery": "投递",
+                "transport": "传输方式",
+                "priority": "优先级",
+                "camera": "摄像头",
+                "tag": "标签"
             }
         }
     }

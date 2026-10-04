@@ -17,6 +17,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 from homeassistant.loader import async_get_integration
@@ -63,7 +64,9 @@ from .const import (
     OVERRIDE_KINDS,
 )
 from .engine import SupernotifyEngine
+from .model import CommandType, QualifiedTargetType, RecipientType
 from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
+from .snoozer import SNOOZE_SCOPES, snooze_name_error
 from .target import Target
 
 if TYPE_CHECKING:
@@ -170,11 +173,28 @@ ACTION_NAMES: Final[tuple[str, ...]] = (
     "enquire_recipients",
     "enquire_snoozes",
     "clear_snoozes",
+    "snooze",
     "purge_archive",
     "purge_media",
     "refresh_entities",
     "reset_overrides",
 )
+
+SNOOZE_COMMANDS: Final[dict[str, CommandType]] = {
+    "snooze": CommandType.SNOOZE,
+    "silence": CommandType.SILENCE,
+    "resume": CommandType.NORMAL,
+}
+SNOOZE_MAX_MINUTES: Final[int] = 7 * 24 * 60
+SNOOZE_REASON: Final[str] = "Action"
+SNOOZE_ACTION_SCHEMA: Final[vol.Schema] = vol.Schema({
+    vol.Required("command"): vol.In(SNOOZE_COMMANDS),
+    vol.Optional("scope", default="everything"): vol.In(SNOOZE_SCOPES),
+    vol.Optional("name"): cv.string,
+    vol.Optional("person"): cv.entity_domain("person"),
+    vol.Optional("minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=SNOOZE_MAX_MINUTES)),
+    vol.Optional("reason"): cv.string,
+})
 
 ATTR_KIND: Final[str] = "kind"
 RESET_OVERRIDES_SCHEMA: Final = vol.Schema({vol.Optional(ATTR_KIND): vol.In(OVERRIDE_KINDS)})
@@ -316,6 +336,42 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
 
     def supplemental_action_clear_snoozes(_call: ServiceCall) -> dict[str, Any]:
         return {"cleared": engine.clear_snoozes()}
+
+    @callback
+    def action_snooze(call: ServiceCall) -> dict[str, Any]:
+        """supernotify.snooze - the same snooze, silence or resume as a mobile action, voice sentence or the
+        AI tool, for scripts, automations and dashboards, and open to any user, where firing the mobile
+        action event over the API needs an admin. A callback, so it runs in the event loop like the others
+        that change state."""
+        cmd: CommandType = SNOOZE_COMMANDS[call.data["command"]]
+        scope = SNOOZE_SCOPES[call.data["scope"]]
+        name: str | None = call.data.get("name")
+        if isinstance(scope, QualifiedTargetType):
+            if error := snooze_name_error(engine, scope, name, cmd):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="invalid_snooze", translation_placeholders={"error": error}
+                )
+        else:
+            name = None
+        person: str | None = call.data.get("person")
+        if person and person not in engine.context.people_registry.people:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_snooze",
+                translation_placeholders={"error": f"{person} is not a recipient"},
+            )
+        minutes: int | None = call.data.get("minutes")
+        snoozer = engine.context.snoozer
+        snoozer.register_snooze(
+            cmd,
+            scope,
+            name,
+            RecipientType.USER if person else RecipientType.EVERYONE,
+            person,
+            dt.timedelta(minutes=minutes) if minutes else snoozer.snooze_period,
+            reason=call.data.get("reason") or SNOOZE_REASON,
+        )
+        return {"snoozes": engine.enquire_snoozes()}
 
     def supplemental_action_enquire_recipients(_call: ServiceCall) -> dict[str, Any]:
         return {"recipients": engine.enquire_recipients()}
@@ -464,6 +520,13 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         "clear_snoozes",
         supplemental_action_clear_snoozes,
         supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        "snooze",
+        action_snooze,
+        schema=SNOOZE_ACTION_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN,

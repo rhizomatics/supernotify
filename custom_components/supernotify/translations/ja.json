@@ -242,6 +242,36 @@
             "name": "スヌーズのクリア",
             "description": "現在アクティブなすべてのスヌーズをクリアします"
         },
+        "snooze": {
+            "name": "スヌーズ",
+            "description": "通知をスヌーズ、ミュート、または再開します - 全員または1人、すべてまたは一部の配信、トランスポート、優先度、カメラ、タグのみ",
+            "fields": {
+                "command": {
+                    "name": "コマンド",
+                    "description": "数分間スヌーズ、再開までミュート、または再開"
+                },
+                "scope": {
+                    "name": "対象範囲",
+                    "description": "スヌーズする対象 - 指定しない場合はすべて"
+                },
+                "name": {
+                    "name": "名前",
+                    "description": "その範囲の配信、トランスポート、優先度、カメラの entity_id、またはタグ"
+                },
+                "person": {
+                    "name": "人物",
+                    "description": "この人の通知のみ - 指定しない場合は全員"
+                },
+                "minutes": {
+                    "name": "分",
+                    "description": "スヌーズの長さ - 指定しない場合は設定された時間"
+                },
+                "reason": {
+                    "name": "理由",
+                    "description": "enquire_snoozes でスヌーズと一緒に表示されます"
+                }
+            }
+        },
         "purge_media": {
             "name": "メディアのパージ",
             "description": "設定された(または指定された)日数より古い保存済みメディアファイルを削除します",
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "ID {notification_id} のアーカイブされた通知が見つかりません"
+        },
+        "invalid_snooze": {
+            "message": "スヌーズできません: {error}"
         }
     },
     "options": {
@@ -608,6 +641,24 @@
                 "summary": "要約",
                 "standard": "標準",
                 "full": "完全"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "スヌーズ",
+                "silence": "ミュート",
+                "resume": "再開"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "すべて",
+                "noncritical": "重大以外すべて",
+                "delivery": "配信",
+                "transport": "トランスポート",
+                "priority": "優先度",
+                "camera": "カメラ",
+                "tag": "タグ"
             }
         }
     }

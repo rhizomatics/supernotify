@@ -17,6 +17,7 @@ from .const import (
     CONF_SNOOZE_TIME,
     PRIORITY_CRITICAL,
     PRIORITY_MEDIUM,
+    PRIORITY_VALUES,
 )
 from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, Target, TargetType
 
@@ -24,10 +25,43 @@ if TYPE_CHECKING:
     from homeassistant.core import Event
 
     from .delivery import Delivery
+    from .engine import SupernotifyEngine
     from .hass_api import HomeAssistantAPI
     from .people import PeopleRegistry, Recipient
 
 _LOGGER = logging.getLogger(__name__)
+
+# what a snooze covers, by the name the AI tool and supernotify.snooze give it
+SNOOZE_SCOPES: dict[str, TargetType] = {
+    "everything": GlobalTargetType.EVERYTHING,
+    "noncritical": GlobalTargetType.NONCRITICAL,
+    "delivery": QualifiedTargetType.DELIVERY,
+    "transport": QualifiedTargetType.TRANSPORT,
+    "priority": QualifiedTargetType.PRIORITY,
+    "camera": QualifiedTargetType.CAMERA,
+    "tag": QualifiedTargetType.TAG,
+}
+
+
+def snooze_name_error(engine: SupernotifyEngine, scope: QualifiedTargetType, name: str | None, cmd: CommandType) -> str | None:
+    """Why a snooze of this scope can't take this name, or None - shared by the AI tool and supernotify.snooze"""
+    registry = engine.context.delivery_registry
+    valid: list[str] | None = {
+        QualifiedTargetType.DELIVERY: list(registry.deliveries),
+        QualifiedTargetType.TRANSPORT: list(registry.transports),
+        QualifiedTargetType.PRIORITY: list(PRIORITY_VALUES),
+    }.get(scope)
+    if not name:
+        return f"A name is needed to snooze a {scope.lower()}"
+    if valid is not None and name not in valid:
+        return f"Unknown {scope.lower()} '{name}', choose from: {', '.join(valid)}"
+    if scope == QualifiedTargetType.CAMERA and not name.startswith("camera."):
+        return "A camera must be given as its entity_id, e.g. camera.front_door"
+    # a tag snooze can still be undone when what it named has gone
+    if scope == QualifiedTargetType.TAG and cmd != CommandType.NORMAL and not engine.tag_matches(name):
+        return f"No scenario or entity is called '{name}'"
+    return None
+
 
 STORAGE_VERSION = 1
 STORAGE_KEY = f"{DOMAIN}.snoozes"

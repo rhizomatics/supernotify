@@ -242,6 +242,36 @@
             "name": "Clear Snoozes",
             "description": "Clear all currently active snoozes"
         },
+        "snooze": {
+            "name": "Snooze",
+            "description": "Snooze, silence or resume notifications - for everyone or one person, everything or only some deliveries, transports, priorities, cameras or tags",
+            "fields": {
+                "command": {
+                    "name": "Command",
+                    "description": "Snooze for some minutes, silence until resumed, or resume"
+                },
+                "scope": {
+                    "name": "Scope",
+                    "description": "What to snooze - everything if not given"
+                },
+                "name": {
+                    "name": "Name",
+                    "description": "The delivery, transport, priority or camera entity_id, for those scopes, or the tag"
+                },
+                "person": {
+                    "name": "Person",
+                    "description": "Only this person's notifications - everyone if not given"
+                },
+                "minutes": {
+                    "name": "Minutes",
+                    "description": "How long a snooze lasts - the configured snooze time if not given"
+                },
+                "reason": {
+                    "name": "Reason",
+                    "description": "Shown with the snooze by enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Purge Media",
             "description": "Delete stored media files older than the configured (or given) number of days",
@@ -552,6 +582,9 @@
         },
         "archive_entry_not_found": {
             "message": "No archived notification found with id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "Unable to snooze: {error}"
         }
     },
     "selector": {
@@ -608,6 +641,24 @@
                 "summary": "Summary",
                 "standard": "Standard",
                 "full": "Full"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Snooze",
+                "silence": "Silence",
+                "resume": "Resume"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Everything",
+                "noncritical": "All but critical",
+                "delivery": "Delivery",
+                "transport": "Transport",
+                "priority": "Priority",
+                "camera": "Camera",
+                "tag": "Tag"
             }
         }
     }

@@ -242,6 +242,36 @@
             "name": "Snooze löschen",
             "description": "Löscht alle aktuell aktiven Snoozes"
         },
+        "snooze": {
+            "name": "Stummschalten",
+            "description": "Benachrichtigungen pausieren, stummschalten oder fortsetzen - für alle oder eine Person, alles oder nur bestimmte Zustellungen, Transporte, Prioritäten, Kameras oder Schlagwörter",
+            "fields": {
+                "command": {
+                    "name": "Befehl",
+                    "description": "Für einige Minuten pausieren, bis auf Weiteres stummschalten oder fortsetzen"
+                },
+                "scope": {
+                    "name": "Umfang",
+                    "description": "Was pausiert wird - alles, wenn nicht angegeben"
+                },
+                "name": {
+                    "name": "Bezeichnung",
+                    "description": "Die Zustellung, der Transport, die Priorität oder die entity_id der Kamera, für diese Umfänge, oder das Schlagwort"
+                },
+                "person": {
+                    "name": "Betroffene Person",
+                    "description": "Nur die Benachrichtigungen dieser Person - alle, wenn nicht angegeben"
+                },
+                "minutes": {
+                    "name": "Minuten",
+                    "description": "Wie lange die Pause dauert - die eingestellte Dauer, wenn nicht angegeben"
+                },
+                "reason": {
+                    "name": "Grund",
+                    "description": "Wird von enquire_snoozes mit der Pause angezeigt"
+                }
+            }
+        },
         "purge_media": {
             "name": "Medien bereinigen",
             "description": "Löscht gespeicherte Mediendateien, die älter als die konfigurierte (oder angegebene) Anzahl von Tagen sind",
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "Keine archivierte Benachrichtigung mit der ID {notification_id} gefunden"
+        },
+        "invalid_snooze": {
+            "message": "Pausieren nicht möglich: {error}"
         }
     },
     "options": {
@@ -608,6 +641,24 @@
                 "summary": "Zusammenfassung",
                 "standard": "Standard",
                 "full": "Vollständig"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Pausieren",
+                "silence": "Stummschalten",
+                "resume": "Fortsetzen"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Alles",
+                "noncritical": "Alles außer kritischen",
+                "delivery": "Zustellung",
+                "transport": "Übertragungsweg",
+                "priority": "Priorität",
+                "camera": "Kamera",
+                "tag": "Schlagwort"
             }
         }
     }

@@ -35,7 +35,7 @@ To use any of these, prefix with `supernotify.`. Try them out via [Tools](https:
 | `reset_overrides`                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
 | `purge_archive`                  | Force the archive housekeeping to run immediately and remove old notification records                                |
 | `purge_media`                    | Force the media storage housekeeping to run immediately and remove old media                                         |
-| `snooze`                         | Snooze notifications for a delivery or target                                                                        |
+| `snooze`                         | Snooze, silence or resume notifications, see [Snoozing](snoozing.md#snoozing-from-a-script-or-dashboard)             |
 | `clear_snoozes`                  | Clear all active snoozes                                                                                             |
 
 The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides**
