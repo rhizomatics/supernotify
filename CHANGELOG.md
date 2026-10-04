@@ -28,6 +28,7 @@
   - Pick a time ending now - last hour, 12 hours, day, week or month, simpler than setting `after` by hand. Remains limited by the max results set.
   - If you also set `after`, the latter gets priority
 - `after` and `before` time filters now use the Home Assistant time zone settings to be a local time
+- Faster archive scans, using the file system `ctime` creation time rather than examining the JSON and combining file read / json parse and filter into a single faster background task for up to 30x speedup
 
 ### Snoozing
 - New HA Actions to snooze, silence (snooze without a time limit) and unsnooze
@@ -38,7 +39,7 @@
 
 ## 🐛 Bug fixes
 - `enquire_archive` now not so fussy about case when filtering for notification outcome.
-- `enquire_archive` no longer opens and parses archive files from outside the `after` / `before` times, now using the file system `ctime` creation time rather than examining the JSON
+- `enquire_archive` no longer opens and parses archive files from outside the `after` / `before` times
 - `enquire_configuration` was failing when deliveries had `conditions` with JSON serialization error
 - Scenario `binary_sensor` state is now `unknown` unless live scenarios are switched on with `scenario_control: {refresh: true}`
   - Previously it showed whatever the conditions evaluated to at start up and never changed, so looked live when it wasn't
