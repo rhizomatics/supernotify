@@ -103,6 +103,7 @@ from .const import (
     CONF_DUPE_POLICY,
     CONF_ENCRYPTION,
     CONF_EXPOSE_STATE,
+    CONF_FALLBACK,
     CONF_HOUSEKEEPING,
     CONF_HOUSEKEEPING_TIME,
     CONF_INCLUSION,
@@ -358,6 +359,8 @@ DELIVERY_SCHEMA = vol.All(
     DELIVERY_CONFIG_SCHEMA.extend({
         vol.Required(CONF_TRANSPORT): vol.In(TRANSPORT_VALUES),
         vol.Optional(CONF_ENABLED): cv.boolean,
+        # deliveries to try in order when this one fails, see Notification._fall_back()
+        vol.Optional(CONF_FALLBACK): vol.All(cv.ensure_list, [cv.string]),
     }),
 )
 

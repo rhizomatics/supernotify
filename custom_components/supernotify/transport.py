@@ -318,6 +318,10 @@ class Transport:
                 return False
 
             domain, service = qualified_action.split(".", 1)
+            # a delivery with a fallback, or used as one, waits for its call, so that an error in the
+            # service is seen and the next one can be tried - otherwise only a missing service or bad
+            # data would be
+            wait: dict[str, Any] = {"blocking": True} if (delivery.fallback or delivery.is_fallback) else {}
             start_time = time.time()
             timestamp: dt.datetime | None = None
             if target_data:
@@ -331,6 +335,7 @@ class Transport:
                     target=target_data,
                     debug=delivery.debug,
                     context=envelope.ha_context,
+                    **wait,
                 )
                 envelope.calls.append(
                     CallRecord(
@@ -348,7 +353,7 @@ class Transport:
                 service_data_as_sent = dict(action_data)
                 timestamp = dt.datetime.now(tz=dt_util.get_default_time_zone())
                 service_response = await self.hass_api.call_service(
-                    domain, service, service_data=action_data, debug=delivery.debug, context=envelope.ha_context
+                    domain, service, service_data=action_data, debug=delivery.debug, context=envelope.ha_context, **wait
                 )
                 envelope.calls.append(
                     CallRecord(

@@ -338,6 +338,24 @@ async def test_call_service_propagates_context(hass: HomeAssistant) -> None:
     assert seen_contexts == [caller_context]
 
 
+async def test_call_service_blocking_is_kept_when_asked_for(hass: HomeAssistant) -> None:
+    """An explicit blocking=True waits for the service, so its error reaches the caller - a
+    delivery with a fallback relies on it - while the default stays fire and forget."""
+    from homeassistant.exceptions import HomeAssistantError
+
+    hass_api = HomeAssistantAPI(hass)
+
+    async def failing(_call: ServiceCall) -> None:
+        raise HomeAssistantError("down")
+
+    hass.services.async_register("testing", "failing", failing)
+
+    with pytest.raises(HomeAssistantError):
+        await hass_api.call_service("testing", "failing", blocking=True)
+    await hass_api.call_service("testing", "failing")  # not awaited, so nothing raised here
+    await hass.async_block_till_done()
+
+
 def test_finds_service(hass: HomeAssistant) -> None:
     hass_api = HomeAssistantAPI(hass)
 

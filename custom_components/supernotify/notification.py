@@ -664,6 +664,7 @@ class Notification(ArchivableObject):
 
             _LOGGER.debug("SUPERNOTIFY Scheduling %s deferred deliveries", len(deferred_deliveries))
             await self._schedule_deliveries(deferred_deliveries)
+            await self._fall_back()
 
         if self.delivered == 0 and not self._suppression_reason:
             if self.failed == 0 and not self.dupe:
@@ -672,7 +673,7 @@ class Notification(ArchivableObject):
                         "SUPERNOTIFY No delivery succeeded, activating fallback_by_default: %s",
                         delivery.name,
                     )
-                    if delivery.name not in self.selected_deliveries:
+                    if delivery.name not in self.selected_deliveries and delivery.name not in self.deliveries:
                         await self.call_transport(delivery)
                         self.fallback += 1
 
@@ -682,11 +683,32 @@ class Notification(ArchivableObject):
                         "SUPERNOTIFY Delivery failed, activating fallback_on_error: %s",
                         delivery.name,
                     )
-                    if delivery.name not in self.selected_deliveries:
+                    if delivery.name not in self.selected_deliveries and delivery.name not in self.deliveries:
                         await self.call_transport(delivery)
                         self.fallback += 1
 
         return self.delivered > 0
+
+    async def _fall_back(self) -> None:
+        """A delivery's own `fallback:` list - when it errored and sent nothing, try those deliveries
+        in order until one sends. Only one level: a fallback's own `fallback:` isn't followed, and a
+        delivery already tried for this notification isn't tried again."""
+        registry = self.context.delivery_registry
+        for name, outcomes in list(self.deliveries.items()):
+            delivery: Delivery | None = registry.deliveries.get(name)
+            failed: bool = bool(outcomes.get(EnvelopeOutcome.ERROR)) or name in self.delivery_exceptions
+            if delivery is None or not delivery.fallback or outcomes.get(EnvelopeOutcome.SUCCESS) or not failed:
+                continue
+            for fallback_name in delivery.fallback:
+                fallback: Delivery | None = registry.deliveries.get(fallback_name)
+                if fallback is None or not fallback.enabled or fallback_name in self.deliveries:
+                    continue
+                _LOGGER.info("SUPERNOTIFY Delivery %s failed, falling back to %s", name, fallback_name)
+                self.debug_trace.record_delivery_provenance(fallback_name, "enabled_by", f"fallback:{name}")
+                await self.call_transport(fallback)
+                self.fallback += 1
+                if self.deliveries.get(fallback_name, {}).get(EnvelopeOutcome.SUCCESS):
+                    break
 
     async def _schedule_deliveries(self, deliveries: dict[str, DeliveryTargetOverride | None]) -> None:
         delivery_coros = []
