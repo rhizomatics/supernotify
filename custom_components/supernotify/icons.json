@@ -2,10 +2,10 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "default": "mdi:clipboard-text",
+                "default": "mdi:movie-open-cog-outline",
                 "state": {
-                    "on": "mdi:clipboard-check",
-                    "off": "mdi:clipboard-text-outline"
+                    "on": "mdi:movie-open-cog",
+                    "off": "mdi:movie-open-off-outline"
                 }
             },
             "scenario_manual": {
