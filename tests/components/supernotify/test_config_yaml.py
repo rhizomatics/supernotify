@@ -580,3 +580,30 @@ async def test_recipients_configured(hass: HomeAssistant) -> None:
             "person_id": ["person.house_owner"],
         },
     }
+
+
+async def test_enquire_configuration_with_template_condition(hass: HomeAssistant) -> None:
+    """A delivery with a template condition holds a Template after validation, which the service
+    response could not serialize ("Unable to serialize to JSON", HTTP 500) - #241."""
+    from homeassistant.helpers.json import json_bytes
+
+    config: dict[str, Any] = {
+        "delivery": {
+            "testing": {
+                "transport": "generic",
+                "target": ["testy.testy"],
+                "action": "notify.send_message",
+                "inclusion": ["default"],
+                "conditions": {
+                    "condition": "and",
+                    "conditions": [{"condition": "template", "value_template": "{{ 1 + 1 == 2 }}"}],
+                },
+            }
+        },
+    }
+    await _setup_supernotify(hass, config)
+    response = await hass.services.async_call("supernotify", "enquire_configuration", None, blocking=True, return_response=True)
+    assert response is not None
+    # what the WebSocket and REST API do with a service response
+    serialized = json_bytes(response).decode()
+    assert "{{ 1 + 1 == 2 }}" in serialized

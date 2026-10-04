@@ -18,6 +18,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.template import Template
 from homeassistant.loader import async_get_integration
 from homeassistant.util.yaml import load_yaml_dict
 
@@ -156,6 +157,18 @@ ATTR_KIND: Final[str] = "kind"
 RESET_OVERRIDES_SCHEMA: Final = vol.Schema({vol.Optional(ATTR_KIND): vol.In(OVERRIDE_KINDS)})
 
 
+def _json_safe(v: Any) -> Any:  # ruff: ignore[any-type]
+    """Config as validated holds Template objects (e.g. a delivery's template conditions), which a
+    service response can't serialize: give their source text instead, and lists for tuples/sets."""
+    if isinstance(v, Template):
+        return v.template
+    if isinstance(v, dict):
+        return {k: _json_safe(x) for k, x in v.items()}
+    if isinstance(v, list | tuple | set):
+        return [_json_safe(x) for x in v]
+    return v
+
+
 @callback
 def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine, config: ConfigType) -> None:
     """Register the domain-scoped supplemental/debugging/admin services.
@@ -221,7 +234,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return notification.contents() if notification else None
 
     def supplemental_action_enquire_configuration(_call: ServiceCall) -> dict[str, Any]:
-        return {
+        return _json_safe({
             CONF_DELIVERY: config.get(CONF_DELIVERY, {}),
             CONF_LINKS: config.get(CONF_LINKS, ()),
             CONF_TEMPLATE_PATH: config.get(CONF_TEMPLATE_PATH, None),
@@ -239,7 +252,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
             CONF_CAMERAS: config.get(CONF_CAMERAS, {}),
             CONF_DUPE_CHECK: config.get(CONF_DUPE_CHECK, {}),
             CONF_SNOOZE: config.get(CONF_SNOOZE, {}),
-        }
+        })
 
     @callback
     def supplemental_action_refresh_entities(_call: ServiceCall) -> None:
