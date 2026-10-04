@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Límite",
-                    "description": "Número máximo de notificaciones a devolver (20 por defecto, 100 como máximo)."
+                    "description": "Número máximo de notificaciones a devolver (20 por defecto; con recuentos por día, todas las del periodo)."
                 },
                 "after": {
                     "name": "Después de",

@@ -171,3 +171,31 @@ async def test_action_daily_for_one_id(hass: HomeAssistant, tmp_path: pathlib.Pa
 
     assert result["count"] == 1
     assert result["days"][0]["date"] == created.date().isoformat()
+
+
+@pytest.mark.parametrize(
+    ("stored", "names"),
+    [
+        (["morning", "home"], ["morning", "home"]),
+        ({"multi_home": {"name": "multi_home"}, "afternoon": {}}, ["multi_home", "afternoon"]),
+        ("solo", ["solo"]),
+        (None, []),
+    ],
+)
+async def test_summary_lists_scenarios_however_they_were_stored(
+    hass: HomeAssistant, tmp_path: pathlib.Path, stored: object, names: list[str]
+) -> None:
+    """Older archive files keep enabled_scenarios as a mapping by name - the summary still gives a list."""
+    created = dt_util.now() - dt.timedelta(minutes=10)
+    entry = _entry(created)
+    entry["id"] = "old1"
+    entry["enabled_scenarios"] = stored
+    (tmp_path / (created.isoformat()[:16].replace(":", "-") + "_old1.json")).write_text(json.dumps(entry))
+    await _setup(hass, str(tmp_path))
+
+    response = await hass.services.async_call(
+        DOMAIN, "enquire_archive", {"verbosity": "summary"}, blocking=True, return_response=True
+    )
+
+    assert response is not None
+    assert response["notifications"][0]["scenarios"] == names

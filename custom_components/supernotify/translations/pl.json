@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Maksymalna liczba",
-                    "description": "Maksymalna liczba zwracanych powiadomień (domyślnie 20, najwyżej 100)."
+                    "description": "Maksymalna liczba zwracanych powiadomień (domyślnie 20; przy licznikach dziennych wszystkie z zakresu)."
                 },
                 "after": {
                     "name": "Po",

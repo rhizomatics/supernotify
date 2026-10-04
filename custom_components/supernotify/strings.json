@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Limit",
-                    "description": "Maximum number of notifications to return (default 20, max 100)."
+                    "description": "Maximum number of notifications to return (default 20; with counts per day, every notification in the range)."
                 },
                 "after": {
                     "name": "After",

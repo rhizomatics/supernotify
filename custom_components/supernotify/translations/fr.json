@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Limite",
-                    "description": "Nombre maximum de notifications à renvoyer (20 par défaut, 100 au maximum)."
+                    "description": "Nombre maximum de notifications à renvoyer (20 par défaut ; avec les comptes par jour, toutes celles de la période)."
                 },
                 "after": {
                     "name": "Après",
