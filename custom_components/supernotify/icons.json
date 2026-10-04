@@ -2,19 +2,35 @@
     "entity": {
         "binary_sensor": {
             "scenario": {
-                "default": "mdi:clipboard-text"
+                "default": "mdi:clipboard-text",
+                "state": {
+                    "on": "mdi:clipboard-check",
+                    "off": "mdi:clipboard-text-outline"
+                }
             },
             "scenario_manual": {
-                "default": "mdi:clipboard-edit"
+                "default": "mdi:clipboard-edit",
+                "state": {
+                    "off": "mdi:clipboard-edit-outline"
+                }
             },
             "recipient": {
-                "default": "mdi:account-arrow-left"
+                "default": "mdi:account-arrow-left",
+                "state": {
+                    "off": "mdi:account-off"
+                }
             },
             "delivery": {
-                "default": "mdi:package-variant"
+                "default": "mdi:package-variant",
+                "state": {
+                    "off": "mdi:package-variant-remove"
+                }
             },
             "transport": {
-                "default": "mdi:truck-fast"
+                "default": "mdi:truck-fast",
+                "state": {
+                    "off": "mdi:truck-remove"
+                }
             }
         },
         "sensor": {
@@ -27,16 +43,28 @@
         },
         "switch": {
             "scenario_enabled": {
-                "default": "mdi:clipboard-check"
+                "default": "mdi:clipboard-check",
+                "state": {
+                    "off": "mdi:clipboard-off"
+                }
             },
             "recipient_enabled": {
-                "default": "mdi:account-check"
+                "default": "mdi:account-check",
+                "state": {
+                    "off": "mdi:account-off"
+                }
             },
             "delivery_enabled": {
-                "default": "mdi:package-variant"
+                "default": "mdi:package-variant",
+                "state": {
+                    "off": "mdi:package-variant-remove"
+                }
             },
             "transport_enabled": {
-                "default": "mdi:truck-fast"
+                "default": "mdi:truck-fast",
+                "state": {
+                    "off": "mdi:truck-remove"
+                }
             }
         },
         "button": {
