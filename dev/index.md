@@ -4,15 +4,11 @@ This page available in [English](https://supernotify.rhizomatics.org.uk/latest/i
 
 Source: https://supernotify.rhizomatics.org.uk/latest/
 
-**Unified Notification for Home Assistant**
+**Unified Notifications for Home Assistant**
 
-### v2 MAJOR CHANGE - Set up from Home Assistant UI
+Recipes
 
-> > `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
-> >
-> > A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
-> >
-> > An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
+Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), try making [Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), set off [sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), make the [Frigate blueprint send e-mail with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [move and zoom a camera](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) to take a snapshot or even have [spooky notifications on Halloween](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md).
 
 A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
@@ -20,11 +16,7 @@ The goal - to make the **simplest possible notification** do as **many notificat
 
 **No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration. And with advanced YAML configuration, the possibilities are endless.
-
-Recipes
-
-Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including: [Make Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), [Set off sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), [Send HomeAssistant themed HTML e-mail](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md), [Use the Frigate blueprint to send emails with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [Move and zoom a camera to take a snapshot](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md), [Suppress or escalate notifications based on content](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) and [Halloween and Christmas themed chimes and voices](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -106,6 +98,14 @@ With zero YAML all UI config
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```
+
+## Migrating from pre-v2.0.0 Installation
+
+`2.0.0` of SuperNotify moved to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
+
+A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
+
+An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
 ## Known Limitations
 

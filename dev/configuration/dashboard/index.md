@@ -31,8 +31,6 @@ views:
               - snooze
               - announce
             groups: []
-          - type: custom:supernotify-stats-card
-            days: 14
       - type: grid
         cards:
           - type: heading
@@ -61,6 +59,18 @@ views:
     cards: []
     icon: mdi:email-fast
     show_icon_and_title: true
+  - type: sections
+    max_columns: 4
+    title: Stats
+    path: stats
+    icon: mdi:chart-timeline-variant-shimmer
+    sections:
+      - type: grid
+        cards:
+          - type: custom:supernotify-stats-card
+            days: 14
+    show_icon_and_title: true
+    cards: []
   - type: sections
     max_columns: 4
     title: People and Scenarios

@@ -13,15 +13,11 @@ This page available in [English](https://supernotify.rhizomatics.org.uk/latest/i
 
 Source: https://supernotify.rhizomatics.org.uk/latest/
 
-**Unified Notification for Home Assistant**
+**Unified Notifications for Home Assistant**
 
-### v2 MAJOR CHANGE - Set up from Home Assistant UI
+Recipes
 
-> > `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
-> >
-> > A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
-> >
-> > An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
+Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), try making [Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), set off [sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), make the [Frigate blueprint send e-mail with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [move and zoom a camera](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) to take a snapshot or even have [spooky notifications on Halloween](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md).
 
 A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
@@ -29,11 +25,7 @@ The goal - to make the **simplest possible notification** do as **many notificat
 
 **No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration. And with advanced YAML configuration, the possibilities are endless.
-
-Recipes
-
-Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including: [Make Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), [Set off sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), [Send HomeAssistant themed HTML e-mail](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md), [Use the Frigate blueprint to send emails with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [Move and zoom a camera to take a snapshot](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md), [Suppress or escalate notifications based on content](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) and [Halloween and Christmas themed chimes and voices](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -115,6 +107,14 @@ With zero YAML all UI config
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```
+
+## Migrating from pre-v2.0.0 Installation
+
+`2.0.0` of SuperNotify moved to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
+
+A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
+
+An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
 ## Known Limitations
 
@@ -302,27 +302,31 @@ Note
 
 Until 2025, *Actions* were known as **Services** in Home Assistant, and that is still commonly used. In this documentation, the new term 'Action' is always used. To avoid ambiguity, when the quite different actions in Actionable Notifications are referred to, it is always as "Mobile Actions"
 
+Most of the actions are also usable via [Supernotify Cards](https://github.com/lollox80/supernotify-cards) which provides a rich UI for them.
+
 ## Available Actions
 
 To use any of these, prefix with `supernotify.`. Try them out via [Tools](https://www.home-assistant.io/docs/tools/dev-tools/)
 
-| Action                         | Description                                                                                                          |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| notify                         | The best way to send a notification. The UI has much more help on choosing options than calling `notify.supernotify` |
-| reload                         | Reload all the supernotify config yaml and restart the component with the fresh config                               |
-| enquire_deliveries_by_scenario | List the deliveries which will be used per configured scenario                                                       |
-| enquire_last_notification      | Show the details, including debug info, for the last handled notification                                            |
-| enquire_implicit_deliveries    | List all the configured default delivieries                                                                          |
-| enquire_scenarios              | List all the configured scenarios                                                                                    |
-| enquire_active_scenarios       | Compute all the scenario conditions and list which apply right now                                                   |
-| enquire_occupancy              | List all the recipients by whether in or out                                                                         |
-| enquire_snoozes                | List all the active snoozes                                                                                          |
-| refresh_entities               | Re-publish the current state of every SuperNotify entity                                                             |
-| reset_overrides                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
-| clear_snoozes                  | Clear all active snoozes                                                                                             |
-| purge_archive                  | Force the archive housekeeping to run immediately and remove old notification records                                |
-| purge_media                    | Force the media storage housekeeping to run immediately and remove old media                                         |
-| snooze                         | Snooze notifications for a delivery or target                                                                        |
+| Action                           | Description                                                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `notify`                         | The best way to send a notification. The UI has much more help on choosing options than calling `notify.supernotify` |
+| `enquire_active_scenarios`       | Compute all the scenario conditions and list which apply right now                                                   |
+| `enquire_archive`                | Search the archived notifications by date or status                                                                  |
+| `enquire_configuration`          | Retrieve the current config as YAML, merging any advanced YAML config with the Home Assistant UI managed config      |
+| `enquire_deliveries_by_scenario` | List the deliveries which will be used per configured scenario                                                       |
+| `enquire_last_notification`      | Show the details, including debug info, for the last handled notification                                            |
+| `enquire_implicit_deliveries`    | List all the configured default delivieries                                                                          |
+| `enquire_occupancy`              | List all the recipients by whether in or out                                                                         |
+| `enquire_scenarios`              | List all the configured scenarios                                                                                    |
+| `enquire_snoozes`                | List all the active snoozes                                                                                          |
+| `refresh_entities`               | Re-publish the current state of every SuperNotify entity                                                             |
+| `reload`                         | Reload all the supernotify config yaml and restart the component with the fresh config                               |
+| `reset_overrides`                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
+| `purge_archive`                  | Force the archive housekeeping to run immediately and remove old notification records                                |
+| `purge_media`                    | Force the media storage housekeeping to run immediately and remove old media                                         |
+| `snooze`                         | Snooze notifications for a delivery or target                                                                        |
+| `clear_snoozes`                  | Clear all active snoozes                                                                                             |
 
 The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides** button (`button.supernotify_reset_overrides`) on the SuperNotify device.
 
@@ -1726,8 +1730,6 @@ views:
               - snooze
               - announce
             groups: []
-          - type: custom:supernotify-stats-card
-            days: 14
       - type: grid
         cards:
           - type: heading
@@ -1756,6 +1758,18 @@ views:
     cards: []
     icon: mdi:email-fast
     show_icon_and_title: true
+  - type: sections
+    max_columns: 4
+    title: Stats
+    path: stats
+    icon: mdi:chart-timeline-variant-shimmer
+    sections:
+      - type: grid
+        cards:
+          - type: custom:supernotify-stats-card
+            days: 14
+    show_icon_and_title: true
+    cards: []
   - type: sections
     max_columns: 4
     title: People and Scenarios
