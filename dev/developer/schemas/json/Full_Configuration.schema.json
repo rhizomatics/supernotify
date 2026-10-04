@@ -259,6 +259,12 @@
           },
           "enabled": {
             "type": "boolean"
+          },
+          "fallback": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
