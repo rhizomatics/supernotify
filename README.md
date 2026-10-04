@@ -20,15 +20,11 @@
 <br/>
 <br/>
 
-**Unified Notification for Home Assistant**
+**Unified Notifications for Home Assistant**
 
-### v2 MAJOR CHANGE - Set up from Home Assistant UI
-
->> `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
-
->> A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
-
->> An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
+!!! tip inline end "Recipes"
+    Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), try making
+    [Alexa whisper low priority notifications](./recipes/alexa_whisper.md), set off [sirens for critical alerts](./recipes/all_sirens_go.md), make the [Frigate blueprint send e-mail with attached images](./recipes/frigate_emails.md), [move and zoom a camera](./recipes/move_a_camera_for_snapshot.md) to take a snapshot or even have [spooky notifications on Halloween](./recipes/seasonal_greetings.md).
 
 A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
@@ -36,11 +32,9 @@ The goal - to make the **simplest possible notification** do as **many notificat
 
 **No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](./recipes/simple_mobile_push.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](./recipes/frigate_emails.md), add a [Dashboard](./configuration/dashboard.md) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](./configuration/dashboard.md) integration. And with advanced YAML configuration, the possibilities are endless.
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](./configuration/dashboard.md) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
-!!! tip inline end "Recipes"
-    Get started quickly, or get inspired, with one of the [notification recipes](./recipes/index.md), including:
-    [Make Alexa whisper low priority notifications](./recipes/alexa_whisper.md), [Set off sirens for critical alerts](./recipes/all_sirens_go.md), [Send HomeAssistant themed HTML e-mail](./recipes/basic_html_email.md), [Use the Frigate blueprint to send emails with attached images](./recipes/frigate_emails.md), [Move and zoom a camera to take a snapshot](./recipes/move_a_camera_for_snapshot.md),  [Suppress or escalate notifications based on content](./recipes/content_escalation.md) and [Halloween and Christmas themed chimes and voices](./recipes/seasonal_greetings.md)
+![Stats Card](./assets/images/supernotify_stats_card.png){width=300, align=right}
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -122,6 +116,14 @@ A lot can be done with the simple non-YAML configuration, including automation o
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```
+
+## Migrating from pre-v2.0.0 Installation
+
+`2.0.0` of SuperNotify moved to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
+
+A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
+
+An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
 ## Known Limitations
 
