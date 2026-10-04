@@ -4,6 +4,7 @@ import datetime as dt
 import json
 import logging
 import math
+import os
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
 
@@ -58,6 +59,45 @@ def _filename_period(filename: str) -> tuple[float, float] | None:
         return None
     stamps: list[float] = [named.replace(fold=fold).timestamp() for fold in (0, 1)]
     return min(stamps), max(stamps) + 60
+
+
+def _list_entries_sync(
+    archive_path: str,
+    limit: int,
+    after: dt.datetime | None,
+    before: dt.datetime | None,
+    outcome: str | None,
+) -> list[dict[str, Any]]:
+    """The body of ``ArchiveDirectory.list_entries``, run in the executor as one job."""
+    entries: list[dict[str, Any]] = []
+    try:
+        with os.scandir(archive_path) as scan:
+            files = [e for e in scan if e.name.endswith(".json") and e.name != WRITE_TEST]
+        files.sort(key=lambda e: e.stat().st_ctime, reverse=True)
+        earliest: float = after.timestamp() if after else -math.inf
+        latest: float = before.timestamp() if before else math.inf
+        for entry in files:
+            if len(entries) >= limit:
+                break
+            if (after or before) and (named := _filename_period(entry.name)) and (named[1] < earliest or named[0] > latest):
+                continue
+            try:
+                with open(entry.path, encoding="utf-8") as fh:
+                    data: dict[str, Any] = json.load(fh)
+            except Exception as exc:
+                _LOGGER.debug("SUPERNOTIFY Skipping unreadable archive file %s: %s", entry.name, exc)
+                continue
+            created: dt.datetime | None = dt_util.parse_datetime(data.get("created") or "")
+            if after is not None and created is not None and created < after:
+                continue
+            if before is not None and created is not None and created > before:
+                continue
+            if outcome is not None and str(data.get("outcome", "")).lower() != outcome.lower():
+                continue
+            entries.append(data)
+    except Exception as exc:
+        _LOGGER.warning("SUPERNOTIFY Unable to list archive entries: %s", exc)
+    return entries
 
 
 class ArchivableObject:
@@ -182,7 +222,14 @@ class ArchiveTopic(ArchiveDestination):
 
 
 class ArchiveDirectory(ArchiveDestination):
-    def __init__(self, path: str, purge_minute_interval: int, diagnostics: OutcomeSelection = OutcomeSelection.ERROR) -> None:
+    def __init__(
+        self,
+        path: str,
+        purge_minute_interval: int,
+        diagnostics: OutcomeSelection = OutcomeSelection.ERROR,
+        hass_api: HomeAssistantAPI | None = None,
+    ) -> None:
+        self.hass_api: HomeAssistantAPI | None = hass_api
         self.configured_path: str = path
         self.archive_path: anyio.Path | None = None
         self.enabled: bool = False
@@ -255,34 +302,13 @@ class ArchiveDirectory(ArchiveDestination):
         """
         if not self.archive_path or not await self.archive_path.exists():
             return []
-        entries: list[dict[str, Any]] = []
-        try:
-            raw_scan = await aiofiles.os.scandir(self.archive_path)
-            files = [e for e in raw_scan if e.name.endswith(".json") and e.name != WRITE_TEST]
-            files.sort(key=lambda e: e.stat().st_ctime, reverse=True)
-            earliest: float = after.timestamp() if after else -math.inf
-            latest: float = before.timestamp() if before else math.inf
-            for entry in files:
-                if len(entries) >= limit:
-                    break
-                if (after or before) and (named := _filename_period(entry.name)) and (named[1] < earliest or named[0] > latest):
-                    continue
-                try:
-                    async with aiofiles.open(entry.path, mode="r") as fh:
-                        data: dict[str, Any] = json.loads(await fh.read())
-                except Exception as exc:
-                    _LOGGER.debug("SUPERNOTIFY Skipping unreadable archive file %s: %s", entry.name, exc)
-                    continue
-                created: dt.datetime | None = dt_util.parse_datetime(data.get("created") or "")
-                if after is not None and created is not None and created < after:
-                    continue
-                if before is not None and created is not None and created > before:
-                    continue
-                if outcome is not None and str(data.get("outcome", "")).lower() != outcome.lower():
-                    continue
-                entries.append(data)
-        except Exception as exc:
-            _LOGGER.warning("SUPERNOTIFY Unable to list archive entries: %s", exc)
+        # one executor job for the whole scan: a file at a time through aiofiles is a thread hop per
+        # open and per read, seconds for a month of archive
+        if self.hass_api is None:  # only a directory made outside Home Assistant, as in some tests
+            return _list_entries_sync(str(self.archive_path), limit, after, before, outcome)
+        entries: list[dict[str, Any]] = await self.hass_api.create_job(
+            _list_entries_sync, str(self.archive_path), limit, after, before, outcome
+        )
         return entries
 
     async def read_entry(self, notification_id: str) -> dict[str, Any] | None:
@@ -388,7 +414,10 @@ class NotificationArchive:
             _LOGGER.warning("SUPERNOTIFY Archive path not configured")
         else:
             self.archive_directory = ArchiveDirectory(
-                self.configured_archive_path, purge_minute_interval=self.purge_minute_interval, diagnostics=self.diagnostics
+                self.configured_archive_path,
+                purge_minute_interval=self.purge_minute_interval,
+                diagnostics=self.diagnostics,
+                hass_api=self.hass_api,
             )
             await self.archive_directory.initialize()
 

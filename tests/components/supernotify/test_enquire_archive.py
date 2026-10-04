@@ -5,10 +5,10 @@ from __future__ import annotations
 import datetime as dt
 import json
 import pathlib
-from typing import TYPE_CHECKING
+import threading
+from typing import TYPE_CHECKING, TextIO
 from unittest.mock import patch
 
-import aiofiles
 import pytest
 import voluptuous as vol
 from homeassistant.exceptions import ServiceValidationError
@@ -248,7 +248,8 @@ async def test_enquire_archive_only_opens_files_in_range(hass: HomeAssistant, tm
 
     await _setup(hass, str(tmp_path))
 
-    with patch("custom_components.supernotify.archive.aiofiles.open", wraps=aiofiles.open) as tracked_open:
+    # the scan runs in the executor with the builtin open
+    with patch("custom_components.supernotify.archive.open", wraps=open, create=True) as tracked_open:
         response = await hass.services.async_call(
             DOMAIN,
             "enquire_archive",
@@ -260,6 +261,26 @@ async def test_enquire_archive_only_opens_files_in_range(hass: HomeAssistant, tm
     assert [e["id"] for e in response["notifications"]] == ["wanted"]
     # a file not named for its creation time can't be ruled out without reading it
     assert sorted(opened) == ["unconventional.json", "wanted.json"]
+
+
+async def test_enquire_archive_reads_files_off_the_event_loop(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """The scan runs as one job in Home Assistant's executor, never opening a file on the event loop."""
+    now = dt_util.now()
+    for name, age in (("one", 1), ("two", 2), ("three", 3)):
+        _write_archive_entry(tmp_path, name, now - dt.timedelta(hours=age))
+    await _setup(hass, str(tmp_path))
+
+    threads: list[int] = []
+
+    def tracked(path: str, encoding: str) -> TextIO:
+        threads.append(threading.get_ident())
+        return open(path, encoding=encoding)
+
+    with patch("custom_components.supernotify.archive.open", side_effect=tracked, create=True):
+        response = await hass.services.async_call(DOMAIN, "enquire_archive", {"limit": 10}, blocking=True, return_response=True)
+    assert sorted(e["id"] for e in response["notifications"]) == ["one", "three", "two"]
+    assert threads
+    assert hass.loop_thread_id not in threads
 
 
 @pytest.mark.parametrize("time_zone", ["Europe/London", "UTC", "Asia/Kolkata"])
