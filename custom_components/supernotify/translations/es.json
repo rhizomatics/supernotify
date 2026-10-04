@@ -244,12 +244,8 @@
         },
         "snooze": {
             "name": "Posponer",
-            "description": "Pospone, silencia o reanuda las notificaciones - para todos o una persona, todo o solo algunas entregas, transportes, prioridades, cámaras o etiquetas",
+            "description": "Pospone las notificaciones unos minutos - para todos o una persona, todo o solo algunas entregas, transportes, prioridades, cámaras o etiquetas",
             "fields": {
-                "command": {
-                    "name": "Comando",
-                    "description": "Posponer unos minutos, silenciar hasta reanudar, o reanudar"
-                },
                 "scope": {
                     "name": "Alcance",
                     "description": "Qué posponer - todo si no se indica"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "Motivo",
                     "description": "Se muestra con la pausa en enquire_snoozes"
+                }
+            }
+        },
+        "silence": {
+            "name": "Silenciar",
+            "description": "Silencia las notificaciones hasta que se reanuden - para todos o una persona, todo o solo algunas entregas, transportes, prioridades, cámaras o etiquetas",
+            "fields": {
+                "scope": {
+                    "name": "Alcance",
+                    "description": "Qué posponer - todo si no se indica"
+                },
+                "name": {
+                    "name": "Nombre",
+                    "description": "La entrega, el transporte, la prioridad o el entity_id de la cámara, para esos alcances, o la etiqueta"
+                },
+                "person": {
+                    "name": "Persona",
+                    "description": "Solo las notificaciones de esta persona - todos si no se indica"
+                },
+                "reason": {
+                    "name": "Motivo",
+                    "description": "Se muestra con la pausa en enquire_snoozes"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "Reanudar",
+            "description": "Quita la pausa o el silencio con este alcance, nombre y persona",
+            "fields": {
+                "scope": {
+                    "name": "Alcance",
+                    "description": "Qué posponer - todo si no se indica"
+                },
+                "name": {
+                    "name": "Nombre",
+                    "description": "La entrega, el transporte, la prioridad o el entity_id de la cámara, para esos alcances, o la etiqueta"
+                },
+                "person": {
+                    "name": "Persona",
+                    "description": "Solo las notificaciones de esta persona - todos si no se indica"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "Estándar",
                 "full": "Completo",
                 "daily": "Recuentos por día"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "Posponer",
-                "silence": "Silenciar",
-                "resume": "Reanudar"
             }
         },
         "snooze_scope": {

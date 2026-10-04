@@ -244,12 +244,8 @@
         },
         "snooze": {
             "name": "暂停",
-            "description": "暂停、静音或恢复通知 - 针对所有人或某个人，全部或仅部分投递、传输方式、优先级、摄像头或标签",
+            "description": "将通知暂停几分钟 - 针对所有人或某个人，全部或仅部分投递、传输方式、优先级、摄像头或标签",
             "fields": {
-                "command": {
-                    "name": "命令",
-                    "description": "暂停几分钟、静音直到恢复，或恢复"
-                },
                 "scope": {
                     "name": "范围",
                     "description": "要暂停的内容 - 未指定则为全部"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "原因",
                     "description": "由 enquire_snoozes 随暂停一起显示"
+                }
+            }
+        },
+        "silence": {
+            "name": "静音",
+            "description": "将通知静音直到恢复 - 针对所有人或某个人，全部或仅部分投递、传输方式、优先级、摄像头或标签",
+            "fields": {
+                "scope": {
+                    "name": "范围",
+                    "description": "要暂停的内容 - 未指定则为全部"
+                },
+                "name": {
+                    "name": "名称",
+                    "description": "这些范围对应的投递、传输方式、优先级或摄像头的 entity_id，或标签"
+                },
+                "person": {
+                    "name": "人员",
+                    "description": "仅此人的通知 - 未指定则为所有人"
+                },
+                "reason": {
+                    "name": "原因",
+                    "description": "由 enquire_snoozes 随暂停一起显示"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "取消暂停",
+            "description": "取消具有此范围、名称和人员的暂停或静音",
+            "fields": {
+                "scope": {
+                    "name": "范围",
+                    "description": "要暂停的内容 - 未指定则为全部"
+                },
+                "name": {
+                    "name": "名称",
+                    "description": "这些范围对应的投递、传输方式、优先级或摄像头的 entity_id，或标签"
+                },
+                "person": {
+                    "name": "人员",
+                    "description": "仅此人的通知 - 未指定则为所有人"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "标准",
                 "full": "完整",
                 "daily": "按天统计"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "暂停",
-                "silence": "静音",
-                "resume": "恢复"
             }
         },
         "snooze_scope": {

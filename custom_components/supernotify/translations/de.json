@@ -243,13 +243,9 @@
             "description": "Löscht alle aktuell aktiven Snoozes"
         },
         "snooze": {
-            "name": "Stummschalten",
-            "description": "Benachrichtigungen pausieren, stummschalten oder fortsetzen - für alle oder eine Person, alles oder nur bestimmte Zustellungen, Transporte, Prioritäten, Kameras oder Schlagwörter",
+            "name": "Pausieren",
+            "description": "Benachrichtigungen für einige Minuten pausieren - für alle oder eine Person, alles oder nur bestimmte Zustellungen, Transporte, Prioritäten, Kameras oder Schlagwörter",
             "fields": {
-                "command": {
-                    "name": "Befehl",
-                    "description": "Für einige Minuten pausieren, bis auf Weiteres stummschalten oder fortsetzen"
-                },
                 "scope": {
                     "name": "Umfang",
                     "description": "Was pausiert wird - alles, wenn nicht angegeben"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "Grund",
                     "description": "Wird von enquire_snoozes mit der Pause angezeigt"
+                }
+            }
+        },
+        "silence": {
+            "name": "Stummschalten",
+            "description": "Benachrichtigungen stummschalten, bis die Pause aufgehoben wird - für alle oder eine Person, alles oder nur bestimmte Zustellungen, Transporte, Prioritäten, Kameras oder Schlagwörter",
+            "fields": {
+                "scope": {
+                    "name": "Umfang",
+                    "description": "Was pausiert wird - alles, wenn nicht angegeben"
+                },
+                "name": {
+                    "name": "Bezeichnung",
+                    "description": "Die Zustellung, der Transport, die Priorität oder die entity_id der Kamera, für diese Umfänge, oder das Schlagwort"
+                },
+                "person": {
+                    "name": "Betroffene Person",
+                    "description": "Nur die Benachrichtigungen dieser Person - alle, wenn nicht angegeben"
+                },
+                "reason": {
+                    "name": "Grund",
+                    "description": "Wird von enquire_snoozes mit der Pause angezeigt"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "Pause aufheben",
+            "description": "Die Pause oder Stummschaltung mit diesem Umfang, dieser Bezeichnung und Person aufheben",
+            "fields": {
+                "scope": {
+                    "name": "Umfang",
+                    "description": "Was pausiert wird - alles, wenn nicht angegeben"
+                },
+                "name": {
+                    "name": "Bezeichnung",
+                    "description": "Die Zustellung, der Transport, die Priorität oder die entity_id der Kamera, für diese Umfänge, oder das Schlagwort"
+                },
+                "person": {
+                    "name": "Betroffene Person",
+                    "description": "Nur die Benachrichtigungen dieser Person - alle, wenn nicht angegeben"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "Standard",
                 "full": "Vollständig",
                 "daily": "Zählungen pro Tag"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "Pausieren",
-                "silence": "Stummschalten",
-                "resume": "Fortsetzen"
             }
         },
         "snooze_scope": {

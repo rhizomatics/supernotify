@@ -244,12 +244,8 @@
         },
         "snooze": {
             "name": "スヌーズ",
-            "description": "通知をスヌーズ、ミュート、または再開します - 全員または1人、すべてまたは一部の配信、トランスポート、優先度、カメラ、タグのみ",
+            "description": "通知を数分間スヌーズします - 全員または1人、すべてまたは一部の配信、トランスポート、優先度、カメラ、タグのみ",
             "fields": {
-                "command": {
-                    "name": "コマンド",
-                    "description": "数分間スヌーズ、再開までミュート、または再開"
-                },
                 "scope": {
                     "name": "対象範囲",
                     "description": "スヌーズする対象 - 指定しない場合はすべて"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "理由",
                     "description": "enquire_snoozes でスヌーズと一緒に表示されます"
+                }
+            }
+        },
+        "silence": {
+            "name": "ミュート",
+            "description": "再開するまで通知をミュートします - 全員または1人、すべてまたは一部の配信、トランスポート、優先度、カメラ、タグのみ",
+            "fields": {
+                "scope": {
+                    "name": "対象範囲",
+                    "description": "スヌーズする対象 - 指定しない場合はすべて"
+                },
+                "name": {
+                    "name": "名前",
+                    "description": "その範囲の配信、トランスポート、優先度、カメラの entity_id、またはタグ"
+                },
+                "person": {
+                    "name": "人物",
+                    "description": "この人の通知のみ - 指定しない場合は全員"
+                },
+                "reason": {
+                    "name": "理由",
+                    "description": "enquire_snoozes でスヌーズと一緒に表示されます"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "スヌーズ解除",
+            "description": "この範囲、名前、人物のスヌーズまたはミュートを解除します",
+            "fields": {
+                "scope": {
+                    "name": "対象範囲",
+                    "description": "スヌーズする対象 - 指定しない場合はすべて"
+                },
+                "name": {
+                    "name": "名前",
+                    "description": "その範囲の配信、トランスポート、優先度、カメラの entity_id、またはタグ"
+                },
+                "person": {
+                    "name": "人物",
+                    "description": "この人の通知のみ - 指定しない場合は全員"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "標準",
                 "full": "完全",
                 "daily": "日別の件数"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "スヌーズ",
-                "silence": "ミュート",
-                "resume": "再開"
             }
         },
         "snooze_scope": {

@@ -244,12 +244,8 @@
         },
         "snooze": {
             "name": "Metti in pausa",
-            "description": "Mette in pausa, silenzia o riattiva le notifiche - per tutti o per una persona, tutte o solo alcune delivery, transport, priorità, telecamere o tag",
+            "description": "Mette in pausa le notifiche per alcuni minuti - per tutti o per una persona, tutte o solo alcune delivery, transport, priorità, telecamere o tag",
             "fields": {
-                "command": {
-                    "name": "Comando",
-                    "description": "Pausa per alcuni minuti, silenzio fino alla riattivazione, oppure riattiva"
-                },
                 "scope": {
                     "name": "Ambito",
                     "description": "Cosa mettere in pausa - tutto se non indicato"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "Motivo",
                     "description": "Mostrato con la pausa da enquire_snoozes"
+                }
+            }
+        },
+        "silence": {
+            "name": "Silenzia",
+            "description": "Silenzia le notifiche fino alla riattivazione - per tutti o per una persona, tutte o solo alcune delivery, transport, priorità, telecamere o tag",
+            "fields": {
+                "scope": {
+                    "name": "Ambito",
+                    "description": "Cosa mettere in pausa - tutto se non indicato"
+                },
+                "name": {
+                    "name": "Nome",
+                    "description": "La delivery, il transport, la priorità o l'entity_id della telecamera, per quegli ambiti, oppure il tag"
+                },
+                "person": {
+                    "name": "Persona",
+                    "description": "Solo le notifiche di questa persona - tutti se non indicata"
+                },
+                "reason": {
+                    "name": "Motivo",
+                    "description": "Mostrato con la pausa da enquire_snoozes"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "Riattiva",
+            "description": "Toglie la pausa o il silenzio con questo ambito, nome e persona",
+            "fields": {
+                "scope": {
+                    "name": "Ambito",
+                    "description": "Cosa mettere in pausa - tutto se non indicato"
+                },
+                "name": {
+                    "name": "Nome",
+                    "description": "La delivery, il transport, la priorità o l'entity_id della telecamera, per quegli ambiti, oppure il tag"
+                },
+                "person": {
+                    "name": "Persona",
+                    "description": "Solo le notifiche di questa persona - tutti se non indicata"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "Standard",
                 "full": "Completo",
                 "daily": "Conteggi per giorno"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "Pausa",
-                "silence": "Silenzia",
-                "resume": "Riattiva"
             }
         },
         "snooze_scope": {
