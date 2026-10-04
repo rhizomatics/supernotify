@@ -168,6 +168,8 @@ SNAP_WAIT_DEFAULT = 15
 
 INCLUSION_FALLBACK_ON_ERROR = "fallback_on_error"
 INCLUSION_FALLBACK = "fallback"
+# a delivery's own deliveries to try, in order, when it fails
+CONF_FALLBACK = "fallback"
 INCLUSION_BY_SCENARIO = "scenario"
 INCLUSION_DEFAULT = "default"
 INCLUSION_EXPLICIT = "explicit"

@@ -29,6 +29,7 @@ from .const import (
     CONF_DATA,
     CONF_DEFAULT_INCLUSION,
     CONF_DELIVERY_DEFAULTS,
+    CONF_FALLBACK,
     CONF_INCLUSION,
     CONF_LOAD,
     CONF_MESSAGE,
@@ -114,6 +115,10 @@ class Delivery(DeliveryConfig):
         # as configured, which enabled can be overridden from at runtime by the delivery switch
         self.config_enabled: bool = conf.get(CONF_ENABLED, self.transport.config_enabled)
         self.enabled: bool = self.config_enabled
+        # deliveries to try, in order, if this one fails - see Notification._fall_back()
+        self.fallback: list[str] = list(conf.get(CONF_FALLBACK) or [])
+        # set by the registry when another delivery lists this one in its `fallback:`
+        self.is_fallback: bool = False
         self.conditions: ConditionsFunc | None = None
         self.transport_data: dict[str, Any] = {}
         if self.options.get(OPTION_TARGET_SELECT):
@@ -596,6 +601,14 @@ class DeliveryRegistry:
             )
 
         self.unload_unused_transports()
+        for delivery in self._deliveries.values():
+            for name in delivery.fallback:
+                if name not in self._deliveries or name == delivery.name:
+                    _LOGGER.warning(
+                        "SUPERNOTIFY Delivery %s has fallback %s, which is not another delivery", delivery.name, name
+                    )
+                else:
+                    self._deliveries[name].is_fallback = True
         _LOGGER.info("SUPERNOTIFY Configured deliveries %s", "; ".join(self._deliveries.keys()))
 
     async def initialize_transport_deliveries(self, context: Context, transport: Transport) -> None:

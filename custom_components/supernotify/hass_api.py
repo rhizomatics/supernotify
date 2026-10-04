@@ -371,7 +371,7 @@ class HomeAssistantAPI:
         context: HomeAssistantContext | None = None,
     ) -> ServiceResponse | None:
 
-        if return_response is None or blocking is None:
+        if return_response is None:
             # unknown service, for example defined in generic action, check if it supports response
             supports_response: SupportsResponse = self.service_info(domain, service)
             if supports_response == SupportsResponse.NONE:
@@ -380,6 +380,7 @@ class HomeAssistantAPI:
                 return_response = True
             else:
                 return_response = debug
+        if blocking is None:
             blocking = return_response or debug
 
         response: ServiceResponse | None = await self._hass.services.async_call(

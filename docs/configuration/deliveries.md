@@ -150,6 +150,32 @@ A list of `inclusion` options controls how deliveries are included, each deliver
     That mechanism skips a delivery that's already been selected some other way - but it doesn't retroactively enable one. If a scenario's own `delivery:` map names a `fallback` delivery directly, that selects it immediately, the same as naming any other delivery - the `fallback` flag adds no condition of its own, so with no `occupancy` or `conditions` set, it fires every time the scenario does, not just when everything else failed.
     Give it its own `occupancy` (`all_out` for "nobody home", for example) or `conditions` if you want it to stay conditional while still being scenario-specific - or leave it out of the scenario's `delivery:` map entirely and let the automatic mechanism add it only when needed.
 
+### Fallback for one delivery
+
+A delivery can name other deliveries to try, in order, when it fails and sends nothing - for example an
+Alexa announcement that falls back to Google, then to the phones, when Alexa Media Player has lost its login:
+
+```yaml
+delivery:
+  alexa_announce:
+    transport: alexa_media_player
+    fallback:
+      - tts_google
+      - mobile_push
+  tts_google:
+    transport: tts
+    inclusion: fallback   # used only as a fallback, never offered in the action editor
+```
+
+- The fallbacks are tried after the other deliveries, one at a time, stopping at the first one that sends.
+- A delivery that has already been tried for this notification is not tried again, so nothing is sent twice.
+- Only one level: a fallback's own `fallback:` isn't followed, the order of the list is the chain.
+- A fallback that is switched off, or skipped by its own `conditions`, `priority` or `occupancy`, is passed over.
+- The fallback shows in the archive with `delivery_provenance` `enabled_by: fallback:alexa_announce`.
+- A delivery with a `fallback:`, and one used as a fallback, waits for its action to finish, so an error from
+  the service is seen. Without that, only a missing action or invalid data would count as a failure. It does
+  not cover a delivery the service accepted but that never arrived - a phone switched off, for example.
+
 ### Implicit Deliveries
 
 The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery
