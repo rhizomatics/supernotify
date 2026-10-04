@@ -4,8 +4,7 @@ tags:
   - recipe
   - email
   - cctv
-  - frigate
-  - no_yaml_config
+  - zero_yaml_config
   - ios
   - blueprint
 title: Frigate Blueprint for Email and Mobile Notification

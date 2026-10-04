@@ -4,7 +4,7 @@ tags:
   - ios
   - android
   - apple
-  - no_yaml_config
+  - zero_yaml_config
   - recipe
 title: Simple Mobile Push Notifications
 description: Send mobile push notification to Apple and/or Android Devices

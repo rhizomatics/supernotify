@@ -1,6 +1,7 @@
 ---
 tags:
   - delivery
+  - targets
   - recipe
 title: Fixed Notification Targets
 description: Define a Supernotify delivery with a fixed list of targets which will not be changed by activated scenarios or manually defined targets in a Home Assistant action call

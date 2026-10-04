@@ -67,7 +67,10 @@ plugins:
   - autorefs
   - pagetree
   - optimize
-  - tags
+  - tags:
+      shadow_tags:
+        - Draft
+        - Internal
   - meta-descriptions
   - llmstxt:
       base_url: https://supernotify.rhizomatics.org.uk/latest/
@@ -146,10 +149,12 @@ plugins:
 extra_javascript:
   - javascripts/markdown_actions.js
   - javascripts/nav_collapse.js
+  - javascripts/tag_filter.js
 
 hooks:
   - docgen/optimize_social_cards.py
   - docgen/nav_order.py
+  - docgen/tagged_index.py
 
 watch:
   - custom_components/supernotify

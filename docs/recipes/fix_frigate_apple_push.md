@@ -4,7 +4,6 @@ tags:
   - recipe
   - mobile_push
   - cctv
-  - frigate
   - ios
   - apple
   - macos

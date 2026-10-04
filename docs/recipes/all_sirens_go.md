@@ -14,7 +14,7 @@ tags:
   - hikvision
 title: All Sirens Go!
 description: Configure sirens of many types to be triggered by a single notification, including MQTT and
-433Mhz devices, and sirens embedded in CCTV cameras, such as those from Hikvision
+  433Mhz devices, and sirens embedded in CCTV cameras, such as those from Hikvision
 ---
 # Recipe - All Sirens Go
 

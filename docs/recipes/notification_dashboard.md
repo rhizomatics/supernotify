@@ -4,6 +4,7 @@ tags:
   - recipe
   - ui
   - lovelace
+  - supernotify_cards
 title: Notification Dashboard
 description: Send out notification and control notifications from a Home Assistant Dashboard
 ---

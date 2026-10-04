@@ -4,7 +4,7 @@ tags:
   - opentelemetry
   - otlp
   - logging
-  - no_yaml_config
+  - zero_yaml_config
   - remote_logger
   - events
 title: OTEL Event Generation

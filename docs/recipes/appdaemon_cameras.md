@@ -3,6 +3,8 @@ tags:
   - scenario
   - recipe
   - cctv
+  - ptz
+  - camera
   - appdaemon
 title: Send Notifications from AppDaemon Apps
 description: Send advanced notifications from the popular AppDaemon add-on for Home Assistant

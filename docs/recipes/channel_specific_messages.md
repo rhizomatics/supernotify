@@ -2,7 +2,6 @@
 tags:
   - recipe
   - delivery
-  - transport
 title: Channel Specific Messages
 description: Tune messages and/or titles for specific deliveries
 ---
@@ -14,8 +13,7 @@ Tune the notification for a specific channel, for example send shorter messages 
 
 ## Implementation
 
-Use the `delivery` override feature of the notification `data` section to override the message or title. The
-delivery name will be matched against the Transport name if there's no matching delivery defined.
+Use the `delivery` override feature of the notification `data` section to override the message or title. The delivery name will be matched against the Transport name if there's no matching delivery defined.
 
 ## Example Notification
 

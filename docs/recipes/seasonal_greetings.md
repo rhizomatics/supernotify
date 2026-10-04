@@ -9,7 +9,7 @@ tags:
   - condition
 title: Seasonal Greetings
 description: Use a Supernotify scenario to add a seasonal note to notifications, and override standard
-chimes with Christmas cheer
+  chimes with Christmas cheer
 ---
 # Recipe - Seasonal Greetings
 
