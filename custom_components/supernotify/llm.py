@@ -28,6 +28,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
 from . import DOMAIN
+from .archive import summarize_notification
 from .const import (
     ATTR_DELIVERY,
     ATTR_DRY_RUN,
@@ -182,11 +183,6 @@ def _person_id(engine: SupernotifyEngine, name: str) -> str | None:
     return engine.context.people_registry.person_id_for_name(name)
 
 
-def _names_for(engine: SupernotifyEngine, person_ids: list[str]) -> list[str]:
-    people = engine.context.people_registry.people
-    return sorted(_display_name(people[p]) if p in people else p for p in person_ids)
-
-
 def _notification_fields(engine: SupernotifyEngine, message_required: bool) -> dict[vol.Marker, Any]:
     """The notification fields an agent may use - never custom_target, actions or media URLs"""
     context = engine.context
@@ -229,56 +225,6 @@ def _notification_call(engine: SupernotifyEngine, args: dict[str, Any]) -> tuple
     if args.get("scenarios"):
         data[ATTR_SCENARIOS_APPLY] = args["scenarios"]
     return person_ids or None, data, unknown
-
-
-def summarize_notification(engine: SupernotifyEngine, contents: dict[str, Any]) -> dict[str, Any]:
-    """Cut an archived or live notification down to what explains what happened to it"""
-    deliveries: dict[str, dict[str, Any]] = {}
-    for name, outcomes in (contents.get("deliveries") or {}).items():
-        if skipped := outcomes.get("skipped"):
-            deliveries[name] = {"skipped": skipped.get("suppression_reason")}
-            continue
-        summary: dict[str, Any] = {}
-        recipients: set[str] = set()
-        for outcome in ("success", "suppressed", "error"):
-            envelopes: list[dict[str, Any]] = outcomes.get(outcome) or []
-            if not envelopes:
-                continue
-            summary[outcome] = len(envelopes)
-            for envelope in envelopes:
-                recipients.update(((envelope.get("target") or {}).get("person_id")) or [])
-                if outcome == "suppressed" and envelope.get("skip_reason"):
-                    summary.setdefault("reasons", []).append(envelope["skip_reason"])
-                if outcome == "error":
-                    summary.setdefault("errors", []).extend(
-                        call.get("exception") for call in envelope.get("failed_calls") or [] if call.get("exception")
-                    )
-        if recipients:
-            summary["recipients"] = _names_for(engine, sorted(recipients))
-        deliveries[name] = summary
-    condition_variables: dict[str, Any] = contents.get("condition_variables") or {}
-    result: dict[str, Any] = {
-        "id": contents.get("id"),
-        "created": contents.get("created"),
-        "outcome": contents.get("outcome"),
-        "message": contents.get("message"),
-        "title": condition_variables.get("notification_title"),
-        "priority": contents.get("priority"),
-        "scenarios": contents.get("enabled_scenarios") or [],
-        "occupancy": {
-            state: _names_for(engine, [p.get("person") for p in people if p.get("person")])
-            for state, people in (contents.get("occupancy") or {}).items()
-        },
-        "deliveries": deliveries,
-        "delivery_provenance": contents.get("delivery_provenance") or {},
-    }
-    if contents.get("unknown_names"):
-        result["unknown_names"] = contents["unknown_names"]
-    if contents.get("_suppression_reason"):
-        result["suppressed"] = contents["_suppression_reason"]
-    if requester := (contents.get("original_context") or {}).get("user"):
-        result["requested_by"] = requester
-    return result
 
 
 class SupernotifyTool(Tool):

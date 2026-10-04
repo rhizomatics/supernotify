@@ -24,7 +24,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import DOMAIN
-from .archive import ARCHIVE_PURGE_MIN_INTERVAL
+from .archive import ARCHIVE_PURGE_MIN_INTERVAL, summarize_notification
 from .common import ensure_list
 from .const import (
     ATTR_CUSTOM_TARGET,
@@ -63,7 +63,6 @@ from .const import (
     OVERRIDE_KINDS,
 )
 from .engine import SupernotifyEngine
-from .llm import summarize_notification
 from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
 from .target import Target
 
