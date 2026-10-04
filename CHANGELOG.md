@@ -3,6 +3,11 @@
 ## ✨ Enhancements
 > These enhancements support the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) dashboard panels, and work too in the regular Home Assistants Actions page.
 
+### Fallback Deliveries
+- A delivery can now have one or more other deliveries list under a `fallback:` key
+ - If the main delivery fails each of these is tried in turn
+ - This also forces the primary delivery into wait-for-response rather than the usual fire-and-forget Home Assistant action calls
+
 ### Dupe Detection / Simulation
 - There are now two duplicate tracking caches, to make working with the recent simulation / dry_run feature easier
   - Simulated notifications go into their own tracking cache and are ignored by real notifications
