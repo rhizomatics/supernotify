@@ -22,13 +22,15 @@
   - Pick a time ending now - last hour, 12 hours, day, week or month, simpler than setting `after` by hand
   - If you also set `after`, the latter gets priority
 - `after` and `before` time filters now use the Home Assistant time zone settings to be a local time
-- Scanning archive by date range now more efficient, using the file system `ctime` creation time rather than examining the JSON
 
 ## 🐛 Bug fixes
 - `enquire_archive` now not so fussy about case when filtering for notification outcome.
-- `enquire_archive` no longer opens and parses archive files from outside the `after` / `before` times
-- `enquire_archive` treats an `after` or `before` without a time zone as local time
+- `enquire_archive` no longer opens and parses archive files from outside the `after` / `before` times, now using the file system `ctime` creation time rather than examining the JSON
 - `enquire_configuration` was failing when deliveries had `conditions` with JSON serialization error
+- Scenario `binary_sensor` state is now `unknown` unless live scenarios are switched on with `scenario_control: {refresh: true}`
+  - Previously it showed whatever the conditions evaluated to at start up and never changed, so looked live when it wasn't
+  - `enquire_active_scenarios` is unaffected, and always evaluates the scenarios as of now
+- Conditional scenario entities report state as unknown if scenario auto refresh left at the default off setting. Refresh control switch logged at startup.
 
 # v2.12.0
 

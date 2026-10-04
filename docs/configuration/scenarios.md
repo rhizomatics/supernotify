@@ -234,7 +234,7 @@ Manual control of scenarios via `binary_sensor` only affects which ones get auto
 
 The state is kept current in two ways. A change to an entity referenced by a scenario's conditions re-evaluates the scenarios that depend on that entity, immediately. A periodic sweep then covers what no entity change can announce: time windows, sun position, and templates whose dependencies could not be determined statically.
 
-Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on small hardware is worth controlling, so the section below is needed to switch it on.
+Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on small hardware is worth controlling, so the section below is needed to switch it on. Until it is, the `binary_sensor` of a scenario with conditions is `unknown`, since nothing would keep its state current.
 
 ```yaml
 scenario_control:

@@ -19,11 +19,15 @@ to `ScenarioRegistry` in scenario.py.
 
 from __future__ import annotations
 
+import datetime as dt
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, Mock
 
 from homeassistant.const import CONF_ALIAS, CONF_CONDITIONS, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
+from custom_components.supernotify.const import SCENARIO_STATE_REFRESH_DEFAULT
 from custom_components.supernotify.hass_api import HomeAssistantAPI
 from custom_components.supernotify.people import PeopleRegistry
 from custom_components.supernotify.scenario import ScenarioRegistry
@@ -194,7 +198,7 @@ async def test_entityless_template_scenario_evaluates_end_to_end(hass: HomeAssis
             "always_on": SCENARIO_SCHEMA({CONF_ALIAS: "always on", CONF_CONDITIONS: "{{ 1 == 1 }}"}),
             "always_off": SCENARIO_SCHEMA({CONF_ALIAS: "always off", CONF_CONDITIONS: "{{ 1 == 2 }}"}),
         },
-        {},
+        {"refresh": True},
         people_registry,
     )
     await registry.initialize(delivery_registry, {}, hass_api)
@@ -221,7 +225,7 @@ async def test_condition_entity_change_is_the_cause_of_scenario_state_change(has
 
     from .test_switch import _config, _setup
 
-    await _setup(hass, {**_config(), "scenario_control": {"refresh": True}})
+    await _setup(hass, _config())
     cause = Context()
 
     hass.states.async_set("binary_sensor.dnd_test", "off", context=cause)
@@ -231,3 +235,44 @@ async def test_condition_entity_change_is_the_cause_of_scenario_state_change(has
     assert state is not None
     assert state.state == STATE_OFF
     assert state.context.id == cause.id
+
+
+async def test_scenario_state_is_unknown_unless_refresh_switched_on(hass: HomeAssistant) -> None:
+    """With nothing to keep it current, a scenario's state would stay as evaluated at startup,
+    so it is unknown rather than a value that looks live and isn't (#240)."""
+    from .test_switch import _config, _setup
+
+    config = _config()
+    del config["scenario_control"]
+    engine = await _setup(hass, config)
+    assert not engine.context.scenario_registry.scenario_state_enabled
+
+    state = hass.states.get("binary_sensor.supernotify_scenario_sera")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.states.async_set("binary_sensor.dnd_test", "off")
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=SCENARIO_STATE_REFRESH_DEFAULT + 1))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera").state == STATE_UNKNOWN
+
+
+async def test_scenario_state_is_swept_and_follows_condition_entities(hass: HomeAssistant) -> None:
+    """Once switched on, every scenario binary_sensor is re-published each refresh interval, and
+    straight away when an entity its conditions depend on changes (#240)."""
+    from .test_switch import _config, _setup
+
+    await _setup(hass, _config())
+    state = hass.states.get("binary_sensor.supernotify_scenario_sera")
+    assert state is not None
+    assert state.state == STATE_ON
+    # the state object is updated in place when only reported again, so take the time now
+    reported_at_startup = state.last_reported
+
+    async_fire_time_changed(hass, dt_util.utcnow() + dt.timedelta(seconds=SCENARIO_STATE_REFRESH_DEFAULT + 1))
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera").last_reported > reported_at_startup
+
+    hass.states.async_set("binary_sensor.dnd_test", "off")
+    await hass.async_block_till_done()
+    assert hass.states.get("binary_sensor.supernotify_scenario_sera").state == STATE_OFF

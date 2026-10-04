@@ -53,7 +53,12 @@ def _config(enabled: dict[str, bool] | None = None) -> dict[str, Any]:
         recipient["enabled"] = enabled["recipient"]
     if "delivery" in enabled:
         delivery["enabled"] = enabled["delivery"]
-    config: dict[str, Any] = {"delivery": {"testing": delivery}, "scenarios": {"sera": scenario}, "recipients": [recipient]}
+    config: dict[str, Any] = {
+        "delivery": {"testing": delivery},
+        "scenarios": {"sera": scenario},
+        "recipients": [recipient],
+        "scenario_control": {"refresh": True},
+    }
     if "transport" in enabled:
         config["transports"] = {"generic": {"enabled": enabled["transport"]}}
     return config

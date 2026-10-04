@@ -56,6 +56,7 @@ def _stateful_scenario_config(condition_state: str) -> dict:
             },
         },
         "recipients": [],
+        "scenario_control": {"refresh": True},
     }
 
 
@@ -540,6 +541,7 @@ def test_scenario_is_on_uses_the_shared_batch_cvars_when_set() -> None:
     auto-generated mock method instead of the real one under test."""
     registry = ScenarioRegistry.__new__(ScenarioRegistry)
     registry._scenario_cond_entities = {"s": {"input_boolean.dnd"}}
+    registry.scenario_control = {"refresh": True}
     sentinel_cvars = MagicMock()
     registry._batch_cvars = sentinel_cvars
     scenario = MagicMock()

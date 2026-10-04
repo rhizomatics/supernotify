@@ -99,6 +99,8 @@ class ScenarioRegistry:
                 hass_api.subscribe_state(sorted(scenario_watch), self.async_refresh_scenario_states)
             if self.scenario_state_interval:
                 hass_api.subscribe_interval(self.scenario_state_interval, self.async_refresh_scenario_states)
+        else:
+            _LOGGER.info("SUPERNOTIFY Scenario state refresh is off, scenario binary_sensors will be unknown")
 
     def register_entity(self, name: str, entity: SupernotifyScenarioBinarySensor) -> None:
         """Called by SupernotifyScenarioBinarySensor.async_added_to_hass()."""
@@ -155,7 +157,7 @@ class ScenarioRegistry:
 
     @property
     def scenario_state_enabled(self) -> bool:
-        return bool(self.scenario_control.get(CONF_REFRESH, True))
+        return bool(self.scenario_control.get(CONF_REFRESH, False))
 
     @property
     def scenario_state_interval(self) -> int:
@@ -179,6 +181,8 @@ class ScenarioRegistry:
     def _scenario_state(self, scenario: Scenario, cvars: ConditionVariables | None = None) -> str:
         """State to expose for a scenario binary_sensor.
 
+        - refresh not switched on in `scenario_control` -> STATE_UNKNOWN, since nothing
+          would keep an evaluated state current and it would stay as it was at startup;
         - no conditions at all (manual/emergency-only scenario) -> STATE_UNKNOWN
           (state is undefined outside of a notification);
         - otherwise ON/OFF from a neutral evaluation (current occupancy, medium
@@ -191,7 +195,7 @@ class ScenarioRegistry:
           placeholders rather than real values - a known, accepted limitation rather
           than something this method tries to detect and suppress.
         """
-        if not scenario.expose_state:
+        if not self.scenario_state_enabled or not scenario.expose_state:
             return STATE_UNKNOWN
         if not scenario.conditions_config:
             return STATE_UNKNOWN
@@ -233,6 +237,7 @@ class ScenarioRegistry:
         # mechanism meant to run on every relevant state change and every periodic sweep.
         occupiers = self._people_registry.determine_occupancy()
         self._batch_cvars = ConditionVariables([], [], [], PRIORITY_MEDIUM, occupiers, None, None)
+        refreshed: int = 0
         try:
             for name in self.scenarios if names is None else names:
                 entity = self._entities.get(name)
@@ -240,8 +245,10 @@ class ScenarioRegistry:
                     if context is not None:
                         entity.async_set_context(context)
                     entity.async_write_ha_state()
+                    refreshed += 1
         finally:
             self._batch_cvars = None
+        _LOGGER.debug("SUPERNOTIFY Refreshed state of %s scenario binary_sensors", refreshed)
 
 
 class Scenario:
