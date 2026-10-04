@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import sys
+from functools import partial
 from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
@@ -177,27 +178,36 @@ ACTION_NAMES: Final[tuple[str, ...]] = (
     "enquire_snoozes",
     "clear_snoozes",
     "snooze",
+    "silence",
+    "unsnooze",
     "purge_archive",
     "purge_media",
     "refresh_entities",
     "reset_overrides",
 )
 
-SNOOZE_COMMANDS: Final[dict[str, CommandType]] = {
-    "snooze": CommandType.SNOOZE,
-    "silence": CommandType.SILENCE,
-    "resume": CommandType.NORMAL,
-}
 SNOOZE_MAX_MINUTES: Final[int] = 7 * 24 * 60
 SNOOZE_REASON: Final[str] = "Action"
-SNOOZE_ACTION_SCHEMA: Final[vol.Schema] = vol.Schema({
-    vol.Required("command"): vol.In(SNOOZE_COMMANDS),
+# what to snooze, silence or unsnooze, the same for all three actions
+SNOOZE_TARGET_FIELDS: Final[dict[vol.Marker, Any]] = {
     vol.Optional("scope", default="everything"): vol.In(SNOOZE_SCOPES),
     vol.Optional("name"): cv.string,
     vol.Optional("person"): cv.entity_domain("person"),
-    vol.Optional("minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=SNOOZE_MAX_MINUTES)),
-    vol.Optional("reason"): cv.string,
-})
+}
+# supernotify.snooze, supernotify.silence and supernotify.unsnooze: the command of a mobile action,
+# one Home Assistant action each
+SNOOZE_ACTIONS: Final[dict[str, tuple[CommandType, vol.Schema]]] = {
+    "snooze": (
+        CommandType.SNOOZE,
+        vol.Schema({
+            **SNOOZE_TARGET_FIELDS,
+            vol.Optional("minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=SNOOZE_MAX_MINUTES)),
+            vol.Optional("reason"): cv.string,
+        }),
+    ),
+    "silence": (CommandType.SILENCE, vol.Schema({**SNOOZE_TARGET_FIELDS, vol.Optional("reason"): cv.string})),
+    "unsnooze": (CommandType.NORMAL, vol.Schema(SNOOZE_TARGET_FIELDS)),
+}
 
 ATTR_KIND: Final[str] = "kind"
 RESET_OVERRIDES_SCHEMA: Final = vol.Schema({vol.Optional(ATTR_KIND): vol.In(OVERRIDE_KINDS)})
@@ -341,12 +351,11 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         return {"cleared": engine.clear_snoozes()}
 
     @callback
-    def action_snooze(call: ServiceCall) -> dict[str, Any]:
-        """supernotify.snooze - the same snooze, silence or resume as a mobile action, voice sentence or the
-        AI tool, for scripts, automations and dashboards, and open to any user, where firing the mobile
-        action event over the API needs an admin. A callback, so it runs in the event loop like the others
-        that change state."""
-        cmd: CommandType = SNOOZE_COMMANDS[call.data["command"]]
+    def snooze_command(cmd: CommandType, call: ServiceCall) -> dict[str, Any]:
+        """supernotify.snooze, supernotify.silence and supernotify.unsnooze - the same snooze, silence or
+        unsnooze as a mobile action, voice sentence or the AI tool, for scripts, automations and dashboards,
+        and open to any user, where firing the mobile action event over the API needs an admin. Run in the
+        event loop like the others that change state."""
         scope = SNOOZE_SCOPES[call.data["scope"]]
         name: str | None = call.data.get("name")
         if isinstance(scope, QualifiedTargetType):
@@ -527,13 +536,14 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         supplemental_action_clear_snoozes,
         supports_response=SupportsResponse.ONLY,
     )
-    hass.services.async_register(
-        DOMAIN,
-        "snooze",
-        action_snooze,
-        schema=SNOOZE_ACTION_SCHEMA,
-        supports_response=SupportsResponse.OPTIONAL,
-    )
+    for action_name, (cmd, schema) in SNOOZE_ACTIONS.items():
+        hass.services.async_register(
+            DOMAIN,
+            action_name,
+            callback(partial(snooze_command, cmd)),
+            schema=schema,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
     hass.services.async_register(
         DOMAIN,
         "purge_archive",

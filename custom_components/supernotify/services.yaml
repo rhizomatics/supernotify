@@ -239,16 +239,6 @@ reset_overrides:
 clear_snoozes:
 snooze:
   fields:
-    command:
-      required: true
-      example: snooze
-      selector:
-        select:
-          translation_key: snooze_command
-          options:
-            - snooze
-            - silence
-            - resume
     scope:
       required: false
       default: everything
@@ -287,6 +277,63 @@ snooze:
       example: Dashboard
       selector:
         text:
+silence:
+  fields:
+    scope:
+      required: false
+      default: everything
+      selector:
+        select:
+          translation_key: snooze_scope
+          options:
+            - everything
+            - noncritical
+            - delivery
+            - transport
+            - priority
+            - camera
+            - tag
+    name:
+      required: false
+      example: alexa_announce
+      selector:
+        text:
+    person:
+      required: false
+      selector:
+        entity:
+          domain: person
+    reason:
+      required: false
+      example: Dashboard
+      selector:
+        text:
+unsnooze:
+  fields:
+    scope:
+      required: false
+      default: everything
+      selector:
+        select:
+          translation_key: snooze_scope
+          options:
+            - everything
+            - noncritical
+            - delivery
+            - transport
+            - priority
+            - camera
+            - tag
+    name:
+      required: false
+      example: alexa_announce
+      selector:
+        text:
+    person:
+      required: false
+      selector:
+        entity:
+          domain: person
 purge_media:
   fields:
     days:

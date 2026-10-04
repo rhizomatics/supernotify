@@ -244,12 +244,8 @@
         },
         "snooze": {
             "name": "Mettre en pause",
-            "description": "Met en pause, rend silencieuses ou rétablit les notifications - pour tous ou une personne, tout ou seulement certains envois, moyens de transport, priorités, caméras ou étiquettes",
+            "description": "Met les notifications en pause quelques minutes - pour tous ou une personne, tout ou seulement certains envois, moyens de transport, priorités, caméras ou étiquettes",
             "fields": {
-                "command": {
-                    "name": "Commande",
-                    "description": "Pause de quelques minutes, silence jusqu'à reprise, ou reprise"
-                },
                 "scope": {
                     "name": "Portée",
                     "description": "Ce qui est mis en pause - tout si non précisé"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "Raison",
                     "description": "Affichée avec la pause par enquire_snoozes"
+                }
+            }
+        },
+        "silence": {
+            "name": "Rendre silencieux",
+            "description": "Rend les notifications silencieuses jusqu'à la reprise - pour tous ou une personne, tout ou seulement certains envois, moyens de transport, priorités, caméras ou étiquettes",
+            "fields": {
+                "scope": {
+                    "name": "Portée",
+                    "description": "Ce qui est mis en pause - tout si non précisé"
+                },
+                "name": {
+                    "name": "Nom",
+                    "description": "L'envoi, le moyen de transport, la priorité ou l'entity_id de la caméra, pour ces portées, ou l'étiquette"
+                },
+                "person": {
+                    "name": "Personne",
+                    "description": "Seulement les notifications de cette personne - tous si non précisé"
+                },
+                "reason": {
+                    "name": "Raison",
+                    "description": "Affichée avec la pause par enquire_snoozes"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "Reprendre",
+            "description": "Retire la pause ou le silence avec cette portée, ce nom et cette personne",
+            "fields": {
+                "scope": {
+                    "name": "Portée",
+                    "description": "Ce qui est mis en pause - tout si non précisé"
+                },
+                "name": {
+                    "name": "Nom",
+                    "description": "L'envoi, le moyen de transport, la priorité ou l'entity_id de la caméra, pour ces portées, ou l'étiquette"
+                },
+                "person": {
+                    "name": "Personne",
+                    "description": "Seulement les notifications de cette personne - tous si non précisé"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "Standard",
                 "full": "Complet",
                 "daily": "Comptes par jour"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "Pause",
-                "silence": "Rendre silencieux",
-                "resume": "Reprendre"
             }
         },
         "snooze_scope": {

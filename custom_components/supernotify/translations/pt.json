@@ -244,12 +244,8 @@
         },
         "snooze": {
             "name": "Adiar",
-            "description": "Adia, silencia ou retoma as notificações - para todos ou uma pessoa, tudo ou só algumas entregas, transportes, prioridades, câmaras ou etiquetas",
+            "description": "Adia as notificações por alguns minutos - para todos ou uma pessoa, tudo ou só algumas entregas, transportes, prioridades, câmaras ou etiquetas",
             "fields": {
-                "command": {
-                    "name": "Comando",
-                    "description": "Adiar por alguns minutos, silenciar até retomar, ou retomar"
-                },
                 "scope": {
                     "name": "Âmbito",
                     "description": "O que adiar - tudo se não for indicado"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "Motivo",
                     "description": "Mostrado com a pausa por enquire_snoozes"
+                }
+            }
+        },
+        "silence": {
+            "name": "Silenciar",
+            "description": "Silencia as notificações até serem retomadas - para todos ou uma pessoa, tudo ou só algumas entregas, transportes, prioridades, câmaras ou etiquetas",
+            "fields": {
+                "scope": {
+                    "name": "Âmbito",
+                    "description": "O que adiar - tudo se não for indicado"
+                },
+                "name": {
+                    "name": "Nome",
+                    "description": "A entrega, o transporte, a prioridade ou o entity_id da câmara, para esses âmbitos, ou a etiqueta"
+                },
+                "person": {
+                    "name": "Pessoa",
+                    "description": "Só as notificações desta pessoa - todos se não for indicada"
+                },
+                "reason": {
+                    "name": "Motivo",
+                    "description": "Mostrado com a pausa por enquire_snoozes"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "Retomar",
+            "description": "Remove a pausa ou o silêncio com este âmbito, nome e pessoa",
+            "fields": {
+                "scope": {
+                    "name": "Âmbito",
+                    "description": "O que adiar - tudo se não for indicado"
+                },
+                "name": {
+                    "name": "Nome",
+                    "description": "A entrega, o transporte, a prioridade ou o entity_id da câmara, para esses âmbitos, ou a etiqueta"
+                },
+                "person": {
+                    "name": "Pessoa",
+                    "description": "Só as notificações desta pessoa - todos se não for indicada"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "Padrão",
                 "full": "Completo",
                 "daily": "Contagens por dia"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "Adiar",
-                "silence": "Silenciar",
-                "resume": "Retomar"
             }
         },
         "snooze_scope": {

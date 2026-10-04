@@ -243,13 +243,9 @@
             "description": "Czyści wszystkie aktualnie aktywne snooze"
         },
         "snooze": {
-            "name": "Wycisz na czas",
-            "description": "Wstrzymuje, wycisza lub wznawia powiadomienia - dla wszystkich lub jednej osoby, wszystkie lub tylko wybrane dostarczenia, sposoby wysyłki, priorytety, kamery lub etykiety",
+            "name": "Wstrzymaj",
+            "description": "Wstrzymuje powiadomienia na kilka minut - dla wszystkich lub jednej osoby, wszystkie lub tylko wybrane dostarczenia, sposoby wysyłki, priorytety, kamery lub etykiety",
             "fields": {
-                "command": {
-                    "name": "Polecenie",
-                    "description": "Wstrzymaj na kilka minut, wycisz do wznowienia lub wznów"
-                },
                 "scope": {
                     "name": "Zakres",
                     "description": "Co wstrzymać - wszystko, jeśli nie podano"
@@ -269,6 +265,46 @@
                 "reason": {
                     "name": "Powód",
                     "description": "Pokazywany przy wstrzymaniu przez enquire_snoozes"
+                }
+            }
+        },
+        "silence": {
+            "name": "Wycisz",
+            "description": "Wycisza powiadomienia do wznowienia - dla wszystkich lub jednej osoby, wszystkie lub tylko wybrane dostarczenia, sposoby wysyłki, priorytety, kamery lub etykiety",
+            "fields": {
+                "scope": {
+                    "name": "Zakres",
+                    "description": "Co wstrzymać - wszystko, jeśli nie podano"
+                },
+                "name": {
+                    "name": "Nazwa",
+                    "description": "Dostarczenie, sposób wysyłki, priorytet lub entity_id kamery dla tych zakresów albo etykieta"
+                },
+                "person": {
+                    "name": "Osoba",
+                    "description": "Tylko powiadomienia tej osoby - wszyscy, jeśli nie podano"
+                },
+                "reason": {
+                    "name": "Powód",
+                    "description": "Pokazywany przy wstrzymaniu przez enquire_snoozes"
+                }
+            }
+        },
+        "unsnooze": {
+            "name": "Wznów",
+            "description": "Usuwa wstrzymanie lub wyciszenie o tym zakresie, nazwie i osobie",
+            "fields": {
+                "scope": {
+                    "name": "Zakres",
+                    "description": "Co wstrzymać - wszystko, jeśli nie podano"
+                },
+                "name": {
+                    "name": "Nazwa",
+                    "description": "Dostarczenie, sposób wysyłki, priorytet lub entity_id kamery dla tych zakresów albo etykieta"
+                },
+                "person": {
+                    "name": "Osoba",
+                    "description": "Tylko powiadomienia tej osoby - wszyscy, jeśli nie podano"
                 }
             }
         },
@@ -642,13 +678,6 @@
                 "standard": "Standardowa",
                 "full": "Pełna",
                 "daily": "Liczniki dzienne"
-            }
-        },
-        "snooze_command": {
-            "options": {
-                "snooze": "Wstrzymaj",
-                "silence": "Wycisz",
-                "resume": "Wznów"
             }
         },
         "snooze_scope": {
