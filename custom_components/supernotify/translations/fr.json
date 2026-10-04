@@ -242,6 +242,36 @@
             "name": "Effacer les snoozes",
             "description": "Efface tous les snoozes actuellement actifs"
         },
+        "snooze": {
+            "name": "Mettre en pause",
+            "description": "Met en pause, rend silencieuses ou rétablit les notifications - pour tous ou une personne, tout ou seulement certains envois, moyens de transport, priorités, caméras ou étiquettes",
+            "fields": {
+                "command": {
+                    "name": "Commande",
+                    "description": "Pause de quelques minutes, silence jusqu'à reprise, ou reprise"
+                },
+                "scope": {
+                    "name": "Portée",
+                    "description": "Ce qui est mis en pause - tout si non précisé"
+                },
+                "name": {
+                    "name": "Nom",
+                    "description": "L'envoi, le moyen de transport, la priorité ou l'entity_id de la caméra, pour ces portées, ou l'étiquette"
+                },
+                "person": {
+                    "name": "Personne",
+                    "description": "Seulement les notifications de cette personne - tous si non précisé"
+                },
+                "minutes": {
+                    "name": "Durée en minutes",
+                    "description": "Durée de la pause - la durée configurée si non précisée"
+                },
+                "reason": {
+                    "name": "Raison",
+                    "description": "Affichée avec la pause par enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Purger les médias",
             "description": "Supprime les fichiers multimédias stockés plus anciens que le nombre de jours configuré (ou indiqué)",
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "Aucune notification archivée trouvée avec l'id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "Mise en pause impossible : {error}"
         }
     },
     "options": {
@@ -609,6 +642,24 @@
                 "standard": "Standard",
                 "full": "Complet",
                 "daily": "Comptes par jour"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Pause",
+                "silence": "Rendre silencieux",
+                "resume": "Reprendre"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Tout",
+                "noncritical": "Tout sauf le critique",
+                "delivery": "Envoi",
+                "transport": "Moyen de transport",
+                "priority": "Priorité",
+                "camera": "Caméra",
+                "tag": "Étiquette"
             }
         }
     }

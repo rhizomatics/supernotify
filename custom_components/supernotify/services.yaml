@@ -237,6 +237,56 @@ reset_overrides:
             - value: transport
               label: Transport
 clear_snoozes:
+snooze:
+  fields:
+    command:
+      required: true
+      example: snooze
+      selector:
+        select:
+          translation_key: snooze_command
+          options:
+            - snooze
+            - silence
+            - resume
+    scope:
+      required: false
+      default: everything
+      selector:
+        select:
+          translation_key: snooze_scope
+          options:
+            - everything
+            - noncritical
+            - delivery
+            - transport
+            - priority
+            - camera
+            - tag
+    name:
+      required: false
+      example: alexa_announce
+      selector:
+        text:
+    person:
+      required: false
+      selector:
+        entity:
+          domain: person
+    minutes:
+      required: false
+      example: 30
+      selector:
+        number:
+          min: 1
+          max: 10080
+          unit_of_measurement: min
+          mode: box
+    reason:
+      required: false
+      example: Dashboard
+      selector:
+        text:
 purge_media:
   fields:
     days:

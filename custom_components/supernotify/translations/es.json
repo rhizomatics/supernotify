@@ -242,6 +242,36 @@
             "name": "Borrar snooze",
             "description": "Borra todos los snooze actualmente activos"
         },
+        "snooze": {
+            "name": "Posponer",
+            "description": "Pospone, silencia o reanuda las notificaciones - para todos o una persona, todo o solo algunas entregas, transportes, prioridades, cámaras o etiquetas",
+            "fields": {
+                "command": {
+                    "name": "Comando",
+                    "description": "Posponer unos minutos, silenciar hasta reanudar, o reanudar"
+                },
+                "scope": {
+                    "name": "Alcance",
+                    "description": "Qué posponer - todo si no se indica"
+                },
+                "name": {
+                    "name": "Nombre",
+                    "description": "La entrega, el transporte, la prioridad o el entity_id de la cámara, para esos alcances, o la etiqueta"
+                },
+                "person": {
+                    "name": "Persona",
+                    "description": "Solo las notificaciones de esta persona - todos si no se indica"
+                },
+                "minutes": {
+                    "name": "Minutos",
+                    "description": "Cuánto dura la pausa - el tiempo configurado si no se indica"
+                },
+                "reason": {
+                    "name": "Motivo",
+                    "description": "Se muestra con la pausa en enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Purgar medios",
             "description": "Elimina los archivos multimedia almacenados más antiguos que el número de días configurado (o indicado)",
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "No se encontró ninguna notificación archivada con el id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "No se puede posponer: {error}"
         }
     },
     "options": {
@@ -609,6 +642,24 @@
                 "standard": "Estándar",
                 "full": "Completo",
                 "daily": "Recuentos por día"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Posponer",
+                "silence": "Silenciar",
+                "resume": "Reanudar"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Todo",
+                "noncritical": "Todo salvo lo crítico",
+                "delivery": "Entrega",
+                "transport": "Transporte",
+                "priority": "Prioridad",
+                "camera": "Cámara",
+                "tag": "Etiqueta"
             }
         }
     }
