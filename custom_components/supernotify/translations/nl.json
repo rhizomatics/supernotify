@@ -292,7 +292,7 @@
                 },
                 "verbosity": {
                     "name": "Detailniveau",
-                    "description": "Hoeveel van elke melding wordt teruggegeven: een korte samenvatting van wat er gebeurde, het standaard gearchiveerde record zonder de debug-trace, of alles wat is opgeslagen. Standaard voor een lijst en volledig voor één 'id'."
+                    "description": "Hoeveel van elke melding wordt teruggegeven: een korte samenvatting van wat er gebeurde, het standaard gearchiveerde record zonder de debug-trace, of alles wat is opgeslagen. Standaard voor een lijst en volledig voor één 'id'. 'Tellingen per dag' geeft in plaats daarvan totalen per lokale dag, zonder limiet tenzij er een is opgegeven."
                 }
             }
         }
@@ -607,7 +607,8 @@
             "options": {
                 "summary": "Samenvatting",
                 "standard": "Standaard",
-                "full": "Volledig"
+                "full": "Volledig",
+                "daily": "Tellingen per dag"
             }
         }
     }

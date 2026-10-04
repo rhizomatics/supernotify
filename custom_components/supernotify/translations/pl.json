@@ -292,7 +292,7 @@
                 },
                 "verbosity": {
                     "name": "Szczegółowość",
-                    "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'."
+                    "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'. 'Liczniki dzienne' zwraca zamiast tego sumy dla każdego lokalnego dnia, bez limitu, chyba że zostanie podany."
                 }
             }
         }
@@ -607,7 +607,8 @@
             "options": {
                 "summary": "Podsumowanie",
                 "standard": "Standardowa",
-                "full": "Pełna"
+                "full": "Pełna",
+                "daily": "Liczniki dzienne"
             }
         }
     }
