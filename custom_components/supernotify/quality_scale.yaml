@@ -295,12 +295,13 @@ rules:
       dynamically discovered devices are added after setup.
 
   entity-category:
-    status: todo
+    status: done
     comment: |
-      Partial: EntityCategory.DIAGNOSTIC set on all scenario/recipient
-      binary_sensors and the two counter sensors (binary_sensor.py,
-      sensor.py), EntityCategory.CONFIG on the scenario and recipient switches (switch.py),
-      plus notify.py:575. Delivery/transport entities not yet reviewed.
+      Every switch (scenario, recipient, delivery, transport) is EntityCategory.CONFIG via
+      SupernotifyOverridableSwitch, as is the reset_overrides button; the scenario and
+      recipient binary_sensors, the deprecated delivery/transport binary_sensors and the
+      two counter sensors are EntityCategory.DIAGNOSTIC. The recipient notify entities
+      deliberately have none, being the primary entity a recipient is notified through.
 
   entity-device-class:
     status: exempt
@@ -321,14 +322,14 @@ rules:
       default (correcting a previous incorrect "done" status here).
 
   entity-translations:
-    status: todo
+    status: done
     comment: |
-      Partial: the two counter sensors, and the scenario and recipient
-      binary_sensors and switches, have translated names via strings.json's
-      "entity" section and _attr_translation_key (the scenario or recipient name
-      being a translation placeholder). The type comes first in each name, so
-      scenarios and recipients each sort together in the entity list.
-      Delivery/transport entities not yet reviewed.
+      Every entity has a translated name via strings.json's "entity" section and
+      _attr_translation_key - the counter sensors, the reset_overrides button, the
+      recipient notify entities, and the scenario, recipient, delivery and transport
+      binary_sensors and switches (the scenario/recipient/delivery/transport name being a
+      translation placeholder). The type comes first in each name, so each kind sorts
+      together in the entity list.
 
   exception-translations:
     status: todo
@@ -336,12 +337,12 @@ rules:
       Need to add translatable exception messages using translation_key.
 
   icon-translations:
-    status: todo
+    status: done
     comment: |
-      Partial: icons.json covers every switch, binary_sensor, sensor and button entity, via
-      _attr_translation_key. The recipient notify entities (people.py) have no
-      translation_key, so no icon translation, yet. No state/range-dependent icons
-      identified so far.
+      icons.json covers every entity via _attr_translation_key, including the recipient
+      notify entities. Switches and binary_sensors have state icons, so a scenario,
+      recipient, delivery or transport that is off looks different from one that is on
+      (test_icons.py checks every on/off entity has one).
 
   reconfiguration-flow:
     status: todo
