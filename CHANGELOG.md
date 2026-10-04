@@ -13,6 +13,7 @@
   | Dry run → Live	 | Sent (was suppressed as a dupe in 2.12.0) |
   | Live → Dry run	 | Reported as DUPE, as a live send would be |
   | Dry run → Dry run	 | Reported as DUPE, so dupe handling can still be tried with dry runs alone |
+
 ### Archive Enquiry
 - `enquire_archive` has a new `verbosity` option
   - `summary` - what happened to each notification in brief, the same as the Assist / MCP tools give
@@ -22,7 +23,8 @@
   - Pick a time ending now - last hour, 12 hours, day, week or month, simpler than setting `after` by hand. Remains limited by the max results set.
   - If you also set `after`, the latter gets priority
 - `after` and `before` time filters now use the Home Assistant time zone settings to be a local time
-### Icons
+
+### Icons
 - State icons now defined for each of the published entities, in line with the 'gold' level Home Assistant component quality scale, contributed by @lollox80
 
 ## 🐛 Bug fixes
