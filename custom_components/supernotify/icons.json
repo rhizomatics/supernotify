@@ -9,9 +9,9 @@
                 }
             },
             "scenario_manual": {
-                "default": "mdi:clipboard-edit",
+                "default": "mdi:movie-edit-outline",
                 "state": {
-                    "off": "mdi:clipboard-edit-outline"
+                    "off": "mdi:movie-off-outline"
                 }
             },
             "recipient": {
