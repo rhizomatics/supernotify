@@ -96,6 +96,7 @@ OCCUPANCY_ONLY_IN = "only_in"
 OCCUPANCY_ONLY_OUT = "only_out"
 
 ATTR_ENABLED = "enabled"
+ATTR_OVERRIDDEN = "overridden"
 ATTR_TRANSPORT_ENABLED = "transport_enabled"
 ATTR_PRIORITY = "priority"
 ATTR_ACTION = "action"
