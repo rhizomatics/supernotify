@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Limite",
-                    "description": "Número máximo de notificações a devolver (20 por predefinição, 100 no máximo)."
+                    "description": "Número máximo de notificações a devolver (20 por predefinição; com contagens por dia, todas as do período)."
                 },
                 "after": {
                     "name": "Depois de",

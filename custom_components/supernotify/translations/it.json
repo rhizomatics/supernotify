@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Limite",
-                    "description": "Numero massimo di notifiche da restituire (default 20, max 100)."
+                    "description": "Numero massimo di notifiche da restituire (default 20; con i conteggi per giorno, tutte quelle del periodo)."
                 },
                 "after": {
                     "name": "Dopo",

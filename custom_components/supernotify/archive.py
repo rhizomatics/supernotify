@@ -51,12 +51,12 @@ def _filename_period(filename: str) -> tuple[float, float] | None:
 
     Both sides of a daylight saving change are allowed for, since the name has no UTC offset.
     """
+    time_zone = dt_util.get_default_time_zone()
     try:
-        named: dt.datetime = dt.datetime.strptime(filename[:16], "%Y-%m-%dT%H-%M")
+        named: dt.datetime = dt.datetime.strptime(filename[:16], "%Y-%m-%dT%H-%M").replace(tzinfo=time_zone)
     except ValueError:
         return None
-    time_zone = dt_util.get_default_time_zone()
-    stamps: list[float] = [named.replace(tzinfo=time_zone, fold=fold).timestamp() for fold in (0, 1)]
+    stamps: list[float] = [named.replace(fold=fold).timestamp() for fold in (0, 1)]
     return min(stamps), max(stamps) + 60
 
 
@@ -428,6 +428,16 @@ def _names_for(engine: SupernotifyEngine, person_ids: list[str]) -> list[str]:
     return sorted(_display_name(people[p]) if p in people else p for p in person_ids)
 
 
+def _scenario_names(scenarios: Any) -> list[str]:  # noqa: ANN401 - as stored, which has varied
+    """The scenario names of an archived notification: a list, or in older archive files a mapping by
+    name, or a single name."""
+    if not scenarios:
+        return []
+    if isinstance(scenarios, list | tuple | dict):
+        return [str(name) for name in scenarios]
+    return [str(scenarios)]
+
+
 def _bump(counts: dict[str, int], key: str) -> None:
     counts[key] = counts.get(key, 0) + 1
 
@@ -460,9 +470,8 @@ def summarize_by_day(entries: list[dict[str, Any]]) -> dict[str, Any]:
                 counts: dict[str, int] = day["deliveries"].setdefault(name, {"success": 0, "failed": 0})
                 counts["success"] += sent
                 counts["failed"] += failed
-        scenarios: Any = contents.get("enabled_scenarios") or []
-        for scenario in scenarios if isinstance(scenarios, list | tuple | dict) else [scenarios]:
-            _bump(day["scenarios"], str(scenario))
+        for scenario in _scenario_names(contents.get("enabled_scenarios")):
+            _bump(day["scenarios"], scenario)
     ordered: list[dict[str, Any]] = [days[key] for key in sorted(days)]
     return {"days": ordered, "count": sum(day["count"] for day in ordered)}
 
@@ -500,7 +509,7 @@ def summarize_notification(engine: SupernotifyEngine, contents: dict[str, Any]) 
         "message": contents.get("message"),
         "title": condition_variables.get("notification_title"),
         "priority": contents.get("priority"),
-        "scenarios": contents.get("enabled_scenarios") or [],
+        "scenarios": _scenario_names(contents.get("enabled_scenarios")),
         "occupancy": {
             state: _names_for(engine, [p.get("person") for p in people if p.get("person")])
             for state, people in (contents.get("occupancy") or {}).items()

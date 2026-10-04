@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Höchstanzahl",
-                    "description": "Maximale Anzahl zurückgegebener Benachrichtigungen (Standard 20, höchstens 100)."
+                    "description": "Maximale Anzahl zurückgegebener Benachrichtigungen (Standard 20; bei Zählungen pro Tag alle im Zeitraum)."
                 },
                 "after": {
                     "name": "Nach",
