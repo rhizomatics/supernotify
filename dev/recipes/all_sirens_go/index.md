@@ -1,22 +1,3 @@
-______________________________________________________________________
-
-tags:
-
-- transport
-- alexa
-- 433mhz
-- critical
-- emergency
-- rest_api
-- chime
-- rflink
-- mqtt
-- siren
-- sounder
-- hikvision title: All Sirens Go! description: Configure sirens of many types to be triggered by a single notification, including MQTT and 433Mhz devices, and sirens embedded in CCTV cameras, such as those from Hikvision
-
-______________________________________________________________________
-
 # Recipe - All Sirens Go
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/
