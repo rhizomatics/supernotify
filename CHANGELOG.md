@@ -19,9 +19,11 @@
   - `standard` - the archived notification without the `debug_trace`, the default for a list
   - `full` - everything stored, the default when asking for one notification by `id`
 - `enquire_archive` has a new `period` option
-  - Pick a time ending now - last hour, 12 hours, day, week or month, simpler than setting `after` by hand
+  - Pick a time ending now - last hour, 12 hours, day, week or month, simpler than setting `after` by hand. Remains limited by the max results set.
   - If you also set `after`, the latter gets priority
 - `after` and `before` time filters now use the Home Assistant time zone settings to be a local time
+### Icons
+- State icons now defined for each of the published entities, in line with the 'gold' level Home Assistant component quality scale, contributed by @lollox80
 
 ## 🐛 Bug fixes
 - `enquire_archive` now not so fussy about case when filtering for notification outcome.
