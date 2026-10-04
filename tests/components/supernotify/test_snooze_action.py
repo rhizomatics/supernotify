@@ -1,4 +1,4 @@
-"""Tests for supernotify.snooze: snooze, silence and resume from scripts, automations and dashboards."""
+"""Tests for supernotify.snooze, supernotify.silence and supernotify.unsnooze, from scripts, automations and dashboards."""
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from custom_components.supernotify.snoozer import Snooze
 
 
-async def _snooze(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    response = await hass.services.async_call(DOMAIN, "snooze", data, blocking=True, return_response=True)
+async def _snooze(hass: HomeAssistant, data: dict[str, Any], action: str = "snooze") -> dict[str, Any]:
+    response = await hass.services.async_call(DOMAIN, action, data, blocking=True, return_response=True)
     await hass.async_block_till_done()
     assert response is not None
     return dict(response)
@@ -36,7 +36,7 @@ def _only(engine: SupernotifyEngine) -> Snooze:
 async def test_snooze_everything_for_everyone_by_default(hass: HomeAssistant) -> None:
     engine = await _setup(hass, _config())
 
-    response = await _snooze(hass, {"command": "snooze", "minutes": 30})
+    response = await _snooze(hass, {"minutes": 30})
 
     snooze = _only(engine)
     assert snooze.target_type == GlobalTargetType.EVERYTHING
@@ -51,7 +51,7 @@ async def test_snooze_everything_for_everyone_by_default(hass: HomeAssistant) ->
 async def test_snooze_without_minutes_uses_configured_time(hass: HomeAssistant) -> None:
     engine = await _setup(hass, _config())
 
-    await _snooze(hass, {"command": "snooze", "scope": "noncritical"})
+    await _snooze(hass, {"scope": "noncritical"})
 
     snooze = _only(engine)
     assert snooze.target_type == GlobalTargetType.NONCRITICAL
@@ -61,9 +61,7 @@ async def test_snooze_without_minutes_uses_configured_time(hass: HomeAssistant) 
 async def test_silence_one_delivery_for_one_person_with_reason(hass: HomeAssistant) -> None:
     engine = await _setup(hass, _config())
 
-    await _snooze(
-        hass, {"command": "silence", "scope": "delivery", "name": "testing", "person": "person.joe", "reason": "Dashboard"}
-    )
+    await _snooze(hass, {"scope": "delivery", "name": "testing", "person": "person.joe", "reason": "Dashboard"}, "silence")
 
     snooze = _only(engine)
     assert snooze.target_type == QualifiedTargetType.DELIVERY
@@ -76,11 +74,11 @@ async def test_silence_one_delivery_for_one_person_with_reason(hass: HomeAssista
 
 async def test_resume_removes_the_matching_snooze_only(hass: HomeAssistant) -> None:
     engine = await _setup(hass, _config())
-    await _snooze(hass, {"command": "silence", "scope": "delivery", "name": "testing", "person": "person.joe"})
-    await _snooze(hass, {"command": "snooze", "scope": "noncritical"})
+    await _snooze(hass, {"scope": "delivery", "name": "testing", "person": "person.joe"}, "silence")
+    await _snooze(hass, {"scope": "noncritical"})
     assert len(engine.context.snoozer.snoozes) == 2
 
-    response = await _snooze(hass, {"command": "resume", "scope": "delivery", "name": "testing", "person": "person.joe"})
+    response = await _snooze(hass, {"scope": "delivery", "name": "testing", "person": "person.joe"}, "unsnooze")
 
     assert _only(engine).target_type == GlobalTargetType.NONCRITICAL
     assert len(response["snoozes"]) == 1
@@ -89,7 +87,7 @@ async def test_resume_removes_the_matching_snooze_only(hass: HomeAssistant) -> N
 async def test_name_is_ignored_for_global_scopes(hass: HomeAssistant) -> None:
     engine = await _setup(hass, _config())
 
-    await _snooze(hass, {"command": "snooze", "scope": "everything", "name": "testing"})
+    await _snooze(hass, {"scope": "everything", "name": "testing"})
 
     assert _only(engine).target is None
 
@@ -97,26 +95,27 @@ async def test_name_is_ignored_for_global_scopes(hass: HomeAssistant) -> None:
 async def test_works_without_a_response(hass: HomeAssistant) -> None:
     engine = await _setup(hass, _config())
 
-    assert await hass.services.async_call(DOMAIN, "snooze", {"command": "silence"}, blocking=True) is None
+    assert await hass.services.async_call(DOMAIN, "silence", {}, blocking=True) is None
     await hass.async_block_till_done()
     assert _only(engine).snooze_until is None
 
 
 @pytest.mark.parametrize(
-    ("data", "error"),
+    ("action", "data", "error"),
     [
-        ({"command": "snooze", "scope": "delivery"}, "A name is needed"),
-        ({"command": "snooze", "scope": "delivery", "name": "nope"}, "Unknown delivery 'nope'"),
-        ({"command": "snooze", "scope": "camera", "name": "driveway"}, "entity_id"),
-        ({"command": "snooze", "scope": "tag", "name": "no such thing"}, "No scenario or entity"),
-        ({"command": "snooze", "person": "person.stranger"}, "not a recipient"),
+        ("snooze", {"scope": "delivery"}, "A name is needed"),
+        ("silence", {"scope": "delivery", "name": "nope"}, "Unknown delivery 'nope'"),
+        ("snooze", {"scope": "camera", "name": "driveway"}, "entity_id"),
+        ("silence", {"scope": "tag", "name": "no such thing"}, "No scenario or entity"),
+        ("unsnooze", {"scope": "transport"}, "A name is needed"),
+        ("snooze", {"person": "person.stranger"}, "not a recipient"),
     ],
 )
-async def test_invalid_snooze_is_refused(hass: HomeAssistant, data: dict[str, Any], error: str) -> None:
+async def test_invalid_snooze_is_refused(hass: HomeAssistant, action: str, data: dict[str, Any], error: str) -> None:
     engine = await _setup(hass, _config())
 
     with pytest.raises(ServiceValidationError) as exc:
-        await hass.services.async_call(DOMAIN, "snooze", data, blocking=True)
+        await hass.services.async_call(DOMAIN, action, data, blocking=True)
 
     assert exc.value.translation_key == "invalid_snooze"
     assert error in exc.value.translation_placeholders["error"]
@@ -124,20 +123,31 @@ async def test_invalid_snooze_is_refused(hass: HomeAssistant, data: dict[str, An
 
 
 @pytest.mark.parametrize(
-    "data",
+    ("action", "data"),
     [
-        {},
-        {"command": "normal"},
-        {"command": "snooze", "scope": "mobile"},
-        {"command": "snooze", "minutes": 0},
-        {"command": "snooze", "person": "switch.joe"},
+        ("snooze", {"scope": "mobile"}),
+        ("snooze", {"minutes": 0}),
+        ("snooze", {"person": "switch.joe"}),
+        ("snooze", {"command": "snooze"}),
+        ("silence", {"minutes": 30}),
+        ("unsnooze", {"reason": "Dashboard"}),
     ],
 )
-async def test_schema_rejects_bad_fields(hass: HomeAssistant, data: dict[str, Any]) -> None:
+async def test_schema_rejects_bad_fields(hass: HomeAssistant, action: str, data: dict[str, Any]) -> None:
     await _setup(hass, _config())
 
     with pytest.raises(vol.Invalid):
-        await hass.services.async_call(DOMAIN, "snooze", data, blocking=True)
+        await hass.services.async_call(DOMAIN, action, data, blocking=True)
+
+
+async def test_unsnooze_without_a_match_changes_nothing(hass: HomeAssistant) -> None:
+    engine = await _setup(hass, _config())
+    await _snooze(hass, {"scope": "delivery", "name": "testing"})
+
+    response = await _snooze(hass, {"scope": "delivery", "name": "testing", "person": "person.joe"}, "unsnooze")
+
+    assert _only(engine).recipient_type == RecipientType.EVERYONE
+    assert len(response["snoozes"]) == 1
 
 
 async def test_tag_can_be_resumed_after_what_it_named_has_gone(hass: HomeAssistant) -> None:
@@ -146,6 +156,6 @@ async def test_tag_can_be_resumed_after_what_it_named_has_gone(hass: HomeAssista
         CommandType.SILENCE, QualifiedTargetType.TAG, "gone_camera", RecipientType.EVERYONE, None, None
     )
 
-    await _snooze(hass, {"command": "resume", "scope": "tag", "name": "gone_camera"})
+    await _snooze(hass, {"scope": "tag", "name": "gone_camera"}, "unsnooze")
 
     assert engine.context.snoozer.snoozes == {}
