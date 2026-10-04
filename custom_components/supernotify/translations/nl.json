@@ -338,7 +338,7 @@
                 },
                 "limit": {
                     "name": "Limiet",
-                    "description": "Maximaal aantal meldingen om terug te geven (standaard 20, maximaal 100)."
+                    "description": "Maximaal aantal meldingen om terug te geven (standaard 20; bij tellingen per dag alle meldingen in de periode)."
                 },
                 "after": {
                     "name": "Na",
