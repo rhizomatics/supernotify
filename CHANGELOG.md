@@ -1,10 +1,10 @@
 # v2.12.1
 
 ## ✨ Enhancements
-> These enhancements support the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) dashboard panels, and work too in the regula Home Assistants Actions page.
+> These enhancements support the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) dashboard panels, and work too in the regular Home Assistants Actions page.
 
 ### Dupe Detection / Simulation
-- There are now two duplicate tracking caches, to make working with the recent simulation / dry_run easier
+- There are now two duplicate tracking caches, to make working with the recent simulation / dry_run feature easier
   - Simulated notifications go into their own tracking cache and are ignored by real notifications
   - Simulated notifications check *both* caches, so you debug what would happen right now for real with that notification
 
