@@ -242,6 +242,36 @@
             "name": "Snoozes wissen",
             "description": "Wist alle momenteel actieve snoozes"
         },
+        "snooze": {
+            "name": "Sluimeren",
+            "description": "Meldingen sluimeren, dempen of hervatten - voor iedereen of één persoon, alles of alleen bepaalde bezorgingen, transportmiddelen, prioriteiten, camera's of labels",
+            "fields": {
+                "command": {
+                    "name": "Opdracht",
+                    "description": "Een paar minuten sluimeren, dempen tot hervatten, of hervatten"
+                },
+                "scope": {
+                    "name": "Bereik",
+                    "description": "Wat gesluimerd wordt - alles als niet opgegeven"
+                },
+                "name": {
+                    "name": "Naam",
+                    "description": "De bezorging, het transportmiddel, de prioriteit of de entity_id van de camera, voor die bereiken, of het label"
+                },
+                "person": {
+                    "name": "Persoon",
+                    "description": "Alleen de meldingen van deze persoon - iedereen als niet opgegeven"
+                },
+                "minutes": {
+                    "name": "Minuten",
+                    "description": "Hoe lang het sluimeren duurt - de ingestelde tijd als niet opgegeven"
+                },
+                "reason": {
+                    "name": "Reden",
+                    "description": "Getoond bij de sluimering door enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Media opschonen",
             "description": "Verwijdert opgeslagen mediabestanden die ouder zijn dan het geconfigureerde (of opgegeven) aantal dagen",
@@ -292,7 +322,7 @@
                 },
                 "verbosity": {
                     "name": "Detailniveau",
-                    "description": "Hoeveel van elke melding wordt teruggegeven: een korte samenvatting van wat er gebeurde, het standaard gearchiveerde record zonder de debug-trace, of alles wat is opgeslagen. Standaard voor een lijst en volledig voor één 'id'."
+                    "description": "Hoeveel van elke melding wordt teruggegeven: een korte samenvatting van wat er gebeurde, het standaard gearchiveerde record zonder de debug-trace, of alles wat is opgeslagen. Standaard voor een lijst en volledig voor één 'id'. 'Tellingen per dag' geeft in plaats daarvan totalen per lokale dag, zonder limiet tenzij er een is opgegeven."
                 }
             }
         }
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "Geen gearchiveerde melding gevonden met id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "Sluimeren niet mogelijk: {error}"
         }
     },
     "options": {
@@ -607,7 +640,26 @@
             "options": {
                 "summary": "Samenvatting",
                 "standard": "Standaard",
-                "full": "Volledig"
+                "full": "Volledig",
+                "daily": "Tellingen per dag"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Sluimeren",
+                "silence": "Dempen",
+                "resume": "Hervatten"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Alles",
+                "noncritical": "Alles behalve kritiek",
+                "delivery": "Bezorging",
+                "transport": "Transportmiddel",
+                "priority": "Prioriteit",
+                "camera": "Beveiligingscamera",
+                "tag": "Label"
             }
         }
     }

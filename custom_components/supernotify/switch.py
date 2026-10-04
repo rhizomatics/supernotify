@@ -33,6 +33,7 @@ from homeassistant.util import slugify
 from . import DOMAIN
 from .common import sanitize
 from .const import (
+    ATTR_OVERRIDDEN,
     DELIVERY_UNRECORDED_ATTRIBUTES,
     OVERRIDE_KIND_DELIVERY,
     OVERRIDE_KIND_RECIPIENT,
@@ -138,6 +139,11 @@ class SupernotifyOverridableSwitch(SwitchEntity, RestoreEntity):
     def is_on(self) -> bool:
         return bool(self._target.enabled)
 
+    def _with_overridden(self, attributes: dict[str, object]) -> dict[str, object]:
+        """The switched item's own attributes, and whether the switch was changed at runtime - then
+        it no longer matches the configured `enabled`, and reset_overrides would put it back."""
+        return {**attributes, ATTR_OVERRIDDEN: bool(self._target.enabled) != bool(self._target.config_enabled)}
+
     @property
     def extra_restore_state_data(self) -> OverrideStoredData:
         # kept trivial: some Home Assistant versions don't guard this getter against errors
@@ -216,7 +222,7 @@ class SupernotifyScenarioSwitch(SupernotifyOverridableSwitch):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._scenario.attributes(include_condition=False))
+        return self._with_overridden(sanitize(self._scenario.attributes(include_condition=False)))
 
     def _refresh_related(self) -> None:
         # the condition state of a disabled scenario is always off, so that changes with this
@@ -246,7 +252,7 @@ class SupernotifyRecipientSwitch(SupernotifyOverridableSwitch):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._recipient.attributes())
+        return self._with_overridden(sanitize(self._recipient.attributes()))
 
     def _refresh_related(self) -> None:
         # the deprecated binary_sensor mirrors enabled
@@ -277,7 +283,7 @@ class SupernotifyDeliverySwitch(SupernotifyOverridableSwitch):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._delivery.attributes())
+        return self._with_overridden(sanitize(self._delivery.attributes()))
 
     def _refresh_related(self) -> None:
         # the deprecated binary_sensor mirrors enabled
@@ -307,7 +313,7 @@ class SupernotifyTransportSwitch(SupernotifyOverridableSwitch):
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
-        return sanitize(self._transport.attributes())
+        return self._with_overridden(sanitize(self._transport.attributes()))
 
     def _refresh_related(self) -> None:
         # the deprecated binary_sensor mirrors enabled

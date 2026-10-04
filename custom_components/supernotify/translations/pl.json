@@ -242,6 +242,36 @@
             "name": "Wyczyść snooze",
             "description": "Czyści wszystkie aktualnie aktywne snooze"
         },
+        "snooze": {
+            "name": "Wycisz na czas",
+            "description": "Wstrzymuje, wycisza lub wznawia powiadomienia - dla wszystkich lub jednej osoby, wszystkie lub tylko wybrane dostarczenia, sposoby wysyłki, priorytety, kamery lub etykiety",
+            "fields": {
+                "command": {
+                    "name": "Polecenie",
+                    "description": "Wstrzymaj na kilka minut, wycisz do wznowienia lub wznów"
+                },
+                "scope": {
+                    "name": "Zakres",
+                    "description": "Co wstrzymać - wszystko, jeśli nie podano"
+                },
+                "name": {
+                    "name": "Nazwa",
+                    "description": "Dostarczenie, sposób wysyłki, priorytet lub entity_id kamery dla tych zakresów albo etykieta"
+                },
+                "person": {
+                    "name": "Osoba",
+                    "description": "Tylko powiadomienia tej osoby - wszyscy, jeśli nie podano"
+                },
+                "minutes": {
+                    "name": "Minuty",
+                    "description": "Jak długo trwa wstrzymanie - skonfigurowany czas, jeśli nie podano"
+                },
+                "reason": {
+                    "name": "Powód",
+                    "description": "Pokazywany przy wstrzymaniu przez enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Usuń media",
             "description": "Usuwa zapisane pliki multimedialne starsze niż skonfigurowana (lub podana) liczba dni",
@@ -292,7 +322,7 @@
                 },
                 "verbosity": {
                     "name": "Szczegółowość",
-                    "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'."
+                    "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'. 'Liczniki dzienne' zwraca zamiast tego sumy dla każdego lokalnego dnia, bez limitu, chyba że zostanie podany."
                 }
             }
         }
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "Nie znaleziono zarchiwizowanego powiadomienia o id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "Nie można wstrzymać: {error}"
         }
     },
     "options": {
@@ -607,7 +640,26 @@
             "options": {
                 "summary": "Podsumowanie",
                 "standard": "Standardowa",
-                "full": "Pełna"
+                "full": "Pełna",
+                "daily": "Liczniki dzienne"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Wstrzymaj",
+                "silence": "Wycisz",
+                "resume": "Wznów"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Wszystko",
+                "noncritical": "Wszystko oprócz krytycznych",
+                "delivery": "Dostarczenie",
+                "transport": "Sposób wysyłki",
+                "priority": "Priorytet",
+                "camera": "Kamera",
+                "tag": "Etykieta"
             }
         }
     }

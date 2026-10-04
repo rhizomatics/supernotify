@@ -35,8 +35,35 @@ To use any of these, prefix with `supernotify.`. Try them out via [Tools](https:
 | `reset_overrides`                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
 | `purge_archive`                  | Force the archive housekeeping to run immediately and remove old notification records                                |
 | `purge_media`                    | Force the media storage housekeeping to run immediately and remove old media                                         |
-| `snooze`                         | Snooze notifications for a delivery or target                                                                        |
+| `snooze`                         | Snooze, silence or resume notifications, see [Snoozing](snoozing.md#snoozing-from-a-script-or-dashboard)             |
 | `clear_snoozes`                  | Clear all active snoozes                                                                                             |
 
 The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides**
 button (`button.supernotify_reset_overrides`) on the SuperNotify device.
+
+### Counts per day from the archive
+
+`enquire_archive` with `verbosity: daily` gives totals for each local day instead of the notifications
+themselves, for usage charts or a template sensor. Every notification in the range is counted unless a `limit`
+is given, so a month is a few kilobytes however busy it was.
+
+```yaml
+action: supernotify.enquire_archive
+data:
+  verbosity: daily
+  period: last_month
+```
+
+```yaml
+days:
+  - date: "2026-10-04"            # local date, oldest first
+    count: 121
+    outcome: {success: 58, partial_delivery: 55, dupe: 6, no_delivery: 2}
+    priority: {medium: 98, low: 23}
+    hour: [3, 1, 0, 0, 0, 0, 2, 5, 9, 11, 8, 7, 9, 12, 10, 6, 5, 4, 3, 2, 1, 2, 1, 1]   # local hour
+    deliveries:                   # in how many notifications each delivery sent or failed
+      mobile_push: {success: 80, failed: 0}
+      alexa_announce: {success: 41, failed: 1}
+    scenarios: {afternoon: 40, evening: 22, multi_home: 101}
+count: 3100
+```

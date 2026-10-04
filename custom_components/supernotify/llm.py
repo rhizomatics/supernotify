@@ -40,7 +40,8 @@ from .const import (
     DRY_RUN_SIMULATE,
     PRIORITY_VALUES,
 )
-from .model import CommandType, GlobalTargetType, QualifiedTargetType, RecipientType, TargetType
+from .model import CommandType, QualifiedTargetType, RecipientType, TargetType
+from .snoozer import SNOOZE_SCOPES, snooze_name_error
 
 if TYPE_CHECKING:
     from homeassistant.util.json import JsonObjectType
@@ -122,15 +123,6 @@ SNOOZE_ACTIONS: dict[str, CommandType | None] = {
     "silence": CommandType.SILENCE,
     "unsnooze": CommandType.NORMAL,
     "clear_all": None,
-}
-SNOOZE_SCOPES: dict[str, TargetType] = {
-    "everything": GlobalTargetType.EVERYTHING,
-    "noncritical": GlobalTargetType.NONCRITICAL,
-    "delivery": QualifiedTargetType.DELIVERY,
-    "transport": QualifiedTargetType.TRANSPORT,
-    "priority": QualifiedTargetType.PRIORITY,
-    "camera": QualifiedTargetType.CAMERA,
-    "tag": QualifiedTargetType.TAG,
 }
 
 
@@ -321,22 +313,7 @@ class SnoozeTool(SupernotifyTool):
         return {"success": True, "result": snoozes}
 
     def _check_name(self, scope: QualifiedTargetType, name: str | None, cmd: CommandType) -> str | None:
-        registry = self.engine.context.delivery_registry
-        valid: list[str] | None = {
-            QualifiedTargetType.DELIVERY: list(registry.deliveries),
-            QualifiedTargetType.TRANSPORT: list(registry.transports),
-            QualifiedTargetType.PRIORITY: list(PRIORITY_VALUES),
-        }.get(scope)
-        if not name:
-            return f"A name is needed to snooze a {scope.lower()}"
-        if valid is not None and name not in valid:
-            return f"Unknown {scope.lower()} '{name}', choose from: {', '.join(valid)}"
-        if scope == QualifiedTargetType.CAMERA and not name.startswith("camera."):
-            return "A camera must be given as its entity_id, e.g. camera.front_door"
-        # a tag snooze can still be undone when what it named has gone
-        if scope == QualifiedTargetType.TAG and cmd != CommandType.NORMAL and not self.engine.tag_matches(name):
-            return f"No scenario or entity is called '{name}'"
-        return None
+        return snooze_name_error(self.engine, scope, name, cmd)
 
     def _requesting_person(self, llm_context: LLMContext) -> str | None:
         user_id: str | None = llm_context.context.user_id if llm_context.context else None

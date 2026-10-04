@@ -428,6 +428,45 @@ def _names_for(engine: SupernotifyEngine, person_ids: list[str]) -> list[str]:
     return sorted(_display_name(people[p]) if p in people else p for p in person_ids)
 
 
+def _bump(counts: dict[str, int], key: str) -> None:
+    counts[key] = counts.get(key, 0) + 1
+
+
+def summarize_by_day(entries: list[dict[str, Any]]) -> dict[str, Any]:
+    """Count archived notifications per local day, oldest first: how many, by outcome, priority,
+    local hour and applied scenario, and for each delivery in how many it sent or failed.
+
+    Older archive files keep `enabled_scenarios` as a mapping by name rather than a list - either
+    is counted by name. A notification without a readable `created` is left out."""
+    days: dict[str, dict[str, Any]] = {}
+    for contents in entries:
+        created: dt.datetime | None = dt_util.parse_datetime(str(contents.get("created") or ""))
+        if created is None:
+            continue
+        local: dt.datetime = dt_util.as_local(created)
+        key: str = local.date().isoformat()
+        day: dict[str, Any] = days.setdefault(
+            key, {"date": key, "count": 0, "outcome": {}, "priority": {}, "hour": [0] * 24, "deliveries": {}, "scenarios": {}}
+        )
+        day["count"] += 1
+        day["hour"][local.hour] += 1
+        _bump(day["outcome"], str(contents.get("outcome") or "unknown").lower())
+        _bump(day["priority"], str(contents.get("priority") or "unknown").lower())
+        for name, outcomes in (contents.get("deliveries") or {}).items():
+            if not isinstance(outcomes, dict):
+                continue
+            sent, failed = bool(outcomes.get("success")), bool(outcomes.get("error"))
+            if sent or failed:
+                counts: dict[str, int] = day["deliveries"].setdefault(name, {"success": 0, "failed": 0})
+                counts["success"] += sent
+                counts["failed"] += failed
+        scenarios: Any = contents.get("enabled_scenarios") or []
+        for scenario in scenarios if isinstance(scenarios, list | tuple | dict) else [scenarios]:
+            _bump(day["scenarios"], str(scenario))
+    ordered: list[dict[str, Any]] = [days[key] for key in sorted(days)]
+    return {"days": ordered, "count": sum(day["count"] for day in ordered)}
+
+
 def summarize_notification(engine: SupernotifyEngine, contents: dict[str, Any]) -> dict[str, Any]:
     """Cut an archived or live notification down to what explains what happened to it"""
     deliveries: dict[str, dict[str, Any]] = {}

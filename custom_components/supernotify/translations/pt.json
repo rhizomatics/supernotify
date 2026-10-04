@@ -242,6 +242,36 @@
             "name": "Limpar snoozes",
             "description": "Limpa todos os snoozes atualmente ativos"
         },
+        "snooze": {
+            "name": "Adiar",
+            "description": "Adia, silencia ou retoma as notificações - para todos ou uma pessoa, tudo ou só algumas entregas, transportes, prioridades, câmaras ou etiquetas",
+            "fields": {
+                "command": {
+                    "name": "Comando",
+                    "description": "Adiar por alguns minutos, silenciar até retomar, ou retomar"
+                },
+                "scope": {
+                    "name": "Âmbito",
+                    "description": "O que adiar - tudo se não for indicado"
+                },
+                "name": {
+                    "name": "Nome",
+                    "description": "A entrega, o transporte, a prioridade ou o entity_id da câmara, para esses âmbitos, ou a etiqueta"
+                },
+                "person": {
+                    "name": "Pessoa",
+                    "description": "Só as notificações desta pessoa - todos se não for indicada"
+                },
+                "minutes": {
+                    "name": "Minutos",
+                    "description": "Quanto tempo dura a pausa - o tempo configurado se não for indicado"
+                },
+                "reason": {
+                    "name": "Motivo",
+                    "description": "Mostrado com a pausa por enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Purgar multimédia",
             "description": "Elimina ficheiros multimédia armazenados mais antigos do que o número de dias configurado (ou indicado)",
@@ -292,7 +322,7 @@
                 },
                 "verbosity": {
                     "name": "Nível de detalhe",
-                    "description": "Quanto devolver de cada notificação: um breve resumo do que aconteceu, o registo arquivado padrão sem o rastreio de depuração, ou tudo o que está armazenado. Por omissão padrão para uma lista e completo para um único 'id'."
+                    "description": "Quanto devolver de cada notificação: um breve resumo do que aconteceu, o registo arquivado padrão sem o rastreio de depuração, ou tudo o que está armazenado. Por omissão padrão para uma lista e completo para um único 'id'. 'Contagens por dia' devolve em vez disso os totais de cada dia local, sem limite a menos que seja indicado um."
                 }
             }
         }
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "Nenhuma notificação arquivada encontrada com o id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "Não é possível adiar: {error}"
         }
     },
     "options": {
@@ -607,7 +640,26 @@
             "options": {
                 "summary": "Resumo",
                 "standard": "Padrão",
-                "full": "Completo"
+                "full": "Completo",
+                "daily": "Contagens por dia"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Adiar",
+                "silence": "Silenciar",
+                "resume": "Retomar"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Tudo",
+                "noncritical": "Tudo exceto o crítico",
+                "delivery": "Entrega",
+                "transport": "Transporte",
+                "priority": "Prioridade",
+                "camera": "Câmara",
+                "tag": "Etiqueta"
             }
         }
     }

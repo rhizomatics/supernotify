@@ -242,6 +242,36 @@
             "name": "Cancella snooze",
             "description": "Cancella tutti gli snooze attualmente attivi"
         },
+        "snooze": {
+            "name": "Metti in pausa",
+            "description": "Mette in pausa, silenzia o riattiva le notifiche - per tutti o per una persona, tutte o solo alcune delivery, transport, priorità, telecamere o tag",
+            "fields": {
+                "command": {
+                    "name": "Comando",
+                    "description": "Pausa per alcuni minuti, silenzio fino alla riattivazione, oppure riattiva"
+                },
+                "scope": {
+                    "name": "Ambito",
+                    "description": "Cosa mettere in pausa - tutto se non indicato"
+                },
+                "name": {
+                    "name": "Nome",
+                    "description": "La delivery, il transport, la priorità o l'entity_id della telecamera, per quegli ambiti, oppure il tag"
+                },
+                "person": {
+                    "name": "Persona",
+                    "description": "Solo le notifiche di questa persona - tutti se non indicata"
+                },
+                "minutes": {
+                    "name": "Minuti",
+                    "description": "Quanto dura la pausa - il tempo configurato se non indicato"
+                },
+                "reason": {
+                    "name": "Motivo",
+                    "description": "Mostrato con la pausa da enquire_snoozes"
+                }
+            }
+        },
         "purge_media": {
             "name": "Elimina media",
             "description": "Elimina i file multimediali memorizzati più vecchi del numero di giorni configurato (o specificato)",
@@ -292,7 +322,7 @@
                 },
                 "verbosity": {
                     "name": "Livello di dettaglio",
-                    "description": "Quanto restituire di ogni notifica: un breve riepilogo di cosa è successo, il record archiviato standard senza la traccia di debug, oppure tutto ciò che è memorizzato. Predefinito standard per una lista e completo per un singolo 'id'."
+                    "description": "Quanto restituire di ogni notifica: un breve riepilogo di cosa è successo, il record archiviato standard senza la traccia di debug, oppure tutto ciò che è memorizzato. Predefinito standard per una lista e completo per un singolo 'id'. 'Conteggi per giorno' restituisce invece i totali di ogni giorno locale, senza limite se non ne viene indicato uno."
                 }
             }
         }
@@ -437,6 +467,9 @@
         },
         "archive_entry_not_found": {
             "message": "Nessuna notifica archiviata trovata con id {notification_id}"
+        },
+        "invalid_snooze": {
+            "message": "Impossibile mettere in pausa: {error}"
         }
     },
     "options": {
@@ -607,7 +640,26 @@
             "options": {
                 "summary": "Riepilogo",
                 "standard": "Standard",
-                "full": "Completo"
+                "full": "Completo",
+                "daily": "Conteggi per giorno"
+            }
+        },
+        "snooze_command": {
+            "options": {
+                "snooze": "Pausa",
+                "silence": "Silenzia",
+                "resume": "Riattiva"
+            }
+        },
+        "snooze_scope": {
+            "options": {
+                "everything": "Tutto",
+                "noncritical": "Tutto tranne le critiche",
+                "delivery": "Una delivery",
+                "transport": "Un transport",
+                "priority": "Priorità",
+                "camera": "Telecamera",
+                "tag": "Etichetta (tag)"
             }
         }
     }
