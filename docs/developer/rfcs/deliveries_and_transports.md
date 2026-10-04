@@ -127,7 +127,7 @@ Use cases could be:
 
 ## Example
 
-```yaml:
+```yaml
 - action: supernotify.notify
   data:
     title: Multi modal notification
@@ -139,7 +139,7 @@ Use cases could be:
         - telegram: 123456789
 ```
 
-```yaml:
+```yaml
 - action: supernotify.notify
   data:
     title: Email notification
