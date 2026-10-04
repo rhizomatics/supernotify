@@ -4,10 +4,28 @@ Source: https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/
 
 Snoozing can be selected from a mobile action, and made for a set time, or notifications can be silenced until further notice. Snoozes are persisted to Home Assistant's integration storage, so will be reactivated after Home Assistant restarts, and included in backups.
 
-Two HomeAssistant actions ( previously known as "services") are available to manage snoozes:
+Three Home Assistant actions (previously known as "services") are available to manage snoozes:
 
+- `supernotify.snooze`
 - `supernotify.clear_snoozes`
 - `supernotify.enquire_snoozes`
+
+### Snoozing from a script or dashboard
+
+`supernotify.snooze` makes the same snoozes as a mobile action, a voice sentence or the AI tool, from an automation, a script or a dashboard button. Any user can call it, while firing the mobile action event through the API needs an admin.
+
+```yaml
+action: supernotify.snooze
+data:
+  command: snooze          # snooze, silence (until resumed) or resume
+  scope: delivery          # everything (default), noncritical, delivery, transport, priority, camera or tag
+  name: alexa_announce     # the delivery, transport, priority, camera entity_id or tag, for those scopes
+  person: person.alice     # only this person's notifications; everyone if left out
+  minutes: 30              # snooze only; the configured snooze time if left out
+  reason: Dashboard        # shown by enquire_snoozes
+```
+
+With a response requested, it returns the snoozes now active, as `enquire_snoozes` does. `resume` removes the snooze with the same scope, name and person.
 
 Snooze context is also logged in the debug trace, which can be archived to the file system or MQTT topic.
 
