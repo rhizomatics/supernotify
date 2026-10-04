@@ -32,6 +32,9 @@
   - `enquire_active_scenarios` is unaffected, and always evaluates the scenarios as of now
 - Conditional scenario entities report state as unknown if scenario auto refresh left at the default off setting. Refresh control switch logged at startup.
 
+## 📚 Documentation
+- Recipes now improved with tags to easily find and filter
+
 # v2.12.0
 
 ## ✨ Enhancements
