@@ -1,12 +1,5 @@
 # CLAUDE.md
 
-Behavioral guidelines to reduce common LLM coding mistakes.
-
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
-
-**These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
-
-
 ## How to Contribute
 
 ### 1. Think Before Coding
@@ -62,15 +55,15 @@ For code reviews, produce a single list of findings, graded by risk.
 
 ## Project Context
 
-The project uses Ruff for formatting and linting, uv amnd mise for dependency management,
+The design principles are documented at docs/developer/principles.md and the future development at docs/developer/roadmap.md. Any outcomes of sessions that change or add to these should be flagged up and these two documents keep being the primary place where the why, how and what of the project are documented.
+
+The project uses Ruff for formatting and linting, uv and mise for dependency management,
 mypy for type checking (with experimental use of ty), pytest for unit and integration testing, and codespell for spell checking.
 
 Documentation uses properdocs with the Material theme, and is published using Github Pages with a
 custom domain of supernotify.rhizomatics.org.uk.
 
-While this is a HACS component, it should be built wherever possible to adhere to the [Home Assistant Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at the highest level. This also means all dependencies must be
-consistent with the set of Home Assistant production dependencies, and test coverage
-maintained above 90%, with regression tests for bug fixes and new tests for all new features.
+While this is a HACS component, it should be built wherever possible to adhere to the [Home Assistant Integration Quality Scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at the highest level. This also means all dependencies must be consistent with the set of Home Assistant production dependencies, and test coverage maintained above 90%, with regression tests for bug fixes and new tests for all new features.
 
 Integration tests use the House class in tests/integrations, and should be used where an end to end flow is required, for target selection, target data building, additional calls like camera PTZ or image capture
 
