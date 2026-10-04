@@ -130,6 +130,22 @@ async def test_enquire_archive_outcome_filter(hass: HomeAssistant, tmp_path: pat
     assert all(e["outcome"] == "SUCCESS" for e in response["notifications"])
 
 
+async def test_enquire_archive_outcome_filter_real_case(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """Archive files hold the DeliveryOutcome value in lower case, the selector offers upper case
+    - the filter matches either way (#242)."""
+    base = dt.datetime(2026, 9, 24, 10, 0, tzinfo=dt.UTC)
+    _write_archive_entry(tmp_path, "ok1", base, outcome="success")
+    _write_archive_entry(tmp_path, "er1", base + dt.timedelta(minutes=1), outcome="error")
+    _write_archive_entry(tmp_path, "pd1", base + dt.timedelta(minutes=2), outcome="partial_delivery")
+
+    await _setup(hass, str(tmp_path))
+    for selector_value, expected in (("ERROR", ["er1"]), ("PARTIAL_DELIVERY", ["pd1"]), ("success", ["ok1"])):
+        response = await hass.services.async_call(
+            DOMAIN, "enquire_archive", {"outcome": selector_value}, blocking=True, return_response=True
+        )
+        assert [e["id"] for e in response["notifications"]] == expected
+
+
 async def test_enquire_archive_by_id(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
     """enquire_archive with id returns a single notification's full detail."""
     base = dt.datetime(2026, 9, 24, 10, 0, tzinfo=dt.UTC)

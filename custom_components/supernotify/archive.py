@@ -228,7 +228,8 @@ class ArchiveDirectory(ArchiveDestination):
 
         Optional *after* and *before* filter by the ``created`` timestamp stored in
         each archive file. Optional *outcome* keeps only notifications whose top-level
-        ``outcome`` field matches (case-sensitive, e.g. ``"SUCCESS"``).
+        ``outcome`` field matches, ignoring case: the archive stores the ``DeliveryOutcome``
+        value (``"success"``) and the action's selector offers ``"SUCCESS"``.
         """
         if not self.archive_path or not await self.archive_path.exists():
             return []
@@ -251,7 +252,7 @@ class ArchiveDirectory(ArchiveDestination):
                     continue
                 if before is not None and created_raw is not None and created_raw > before.isoformat():
                     continue
-                if outcome is not None and data.get("outcome") != outcome:
+                if outcome is not None and str(data.get("outcome", "")).lower() != outcome.lower():
                     continue
                 entries.append(data)
         except Exception as exc:
