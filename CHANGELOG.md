@@ -1,4 +1,4 @@
-# v2.12.1
+# v2.13.0
 
 ## ✨ Enhancements
 > These enhancements support the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) dashboard panels, and work too in the regular Home Assistants Actions page.
