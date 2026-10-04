@@ -101,7 +101,7 @@ def test_a_day_crossing_daylight_saving_is_one_day(rome: None) -> None:
 
 
 def test_unreadable_created_and_odd_values_are_skipped(rome: None) -> None:
-    entries = [
+    entries: list[dict[str, str | dict[str, str]]] = [
         {"created": "not a date"},
         {"outcome": "success"},
         {"created": "2026-10-04T10:00:00+02:00", "deliveries": {"push": "?"}, "enabled_scenarios": "solo"},

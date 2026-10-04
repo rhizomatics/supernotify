@@ -54,7 +54,9 @@ async def test_snooze_without_minutes_uses_configured_time(hass: HomeAssistant) 
     await _snooze(hass, {"scope": "noncritical"})
 
     snooze = _only(engine)
+    assert snooze is not None
     assert snooze.target_type == GlobalTargetType.NONCRITICAL
+    assert snooze.snooze_until is not None
     assert snooze.snooze_until - snooze.snoozed_at == engine.context.snoozer.snooze_period
 
 
@@ -118,7 +120,7 @@ async def test_invalid_snooze_is_refused(hass: HomeAssistant, action: str, data:
         await hass.services.async_call(DOMAIN, action, data, blocking=True)
 
     assert exc.value.translation_key == "invalid_snooze"
-    assert error in exc.value.translation_placeholders["error"]
+    assert error in exc.value.translation_placeholders["error"]  # type: ignore
     assert engine.context.snoozer.snoozes == {}
 
 

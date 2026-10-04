@@ -24,8 +24,12 @@
   - If you also set `after`, the latter gets priority
 - `after` and `before` time filters now use the Home Assistant time zone settings to be a local time
 
-### Icons
+### Snoozing
+- New HA Actions to snooze, silence (snooze without a time limit) and unsnooze
+
+### Entities
 - State icons now defined for each of the published entities, in line with the 'gold' level Home Assistant component quality scale, contributed by @lollox80
+- Switch entities now have an `overridden` attribute to expose if they have been manually changed
 
 ## 🐛 Bug fixes
 - `enquire_archive` now not so fussy about case when filtering for notification outcome.
