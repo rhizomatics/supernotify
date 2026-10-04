@@ -6,12 +6,17 @@ import datetime as dt
 import json
 import pathlib
 from typing import TYPE_CHECKING
+from unittest.mock import patch
 
+import aiofiles
 import pytest
+import voluptuous as vol
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify import DOMAIN
+from custom_components.supernotify.archive import _filename_period
 
 from .hass_setup_lib import assert_json_round_trip
 
@@ -170,3 +175,104 @@ async def test_enquire_archive_id_not_found(hass: HomeAssistant, tmp_path: pathl
     assert exc_info.value.translation_key == "archive_entry_not_found"
     assert exc_info.value.translation_placeholders == {"notification_id": "does-not-exist"}
     assert "does-not-exist" in str(exc_info.value)
+
+
+async def test_enquire_archive_verbosity(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """A list is standard unless asked otherwise, with the debug trace only at full verbosity."""
+    path = _write_archive_entry(tmp_path, "dbg", dt_util.now())
+    payload = json.loads(path.read_text())
+    payload["debug_trace"] = {"delivery_selection": {"ranked": ["testing"]}}
+    payload["deliveries"] = {"testing": {"success": [{"target": {"person_id": ["person.unknown"]}}]}}
+    path.write_text(json.dumps(payload))
+
+    await _setup(hass, str(tmp_path))
+
+    async def enquire(**data: str) -> dict:
+        response = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
+        assert_json_round_trip(response, label="enquire_archive_verbosity")
+        return response
+
+    standard = (await enquire())["notifications"][0]
+    assert "debug_trace" not in standard
+    assert standard["delivered"] == ["testing"]
+    assert (await enquire(verbosity="standard"))["notifications"] == [standard]
+
+    assert (await enquire(verbosity="full"))["notifications"] == [payload]
+
+    summary = (await enquire(verbosity="summary"))["notifications"][0]
+    assert summary["id"] == "dbg"
+    assert summary["deliveries"] == {"testing": {"success": 1, "recipients": ["person.unknown"]}}
+    assert "delivered" not in summary
+
+    # a single notification is in full unless asked otherwise
+    assert await enquire(id="dbg") == payload
+    assert "debug_trace" not in await enquire(id="dbg", verbosity="standard")
+    assert (await enquire(id="dbg", verbosity="summary"))["deliveries"] == summary["deliveries"]
+
+    with pytest.raises(vol.Invalid):
+        await enquire(verbosity="chatty")
+
+
+async def test_enquire_archive_period(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """A period selects the notifications created in a length of time ending now."""
+    now = dt_util.now()
+    _write_archive_entry(tmp_path, "mins", now - dt.timedelta(minutes=10))
+    _write_archive_entry(tmp_path, "hours", now - dt.timedelta(hours=5))
+    _write_archive_entry(tmp_path, "days", now - dt.timedelta(days=3))
+
+    await _setup(hass, str(tmp_path))
+
+    async def ids(**data: str) -> set[str]:
+        response = await hass.services.async_call(DOMAIN, "enquire_archive", data, blocking=True, return_response=True)
+        return {e["id"] for e in response["notifications"]}
+
+    assert await ids(period="last_hour") == {"mins"}
+    assert await ids(period="last_12_hours") == {"mins", "hours"}
+    assert await ids(period="last_week") == {"mins", "hours", "days"}
+    # an explicit start time is used in preference to the period
+    assert await ids(period="last_hour", after=(now - dt.timedelta(days=1)).isoformat()) == {"mins", "hours"}
+    # a start time with no time zone is local time
+    assert await ids(after=(now - dt.timedelta(days=1)).replace(tzinfo=None).isoformat()) == {"mins", "hours"}
+    assert await ids(period="last_week", before=(now - dt.timedelta(hours=1)).isoformat()) == {"hours", "days"}
+
+    with pytest.raises(vol.Invalid):
+        await ids(period="last_century")
+
+
+async def test_enquire_archive_only_opens_files_in_range(hass: HomeAssistant, tmp_path: pathlib.Path) -> None:
+    """Files named for a time outside `after` and `before` are never opened."""
+    now = dt_util.now()
+    for name, age in (("new", 0), ("recent", 2), ("wanted", 5), ("old", 9), ("ancient", 72)):
+        _write_archive_entry(tmp_path, name, now - dt.timedelta(hours=age))
+    (tmp_path / "unconventional.json").write_text(json.dumps({"id": "odd", "created": now.isoformat()}))
+
+    await _setup(hass, str(tmp_path))
+
+    with patch("custom_components.supernotify.archive.aiofiles.open", wraps=aiofiles.open) as tracked_open:
+        response = await hass.services.async_call(
+            DOMAIN,
+            "enquire_archive",
+            {"after": (now - dt.timedelta(hours=6)).isoformat(), "before": (now - dt.timedelta(hours=4)).isoformat()},
+            blocking=True,
+            return_response=True,
+        )
+    opened = [pathlib.Path(call.args[0]).name.rpartition("_")[2] for call in tracked_open.call_args_list]
+    assert [e["id"] for e in response["notifications"]] == ["wanted"]
+    # a file not named for its creation time can't be ruled out without reading it
+    assert sorted(opened) == ["unconventional.json", "wanted.json"]
+
+
+@pytest.mark.parametrize("time_zone", ["Europe/London", "UTC", "Asia/Kolkata"])
+async def test_filename_period_covers_creation_time(hass: HomeAssistant, time_zone: str) -> None:
+    """Both sides of a clock change are allowed for, since the file name has no UTC offset."""
+    await hass.config.async_set_time_zone(time_zone)
+    zone = dt_util.get_default_time_zone()
+    # either side of, and both passes through, the hour repeated when UK clocks go back
+    for utc in ("2026-10-24T23:30:40", "2026-10-25T00:30:40", "2026-10-25T01:30:40", "2026-03-29T01:30:40"):
+        created = dt.datetime.fromisoformat(utc).replace(tzinfo=dt.UTC).astimezone(zone)
+        period = _filename_period(f"{created.isoformat()[:16].replace(':', '-')}_abc.json")
+        assert period is not None
+        assert period[0] <= created.timestamp() <= period[1]
+        assert period[1] - period[0] <= 3660
+    assert _filename_period(".startup") is None
+    assert _filename_period("unconventional.json") is None

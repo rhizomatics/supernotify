@@ -1,3 +1,35 @@
+# v2.12.1
+
+## ✨ Enhancements
+> These enhancements support the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) dashboard panels, and work too in the regula Home Assistants Actions page.
+
+### Dupe Detection / Simulation
+- There are now two duplicate tracking caches, to make working with the recent simulation / dry_run easier
+  - Simulated notifications go into their own tracking cache and are ignored by real notifications
+  - Simulated notifications check *both* caches, so you debug what would happen right now for real with that notification
+
+  | Sequence	| Second Call |
+  | --------- | ----------- |
+  | Dry run → Live	 | Sent (was suppressed as a dupe in 2.12.0) |
+  | Live → Dry run	 | Reported as DUPE, as a live send would be |
+  | Dry run → Dry run	 | Reported as DUPE, so dupe handling can still be tried with dry runs alone |
+### Archive Enquiry
+- `enquire_archive` has a new `verbosity` option
+  - `summary` - what happened to each notification in brief, the same as the Assist / MCP tools give
+  - `standard` - the archived notification without the `debug_trace`, the default for a list
+  - `full` - everything stored, the default when asking for one notification by `id`
+- `enquire_archive` has a new `period` option
+  - Pick a time ending now - last hour, 12 hours, day, week or month, simpler than setting `after` by hand
+  - If you also set `after`, the latter gets priority
+- `after` and `before` time filters now use the Home Assistant time zone settings to be a local time
+- Scanning archive by date range now more efficient, using the file system `ctime` creation time rather than examining the JSON
+
+## 🐛 Bug fixes
+- `enquire_archive` now not so fussy about case when filtering for notification outcome.
+- `enquire_archive` no longer opens and parses archive files from outside the `after` / `before` times
+- `enquire_archive` treats an `after` or `before` without a time zone as local time
+- `enquire_configuration` was failing when deliveries had `conditions` with JSON serialization error
+
 # v2.12.0
 
 ## ✨ Enhancements

@@ -183,6 +183,26 @@ enquire_archive:
             - NO_DELIVERY
             - DUPE
             - FALLBACK_DELIVERY
+    period:
+      required: false
+      selector:
+        select:
+          translation_key: archive_period
+          options:
+            - last_hour
+            - last_12_hours
+            - last_day
+            - last_week
+            - last_month
+    verbosity:
+      required: false
+      selector:
+        select:
+          translation_key: archive_verbosity
+          options:
+            - summary
+            - standard
+            - full
 enquire_last_notification:
   fields:
     diagnostics:

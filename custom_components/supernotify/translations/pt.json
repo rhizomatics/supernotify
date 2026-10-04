@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Resultado",
                     "description": "Devolver apenas as notificações com este resultado."
+                },
+                "period": {
+                    "name": "Período",
+                    "description": "Devolver apenas as notificações criadas neste período até agora. Ignorado se 'Depois de' estiver definido."
+                },
+                "verbosity": {
+                    "name": "Nível de detalhe",
+                    "description": "Quanto devolver de cada notificação: um breve resumo do que aconteceu, o registo arquivado padrão sem o rastreio de depuração, ou tudo o que está armazenado. Por omissão padrão para uma lista e completo para um único 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Só quem está em casa",
                 "only_out": "Só quem está fora",
                 "none": "Ninguém"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Última hora",
+                "last_12_hours": "Últimas 12 horas",
+                "last_day": "Último dia",
+                "last_week": "Última semana",
+                "last_month": "Último mês"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Resumo",
+                "standard": "Padrão",
+                "full": "Completo"
             }
         }
     }

@@ -20,6 +20,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 from homeassistant.loader import async_get_integration
+from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import DOMAIN
@@ -62,6 +63,7 @@ from .const import (
     OVERRIDE_KINDS,
 )
 from .engine import SupernotifyEngine
+from .llm import summarize_notification
 from .schema import ACTION_DATA_FIELDS, NOTIFY_ACTION_SCHEMA
 from .target import Target
 
@@ -133,6 +135,28 @@ def merge_delivery_fields(data: dict[str, Any]) -> dict[str, Any]:
         data[ATTR_DELIVERY] = list(dict.fromkeys([*ensure_list(picked), *ensure_list(control)]))
     return data
 
+
+VERBOSITY_SUMMARY: Final[str] = "summary"
+VERBOSITY_STANDARD: Final[str] = "standard"
+VERBOSITY_FULL: Final[str] = "full"
+
+# time periods ending now, as offered by the Home Assistant Activity view
+ARCHIVE_PERIODS: Final[dict[str, dt.timedelta]] = {
+    "last_hour": dt.timedelta(hours=1),
+    "last_12_hours": dt.timedelta(hours=12),
+    "last_day": dt.timedelta(days=1),
+    "last_week": dt.timedelta(weeks=1),
+    "last_month": dt.timedelta(days=30),
+}
+
+# only the fields with a fixed choice of values are checked, the rest are as loose as they were
+ENQUIRE_ARCHIVE_SCHEMA: Final[vol.Schema] = vol.Schema(
+    {
+        vol.Optional("period"): vol.In(ARCHIVE_PERIODS),
+        vol.Optional("verbosity"): vol.In((VERBOSITY_SUMMARY, VERBOSITY_STANDARD, VERBOSITY_FULL)),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 ACTION_NAMES: Final[tuple[str, ...]] = (
     "notify",
@@ -305,6 +329,15 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
                 translation_key="no_archive_configured",
             )
         notification_id: str | None = call.data.get("id")
+        verbosity: str = call.data.get("verbosity") or (VERBOSITY_FULL if notification_id else VERBOSITY_STANDARD)
+
+        def at_verbosity(contents: dict[str, Any]) -> dict[str, Any]:
+            if verbosity == VERBOSITY_SUMMARY:
+                return summarize_notification(engine, contents)
+            if verbosity == VERBOSITY_STANDARD:
+                return {k: v for k, v in contents.items() if k != "debug_trace"}
+            return contents
+
         if notification_id:
             entry = await archive.archive_directory.read_entry(notification_id)
             if entry is None:
@@ -313,15 +346,19 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
                     translation_key="archive_entry_not_found",
                     translation_placeholders={"notification_id": notification_id},
                 )
-            return entry
+            return at_verbosity(entry)
         limit: int = int(call.data.get("limit", 20))
         after_raw: str | None = call.data.get("after")
         before_raw: str | None = call.data.get("before")
         outcome: str | None = call.data.get("outcome")
-        after = dt.datetime.fromisoformat(after_raw) if after_raw else None
-        before = dt.datetime.fromisoformat(before_raw) if before_raw else None
+        period: str | None = call.data.get("period")
+        # a date/time given without a time zone is local time
+        after = dt_util.as_local(dt.datetime.fromisoformat(after_raw)) if after_raw else None
+        before = dt_util.as_local(dt.datetime.fromisoformat(before_raw)) if before_raw else None
+        if after is None and period:
+            after = dt_util.now() - ARCHIVE_PERIODS[period]
         entries = await archive.archive_directory.list_entries(limit=limit, after=after, before=before, outcome=outcome)
-        return {"notifications": entries, "count": len(entries)}
+        return {"notifications": [at_verbosity(entry) for entry in entries], "count": len(entries)}
 
     async def supplemental_action_purge_archive(call: ServiceCall) -> dict[str, Any]:
         days = call.data.get("days")
@@ -384,6 +421,7 @@ def async_register_engine_actions(hass: HomeAssistant, engine: SupernotifyEngine
         DOMAIN,
         "enquire_archive",
         supplemental_action_enquire_archive,
+        schema=ENQUIRE_ARCHIVE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

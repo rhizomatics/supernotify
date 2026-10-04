@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Resultaat",
                     "description": "Alleen meldingen met dit resultaat teruggeven."
+                },
+                "period": {
+                    "name": "Periode",
+                    "description": "Alleen meldingen teruggeven die in deze periode tot nu zijn aangemaakt. Genegeerd als 'Na' is ingesteld."
+                },
+                "verbosity": {
+                    "name": "Detailniveau",
+                    "description": "Hoeveel van elke melding wordt teruggegeven: een korte samenvatting van wat er gebeurde, het standaard gearchiveerde record zonder de debug-trace, of alles wat is opgeslagen. Standaard voor een lijst en volledig voor één 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Alleen wie thuis is",
                 "only_out": "Alleen wie weg is",
                 "none": "Niemand"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Afgelopen uur",
+                "last_12_hours": "Afgelopen 12 uur",
+                "last_day": "Afgelopen dag",
+                "last_week": "Afgelopen week",
+                "last_month": "Afgelopen maand"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Samenvatting",
+                "standard": "Standaard",
+                "full": "Volledig"
             }
         }
     }

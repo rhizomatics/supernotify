@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import logging
+import math
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any
 
@@ -39,6 +40,21 @@ _LOGGER = logging.getLogger(__name__)
 ARCHIVE_PURGE_MIN_INTERVAL = 3 * 60
 ARCHIVE_DEFAULT_DAYS = 1
 WRITE_TEST = ".startup"
+
+
+def _filename_period(filename: str) -> tuple[float, float] | None:
+    """The span of time an archive file could have been created in, going by the local time
+    to the minute at the start of its name, or ``None`` if it isn't named that way.
+
+    Both sides of a daylight saving change are allowed for, since the name has no UTC offset.
+    """
+    try:
+        named: dt.datetime = dt.datetime.strptime(filename[:16], "%Y-%m-%dT%H-%M")
+    except ValueError:
+        return None
+    time_zone = dt_util.get_default_time_zone()
+    stamps: list[float] = [named.replace(tzinfo=time_zone, fold=fold).timestamp() for fold in (0, 1)]
+    return min(stamps), max(stamps) + 60
 
 
 class ArchivableObject:
@@ -230,6 +246,9 @@ class ArchiveDirectory(ArchiveDestination):
         each archive file. Optional *outcome* keeps only notifications whose top-level
         ``outcome`` field matches, ignoring case: the archive stores the ``DeliveryOutcome``
         value (``"success"``) and the action's selector offers ``"SUCCESS"``.
+
+        Files are named for the minute they were created, so any that fall outside
+        *after* and *before* are passed over without being opened.
         """
         if not self.archive_path or not await self.archive_path.exists():
             return []
@@ -238,19 +257,23 @@ class ArchiveDirectory(ArchiveDestination):
             raw_scan = await aiofiles.os.scandir(self.archive_path)
             files = [e for e in raw_scan if e.name.endswith(".json") and e.name != WRITE_TEST]
             files.sort(key=lambda e: e.stat().st_ctime, reverse=True)
+            earliest: float = after.timestamp() if after else -math.inf
+            latest: float = before.timestamp() if before else math.inf
             for entry in files:
                 if len(entries) >= limit:
                     break
+                if (after or before) and (named := _filename_period(entry.name)) and (named[1] < earliest or named[0] > latest):
+                    continue
                 try:
                     async with aiofiles.open(entry.path, mode="r") as fh:
                         data: dict[str, Any] = json.loads(await fh.read())
                 except Exception as exc:
                     _LOGGER.debug("SUPERNOTIFY Skipping unreadable archive file %s: %s", entry.name, exc)
                     continue
-                created_raw: str | None = data.get("created")
-                if after is not None and created_raw is not None and created_raw < after.isoformat():
+                created: dt.datetime | None = dt_util.parse_datetime(data.get("created") or "")
+                if after is not None and created is not None and created < after:
                     continue
-                if before is not None and created_raw is not None and created_raw > before.isoformat():
+                if before is not None and created is not None and created > before:
                     continue
                 if outcome is not None and str(data.get("outcome", "")).lower() != outcome.lower():
                     continue

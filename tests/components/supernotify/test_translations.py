@@ -63,6 +63,9 @@ EXPECTED_IDENTICAL_TO_ENGLISH = {
     ("nl", "entity.binary_sensor.transport.name"),  # "Transport" is also the Dutch word for transport
     ("pl", "entity.binary_sensor.transport.name"),  # "Transport" is also the Polish word for transport
     ("it", "entity.notify.recipient.name"),  # "recipient" stays English in Italian, see CLAUDE.md
+    ("de", "selector.archive_verbosity.options.standard"),  # "Standard" is also the German word for standard
+    ("fr", "selector.archive_verbosity.options.standard"),  # "Standard" is also the French word for standard
+    ("it", "selector.archive_verbosity.options.standard"),  # "Standard" is a standard Italian loanword
 }
 
 

@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Ergebnis",
                     "description": "Nur Benachrichtigungen mit diesem Ergebnis zurückgeben."
+                },
+                "period": {
+                    "name": "Zeitraum",
+                    "description": "Nur Benachrichtigungen zurückgeben, die in diesem Zeitraum bis jetzt erstellt wurden. Wird ignoriert, wenn 'Nach' gesetzt ist."
+                },
+                "verbosity": {
+                    "name": "Detailgrad",
+                    "description": "Wie viel von jeder Benachrichtigung zurückgegeben wird: eine kurze Zusammenfassung des Ablaufs, der Standard-Archiveintrag ohne Debug-Trace oder alles Gespeicherte. Standard für eine Liste, vollständig für eine einzelne 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Nur Personen zu Hause",
                 "only_out": "Nur Personen unterwegs",
                 "none": "Niemand"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Letzte Stunde",
+                "last_12_hours": "Letzte 12 Stunden",
+                "last_day": "Letzter Tag",
+                "last_week": "Letzte Woche",
+                "last_month": "Letzter Monat"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Zusammenfassung",
+                "standard": "Standard",
+                "full": "Vollständig"
             }
         }
     }

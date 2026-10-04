@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Outcome",
                     "description": "Return only notifications with this outcome."
+                },
+                "period": {
+                    "name": "Period",
+                    "description": "Return only notifications created in this period up to now. Ignored if 'After' is set."
+                },
+                "verbosity": {
+                    "name": "Verbosity",
+                    "description": "How much of each notification to return: a short summary of what happened, the standard archived record without the debug trace, or everything stored. Defaults to standard for a list and full for a single 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Only people at home",
                 "only_out": "Only people away",
                 "none": "No one"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Last hour",
+                "last_12_hours": "Last 12 hours",
+                "last_day": "Last day",
+                "last_week": "Last week",
+                "last_month": "Last month"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Summary",
+                "standard": "Standard",
+                "full": "Full"
             }
         }
     }

@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "结果",
                     "description": "只返回具有此结果的通知。"
+                },
+                "period": {
+                    "name": "时间段",
+                    "description": "只返回截至现在的此时间段内创建的通知。如果设置了“之后”则忽略。"
+                },
+                "verbosity": {
+                    "name": "详细程度",
+                    "description": "每条通知返回多少内容：发生情况的简短摘要、不含调试跟踪的标准归档记录，或存储的全部内容。列表默认为标准，单个 'id' 默认为完整。"
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "仅在家的人",
                 "only_out": "仅外出的人",
                 "none": "无人"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "过去一小时",
+                "last_12_hours": "过去 12 小时",
+                "last_day": "过去一天",
+                "last_week": "过去一周",
+                "last_month": "过去一个月"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "摘要",
+                "standard": "标准",
+                "full": "完整"
             }
         }
     }

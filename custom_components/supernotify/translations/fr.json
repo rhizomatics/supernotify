@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Résultat",
                     "description": "Renvoyer uniquement les notifications ayant ce résultat."
+                },
+                "period": {
+                    "name": "Période",
+                    "description": "Renvoyer uniquement les notifications créées pendant cette période jusqu'à maintenant. Ignoré si 'Après' est défini."
+                },
+                "verbosity": {
+                    "name": "Niveau de détail",
+                    "description": "Quelle part de chaque notification renvoyer : un court résumé de ce qui s'est passé, l'enregistrement archivé standard sans la trace de débogage, ou tout ce qui est stocké. Par défaut standard pour une liste et complet pour un seul 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Seulement les personnes à la maison",
                 "only_out": "Seulement les personnes absentes",
                 "none": "Personne"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Dernière heure",
+                "last_12_hours": "12 dernières heures",
+                "last_day": "Dernier jour",
+                "last_week": "Dernière semaine",
+                "last_month": "Dernier mois"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Résumé",
+                "standard": "Standard",
+                "full": "Complet"
             }
         }
     }

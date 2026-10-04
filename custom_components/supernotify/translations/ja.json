@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "結果",
                     "description": "この結果の通知のみを返します。"
+                },
+                "period": {
+                    "name": "期間",
+                    "description": "現在までのこの期間に作成された通知のみを返します。「以降」が設定されている場合は無視されます。"
+                },
+                "verbosity": {
+                    "name": "詳細度",
+                    "description": "各通知をどの程度返すか: 何が起きたかの短い要約、デバッグトレースを除いた標準のアーカイブ記録、または保存されているすべて。リストでは標準、単一の 'id' では完全が既定です。"
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "在宅中の人のみ",
                 "only_out": "外出中の人のみ",
                 "none": "誰にも送らない"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "過去1時間",
+                "last_12_hours": "過去12時間",
+                "last_day": "過去1日",
+                "last_week": "過去1週間",
+                "last_month": "過去1か月"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "要約",
+                "standard": "標準",
+                "full": "完全"
             }
         }
     }

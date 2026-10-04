@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Wynik",
                     "description": "Zwróć tylko powiadomienia z tym wynikiem."
+                },
+                "period": {
+                    "name": "Okres",
+                    "description": "Zwróć tylko powiadomienia utworzone w tym okresie do teraz. Ignorowane, jeśli ustawiono 'Po'."
+                },
+                "verbosity": {
+                    "name": "Szczegółowość",
+                    "description": "Ile z każdego powiadomienia zwrócić: krótkie podsumowanie tego, co się stało, standardowy zapis archiwalny bez śladu debugowania albo wszystko, co zapisano. Domyślnie standardowa dla listy i pełna dla pojedynczego 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Tylko osoby w domu",
                 "only_out": "Tylko osoby poza domem",
                 "none": "Nikt"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Ostatnia godzina",
+                "last_12_hours": "Ostatnie 12 godzin",
+                "last_day": "Ostatni dzień",
+                "last_week": "Ostatni tydzień",
+                "last_month": "Ostatni miesiąc"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Podsumowanie",
+                "standard": "Standardowa",
+                "full": "Pełna"
             }
         }
     }

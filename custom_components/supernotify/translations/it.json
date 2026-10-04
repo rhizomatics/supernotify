@@ -285,6 +285,14 @@
                 "outcome": {
                     "name": "Esito",
                     "description": "Solo notifiche con questo esito."
+                },
+                "period": {
+                    "name": "Periodo",
+                    "description": "Solo notifiche create in questo periodo fino ad ora. Ignorato se 'Dopo' è impostato."
+                },
+                "verbosity": {
+                    "name": "Livello di dettaglio",
+                    "description": "Quanto restituire di ogni notifica: un breve riepilogo di cosa è successo, il record archiviato standard senza la traccia di debug, oppure tutto ciò che è memorizzato. Predefinito standard per una lista e completo per un singolo 'id'."
                 }
             }
         }
@@ -584,6 +592,22 @@
                 "only_in": "Solo chi è in casa",
                 "only_out": "Solo chi è fuori",
                 "none": "Nessuno"
+            }
+        },
+        "archive_period": {
+            "options": {
+                "last_hour": "Ultima ora",
+                "last_12_hours": "Ultime 12 ore",
+                "last_day": "Ultimo giorno",
+                "last_week": "Ultima settimana",
+                "last_month": "Ultimo mese"
+            }
+        },
+        "archive_verbosity": {
+            "options": {
+                "summary": "Riepilogo",
+                "standard": "Standard",
+                "full": "Completo"
             }
         }
     }
