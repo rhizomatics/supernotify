@@ -186,6 +186,12 @@ Switching a delivery or transport on or off lasts across restarts and reloads, s
 
 Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.
 
+Each switch has an `overridden` attribute, `true` while it has been changed at runtime and no longer matches the configured value, so a dashboard can mark what `reset_overrides` would put back, or a template sensor can count the overrides:
+
+```yaml
+{{ states.switch | selectattr('attributes.overridden', 'eq', true) | list | count }}
+```
+
 - A scenario without conditions is driven by its *Scenario Manual* `binary_sensor`. That on/off state is not an override of the configuration, so `supernotify.reset_overrides` leaves it as it is, and only puts the scenario's switch back.
 - An override belongs to its switch entity. While the switch is disabled in Home Assistant, its override is not applied and the configured value is used, and `supernotify.reset_overrides` can't clear it. Enabling the switch again brings the override back - turn it back with the switch, or use `supernotify.reset_overrides` once the switch is enabled again.
 - A delivery with no `enabled` of its own follows its transport's configured `enabled`, so changing the transport's `enabled` in the configuration also ends that delivery's override.
