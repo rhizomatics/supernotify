@@ -12,25 +12,27 @@ Most of the actions are also usable via [Supernotify Cards](https://github.com/l
 
 To use any of these, prefix with `supernotify.`. Try them out via [Tools](https://www.home-assistant.io/docs/tools/dev-tools/)
 
-| Action                           | Description                                                                                                                                                |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `notify`                         | The best way to send a notification. The UI has much more help on choosing options than calling `notify.supernotify`                                       |
-| `enquire_active_scenarios`       | Compute all the scenario conditions and list which apply right now                                                                                         |
-| `enquire_archive`                | Search the archived notifications by date or status                                                                                                        |
-| `enquire_configuration`          | Retrieve the current config as YAML, merging any advanced YAML config with the Home Assistant UI managed config                                            |
-| `enquire_deliveries_by_scenario` | List the deliveries which will be used per configured scenario                                                                                             |
-| `enquire_last_notification`      | Show the details, including debug info, for the last handled notification                                                                                  |
-| `enquire_implicit_deliveries`    | List all the configured default delivieries                                                                                                                |
-| `enquire_occupancy`              | List all the recipients by whether in or out                                                                                                               |
-| `enquire_scenarios`              | List all the configured scenarios                                                                                                                          |
-| `enquire_snoozes`                | List all the active snoozes                                                                                                                                |
-| `refresh_entities`               | Re-publish the current state of every SuperNotify entity                                                                                                   |
-| `reload`                         | Reload all the supernotify config yaml and restart the component with the fresh config                                                                     |
-| `reset_overrides`                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`                                             |
-| `purge_archive`                  | Force the archive housekeeping to run immediately and remove old notification records                                                                      |
-| `purge_media`                    | Force the media storage housekeeping to run immediately and remove old media                                                                               |
-| `snooze`                         | Snooze, silence or resume notifications, see [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-from-a-script-or-dashboard) |
-| `clear_snoozes`                  | Clear all active snoozes                                                                                                                                   |
+| Action                           | Description                                                                                                                                              |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notify`                         | The best way to send a notification. The UI has much more help on choosing options than calling `notify.supernotify`                                     |
+| `enquire_active_scenarios`       | Compute all the scenario conditions and list which apply right now                                                                                       |
+| `enquire_archive`                | Search the archived notifications by date or status                                                                                                      |
+| `enquire_configuration`          | Retrieve the current config as YAML, merging any advanced YAML config with the Home Assistant UI managed config                                          |
+| `enquire_deliveries_by_scenario` | List the deliveries which will be used per configured scenario                                                                                           |
+| `enquire_last_notification`      | Show the details, including debug info, for the last handled notification                                                                                |
+| `enquire_implicit_deliveries`    | List all the configured default delivieries                                                                                                              |
+| `enquire_occupancy`              | List all the recipients by whether in or out                                                                                                             |
+| `enquire_scenarios`              | List all the configured scenarios                                                                                                                        |
+| `enquire_snoozes`                | List all the active snoozes                                                                                                                              |
+| `refresh_entities`               | Re-publish the current state of every SuperNotify entity                                                                                                 |
+| `reload`                         | Reload all the supernotify config yaml and restart the component with the fresh config                                                                   |
+| `reset_overrides`                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`                                           |
+| `purge_archive`                  | Force the archive housekeeping to run immediately and remove old notification records                                                                    |
+| `purge_media`                    | Force the media storage housekeeping to run immediately and remove old media                                                                             |
+| `snooze`                         | Snooze notifications for some minutes, see [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-from-a-script-or-dashboard) |
+| `silence`                        | Silence notifications until they are unsnoozed                                                                                                           |
+| `unsnooze`                       | Remove a snooze or silence                                                                                                                               |
+| `clear_snoozes`                  | Clear all active snoozes                                                                                                                                 |
 
 The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides** button (`button.supernotify_reset_overrides`) on the SuperNotify device.
 
