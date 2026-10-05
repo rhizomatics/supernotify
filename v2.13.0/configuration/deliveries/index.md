@@ -1,0 +1,292 @@
+# Deliveries
+
+Source: https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/
+
+*Delivery* is a pre-set configuration for a specific *Transport* - it controls the configuration and can set values that would otherwise have to be repeated in every notification.
+
+The simplest case though is that you never know or worry about them - if you add an email address as a target for a notification, the email delivery is used, or a phone number for SMS, and if you add a big list of random targets, Supernotify will work out the right delivery for each. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more information.
+
+If you need, Deliveries can be manually selected on a notification, for example sending some to Telegram and others to email, or having a siren fire also for some. They can also be automatically selected using conditions or Scenarios.
+
+## Standard Delivery
+
+A Delivery gets configured automatically for every usable [transport](https://supernotify.rhizomatics.org.uk/latest/transports/index.md), it will check the underlying integration, like Ntfy or Telegram, has been set up in Home Assistant, and if it needs entities like Media Players, whether these exist.
+
+For example, if there is an [SMTP Integration](https://www.home-assistant.io/integrations/smtp/) an `email` Delivery will be set up, with the SMTP `action`.
+
+Whether a standard delivery counts as `default` (auto-selected) or `explicit` (only fires when named) depends on whether its transport can definitively claim something in the notification. `email`, `sms`, `mobile_push`, `discord`, `matrix`, `mqtt`, `telegram`, `html5`, `alexa_devices` and the generic notify-entity delivery are all `default`: each has its own dedicated target category (an email address, a phone number, a `discord_channel:`/`matrix_room:`/`topic:`/`telegram_chat_id:`-qualified value, a matching `notify.*` entity), so they only actually fire once a notification's target or an available recipient's own details give them something to claim - a bare `message`, with nothing for any of them to match, reaches none of them. Transports without a dedicated category of their own - `kodi`, `tts`, the generic `media` transport, `alexa_media_player`, `chime`, `persistent`, `generic`, `ntfy`, `gotify`, `lametric`, `pushover` - stay `explicit` always, since there's no way to tell from the target alone that a notification was meant for them (a bare `media_player.x` entity, for instance, doesn't say whether the intent was an image, a sound, speech, or Kodi's own playback).
+
+In any case, the `inclusion` key can be used, either in the Transport or Delivery configuration, to override any of the automatic choices. See [Delivery Inclusion](#delivery-inclusion) for more on how that works.
+
+## Customizing Delivery
+
+You may want to create multiple Deliveries for the same channel, for example a plain `email` and `html_email` delivery, or different custom notification platforms using the `generic` transport. Be careful to have constraints, like priority, occupancy or conditions, if there are multiple deliveries so you don't get duplicate notifications.
+
+Or more simply, you can customize the standard delivery created for each transport, here's an example, which refines the standard `sms` delivery, created because the home already has a working SMS integration, and switches on the delivery only if notification priority is critical or high
+
+If the conditions were more complex than this, a `condition` block could be applied.
+
+Customizing Standard Delivery
+
+```yaml
+delivery:
+    sms: # same name as transport
+        priority:
+        - critical
+        - high
+```
+
+If the name `text_message` had been chosen here, then there would now be two deliveries, `sms` ( the automatic standard one ) and `text_message` (my new custom one) defined.
+
+If you only have one delivery, this is the same thing as:
+
+Customizing Standard Delivery
+
+```yaml
+transports:
+    sms:
+      delivery_defaults:
+        occupancy: only_out
+        priority:
+        - critical
+        - high
+```
+
+## Other Reasons to Use Delivery
+
+- Make sure critical notifications are heard. Fire up the sirens, push to mobile apps and send off email or SMS
+- If you're paying for SMS, keep it only for critical notifications
+- Adapt messaging style to occupancy
+- Reduce notification noise by using sounds, like dings or bells, on chime devices or voice assistants
+
+There are more examples in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) section.
+
+## Simplifying Deliveries
+
+- If you only have one delivery config, don't bother with the `delivery:` config, just update the `delivery_defaults` for the transport, so the standard delivery is set up the way you like it
+- If you have multiple deliveries for the same Transport, then set common defaults at Transport level, using `delivery_defaults`
+- Use [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md) to apply common chunks of config
+- Move to a scenario-only configuration (recommended)
+- From v2.10.0 this is a simple change in the *Delivery Control* settings
+- In older versions, it requires a YAML change, setting `inclusion` to `scenario` (or `explicit`, which is also offered in the action editor's Delivery list) for every delivery, or all at once with [Delivery Control](#delivery-control)
+- This makes Deliveries more of an opt-in model than opt-out, since all Deliveries are now inactive unless explicitly selected
+
+In this snippet, all Delivery configurations for `alexa_devices` will use the defined target group.
+
+Example Transport Defaults
+
+```yaml
+    alexa_devices:
+      delivery_defaults:
+        target:
+          - group.alexa_announcements
+```
+
+## Overriding Message and Title
+
+If your downstream transport has specific needs for the `message` and/or `title` then these can be overridden or amended for only the deliveries that need them.
+
+Override Message
+
+```yaml
+delivery:
+  custom_notify:
+    transport: generic
+    action: notify.very_custom
+    message: HOME ASSISTANT NOTIFICATION
+```
+
+For this delivery, whatever the `message` on the notification, it will be replaced by "HOME ASSISTANT NOTIFICATION" when delivered to the custom notification.
+
+Info
+
+`message` and `title` are the two special cases where the values in the configuration override the values in the Action `data`. For everything else the Action wins.
+
+For amending rather than overriding, see the [Alexa Whisper Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) for an example of using `message_template` in a [Scenario](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md).
+
+## Controlling Targets
+
+For fine-grained control over how any targets pre-defined in a delivery are treated, for example when explicit targets provided in a notification action call, Delivery has an optional `target_usage` key, taking values of:
+
+- `no_action` - Only uses the Delivery target if there's no target on the notification action call
+- `no_delivery` - Only uses the Delivery target if there's no target applicable to this delivery
+- `merge_delivery`- Combines the targets in the Delivery with any on the action call, only where delivery already has a target
+- `merge_always` - Combines the targets in the Delivery with any on the action call, or if there's no target on the notification, it defaults to the Delivery target
+- `fixed` - Only ever delivers to the targets in the Delivery config, ignoring any direct or indirect (for example `person_id`) in the action call
+
+Additionally, `target_required` defines if this delivery needs targets to work, and should be skipped if no targets are resolved as specific to it, for example based on the `target_categories` option to select by category. This has values:
+
+- `always` - Targets are mandatory, skip this delivery if no targets identified for it
+- `never` - Don't require targets, and don't even waste time computing them and don't supply them to the transport adaptor
+- `optional` - Don't require targets but still compute them and make them available for the notification
+
+Home Assistant `area_id`, `floor_id` and `label_id` targets are resolved to the entities they reference before anything else looks at them, using the same core logic as a Home Assistant entity action, so groups are expanded and an entity inherits the area of its device. The delivery's `target_categories` and `target_select` options then apply to those entities, exactly as they would to an entity named in the notification.
+
+See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md) for more info on how to use them.
+
+## Delivery Inclusion
+
+A list of `inclusion` options controls how deliveries are included, each delivery can have multiple options included, though some of them are mutually impossible, like `default` and `explicit`
+
+| Option              | Default | Usage                                                                                     |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------- |
+| `default`           | Y       | Use this delivery for every notification if there are targets and its not overridden      |
+| `scenario`          | N       | Only use this delivery if a scenario enables it                                           |
+| `explicit`          | N       | Only use this delivery if a notification asks for it, or a scenario enables it            |
+| `fallback`          | N       | Use this delivery only if no other delivery was selected                                  |
+| `fallback_on_error` | N       | Use this delivery if no other delivery was successful and at least one of them had errors |
+
+`explicit` and `scenario` work the same way when a notification is sent. The difference is in the `supernotify.notify` action editor, whose **Delivery** list offers `default` and `explicit` deliveries, but not ones only a scenario, or a fallback, should use.
+
+`fallback` is not a per-scenario 'last resort'
+
+`fallback`/`fallback_on_error` only control whether a delivery gets pulled in by the separate mechanism that runs after every other delivery has been attempted, if *nothing at all* delivered for the notification (or, for `fallback_on_error`, if at least one attempt errored). That mechanism skips a delivery that's already been selected some other way - but it doesn't retroactively enable one. If a scenario's own `delivery:` map names a `fallback` delivery directly, that selects it immediately, the same as naming any other delivery - the `fallback` flag adds no condition of its own, so with no `occupancy` or `conditions` set, it fires every time the scenario does, not just when everything else failed. Give it its own `occupancy` (`all_out` for "nobody home", for example) or `conditions` if you want it to stay conditional while still being scenario-specific - or leave it out of the scenario's `delivery:` map entirely and let the automatic mechanism add it only when needed.
+
+### Fallback for one delivery
+
+A delivery can name other deliveries to try, in order, when it fails and sends nothing - for example an Alexa announcement that falls back to Google, then to the phones, when Alexa Media Player has lost its login:
+
+```yaml
+delivery:
+  alexa_announce:
+    transport: alexa_media_player
+    fallback:
+      - tts_google
+      - mobile_push
+  tts_google:
+    transport: tts
+    inclusion: fallback   # used only as a fallback, never offered in the action editor
+```
+
+- The fallbacks are tried after the other deliveries, one at a time, stopping at the first one that sends.
+- A delivery that has already been tried for this notification is not tried again, so nothing is sent twice.
+- Only one level: a fallback's own `fallback:` isn't followed, the order of the list is the chain.
+- A fallback that is switched off, or skipped by its own `conditions`, `priority` or `occupancy`, is passed over.
+- The fallback shows in the archive with `delivery_provenance` `enabled_by: fallback:alexa_announce`.
+- The delivery's switch has a `fallback` attribute with the list, so a dashboard can show it.
+- A delivery with a `fallback:`, and one used as a fallback, waits for its action to finish, so an error from the service is seen. Without that, only a missing action or invalid data would count as a failure. It does not cover a delivery the service accepted but that never arrived - a phone switched off, for example.
+
+### Implicit Deliveries
+
+The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
+
+### Delivery Control
+
+A delivery without its own `inclusion` takes its transport's, which is `default` for email, SMS, mobile push, notify entities, Alexa Devices, HTML5, Discord, Matrix, MQTT and Telegram, and `explicit` for the rest - see [Standard Delivery](#standard-delivery) above for why. These are `default` despite some of their targets (a channel/user ID, a room ID/alias, a topic, a chat ID) being opaque values, because each has its own dedicated target category (`discord_channel`/`matrix_room`/`topic`/`telegram_chat_id`) no other transport uses - a target explicitly qualified with one reaches its delivery automatically, and the delivery is simply skipped otherwise. MQTT's topic can also come from a `data:` keyword instead of a target - unlike Discord/Matrix/Telegram, that alone wouldn't tell it whether a given notification is even relevant - so its standard delivery only counts as truly asked-for, and allowed to rely on a `data:`-only topic, when the call names `mqtt` explicitly; swept in implicitly with no `topic:` target, it's simply skipped instead of attempting every notification. See [Suppression Reasons](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/#suppression-reasons) and the [Target-Driven Implicit Selection roadmap item](https://supernotify.rhizomatics.org.uk/latest/developer/roadmap/index.md) for the fuller picture. To give every delivery the same default instead, go to **Settings** > **Devices & services** > **Supernotify** > **Configure** > **Delivery Control** and set **Default inclusion**. A transport's own `delivery_defaults` in YAML still override it, as does a delivery's own `inclusion`.
+
+The same page has **Spoken delivery occupancy**, a default `occupancy` for spoken deliveries, such as Alexa and TTS announcements, for example `only_in` so a spoken delivery only happens when someone's home. For a delivery with its own fixed target - the Alexa Devices `_announce_all`/`_speak_all` deliveries, for example - `occupancy` decides whether the whole delivery fires at all, since there's no per-recipient list for it to narrow; for a delivery that resolves its targets from recipients, it also narrows which recipients it reaches, same as for any other delivery. Recipients without a Person are never in or out, so `only_in` and `only_out` always leave them out - see [Users without Person entries](https://supernotify.rhizomatics.org.uk/latest/configuration/people/#users-without-person-entries). Left as *Not controlled*, and *Each transport's own default* for inclusion, nothing changes.
+
+Info
+
+`inclusion` replaces the deprecated `selection` key (same values, same meaning) - existing config using `selection` still works but should be migrated.
+
+Info
+
+This is a config-time property of the delivery itself - whether it's a *candidate* for implicit inclusion at all. For the separate, per-notification `delivery_selection` choice (`implicit`/`explicit`/`fixed`) made on an action call, see [Controlling Delivery Selection](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/#controlling-delivery-selection).
+
+## Entities
+
+Each delivery has a `switch.supernotify_delivery_XXXX` entity, on the **SuperNotify** device, that is the delivery `enabled` flag, with the delivery configuration as attributes. Turning it off ( by main UI, Developer Tools, automations, API or whatever ) disables the delivery, and turning it on enables it again, for run-time control of notifications. Each transport also has a switch, `switch.supernotify_transport_XXXX`, which allows all deliveries for that transport to be quickly disabled, without changing the delivery switches themselves. Only a transport that is loaded, and so usable, has a switch, as do only its deliveries. A switch left from a transport or delivery that is no longer loaded shows as unavailable, and can be deleted from its entity settings.
+
+Switching a delivery or transport on or off lasts across restarts and reloads, see [Overrides](#overrides).
+
+Deprecated
+
+The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary_sensor.supernotify_transport_XXXX` entities are kept only for backward compatibility, and will be removed in a future version. They are read-only, mirroring the switches: writing their state no longer enables or disables anything. They are not created on a new install, and a repair is raised once in Home Assistant if you have one enabled.
+
+### Overrides
+
+Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.
+
+Each switch has an `overridden` attribute, `true` while it has been changed at runtime and no longer matches the configured value, so a dashboard can mark what `reset_overrides` would put back, or a template sensor can count the overrides:
+
+```yaml
+{{ states.switch | selectattr('attributes.overridden', 'eq', true) | list | count }}
+```
+
+- A scenario without conditions is driven by its *Scenario Manual* `binary_sensor`. That on/off state is not an override of the configuration, so `supernotify.reset_overrides` leaves it as it is, and only puts the scenario's switch back.
+- An override belongs to its switch entity. While the switch is disabled in Home Assistant, its override is not applied and the configured value is used, and `supernotify.reset_overrides` can't clear it. Enabling the switch again brings the override back - turn it back with the switch, or use `supernotify.reset_overrides` once the switch is enabled again.
+- A delivery with no `enabled` of its own follows its transport's configured `enabled`, so changing the transport's `enabled` in the configuration also ends that delivery's override.
+- The override is saved by Home Assistant's own restore state mechanism, so it lasts as long as the switch exists: it's forgotten if the switch has been missing for about 7 days, and, as Home Assistant saves it every 15 minutes and on a clean shutdown, a change up to 15 minutes before a crash can be lost.
+
+## Removing
+
+Its also possible to completely switch off transports, so that they don't show up anywhere in Home Assistant, and there's no Delivery option, and no ability to dynamically switch them back on.
+
+Example of switching off a transport completely
+
+```yaml
+transports:
+  mobile_push:
+    load: false
+```
+
+## Extreme Example
+
+Its unlikely any Delivery would ever look quite like this, with every configuration key used. The full choice can also be found in the [Delivery Schema](https://supernotify.rhizomatics.org.uk/latest/developer/reference/schemas/Delivery_Definition/index.md) definition.
+
+Complex Example
+
+```yaml
+delivery:
+    all_bells_and_whistles:
+        # Alias does nothing, just a place for longer name
+        alias: Make a fuss if alarm armed or high priority
+        # Which of the built-in transports to use
+        transport: generic
+        # This defaults to true, quick way to switch off this delivery
+        enabled: true
+        # Which Home Assistant action (aka 'service') should be called
+        action: script.my_alerter
+        # These are fine-tuning options for the transport
+        options:
+            # only pass `entity_id` targets to the delivery
+            target_categories:
+              - entity_id
+            # narrow down the entity ids selected
+            target_include_re:
+              - media_player\.chime_[A-Za-z0-9_]+
+              - mqtt\.siren_[A-Za-z0-9_]+
+            # don't deliver to a target already notified in this action
+            unique_targets: true
+        # bunch of data that only makes sense to the transport
+        data:
+            noise_level: scarey
+            jitter: 23
+        # standard targets to use
+        target:
+            entity_id:
+                switch.hall_light
+                switch.garage_buzzer
+            person_id:
+                person.joe_bob
+        # use these targets always, whether or not the notification has explicit targets
+        target_usage: merge_always
+        # if there's no targets don't notify ( which always happen anyway because of the merge targets above )
+        target_required: optional
+        # Use this delivery only when explicitly selected by a scenario, or if all other deliveries fail with at least one error
+        inclusion:
+          - scenario
+          - fallback_on_error
+        # only deliver if notification is high or critical
+        priority:
+            - high
+            - critical
+        # only deliver if there's someone determined ( by mobile app tracker ) to be home
+        occupancy: any_in
+        # apply a further time and day of week condition
+        conditions:
+              alias: "Time 15~02"
+              condition: time
+              after: "15:00:00"
+              before: "02:00:00"
+              weekday:
+                - mon
+                - wed
+                - fri
+        # Send this delivery last ( this has affect on unique selection choice, so another delivery might hit a target first)
+        selection_rank: last
+        # fix the message and title, ignoring what's sent on notification
+        message: ALERT!
+        title: Overridden title
+```
