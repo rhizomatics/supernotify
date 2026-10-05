@@ -70,7 +70,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Recipes for Home Assistant Notifications using Supernotify](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md)
 - [Backup Alexa Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/index.md)
 - [Alexa Whispering Low Priority Announcements](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md)
-- [All sirens go](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md)
+- [All Sirens Go!](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md)
 - [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md)
 - [Basic HTML Formatted Email Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md)
 - [Bedtime Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md)
@@ -92,7 +92,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md)
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md)
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
-- [Seasonal greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
+- [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md)
 - [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)
 

@@ -13,15 +13,11 @@ This page available in [English](https://supernotify.rhizomatics.org.uk/latest/i
 
 Source: https://supernotify.rhizomatics.org.uk/latest/
 
-**Unified Notification for Home Assistant**
+**Unified Notifications for Home Assistant**
 
-### v2 MAJOR CHANGE - Set up from Home Assistant UI
+Recipes
 
-> > `2.0.0` of SuperNotify moves to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
-> >
-> > A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
-> >
-> > An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
+Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), try making [Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), set off [sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), make the [Frigate blueprint send e-mail with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [move and zoom a camera](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) to take a snapshot or even have [spooky notifications on Halloween](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md).
 
 A **unified notification interface** on top of HomeAssistant's `notify` platform, to greatly simplify notifying via multiple channels just the way you need it, including conditional notifications, voice announcements, mobile actions, camera snapshots, chimes, template based HTML emails, spooky Hallowe'en announcements and more.
 
@@ -29,11 +25,7 @@ The goal - to make the **simplest possible notification** do as **many notificat
 
 **No YAML is required** to get started and easily have [mobile push notifications to all your Home Assistant users](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md), camera snapshots attached to e-mails, [Frigate blueprint notifications sent to email](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), add a [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) and cut out duplicate notifications.
 
-Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration. And with advanced YAML configuration, the possibilities are endless.
-
-Recipes
-
-Get started quickly, or get inspired, with one of the [notification recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md), including: [Make Alexa whisper low priority notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md), [Set off sirens for critical alerts](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md), [Send HomeAssistant themed HTML e-mail](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md), [Use the Frigate blueprint to send emails with attached images](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md), [Move and zoom a camera to take a snapshot](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md), [Suppress or escalate notifications based on content](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) and [Halloween and Christmas themed chimes and voices](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
+Use the [Supernotify Cards](https://github.com/lollox80/supernotify-cards) for elegant [dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) integration, such as these usage statistics below. And with advanced YAML configuration, the possibilities are endless.
 
 This keeps automations, scripts, AppDaemon apps etc simple and easy to maintain, with all the detail and rules managed all in one place, with lots of support to make even complicated preferences easy to manage. The smallest notification possible - only a message defined - can be enough to trigger everything you need to keep everyone informed. Change e-mail addresses in one place, and let Supernotify handle finding which Mobile Apps to use.
 
@@ -115,6 +107,14 @@ With zero YAML all UI config
     data:
         message: Hello! Testing this new Supernotify thing sending to everyone's mobile apps
 ```
+
+## Migrating from pre-v2.0.0 Installation
+
+`2.0.0` of SuperNotify moved to a native Home Assistant UI configuration ('ConfigFlow'). If you have an existing simple configuration, everything will be migrated for you and there will be no YAML needed.
+
+A *Repair* will be raised to move any advanced configuration (deliveries, scenarios, cameras, persons, actions etc) to a new `supernotify:` section, which can be a `supernotify.yaml` file with an `include` statement to your `configuration.yaml` or however you choose to organize your configuration. Nothing will be deleted or commented out, so remove the old config when you are comfortable the new version is working for you, and this will also clear up warnings from the log about the older notification service.
+
+An alternative `supernotify.notify` action is now available that is much easier to configure from automations, and works identically to the existing actions.
 
 ## Known Limitations
 
@@ -302,29 +302,60 @@ Note
 
 Until 2025, *Actions* were known as **Services** in Home Assistant, and that is still commonly used. In this documentation, the new term 'Action' is always used. To avoid ambiguity, when the quite different actions in Actionable Notifications are referred to, it is always as "Mobile Actions"
 
+Most of the actions are also usable via [Supernotify Cards](https://github.com/lollox80/supernotify-cards) which provides a rich UI for them.
+
 ## Available Actions
 
 To use any of these, prefix with `supernotify.`. Try them out via [Tools](https://www.home-assistant.io/docs/tools/dev-tools/)
 
-| Action                         | Description                                                                                                          |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| notify                         | The best way to send a notification. The UI has much more help on choosing options than calling `notify.supernotify` |
-| reload                         | Reload all the supernotify config yaml and restart the component with the fresh config                               |
-| enquire_deliveries_by_scenario | List the deliveries which will be used per configured scenario                                                       |
-| enquire_last_notification      | Show the details, including debug info, for the last handled notification                                            |
-| enquire_implicit_deliveries    | List all the configured default delivieries                                                                          |
-| enquire_scenarios              | List all the configured scenarios                                                                                    |
-| enquire_active_scenarios       | Compute all the scenario conditions and list which apply right now                                                   |
-| enquire_occupancy              | List all the recipients by whether in or out                                                                         |
-| enquire_snoozes                | List all the active snoozes                                                                                          |
-| refresh_entities               | Re-publish the current state of every SuperNotify entity                                                             |
-| reset_overrides                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`       |
-| clear_snoozes                  | Clear all active snoozes                                                                                             |
-| purge_archive                  | Force the archive housekeeping to run immediately and remove old notification records                                |
-| purge_media                    | Force the media storage housekeeping to run immediately and remove old media                                         |
-| snooze                         | Snooze notifications for a delivery or target                                                                        |
+| Action                           | Description                                                                                                                                              |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `notify`                         | The best way to send a notification. The UI has much more help on choosing options than calling `notify.supernotify`                                     |
+| `enquire_active_scenarios`       | Compute all the scenario conditions and list which apply right now                                                                                       |
+| `enquire_archive`                | Search the archived notifications by date or status                                                                                                      |
+| `enquire_configuration`          | Retrieve the current config as YAML, merging any advanced YAML config with the Home Assistant UI managed config                                          |
+| `enquire_deliveries_by_scenario` | List the deliveries which will be used per configured scenario                                                                                           |
+| `enquire_last_notification`      | Show the details, including debug info, for the last handled notification                                                                                |
+| `enquire_implicit_deliveries`    | List all the configured default delivieries                                                                                                              |
+| `enquire_occupancy`              | List all the recipients by whether in or out                                                                                                             |
+| `enquire_scenarios`              | List all the configured scenarios                                                                                                                        |
+| `enquire_snoozes`                | List all the active snoozes                                                                                                                              |
+| `refresh_entities`               | Re-publish the current state of every SuperNotify entity                                                                                                 |
+| `reload`                         | Reload all the supernotify config yaml and restart the component with the fresh config                                                                   |
+| `reset_overrides`                | Put scenarios, recipients, deliveries and transports switched on or off back as configured, or only one `kind`                                           |
+| `purge_archive`                  | Force the archive housekeeping to run immediately and remove old notification records                                                                    |
+| `purge_media`                    | Force the media storage housekeeping to run immediately and remove old media                                                                             |
+| `snooze`                         | Snooze notifications for some minutes, see [Snoozing](https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/#snoozing-from-a-script-or-dashboard) |
+| `silence`                        | Silence notifications until they are unsnoozed                                                                                                           |
+| `unsnooze`                       | Remove a snooze or silence                                                                                                                               |
+| `clear_snoozes`                  | Clear all active snoozes                                                                                                                                 |
 
 The same reset as `reset_overrides` with no `kind` is also available as the **Reset overrides** button (`button.supernotify_reset_overrides`) on the SuperNotify device.
+
+### Counts per day from the archive
+
+`enquire_archive` with `verbosity: daily` gives totals for each local day instead of the notifications themselves, for usage charts or a template sensor. Every notification in the range is counted unless a `limit` is given, so a month is a few kilobytes however busy it was.
+
+```yaml
+action: supernotify.enquire_archive
+data:
+  verbosity: daily
+  period: last_month
+```
+
+```yaml
+days:
+  - date: "2026-10-04"            # local date, oldest first
+    count: 121
+    outcome: {success: 58, partial_delivery: 55, dupe: 6, no_delivery: 2}
+    priority: {medium: 98, low: 23}
+    hour: [3, 1, 0, 0, 0, 0, 2, 5, 9, 11, 8, 7, 9, 12, 10, 6, 5, 4, 3, 2, 1, 2, 1, 1]   # local hour
+    deliveries:                   # in how many notifications each delivery sent or failed
+      mobile_push: {success: 80, failed: 0}
+      alexa_announce: {success: 41, failed: 1}
+    scenarios: {afternoon: 40, evening: 22, multi_home: 101}
+count: 3100
+```
 
 # Assist and AI Agents
 
@@ -977,10 +1008,27 @@ Source: https://supernotify.rhizomatics.org.uk/latest/usage/snoozing/
 
 Snoozing can be selected from a mobile action, and made for a set time, or notifications can be silenced until further notice. Snoozes are persisted to Home Assistant's integration storage, so will be reactivated after Home Assistant restarts, and included in backups.
 
-Two HomeAssistant actions ( previously known as "services") are available to manage snoozes:
+Five Home Assistant actions (previously known as "services") are available to manage snoozes:
 
+- `supernotify.snooze`, `supernotify.silence` and `supernotify.unsnooze`
 - `supernotify.clear_snoozes`
 - `supernotify.enquire_snoozes`
+
+### Snoozing from a script or dashboard
+
+`supernotify.snooze`, `supernotify.silence` and `supernotify.unsnooze` make the same snoozes as a mobile action, a voice sentence or the AI tool, from an automation, a script or a dashboard button. Any user can call them, while firing the mobile action event through the API needs an admin.
+
+```yaml
+action: supernotify.snooze     # for some minutes; supernotify.silence lasts until unsnoozed
+data:
+  scope: delivery          # everything (default), noncritical, delivery, transport, priority, camera or tag
+  name: alexa_announce     # the delivery, transport, priority, camera entity_id or tag, for those scopes
+  person: person.alice     # only this person's notifications; everyone if left out
+  minutes: 30              # snooze only; the configured snooze time if left out
+  reason: Dashboard        # snooze and silence, shown by enquire_snoozes
+```
+
+`supernotify.unsnooze` takes the same `scope`, `name` and `person`, and removes the snooze or silence that has them. With a response requested, each returns the snoozes now active, as `enquire_snoozes` does.
 
 Snooze context is also logged in the debug trace, which can be archived to the file system or MQTT topic.
 
@@ -1726,8 +1774,6 @@ views:
               - snooze
               - announce
             groups: []
-          - type: custom:supernotify-stats-card
-            days: 14
       - type: grid
         cards:
           - type: heading
@@ -1756,6 +1802,18 @@ views:
     cards: []
     icon: mdi:email-fast
     show_icon_and_title: true
+  - type: sections
+    max_columns: 4
+    title: Stats
+    path: stats
+    icon: mdi:chart-timeline-variant-shimmer
+    sections:
+      - type: grid
+        cards:
+          - type: custom:supernotify-stats-card
+            days: 14
+    show_icon_and_title: true
+    cards: []
   - type: sections
     max_columns: 4
     title: People and Scenarios
@@ -1983,6 +2041,30 @@ A list of `inclusion` options controls how deliveries are included, each deliver
 
 `fallback`/`fallback_on_error` only control whether a delivery gets pulled in by the separate mechanism that runs after every other delivery has been attempted, if *nothing at all* delivered for the notification (or, for `fallback_on_error`, if at least one attempt errored). That mechanism skips a delivery that's already been selected some other way - but it doesn't retroactively enable one. If a scenario's own `delivery:` map names a `fallback` delivery directly, that selects it immediately, the same as naming any other delivery - the `fallback` flag adds no condition of its own, so with no `occupancy` or `conditions` set, it fires every time the scenario does, not just when everything else failed. Give it its own `occupancy` (`all_out` for "nobody home", for example) or `conditions` if you want it to stay conditional while still being scenario-specific - or leave it out of the scenario's `delivery:` map entirely and let the automatic mechanism add it only when needed.
 
+### Fallback for one delivery
+
+A delivery can name other deliveries to try, in order, when it fails and sends nothing - for example an Alexa announcement that falls back to Google, then to the phones, when Alexa Media Player has lost its login:
+
+```yaml
+delivery:
+  alexa_announce:
+    transport: alexa_media_player
+    fallback:
+      - tts_google
+      - mobile_push
+  tts_google:
+    transport: tts
+    inclusion: fallback   # used only as a fallback, never offered in the action editor
+```
+
+- The fallbacks are tried after the other deliveries, one at a time, stopping at the first one that sends.
+- A delivery that has already been tried for this notification is not tried again, so nothing is sent twice.
+- Only one level: a fallback's own `fallback:` isn't followed, the order of the list is the chain.
+- A fallback that is switched off, or skipped by its own `conditions`, `priority` or `occupancy`, is passed over.
+- The fallback shows in the archive with `delivery_provenance` `enabled_by: fallback:alexa_announce`.
+- The delivery's switch has a `fallback` attribute with the list, so a dashboard can show it.
+- A delivery with a `fallback:`, and one used as a fallback, waits for its action to finish, so an error from the service is seen. Without that, only a missing action or invalid data would count as a failure. It does not cover a delivery the service accepted but that never arrived - a phone switched off, for example.
+
 ### Implicit Deliveries
 
 The primary purpose of the `default` (or "implicit") deliveries is to provide a means of handling known targets. For example, if an email address is in the list of targets, it implies that an `email` delivery is used for it, even if `email` is not on the list. If there are no email addresses the `email` delivery does nothing. Likewise for `discord_channel:xxx` or `topic:my_mqtt_queue` type target addresses.
@@ -2014,6 +2096,12 @@ The delivery and transport `binary_sensor.supernotify_delivery_XXXX` and `binary
 ### Overrides
 
 Switching a scenario, recipient, delivery or transport on or off with its switch overrides its configured `enabled` value. The override lasts across restarts and reloads, while its configured value - its own `enabled`, or for a delivery without one, its transport's - is unchanged. Changing that value in the configuration, and reloading, puts it back as configured. So does the `supernotify.reset_overrides` action, for everything or for one kind at a time.
+
+Each switch has an `overridden` attribute, `true` while it has been changed at runtime and no longer matches the configured value, so a dashboard can mark what `reset_overrides` would put back, or a template sensor can count the overrides:
+
+```yaml
+{{ states.switch | selectattr('attributes.overridden', 'eq', true) | list | count }}
+```
 
 - A scenario without conditions is driven by its *Scenario Manual* `binary_sensor`. That on/off state is not an override of the configuration, so `supernotify.reset_overrides` leaves it as it is, and only puts the scenario's switch back.
 - An override belongs to its switch entity. While the switch is disabled in Home Assistant, its override is not applied and the configured value is used, and `supernotify.reset_overrides` can't clear it. Enabling the switch again brings the override back - turn it back with the switch, or use `supernotify.reset_overrides` once the switch is enabled again.
@@ -2824,7 +2912,7 @@ Manual control of scenarios via `binary_sensor` only affects which ones get auto
 
 The state is kept current in two ways. A change to an entity referenced by a scenario's conditions re-evaluates the scenarios that depend on that entity, immediately. A periodic sweep then covers what no entity change can announce: time windows, sun position, and templates whose dependencies could not be determined statically.
 
-Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on small hardware is worth controlling, so the section below is needed to switch it on.
+Evaluating conditions costs whatever those conditions cost, which for template-heavy scenarios on small hardware is worth controlling, so the section below is needed to switch it on. Until it is, the `binary_sensor` of a scenario with conditions is `unknown`, since nothing would keep its state current.
 
 ```yaml
 scenario_control:
@@ -5846,15 +5934,41 @@ To get canned sounds rather than speech, use the [Chime](https://supernotify.rhi
 - [Android Companion App TTS](https://companion.home-assistant.io/docs/notifications/notifications-basic?_highlight=tts#text-to-speech-notifications)
 # Recipes
 
-______________________________________________________________________
-
 # Recipe Index
 
 Source: https://supernotify.rhizomatics.org.uk/latest/recipes/
 
 Ideas for Home Assistant notifications using Supernotify, with example configurations.
 
-{{ pagetree(siblings) }}
+Select a tag to see only the recipes with that tag, and select it again to see them all.
+
+- [Backup Alexa Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/index.md) alexacondition
+- [Alexa Whispering Low Priority Announcements](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) alexascenarioconditiontts
+- [All Sirens Go!](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md) alexa433mhzcriticalemergencyrest_apichimemqttsiren
+- [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzappdaemon
+- [Basic HTML Formatted Email Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md) emailscenariohtml_emailzero_yaml_config
+- [Bedtime Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md) scenariocondition
+- [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md) delivery
+- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancycondition
+- [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushiosandroidactionable_notifications
+- [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
+- [Use Live Activities to Track Dishwasher Cycle](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md) iosandroidlivemobile_push
+- [CC All Emails](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) emailhtml_email
+- [Apply a Scenario Exception](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md) scenariotemplatecondition
+- [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushiosmacos
+- [Fixed Notification Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md) deliverytargets
+- [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_configios
+- [General Tips for Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/index.md) mqttsms
+- [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md) scenarioconditionoccupancy
+- [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) frigateptz
+- [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md) mqttsiren
+- [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md) dashboardsupernotify_cards
+- [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) opentelemetryloggingzero_yaml_configevents
+- [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
+- [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
+- [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
+- [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md) mobile_pushiosandroidzero_yaml_config
+- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattsaccessibilitytemplatecondition
 
 # Recipe - Alexa Alternative Integration
 
@@ -5935,25 +6049,6 @@ scenarios:
 ## Variations
 
 Use similar scenarios to have a noise ( a bell, or a spooky Halloween noise ) embedded in messages, make the voice more or less emotional, change the voice personality / nationality or even have it sung.
-
-______________________________________________________________________
-
-tags:
-
-- transport
-- alexa
-- 433mhz
-- critical
-- emergency
-- rest_api
-- chime
-- rflink
-- mqtt
-- siren
-- sounder
-- hikvision title: All Sirens Go! description: Configure sirens of many types to be triggered by a single notification, including MQTT and 433Mhz devices, and sirens embedded in CCTV cameras, such as those from Hikvision
-
-______________________________________________________________________
 
 # Recipe - All Sirens Go
 
@@ -6193,6 +6288,7 @@ In this case a Frigate notification is usually a medium priority, however if the
 ## Variations
 
 - Use `{{'LONE_HOME' in occupancy}}` to check if only one person is home
+- Stop Frigate bothering you about the common birds in the garden
 - Use risk levels in the message, as set by GenAI in the [Voice Described CCTV Recipe](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)
 
 # Recipe - Contextual Mobile Actions
@@ -7008,20 +7104,6 @@ automations:
             </tr>
           <table>
 ```
-
-______________________________________________________________________
-
-tags:
-
-- xmas
-- holiday
-- scenario
-- alexa
-- chime
-- recipe
-- condition title: Seasonal Greetings description: Use a Supernotify scenario to add a seasonal note to notifications, and override standard chimes with Christmas cheer
-
-______________________________________________________________________
 
 # Recipe - Seasonal Greetings
 
