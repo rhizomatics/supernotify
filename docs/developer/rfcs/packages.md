@@ -35,15 +35,31 @@ Potential applications are discovered as entities are created within Home Assist
 - ETA forecast updates
 - End of event notification and clear-down ( removing the progress bar and telling everyone the dishwasher has ended are 2 separate physical notifications )
 
-## Implementation
+## Design Decisions
 
-### Option 1 - Sub Package
+### Responsibilities
+
+How much of the this becomes Supernotify functionality or at least visible within Supernotify code, either for direct functional reasons, or to allow use within scenario conditions, e-mail templates etc
+
+| What       | Details | Direction |
+| ---------- | ------- | --------- |
+| **Origin** | Some times direct mapping to Home Assistant device, e.g. smart oven. Other times indirect, like a power monitor plug, or could be a combination of events and states indicating something in the real world | `data` tag and `ConditionVariable` |
+| **Cycle** | With ETA and percentage progress | `data` tag and `ConditionVariable`  |
+| **Cycle Phase** | Name, possibly its own ETA and progress measure | `data` tag and `ConditionVariable`  |
+| **Activity Bar** | Setup, clear down. Alternative implementations for other transports, e.g. section within an e-mail | `start`,`stop`,`update` long running notification for transports, immediately for Mobile Push and Persistent. No state for these within Supernotify itself |
+
+
+### Packaging
+
+#### Option 1 - Sub Package
 A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again. Packages create their own HA Context, as an automation would do, for tying together downstream calls and state changes.
 
-### Option 2 - Add-on Component
+#### Option 2 - Add-on Component
 A thin custom component on HACS per package, better for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It could only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
 
 The move into generating notifications rather than being a notification engine is another reason to have these as separate components, and keep scope uncrept within Supernotify itself.
+
+## Implementation
 
 ### Changes Needed in Supernotify
 
