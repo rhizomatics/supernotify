@@ -705,7 +705,7 @@ class Notification(ArchivableObject):
                     continue
                 _LOGGER.info("SUPERNOTIFY Delivery %s failed, falling back to %s", name, fallback_name)
                 self.debug_trace.record_delivery_provenance(fallback_name, "enabled_by", f"fallback:{name}")
-                await self.call_transport(fallback)
+                await self.call_transport(fallback, skip_already_sent=True)
                 self.fallback += 1
                 if self.deliveries.get(fallback_name, {}).get(EnvelopeOutcome.SUCCESS):
                     break
@@ -807,7 +807,23 @@ class Notification(ArchivableObject):
             return TargetRequired.ALWAYS
         return delivery.target_required
 
-    async def call_transport(self, delivery: Delivery, target_override: DeliveryTargetOverride | None = None) -> None:
+    def _already_sent(self, envelope: Envelope) -> bool:
+        """Whether another delivery of this notification has already sent exactly this - same transport,
+        action, targets and content - so sending it again would only repeat it"""
+        key: str = envelope.content_key()
+        return any(
+            sent.content_key() == key
+            for outcomes in self.deliveries.values()
+            for sent in outcomes.get(EnvelopeOutcome.SUCCESS) or []
+            if isinstance(sent, Envelope)
+        )
+
+    async def call_transport(
+        self,
+        delivery: Delivery,
+        target_override: DeliveryTargetOverride | None = None,
+        skip_already_sent: bool = False,
+    ) -> None:
         try:
             transport: Transport = delivery.transport
             skip_reason: SuppressionReason | None = self.delivery_skip_reason(delivery)
@@ -829,6 +845,11 @@ class Notification(ArchivableObject):
                 return
 
             for envelope in envelopes:
+                if skip_already_sent and self._already_sent(envelope):
+                    # a fallback that would only repeat what another delivery of this notification already sent
+                    _LOGGER.debug("SUPERNOTIFY Skipping %s, already sent the same by another delivery", delivery.name)
+                    self.record_result(delivery, envelope, suppression_reason=SuppressionReason.DUPE)
+                    continue
                 if not envelope.force_resend and self.context.dupe_checker.check(
                     envelope, dry_run=self.dry_run == DRY_RUN_SIMULATE
                 ):
