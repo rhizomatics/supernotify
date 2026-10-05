@@ -404,6 +404,9 @@ class Delivery(DeliveryConfig):
             CONF_DATA: self.data,
             CONF_DEBUG: self.debug,
         }
+        if self.fallback:
+            # so a dashboard can show which deliveries stand in when this one fails
+            attrs[CONF_FALLBACK] = self.fallback
         if self.alias:
             attrs[ATTR_FRIENDLY_NAME] = self.alias
         return attrs

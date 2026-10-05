@@ -158,3 +158,21 @@ async def test_unknown_fallback_is_warned_at_startup(hass: HomeAssistant, caplog
 
     assert "Delivery alexa has fallback nope, which is not another delivery" in caplog.text
     assert "Delivery alexa has fallback alexa, which is not another delivery" in caplog.text
+
+
+async def test_fallback_list_on_the_delivery_switch(hass: HomeAssistant) -> None:
+    """The switch shows a delivery's `fallback:` list, and nothing for a delivery without one."""
+    await _setup(
+        hass,
+        {
+            "alexa": _delivery("test.a", fallback=["google", "push"]),
+            "google": _delivery("test.b", inclusion="fallback"),
+            "push": _delivery("test.c", inclusion="fallback"),
+        },
+    )
+    alexa = hass.states.get("switch.supernotify_delivery_alexa")
+    google = hass.states.get("switch.supernotify_delivery_google")
+    assert alexa is not None
+    assert google is not None
+    assert alexa.attributes["fallback"] == ["google", "push"]
+    assert "fallback" not in google.attributes
