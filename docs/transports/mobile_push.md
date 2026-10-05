@@ -77,6 +77,28 @@ one, or `false` leaves the channel alone, and `mobile_push_critical_priority` ov
     Some phones (Samsung One UI for one) also need the Home Assistant app allowed as an exception to
     Do Not Disturb, in the phone's own settings.
 
+## Android Commands and Spoken Text
+
+The companion app takes [notification commands](https://companion.home-assistant.io/docs/notifications/notification-commands)
+and TTS as the `message` of a call of their own, so Supernotify sends them that way, to Android phones only:
+`mobile_push_command_dnd` (`alarms_only`, `priority_only`, `total_silence`, `off`),
+`mobile_push_command_ringer_mode` (`normal`, `silent`, `vibrate`) and `mobile_push_command_screen_on` each
+go just before the notification, and `mobile_push_tts_text` just after it, on the alarm stream for a
+`critical` notification:
+
+```yaml
+  - action: supernotify.notify
+    data:
+      message: Water leak under the sink
+      priority: critical
+      extra_data:
+        mobile_push_command_screen_on: true
+        mobile_push_tts_text: Water leak under the sink
+```
+
+!!! note
+    `command_dnd` needs a permission the companion app asks for the first time it's used.
+
 ## Notification Grouping
 
 Set `mobile_push_group` in `extra_data:` to visually stack notifications together on the device

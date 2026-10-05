@@ -574,12 +574,9 @@ async def test_deliver_android_and_ios_extra_data_keys() -> None:
     assert "alarm_stream_max" not in data
     assert data["ttl"] == 30
     assert data["priority"] == "high"
-    assert data["tts_text"] == "speak this"
-    assert data["tts_text_language"] == "en-US"
-    assert data["tts_engine"] == "com.google.android.tts"
-    assert data["command_screen_on"] is True
-    assert data["command_dnd"] == "off"
-    assert data["command_ringer_mode"] == "silent"
+    # commands and TTS are calls of their own, and an unknown device might be an iPhone, so none here
+    assert not any(k.startswith(("tts_", "command_")) for k in data)
+    assert len(e.calls) == 1
     assert data["subtitle"] == "a subtitle"
     assert data["tag"] == "my-tag"
 
@@ -775,3 +772,76 @@ async def test_android_critical_sounds_through_do_not_disturb(
     sent = e.calls[0].action_data.get("data", {})  # type: ignore[union-attr]
     assert {k: sent[k] for k in ("ttl", "priority", "channel") if k in sent} == expected
     assert not any(k.startswith("mobile_push_") for k in sent)
+
+
+async def _deliver_to(context: Context, manufacturer: str, priority: str, data: dict[str, Any]) -> Envelope:
+    uut = MobilePushTransport(context)
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.configure_for_tests([uut])
+    await context.initialize()
+    e = Envelope(
+        Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
+        Notification(context, message="smoke", title="alarm", action_data={ATTR_PRIORITY: priority}),
+        target=Target({"mobile_app_id": ["mobile_app_phone"]}),
+        data=data,
+    )
+    await uut.deliver(e)
+    return e
+
+
+async def test_android_commands_go_before_the_notification_as_their_own_calls(unmocked_config: Context) -> None:
+    e = await _deliver_to(
+        unmocked_config,
+        "Samsung",
+        PRIORITY_MEDIUM,
+        {
+            "mobile_push_command_dnd": "off",
+            "mobile_push_command_ringer_mode": "normal",
+            "mobile_push_command_screen_on": True,
+        },
+    )
+
+    sent = [c.action_data for c in e.calls]
+    assert sent[:3] == [
+        {"message": "command_dnd", "data": {"command": "off"}},
+        {"message": "command_ringer_mode", "data": {"command": "normal"}},
+        {"message": "command_screen_on", "data": {}},
+    ]
+    assert sent[3]["message"] == "smoke"  # type: ignore[index]
+    assert len(sent) == 4
+    assert all(c.action == "mobile_app_phone" for c in e.calls)
+
+
+@pytest.mark.parametrize(
+    ("priority", "data", "media_stream"),
+    [
+        (PRIORITY_MEDIUM, {}, None),
+        (PRIORITY_CRITICAL, {}, "alarm_stream"),
+        (PRIORITY_MEDIUM, {"mobile_push_alarm_stream_max": True}, "alarm_stream_max"),
+    ],
+)
+async def test_android_tts_is_its_own_call_after_the_notification(
+    unmocked_config: Context, priority: str, data: dict[str, Any], media_stream: str | None
+) -> None:
+    e = await _deliver_to(unmocked_config, "Samsung", priority, {"mobile_push_tts_text": "smoke in the kitchen", **data})
+
+    assert len(e.calls) == 2
+    assert e.calls[0].action_data["message"] == "smoke"  # type: ignore[index]
+    assert "tts_text" not in e.calls[0].action_data.get("data", {})  # type: ignore[union-attr]
+    tts = e.calls[1].action_data
+    assert tts is not None
+    assert tts["message"] == "TTS"
+    assert tts["data"]["tts_text"] == "smoke in the kitchen"
+    assert tts["data"].get("media_stream") == media_stream
+
+
+async def test_iphone_gets_no_android_commands_or_tts(unmocked_config: Context) -> None:
+    e = await _deliver_to(
+        unmocked_config,
+        "Apple",
+        PRIORITY_CRITICAL,
+        {"mobile_push_command_dnd": "off", "mobile_push_tts_text": "smoke in the kitchen"},
+    )
+
+    assert len(e.calls) == 1
+    assert e.calls[0].action_data["message"] == "smoke"  # type: ignore[index]
