@@ -152,9 +152,13 @@ attachment-specific work. Still missing: a `content-type` derived from the URL (
 A cross-platform URL opened when the notification is tapped, becoming iOS `url` and Android `clickAction`. Today it only
 works as passthrough `extra_data`, which can't differ per platform.
 
+Done: `mobile_push_tap_url`, with tests in `test_transport_mobile_push.py`.
+
 ### 9. Live view entity
 
 Set the iOS live camera view (`entity_id`) independently of where the image comes from.
+
+Done: `mobile_push_live_view_entity`, with tests in `test_transport_mobile_push.py`.
 
 ### 10. Live Activity fields
 
@@ -209,7 +213,7 @@ Frigate package exists to need it.
 
 1. **Snooze enforcement** - a bug today, small, and packages depend on it - done
 2. **Mobile push media, iOS video, tap URL, live view** (6-9) - self-contained and useful to existing Frigate blueprint
-   users - media precedence (6) done, iOS video (7) partly done, tap URL and live view (8-9) still open
+   users - media precedence (6), tap URL and live view (8-9) done, iOS video (7) partly done
 3. **Source, lifecycle and tag, cooldown** (2-4) - the core model packages build on
 4. **Live Activity fields** (10) - makes the existing dishwasher recipe much simpler
 5. **Scenario priority** (5)

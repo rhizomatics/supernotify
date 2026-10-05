@@ -36,6 +36,10 @@ New data keys (all optional):
     mobile_push_channel_override    str   Android notification channel override (e.g. "alarm","general")
     mobile_push_alarm_stream        bool  Android: route audio through alarm stream (interrupts DND/silent)
     mobile_push_alarm_stream_max    bool  Android: alarm stream at maximum device volume
+    mobile_push_tap_url             str   URL or app path (e.g. "/lovelace/cameras") opened when the
+                                      notification is tapped - iOS `url`, Android `clickAction`.
+    mobile_push_live_view_entity    str   iOS: camera entity streamed live when the notification is
+                                      expanded, independently of where the image comes from.
 
 """
 
@@ -195,6 +199,9 @@ class MobilePushTransport(Transport):
             "group": raw_data.pop("mobile_push_group", None),
             "notification_tag": raw_data.pop("mobile_push_notification_tag", None),
             "clear_notification": raw_data.pop("mobile_push_clear_notification", False),
+            "tap_url": raw_data.pop("mobile_push_tap_url", None),
+            # iOS live camera view
+            "live_view_entity": raw_data.pop("mobile_push_live_view_entity", None),
         }
 
     def _android_payload(
@@ -242,6 +249,10 @@ class MobilePushTransport(Transport):
             android_data["command_dnd"] = push_data["command_dnd"]
         if push_data["command_ringer_mode"]:
             android_data["command_ringer_mode"] = push_data["command_ringer_mode"]
+
+        # Tap URL: Android's name for the iOS `url`
+        if push_data["tap_url"]:
+            android_data["clickAction"] = push_data["tap_url"]
         return android_data
 
     async def action_title(self, url: str, retry_timeout: int = 900) -> str | None:
@@ -309,6 +320,12 @@ class MobilePushTransport(Transport):
 
         if push_data["subtitle"]:
             ios_data["subtitle"] = push_data["subtitle"]
+        if push_data["tap_url"]:
+            ios_data["url"] = push_data["tap_url"]
+        if push_data["live_view_entity"]:
+            # wins over the camera the device would otherwise fetch the image from, since the
+            # image can come from a snapshot url while the live view is of the camera itself
+            ios_data["entity_id"] = push_data["live_view_entity"]
 
         # 5. Android-specific fields
         android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority)
