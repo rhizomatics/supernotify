@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import logging
 import string
@@ -377,9 +378,12 @@ class Envelope(DupeCheckable):
         """What this envelope would actually make the transport do - the transport, its action, the
         resolved targets, and the exact text, data and media - but not which delivery it came from.
         Two envelopes with the same key are the same delivery to the person receiving it, so a
-        fallback doesn't repeat what another delivery already sent"""
+        fallback doesn't repeat what another delivery already sent.
+
+        A short blake2b digest rather than the built-in ``hash()``, so the key stays the same across
+        restarts and could be used in an id"""
         media = self.media or {}
-        return json.dumps(
+        content: str = json.dumps(
             [
                 self.delivery.transport.name,
                 self.delivery.action,
@@ -394,6 +398,7 @@ class Envelope(DupeCheckable):
             sort_keys=True,
             default=str,
         )
+        return hashlib.blake2b(content.encode(), digest_size=8).hexdigest()
 
     def _render_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
         """Render Jinja2 templates in delivery `data` before the transport call.

@@ -369,3 +369,18 @@ async def test_force_resend_defaults_from_notification_and_data_overrides_it() -
     assert uut.force_resend is True
     assert uut.data == {"other": 1}
     assert "force_resend" not in uut.contents()
+
+
+async def test_content_key_is_a_short_digest_of_the_content() -> None:
+    context = TestingContext()
+    await context.test_initialize()
+    delivery = context.delivery("notify_entity")
+
+    def key(message: str) -> str:
+        return Envelope(delivery, notification=Notification(context, message=message)).content_key()
+
+    assert len(key("Hello Test")) == 16
+    int(key("Hello Test"), 16)
+    # same content gives the same key, even from a different notification; different content doesn't
+    assert key("Hello Test") == key("Hello Test")
+    assert key("Hello Test") != key("Hello Other")
