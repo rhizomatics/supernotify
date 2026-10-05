@@ -296,6 +296,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/household_appliances_live/</loc>
+        <lastmod>2026-10-05</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/package_support/</loc>
         <lastmod>2026-10-05</lastmod>
         <changefreq>daily</changefreq>
