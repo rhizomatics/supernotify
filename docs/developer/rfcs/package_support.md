@@ -48,9 +48,7 @@ instead, so snoozing a Frigate camera also covers notifications about it that ca
 Where a notification came from, so users can write scenarios for all Frigate events, all Frigate motion, or everything
 on the driveway without matching message text, and so cooldown, snoozing and lifecycle have something to key on.
 
-A single path like `frigate.driveway` isn't enough: Frigate alone has separate review, motion, ANPR and GenAI flows, and
-a scenario may want to group by any of those, or by camera, or by place. So the source is a set of named parts, and a
-match can use any subset of them:
+A single path like `frigate.driveway` isn't enough: Frigate alone has separate review, motion, ANPR and GenAI flows, and a scenario may want to group by any of those, or by camera, or by place. So the source is a set of named parts, and a match can use any subset of them:
 
 | Part       | Meaning                                         | Frigate                       | Appliance package          | Automation                  |
 | ---------- | ----------------------------------------------- | ----------------------------- | -------------------------- | --------------------------- |
@@ -137,14 +135,17 @@ after scenarios are chosen and doesn't re-trigger selection. Relates to *Per-del
 
 ### 6. Media precedence
 
-With both `camera_entity_id` and `snapshot_url`, the camera grab currently wins. Frigate needs the snapshot URL for the
-image, with the camera entity used only for live view, grouping and snoozing. Use `snapshot_url` for the image when given,
-and only grab from the camera without one.
+With both `camera_entity_id` and `snapshot_url`, the camera grab used to win. Frigate needs the snapshot URL for the
+image, with the camera entity used only for live view, grouping and snoozing.
+
+Fixed: `snap_notification_image` in `media_grab.py` uses `snapshot_url` for the image when given, and only grabs from
+the camera without one, with regression tests in `test_media_grab.py` and `test_transport_mobile_push.py`.
 
 ### 7. iOS video attachment
 
-`clip_url` only becomes Android's `video`. Add the iOS `attachment` with `url` and a `content-type` derived from the URL
-(`application/vnd.apple.mpegurl` for `.m3u8`).
+`clip_url` already becomes `video` for both platforms (`mobile_push.py`), so iOS gets the clip without any
+attachment-specific work. Still missing: a `content-type` derived from the URL (`application/vnd.apple.mpegurl` for
+`.m3u8`), in case iOS needs that to treat a Frigate HLS stream as a stream rather than a plain file download.
 
 ### 8. Tap URL
 
@@ -188,8 +189,11 @@ already uses `ActionSelector` in its config flow. Also needs:
 ### 13. Richer `services.yaml`
 
 The action editor becomes the whole customization UI for packages, so `supernotify.notify` field descriptions, examples
-and selectors matter far more, including dynamic delivery and scenario dropdowns via `async_set_service_schema`, and
-translations for all of it.
+and selectors matter far more, and translations for all of it.
+
+The dynamic part is done: `async_describe_configured_names` in `actions.py` already overlays the static `services.yaml`
+with live `select` dropdowns for the delivery and scenario fields, via `async_set_service_schema`, re-run on every
+config entry setup/reload. Packages will need the same treatment for whatever fields they add.
 
 ### 14. Optional integration dependencies
 
@@ -197,11 +201,17 @@ Packages bundled in Supernotify can't add `mqtt` or `frigate` to `dependencies`,
 user. Add them to `after_dependencies` instead, check at runtime, and only offer a package when its integrations are
 loaded.
 
+`mqtt` already has this: it's in `after_dependencies`, with `hass_api.mqtt_available()` as the runtime check, used
+today to disable MQTT archiving gracefully when it's not loaded. `frigate` still needs the same treatment, once a
+Frigate package exists to need it.
+
 ## Suggested Order
 
-1. **Snooze enforcement** - a bug today, small, and packages depend on it
-2. **Mobile push media, iOS video, tap URL, live view** (6-9) - self-contained and useful to existing Frigate blueprint users
+1. **Snooze enforcement** - a bug today, small, and packages depend on it - done
+2. **Mobile push media, iOS video, tap URL, live view** (6-9) - self-contained and useful to existing Frigate blueprint
+   users - media precedence (6) done, iOS video (7) partly done, tap URL and live view (8-9) still open
 3. **Source, lifecycle and tag, cooldown** (2-4) - the core model packages build on
 4. **Live Activity fields** (10) - makes the existing dishwasher recipe much simpler
 5. **Scenario priority** (5)
-6. **Package framework, stored action and `services.yaml`** (11-14), after the spikes, then the first package
+6. **Package framework, stored action and `services.yaml`** (11-14), after the spikes, then the first package - the
+   dynamic delivery/scenario dropdowns in `services.yaml` (13) are already done

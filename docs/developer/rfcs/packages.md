@@ -20,21 +20,38 @@ Everything about this is ConfigFlow based, there is no YAML required, nor offere
 
 The "packages" could also be selected after the fact, either directly in the main Supernotify ConfigFlow, or as "helper" objects.
 
+## Skeleton
+
+### Config Time
+
+Potential applications are discovered as entities are created within Home Assistant. So if I buy and connect a new dishwasher, it will get picked up by default, with no need to restart or even open any of the settings, unless auto-discover switched off.
+
+### Event Time
+
+- Event detection and verification
+- Notification initiation
+- Sub-event phase start and end ('pre-wash','rinse cycle') or simple phase name changes
+- Progress updates ( time, percentage ) for full event or phases
+- ETA forecast updates
+- End of event notification and clear-down ( removing the progress bar and telling everyone the dishwasher has ended are 2 separate physical notifications )
+
 ## Implementation
 
+### Option 1 - Sub Package
 A sub-package within Supernotify, with a module per package, each set up as a config subentry of the Supernotify entry. At set-up or startup the modules are called to see if they are applicable, and offer themselves through a repair issue, whose built-in *Ignore* persists the choice not to be bothered again. Packages create their own HA Context, as an automation would do, for tying together downstream calls and state changes.
 
-Later, a thin custom component on HACS per package, purely for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It would only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
+### Option 2 - Add-on Component
+A thin custom component on HACS per package, better for visibility - someone looking for help with Frigate is more likely to pick a Frigate SuperNotifier from HACS than examine Supernotify and find the small print. It could only guide the user to install Supernotify and enable the package, since HACS can't install one custom component as a dependency of another.
+
+The move into generating notifications rather than being a notification engine is another reason to have these as separate components, and keep scope uncrept within Supernotify itself.
+
+### Changes Needed in Supernotify
 
 See [Package Support](./package_support.md) for the changes needed in Supernotify first.
 
-### Alternatives
-
-A separate custom component on HACS per package, holding the package logic, as Supernotify "plugins". Rejected for now, since neither HACS nor Home Assistant will install Supernotify as its dependency.
-
 ### Branding
 
-No user facing use of term 'packages'. These will be XXXX SuperNotifier components, explained as a pre-set bundle of notifications
+No user facing use of term 'packages'. These will be XXXX SuperNotifier components, explained as a pre-set bundle of automations and notifications
 
 ## Examples
 
