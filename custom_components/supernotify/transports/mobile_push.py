@@ -4,7 +4,9 @@ Sends push notifications to HA Companion App on iOS and Android devices.
 Supports per-device delivery with automatic snooze on failure.
 
 Priority mapping (auto, overridable via push_critical_level_ios):
-    critical  → iOS: interruption_level=critical  + Android: ttl=0
+    critical  → iOS: interruption_level=critical
+                Android: ttl=0, priority=high, channel=alarm_stream (sounds through Do Not Disturb
+                and silent mode, unless the data already sets a `channel`)
     high      → iOS: interruption_level=time-sensitive
     medium    → iOS: interruption_level=active    (default)
     low       → iOS: interruption_level=passive
@@ -16,7 +18,10 @@ New data keys (all optional):
                                       If omitted, auto-mapped from SuperNotify priority.
     mobile_push_critical_ttl        int   Android FCM TTL in ms (0=no caching/instant).
                                       Auto-set to 0 for critical priority if not set.
-    mobile_push_critical_priority   int  Android FCM priority override (1=min, 5=max).
+    mobile_push_critical_priority   str   Android FCM priority override ("high" or "normal").
+                                      Auto-set to "high" for critical priority if not set.
+    mobile_push_critical_channel    str   Android channel for critical priority, "alarm_stream" if not set.
+                                      Set to false to leave the channel alone.
     mobile_push_subtitle            str   iOS subtitle (line between title and message, iOS 10+)
     mobile_push_group               str   Notification group for visual stacking (iOS thread-id / Android group).
                                       Falls back to the camera entity id if there's a camera image,
@@ -34,8 +39,10 @@ New data keys (all optional):
     mobile_push_command_dnd         str   Android: change Do Not Disturb ("toggle","off","on")
     mobile_push_command_ringer_mode str   Android: change ringer mode ("silent","vibrate","normal")
     mobile_push_channel_override    str   Android notification channel override (e.g. "alarm","general")
-    mobile_push_alarm_stream        bool  Android: route audio through alarm stream (interrupts DND/silent)
-    mobile_push_alarm_stream_max    bool  Android: alarm stream at maximum device volume
+    mobile_push_alarm_stream        bool  Android: use the alarm_stream channel, which sounds through
+                                      Do Not Disturb and silent mode
+    mobile_push_alarm_stream_max    bool  Android: kept for compatibility, same as mobile_push_alarm_stream -
+                                      the companion app only supports alarm_stream_max for TTS
 
 """
 
@@ -107,6 +114,10 @@ IOS_INTERRUPTION_MAP: dict[str, str] = {
 
 # Android FCM TTL auto-set for critical priority (0 = instant, no FCM caching)
 ANDROID_CRITICAL_TTL = 0
+# Android FCM priority and channel auto-set for critical priority - what the companion app
+# documents for critical notifications, alarm_stream being what gets through Do Not Disturb
+ANDROID_CRITICAL_PRIORITY = "high"
+ANDROID_ALARM_STREAM_CHANNEL = "alarm_stream"
 
 
 class MobilePushTransport(Transport):
@@ -181,6 +192,7 @@ class MobilePushTransport(Transport):
             "critical_ttl": raw_data.pop("mobile_push_critical_ttl", None),
             "critical_android_priority": raw_data.pop("mobile_push_critical_priority", None),
             "channel_override": raw_data.pop("mobile_push_channel_override", None),
+            "critical_channel": raw_data.pop("mobile_push_critical_channel", ANDROID_ALARM_STREAM_CHANNEL),
             "alarm_stream": raw_data.pop("mobile_push_alarm_stream", False),
             "alarm_stream_max": raw_data.pop("mobile_push_alarm_stream_max", False),
             # Android TTS
@@ -201,21 +213,23 @@ class MobilePushTransport(Transport):
         self,
         push_data: dict[str, Any],
         priority: str | None,
+        channel_given: bool = False,
     ) -> dict[str, Any]:
         """Apply Android-specific fields to the notification data dict.
 
-        Android fields live flat in data{}, not inside the push{} sub-dict.
+        Android fields live flat in data{}, not inside the push{} sub-dict. `channel_given` is when the
+        pass-through data already has a `channel`, which then isn't replaced.
         """
         android_data: dict[str, Any] = {}
+        critical: bool = priority == const.PRIORITY_CRITICAL
         # Channel override (Android 8+, determines sound/vibration/LED)
         if push_data["channel_override"]:
             android_data["channel"] = push_data["channel_override"]
-
-        # Alarm stream: routes audio through alarm stream, interrupts DND/silent
-        if push_data["alarm_stream"]:
-            android_data["alarm_stream"] = True
-            if push_data["alarm_stream_max"]:
-                android_data["alarm_stream_max"] = True
+        elif push_data["alarm_stream"] or push_data["alarm_stream_max"]:
+            # the companion app takes the alarm stream as a channel, not a flag of its own
+            android_data["channel"] = ANDROID_ALARM_STREAM_CHANNEL
+        elif critical and push_data["critical_channel"] and not channel_given:
+            android_data["channel"] = push_data["critical_channel"]
 
         # FCM TTL: auto-set to 0 for critical (instant delivery, no FCM caching)
         if push_data["critical_ttl"] is not None:
@@ -223,9 +237,11 @@ class MobilePushTransport(Transport):
         elif priority == const.PRIORITY_CRITICAL:
             android_data["ttl"] = ANDROID_CRITICAL_TTL
 
-        # FCM priority override
+        # FCM priority: high for critical, so a dozing phone gets it straight away
         if push_data["critical_android_priority"] is not None:
             android_data["priority"] = push_data["critical_android_priority"]
+        elif critical:
+            android_data["priority"] = ANDROID_CRITICAL_PRIORITY
 
         # Android TTS: read message aloud on device (Android 8+)
         if push_data["tts_text"]:
@@ -311,7 +327,7 @@ class MobilePushTransport(Transport):
             ios_data["subtitle"] = push_data["subtitle"]
 
         # 5. Android-specific fields
-        android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority)
+        android_data: dict[str, Any] = self._android_payload(push_data, envelope.priority, channel_given="channel" in raw_data)
 
         # 6. Cross-platform: notification tag
         notification_tag = push_data["notification_tag"]
