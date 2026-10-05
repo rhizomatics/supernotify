@@ -384,10 +384,14 @@ def _snooze(
     if they aren't known"""
     person_id: str | None = engine.context.people_registry.person_id_for_user_id(context.user_id)
     recipient_type = RecipientType.USER if person_id else RecipientType.EVERYONE
-    target_type: TargetType = subject.target_type if subject else GlobalTargetType.EVERYTHING
+    # "silence" said at bedtime with nothing named still lets critical alerts through - nobody saying it
+    # means the smoke alarm too. Resuming clears both kinds, so a snooze of everything can still be undone.
+    target_type: TargetType = subject.target_type if subject else GlobalTargetType.NONCRITICAL
     engine.context.snoozer.register_snooze(
         cmd, target_type, subject.target if subject else None, recipient_type, person_id, snooze_for, reason="Voice command"
     )
+    if cmd == CommandType.NORMAL and not subject:
+        engine.context.snoozer.register_snooze(cmd, GlobalTargetType.EVERYTHING, None, recipient_type, person_id, None)
     whose = "yours" if person_id else "all"
     about: str = ""
     if subject:
