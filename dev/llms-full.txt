@@ -2062,6 +2062,7 @@ delivery:
 - Only one level: a fallback's own `fallback:` isn't followed, the order of the list is the chain.
 - A fallback that is switched off, or skipped by its own `conditions`, `priority` or `occupancy`, is passed over.
 - The fallback shows in the archive with `delivery_provenance` `enabled_by: fallback:alexa_announce`.
+- The delivery's switch has a `fallback` attribute with the list, so a dashboard can show it.
 - A delivery with a `fallback:`, and one used as a fallback, waits for its action to finish, so an error from the service is seen. Without that, only a missing action or invalid data would count as a failure. It does not cover a delivery the service accepted but that never arrived - a phone switched off, for example.
 
 ### Implicit Deliveries
