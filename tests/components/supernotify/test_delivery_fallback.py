@@ -117,6 +117,61 @@ async def test_fallback_that_already_sent_is_not_sent_twice(hass: HomeAssistant)
     assert len(calls["c"]) == 1
 
 
+async def test_fallback_that_would_repeat_another_delivery_is_skipped(hass: HomeAssistant) -> None:
+    """A fallback that would make exactly the same call as a delivery that already sent - same transport,
+    action, targets and content - is skipped, so the person doesn't get it twice"""
+    calls = await _setup(
+        hass,
+        {
+            "alexa": _delivery("test.a", fallback=["push_again"]),
+            "push": _delivery("test.c"),
+            "push_again": _delivery("test.c", inclusion="fallback"),
+        },
+        failing=("a",),
+    )
+
+    result = await _notify(hass, delivery=["alexa", "push"])
+
+    assert len(calls["c"]) == 1
+    skipped = result["deliveries"]["push_again"]["suppressed"]
+    assert [e["skip_reason"] for e in skipped] == ["DUPE"]
+    assert result["delivery_provenance"]["push_again"]["enabled_by"] == ["fallback:alexa"]
+
+
+async def test_fallback_with_the_same_action_but_other_targets_is_sent(hass: HomeAssistant) -> None:
+    calls = await _setup(
+        hass,
+        {
+            "alexa": _delivery("test.a", fallback=["push_others"]),
+            "push": _delivery("test.c"),
+            "push_others": _delivery("test.c", inclusion="fallback", target=["other.phone"]),
+        },
+        failing=("a",),
+    )
+
+    result = await _notify(hass, delivery=["alexa", "push"])
+
+    assert len(calls["c"]) == 2
+    assert "success" in result["deliveries"]["push_others"]
+
+
+async def test_fallback_with_its_own_content_is_sent(hass: HomeAssistant) -> None:
+    calls = await _setup(
+        hass,
+        {
+            "alexa": _delivery("test.a", fallback=["push_again"]),
+            "push": _delivery("test.c"),
+            "push_again": _delivery("test.c", inclusion="fallback", data={"priority_tag": "urgent"}),
+        },
+        failing=("a",),
+    )
+
+    result = await _notify(hass, delivery=["alexa", "push"])
+
+    assert len(calls["c"]) == 2
+    assert "success" in result["deliveries"]["push_again"]
+
+
 async def test_only_one_level_and_switched_off_fallbacks_skipped(hass: HomeAssistant) -> None:
     calls = await _setup(
         hass,

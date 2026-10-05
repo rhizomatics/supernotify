@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import logging
 import string
 import time
@@ -371,6 +372,28 @@ class Envelope(DupeCheckable):
             camera_entity_id,
             media_url,
         ))
+
+    def content_key(self) -> str:
+        """What this envelope would actually make the transport do - the transport, its action, the
+        resolved targets, and the exact text, data and media - but not which delivery it came from.
+        Two envelopes with the same key are the same delivery to the person receiving it, so a
+        fallback doesn't repeat what another delivery already sent"""
+        media = self.media or {}
+        return json.dumps(
+            [
+                self.delivery.transport.name,
+                self.delivery.action,
+                self.target.hash_resolved(),
+                self._message,
+                self._title,
+                self.message_html,
+                self.spoken_message,
+                self.data,
+                {k: media.get(k) for k in sorted(media)},
+            ],
+            sort_keys=True,
+            default=str,
+        )
 
     def _render_data_templates(self, data: dict[str, Any]) -> dict[str, Any]:
         """Render Jinja2 templates in delivery `data` before the transport call.

@@ -169,6 +169,9 @@ delivery:
 
 - The fallbacks are tried after the other deliveries, one at a time, stopping at the first one that sends.
 - A delivery that has already been tried for this notification is not tried again, so nothing is sent twice.
+- A fallback that would make exactly the same call as another delivery that already sent - the same transport,
+  action, targets, text and data - is skipped as a `DUPE`, so the person isn't sent the same thing twice. A
+  fallback with other targets, or its own `data`, still sends.
 - Only one level: a fallback's own `fallback:` isn't followed, the order of the list is the chain.
 - A fallback that is switched off, or skipped by its own `conditions`, `priority` or `occupancy`, is passed over.
 - The fallback shows in the archive with `delivery_provenance` `enabled_by: fallback:alexa_announce`.
