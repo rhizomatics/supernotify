@@ -193,7 +193,10 @@ class House:
         """
         device_registry = dr.async_get(self._hass)
         entry = self._hass.config_entries.async_entries(SUPERNOTIFY_DOMAIN)[0]
-        device = device_registry.async_get_device_by_identifier((SUPERNOTIFY_DOMAIN, entry.entry_id), entry.entry_id)
+        if hasattr(device_registry, "async_get_device_by_identifier"):
+            device = device_registry.async_get_device_by_identifier((SUPERNOTIFY_DOMAIN, entry.entry_id), entry.entry_id)
+        else:  # older HA, where identifiers were unique across config entries
+            device = device_registry.async_get_device(identifiers={(SUPERNOTIFY_DOMAIN, entry.entry_id)})
         assert device is not None
         return device.id
 
