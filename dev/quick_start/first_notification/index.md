@@ -6,7 +6,9 @@ Everything on this page is done from the Home Assistant UI, straight after [inst
 
 ## 1. Notify Everyone
 
-Open the [Actions tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) in **Developer Tools**, choose the `supernotify.notify` action, type a message, and press **Perform action**.
+Open the [Actions tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) in **Developer Tools**, choose the `supernotify.notify` action
+
+Type a message, and press **Perform action**.
 
 Message to Everyone
 

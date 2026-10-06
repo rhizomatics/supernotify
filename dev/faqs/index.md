@@ -26,6 +26,8 @@ alexa_inform:
     - notify.studio_speak
 ```
 
+## Other Questions
+
 **Q**: My question isn't here, and I can't get find answer in the docs.
 
 **A**: Try using an AI agent if you have one, like Claude or ChatGPT, or the Home Assistant chat bot - the Supernotify site has agent-accessible help, and can give good suggestions and even write or rewrite your YAML for you.
