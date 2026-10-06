@@ -16,6 +16,11 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/faqs/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/getting_started/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>

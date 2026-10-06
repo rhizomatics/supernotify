@@ -1353,7 +1353,7 @@
   },
   "additionalProperties": true,
   "title": "Full Configuration",
-  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Full_Configuration.schema.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json",
   "description": "Voluptuous validation schema for Full_Configuration",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

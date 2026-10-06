@@ -3,13 +3,14 @@
 > Advanced, concise, flexible notifications for Home Assistant
 
 Supernotify is a Home Assistant custom integration for unified notifications: send one notification and it is routed to many channels (deliveries) by transport, recipient and scenario, with configuration in YAML or the UI.
-JSON Schemas for validating configuration are published at https://supernotify.rhizomatics.org.uk/developer/schemas/json/Full_Configuration.schema.json (complete YAML configuration) and https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action.schema.json (the notify action call). Schemas for individual objects, such as Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition, sit alongside as <Name>.schema.json.
+JSON Schemas for validating configuration are published at https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json (complete YAML configuration) and https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action.schema.json (the notify action call). Schemas for individual objects, such as Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition, sit alongside as <Name>.schema.json.
 
 ## Start here
 
 - [Supernotify](https://supernotify.rhizomatics.org.uk/latest/index.md): Overview of what Supernotify does
 - [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md): Install, configure and send a first notification
 - [Core Concepts](https://supernotify.rhizomatics.org.uk/latest/concepts/index.md): Core concepts - transports, deliveries, scenarios, recipients and targets
+- [Frequently Asked Questions](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md): Frequently asked questions, with short answers
 
 ## Using Supernotify
 

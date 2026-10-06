@@ -326,7 +326,7 @@
     }
   },
   "title": "Notify Action Data",
-  "$id": "https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action_Data.schema.json",
+  "$id": "https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action_Data.schema.json",
   "description": "Voluptuous validation schema for Notify_Action_Data",
   "$schema": "https://json-schema.org/draft/2020-12/schema"
 }
