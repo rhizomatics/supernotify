@@ -93,6 +93,7 @@ plugins:
           - index.md: Overview of what Supernotify does
           - getting_started.md: Install, configure and send a first notification
           - concepts.md: Core concepts - transports, deliveries, scenarios, recipients and targets
+          - faqs.md: Frequently asked questions, with short answers
         Using Supernotify:
           - usage/*.md
         Configuration:
