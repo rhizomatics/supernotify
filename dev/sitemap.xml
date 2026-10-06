@@ -11,17 +11,7 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/concepts/</loc>
-        <lastmod>2026-10-06</lastmod>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/faqs/</loc>
-        <lastmod>2026-10-06</lastmod>
-        <changefreq>daily</changefreq>
-    </url>
-    <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/getting_started/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -111,7 +101,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/de/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/de/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -321,7 +341,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/es/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/es/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -331,7 +381,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/fr/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -341,7 +421,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/hi/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -351,7 +461,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/it/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/it/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -361,7 +501,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/ja/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -371,7 +541,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/nl/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -381,7 +581,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pl/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -391,7 +621,72 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/pt/quick_start/removing/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -527,6 +822,11 @@
     </url>
     <url>
         <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>
@@ -711,7 +1011,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/concepts/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/advanced_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/basic_concepts/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/first_notification/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/installation/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/next_steps/</loc>
+        <lastmod>2026-10-06</lastmod>
+        <changefreq>daily</changefreq>
+    </url>
+    <url>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/zh-Hans/quick_start/removing/</loc>
         <lastmod>2026-10-06</lastmod>
         <changefreq>daily</changefreq>
     </url>

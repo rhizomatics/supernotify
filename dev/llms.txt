@@ -8,8 +8,13 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 ## Start here
 
 - [Supernotify](https://supernotify.rhizomatics.org.uk/latest/index.md): Overview of what Supernotify does
-- [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md): Install, configure and send a first notification
-- [Core Concepts](https://supernotify.rhizomatics.org.uk/latest/concepts/index.md): Core concepts - transports, deliveries, scenarios, recipients and targets
+- [Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md): Quick Start overview
+- [Installation](https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/index.md): Install from HACS and set up from the UI, with no YAML
+- [Send Your First Notification](https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/index.md): Send a first notification, to everyone, one person or the speakers
+- [What to Do Next](https://supernotify.rhizomatics.org.uk/latest/quick_start/next_steps/index.md): What to do next - automations, a dashboard, switches, targets and recipes
+- [Basic Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/index.md): Basic concepts - targets, recipients, deliveries and priority
+- [Advanced Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/index.md): Advanced concepts - transports, deliveries, scenarios, recipients and targets
+- [Removal](https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/index.md): Remove Supernotify and clean up what it leaves behind
 - [Frequently Asked Questions](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md): Frequently asked questions, with short answers
 
 ## Using Supernotify
@@ -95,6 +100,7 @@ JSON Schemas for validating configuration are published at https://supernotify.r
 - [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md)
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md)
 - [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md)
+- [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md)
 - [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md)
 
 ## Reference
