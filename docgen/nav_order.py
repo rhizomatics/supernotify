@@ -36,6 +36,23 @@ PAGE_ORDER = {
 # Sections listed in the sidebar as the tags of their pages, each a link to the section's tagged
 # index narrowed to that tag, rather than as a list of pages repeating that index
 TAG_NAV = {"Recipes"}
+# Words in tag names that plain capitalization gets wrong
+TAG_WORDS = {
+    "433mhz": "433MHz",
+    "api": "API",
+    "appdaemon": "AppDaemon",
+    "genai": "GenAI",
+    "html": "HTML",
+    "ios": "iOS",
+    "macos": "macOS",
+    "mqtt": "MQTT",
+    "opentelemetry": "OpenTelemetry",
+    "ptz": "PTZ",
+    "rest": "REST",
+    "sms": "SMS",
+    "tts": "TTS",
+    "yaml": "YAML",
+}
 
 
 def _key(item: Any) -> str:  # ruff: ignore[any-type]
@@ -53,7 +70,8 @@ def _tag_links(section: Any) -> list[Any]:  # ruff: ignore[any-type]
             tags.update(get_data(child.file.content_string)[1].get("tags") or [])
     links: list[Any] = []
     for tag in sorted(tags - hidden):
-        link = Link(tag, f"{index.file.url}#tag={tag}")
+        label = " ".join(TAG_WORDS.get(word, word.capitalize()) for word in tag.split("_"))
+        link = Link(label, f"{index.file.url}#tag={tag}")
         link.parent = section
         links.append(link)
     return [index, *links]

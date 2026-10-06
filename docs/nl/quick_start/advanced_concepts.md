@@ -1,4 +1,5 @@
 ---
+title: Geavanceerde concepten
 tags:
   - transport
   - delivery
@@ -6,21 +7,11 @@ tags:
   - target
   - recipient
   - principles
-description: Kernconcepten van Supernotify voor Home Assistant, waaronder Transport, Delivery, Scenario en Recipient
+description: Geavanceerde concepten van Supernotify voor Home Assistant, waaronder transport, delivery, scenario en recipient, vooral voor YAML-configuratie
 ---
-# Kernconcepten
+# Geavanceerde concepten
 
-## Hoe alles samenhangt { #how-it-fits-together }
-
-Eén melding vanuit een automatisering kan uitgroeien tot meerdere verschillende meldingen, elk afgestemd op
-de manier waarop ze wordt verstuurd.
-
-![Eén melding vanuit een automatisering wordt een e-mail, twee pushmeldingen, een sms en een omroepbericht via een speaker](../assets/images/concepts_flow.svg)
-
-1. **Doelen** - personen worden omgezet in de manieren waarop ze bereikbaar zijn, aan de hand van hun [Recipient](#recipient)-gegevens
-2. **Deliveries** - de [Deliveries](#delivery) die van toepassing zijn worden gekozen, standaard of via [Scenario's](#scenario)
-3. **Meldingen** - elke delivery pakt de doelen die ze kan gebruiken en verstuurt een passende melding,
-   zodat een e-mail een volledige HTML-opmaak met afbeeldingen kan hebben, terwijl de keukenspeaker een kort gesproken bericht krijgt
+[Basisconcepten](basic_concepts.md) bevat de korte versie en de afbeelding van hoe alles samenhangt. Deze pagina gaat dieper in op elk onderdeel, en veel ervan doet er pas toe als je Supernotify met YAML configureert.
 
 ## Doel (Target) { #target }
 - Wie of wat een melding krijgt, en hoe
@@ -33,17 +24,17 @@ de manier waarop ze wordt verstuurd.
     - `person_id` om de *Recipient*-functies te gebruiken
     - de standaard doelselectie van Home Assistant, `label_id`, `floor_id` en `area_id`
     - *groeps*doelen (zowel nieuwe als oude Home Assistant-groepen)
-- Doelen kunnen een specifieke **Doelcategorie** krijgen, zoals `discord_channel:839439434`; zie [Categorievoorvoegsels](../usage/targets.md#category-prefixes)
+- Doelen kunnen een specifieke **Doelcategorie** krijgen, zoals `discord_channel:839439434`; zie [Categorievoorvoegsels](../../usage/targets.md#category-prefixes)
 - Elk doel wordt uit de lijst opgepakt door de integratie die het het best kan afhandelen
   - Een Notify-entiteit van Alexa Devices wordt bijvoorbeeld afgehandeld door het Alexa Devices-transport, terwijl een algemene Notify-entiteit terugvalt op het minder uitgebreide Notify Entity-transport
-- Zie [Targets](../usage/targets.md) voor meer informatie
+- Zie [Targets](../../usage/targets.md) voor meer informatie
 
 ## Ontvanger (Recipient) { #recipient }
 - Een persoon, met optioneel e-mailadres, telefoonnummer, mobiele apparaten of eigen doelen
   - Standaard automatisch gevonden uit de gebruikersaccounts en persoonsentiteiten die al in Home Assistant staan
 - Zo is het makkelijker om naar personen te verwijzen in automatiseringen: gebruik `person.joe_mctest` in plaats van in elke melding Joe's e-mailadres te moeten onthouden. Werkt ook voor telefoonnummers als er een geschikte sms-integratie is, of voor eigen ID's zoals Telegram of Discord
 - Elke ontvanger heeft ook een Home Assistant-`switch`-entiteit, zodat je iemand makkelijk met rust kunt laten
-- Zie [People](../configuration/people.md) en [Recipes](../recipes/index.md) voor meer details
+- Zie [People](../../configuration/people.md) en [Recipes](../../recipes/index.md) voor meer details
 
 ## Transport { #transport }
 
@@ -54,7 +45,7 @@ de manier waarop ze wordt verstuurd.
 - De transportadapter maakt het mogelijk om één melding naar veel platformen te sturen, ook als die totaal verschillende en onderling onverenigbare interfaces hebben
 - Hij past meldingen aan het transport aan: attributen die niet worden geaccepteerd worden weggelaten, `data`-structuren worden omgevormd, alleen de juiste doelen worden gekozen, en waar mogelijk is verdere fijnafstemming mogelijk
 - Elk transport heeft een standaardconfiguratie waarmee veel kan worden afgestemd en vooraf ingesteld, zodat je niet in elke melding dezelfde waarden hoeft op te geven
-- Zie [Transports](../transports/index.md) voor meer details
+- Zie [Transports](../../transports/index.md) voor meer details
 
 ## Bezorging (Delivery) { #delivery }
 
@@ -65,8 +56,8 @@ de manier waarop ze wordt verstuurd.
 - Transporten die doelen eenduidig kunnen kiezen, zoals e-mail, mobiele push, sms, Alexa Devices en Notify Entity, worden standaard meegenomen bij het afhandelen van doelen
   - Andere kunnen worden meegenomen via de configuratie, via Scenario's of door erom te vragen in een melding
 - Je kunt eigen deliveries maken met een zelfgekozen naam, en meerdere deliveries voor één transport hebben, bijvoorbeeld `plain_email` en `html_email`
-- Het [Generic-transport](../transports/generic.md) werkt als *gereedschapskist* om een delivery te maken voor bijna alles wat Home Assistant kan en wat nog niet door een standaardtransport wordt gedekt
-- Zie [Deliveries](../configuration/deliveries.md) en [Recipes](../recipes/index.md) voor meer details
+- Het [Generic-transport](../../transports/generic.md) werkt als *gereedschapskist* om een delivery te maken voor bijna alles wat Home Assistant kan en wat nog niet door een standaardtransport wordt gedekt
+- Zie [Deliveries](../../configuration/deliveries.md) en [Recipes](../../recipes/index.md) voor meer details
 
 ## Scenario { #scenario }
 - Een pakket instellingen dat op naam kan worden ingeschakeld, of automatisch via Home Assistant-voorwaarden
@@ -74,7 +65,7 @@ de manier waarop ze wordt verstuurd.
   - Voorwaarden kunnen de tekst van het bericht gebruiken, zodat een Frigate-melding over vogels op het terras anders kan worden afgehandeld dan een insluiper bij een raam
 - Gebruik scenario's om meldingen 's nachts minder opdringerig te maken, feestelijker tijdens de feestdagen, of om bepaalde berichten voorrang te geven
 - Ze maken het makkelijk om op één plek aanpassingen door te voeren voor veel deliveries of meldingen, en zijn de sleutel tot radicaal eenvoudigere meldingsaanroepen in je automatiseringen
-- Zie [Scenarios](../configuration/scenarios.md) en [Recipes](../recipes/index.md) voor meer details
+- Zie [Scenarios](../../configuration/scenarios.md) en [Recipes](../../recipes/index.md) voor meer details
 
 ## Prioriteit (Priority) { #priority }
 - Een urgentieniveau voor meldingen
@@ -84,9 +75,9 @@ de manier waarop ze wordt verstuurd.
    - Supernotify heeft een eigen e-mailintegratie, die prioriteit vertaalt naar iets wat Outlook, Apple Mail enz. begrijpen
 
 !!! info
-    Voor de technisch geïnteresseerden is er een [Klassendiagram](../developer/diagrams/class_diagram.md) van de kernklassen bij deze concepten.
+    Voor wie technisch is aangelegd zijn er [technische diagrammen](../../developer/diagrams/index.md) van deze concepten.
 
-# Kernprincipes { #core-principles }
+## Kernprincipes { #core-principles }
 
 1. Een melding heeft alleen een bericht nodig; al het andere kan een standaardwaarde krijgen, inclusief alle doelen
 2. Wat je in een actie-aanroep opgeeft, gaat voor op de standaardwaarden
@@ -97,6 +88,6 @@ de manier waarop ze wordt verstuurd.
    - Doelen kunnen in subcategorieën worden ingedeeld, of één grote lijst zijn van entiteit-ID's, apparaat-ID's, e-mailadressen en telefoonnummers
    - Opties in de actie-`data`, zoals `delivery`, kunnen één waarde, een lijst of een woordenboek zijn
 
-## Ontwikkelaars { #developers }
+### Ontwikkelaars { #developers }
 
-Zie [Developer Concepts](../developer/concepts.md) voor hoe meldingen door deliveries, doelen en *Envelopes* stromen, en de [Design Principles](../developer/principles.md).
+Zie [Developer Concepts](../../developer/concepts.md) voor hoe meldingen door deliveries, doelen en *Envelopes* stromen, en de [Design Principles](../../developer/principles.md).

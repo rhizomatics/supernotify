@@ -1,3 +1,19 @@
+# v2.13.1
+
+## ✨ Enhancements
+- Every envelope is now finger printed with a hash, and this is used to make sure there are no double deliveries if mis-configured, or if there's a new fallback delivery
+
+## 📚 Documentation
+- *Getting Started* and *Concepts* pages now replaced by an expanded **Quick Start** section, and concepts split into *Basic* and *Advanced*, and full translations for the entire section
+- New recipe - [Someone at the Door](./recipes/someone_at_the_door.md)
+- Recipes page now has improved navigation
+- New [Frequently Asked Questions](./faqs.md)
+- Stub re-direct pages to make it easier for agents to find help and reference material despite the versioned setup
+
+
+## 📝 Other changes
+- Automated build fixed to use correct old version of Home Assistant to ensure the target 6 month range (currently back to Python 3.13 support) is tested
+
 # v2.13.0
 
 ## ✨ Enhancements

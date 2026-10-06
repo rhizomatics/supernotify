@@ -1,4 +1,5 @@
 ---
+title: उन्नत अवधारणाएँ
 tags:
   - transport
   - delivery
@@ -6,21 +7,11 @@ tags:
   - target
   - recipient
   - principles
-description: Home Assistant के लिए Supernotify की मुख्य अवधारणाएँ, जिनमें Transport, Delivery, Scenario और Recipient शामिल हैं
+description: Home Assistant के लिए Supernotify की उन्नत अवधारणाएँ, जिनमें Transport, Delivery, Scenario और Recipient शामिल हैं, मुख्य रूप से YAML कॉन्फ़िगरेशन के लिए
 ---
-# मुख्य अवधारणाएँ
+# उन्नत अवधारणाएँ
 
-## सब कुछ कैसे जुड़ता है { #how-it-fits-together }
-
-किसी ऑटोमेशन से भेजी गई एक ही सूचना कई अलग-अलग सूचनाओं में बदल सकती है, और हर सूचना उसी तरीके के अनुसार ढलती है
-जिससे वह भेजी जाती है।
-
-![एक ऑटोमेशन की सूचना एक ई-मेल, दो पुश अलर्ट, एक SMS और एक स्पीकर घोषणा बन जाती है](../assets/images/concepts_flow.svg)
-
-1. **लक्ष्य** - लोगों को उनके [Recipient](#recipient) विवरण के आधार पर उन तरीकों में बदला जाता है जिनसे उन तक पहुँचा जा सकता है
-2. **Deliveries** - लागू होने वाली [Deliveries](#delivery) चुनी जाती हैं, डिफ़ॉल्ट रूप से या [Scenarios](#scenario) के ज़रिए
-3. **सूचनाएँ** - हर delivery उन लक्ष्यों को लेती है जिनका वह उपयोग कर सकती है, और उनके अनुरूप सूचना भेजती है,
-   ताकि ई-मेल में चित्रों के साथ पूरा HTML लेआउट हो सके, जबकि रसोई के स्पीकर को एक छोटा बोला गया संदेश मिले
+संक्षिप्त रूप, और सब कुछ कैसे जुड़ता है इसका चित्र, [बुनियादी अवधारणाएँ](basic_concepts.md) में है। यह पेज हर एक को और गहराई से समझाता है, और इसका बड़ा हिस्सा तभी मायने रखता है जब आप Supernotify को YAML से कॉन्फ़िगर करते हैं।
 
 ## लक्ष्य (Target) { #target }
 - किसे या किस चीज़ को सूचना मिलेगी और कैसे
@@ -33,17 +24,17 @@ description: Home Assistant के लिए Supernotify की मुख्य 
     - *Recipient* सुविधाओं के उपयोग के लिए `person_id`
     - Home Assistant के मानक लक्ष्य चयनकर्ता, `label_id`, `floor_id` और `area_id`
     - *समूह* लक्ष्य (Home Assistant के नए और पुराने, दोनों प्रकार के समूह)
-- लक्ष्यों को किसी विशेष **लक्ष्य श्रेणी** से चिह्नित किया जा सकता है, जैसे `discord_channel:839439434`; देखें [श्रेणी उपसर्ग](../usage/targets.md#category-prefixes)
+- लक्ष्यों को किसी विशेष **लक्ष्य श्रेणी** से चिह्नित किया जा सकता है, जैसे `discord_channel:839439434`; देखें [श्रेणी उपसर्ग](../../usage/targets.md#category-prefixes)
 - हर लक्ष्य को सूची से वही इंटीग्रेशन उठाता है जो उसे सबसे अच्छी तरह संभाल सके
   - उदाहरण के लिए, Alexa Devices की Notify एंटिटी को Alexa Devices transport संभालता है, जबकि सामान्य Notify एंटिटी कम सक्षम Notify Entity transport पर जाती है
-- अधिक जानकारी के लिए [Targets](../usage/targets.md) देखें
+- अधिक जानकारी के लिए [Targets](../../usage/targets.md) देखें
 
 ## प्राप्तकर्ता (Recipient) { #recipient }
 - एक व्यक्ति, वैकल्पिक ई-मेल पता, फ़ोन नंबर, मोबाइल डिवाइस या कस्टम लक्ष्यों के साथ
   - डिफ़ॉल्ट रूप से Home Assistant में पहले से मौजूद उपयोगकर्ता खातों और Person एंटिटी से अपने आप खोजे जाते हैं
 - इससे ऑटोमेशन में लोगों का उल्लेख करना आसान हो जाता है: हर सूचना में Joe का ई-मेल पता याद रखने के बजाय `person.joe_mctest` का उपयोग करें। संगत SMS इंटीग्रेशन होने पर फ़ोन नंबरों के लिए, या Telegram और Discord जैसे कस्टम पहचानकर्ताओं के लिए भी काम करता है
 - हर प्राप्तकर्ता की एक Home Assistant `switch` एंटिटी भी होती है, ताकि किसी को सूचनाओं से परेशान होने से आसानी से बचाया जा सके
-- अधिक विवरण के लिए [People](../configuration/people.md) और [Recipes](../recipes/index.md) देखें
+- अधिक विवरण के लिए [People](../../configuration/people.md) और [Recipes](../../recipes/index.md) देखें
 
 ## ट्रांसपोर्ट (Transport) { #transport }
 
@@ -54,7 +45,7 @@ description: Home Assistant के लिए Supernotify की मुख्य 
 - Transport अडैप्टर एक ही सूचना को कई प्लेटफ़ॉर्म पर भेजने देता है, भले ही उनके इंटरफ़ेस अलग-अलग और आपस में असंगत हों
 - यह सूचनाओं को transport के अनुसार ढालता है: जिन गुणों को transport स्वीकार नहीं करता उन्हें हटाता है, `data` संरचनाओं को बदलता है, केवल उपयुक्त लक्ष्य चुनता है, और जहाँ संभव हो वहाँ अतिरिक्त समायोजन की सुविधा देता है
 - हर transport का एक डिफ़ॉल्ट कॉन्फ़िगरेशन होता है, जिससे कई समायोजन और डिफ़ॉल्ट मान तय किए जा सकते हैं और हर सूचना में वही मान दोहराने की ज़रूरत नहीं पड़ती
-- अधिक विवरण के लिए [Transports](../transports/index.md) देखें
+- अधिक विवरण के लिए [Transports](../../transports/index.md) देखें
 
 ## डिलीवरी (Delivery) { #delivery }
 
@@ -65,8 +56,8 @@ description: Home Assistant के लिए Supernotify की मुख्य 
 - जो transports लक्ष्यों को स्पष्ट रूप से चुन सकते हैं, जैसे ई-मेल, मोबाइल पुश, SMS, Alexa Devices और Notify Entity, वे लक्ष्यों को संभालने में डिफ़ॉल्ट रूप से शामिल होते हैं
   - अन्य को कॉन्फ़िगरेशन, Scenarios या किसी सूचना में माँगकर शामिल किया जा सकता है
 - आप अपने चुने हुए नाम से अपनी deliveries बना सकते हैं, और एक ही transport के लिए कई deliveries रख सकते हैं, जैसे `plain_email` और `html_email`
-- [Generic Transport](../transports/generic.md) एक *टूलबॉक्स* की तरह काम करता है, जिससे Home Assistant की लगभग किसी भी क्षमता के लिए delivery बनाई जा सकती है जो किसी मानक transport में पहले से शामिल नहीं है
-- अधिक विवरण के लिए [Deliveries](../configuration/deliveries.md) और [Recipes](../recipes/index.md) देखें
+- [Generic Transport](../../transports/generic.md) एक *टूलबॉक्स* की तरह काम करता है, जिससे Home Assistant की लगभग किसी भी क्षमता के लिए delivery बनाई जा सकती है जो किसी मानक transport में पहले से शामिल नहीं है
+- अधिक विवरण के लिए [Deliveries](../../configuration/deliveries.md) और [Recipes](../../recipes/index.md) देखें
 
 ## परिदृश्य (Scenario) { #scenario }
 - सेटिंग्स का एक पैकेज, जिसे नाम से या Home Assistant शर्तों के ज़रिए अपने आप चालू किया जा सकता है
@@ -74,7 +65,7 @@ description: Home Assistant के लिए Supernotify की मुख्य 
   - शर्तों में संदेश का टेक्स्ट भी शामिल होता है, इसलिए आँगन में पक्षियों के बारे में Frigate सूचना को खिड़की पर घुसपैठिए से अलग तरीके से संभाला जा सकता है
 - Scenarios से रात में सूचनाएँ कम परेशान करने वाली, छुट्टियों में अधिक उत्सवपूर्ण, या कुछ संदेशों को प्राथमिकता दी जा सकती है
 - इनसे कई deliveries या सूचनाओं पर एक ही जगह से बदलाव लागू करना आसान हो जाता है, और ये आपके ऑटोमेशन में सूचना कॉल को बहुत सरल बनाने की कुंजी हैं
-- अधिक विवरण के लिए [Scenarios](../configuration/scenarios.md) और [Recipes](../recipes/index.md) देखें
+- अधिक विवरण के लिए [Scenarios](../../configuration/scenarios.md) और [Recipes](../../recipes/index.md) देखें
 
 ## प्राथमिकता (Priority) { #priority }
 - सूचनाओं के लिए तात्कालिकता का स्तर
@@ -84,9 +75,9 @@ description: Home Assistant के लिए Supernotify की मुख्य 
    - Supernotify का अपना ई-मेल इंटीग्रेशन है, जो प्राथमिकता को ऐसे रूप में बदलता है जिसे Outlook, Apple Mail आदि समझ सकें
 
 !!! info
-    तकनीकी रुचि रखने वालों के लिए, इन अवधारणाओं से जुड़ी मुख्य classes का एक [Class Diagram](../developer/diagrams/class_diagram.md) उपलब्ध है।
+    तकनीकी रुचि रखने वालों के लिए इन अवधारणाओं के [तकनीकी आरेख](../../developer/diagrams/index.md) उपलब्ध हैं।
 
-# मुख्य सिद्धांत { #core-principles }
+## मुख्य सिद्धांत { #core-principles }
 
 1. किसी सूचना को केवल एक संदेश चाहिए; बाकी सब कुछ डिफ़ॉल्ट हो सकता है, सभी लक्ष्यों सहित
 2. आप action कॉल में जो भी तय करते हैं, वह डिफ़ॉल्ट मानों से ऊपर होता है
@@ -97,6 +88,6 @@ description: Home Assistant के लिए Supernotify की मुख्य 
    - लक्ष्यों को उप-श्रेणियों में बाँटा जा सकता है, या वे एंटिटी ID, डिवाइस ID, ई-मेल और फ़ोन नंबरों की एक बड़ी सूची हो सकते हैं
    - Action `data` के विकल्प, जैसे `delivery`, एकल मान, सूची या dictionary mapping हो सकते हैं
 
-## डेवलपर { #developers }
+### डेवलपर { #developers }
 
-सूचनाएँ deliveries, लक्ष्यों और *Envelopes* से कैसे गुज़रती हैं, यह जानने के लिए [Developer Concepts](../developer/concepts.md) देखें, और [Design Principles](../developer/principles.md) भी।
+सूचनाएँ deliveries, लक्ष्यों और *Envelopes* से कैसे गुज़रती हैं, यह जानने के लिए [Developer Concepts](../../developer/concepts.md) देखें, और [Design Principles](../../developer/principles.md) भी।

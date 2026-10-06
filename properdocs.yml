@@ -69,6 +69,16 @@ plugins:
       redirect_maps:
         getting_started.md: quick_start/index.md
         concepts.md: quick_start/basic_concepts.md
+        de/concepts.md: de/quick_start/basic_concepts.md
+        es/concepts.md: es/quick_start/basic_concepts.md
+        fr/concepts.md: fr/quick_start/basic_concepts.md
+        hi/concepts.md: hi/quick_start/basic_concepts.md
+        it/concepts.md: it/quick_start/basic_concepts.md
+        ja/concepts.md: ja/quick_start/basic_concepts.md
+        nl/concepts.md: nl/quick_start/basic_concepts.md
+        pl/concepts.md: pl/quick_start/basic_concepts.md
+        pt/concepts.md: pt/quick_start/basic_concepts.md
+        zh-Hans/concepts.md: zh-Hans/quick_start/basic_concepts.md
   - pagetree
   - optimize
   - tags:

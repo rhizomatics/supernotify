@@ -1,4 +1,5 @@
 ---
+title: Conceptos avanzados
 tags:
   - transport
   - delivery
@@ -6,21 +7,11 @@ tags:
   - target
   - recipient
   - principles
-description: Conceptos fundamentales de Supernotify para Home Assistant, incluyendo Transport, Delivery, Scenario y Recipient
+description: Conceptos avanzados de Supernotify para Home Assistant, incluidos transport, delivery, scenario y recipient, sobre todo para la configuración con YAML
 ---
-# Conceptos fundamentales
+# Conceptos avanzados
 
-## Cómo encaja todo { #how-it-fits-together }
-
-Una sola notificación de una automatización puede convertirse en varias notificaciones distintas, cada una adaptada
-a la forma en que se envía.
-
-![Una notificación de una automatización se convierte en un correo electrónico, dos alertas push, un SMS y un anuncio por altavoz](../assets/images/concepts_flow.svg)
-
-1. **Destinos** - las personas se convierten en las formas de contactarlas, usando sus datos de [Recipient](#recipient)
-2. **Deliveries** - se eligen las [Deliveries](#delivery) que corresponden, por defecto o mediante [Scenarios](#scenario)
-3. **Notificaciones** - cada delivery toma los destinos que puede usar y envía una notificación adecuada,
-   de modo que un correo puede tener un diseño HTML completo con imágenes, mientras que el altavoz de la cocina recibe un breve mensaje hablado
+[Conceptos básicos](basic_concepts.md) tiene la versión corta y la imagen de cómo encaja todo. Esta página profundiza en cada uno, y buena parte solo importa cuando configuras Supernotify con YAML.
 
 ## Destino (Target) { #target }
 - Quién o qué recibe la notificación y cómo
@@ -33,17 +24,17 @@ a la forma en que se envía.
     - `person_id` para usar las funciones de *Recipient*
     - los selectores de destino estándar de Home Assistant, `label_id`, `floor_id` y `area_id`
     - destinos de *grupo* (grupos de Home Assistant tanto nuevos como antiguos)
-- Los destinos pueden asignarse a una **Categoría de destino** concreta, como `discord_channel:839439434`; consulta [Prefijos de categoría](../usage/targets.md#category-prefixes)
+- Los destinos pueden asignarse a una **Categoría de destino** concreta, como `discord_channel:839439434`; consulta [Prefijos de categoría](../../usage/targets.md#category-prefixes)
 - Cada destino lo toma de la lista la integración más adecuada para gestionarlo
   - Por ejemplo, una entidad Notify de Alexa Devices la gestiona el transporte Alexa Devices, mientras que una entidad Notify genérica recurre al transporte Notify Entity, menos capaz
-- Consulta [Targets](../usage/targets.md) para más información
+- Consulta [Targets](../../usage/targets.md) para más información
 
 ## Destinatario (Recipient) { #recipient }
 - Una persona, con dirección de correo, número de teléfono, dispositivos móviles o destinos personalizados opcionales
   - Por defecto se descubren automáticamente a partir de las cuentas de usuario y entidades de persona de Home Assistant
 - Facilita referirse a personas en las automatizaciones: usa `person.joe_mctest` en lugar de recordar el correo de Joe en cada notificación. También funciona con números de teléfono si hay una integración SMS compatible, o con identificadores personalizados como Telegram o Discord
 - Cada destinatario tiene además una entidad `switch` de Home Assistant, para evitar fácilmente que alguien reciba notificaciones
-- Consulta [People](../configuration/people.md) y [Recipes](../recipes/index.md) para más detalles
+- Consulta [People](../../configuration/people.md) y [Recipes](../../recipes/index.md) para más detalles
 
 ## Transporte (Transport) { #transport }
 
@@ -54,7 +45,7 @@ a la forma en que se envía.
 - El adaptador de transporte permite enviar una sola notificación a muchas plataformas, aunque tengan interfaces distintas e incompatibles entre sí
 - Adapta las notificaciones al transporte, eliminando atributos que no acepta, reorganizando las estructuras `data`, seleccionando solo los destinos apropiados y permitiendo ajustes adicionales cuando es posible
 - Cada transporte tiene una configuración por defecto que permite ajustar muchos detalles y valores predeterminados, sin tener que repetirlos en cada notificación
-- Consulta [Transports](../transports/index.md) para más detalles
+- Consulta [Transports](../../transports/index.md) para más detalles
 
 ## Entrega (Delivery) { #delivery }
 
@@ -65,8 +56,8 @@ a la forma en que se envía.
 - Los transportes que pueden seleccionar destinos de forma inequívoca, como correo, push móvil, SMS, Alexa Devices y Notify Entity, se incluyen por defecto al gestionar destinos
   - Los demás pueden incluirse mediante configuración, usando Scenarios o pidiéndolo en una notificación
 - Puedes definir tus propias deliveries, con el nombre que elijas, y tener varias para un mismo transporte, por ejemplo `plain_email` y `html_email`
-- El [transporte Generic](../transports/generic.md) actúa como *caja de herramientas* para crear una delivery para casi cualquier cosa que Home Assistant pueda hacer y que no cubra ya un transporte estándar
-- Consulta [Deliveries](../configuration/deliveries.md) y [Recipes](../recipes/index.md) para más detalles
+- El [transporte Generic](../../transports/generic.md) actúa como *caja de herramientas* para crear una delivery para casi cualquier cosa que Home Assistant pueda hacer y que no cubra ya un transporte estándar
+- Consulta [Deliveries](../../configuration/deliveries.md) y [Recipes](../../recipes/index.md) para más detalles
 
 ## Escenario (Scenario) { #scenario }
 - Un paquete de ajustes que puede activarse por nombre o automáticamente mediante condiciones de Home Assistant
@@ -74,7 +65,7 @@ a la forma en que se envía.
   - Las condiciones incluyen el texto del mensaje, así que una notificación de Frigate sobre pájaros en el patio puede tratarse distinto que un intruso en una ventana
 - Usa scenarios para que las notificaciones sean más discretas de noche, más festivas en vacaciones, o para dar prioridad a ciertos mensajes
 - Permiten aplicar cambios en un solo lugar a muchas deliveries o notificaciones, y son la clave para simplificar radicalmente las llamadas de notificación en tus automatizaciones
-- Consulta [Scenarios](../configuration/scenarios.md) y [Recipes](../recipes/index.md) para más detalles
+- Consulta [Scenarios](../../configuration/scenarios.md) y [Recipes](../../recipes/index.md) para más detalles
 
 ## Prioridad (Priority) { #priority }
 - Un nivel de urgencia para las notificaciones
@@ -84,9 +75,9 @@ a la forma en que se envía.
    - Supernotify tiene su propia integración de correo, que traduce la prioridad a un formato que entienden Outlook, Apple Mail, etc.
 
 !!! info
-    Para los más técnicos, hay un [Diagrama de clases](../developer/diagrams/class_diagram.md) de las clases principales correspondientes a estos conceptos.
+    Para quienes tengan perfil técnico, hay [diagramas técnicos](../../developer/diagrams/index.md) de estos conceptos.
 
-# Principios fundamentales { #core-principles }
+## Principios fundamentales { #core-principles }
 
 1. Una notificación solo necesita un mensaje; todo lo demás puede tomar valores por defecto, incluidos todos los destinos
 2. Lo que definas en una llamada de acción tiene prioridad sobre los valores por defecto
@@ -97,6 +88,6 @@ a la forma en que se envía.
    - Los destinos pueden organizarse en subcategorías, o ser una gran lista de IDs de entidad, IDs de dispositivo, correos y números de teléfono
    - Las opciones de `data` de la acción, como `delivery`, pueden ser un valor único, una lista o un diccionario
 
-## Desarrolladores { #developers }
+### Desarrolladores { #developers }
 
-Consulta [Developer Concepts](../developer/concepts.md) para ver cómo fluyen las notificaciones a través de deliveries, destinos y *Envelopes*, y los [Design Principles](../developer/principles.md).
+Consulta [Developer Concepts](../../developer/concepts.md) para ver cómo fluyen las notificaciones a través de deliveries, destinos y *Envelopes*, y los [Design Principles](../../developer/principles.md).
