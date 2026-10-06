@@ -131,12 +131,6 @@ plugins:
         # changelog, roadmap, principles and RFCs left out - old or planned behaviour an agent would
         # take as current, and the changelog mentions everything so wins the help tool's page search
 
-  - social:
-      enabled: !ENV [CI, false]
-      cards_layout_options:
-        logo: docs/assets/images/icon.png
-        background_image: docs/assets/images/logo-dim-social-640x320.png
-        background_color: transparent
   - mike:
       alias_type: symlink
       canonical_version: latest
@@ -172,7 +166,6 @@ extra_javascript:
   - javascripts/tag_filter.js
 
 hooks:
-  - docgen/optimize_social_cards.py
   - docgen/nav_order.py
   - docgen/tagged_index.py
 
