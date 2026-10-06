@@ -1,6 +1,6 @@
 # Packages
 
-(provisional name for implementation)
+(provisional name for implementation - could be `bundles`, or `presets`, need to be not overlap with known Home Assistant terms like blueprint)
 
 ## Feedback
 
@@ -422,10 +422,12 @@ Its aim is to get a basic working component that can be custom installed and get
 Supernotify changes
  - Potentially some identifier for the cycle, and the watched device
  - For MVP, drive everything from the packager, avoiding changes to Supernotify unless its really hacky inside the packager, and use lessons learned to refine Supernotify integration
-   - Nice add from Supernotify is having a high level way to start/progress/end activity bars without worrying about Android vs iOS and without knowing about final pseudo-notifications to clear bars
+   - Nice adds from Supernotify
+    - High level way to start/progress/end activity bars without worrying about Android vs iOS or dupe detection interfering with progress updates or knowing about final pseudo-notifications to clear bars
+    - No need of `extra_data` and potential confusion for other transports
 State Management
  - Longer running state to manage the live activity bars.
-   - Primarily the state is there to make sure that live activity bars on phones get closed one way or another
+   - Primarily the state is there to make sure that live activity bars on phones get closed one way or another, and also that they survive a home assistant restart or config reload
      - Can leave this to MVP++
      - Useful experiment to see how much can be done without any new state and any Supernotify changes
    - If possible, state managed entirely elsewhere, however until the Mobile App supported this likely to need the 'package' plugin to support.
@@ -439,7 +441,10 @@ Install Behavior
      - Review post-MVP if config entry or sub-entry better for these use cases
  Settings UI
    - Override default message and title for both start and end
-   - Set explicit targets.
+   - Allow setting explicit targets but optional
+     - Full range of targets if supernotify present
+       - Warning if targets provided and no mobile apps included [MVP++]
+     - if no targets provided, then supernotify itself does the defaulting to include all mobile apps found from Person or User recodds
    - If supernotify present can select deliveries.
    - If no supernotify, target list is mandatory for notify entities only
 
@@ -448,6 +453,10 @@ MVP++
   - Suggestion, Ecovacs robot vacuum
 - Power monitor use case, start live activity when the power goes over a threshold - associated with say a washing machine - and end the activity when the power drops, with grace period/rounding etc for short spikes
 - Android integration if only iOS on MVP 1
-- Intermediate progress tracking for % completion and ETA update
+- Warn user if explicit targets can't do live activities
+  - Implies an API or action call to Supernotify that resolves targets down to mobile app level, and also that could change thereafter
+- Configurable intermediate progress tracking for % completion
+  - ETA update
+  - Sub-cycle phase change, e.g. 'oven pre-heat', 'rinse cycle'
 - Sweeper process to close live activity bars after a grace period if the appliance end signal hasn't been received
   - Also notify a warning that the appliance is either stuck or home assistant issue preventing closure

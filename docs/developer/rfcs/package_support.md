@@ -1,11 +1,9 @@
 # Package Support
 
-Changes needed in Supernotify before any [Package](./packages.md) is built, collected from the proposed packages:
+Changes anticipated in Supernotify before any production [Package](./packages.md) is released, collected from the proposed packages:
 [Frigate](./frigate_supernotifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
 
-Packages are built as modules inside Supernotify, set up as config subentries. A thin HACS repository per package,
-for example *Frigate SuperNotifier*, can come later purely so people searching HACS find it; it would only guide
-the user to install or enable Supernotify.
+Packages are built as separate HACS components that work much better with  Supernotify but have some basic functionality without. These can then be attractive to people with a specific requirement to integrate Frigate or want to their phone have a progress bar for the dishwasher.
 
 ## Needs by Package
 

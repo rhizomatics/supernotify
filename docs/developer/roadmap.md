@@ -160,7 +160,8 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
 
 ### Packages
 
-See [Packages](./rfcs/packages.md), starting with [Frigate SuperNotifier](./rfcs/frigate_supernotifier.md). The Supernotify changes needed first are in [Package Support](./rfcs/package_support.md).
+Companion HACS components, with working term ["Packages"](./rfcs/packages.md), starting with an [MVP](./rfcs/packages.md#mvp) and sometime later a [Frigate SuperNotifier](./rfcs/frigate_supernotifier.md).
+The Supernotify changes needed first are in [Package Support](./rfcs/package_support.md) though expected to be refined after the MVP.
 
 ### UI
 
