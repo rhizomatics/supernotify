@@ -450,6 +450,21 @@ Install Behavior
    - If supernotify present can select deliveries.
    - If no supernotify, target list is mandatory for notify entities only
 
+### MVP Testing
+
+Sounds good. A few things worth knowing for the first real run:
+
+- **Debug logging**: the plugin only logs failures, so if nothing arrives there will be nothing in the log either. Supernotify's archive, or `supernotify.enquire_last_notification`, will show whether the start call reached it and which deliveries it picked.
+- **First appliance is manual**: after the restart, add the integration by hand and pick the dishwasher; the oven and any others should then show up as *Discovered*.
+- **What to watch on the phone**:
+  - whether the Live Activity opens on `run`;
+  - whether it updates silently at each 10%;
+  - whether the countdown matches the appliance;
+  - whether the bar clears before the "finished" notification lands.
+- **Least certain part**: the countdown. Finish time is sent as an absolute Unix timestamp with `chronometer: true`, which is based on the companion docs and is untested on a device.
+- **No dishes needed for a quick check**: setting `sensor.dishwasher_operation_state` to `run` and then `finished` in Developer Tools → States exercises the whole start and end path. Progress only updates if you also set the progress sensor.
+
+
 ### MVP++
 
 - Other appliances, pick a different class or a different style vendor integration (e.g. cloud vs local), to get better stress on the solution
