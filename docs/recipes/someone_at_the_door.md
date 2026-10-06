@@ -24,6 +24,8 @@ Have the speakers say that someone is at the door, then add a picture from the p
 
 Create an automation with the doorbell as its trigger, and a `supernotify.notify` action that uses a spoken delivery.
 
+![Select Action](../assets/images/automation_add_action.png){width=600}
+
 If you have Alexa Devices, the `alexa_devices_announce_all` delivery is already there. For other speakers, use a [TTS](../transports/tts.md) delivery.
 
 ```yaml title="Doorbell Automation"
