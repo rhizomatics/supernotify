@@ -14,7 +14,7 @@ Everything on this page is done from the Home Assistant UI, straight after [inst
 
 Open the [Actions tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) in **Developer Tools**, choose the `supernotify.notify` action
 
-![Select Action](../assets/images/automation_add_action.png)
+![Select Action](../assets/images/automation_add_action.png){width=600}
 
 Type a message, and press **Perform action**.
 
