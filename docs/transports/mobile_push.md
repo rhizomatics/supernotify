@@ -83,8 +83,9 @@ The companion app takes [notification commands](https://companion.home-assistant
 and TTS as the `message` of a call of their own, so Supernotify sends them that way, to Android phones only:
 `mobile_push_command_dnd` (`alarms_only`, `priority_only`, `total_silence`, `off`),
 `mobile_push_command_ringer_mode` (`normal`, `silent`, `vibrate`) and `mobile_push_command_screen_on` each
-go just before the notification, and `mobile_push_tts_text` just after it, on the alarm stream for a
-`critical` notification:
+go just before the notification, and `mobile_push_tts_text` just after it - for a `critical` notification
+on the alarm stream at full volume (`alarm_stream_max`, the app puts the volume back afterwards), since a
+watch's alarm volume can be too low to hear:
 
 ```yaml
   - action: supernotify.notify

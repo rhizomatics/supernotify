@@ -30,8 +30,8 @@ New data keys (all optional):
     mobile_push_clear_notification  bool  Send clear_notification to dismiss previous same-tag notification.
                                       Requires push_notification_tag to be set.
     mobile_push_tts_text            str   Android: text read aloud by the phone (Android 8+), sent as its own
-                                      `message: TTS` call after the notification, on the alarm stream
-                                      for critical. If omitted, push TTS is not activated.
+                                      `message: TTS` call after the notification, on the alarm stream at
+                                      full volume for critical. If omitted, push TTS is not activated.
     mobile_push_tts_locale          str   BCP-47 language for TTS (e.g. "it-IT", "en-US").
                                       Only used when push_tts_text is set.
     mobile_push_tts_engine          str   TTS engine package (e.g. "com.google.android.tts").
@@ -264,9 +264,11 @@ class MobilePushTransport(Transport):
         after: list[dict[str, Any]] = []
         if push_data["tts_text"]:
             tts_data: dict[str, Any] = {"tts_text": push_data["tts_text"]}
-            if push_data["alarm_stream_max"]:
+            if push_data["alarm_stream_max"] or priority == const.PRIORITY_CRITICAL:
+                # at full volume for critical - on a watch the alarm volume can be too low to hear,
+                # and the companion app puts the volume back afterwards
                 tts_data["media_stream"] = "alarm_stream_max"
-            elif push_data["alarm_stream"] or priority == const.PRIORITY_CRITICAL:
+            elif push_data["alarm_stream"]:
                 tts_data["media_stream"] = ANDROID_ALARM_STREAM_CHANNEL
             if push_data["tts_locale"]:
                 tts_data["tts_text_language"] = push_data["tts_locale"]

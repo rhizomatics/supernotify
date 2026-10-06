@@ -816,7 +816,8 @@ async def test_android_commands_go_before_the_notification_as_their_own_calls(un
     ("priority", "data", "media_stream"),
     [
         (PRIORITY_MEDIUM, {}, None),
-        (PRIORITY_CRITICAL, {}, "alarm_stream"),
+        (PRIORITY_CRITICAL, {}, "alarm_stream_max"),
+        (PRIORITY_MEDIUM, {"mobile_push_alarm_stream": True}, "alarm_stream"),
         (PRIORITY_MEDIUM, {"mobile_push_alarm_stream_max": True}, "alarm_stream_max"),
     ],
 )
