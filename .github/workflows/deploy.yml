@@ -170,9 +170,17 @@ jobs:
         mkdir -p site-export
         if git rev-parse origin/gh-pages >/dev/null 2>&1; then
           git archive origin/gh-pages | tar -x -C site-export
+          # Verify extraction was successful
+          if [ ! -d "site-export" ] || [ -z "$(ls -A site-export)" ]; then
+            echo "Warning: site-export is empty after extraction"
+            # Create a minimal index.html as fallback
+            echo "<html><body>Documentation is being built...</body></html>" > site-export/index.html
+          fi
         else
-          echo "gh-pages branch not found, creating empty site export"
+          echo "gh-pages branch not found, creating empty site export with placeholder"
+          echo "<html><body>Documentation is being built...</body></html>" > site-export/index.html
         fi
+        ls -la site-export
     - name: Upload Pages artifact
       if: ${{ github.event_name != 'pull_request' }}
       uses: actions/upload-pages-artifact@v5
