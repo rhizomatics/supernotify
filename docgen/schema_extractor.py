@@ -62,7 +62,7 @@ import custom_components.supernotify.transports.chime
 
 _LOGGER = logging.getLogger(__name__)
 
-ROOT_URL = "https://supernotify.rhizomatics.org.uk/developer/schemas/json/"
+ROOT_URL = "https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/"
 
 SCHEMAS_BY_MODULE = {
     custom_components.supernotify.schema: {
