@@ -169,11 +169,14 @@ jobs:
       run: |
         mkdir -p site-export
         if git rev-parse origin/gh-pages >/dev/null 2>&1; then
-          git archive origin/gh-pages | tar -x -C site-export
-          # Verify extraction was successful
-          if [ ! -d "site-export" ] || [ -z "$(ls -A site-export)" ]; then
-            echo "Warning: site-export is empty after extraction"
-            # Create a minimal index.html as fallback
+          if git archive origin/gh-pages | tar -x -C site-export; then
+            # Verify extraction was successful
+            if [ -z "$(ls -A site-export)" ]; then
+              echo "Warning: site-export is empty after extraction"
+              echo "<html><body>Documentation is being built...</body></html>" > site-export/index.html
+            fi
+          else
+            echo "Error: Failed to extract gh-pages branch"
             echo "<html><body>Documentation is being built...</body></html>" > site-export/index.html
           fi
         else
