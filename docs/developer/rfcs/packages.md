@@ -399,3 +399,28 @@ Live Activities would be a great fit for ongoing events in Frigate, where its po
   - "Notification Presets"?
   - "Routines"?
   - Reuse "Recipe" - manual recipes in the docs, automatic recipes in the code. Though recipe sounds like a set of steps for doing things yourself, this is more like buying the cake already baked and iced.
+
+## MVP
+
+- Household appliances package
+  - Detects appliances that have an identifiable cycle
+    - Creates a 'live activity' on mobile apps for the duration of the cycle
+    - Also start notifications for non-mobile notification and end notification for all.
+    - Limited to Bosch/Neff HomeConnect appliances at first, and English only
+  - Separate HACS plugin,
+    - Working title Appliances Supernotification
+    - Needs supernotify to work fully
+    - Minimal non-supernotify functionality to use Notify Entities with `send_message`, no live activities, just a start and end notification to selected target
+    - Setup screen has warning if supernotify not present, info on limitations without it, and pointer to install via HACS
+Supernotify changes
+ - Longer running state to manage the live activity bars.
+Install Behavior
+ - Searches for likely entities for known platforms
+   - Re-searches whenever new entities for those platforms are added.
+   - Each appliance has a watcher which is like an instance of the component
+     - On the integration home page in home assistant easy to see everything its configured to watch and disable/delete/edit.
+ Settings UI
+   - Override default message and title for both start and end
+   - Set explicit targets.
+   - If supernotify present can select deliveries.
+   - If no supernotify, target list is mandatory for notify entities only
