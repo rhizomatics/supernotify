@@ -3,7 +3,7 @@
 > Advanced, concise, flexible notifications for Home Assistant
 
 Supernotify is a Home Assistant custom integration for unified notifications: send one notification and it is routed to many channels (deliveries) by transport, recipient and scenario, with configuration in YAML or the UI.
-JSON Schemas for validating configuration are published at https://supernotify.rhizomatics.org.uk/developer/schemas/json/Full_Configuration.schema.json (complete YAML configuration) and https://supernotify.rhizomatics.org.uk/developer/schemas/json/Notify_Action.schema.json (the notify action call). Schemas for individual objects, such as Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition, sit alongside as <Name>.schema.json.
+JSON Schemas for validating configuration are published at https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Full_Configuration.schema.json (complete YAML configuration) and https://supernotify.rhizomatics.org.uk/latest/developer/schemas/json/Notify_Action.schema.json (the notify action call). Schemas for individual objects, such as Delivery_Definition, Scenario_Definition, Recipient_Definition and Transport_Definition, sit alongside as <Name>.schema.json.
 
 # Start here
 
@@ -136,70 +136,231 @@ An alternative `supernotify.notify` action is now available that is much easier 
 - [Dev Shell](https://devshell.rhizomatics.org.uk) - Python REPL for Home Assistant development and data exploration.
 - [Updates2MQTT](https://updates2mqtt.rhizomatics.org.uk) - Automatically notify via MQTT on Docker image updates, with advanced handling to extract versions and release notes from images, and option to remotely pull and restart containers from Home Assistant. Also available on [PyPI](https://pypi.org/project/updates2mqtt/)
 
-# Getting Started
+# Quick Start
 
-Source: https://supernotify.rhizomatics.org.uk/latest/getting_started/
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/
 
-## HACS
+Supernotify can be installed and used without writing any YAML. These pages take about ten minutes:
 
-Make sure you have **HACS** installed
+1. [Installation](https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/index.md)
+1. [Send your first notification](https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/index.md)
+1. [What to do next](https://supernotify.rhizomatics.org.uk/latest/quick_start/next_steps/index.md) - starting with an automation and a dashboard
+1. [Basic concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/index.md) - the main ideas and terminology explained
 
-If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify is one of the default repositories in HACS so no custom repo configuration required
+There are also [advanced concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/index.md) plus lots of [recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md) to try out.
 
-## Installation
+If you don't end up liking it, then use the [removal](https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/index.md) guidance to clean it up, and if you can, [leave a note](https://github.com/rhizomatics/supernotify/discussions/new/choose) on what didn't work for you.
 
-From the HACS page on Home Assistant, select **Supernotify** in the list of available integrations
+# Installation
 
-## Configure
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/
 
-For a zero-configuration setup with everything auto-discovered (mobile push, an existing SMTP integration or any notify entities, recipients from Home Assistant persons), go to **Settings → Devices & Services → Add Integration** and search for **Supernotify**.
+## Install from HACS
+
+First, make sure you have **HACS** installed.
+
+If not, check the [HACS Instructions](https://hacs.xyz/docs/use/). Supernotify is one of the default repositories in HACS so no custom repo configuration required.
+
+From the HACS page on Home Assistant, select **Supernotify** in the list of available integrations, download it, and restart Home Assistant.
+
+## Add the Integration
+
+Go to **Settings → Devices & Services → Add Integration** and search for **Supernotify**. Accept the defaults.
+
+## Discovery and Defaults
+
+Above is everything you need to do to get some notifications working.
+
+Supernotify looks at what is already in Home Assistant and finds:
+
+- **People** - everyone with a *Person* or a *User* in Home Assistant, and the phones or tablets they run the Home Assistant app on
+- **Ways to notify** - mobile push, an existing SMTP e-mail integration, any notify entities, and devices like Alexa speakers or chimes if you have them
+
+It builds a *delivery* for each way to notify it finds, plus some convenience ones, like `chime_siren_all` and `alexa_devices_announce_all`, if you have those devices.
 
 Archive, duplicate detection and housekeeping settings can be adjusted afterwards from the integration's **Configure** option.
 
-This will build a delivery channel for every transport mechanism it can find, plus some convenience ones, like `chime_siren_all` and `alexa_devices_announce_all` that will be created if you have those devices.
+Now [send your first notification](https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/index.md).
 
-Advanced configuration, like custom deliveries, transports, scenarios, recipients and fine-tuning cameras are still configured via YAML fornow - see the [Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/index.md) pages.
+# Send Your First Notification
 
-## Send
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/
 
-Send a test notification from [Tools Action Tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) or start [sending notifications](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md) from automations. Use the `supernotify.notify` action to craft the notification, which can be nothing more than a single `message`.
+Everything on this page is done from the Home Assistant UI, straight after [installing](https://supernotify.rhizomatics.org.uk/latest/quick_start/installation/index.md). Each step shows the YAML as well, for anyone who prefers it.
 
-This first notification will go out all mobile devices in the house. To limit it, list the mobile devices, or the `person` entities as targets in the notification:
+## 1. Notify Everyone
 
-If you have Alexa Devices, use `alexa_devices_announce_all` or `alexa_devices_speak_all` in the *Delivery* box. (Announce has an extra introductory chime vs plain speak). You can combine these with email and mobile app notifications in a single notification.
+Open the [Actions tab](https://www.home-assistant.io/docs/tools/dev-tools/#actions-tab) in **Developer Tools**, choose the `supernotify.notify` action, type a message, and press **Perform action**.
 
-### Add a Notification Action to an Automation
+Message to Everyone
 
-### Add to the Dashboard
+```yaml
+action: supernotify.notify
+data:
+  message: Something went off in the basement
+```
+
+A message is all a notification needs. With nothing else said, this goes to every phone and tablet running the Home Assistant app, for everyone in the house.
+
+## 2. Notify One Person
+
+That's probably more people than you want. To limit it, pick `person` entities, or individual mobile devices, as the **targets**:
+
+Message to One Person
+
+```yaml
+action: supernotify.notify
+data:
+  message: Something went off in the basement
+  target: person.john_mcdoe
+```
+
+Now only John's devices get it. Choosing a person rather than a phone means the notification still arrives when John gets a new phone.
+
+## 3. Choose How It's Sent
+
+The **Delivery** box lists the ways Supernotify found to send notifications. Leave it out, and Supernotify chooses for you; pick from it, and only those are used.
+
+If you have Alexa Devices, use `alexa_devices_announce_all` or `alexa_devices_speak_all`. (Announce has an extra introductory chime vs plain speak). You can combine these with email and mobile app notifications in a single notification.
+
+Speakers and Phones Together
+
+```yaml
+action: supernotify.notify
+data:
+  message: Someone is at the front door
+  delivery:
+    - alexa_devices_announce_all
+    - mobile_push
+```
+
+Each one gets a notification that suits it, so the speakers say the message while the phones show it.
+
+Once that works, the next thing is to [add a notification to an automation](https://supernotify.rhizomatics.org.uk/latest/quick_start/next_steps/#add-a-notification-to-an-automation).
+
+# What to Do Next
+
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/next_steps/
+
+Start with an automation, since that is what notifications are for. The rest are optional, and can be done in any order.
+
+## Add a Notification to an Automation
+
+`supernotify.notify` is an action like any other, so it goes into an automation the usual way. This example sends a notification when a motion sensor in the hallway goes off.
+
+Create an automation, with the motion sensor as the trigger, then choose **Add action** and search for Supernotify:
+
+Fill in the message, and anything else you want from [your first notification](https://supernotify.rhizomatics.org.uk/latest/quick_start/first_notification/index.md), like a target or delivery:
+
+Motion Sensor Automation
+
+```yaml
+alias: Hallway motion notification
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.hallway_motion
+    to: "on"
+actions:
+  - action: supernotify.notify
+    data:
+      title: Motion detected
+      message: Something is moving in the hallway
+      target: person.john_mcdoe
+```
+
+To also hear it on the speakers, add `alexa_devices_announce_all` and `mobile_push` as the deliveries. [Sending Notifications](https://supernotify.rhizomatics.org.uk/latest/usage/notifying/index.md) covers everything else the action can do.
+
+For a fuller worked example, with spoken announcements and a camera picture, see the [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md) recipe.
+
+## Add a Dashboard
 
 [Supernotify Cards](https://github.com/lollox80/supernotify-cards) has lots of focused dashboard cards to control and monitor notifications, send out manually, or test configurations.
 
-## Removal
+The [Dashboard](https://supernotify.rhizomatics.org.uk/latest/configuration/dashboard/index.md) page has a complete example to paste into a new dashboard, which can then be edited visually.
 
-From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
+## Switch People and Deliveries On and Off
 
-### Cleaning Up Config
+Each person Supernotify knows about has a Home Assistant `switch` entity, and so does each delivery. Turn one off to stop someone being bothered, or to silence the speakers for a while, without changing any automations.
 
-1. Any manually created YAML files in the `config` directory will be untouched, remove these manually if confident they won't be needed again.
-1. Any archived notifications will remain, by default in `/config/archive/supernotify` directory unless configured otherwise. Remove this directory if needed.
-1. If using cameras or image attachments, media files may be left, by default in `/config/media/supernotify` directory unless configured otherwise. Remove this directory if needed.
-1. Templates may be left behind, by default in a `supernotify/templates` directory under your Home Assistant config directory unless configured otherwise. Remove this directory if needed.
+## Notify Just Some Devices
+
+Targets can be an **Area**, **Floor** or **Label** as well as a person or a device, so a notification can go to the speakers downstairs, or to everything labelled for the kitchen. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md), and the [FAQs](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md) for common questions.
+
+## Tune the Settings
+
+Archiving, duplicate detection and housekeeping can be changed from the integration's **Configure** option, in **Settings → Devices & Services**. See [Archiving](https://supernotify.rhizomatics.org.uk/latest/configuration/archiving/index.md) and [Duplicate Detection](https://supernotify.rhizomatics.org.uk/latest/configuration/dupe_detection/index.md).
 
 ## Be Inspired
 
 Find lots of ideas with example configuration in the [Recipes](https://supernotify.rhizomatics.org.uk/latest/recipes/index.md).
 
-# Core Concepts
+## Go Further with YAML
 
-Source: https://supernotify.rhizomatics.org.uk/latest/concepts/
+More is possible with some YAML configuration, and all of it is optional:
+
+- Give people an e-mail address or phone number, in [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md)
+- Create your own deliveries, like an HTML e-mail or a fixed set of speakers, in [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md)
+- Change how notifications behave at night, or when nobody is home, with [Scenarios](https://supernotify.rhizomatics.org.uk/latest/configuration/scenarios/index.md)
+- Attach camera snapshots, in [Multimedia](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/index.md)
+
+[Advanced Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/index.md) explains the ideas behind these, and [Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/index.md) is the reference.
+
+## Get Help
+
+Ask at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page, or use an AI agent - see the last answer in the [FAQs](https://supernotify.rhizomatics.org.uk/latest/faqs/index.md).
+
+# Basic Concepts
+
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/
 
 ## How It Fits Together
 
 One notification from an automation can turn into several different notifications, each one shaped for the way it's sent.
 
-1. **Targets** - people are turned into the ways they can be reached, using their [Recipient](#recipient) details
-1. **Deliveries** - the [Deliveries](#delivery) that apply are chosen, by default or by [Scenarios](#scenario)
+Reading the picture from left to right:
+
+1. **Who to notify** - the [targets](#target). People are turned into the ways they can be reached, using their [recipient](#recipient) details
+1. **Delivery** - the [deliveries](#delivery) that apply are chosen, by default or because you asked for them
 1. **Notifications** - each delivery picks out the targets it can use, and sends a notification suited to it, so an e-mail can have a full HTML layout and pictures, while the kitchen speaker gets a short spoken message
+
+Three words cover almost everything in a UI-only setup.
+
+## Target
+
+A target is **who or what gets notified**: a person, a phone, a speaker, an e-mail address, or an area, floor or label that stands for several devices.
+
+Leave targets out, and the notification goes to everyone.
+
+## Recipient
+
+A recipient is **a person, as Supernotify knows them**: their phones and tablets, and optionally an e-mail address and phone number. Recipients are found automatically from the *Person* entities in Home Assistant.
+
+A recipient is not a different kind of target. A person is one of the things a target can be, and the recipient is where Supernotify looks up how to reach them. That is why `person.joe_mctest` works as a target, and you don't need Joe's e-mail address in every automation.
+
+## Delivery
+
+A delivery is **one way of sending a notification**, with a name, like `mobile_push`, `email` or `alexa_devices_announce_all`. Supernotify creates deliveries for whatever it finds in your Home Assistant, and they are what appears in the **Delivery** box of the `supernotify.notify` action.
+
+Leave deliveries out, and Supernotify uses the ones that can work out for themselves where to send, like mobile push and e-mail.
+
+## Priority
+
+Priority is **how urgent a notification is**, on five levels: `minimum`, `low`, `medium`, `high` and `critical`. It is optional, and `medium` if not given. Priority is passed on to the phones, e-mail programs and other things that understand it.
+
+## Two More, for Later
+
+These come up throughout the documentation, and neither is needed to get started.
+
+- A **Transport** is the technical means behind a delivery, usually a Home Assistant integration such as mobile app, SMTP or Alexa Devices. A delivery is a transport plus the settings to use with it, so one transport can have several deliveries, such as a plain `email` and an `html_email`.
+- A **Scenario** is a package of settings with a name, which changes which deliveries are used and how they behave, for example quieter at night. Scenarios are set up in YAML.
+
+[Advanced Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/index.md) covers both, and the rest of what YAML configuration can do.
+
+# Advanced Concepts
+
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/advanced_concepts/
+
+[Basic Concepts](https://supernotify.rhizomatics.org.uk/latest/quick_start/basic_concepts/index.md) has the short version, and the picture of how these fit together. This page goes further into each one, and much of it only matters once you configure Supernotify with YAML.
 
 ## Target
 
@@ -268,9 +429,9 @@ One notification from an automation can turn into several different notification
 
 Info
 
-For the technically minded, there's a [Class Diagram](https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/class_diagram/index.md) of the core classes matching these concepts.
+For the technically minded, there are [Technical Diagrams](https://supernotify.rhizomatics.org.uk/latest/developer/diagrams/index.md) for these concepts.
 
-# Core Principles
+## Core Principles
 
 1. All a notification needs is a message, everything else can be defaulted, including all the targets
 1. If you define something in an action call, it takes precedence over the defaults
@@ -281,9 +442,56 @@ For the technically minded, there's a [Class Diagram](https://supernotify.rhizom
    - Targets can be structured into sub-categories, or a big list of entity ids, device ids, emails and phone numbers
    - Action `data` options like `delivery` can be a single value, list or dictionary mapping
 
-## Developers
+### Developers
 
 See [Developer Concepts](https://supernotify.rhizomatics.org.uk/latest/developer/concepts/index.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](https://supernotify.rhizomatics.org.uk/latest/developer/principles/index.md).
+
+# Removing Supernotify
+
+Source: https://supernotify.rhizomatics.org.uk/latest/quick_start/removing/
+
+From the HACS menu, select `Supernotify` and chose `Remove` from the `...` menu.
+
+### Cleaning Up Config
+
+1. Any manually created YAML files in the `config` directory will be untouched, remove these manually if confident they won't be needed again.
+1. Any archived notifications will remain, by default in `/config/archive/supernotify` directory unless configured otherwise. Remove this directory if needed.
+1. If using cameras or image attachments, media files may be left, by default in `/config/media/supernotify` directory unless configured otherwise. Remove this directory if needed.
+1. Templates may be left behind, by default in a `supernotify/templates` directory under your Home Assistant config directory unless configured otherwise. Remove this directory if needed.
+
+# Frequently Asked Questions
+
+Source: https://supernotify.rhizomatics.org.uk/latest/faqs/
+
+## Target Selection
+
+**Q**: If I define a `label_id` and an `area_id`, and in that area I have 3 devices, is the `label_id` treated as an `AND`? (so it will send to just devices in `label_id` that have `label_id`), or an `OR`, (so it sends to all devices that are in `area_id`, as well as all devices in the system that have `label_id`?)
+
+**A**: It works as an OR selector - give me all everything that is in area X OR has label Y, so all the `area_id`,`floor_id` and `label` targets all add up to one big list. This is part of the standard Home Assistant [target selectors](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) which happens outside of Supernotify, and works the same for all integrations.
+
+**Q**: How do I send a notification to only 3 of my Alexa speakers and not the rest.
+
+**A**: There are a few ways of doing this
+
+Option 1 - Use the Home Assistant [Target Selector](https://www.home-assistant.io/docs/blueprint/selectors/#target-selector) on the `supernotify.notify` action to pick the speakers by their **Area**, **Floor** or **Label**.
+
+Option 2 - Create a separate *Delivery* (YAML only at present) for these speakers, and list them as targets. Then when setting up notifications, pick this delivery from the list.
+
+```yaml
+alexa_inform:
+    alias: Ask all the Alexas apart from bedrooms to speak the notification
+    transport: alexa_devices
+    target:
+    - notify.kitchen_alexa_speak
+    - notify.living_room_flex_speak
+    - notify.studio_speak
+```
+
+**Q**: My question isn't here, and I can't get find answer in the docs.
+
+**A**: Try using an AI agent if you have one, like Claude or ChatGPT, or the Home Assistant chat bot - the Supernotify site has agent-accessible help, and can give good suggestions and even write or rewrite your YAML for you.
+
+Otherwise, ask a human at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page for general help, or the [Issues](https://github.com/rhizomatics/supernotify/issues) if you've found a bug.
 # Using Supernotify
 
 # Usage
@@ -1363,7 +1571,7 @@ While SSML can add a variety of sounds to voice assistants, the best way to use 
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/
 
-Start with the simplest possible setup, [added from the UI](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md) with no YAML at all - see the [minimal](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md) page. This will allow you to notify using *Notify Entities* and push mobile notifications to all the devices registered in Home Assistant, without specifying any targets, or any other config.
+Start with the simplest possible setup, [added from the UI](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md) with no YAML at all - see the [minimal](https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/index.md) page. This will allow you to notify using *Notify Entities* and push mobile notifications to all the devices registered in Home Assistant, without specifying any targets, or any other config.
 
 This page onwards covers YAML configuration - still how [Deliveries](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/index.md), transports, scenarios, recipients and cameras are set up, though archive, duplicate detection and housekeeping can also be configured from the UI.
 
@@ -2059,6 +2267,7 @@ delivery:
 
 - The fallbacks are tried after the other deliveries, one at a time, stopping at the first one that sends.
 - A delivery that has already been tried for this notification is not tried again, so nothing is sent twice.
+- A fallback that would make exactly the same call as another delivery that already sent - the same transport, action, targets, text and data - is skipped as a `DUPE`, so the person isn't sent the same thing twice. A fallback with other targets, or its own `data`, still sends.
 - Only one level: a fallback's own `fallback:` isn't followed, the order of the list is the chain.
 - A fallback that is switched off, or skipped by its own `conditions`, `priority` or `occupancy`, is passed over.
 - The fallback shows in the archive with `delivery_provenance` `enabled_by: fallback:alexa_announce`.
@@ -3013,7 +3222,7 @@ Both forms can be combined freely and nest to any depth.
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/yaml/
 
-By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md).
+By default, advanced configuration - `delivery`, `transports`, `scenarios`, `recipients`, `cameras`, `action_groups`, `links` and `snooze` - lives in `configuration.yaml`, under a top-level `supernotify` section, or split out, see below. Everything else (template/media paths, archive, duplicate detection, housekeeping, and the action name) is managed entirely from the Integrations web page - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
 
 ## Naming the Integration
 
@@ -3580,7 +3789,7 @@ supernotify:
 
 Source: https://supernotify.rhizomatics.org.uk/latest/configuration/examples/minimal/
 
-The smallest possible setup no longer needs any YAML at all: go to **Settings → Devices & Services → Add Integration**, search for **Supernotify**, and accept the defaults. Mobile push, an existing SMTP integration or notify entities, and recipients from Home Assistant persons are all discovered automatically - see [Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md).
+The smallest possible setup no longer needs any YAML at all: go to **Settings → Devices & Services → Add Integration**, search for **Supernotify**, and accept the defaults. Mobile push, an existing SMTP integration or notify entities, and recipients from Home Assistant persons are all discovered automatically - see [Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md).
 
 ```yaml
  # There is no longer any minimal YAML since the core configuration
@@ -5942,33 +6151,34 @@ Ideas for Home Assistant notifications using Supernotify, with example configura
 
 Select a tag to see only the recipes with that tag, and select it again to see them all.
 
-- [Backup Alexa Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/index.md) alexacondition
 - [Alexa Whispering Low Priority Announcements](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_whisper/index.md) alexascenarioconditiontts
-- [All Sirens Go!](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md) alexa433mhzcriticalemergencyrest_apichimemqttsiren
-- [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzappdaemon
+- [All Sirens Go!](https://supernotify.rhizomatics.org.uk/latest/recipes/all_sirens_go/index.md) alexacriticalemergencyrest_apichimemqttsiren
+- [Apply a Scenario Exception](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md) scenariotemplatecondition
+- [Backup Alexa Integration](https://supernotify.rhizomatics.org.uk/latest/recipes/alexa_alternative_integration/index.md) alexacondition
 - [Basic HTML Formatted Email Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/basic_html_email/index.md) emailscenariohtml_emailzero_yaml_config
 - [Bedtime Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/bedtime/index.md) scenariocondition
-- [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md) delivery
-- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancycondition
-- [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushiosandroidactionable_notifications
-- [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
-- [Use Live Activities to Track Dishwasher Cycle](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md) iosandroidlivemobile_push
+- [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) frigateptz
 - [CC All Emails](https://supernotify.rhizomatics.org.uk/latest/recipes/email_cc/index.md) emailhtml_email
-- [Apply a Scenario Exception](https://supernotify.rhizomatics.org.uk/latest/recipes/except_scenario/index.md) scenariotemplatecondition
-- [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushiosmacos
-- [Fixed Notification Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md) deliverytargets
-- [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_configios
+- [Channel Specific Messages](https://supernotify.rhizomatics.org.uk/latest/recipes/channel_specific_messages/index.md)
+- [Content Based Escalation](https://supernotify.rhizomatics.org.uk/latest/recipes/content_escalation/index.md) scenariooccupancycondition
+- [Context-Sensitive Mobile Actions](https://supernotify.rhizomatics.org.uk/latest/recipes/contextual_mobile_actions/index.md) scenarioalarm_control_panelmobile_pushandroid
+- [Debug a Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/debug_integration/index.md) archivingdebugginglogging
+- [Fix Apple Notifications from Frigate Blueprint](https://supernotify.rhizomatics.org.uk/latest/recipes/fix_frigate_apple_push/index.md) frigatemobile_pushapplemacos
+- [Fixed Notification Targets](https://supernotify.rhizomatics.org.uk/latest/recipes/fixed_targets/index.md)
+- [Frigate Blueprint for Email and Mobile Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/frigate_emails/index.md) frigateemailzero_yaml_config
 - [General Tips for Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/general_config_tips/index.md) mqttsms
 - [Home Alone - Tuned Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md) scenarioconditionoccupancy
-- [Camera PTZ For Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md) frigateptz
-- [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md) mqttsiren
-- [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md) dashboardsupernotify_cards
-- [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) opentelemetryloggingzero_yaml_configevents
+- [Notification Dashboard](https://supernotify.rhizomatics.org.uk/latest/recipes/notification_dashboard/index.md) dashboard
 - [Notify Whoever's Home, Fall Back to Everyone](https://supernotify.rhizomatics.org.uk/latest/recipes/presence_routing_with_fallback/index.md) occupancyscenario
-- [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
+- [OTEL Event Generation](https://supernotify.rhizomatics.org.uk/latest/recipes/otel_events/index.md) loggingzero_yaml_config
 - [Seasonal Greetings](https://supernotify.rhizomatics.org.uk/latest/recipes/seasonal_greetings/index.md) holidayscenarioalexachimecondition
-- [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md) mobile_pushiosandroidzero_yaml_config
-- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattsaccessibilitytemplatecondition
+- [Send Notifications from AppDaemon Apps](https://supernotify.rhizomatics.org.uk/latest/recipes/appdaemon_cameras/index.md) scenarioptzcameraappdaemon
+- [Send out an HTML Email on Home Assistant Restart](https://supernotify.rhizomatics.org.uk/latest/recipes/restart_email/index.md) automationemailhtml_emailtemplatezero_yaml_config
+- [Simple Mobile Push Notifications](https://supernotify.rhizomatics.org.uk/latest/recipes/simple_mobile_push/index.md) mobile_pushandroidapplezero_yaml_config
+- [Someone's at the Door](https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/index.md) doorbellalexavoice_assistantcameramobile_pushchimeoccupancyzero_yaml_config
+- [Trigger MQTT Device for Notification](https://supernotify.rhizomatics.org.uk/latest/recipes/mqtt/index.md) mqttsiren
+- [Use Live Activities to Track Dishwasher Cycle](https://supernotify.rhizomatics.org.uk/latest/recipes/dishwasher_live_activity/index.md) androidlivemobile_push
+- [Voice Described CCTV with GenAI](https://supernotify.rhizomatics.org.uk/latest/recipes/voice_described_cctv/index.md) frigategenaialexattscameraaccessibilitytemplatecondition
 
 # Recipe - Alexa Alternative Integration
 
@@ -7223,7 +7433,7 @@ Send mobile push notifications without any configuration.
 
 All you need is:
 
-1. Install Supernotify from HACS ([Getting Started](https://supernotify.rhizomatics.org.uk/latest/getting_started/index.md))
+1. Install Supernotify from HACS ([Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md))
    - By default, the configuration will have *Mobile Device Discovery* and *Person Discovery* switched on
 1. If they don't already have it, set up the [Home Assistant Companion App](https://companion.home-assistant.io) for each person/device to be notified
    - This needs a *username* and *password* for each user, see [Adding a Person to Home Assistant](https://www.home-assistant.io/integrations/person/#adding-a-person-to-home-assistant)
@@ -7233,6 +7443,115 @@ All you need is:
 ## Variations
 
 See [Mobile Push](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md) for lots more options to add to the notification, such as camera snapshots, sounds, vibrations, links, grouping, priority, badges and more.
+
+# Recipe - Someone's at the Door
+
+Source: https://supernotify.rhizomatics.org.uk/latest/recipes/someone_at_the_door/
+
+## Purpose
+
+Have the speakers say that someone is at the door, then add a picture from the porch camera for the phones. A good first automation after the [Quick Start](https://supernotify.rhizomatics.org.uk/latest/quick_start/index.md), and the first two steps need no Supernotify configuration at all.
+
+## Implementation
+
+### Step 1 - Announce on the Speakers
+
+Create an automation with the doorbell as its trigger, and a `supernotify.notify` action that uses a spoken delivery.
+
+If you have Alexa Devices, the `alexa_devices_announce_all` delivery is already there. For other speakers, use a [TTS](https://supernotify.rhizomatics.org.uk/latest/transports/tts/index.md) delivery.
+
+Doorbell Automation
+
+```yaml
+alias: Someone at the door
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.front_doorbell
+    to: "on"
+actions:
+  - action: supernotify.notify
+    data:
+      message: Someone is at the front door
+      delivery: alexa_devices_announce_all
+```
+
+### Step 2 - Add a Picture from the Porch Camera
+
+Use the *Camera* selector on the notification action to add the camera, and `mobile_push` to the deliveries.
+
+If you were to edit the YAML for the automation, the action would look like:
+
+Doorbell Action with Camera Snapshot
+
+```yaml
+  - action: supernotify.notify
+    data:
+      title: Front door
+      message: Someone is at the front door
+      media:
+        camera_entity_id: camera.porch
+      delivery:
+        - alexa_devices_announce_all
+        - mobile_push
+```
+
+Supernotify takes one snapshot from the camera and gives it to each delivery that can show a picture. The speakers still just say the message, and the phones show the picture with it.
+
+Snapshots are stored for a while on the file system, so check the [Multimedia Basic Configuration](https://supernotify.rhizomatics.org.uk/latest/configuration/multimedia/#basic-configuration) if the picture doesn't arrive.
+
+## Variations
+
+### Chimes
+
+Play a doorbell sound instead of, or as well as, the spoken announcement, on Alexa devices, sirens or cheap 433Mhz chimes. Set up a `doorbell` alias as shown in [Chime](https://supernotify.rhizomatics.org.uk/latest/transports/chime/#aliases), then ask for that tune:
+
+```yaml
+      delivery:
+        - chime
+        - mobile_push
+      delivery_control:
+        chime:
+          data:
+            chime_tune: doorbell
+```
+
+### E-mail or Text if Nobody is Home
+
+A spoken announcement is no use to an empty house. Give the `email` and `sms` deliveries an `occupancy` of `all_out`, so they are only used when everyone is out:
+
+Supernotify Config Snippet
+
+```yaml
+transports:
+  email:
+    delivery_defaults:
+      occupancy: all_out
+  sms:
+    delivery_defaults:
+      occupancy: all_out
+```
+
+Then add `email` and `sms` to the deliveries in the action. The e-mail has the camera picture attached.
+
+This needs an e-mail address or phone number for each person, see [People](https://supernotify.rhizomatics.org.uk/latest/configuration/people/index.md), and for texts one of the [SMS](https://supernotify.rhizomatics.org.uk/latest/transports/sms/index.md) integrations.
+
+### Don't Announce to an Empty House
+
+Set **Spoken delivery occupancy** to `only_in` in the integration's **Configure** option, under **Delivery Control**, so the speakers stay quiet when nobody is home. See [Delivery Control](https://supernotify.rhizomatics.org.uk/latest/configuration/deliveries/#delivery-control).
+
+### Only Some Speakers
+
+Leave out `alexa_devices_announce_all`, use the `alexa_devices` delivery, and choose the speakers as targets, by entity, area, floor or label. See [Targets](https://supernotify.rhizomatics.org.uk/latest/usage/targets/index.md).
+
+### Move the Camera First
+
+If the porch camera can pan, tilt or zoom, have it [move to the door before the snapshot](https://supernotify.rhizomatics.org.uk/latest/recipes/move_a_camera_for_snapshot/index.md).
+
+## Further Reading
+
+- [Alexa Devices Transport](https://supernotify.rhizomatics.org.uk/latest/transports/alexa_devices/index.md)
+- [Mobile Push Transport](https://supernotify.rhizomatics.org.uk/latest/transports/mobile_push/index.md)
+- [Home Alone](https://supernotify.rhizomatics.org.uk/latest/recipes/home_alone/index.md), for changing notifications by who is home
 
 # Recipe - Voice Described CCTV with GenAI
 
