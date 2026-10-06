@@ -20,7 +20,7 @@ Click here to go to latest.
   {% set card_description = page.meta.description or config.site_description %}
   {% set card_lang = page.url.split("/")[0] %}
   {% set card_suffix = "-" ~ card_lang if card_lang in ["de", "es", "fr", "hi", "it", "ja", "nl", "pl", "pt", "zh-Hans"] else "" %}
-  {% set card_image = config.site_url ~ "assets/images/social-card" ~ card_suffix ~ ".png" %}
+  {% set card_image = config.site_url.rstrip("/") ~ "/assets/images/social-card" ~ card_suffix ~ ".png" %}
   <meta property="og:type" content="website">
   <meta property="og:title" content="{{ card_title }}">
   <meta property="og:description" content="{{ card_description }}">
