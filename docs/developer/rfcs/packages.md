@@ -402,25 +402,52 @@ Live Activities would be a great fit for ongoing events in Frigate, where its po
 
 ## MVP
 
+This supersedes the earlier discussions on approach and implementation.
+
+Its aim is to get a basic working component that can be custom installed and get feedback working with real appliances, and if need be with beta versions of Supernotify for any tentative or fast-changing needed to that core.
+
 - Household appliances package
   - Detects appliances that have an identifiable cycle
     - Creates a 'live activity' on mobile apps for the duration of the cycle
+    - Subscribe to progress tracker and push updates to mobile apps only
     - Also start notifications for non-mobile notification and end notification for all.
     - Limited to Bosch/Neff HomeConnect appliances at first, and English only
-  - Separate HACS plugin,
-    - Working title Appliances Supernotification
+  - Separate HACS plugin
+    - Working title *Appliances Supernotifications*
+    - Separate git repo under Rhizomatics, `appliances_supernotifications`
     - Needs supernotify to work fully
     - Minimal non-supernotify functionality to use Notify Entities with `send_message`, no live activities, just a start and end notification to selected target
     - Setup screen has warning if supernotify not present, info on limitations without it, and pointer to install via HACS
+    - iOS support at minimum, Android too if quick
 Supernotify changes
+ - Potentially some identifier for the cycle, and the watched device
+ - For MVP, drive everything from the packager, avoiding changes to Supernotify unless its really hacky inside the packager, and use lessons learned to refine Supernotify integration
+   - Nice add from Supernotify is having a high level way to start/progress/end activity bars without worrying about Android vs iOS and without knowing about final pseudo-notifications to clear bars
+State Management
  - Longer running state to manage the live activity bars.
+   - Primarily the state is there to make sure that live activity bars on phones get closed one way or another
+     - Can leave this to MVP++
+     - Useful experiment to see how much can be done without any new state and any Supernotify changes
+   - If possible, state managed entirely elsewhere, however until the Mobile App supported this likely to need the 'package' plugin to support.
+   - Since there'll be multiple packages, the code to manage this state either needs a separate library, is duplicated, or hard requirement for Supernotify
+     - PROPOSED RESOLUTION - shared code to manage live activities or other long running state lives in Supernotify. State itself remains in the packager. If Supernotify not installed then all Live Activities simply not supported, so all package is doing is start and end notifications triggered entirely by the appliance integration
 Install Behavior
  - Searches for likely entities for known platforms
    - Re-searches whenever new entities for those platforms are added.
-   - Each appliance has a watcher which is like an instance of the component
+   - Each appliance has a config entry
      - On the integration home page in home assistant easy to see everything its configured to watch and disable/delete/edit.
+     - Review post-MVP if config entry or sub-entry better for these use cases
  Settings UI
    - Override default message and title for both start and end
    - Set explicit targets.
    - If supernotify present can select deliveries.
    - If no supernotify, target list is mandatory for notify entities only
+
+MVP++
+- Other appliances, pick a different class or a different style vendor integration (e.g. cloud vs local), to get better stress on the solution
+  - Suggestion, Ecovacs robot vacuum
+- Power monitor use case, start live activity when the power goes over a threshold - associated with say a washing machine - and end the activity when the power drops, with grace period/rounding etc for short spikes
+- Android integration if only iOS on MVP 1
+- Intermediate progress tracking for % completion and ETA update
+- Sweeper process to close live activity bars after a grace period if the appliance end signal hasn't been received
+  - Also notify a warning that the appliance is either stuck or home assistant issue preventing closure
