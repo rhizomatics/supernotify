@@ -75,6 +75,27 @@ iOS doesn't support it for them.
     Don't confuse this with [Action Groups](../usage/mobile_actions.md#action-groups) - `action_groups:`
     is Supernotify's own unrelated concept for reusable sets of actionable-notification buttons. The name clash is with the Companion App's own `group` attribute, not with Supernotify's action groups.
 
+## Tap URL and Live View
+
+`mobile_push_tap_url` sets what opens when the notification is tapped, for both platforms - it becomes
+`url` on iOS and `clickAction` on Android. A path such as `/lovelace/cameras` opens in the Companion
+App, a full URL in the browser.
+
+`mobile_push_live_view_entity` sets the camera iOS streams live when the notification is expanded,
+independently of where the image comes from - for example a Frigate snapshot as the image and the
+camera itself as the live view. Android has no live view, so it's left out there.
+
+```yaml
+  - action: supernotify.notify
+    data:
+      message: Car on the driveway
+      media:
+        snapshot_url: https://frigate.local/api/events/1696512345.123-abc/snapshot.jpg
+      extra_data:
+        mobile_push_tap_url: /lovelace/cameras
+        mobile_push_live_view_entity: camera.driveway
+```
+
 ## Default Delivery
 
 A default Delivery called `mobile_push` will be automatically generated for Mobile Push transport if no explicit ones

@@ -732,3 +732,52 @@ async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
     assert e.calls[0].action_data is not None
     data = e.calls[0].action_data["data"]
     assert data["image"] == "http://my.home/precomputed.jpg"
+
+
+async def _deliver_to(manufacturer: str, data: dict[str, Any], media: dict[str, Any] | None = None) -> dict[str, Any]:
+    ctx = TestingContext(deliveries={"media_test": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}})
+    await ctx.test_initialize()
+    uut = cast("MobilePushTransport", ctx.transport(TRANSPORT_MOBILE_PUSH))
+    e = Envelope(
+        Delivery("media_test", ctx.delivery_config("media_test"), uut),
+        Notification(ctx, message="hello there", action_data={"media": media} if media else None),
+        target=Target({"mobile_app_id": ["mobile_app_test_user_phone"]}),
+        data=data,
+    )
+    device = TrackedDeviceDetails("id001", manufacturer=manufacturer, model="Phone")
+    with patch.object(ctx.hass_api, "mobile_app_by_id", return_value=device):
+        assert await uut.deliver(e) is True
+    assert e.calls[0].action_data is not None
+    # an empty data block is pruned from the call
+    return e.calls[0].action_data.get("data", {})
+
+
+async def test_deliver_tap_url_ios() -> None:
+    data = await _deliver_to("Apple", {"mobile_push_tap_url": "/lovelace/cameras"})
+    assert data["url"] == "/lovelace/cameras"
+    assert "clickAction" not in data
+    assert "mobile_push_tap_url" not in data
+
+
+async def test_deliver_tap_url_android() -> None:
+    data = await _deliver_to("Google", {"mobile_push_tap_url": "https://example.com/clip"})
+    assert data["clickAction"] == "https://example.com/clip"
+    assert "url" not in data
+    assert "mobile_push_tap_url" not in data
+
+
+async def test_deliver_live_view_entity_independent_of_snapshot_image() -> None:
+    data = await _deliver_to(
+        "Apple",
+        {"mobile_push_live_view_entity": "camera.driveway"},
+        media={"snapshot_url": "https://frigate.local/api/events/123/snapshot.jpg"},
+    )
+    assert data["image"] == "https://frigate.local/api/events/123/snapshot.jpg"
+    assert data["entity_id"] == "camera.driveway"
+    assert "mobile_push_live_view_entity" not in data
+
+
+async def test_deliver_live_view_entity_is_ios_only() -> None:
+    data = await _deliver_to("Google", {"mobile_push_live_view_entity": "camera.driveway"})
+    assert "entity_id" not in data
+    assert "mobile_push_live_view_entity" not in data
