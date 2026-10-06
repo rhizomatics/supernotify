@@ -834,6 +834,9 @@ async def test_android_tts_is_its_own_call_after_the_notification(
     assert tts["message"] == "TTS"
     assert tts["data"]["tts_text"] == "smoke in the kitchen"
     assert tts["data"].get("media_stream") == media_stream
+    # a critical's TTS goes as fast as the notification, or it waits for the phone to be unlocked
+    urgent = {"ttl": 0, "priority": "high"} if priority == PRIORITY_CRITICAL else {}
+    assert {k: tts["data"][k] for k in ("ttl", "priority") if k in tts["data"]} == urgent
 
 
 async def test_iphone_gets_no_android_commands_or_tts(unmocked_config: Context) -> None:
@@ -846,3 +849,9 @@ async def test_iphone_gets_no_android_commands_or_tts(unmocked_config: Context) 
 
     assert len(e.calls) == 1
     assert e.calls[0].action_data["message"] == "smoke"  # type: ignore[index]
+
+
+async def test_android_commands_for_critical_go_with_high_priority(unmocked_config: Context) -> None:
+    e = await _deliver_to(unmocked_config, "Samsung", PRIORITY_CRITICAL, {"mobile_push_command_screen_on": True})
+
+    assert e.calls[0].action_data == {"message": "command_screen_on", "data": {"ttl": 0, "priority": "high"}}

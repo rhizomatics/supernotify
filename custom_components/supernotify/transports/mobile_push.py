@@ -256,14 +256,19 @@ class MobilePushTransport(Transport):
         """Notification commands and TTS, which the companion app takes as the `message` of a call of
         their own rather than as notification data - commands to go before the notification, so the
         screen is on or Do Not Disturb off when it arrives, and TTS after it."""
+        # a call without high priority can wait until the phone is unlocked - a critical's TTS would then be
+        # spoken late, maybe twice - so for critical these go as fast as the notification itself
+        urgent: dict[str, Any] = (
+            {"ttl": ANDROID_CRITICAL_TTL, "priority": ANDROID_CRITICAL_PRIORITY} if priority == const.PRIORITY_CRITICAL else {}
+        )
         before: list[dict[str, Any]] = []
         for key in ("command_dnd", "command_ringer_mode", "command_screen_on"):
             value = push_data[key]
             if value:
-                before.append({"message": key, ATTR_DATA: {} if value is True else {"command": value}})
+                before.append({"message": key, ATTR_DATA: ({} if value is True else {"command": value}) | urgent})
         after: list[dict[str, Any]] = []
         if push_data["tts_text"]:
-            tts_data: dict[str, Any] = {"tts_text": push_data["tts_text"]}
+            tts_data: dict[str, Any] = {"tts_text": push_data["tts_text"], **urgent}
             if push_data["alarm_stream_max"] or priority == const.PRIORITY_CRITICAL:
                 # at full volume for critical - on a watch the alarm volume can be too low to hear,
                 # and the companion app puts the volume back afterwards
