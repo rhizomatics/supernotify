@@ -406,6 +406,8 @@ This supersedes the earlier discussions on approach and implementation.
 
 Its aim is to get a basic working component that can be custom installed and get feedback working with real appliances, and if need be with beta versions of Supernotify for any tentative or fast-changing needed to that core.
 
+Repo: https://github.com/rhizomatics/appliances_supernotifications
+
 - Household appliances package
   - Detects appliances that have an identifiable cycle
     - Creates a 'live activity' on mobile apps for the duration of the cycle
