@@ -1,4 +1,5 @@
 ---
+title: Advanced Concepts
 tags:
   - transport
   - delivery
@@ -6,20 +7,11 @@ tags:
   - target
   - recipient
   - principles
-description: Core Concepts of Supernotify for Home Assistant, including Transport, Delivery, Scenario and Recipient
+description: Advanced concepts of Supernotify for Home Assistant, including Transport, Delivery, Scenario and Recipient, mostly for YAML configuration
 ---
-# Core Concepts
+# Advanced Concepts
 
-## How It Fits Together
-
-One notification from an automation can turn into several different notifications, each one shaped for the way it's sent.
-
-![One notification from an automation becoming an e-mail, two phone push alerts, a text and a speaker announcement](assets/images/concepts_flow.svg)
-
-1. **Targets** - people are turned into the ways they can be reached, using their [Recipient](#recipient) details
-2. **Deliveries** - the [Deliveries](#delivery) that apply are chosen, by default or by [Scenarios](#scenario)
-3. **Notifications** - each delivery picks out the targets it can use, and sends a notification suited to it,
-   so an e-mail can have a full HTML layout and pictures, while the kitchen speaker gets a short spoken message
+[Basic Concepts](basic_concepts.md) has the short version, and the picture of how these fit together. This page goes further into each one, and much of it only matters once you configure Supernotify with YAML.
 
 ## Target
 - Who or what gets notified and how
@@ -32,17 +24,17 @@ One notification from an automation can turn into several different notification
     - `person_id` to use the *Recipient* features
     - standard Home Assistant target selectors, `label_id`,`floor_id` and `area_id`.
     - *Group* targets (both new and old style Home Assistant groups)
-- Targets can be qualified for a specific **Target Category**, like `discord_channel:839439434`, see [Category Prefixes](usage/targets.md#category-prefixes) for more info.
+- Targets can be qualified for a specific **Target Category**, like `discord_channel:839439434`, see [Category Prefixes](../usage/targets.md#category-prefixes) for more info.
 - Targets are picked off the list by notifications by the best integration to handle it.
   - For example, a Notify Entity on Alexa Devices will be handled by the Alexa Devices transport whereas a generic Notify Entity would fall back to the less capable Notify Entity transport.
-- See [Targets](./usage/targets.md) for more information
+- See [Targets](../usage/targets.md) for more information
 
 ## Recipient
 - A person, with optional e-mail address, phone number, mobile devices or custom targets.
   - By default auto-discovered from the User accounts and Person entities already on Home Assistant
 - This makes it easier to refer to people in automations, use `person.joe_mctest` rather than trying to remember Joe's email address in every automation notification. Also works for phone numbers if compatible SMS integration installed, or custom identifiers like Telegram or Discord.
 - Each recipient also has a Home Assistant `switch` entity, so it's easy to stop someone being bothered by notifications
-- See [People](configuration/people.md) and [Recipes](recipes/index.md) for more detail
+- See [People](../configuration/people.md) and [Recipes](../recipes/index.md) for more detail
 
 ## Transport
 
@@ -53,7 +45,7 @@ One notification from an automation can turn into several different notification
 - The transport adaptor allows a single notification to be sent to many platforms, even when they all have different and mutually incompatible interfaces.
 - They adapt notifications to the transport, pruning out attributes they can't accept, reshaping `data` structures, selecting just the appropriate targets, and allowing additional fine-tuning where it's possible.
 - Each transport has a default configuration, which allows lots of fine tuning and defaults to be made, saving need to add the same values into every notification.
-- See [Transports](transports/index.md) for more detail
+- See [Transports](../transports/index.md) for more detail
 
 ## Delivery
 
@@ -64,8 +56,8 @@ One notification from an automation can turn into several different notification
 - Transports which can definitively select targets, like Email, Mobile Push, SMS, Alexa Devices and Notify Entity, are included by default in handling targets.
   - Others can be included via configuration, by using Scenarios or asking for them to be included in a notification
 - You can define your own deliveries, with a name of your choosing, and have multiple deliveries for a single transport, for example a plain `email` and `html_email` deliveries.
-- The [Generic Transport](transports/generic.md) acts as a *toolbox* for creating a delivery for almost anything Home Assistant could do that's not already covered by a standard Transport
-- See [Deliveries](configuration/deliveries.md) and [Recipes](recipes/index.md) for more detail
+- The [Generic Transport](../transports/generic.md) acts as a *toolbox* for creating a delivery for almost anything Home Assistant could do that's not already covered by a standard Transport
+- See [Deliveries](../configuration/deliveries.md) and [Recipes](../recipes/index.md) for more detail
 
 ## Scenario
 - A package of settings that can be switched on by name, or automatically by Home Assistant conditions.
@@ -73,7 +65,7 @@ One notification from an automation can turn into several different notification
   - Conditions include the text of the message, so a Frigate notification about birds on the patio could be notified differently than a prowler at a window
 - Use scenarios to make notifications less obtrusive at night, or more festive on holidays, or prioritize some messages
 - They make it easy to apply overrides in one place to many different deliveries or notifications, and are the key to making notification calls in your automations radically simpler
-- See [Scenarios](configuration/scenarios.md) and [Recipes](recipes/index.md) for more detail
+- See [Scenarios](../configuration/scenarios.md) and [Recipes](../recipes/index.md) for more detail
 
 ## Priority
 - An urgency level for notifications
@@ -83,9 +75,9 @@ One notification from an automation can turn into several different notification
    - Supernotify has its own e-mail integration, which will translate priority into a way Outlook, Apple Mail etc can understand
 
 !!! info
-    For the technically minded, there are [Technical Diagrams](developer/diagrams/index.md) for these concepts.
+    For the technically minded, there are [Technical Diagrams](../developer/diagrams/index.md) for these concepts.
 
-# Core Principles
+## Core Principles
 
 1. All a notification needs is a message, everything else can be defaulted, including all the targets
 2. If you define something in an action call, it takes precedence over the defaults
@@ -96,6 +88,6 @@ One notification from an automation can turn into several different notification
    - Targets can be structured into sub-categories, or a big list of entity ids, device ids, emails and phone numbers
    - Action `data` options like `delivery` can be a single value, list or dictionary mapping
 
-## Developers
+### Developers
 
-See [Developer Concepts](developer/concepts.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](developer/principles.md).
+See [Developer Concepts](../developer/concepts.md) for how notifications flow through deliveries, targets and *Envelopes*, and the [Design Principles](../developer/principles.md).

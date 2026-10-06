@@ -286,7 +286,7 @@ rules:
   docs-use-cases:
     status: done
     comment: |
-      docs/concepts.md and docs/recipes/ cover use cases
+      docs/quick_start/ and docs/recipes/ cover use cases
 
   dynamic-devices:
     status: exempt

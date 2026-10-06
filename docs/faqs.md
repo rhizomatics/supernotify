@@ -30,4 +30,4 @@ alexa_inform:
 
 Otherwise, ask a human at the [Discussions](https://github.com/rhizomatics/supernotify/discussions) page for general help, or the [Issues](https://github.com/rhizomatics/supernotify/issues) if you've found a bug.
 
-![Example Help from Claude](assets/images/claude_help.png){width=500}
+![Example Help from Claude](assets/images/claude_help.png){width=700}

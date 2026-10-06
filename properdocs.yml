@@ -65,6 +65,10 @@ plugins:
         - options.md*
 
   - autorefs
+  - redirects:
+      redirect_maps:
+        getting_started.md: quick_start/index.md
+        concepts.md: quick_start/basic_concepts.md
   - pagetree
   - optimize
   - tags:
@@ -91,8 +95,13 @@ plugins:
       sections:
         Start here:
           - index.md: Overview of what Supernotify does
-          - getting_started.md: Install, configure and send a first notification
-          - concepts.md: Core concepts - transports, deliveries, scenarios, recipients and targets
+          - quick_start/index.md: Quick Start overview
+          - quick_start/installation.md: Install from HACS and set up from the UI, with no YAML
+          - quick_start/first_notification.md: Send a first notification, to everyone, one person or the speakers
+          - quick_start/next_steps.md: What to do next - automations, a dashboard, switches, targets and recipes
+          - quick_start/basic_concepts.md: Basic concepts - targets, recipients, deliveries and priority
+          - quick_start/advanced_concepts.md: Advanced concepts - transports, deliveries, scenarios, recipients and targets
+          - quick_start/removing.md: Remove Supernotify and clean up what it leaves behind
           - faqs.md: Frequently asked questions, with short answers
         Using Supernotify:
           - usage/*.md
