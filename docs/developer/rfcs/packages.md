@@ -448,7 +448,8 @@ Install Behavior
    - If supernotify present can select deliveries.
    - If no supernotify, target list is mandatory for notify entities only
 
-MVP++
+### MVP++
+
 - Other appliances, pick a different class or a different style vendor integration (e.g. cloud vs local), to get better stress on the solution
   - Suggestion, Ecovacs robot vacuum
 - Power monitor use case, start live activity when the power goes over a threshold - associated with say a washing machine - and end the activity when the power drops, with grace period/rounding etc for short spikes
@@ -460,3 +461,4 @@ MVP++
   - Sub-cycle phase change, e.g. 'oven pre-heat', 'rinse cycle'
 - Sweeper process to close live activity bars after a grace period if the appliance end signal hasn't been received
   - Also notify a warning that the appliance is either stuck or home assistant issue preventing closure
+- Nicer transition to without->with Supernotify, so not losing any config or at least been given the choice and explained the effect
