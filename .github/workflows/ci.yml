@@ -88,13 +88,18 @@ jobs:
           sudo apt-get install -y libturbojpeg
           uv sync --dev --python ${{ matrix.python-version }}
 
+      # --no-config: otherwise the override-dependencies in pyproject.toml silently keep the locked
+      # homeassistant; the test harness has to move with it, as it is built against one HA release
       - name: Pin Home Assistant ${{ matrix.ha-version }}
         if: matrix.ha-override
-        run: uv pip install --no-deps "homeassistant==${{ matrix.ha-override }}"
+        run: |
+          uv pip install --no-config "homeassistant==${{ matrix.ha-override }}" pytest-homeassistant-custom-component
+          uv run --no-sync python -c "import homeassistant.const as c; v = c.__version__; print('Home Assistant', v); assert v.startswith('${{ matrix.ha-version }}.'), v"
 
+      # --no-sync: a plain uv run would re-sync to the lock and undo the pin above
       - name: pytest
         run: |
-          uv run pytest \
+          uv run --no-sync pytest \
             --junitxml=junit/test-results-${{ matrix.python-version }}-ha${{ matrix.ha-version }}.xml \
             --cov=custom_components.supernotify \
             --cov-report=xml \
