@@ -12,8 +12,7 @@ description: Core Concepts of Supernotify for Home Assistant, including Transpor
 
 ## How It Fits Together
 
-One notification from an automation can turn into several different notifications, each one shaped for the
-way it's sent.
+One notification from an automation can turn into several different notifications, each one shaped for the way it's sent.
 
 ![One notification from an automation becoming an e-mail, two phone push alerts, a text and a speaker announcement](assets/images/concepts_flow.svg)
 
@@ -84,7 +83,7 @@ way it's sent.
    - Supernotify has its own e-mail integration, which will translate priority into a way Outlook, Apple Mail etc can understand
 
 !!! info
-    For the technically minded, there's a [Class Diagram](developer/diagrams/class_diagram.md) of the core classes matching these concepts.
+    For the technically minded, there are [Technical Diagrams](developer/diagrams/index.md) for these concepts.
 
 # Core Principles
 

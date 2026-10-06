@@ -104,7 +104,8 @@ docs=[
     "mkdocs-meta-descriptions-plugin",
     "mike",
     "mkdocs-htmlproofer-plugin",
-    "mkdocs-llmstxt"
+    "mkdocs-llmstxt",
+    "mkdocs-redirects>=1.2.3,<2.0.0",
 ]
 
 [project.optional-dependencies]
