@@ -32,6 +32,8 @@ New data keys (all optional):
     mobile_push_tts_text            str   Android: text read aloud by the phone (Android 8+), sent as its own
                                       `message: TTS` call after the notification, on the alarm stream at
                                       full volume for critical. If omitted, push TTS is not activated.
+    mobile_push_tts_delay           int   Seconds between the notification and its TTS, so the notification's
+                                      own sound isn't cut off (default 5, 0 for straight away).
     mobile_push_tts_locale          str   BCP-47 language for TTS (e.g. "it-IT", "en-US").
                                       Only used when push_tts_text is set.
     mobile_push_tts_engine          str   TTS engine package (e.g. "com.google.android.tts").
@@ -53,6 +55,7 @@ New data keys (all optional):
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from datetime import timedelta
@@ -123,6 +126,9 @@ ANDROID_CRITICAL_TTL = 0
 # documents for critical notifications, alarm_stream being what gets through Do Not Disturb
 ANDROID_CRITICAL_PRIORITY = "high"
 ANDROID_ALARM_STREAM_CHANNEL = "alarm_stream"
+# seconds between a notification and its TTS on Android - started together, the TTS cuts off the
+# notification's own sound
+ANDROID_TTS_DELAY = 5
 
 
 class MobilePushTransport(Transport):
@@ -204,6 +210,7 @@ class MobilePushTransport(Transport):
             "tts_text": raw_data.pop("mobile_push_tts_text", None),
             "tts_locale": raw_data.pop("mobile_push_tts_locale", None),
             "tts_engine": raw_data.pop("mobile_push_tts_engine", None),
+            "tts_delay": raw_data.pop("mobile_push_tts_delay", ANDROID_TTS_DELAY),
             # Android Notification Commands
             "command_screen_on": raw_data.pop("mobile_push_command_screen_on", None),
             "command_dnd": raw_data.pop("mobile_push_command_dnd", None),
@@ -426,6 +433,7 @@ class MobilePushTransport(Transport):
         clear_notification = bool(push_data["clear_notification"] and notification_tag)
         model_filter = SelectionRule(envelope.delivery.options.get(OPTION_DEVICE_MODEL_SELECT))
         hits = 0
+        tts_pending: list[tuple[str, dict[str, Any]]] = []
 
         for mobile_target in envelope.target.mobile_app_ids:
             full_target = mobile_target if Target.is_notify_entity(mobile_target) else f"notify.{mobile_target}"
@@ -472,8 +480,7 @@ class MobilePushTransport(Transport):
                 )
 
             if success and is_android:
-                for extra in android_after:
-                    await self.call_action(envelope, qualified_action=full_target, action_data=dict(extra), implied_target=True)
+                tts_pending.extend((full_target, dict(extra)) for extra in android_after)
 
             if success:
                 hits += 1
@@ -496,4 +503,10 @@ class MobilePushTransport(Transport):
                                     snooze_for=timedelta(days=1),
                                     reason="Action Failure",
                                 )
+        if tts_pending:
+            # one wait for all the devices, after every notification has gone
+            if push_data["tts_delay"]:
+                await asyncio.sleep(push_data["tts_delay"])
+            for full_target, extra in tts_pending:
+                await self.call_action(envelope, qualified_action=full_target, action_data=extra, implied_target=True)
         return hits > 0

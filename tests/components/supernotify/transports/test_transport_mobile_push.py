@@ -824,7 +824,9 @@ async def test_android_commands_go_before_the_notification_as_their_own_calls(un
 async def test_android_tts_is_its_own_call_after_the_notification(
     unmocked_config: Context, priority: str, data: dict[str, Any], media_stream: str | None
 ) -> None:
-    e = await _deliver_to(unmocked_config, "Samsung", priority, {"mobile_push_tts_text": "smoke in the kitchen", **data})
+    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
+        e = await _deliver_to(unmocked_config, "Samsung", priority, {"mobile_push_tts_text": "smoke in the kitchen", **data})
+    sleep.assert_awaited_once_with(5)  # so the notification's own sound is heard before the TTS
 
     assert len(e.calls) == 2
     assert e.calls[0].action_data["message"] == "smoke"  # type: ignore[index]
@@ -855,3 +857,29 @@ async def test_android_commands_for_critical_go_with_high_priority(unmocked_conf
     e = await _deliver_to(unmocked_config, "Samsung", PRIORITY_CRITICAL, {"mobile_push_command_screen_on": True})
 
     assert e.calls[0].action_data == {"message": "command_screen_on", "data": {"ttl": 0, "priority": "high"}}
+
+
+async def test_android_tts_waits_once_for_all_devices_and_can_go_straight_away(unmocked_config: Context) -> None:
+    context = unmocked_config
+    uut = MobilePushTransport(context)
+    context.hass_api.mobile_app_by_id.return_value = TrackedDeviceDetails("id001", manufacturer="Samsung", model="Phone")  # type: ignore[attr-defined]  # ty: ignore[unresolved-attribute]
+    context.configure_for_tests([uut])
+    await context.initialize()
+
+    def envelope(data: dict[str, Any]) -> Envelope:
+        return Envelope(
+            Delivery("default", {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}, uut),
+            Notification(context, message="smoke", title="alarm", action_data={ATTR_PRIORITY: PRIORITY_CRITICAL}),
+            target=Target({"mobile_app_id": ["mobile_app_phone", "mobile_app_watch"]}),
+            data=data,
+        )
+
+    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
+        e = envelope({"mobile_push_tts_text": "smoke"})
+        await uut.deliver(e)
+    sleep.assert_awaited_once_with(5)
+    assert [c.action_data["message"] for c in e.calls] == ["smoke", "smoke", "TTS", "TTS"]  # type: ignore[index]
+
+    with patch("custom_components.supernotify.transports.mobile_push.asyncio.sleep") as sleep:
+        await uut.deliver(envelope({"mobile_push_tts_text": "smoke", "mobile_push_tts_delay": 0}))
+    sleep.assert_not_awaited()
