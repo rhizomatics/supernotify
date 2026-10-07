@@ -761,4 +761,9 @@ async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> Non
     envelope = uut.delivered_envelopes[0]
     assert envelope.delivery_error is None
     assert envelope.failed_calls[0].exception == "Action notify.mobile_app_nophone not found"
-    assert list(ctx.snoozer.snoozes) == ["MOBILE_mobile_app_nophone_person.bidey_in"]
+    # gone rather than unreachable, so a repair says so, instead of a snooze hiding it
+    assert ctx.snoozer.snoozes == {}
+    from homeassistant.helpers import issue_registry as ir
+
+    issues = [i for (domain, i) in ir.async_get(hass).issues if domain == DOMAIN and "mobile_app" in i]
+    assert issues == ["recipient_bidey_in_mobile_app_mobile_app_nophone_not_found"]

@@ -19,6 +19,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from custom_components.supernotify.delivery import Delivery
 from custom_components.supernotify.hass_api import (
@@ -845,3 +847,53 @@ async def test_disconnect_debug_log_does_not_render_unsubscribe_callables(
     assert rendered == []
     assert "SUPERNOTIFY Unsubscribing: _remove_listener" in caplog.text
     assert "SUPERNOTIFY Unsubscribing: EventBus._async_remove_listener" in caplog.text
+
+
+async def test_subscribe_mobile_app_changes_is_debounced_and_ignores_other_changes(hass: HomeAssistant) -> None:
+    from datetime import timedelta
+
+    hass_api = HomeAssistantAPI(hass)
+    on_change = AsyncMock()
+    hass_api.subscribe_mobile_app_changes(on_change, cooldown=1)
+
+    def settle() -> None:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+
+    # not a mobile app, and not a mobile app's notify action
+    register_device(hass_api, device_id="50001111222233334444555566667777", domain="unit_testing", domain_id="hub")
+    hass.services.async_register("notify", "smtp", lambda _call: None)
+    await hass.async_block_till_done()
+    settle()
+    await hass.async_block_till_done()
+    on_change.assert_not_called()
+
+    # a phone paired, with its notify action registered just after, is one change
+    device = register_mobile_app(hass_api, person="person.debounce_test", device_name="New Phone")
+    assert device is not None
+    await hass.async_block_till_done()
+    settle()
+    await hass.async_block_till_done()
+    assert on_change.await_count == 1
+
+    # and so is it going away
+    hass.services.async_remove("notify", "mobile_app_new_phone")
+    hass_api._device_registry().async_remove_device(device.id)  # type: ignore[union-attr]
+    await hass.async_block_till_done()
+    settle()
+    await hass.async_block_till_done()
+    assert on_change.await_count == 2
+
+    hass_api.disconnect()
+
+
+def test_build_mobile_app_cache_drops_a_device_that_has_gone(hass: HomeAssistant) -> None:
+    hass_api = HomeAssistantAPI(hass)
+    device = register_mobile_app(hass_api, person="person.gone_test", device_name="Old Phone")
+    assert device is not None
+    assert hass_api.mobile_app_by_id("mobile_app_old_phone") is not None
+
+    hass_api._device_registry().async_remove_device(device.id)  # type: ignore[union-attr]
+    hass_api.build_mobile_app_cache()
+
+    assert hass_api.mobile_app_by_id("mobile_app_old_phone") is None
+    assert hass_api.mobile_app_by_device_id(device.id) is None

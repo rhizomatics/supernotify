@@ -706,3 +706,15 @@ async def test_send_message_exception_handling(mock_hass: Mock) -> None:
     with patch("custom_components.supernotify.engine.Notification", side_effect=RuntimeError("boom")):
         await uut.async_send_message("test message")
     assert uut.failures == 1
+
+
+async def test_async_mobile_apps_changed_refreshes_recipients_and_purges_snoozes(mock_hass: Mock) -> None:
+    uut = SupernotifyEngine(mock_hass, recipients=RECIPIENTS)
+    await uut.initialize()
+    uut.context.people_registry.refresh_mobile_devices = Mock()  # type: ignore[method-assign]
+    uut.context.snoozer.purge_snoozes = Mock()  # type: ignore[method-assign]
+
+    await uut.async_mobile_apps_changed()
+
+    uut.context.people_registry.refresh_mobile_devices.assert_called_once()
+    uut.context.snoozer.purge_snoozes.assert_called_once()

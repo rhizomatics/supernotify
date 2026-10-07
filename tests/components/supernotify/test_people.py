@@ -384,3 +384,41 @@ async def test_repair_raised_for_mobile_device_with_no_notify_action(hass: HomeA
     assert issue.translation_key == "recipient_mobile_app_not_found"
     assert issue.translation_placeholders == {"recipient": "person.test_user", "mobile_app": "mobile_app_jphone"}
     assert issue.is_fixable is False
+
+
+async def test_refresh_mobile_devices_follows_a_re_paired_phone(hass: HomeAssistant) -> None:
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import issue_registry as ir
+
+    ctx = TestingContext(
+        homeassistant=hass,
+        recipients="""
+    - person: person.test_user
+      mobile_devices:
+        - mobile_app_id: mobile_app_ipad11
+""",
+        components={"person": {}},
+        transport_types=[MobilePushTransport],
+    )
+    watch = register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Bobs Watch")
+    assert watch is not None
+    await ctx.test_initialize()
+    bob: Recipient = ctx.people_registry.people["person.test_user"]
+    assert list(bob.enabled_mobile_devices) == unordered("mobile_app_ipad11", "mobile_app_bobs_watch")
+
+    def issues() -> list[str]:
+        return [i for (domain, i) in ir.async_get(hass).issues if domain == "supernotify" and "mobile_app" in i]
+
+    assert issues() == ["recipient_test_user_mobile_app_mobile_app_ipad11_not_found"]
+
+    # the watch is re-paired under a new name, and the configured iPad's app turns up
+    dr.async_get(hass).async_remove_device(watch.id)
+    hass.services.async_remove("notify", "mobile_app_bobs_watch")
+    register_mobile_app(ctx.hass_api, person="person.test_user", device_name="Orologio")
+    hass.services.async_register("notify", "mobile_app_ipad11", lambda _call: None)
+
+    ctx.people_registry.refresh_mobile_devices()
+
+    assert list(bob.enabled_mobile_devices) == unordered("mobile_app_ipad11", "mobile_app_orologio")
+    assert bob.target("mobile_push").mobile_app_ids == unordered("mobile_app_ipad11", "mobile_app_orologio")
+    assert issues() == []
