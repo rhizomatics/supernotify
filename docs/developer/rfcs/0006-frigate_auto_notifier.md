@@ -1,4 +1,8 @@
-# Frigate Auto Notifier
+# RFC 0006: Frigate Auto Notifier
+
+2026-09-24 · Jey Burrows · Status: draft
+
+## Summary
 
 One of the first [Auto Notifiers](./0003-auto_notifier.md): a new module (with optional separate HACS custom component for visibility) that replaces the
 [Frigate Notifications blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications)

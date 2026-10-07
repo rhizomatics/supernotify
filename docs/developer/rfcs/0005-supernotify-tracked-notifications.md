@@ -1,4 +1,4 @@
-# RFC 0002: Tracked notifications in Supernotify
+# RFC 0005: Tracked notifications in Supernotify
 
 2026-10-07 · Jey Burrows · Status: draft
 

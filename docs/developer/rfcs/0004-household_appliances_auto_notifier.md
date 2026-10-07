@@ -1,4 +1,8 @@
-# Household Appliances Auto Notifier
+# RFC 0004: Household Appliances Auto Notifier
+
+2026-10-06 · Jey Burrows · Status: draft
+
+## Summary
 
 An implementation of [Auto Notifier](./0003-auto_notifier.md) to use *Live Activities* for common household appliances, such as dishwashers, robot vacuums, ovens and washing machines.
 

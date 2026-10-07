@@ -1,4 +1,4 @@
-# RFC 0001: Auto Notifier Packages
+# RFC 0003: Auto Notifier Packages
 
 2026-10-07 · Jey Burrows · Status: draft
 
