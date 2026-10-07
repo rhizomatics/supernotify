@@ -43,3 +43,10 @@ delivery:
            - MINIMAL_PRIORITY_ARMED_ANY
            - MINIMAL_PRIORITY_DISARMED
  ```
+
+### Questions and Issues
+
+Why not `occupancy`?
+  Its only simple if combinations limited, and occupancy is accounted for by alarm control panels (`ARMED_HOME`,`DISARMED`,`ARMED_NIGHT`)
+Why not time of day?
+  `ARMED_NIGHT` covers some of that, although there are bigger gaps - 1) day/night during `ARMED_AWAY` or `ARMED_VACATION` and 2) night-time vs bed-time, such as switch on floodlights if its dark but only squelch announcements when its bedtime (it can be dark at 4pm in Scottish winter and bright daylight at 4am in summer)
