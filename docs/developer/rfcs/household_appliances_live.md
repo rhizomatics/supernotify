@@ -1,6 +1,6 @@
-# Household Appliances Live Package
+# Household Appliances Auto Notifier
 
-An implementation of [packages](./packages.md) to use *Live Activities* for common household appliances, such as dishwashers, robot vacuums, ovens and washing machines.
+An implementation of [Auto Notifier](./auto_notifier.md) to use *Live Activities* for common household appliances, such as dishwashers, robot vacuums, ovens and washing machines.
 
 Although this component aims to make full use of Supernotifier available to a wider group of people with minimal effort, the primary aim is to make household appliances integrate smoothly into everyday handheld and voice devices.
 

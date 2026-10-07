@@ -160,8 +160,8 @@ Similar to above but for cases where delivery went ahead with errors, like mis-c
 
 ### Packages
 
-Companion HACS components, with working term ["Packages"](./rfcs/packages.md), starting with an [MVP](./rfcs/packages.md#mvp) and sometime later a [Frigate SuperNotifier](./rfcs/frigate_supernotifier.md).
-The Supernotify changes needed first are in [Package Support](./rfcs/package_support.md) though expected to be refined after the MVP.
+Companion HACS components, with working term [Auto Notifier](./rfcs/auto_notifier.md), starting with an [MVP](./rfcs/auto_notifier.md#mvp) and sometime later a [Frigate Auto Notifier](./rfcs/frigate_auto_notifier.md).
+The Supernotify changes needed first are in [Auto Notifier Support](./rfcs/auto_notifier_support.md) though expected to be refined after the MVP.
 
 ### UI
 
@@ -171,7 +171,7 @@ SignalK has nice idea of having recommended plugins, could be feature PR for HAC
 
 ### Extensibility
 
-- Other developers able to create add-ons, see also [Packages](./rfcs/packages.md)
+- Other developers able to create add-ons, see also [Auto Notifier](./rfcs/auto_notifier.md)
 - Notification plugins could expose themselves directly as Transports so no additional development or release needed for Supernotify
 - Consider moving Generic transport to its own notification toolbox plugin
 

@@ -63,7 +63,7 @@ The move into generating notifications rather than being a notification engine i
 
 ### Changes Needed in Supernotify
 
-See [Package Support](./package_support.md) for the changes needed in Supernotify first.
+See [Auto Notifier Support](./auto_notifier_support.md) for the changes needed in Supernotify first.
 
 ### Branding
 

@@ -1,7 +1,7 @@
 # Package Support
 
-Changes anticipated in Supernotify before any production [Package](./packages.md) is released, collected from the proposed packages:
-[Frigate](./frigate_supernotifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
+Changes anticipated in Supernotify before any production [Auto Notifier](./auto_notifier.md) is released, collected from the proposed packages:
+[Frigate](./frigate_auto_notifier.md), appliance Live Activities (smart and power monitored), and motion sensors.
 
 Packages are built as separate HACS components that work much better with  Supernotify but have some basic functionality without. These can then be attractive to people with a specific requirement to integrate Frigate or want to their phone have a progress bar for the dishwasher.
 

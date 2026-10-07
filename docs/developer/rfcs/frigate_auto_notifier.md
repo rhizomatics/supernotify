@@ -1,6 +1,6 @@
 # Frigate SuperNotifier
 
-The first [Package](./packages.md): a new module (with optional separate HACS custom component for visibility) that replaces the
+One of the first [Auto Notifiers](./auto_notifier.md): a new module (with optional separate HACS custom component for visibility) that replaces the
 [Frigate Notifications blueprint](https://github.com/SgtBatten/HA_blueprints/tree/main/Frigate_Camera_Notifications)
 (beta `0.14.0.3l`) for review events, sending everything through Supernotify.
 
@@ -99,7 +99,7 @@ Remaining profile settings, with the fix recipe:
 
 ## Changes needed in Supernotify
 
-See [Package Support](./package_support.md), which covers these for all packages. For Frigate, the essentials are
+See [Auto Notifier Support](./auto_notifier_support.md), which covers these for all packages. For Frigate, the essentials are
 snooze enforcement, notification source, lifecycle and tag, cooldown, and the mobile push media, iOS video, tap URL and
 live view changes.
 
@@ -111,4 +111,4 @@ live view changes.
 - How does the component know Frigate's camera list, zones and labels during the flow - from the Frigate integration's
   coordinator data, or the Frigate API?
 - Should a default profile be created automatically when a Frigate entry is found, or only offered?
-- Naming - see [Packages](./packages.md#questions)
+- Naming - see [Auto Notifier](./auto_notifier.md#questions)
