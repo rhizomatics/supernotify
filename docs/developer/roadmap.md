@@ -94,6 +94,10 @@ Revisit the HTML template, review if more than 1 needed, and ways to make it mor
 
 Add a target category to allow auto inclusion
 
+### Alert
+
+Review integration with `alert` - align live activities where possible with its behaviour and syntax, add recipe, make sure it works well with `notifiers`.
+
 ## Delivery and Target Selection
 
 ### Inclusion Default
