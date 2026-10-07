@@ -1,3 +1,12 @@
+# Unreleased
+
+## ✨ Enhancements
+### Mobile
+- If a mobile app is removed, its action goes away - this used to lead
+to stack traces in logs and the entire notification mapped as an error even if other deliveries succeeded.
+  -  Now it is handled separately from other exceptions and treated as a missed target within the `mobile_push` transport, which auto raises a snooze if it can to quiet repeat failures
+- Recipients with manually configured or discovered mobile devices now get them checked at startup, and a repair raised if that mobile is no longer known to Home Assistant. The repair links to the People documentation, and can be dismissed like other repairs.
+
 # v2.13.2
 
 ## 🐛 Bug fixes

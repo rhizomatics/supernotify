@@ -442,6 +442,10 @@
             "title": "Lieferung hat eine ungültige Aktion",
             "description": "Die Lieferung {delivery} hat eine ungültige Aktion {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Mobile App für Empfänger nicht gefunden",
+            "description": "Empfänger {recipient} hat ein Mobilgerät {mobile_app}, aber es gibt keine Aktion `notify.{mobile_app}` in Home Assistant, sodass Benachrichtigungen es nicht erreichen können. Wenn das Gerät oder seine Home Assistant App nicht mehr existiert, entferne es aus Home Assistant oder deaktiviere es in den `mobile_devices` des Empfängers. Ignoriere diese Reparatur, wenn das Gerät nur vorübergehend fehlt."
+        },
         "delivery_invalid_condition": {
             "title": "Lieferung hat eine ungültige Bedingung",
             "description": "Die Lieferung {delivery} hat eine ungültige Bedingung {condition}: {exception}"

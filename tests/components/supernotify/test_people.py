@@ -356,3 +356,31 @@ async def test_recipient_notify_entity_restores_last_notified_on_added_to_hass(h
         uut.async_get_last_state = AsyncMock(return_value=restored_state)  # type: ignore[method-assign]
         await uut.async_added_to_hass()
         assert uut.extra_state_attributes == {"last_notified": "2026-09-07T09:00:00+00:00"}
+
+
+async def test_repair_raised_for_mobile_device_with_no_notify_action(hass: HomeAssistant) -> None:
+    from homeassistant.helpers import issue_registry as ir
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    async_mock_service(hass, "notify", "mobile_app_ipad11")
+    ctx = TestingContext(
+        homeassistant=hass,
+        recipients="""
+    - person: person.test_user
+      mobile_devices:
+        - mobile_app_id: mobile_app_ipad11
+        - mobile_app_id: mobile_app_jphone
+        - mobile_app_id: mobile_app_bobs_broken_phone
+          enabled: False
+""",
+        components={"person": {}},
+    )
+    await ctx.test_initialize()
+
+    issues = [i for (domain, i) in ir.async_get(hass).issues if domain == "supernotify" and "mobile_app" in i]
+    assert issues == ["recipient_test_user_mobile_app_mobile_app_jphone_not_found"]
+    issue = ir.async_get(hass).async_get_issue("supernotify", issues[0])
+    assert issue is not None
+    assert issue.translation_key == "recipient_mobile_app_not_found"
+    assert issue.translation_placeholders == {"recipient": "person.test_user", "mobile_app": "mobile_app_jphone"}
+    assert issue.is_fixable is False

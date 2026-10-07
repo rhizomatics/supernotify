@@ -589,6 +589,10 @@
             "title": "Delivery Has Invalid Action",
             "description": "The delivery {delivery} has an invalid action {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Mobile App Not Found for Recipient",
+            "description": "Recipient {recipient} has a mobile device {mobile_app}, but there is no `notify.{mobile_app}` action in Home Assistant, so notifications can't reach it. If the device or its Home Assistant app has gone, remove it from Home Assistant, or disable it in the recipient's `mobile_devices`. Ignore this repair if the device is only away temporarily."
+        },
         "delivery_invalid_condition": {
             "title": "Delivery Has Invalid Condition",
             "description": "The {delivery} delivery has an invalid condition {condition}: {exception}"

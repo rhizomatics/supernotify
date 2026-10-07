@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
 )
-from homeassistant.exceptions import IntegrationError
+from homeassistant.exceptions import IntegrationError, ServiceNotFound
 from homeassistant.util import dt as dt_util
 
 from custom_components.supernotify.model import (
@@ -285,6 +285,7 @@ class Transport:
         action_data: dict[str, Any] | None = None,
         target_data: dict[str, Any] | None = None,
         implied_target: bool = False,  # True if the qualified action implies a target
+        single_target: bool = False,  # True if the action reaches only one target, so not finding it isn't an error
     ) -> bool:
         action_data = action_data or {}
         start_time = time.time()
@@ -371,7 +372,7 @@ class Transport:
             self.log_delivery_recovered()
             return True
         except Exception as e:
-            self.record_error(str(e), method="call_action")
+            not_found: bool = isinstance(e, ServiceNotFound)
             envelope.failed_calls.append(
                 CallRecord(
                     timestamp,
@@ -383,11 +384,18 @@ class Transport:
                     exception=str(e),
                 )
             )
+            if not_found and single_target:
+                # like a rejected e-mail address, one target that couldn't be reached rather than
+                # the transport failing
+                _LOGGER.warning("SUPERNOTIFY Missed %s target, %s, id: %s", self.name, e, envelope.notification_id)
+                return False
+            self.record_error(str(e), method="call_action")
             self.log_delivery_failure(
                 e, "SUPERNOTIFY Failed to notify %s via %s.%s, id: %s", self.name, domain, service, envelope.notification_id
             )
             envelope.error_count += 1
-            envelope.delivery_error = format_exception(e)
+            # a missing action explains itself, only an unexpected error needs its stack trace
+            envelope.delivery_error = [str(e)] if not_found else format_exception(e)
             return False
 
     def record_error(self, message: str, method: str) -> None:
@@ -399,16 +407,17 @@ class Transport:
     def log_delivery_failure(self, err: BaseException, message: str, *args: Any) -> None:
         """Log a delivery failure, passing the exception caught in the caller's except block.
 
-        Logged at ERROR (with traceback) the first time this transport becomes unavailable,
+        Logged at ERROR (with traceback, unless it's only a missing action) the first time this transport becomes unavailable,
         then downgraded to DEBUG for consecutive failures until it recovers - avoids
         spamming the log every notification while an external service/device stays down.
         Call alongside record_error(), which keeps tracking the lifetime error count
         regardless of log level.
         """
+        exc_info: BaseException | None = None if isinstance(err, ServiceNotFound) else err
         if self._unavailable:
-            _LOGGER.debug(message, *args, exc_info=err)
+            _LOGGER.debug(message, *args, exc_info=exc_info)
         else:
-            _LOGGER.error(message, *args, exc_info=err)
+            _LOGGER.error(message, *args, exc_info=exc_info)
             self._unavailable = True
 
     def log_delivery_recovered(self) -> None:

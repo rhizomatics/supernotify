@@ -442,6 +442,10 @@
             "title": "La consegna ha un'azione non valida",
             "description": "La consegna {delivery} ha un'azione non valida {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "App mobile non trovata per il recipient",
+            "description": "Il recipient {recipient} ha un dispositivo mobile {mobile_app}, ma in Home Assistant non esiste l'azione `notify.{mobile_app}`, quindi le notifiche non possono raggiungerlo. Se il dispositivo o la sua app Home Assistant non esiste più, rimuovilo da Home Assistant oppure disabilitalo in `mobile_devices` del recipient. Ignora questa riparazione se il dispositivo manca solo temporaneamente."
+        },
         "delivery_invalid_condition": {
             "title": "La consegna ha una condizione non valida",
             "description": "La consegna {delivery} ha una condizione non valida {condition}: {exception}"

@@ -442,6 +442,10 @@
             "title": "डिलीवरी की क्रिया अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य क्रिया {action} है"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "प्राप्तकर्ता के लिए मोबाइल ऐप नहीं मिला",
+            "description": "प्राप्तकर्ता {recipient} के पास मोबाइल डिवाइस {mobile_app} है, लेकिन Home Assistant में `notify.{mobile_app}` क्रिया नहीं है, इसलिए सूचनाएँ उस तक नहीं पहुँच सकतीं। यदि डिवाइस या उसका Home Assistant ऐप अब नहीं है, तो उसे Home Assistant से हटाएँ, या प्राप्तकर्ता के `mobile_devices` में उसे अक्षम करें। यदि डिवाइस केवल अस्थायी रूप से अनुपलब्ध है तो इस मरम्मत को अनदेखा करें।"
+        },
         "delivery_invalid_condition": {
             "title": "डिलीवरी की शर्त अमान्य है",
             "description": "डिलीवरी {delivery} में एक अमान्य शर्त {condition} है: {exception}"

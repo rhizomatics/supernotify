@@ -442,6 +442,10 @@
             "title": "Dostarczenie ma nieprawidłową akcję",
             "description": "Dostarczenie {delivery} ma nieprawidłową akcję {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Nie znaleziono aplikacji mobilnej dla odbiorcy",
+            "description": "Odbiorca {recipient} ma urządzenie mobilne {mobile_app}, ale w Home Assistant nie ma akcji `notify.{mobile_app}`, więc powiadomienia nie mogą do niego dotrzeć. Jeśli urządzenie lub jego aplikacja Home Assistant już nie istnieje, usuń je z Home Assistant albo wyłącz w `mobile_devices` odbiorcy. Zignoruj tę naprawę, jeśli urządzenie jest niedostępne tylko tymczasowo."
+        },
         "delivery_invalid_condition": {
             "title": "Dostarczenie ma nieprawidłowy warunek",
             "description": "Dostarczenie {delivery} ma nieprawidłowy warunek {condition}: {exception}"

@@ -442,6 +442,10 @@
             "title": "A entrega tem uma ação inválida",
             "description": "A entrega {delivery} tem uma ação inválida {action}"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "Aplicação móvel não encontrada para o destinatário",
+            "description": "O destinatário {recipient} tem um dispositivo móvel {mobile_app}, mas não existe a ação `notify.{mobile_app}` no Home Assistant, pelo que as notificações não o conseguem alcançar. Se o dispositivo ou a sua aplicação Home Assistant já não existir, remova-o do Home Assistant ou desative-o em `mobile_devices` do destinatário. Ignore esta reparação se o dispositivo estiver ausente apenas temporariamente."
+        },
         "delivery_invalid_condition": {
             "title": "A entrega tem uma condição inválida",
             "description": "A entrega {delivery} tem uma condição inválida {condition}: {exception}"

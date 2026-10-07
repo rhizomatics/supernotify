@@ -416,11 +416,19 @@ class MobilePushTransport(Transport):
                 clear_action_data = dict(action_data)
                 clear_action_data["message"] = "clear_notification"
                 success = await self.call_action(
-                    envelope, qualified_action=full_target, action_data=clear_action_data, implied_target=True
+                    envelope,
+                    qualified_action=full_target,
+                    action_data=clear_action_data,
+                    implied_target=True,
+                    single_target=True,
                 )
             else:
                 success = await self.call_action(
-                    envelope, qualified_action=full_target, action_data=action_data, implied_target=True
+                    envelope,
+                    qualified_action=full_target,
+                    action_data=action_data,
+                    implied_target=True,
+                    single_target=True,
                 )
 
             if success:

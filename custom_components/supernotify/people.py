@@ -248,6 +248,17 @@ class Recipient:
                 _LOGGER.info("SUPERNOTIFY Unable to find mobile devices for %s", self.entity_id)
         if self.mobile_devices:
             self._target.extend(ATTR_MOBILE_APP_ID, list(self.enabled_mobile_devices.keys()))
+            for mobile_app_id in self.enabled_mobile_devices:
+                action: str = mobile_app_id.removeprefix("notify.")
+                hass_api = people_registry.hass_api
+                if not hass_api.has_service("notify", action) and hass_api.get_state(f"notify.{action}") is None:
+                    _LOGGER.warning("SUPERNOTIFY No notify action found for %s mobile device %s", self.entity_id, action)
+                    hass_api.raise_issue(
+                        f"recipient_{self.name}_mobile_app_{action}_not_found",
+                        issue_key="recipient_mobile_app_not_found",
+                        issue_map={"recipient": self.entity_id, "mobile_app": action},
+                        learn_more_url="https://supernotify.rhizomatics.org.uk/configuration/people/",
+                    )
         if not self.user_id or not self.alias:
             attrs: dict[str, Any] | None = people_registry.person_attributes(self.entity_id)
             if attrs:

@@ -30,7 +30,7 @@ from custom_components.supernotify.envelope import Envelope
 from custom_components.supernotify.hass_api import HomeAssistantAPI, TrackedDeviceDetails
 from custom_components.supernotify.model import QualifiedTargetType, RecipientType, Target
 from custom_components.supernotify.notification import Notification
-from custom_components.supernotify.schema import EnvelopeOutcome
+from custom_components.supernotify.schema import DeliveryOutcome, EnvelopeOutcome
 from custom_components.supernotify.snoozer import Snooze
 from custom_components.supernotify.transports.mobile_push import MobilePushTransport
 from tests.components.supernotify.doubles_lib import service_call
@@ -732,3 +732,33 @@ async def test_deliver_snapshot_url_fallback_when_no_image_grabbed() -> None:
     assert e.calls[0].action_data is not None
     data = e.calls[0].action_data["data"]
     assert data["image"] == "http://my.home/precomputed.jpg"
+
+
+async def test_missing_mobile_action_is_not_an_error(hass: HomeAssistant) -> None:
+    from pytest_homeassistant_custom_component.common import async_mock_service
+
+    calls = async_mock_service(hass, "notify", "mobile_app_iphone")
+    ctx = TestingContext(
+        homeassistant=hass,
+        recipients=[
+            {
+                CONF_PERSON: "person.bidey_in",
+                CONF_MOBILE_DEVICES: [{CONF_MOBILE_APP_ID: "mobile_app_iphone"}, {CONF_MOBILE_APP_ID: "mobile_app_nophone"}],
+            },
+        ],
+        deliveries={"push": {CONF_TRANSPORT: TRANSPORT_MOBILE_PUSH}},
+        viable_transport_types=[MobilePushTransport],
+    )
+    await ctx.test_initialize()
+
+    uut = Notification(ctx, message="hello there", target="person.bidey_in", action_data={"delivery": ["push"]})
+    await uut.initialize()
+    await uut.deliver()
+
+    assert len(calls) == 1
+    assert uut.outcome() == DeliveryOutcome.SUCCESS
+    assert uut.error_count == 0
+    envelope = uut.delivered_envelopes[0]
+    assert envelope.delivery_error is None
+    assert envelope.failed_calls[0].exception == "Action notify.mobile_app_nophone not found"
+    assert list(ctx.snoozer.snoozes) == ["MOBILE_mobile_app_nophone_person.bidey_in"]

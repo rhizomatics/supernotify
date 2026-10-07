@@ -442,6 +442,10 @@
             "title": "配信のアクションが無効です",
             "description": "配信 {delivery} には無効なアクション {action} があります"
         },
+        "recipient_mobile_app_not_found": {
+            "title": "受信者のモバイルアプリが見つかりません",
+            "description": "受信者 {recipient} にはモバイルデバイス {mobile_app} がありますが、Home Assistant に `notify.{mobile_app}` アクションがないため、通知を届けられません。デバイスまたはその Home Assistant アプリがなくなった場合は、Home Assistant から削除するか、受信者の `mobile_devices` で無効にしてください。デバイスが一時的に利用できないだけの場合は、この修復を無視してください。"
+        },
         "delivery_invalid_condition": {
             "title": "配信の条件が無効です",
             "description": "配信 {delivery} には無効な条件 {condition} があります：{exception}"
