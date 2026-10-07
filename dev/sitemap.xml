@@ -306,37 +306,37 @@
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0001-supernotify-tracked-notifications/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0001-configflow_approach/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/auto_notifier/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0002-deliveries_and_transports/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/auto_notifier_support/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0003-auto_notifier/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/configflow_approach/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0003a-auto_notifier_support/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/deliveries_and_transports/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0004-household_appliances_auto_notifier/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/frigate_auto_notifier/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0005-supernotify-tracked-notifications/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
     <url>
-        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/household_appliances_live/</loc>
+        <loc>https://supernotify.rhizomatics.org.uk/latest/developer/rfcs/0006-frigate_auto_notifier/</loc>
         <lastmod>2026-10-07</lastmod>
         <changefreq>daily</changefreq>
     </url>
